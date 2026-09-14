@@ -71,13 +71,16 @@ export JAVA_HOME=/path/to/jdk-17
 - 环境：Gradle 7.3.3 / JDK 17 / NDK 27.3.13750724 / compileSdk 34 / minSdk 26
 - 签名：请**自备** keystore（仓库不包含签名密钥），在 `HMCLPE/build.gradle` 中配置
 
-### 获取运行库（必需，仓库未包含）
-为保证仓库体积，`HMCLPE/src/main/assets/app_runtime/java/`（约 700MB 的预编译 Java 运行时）
-与 `runtime-source/` 未纳入版本控制，请自行获取后放回对应目录：
+### 运行库（已内置）
+`HMCLPE/src/main/assets/app_runtime/java/` 已包含全部常用 Java 运行时，克隆即可完整构建：
 
-- Java 8 / 17 / 21 / 25 的 Android 版运行时：取自 [HMCL-PE](https://github.com/Tungs-HMCL/HMCL-PE) 与
-  [Fold Craft Launcher](https://github.com/FCL-Team/FoldCraftLauncher) 的 `app_runtime/java/` 目录
-- 目录结构：`app_runtime/java/{default,8-arm,8-arm64,8-x86,8-x86_64,JRE17,JRE21,JRE25,17-*,21-*,25-*}/`
+- Java 8：`default`、`8-arm`、`8-arm64`、`8-x86`、`8-x86_64`
+- Java 17：`JRE17`、`17-arm`、`17-arm64`、`17-x86`、`17-x86_64`
+- Java 21：`JRE21`、`21-arm`、`21-arm64`、`21-x86`、`21-x86_64`
+- Java 25：`25-arm`、`25-arm64`、`25-x86_64`
+
+唯一例外是 **JRE25**：它的 `lib/modules` 单文件 121MB，超过 GitHub 100MB 硬上限、无法入库。
+请从 Release 附件下载 `JRE25-runtime.zip`，解压到 `HMCLPE/src/main/assets/app_runtime/java/JRE25/` 即可。
 
 ## 开源许可
 
