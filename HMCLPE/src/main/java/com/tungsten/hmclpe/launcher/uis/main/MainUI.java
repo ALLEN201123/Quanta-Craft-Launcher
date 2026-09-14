@@ -166,6 +166,7 @@ public class MainUI extends BaseUI implements View.OnClickListener, AdapterView.
                 options.put("OpenGL ES 3.0 VirGPU", "opengles3_vgpu");
                 options.put("OpenGL ES 3.0 VirGL", "opengles3_virgl");
                 options.put("Vulkan ZGC（Zink）", "vulkan_zink");
+                options.put("MobileGlues（MG 外部渲染器）", "mg");
             }
             for (java.util.Map.Entry<String, String> e : options.entrySet()) {
                 android.widget.TextView row = new android.widget.TextView(activity);

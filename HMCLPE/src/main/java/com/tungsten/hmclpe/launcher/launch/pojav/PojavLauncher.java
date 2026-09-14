@@ -51,6 +51,14 @@ public class PojavLauncher {
 
             JREUtils.relocateLibPath(context,javaPath);
             String libraryPath = JREUtils.getJavaLibDir(javaPath) + ":" + AppManifest.POJAV_LIB_DIR + "/lwjgl3:" + JREUtils.LD_LIBRARY_PATH + ":" + AppManifest.POJAV_LIB_DIR + "/lwjgl3";
+            // 外部渲染器（MobileGlues/MG 等）：把 <游戏目录>/renderer/mg 挂到库路径（用户把渲染器文件放这里）
+            try {
+                java.io.File mgDir = new java.io.File(gameLaunchSetting.game_directory, "renderer/mg");
+                if (mgDir.isDirectory()) {
+                    libraryPath = libraryPath + ":" + mgDir.getAbsolutePath();
+                }
+            } catch (Throwable ignored) {
+            }
             boolean isJava8 = javaPath.endsWith("default");
             boolean useCacio17 = !isJava8;
             String classPath = getLWJGL3ClassPath() + ":" + version.getClassPath(gameLaunchSetting.gameFileDirectory,isHighVersion(gameLaunchSetting),useCacio17);

@@ -321,6 +321,9 @@ public class JREUtils {
             case "vulkan_zink":
                 renderLibrary = "libOSMesa_8.so";
                 break;
+            case "mg":
+                renderLibrary = "libMobileGlues.so";
+                break;
             default:
                 Log.w("RENDER_LIBRARY", "No renderer selected, defaulting to opengles2");
                 renderLibrary = "libgl4es_114.so";
