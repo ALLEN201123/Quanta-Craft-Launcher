@@ -60,10 +60,8 @@ public class LaunchLogWindow {
 
     private void startLogcatCapture() {
         try {
-            // 按进程号抓全部输出：21/25 运行时启动后的游戏输出不走 jrelog 标签（走进程 stdout），
-            // 用 -s jrelog 过滤会把它们全丢掉 —— 这里改为抓本进程的一切日志。
             final Process process = Runtime.getRuntime().exec(
-                    new String[]{"logcat", "-v", "brief", "--pid", String.valueOf(android.os.Process.myPid())});
+                    new String[]{"logcat", "-v", "brief", "-s", "jrelog:V"});
             final java.io.BufferedReader reader = new java.io.BufferedReader(
                     new java.io.InputStreamReader(process.getInputStream()));
             Thread thread = new Thread(() -> {
