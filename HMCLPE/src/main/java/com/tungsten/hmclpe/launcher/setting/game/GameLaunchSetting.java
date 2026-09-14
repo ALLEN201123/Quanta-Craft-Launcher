@@ -157,7 +157,17 @@ public class GameLaunchSetting {
                 javaPath = AppManifest.JAVA_DIR + "/" + privateGameSetting.javaSetting.name;
             }
             else {
-                javaPath = AppManifest.JAVA_DIR + "/" + selectJavaRuntime(requiredJava(version));
+                String runtimeName = selectJavaRuntime(requiredJava(version));
+                // 21/25 的主目录（JRE21/JRE25）是 aarch64 构建；其他架构必须用按架构目录
+                // （21-arm/21-arm64/21-x86/21-x86_64、25-arm/...），否则 dlopen 64 位 libjvm 直接失败。
+                if (runtimeName.equals("JRE21") || runtimeName.equals("JRE25")) {
+                    int arch = com.tungsten.hmclpe.utils.Architecture.getRuntimeArchitecture();
+                    String suffix = arch == com.tungsten.hmclpe.utils.Architecture.ARCH_ARM ? "arm"
+                            : arch == com.tungsten.hmclpe.utils.Architecture.ARCH_ARM64 ? "arm64"
+                            : arch == com.tungsten.hmclpe.utils.Architecture.ARCH_X86 ? "x86" : "x86_64";
+                    runtimeName = (runtimeName.equals("JRE21") ? "21-" : "25-") + suffix;
+                }
+                javaPath = AppManifest.JAVA_DIR + "/" + runtimeName;
             }
         }
         else {
