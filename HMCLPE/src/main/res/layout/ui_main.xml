@@ -34,12 +34,12 @@
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:layout_marginEnd="6dp"
-                android:padding="10dp">
+                android:padding="6dp">
 
                 <RelativeLayout
                     android:layout_gravity="center"
-                    android:layout_width="30dp"
-                    android:layout_height="30dp">
+                    android:layout_width="26dp"
+                    android:layout_height="26dp">
 
                     <ImageView
                         android:layout_width="26.6666dp"
@@ -50,14 +50,14 @@
 
                     <ImageView
                         android:id="@+id/account_skin_hat"
-                        android:layout_width="30dp"
-                        android:layout_height="30dp" />
+                        android:layout_width="26dp"
+                        android:layout_height="26dp" />
 
                 </RelativeLayout>
 
                 <LinearLayout
                     android:layout_width="wrap_content"
-                    android:layout_height="35dp"
+                    android:layout_height="26dp"
                     android:layout_gravity="center"
                     android:orientation="vertical">
 
@@ -95,11 +95,11 @@
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:layout_marginEnd="6dp"
-                android:padding="10dp">
+                android:padding="6dp">
 
                 <ImageView
-                    android:layout_width="30dp"
-                    android:layout_height="30dp"
+                    android:layout_width="26dp"
+                    android:layout_height="26dp"
                     android:layout_gravity="center"
                     android:id="@+id/current_version_icon"
                     android:background="@drawable/ic_grass"/>
@@ -107,7 +107,7 @@
                 <LinearLayout
                     android:id="@+id/no_version_alert_text"
                     android:layout_width="wrap_content"
-                    android:layout_height="35dp"
+                    android:layout_height="26dp"
                     android:layout_gravity="center"
                     android:orientation="vertical">
 
@@ -135,7 +135,7 @@
                     android:singleLine="true"
                     android:visibility="gone"
                     android:layout_width="wrap_content"
-                    android:layout_height="35dp"
+                    android:layout_height="26dp"
                     android:layout_gravity="center"
                     android:gravity="center"
                     android:layout_marginStart="6dp"
@@ -155,19 +155,19 @@
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:layout_marginEnd="6dp"
-                android:padding="10dp">
+                android:padding="6dp">
 
                 <ImageView
                     android:id="@+id/version_list_icon"
-                    android:layout_width="30dp"
-                    android:layout_height="30dp"
+                    android:layout_width="26dp"
+                    android:layout_height="26dp"
                     android:layout_gravity="center"
                     android:background="@drawable/ic_bookshelf"/>
 
                 <TextView
                     android:singleLine="true"
                     android:layout_width="wrap_content"
-                    android:layout_height="35dp"
+                    android:layout_height="26dp"
                     android:layout_gravity="center"
                     android:gravity="center"
                     android:layout_marginStart="6dp"
@@ -187,19 +187,19 @@
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:layout_marginEnd="6dp"
-                android:padding="10dp">
+                android:padding="6dp">
 
                 <ImageView
                     android:id="@+id/download_icon"
-                    android:layout_width="30dp"
-                    android:layout_height="30dp"
+                    android:layout_width="26dp"
+                    android:layout_height="26dp"
                     android:layout_gravity="center"
                     android:background="@drawable/ic_chest"/>
 
                 <TextView
                     android:singleLine="true"
                     android:layout_width="wrap_content"
-                    android:layout_height="35dp"
+                    android:layout_height="26dp"
                     android:layout_gravity="center"
                     android:gravity="center"
                     android:layout_marginStart="6dp"
@@ -220,19 +220,19 @@
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:layout_marginEnd="6dp"
-                android:padding="10dp">
+                android:padding="6dp">
 
                 <ImageView
                     android:id="@+id/multiplayer_icon"
                     android:layout_gravity="center"
-                    android:layout_width="30dp"
-                    android:layout_height="30dp"
+                    android:layout_width="26dp"
+                    android:layout_height="26dp"
                     android:background="@drawable/ic_qcl_multiplayer_white"/>
 
                 <TextView
                     android:singleLine="true"
                     android:layout_width="wrap_content"
-                    android:layout_height="35dp"
+                    android:layout_height="26dp"
                     android:layout_gravity="center"
                     android:gravity="center"
                     android:layout_marginStart="6dp"
@@ -251,19 +251,19 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:padding="10dp">
+                android:padding="6dp">
 
                 <ImageView
                     android:id="@+id/setting_icon"
                     android:layout_gravity="center"
-                    android:layout_width="30dp"
-                    android:layout_height="30dp"
+                    android:layout_width="26dp"
+                    android:layout_height="26dp"
                     android:background="@drawable/ic_command"/>
 
                 <TextView
                     android:singleLine="true"
                     android:layout_width="wrap_content"
-                    android:layout_height="35dp"
+                    android:layout_height="26dp"
                     android:layout_gravity="center"
                     android:gravity="center"
                     android:layout_marginStart="6dp"
