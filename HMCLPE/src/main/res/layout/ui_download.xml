@@ -22,11 +22,11 @@
             android:orientation="horizontal">
 
             <LinearLayout
-                android:layout_height="72dp"
+                android:layout_height="56dp"
                 android:minWidth="84dp"
                 android:layout_marginStart="12dp"
                 android:gravity="center"
-                android:padding="10dp"
+                android:padding="6dp"
                 android:background="@drawable/launcher_button_parent"
                 android:focusable="true"
                 android:clickable="true"
@@ -54,11 +54,11 @@
             </LinearLayout>
 
             <LinearLayout
-                android:layout_height="72dp"
+                android:layout_height="56dp"
                 android:minWidth="84dp"
                 android:layout_marginStart="8dp"
                 android:gravity="center"
-                android:padding="10dp"
+                android:padding="6dp"
                 android:background="@drawable/launcher_button_parent"
                 android:focusable="true"
                 android:clickable="true"
@@ -86,11 +86,11 @@
             </LinearLayout>
 
             <LinearLayout
-                android:layout_height="72dp"
+                android:layout_height="56dp"
                 android:minWidth="84dp"
                 android:layout_marginStart="8dp"
                 android:gravity="center"
-                android:padding="10dp"
+                android:padding="6dp"
                 android:background="@drawable/launcher_button_parent"
                 android:focusable="true"
                 android:clickable="true"
@@ -118,11 +118,11 @@
             </LinearLayout>
 
             <LinearLayout
-                android:layout_height="72dp"
+                android:layout_height="56dp"
                 android:minWidth="84dp"
                 android:layout_marginStart="8dp"
                 android:gravity="center"
-                android:padding="10dp"
+                android:padding="6dp"
                 android:background="@drawable/launcher_button_parent"
                 android:focusable="true"
                 android:clickable="true"
@@ -150,11 +150,11 @@
             </LinearLayout>
 
             <LinearLayout
-                android:layout_height="72dp"
+                android:layout_height="56dp"
                 android:minWidth="84dp"
                 android:layout_marginStart="8dp"
                 android:gravity="center"
-                android:padding="10dp"
+                android:padding="6dp"
                 android:background="@drawable/launcher_button_parent"
                 android:focusable="true"
                 android:clickable="true"
@@ -182,11 +182,11 @@
             </LinearLayout>
 
             <LinearLayout
-                android:layout_height="72dp"
+                android:layout_height="56dp"
                 android:minWidth="84dp"
                 android:layout_marginStart="8dp"
                 android:gravity="center"
-                android:padding="10dp"
+                android:padding="6dp"
                 android:background="@drawable/launcher_button_parent"
                 android:focusable="true"
                 android:clickable="true"
