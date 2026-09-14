@@ -1,4 +1,20 @@
-# QCL · Quanta Craft Launcher（量子方块启动器）
+# QCL · Quanta Craft Launcher
+
+**Quanta Craft Launcher (QCL, 量子方块启动器)** is an Android launcher for Minecraft: Java Edition,
+rebuilt from [HMCL-PE](https://github.com/Tungs-HMCL/HMCL-PE) by Tungs.
+Maintainer: **Rod123456** (bilibili UID 550905358).
+
+**English summary:** QCL focuses on *ancient* Minecraft versions (pre-classic / classic / indev / infdev /
+alpha / beta / RC) — 181 archived builds are listed and installed with dependencies and assets fetched
+automatically. It also supports modern versions up to 26.x (Java 25). Two launch backends (Boat / Pojav),
+automatic 32/64-bit runtime detection, dynamic memory clamping, a launch-log overlay, a crash screen, and
+multiplayer powered by Terracotta (China mainland only). Licensed under **GNU GPL-3.0** — see
+[`LICENSE`](LICENSE) and [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md).
+
+> 中文说明在下方。The Chinese documentation follows.
+
+---
+
 
 > 基于 [HMCL-PE](https://github.com/Tungs-HMCL/HMCL-PE)（Tungs）重构的 Android 版 Minecraft: Java Edition 启动器。
 > 作者：**Rod123456**（bilibili UID 550905358）—— 喜欢研究 Minecraft 1.0 以前的所有远古版本，视频也主要围绕这些老版本。
