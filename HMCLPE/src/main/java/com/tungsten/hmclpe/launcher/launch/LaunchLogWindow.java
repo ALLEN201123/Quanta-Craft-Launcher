@@ -184,6 +184,18 @@ public class LaunchLogWindow {
         }
     }
 
+    private void autoScrollIfAtBottom() {
+        if (scroller == null) return;
+        scroller.post(() -> {
+            try {
+                if (!scroller.canScrollVertically(1)) {
+                    scroller.fullScroll(android.view.View.FOCUS_DOWN);
+                }
+            } catch (Throwable ignored) {
+            }
+        });
+    }
+
     public void close() {
         closed = true;
         current = null;
@@ -238,6 +250,7 @@ public class LaunchLogWindow {
         logView.setTextColor(0xFFDDDDDD);
         logView.setTextSize(10);
         logView.setTypeface(android.graphics.Typeface.MONOSPACE);
+        logView.setTextIsSelectable(true);
         scroller.addView(logView, new ScrollView.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT));
         box.addView(scroller, new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f));
@@ -260,6 +273,7 @@ public class LaunchLogWindow {
                 if (existing != null && !existing.isEmpty()) {
                     buffer.append(existing);
                     logView.setText(trim(buffer));
+                autoScrollIfAtBottom();
                     scrollToEnd();
                 }
             }
@@ -280,6 +294,7 @@ public class LaunchLogWindow {
             if (!text.endsWith("\n")) buffer.append('\n');
             if (attached && logView != null) {
                 logView.setText(trim(buffer));
+                autoScrollIfAtBottom();
                 scrollToEnd();
             }
         });
