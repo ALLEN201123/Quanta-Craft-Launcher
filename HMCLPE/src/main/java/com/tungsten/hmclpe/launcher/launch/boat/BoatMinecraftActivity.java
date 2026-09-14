@@ -84,7 +84,7 @@ public class BoatMinecraftActivity extends BoatActivity {
         menuHelper = new MenuHelper(this, this, gameLaunchSetting.fullscreen, gameLaunchSetting.game_directory, drawerLayout, baseLayout, false, gameLaunchSetting.controlLayout, 1, scaleFactor);
         // 启动日志悬浮窗：默认开启；退出游戏回主界面时随 Activity 销毁自动关闭
         // 默认显示（老存档里 log=false 也照样显示），游戏进主界面后自动关闭；× 可手动关
-        new LaunchLogWindow(this, drawerLayout).show();
+        LaunchLogWindow.showForBoat(this, drawerLayout);
 
     }
 

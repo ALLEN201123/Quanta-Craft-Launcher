@@ -3,7 +3,7 @@
     <string name="app_name_pri" translatable="false">Quanta Craft Launcher</string>
     <string name="app_name_sec" translatable="false">量子方块启动器</string>
     <string name="version_name" translatable="false">v1.0.0</string>
-    <string name="app_bar_title" translatable="false">QCL · Quanta Craft Launcher v1.0.0</string>
+    <string name="app_bar_title" translatable="false">QCL · Quanta Craft Launcher v1.0.1</string>
 
     <string name="dialog_outdated_warning_title">Warning</string>
     <string name="dialog_outdated_warning_msg">HMCL-PE has stopped maintenance. If you want to run Minecraft: Java Edition on Android devices and get a better experience, please download FoldCraftLauncher or PojavLauncher.\nNote: If you have any problems when using other launchers, HMCL-dev is not responsible. Please ask the developer of the launcher you are using for help.</string>

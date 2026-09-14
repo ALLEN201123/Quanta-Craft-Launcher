@@ -48,6 +48,36 @@ public class LaunchLogWindow {
         this.parent = parent;
     }
 
+    /** 是否额外从 logcat 抓取游戏输出（Boat 后端的 JVM 输出只在这里） */
+    private static boolean captureLogcat = false;
+
+    /** Boat 后端用：Boat 的原生层把游戏输出打到 logcat 的 jrelog 标签，Logger 里拿不到 */
+    public static void showForBoat(Activity activity, ViewGroup parent) {
+        captureLogcat = true;
+        new LaunchLogWindow(activity, parent).show();
+    }
+
+    private void startLogcatCapture() {
+        try {
+            final Process process = Runtime.getRuntime().exec(
+                    new String[]{"logcat", "-v", "brief", "-s", "jrelog:V"});
+            final java.io.BufferedReader reader = new java.io.BufferedReader(
+                    new java.io.InputStreamReader(process.getInputStream()));
+            Thread thread = new Thread(() -> {
+                try {
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        onLogLine(line);
+                    }
+                } catch (Throwable ignored) {
+                }
+            }, "qcl-logcat");
+            thread.setDaemon(true);
+            thread.start();
+        } catch (Throwable ignored) {
+        }
+    }
+
     /** 显示窗口并开始接收日志。
      *  关闭时机跟随游戏日志：日志连续一段时间不再输出（游戏进入主界面后空闲不打印）即自动关闭；
      *  另有 2 分钟兜底上限，避免卡死时窗口一直挂着。 */
@@ -57,6 +87,9 @@ public class LaunchLogWindow {
         lastLogTime = shownAt;
         current = this;
         Logger.getInstance(activity).setLogListener(this::onLogLine);
+        if (captureLogcat) {
+            startLogcatCapture();
+        }
         mainHandler.post(this::attach);
         mainHandler.postDelayed(silenceChecker, 1000);
     }
