@@ -21,70 +21,79 @@ multiplayer powered by Terracotta (China mainland only). Licensed under **GNU GP
 
 ---
 
-## Features
+## 这是什么
 
-- **Ancient versions, fully playable** — 181 archived builds (pre-classic / classic / indev / infdev / alpha / beta / RC) listed and installed automatically, including the version JSON, libraries and assets.
-- **Automatic 32/64-bit runtime detection** with a manual override in Settings (Auto / 64-bit / 32-bit).
-- **Safe memory allocation** — per-bitness defaults (2 GB on 64-bit, 1 GB on 32-bit), then dynamically clamped to the device's *currently available* memory so the VM can never fail to start.
-- **Two launch backends** — Pojav (default) and Boat; long-press the launch button to switch renderers (GL4ES / VirGL / OpenGL ES 2.0-3.0 / Vulkan Zink).
-- **Launch log overlay** — live JVM and game output, closes automatically when the game reaches its main menu.
-- **Multiplayer (Terracotta)** — enabled from the launcher's main screen, used from the in-game floating menu; hosts share an invite code, guests join with it. **China mainland only.**
-- **Crash screen** — full log on the left, error summary on the right, with Exit / Back-to-launcher buttons.
-- **Downloads** — BMCLAPI mirror; Mods / Resource packs / Modpacks / **Shaders** / Worlds pages, Modrinth by default with CurseForge switchable.
+QCL 是一个安卓平台的 Minecraft Java 版启动器，界面按自己的「QCL 灰色半透明」风格重做，重点解决
+**远古版本（pre-classic / classic / indev / infdev / alpha / beta / RC）能不能装、能不能启动**的问题，
+同时支持到最新的 26.x（2026 年官方改历年命名）。
 
-## Version / Java mapping
+## 主要特性
 
-| Minecraft | Java runtime bundled |
-|---|---|
-| ≤ 1.16.5 (incl. all ancient versions) | Java 8 (`default`, `8-arm`, `8-arm64`, `8-x86`, `8-x86_64`) |
-| 1.17 – 1.20.4 | Java 17 (`JRE17`, `17-arm`, `17-arm64`, `17-x86`, `17-x86_64`) |
-| 1.20.5 – 1.21.11 | Java 21 (`JRE21`, `21-*`) |
-| 26.x | Java 25 (`25-*` in-repo; `JRE25` ships as a release attachment) |
+### 启动链路
+- **32/64 位运行时自动检测**：跟随设备与应用实际 ABI 自动选择（可在设置里手动强制）
+- **内存安全**：按运行时位数给默认值（64 位 2GB / 32 位 1GB），并按**当前剩余内存**动态夹取，避免 VM 初始化失败把启动器一起带走
+- **双启动后端**：Boat / Pojav（默认 Pojav）
+- **长按启动键**可切换渲染器（GL4ES 1.1.5 / VirGL / OpenGL ES 2.0-3.0 / Vulkan Zink）
+- **启动日志悬浮窗**：默认开启，实时显示 JVM 与游戏输出，进入游戏主界面自动关闭（可在游戏内悬浮窗开关）
 
-## Build
+### 远古版本
+- 内置 **181 条历史归档**（几乎涵盖全部远古版本，来自考古社区归档），点击即可安装
+- 安装时自动补齐 **jar / 版本 json / 依赖库 / 资源文件**，完成后提示安装成功
+- 启动前自动检查并补齐缺失文件（json 损坏也能用模板重建）
+
+### 下载
+- 国内默认走 **BMCLAPI** 镜像；Mod / 资源包 / 整合包 / **光影** / 世界分页浏览
+- 默认下载源为 **Modrinth**（资源包 / 整合包 / 光影 / 世界均支持切换 CurseForge）
+
+### 账号与皮肤
+- 离线账号默认**史蒂夫**（宽臂），支持导入自己的 PNG 皮肤
+- 头像跟随皮肤变化（导入皮肤取脸部 / 史蒂夫 / 艾利克斯）
+- 3D 人物待机与走路动画
+
+### 多人联机（Terracotta / 陶瓷联机）
+- 基于 [Terracotta](https://github.com/burningtnt/Terracotta)（BurningTNT）
+- **游戏外**（启动器主界面 →「多人联机」）开启；**游戏内**（悬浮窗 →「联机模块」）创建/加入房间
+- 房主获得邀请码自动复制，访客填入邀请码后获得服务器地址
+- ⚠️ **仅限中国大陆地区使用**，境外使用本启动器不承担责任，且可能带来法律风险
+
+### 其它
+- 崩溃时弹出**崩溃界面**（左完整日志 / 右错误摘要 / 退出 / 返回启动器），不再直接闪退回主界面
+- 版本隔离默认开启，玩家可自行关闭
+
+## 构建
 
 ```bash
 export JAVA_HOME=/path/to/jdk-17
 ./gradlew :HMCLPE:assembleRelease
-# output: HMCLPE/build/outputs/apk/release/HMCLPE-release.apk
+# 产物：HMCLPE/build/outputs/apk/release/HMCLPE-release.apk
 ```
 
-Environment: Gradle 7.3.3 / JDK 17 / NDK 27.3.13750724 / compileSdk 34 / minSdk 26.
-All Java runtimes are bundled in-repo **except `JRE25`** (its `lib/modules` exceeds GitHub's 100 MB file
-limit) — download `JRE25-runtime.zip` from the v1.0.0 release and unzip it into
-`HMCLPE/src/main/assets/app_runtime/java/JRE25/`.
-Sign with your own keystore; the repository does not contain one.
+- 环境：Gradle 7.3.3 / JDK 17 / NDK 27.3.13750724 / compileSdk 34 / minSdk 26
+- 签名：请**自备** keystore（仓库不包含签名密钥），在 `HMCLPE/build.gradle` 中配置
 
-## License
+### 获取运行库（必需，仓库未包含）
+为保证仓库体积，`HMCLPE/src/main/assets/app_runtime/java/`（约 700MB 的预编译 Java 运行时）
+与 `runtime-source/` 未纳入版本控制，请自行获取后放回对应目录：
 
-**GNU GPL-3.0** (inherited from HMCL-PE). Distributing this app requires providing the complete
-corresponding source code. Third-party components and attributions: [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md).
+- Java 8 / 17 / 21 / 25 的 Android 版运行时：取自 [HMCL-PE](https://github.com/Tungs-HMCL/HMCL-PE) 与
+  [Fold Craft Launcher](https://github.com/FCL-Team/FoldCraftLauncher) 的 `app_runtime/java/` 目录
+- 目录结构：`app_runtime/java/{default,8-arm,8-arm64,8-x86,8-x86_64,JRE17,JRE21,JRE25,17-*,21-*,25-*}/`
 
-### Credits
-HMCL-PE (Tungs) · PojavLauncher (PojavLauncherTeam) · Terracotta (BurningTNT) ·
-LWJGL / GL4ES / OpenAL / OpenJDK · BMCLAPI (bangbang93)
+## 开源许可
 
-## Disclaimer
-No Minecraft game files are included. The multiplayer feature is restricted to mainland China.
+- 本项目以 **GNU GPL-3.0**（或更新版本）授权，全文见 [`LICENSE`](LICENSE)。
+  它继承自 HMCL-PE，因此**分发（包括发布 APK）时必须同时提供完整对应源码**。
+- 第三方组件与各自许可、署名见 `THIRD_PARTY_NOTICES.md`
 
----
+### 特别鸣谢
+| 项目 | 作者 | 用途 |
+|---|---|---|
+| HMCL-PE | Tungs（bilibili 18115101） | 本项目的前身 |
+| PojavLauncher | PojavLauncherTeam / Amethyst-Android | JVM 启动与 LWJGL 移植 |
+| Terracotta | BurningTNT | 多人联机 |
+| LWJGL / GL4ES / OpenAL / OpenJDK | 各自作者 | 图形、音频与运行时 |
+| BMCLAPI | bangbang93 | 国内下载镜像 |
 
-## 简体中文说明
-
-**Quanta Craft Launcher（量子方块启动器，QCL）** 是基于 HMCL-PE（作者 Tungs）重构的安卓版 Minecraft: Java Edition 启动器。
-维护者：**Rod123456**（bilibili UID 550905358）。
-
-- **远古版本全流程**：内置 181 条历史归档（pre-classic/classic/indev/infdev/alpha/beta/RC），点击安装，
-  自动补齐 jar / 版本 json / 依赖库 / 资源；启动前自动检查修复缺失文件。
-- **运行时位数**：自动检测（64 位设备自动用 64 位），可在 全局游戏设置 → 运行时位数 手动切换；默认内存按位数给（64 位 2G / 32 位 1G），并按当前剩余内存动态夹取。
-- **双后端**：Pojav（默认）/ Boat；长按启动键切换渲染器。
-- **启动日志悬浮窗**：默认开启，进游戏主界面自动关闭；Boat 后端同样支持（抓取 logcat jrelog）。
-- **多人联机（Terracotta，陶瓷联机）**：主界面「多人联机」开启 → 游戏内悬浮窗「联机模块」创建/加入房间。**仅限中国大陆使用。**
-- **崩溃界面**：左侧完整日志、右侧错误摘要，可退出或返回启动器。
-- **下载**：BMCLAPI 镜像；模组/资源包/整合包/光影/世界，默认源 Modrinth，可切换 CurseForge。
-
-**版本与 Java 对应**：≤1.16.5（含全部远古版本）→ Java 8；1.17–1.20.4 → Java 17；1.20.5–1.21.11 → Java 21；26.x → Java 25。
-
-**许可**：GNU GPL-3.0（继承自 HMCL-PE），分发 APK 必须同时提供完整源码。第三方组件署名见 `THIRD_PARTY_NOTICES.md`。
-
-**免责**：不含 Minecraft 本体与资源；多人联机仅限中国大陆地区使用。
+## 免责声明
+本项目不包含 Minecraft 游戏本体与资源，使用需自备正版账号（或自建离线账号）。
+多人联机功能仅限中国大陆地区使用。
