@@ -87,9 +87,9 @@ public class LaunchLogWindow {
         lastLogTime = shownAt;
         current = this;
         Logger.getInstance(activity).setLogListener(this::onLogLine);
-        if (captureLogcat) {
-            startLogcatCapture();
-        }
+        // 所有后端都抓 logcat 的 jrelog：Boat 只走 logcat；Pojav 的 21/25 运行时也可能
+        // 不经过 Logger 管道 —— 有 logcat 兜底，窗口永远有内容可看（用于定位启动问题）。
+        startLogcatCapture();
         mainHandler.post(this::attach);
         mainHandler.postDelayed(silenceChecker, 1000);
     }
