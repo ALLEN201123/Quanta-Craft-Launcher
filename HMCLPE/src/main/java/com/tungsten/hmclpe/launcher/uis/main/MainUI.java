@@ -194,11 +194,14 @@ public class MainUI extends BaseUI implements View.OnClickListener, AdapterView.
                 });
                 root.addView(row, lp);
             }
-            dialog.setContentView(root);
+            android.widget.ScrollView scroll = new android.widget.ScrollView(activity);
+            scroll.addView(root, new android.view.ViewGroup.LayoutParams(
+                    android.view.ViewGroup.LayoutParams.MATCH_PARENT, android.view.ViewGroup.LayoutParams.WRAP_CONTENT));
+            dialog.setContentView(scroll);
             android.view.Window w = dialog.getWindow();
             if (w != null) {
                 w.setLayout(android.view.ViewGroup.LayoutParams.MATCH_PARENT,
-                        Math.round(340 * activity.getResources().getDisplayMetrics().density));
+                        Math.round(440 * activity.getResources().getDisplayMetrics().density));
                 w.setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(0x00000000));
             }
             dialog.show();
