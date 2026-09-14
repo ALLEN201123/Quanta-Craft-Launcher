@@ -48,6 +48,24 @@ public class BoatLauncher {
             boolean isJava8 = javaPath.endsWith("default");
             boolean useCacio17 = !isJava8;
             String javaLibDir = cosine.boat.LoadMe.getJavaLibDir(javaPath);
+            // lwjgl-2 原生库按架构放置：assets 里有 lwjgl-2/<abi>/liblwjgl.so，
+            // 启动前把当前运行时架构对应的那份复制到 lwjgl-2/liblwjgl.so（ Boat 原始布局只认这个路径）。
+            // 缺失对应架构时保留原文件，避免覆盖成错误架构导致 dlopen 失败。
+            try {
+                int arch = com.tungsten.hmclpe.utils.Architecture.getRuntimeArchitecture();
+                String abiDir = arch == com.tungsten.hmclpe.utils.Architecture.ARCH_ARM ? "arm"
+                        : arch == com.tungsten.hmclpe.utils.Architecture.ARCH_ARM64 ? "arm64"
+                        : arch == com.tungsten.hmclpe.utils.Architecture.ARCH_X86 ? "x86" : "x86_64";
+                java.io.File srcSo = new java.io.File(AppManifest.BOAT_LIB_DIR + "/lwjgl-2/" + abiDir + "/liblwjgl.so");
+                java.io.File dstSo = new java.io.File(AppManifest.BOAT_LIB_DIR + "/lwjgl-2/liblwjgl.so");
+                if (srcSo.isFile()) {
+                    java.io.File dstParent = dstSo.getParentFile();
+                    if (dstParent != null) dstParent.mkdirs();
+                    java.nio.file.Files.copy(srcSo.toPath(), dstSo.toPath(),
+                            java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                }
+            } catch (Throwable ignored) {
+            }
             if (!highVersion){
                 libraryPath = javaLibDir + ":" + AppManifest.BOAT_LIB_DIR + ":" + AppManifest.BOAT_LIB_DIR + "/lwjgl-2:" + AppManifest.BOAT_LIB_DIR + "/renderer/" + r;
                 classPath = AppManifest.BOAT_LIB_DIR + "/lwjgl-2/lwjgl.jar:" + AppManifest.BOAT_LIB_DIR + "/lwjgl-2/lwjgl_util.jar:" + version.getClassPath(gameLaunchSetting.gameFileDirectory,false,false);
