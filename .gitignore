@@ -19,10 +19,14 @@ qcl.keystore
 *.ap_
 *.dex
 
-# ===== 第三方预编译 Java 运行时（体积 700MB+，且非本项目代码；
-#      获取方式见 README「获取运行库」一节）=====
-HMCLPE/src/main/assets/app_runtime/java/
+# ===== 第三方预编译 Java 运行时 =====
+# 仓库内已包含：Java 8 全家（default/8-arm/8-arm64/8-x86/8-x86_64）与 JRE17（单文件均 <100MB）
+# 未包含（体积大且 JRE25/lib/modules 超 GitHub 100MB 上限，获取方式见 README）：
 runtime-source/
+HMCLPE/src/main/assets/app_runtime/java/JRE21/
+HMCLPE/src/main/assets/app_runtime/java/JRE25/
+HMCLPE/src/main/assets/app_runtime/java/21-*/
+HMCLPE/src/main/assets/app_runtime/java/25-*/
 
 # ===== 其它 =====
 *.log
