@@ -42,6 +42,7 @@ public class LaunchLogWindow {
     private ScrollView scroller;
     private boolean attached;
     private static LaunchLogWindow current;
+    private volatile boolean closed;
 
     public LaunchLogWindow(Activity activity, ViewGroup parent) {
         this.activity = activity;
@@ -78,6 +79,48 @@ public class LaunchLogWindow {
         }
     }
 
+
+    /** 实时 tail 游戏日志文件（比 logcat 管道可靠）：Pojav 一直在写 pojav_latest_log.txt */
+    private void startFileTail(Activity activity) {
+        try {
+            final java.io.File dir = activity.getExternalFilesDir("debug");
+            if (dir == null) return;
+            final java.io.File logFile = new java.io.File(dir, "pojav_latest_log.txt");
+            Thread thread = new Thread(() -> {
+                long offset = 0;
+                java.io.BufferedReader reader = null;
+                while (!closed) {
+                    try {
+                        if (logFile.isFile()) {
+                            long len = logFile.length();
+                            if (len < offset) offset = 0;   // 日志被重置则从头读
+                            if (len > offset) {
+                                if (reader == null) reader = new java.io.BufferedReader(new java.io.InputStreamReader(new java.io.FileInputStream(logFile)));
+                                reader.skip(offset - (reader.ready() ? 0 : offset) );
+                                // 简单实现：直接按 offset 重新打开读取，避免 skip 语义差异
+                                try { if (reader != null) reader.close(); } catch (Throwable ignored) {}
+                                java.io.RandomAccessFile raf = new java.io.RandomAccessFile(logFile, "r");
+                                raf.seek(offset);
+                                String line;
+                                while ((line = raf.readLine()) != null) {
+                                    offset += line.length() + 1;
+                                    onLogLine(line);
+                                }
+                                raf.close();
+                            }
+                        }
+                        Thread.sleep(400);
+                    } catch (Throwable t) {
+                        try { Thread.sleep(1000); } catch (InterruptedException ignored2) {}
+                    }
+                }
+            }, "qcl-logtail");
+            thread.setDaemon(true);
+            thread.start();
+        } catch (Throwable ignored) {
+        }
+    }
+
     /** 显示窗口并开始接收日志。
      *  关闭时机跟随游戏日志：日志连续一段时间不再输出（游戏进入主界面后空闲不打印）即自动关闭；
      *  另有 2 分钟兜底上限，避免卡死时窗口一直挂着。 */
@@ -95,7 +138,7 @@ public class LaunchLogWindow {
     }
 
     /** 日志静默多久判定为"已进入主界面"（兜底） */
-    private static final long LOG_SILENCE_MS = 8000;
+    private static final long LOG_SILENCE_MS = 600000;
 
     /** 主界面标记：游戏日志里出现这些内容，说明已经加载到主界面，日志立刻关闭 */
     private static final String[] MENU_MARKERS = {
@@ -104,7 +147,7 @@ public class LaunchLogWindow {
             "Created: 16x16x4"         // 新版本：主界面贴图集已创建
     };
     /** 兜底：窗口最长显示时间 */
-    private static final long MAX_SHOW_MS = 300_000;
+    private static final long MAX_SHOW_MS = 900_000;
     private long shownAt;
     private long lastLogTime;
     private boolean gotAnyLine;
@@ -142,6 +185,7 @@ public class LaunchLogWindow {
     }
 
     public void close() {
+        closed = true;
         current = null;
         mainHandler.removeCallbacks(silenceChecker);
         Logger.getInstance(activity).setLogListener(null);
