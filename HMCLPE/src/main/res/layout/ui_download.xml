@@ -1,0 +1,258 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:visibility="gone"
+    android:id="@+id/ui_download"
+    android:background="@color/launcher_ui_background"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <HorizontalScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:scrollbars="none">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp"
+            android:paddingTop="8dp"
+            android:paddingBottom="8dp"
+            android:orientation="horizontal">
+
+            <LinearLayout
+                android:layout_height="72dp"
+                android:minWidth="84dp"
+                android:layout_marginStart="12dp"
+                android:gravity="center"
+                android:padding="10dp"
+                android:background="@drawable/launcher_button_parent"
+                android:focusable="true"
+                android:clickable="true"
+                android:id="@+id/start_download_game_ui"
+                android:layout_width="wrap_content"
+                android:orientation="vertical">
+
+                <ImageView
+                    android:layout_gravity="center_horizontal"
+                    android:layout_width="22dp"
+                    android:layout_height="22dp"
+                    android:background="@drawable/ic_baseline_game_pad_black"/>
+
+                <TextView
+                    android:layout_marginTop="6dp"
+                    android:gravity="center_horizontal"
+                    android:singleLine="true"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/download_ui_game"
+                    android:textSize="14sp"
+                    android:textColor="@color/colorPureBlack"/>
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_height="72dp"
+                android:minWidth="84dp"
+                android:layout_marginStart="8dp"
+                android:gravity="center"
+                android:padding="10dp"
+                android:background="@drawable/launcher_button_parent"
+                android:focusable="true"
+                android:clickable="true"
+                android:id="@+id/start_download_package_ui"
+                android:layout_width="wrap_content"
+                android:orientation="vertical">
+
+                <ImageView
+                    android:layout_gravity="center_horizontal"
+                    android:layout_width="22dp"
+                    android:layout_height="22dp"
+                    android:background="@drawable/ic_baseline_pack_black"/>
+
+                <TextView
+                    android:layout_marginTop="6dp"
+                    android:gravity="center_horizontal"
+                    android:singleLine="true"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/download_ui_package"
+                    android:textSize="14sp"
+                    android:textColor="@color/colorPureBlack"/>
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_height="72dp"
+                android:minWidth="84dp"
+                android:layout_marginStart="8dp"
+                android:gravity="center"
+                android:padding="10dp"
+                android:background="@drawable/launcher_button_parent"
+                android:focusable="true"
+                android:clickable="true"
+                android:id="@+id/start_download_mod_ui"
+                android:layout_width="wrap_content"
+                android:orientation="vertical">
+
+                <ImageView
+                    android:layout_gravity="center_horizontal"
+                    android:layout_width="22dp"
+                    android:layout_height="22dp"
+                    android:background="@drawable/ic_outline_extension_black"/>
+
+                <TextView
+                    android:layout_marginTop="6dp"
+                    android:gravity="center_horizontal"
+                    android:singleLine="true"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/download_ui_mod"
+                    android:textSize="14sp"
+                    android:textColor="@color/colorPureBlack"/>
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_height="72dp"
+                android:minWidth="84dp"
+                android:layout_marginStart="8dp"
+                android:gravity="center"
+                android:padding="10dp"
+                android:background="@drawable/launcher_button_parent"
+                android:focusable="true"
+                android:clickable="true"
+                android:id="@+id/start_download_resource_pack_ui"
+                android:layout_width="wrap_content"
+                android:orientation="vertical">
+
+                <ImageView
+                    android:layout_gravity="center_horizontal"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:background="@drawable/ic_baseline_texture_black"/>
+
+                <TextView
+                    android:layout_marginTop="6dp"
+                    android:gravity="center_horizontal"
+                    android:singleLine="true"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/download_ui_resource_pack"
+                    android:textSize="14sp"
+                    android:textColor="@color/colorPureBlack"/>
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_height="72dp"
+                android:minWidth="84dp"
+                android:layout_marginStart="8dp"
+                android:gravity="center"
+                android:padding="10dp"
+                android:background="@drawable/launcher_button_parent"
+                android:focusable="true"
+                android:clickable="true"
+                android:id="@+id/start_download_shader_ui"
+                android:layout_width="wrap_content"
+                android:orientation="vertical">
+
+                <ImageView
+                    android:layout_gravity="center_horizontal"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:background="@drawable/ic_baseline_shader_black"/>
+
+                <TextView
+                    android:layout_marginTop="6dp"
+                    android:gravity="center_horizontal"
+                    android:singleLine="true"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/download_ui_shader"
+                    android:textSize="14sp"
+                    android:textColor="@color/colorPureBlack"/>
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_height="72dp"
+                android:minWidth="84dp"
+                android:layout_marginStart="8dp"
+                android:gravity="center"
+                android:padding="10dp"
+                android:background="@drawable/launcher_button_parent"
+                android:focusable="true"
+                android:clickable="true"
+                android:id="@+id/start_download_world_ui"
+                android:layout_width="wrap_content"
+                android:orientation="vertical">
+
+                <ImageView
+                    android:background="@drawable/ic_baseline_earth_black"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_width="22dp"
+                    android:layout_height="22dp" />
+
+                <TextView
+                    android:layout_marginTop="6dp"
+                    android:gravity="center_horizontal"
+                    android:singleLine="true"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/download_ui_world"
+                    android:textSize="14sp"
+                    android:textColor="@color/colorPureBlack"/>
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </HorizontalScrollView>
+
+    <LinearLayout
+        android:animateLayoutChanges="true"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="horizontal">
+
+        <include
+            layout="@layout/ui_download_minecraft"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"/>
+
+        <include
+            layout="@layout/ui_download_mod"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"/>
+
+        <include
+            layout="@layout/ui_download_package"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"/>
+
+        <include
+            layout="@layout/ui_download_resource_pack"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"/>
+
+        <include
+            layout="@layout/ui_download_shader"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"/>
+
+        <include
+            layout="@layout/ui_download_world"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"/>
+
+    </LinearLayout>
+
+</LinearLayout>

@@ -1,0 +1,379 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/ui_main"
+    android:visibility="invisible"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <!-- 顶部：所有入口从左到右排列，可左右滑动，避免最左/最右看不到 -->
+    <HorizontalScrollView
+        android:background="@color/qcl_gray_translucent_bar"
+        android:scrollbars="none"
+        android:fillViewport="false"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <LinearLayout
+            android:orientation="horizontal"
+            android:paddingLeft="6dp"
+            android:paddingRight="6dp"
+            android:paddingTop="6dp"
+            android:paddingBottom="6dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+
+
+            <!-- 1. 玩家账户（含头像） -->
+            <LinearLayout
+                android:background="@drawable/qcl_button_gray"
+                android:focusable="true"
+                android:clickable="true"
+                android:id="@+id/start_ui_account"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginEnd="6dp"
+                android:padding="10dp">
+
+                <RelativeLayout
+                    android:layout_gravity="center"
+                    android:layout_width="30dp"
+                    android:layout_height="30dp">
+
+                    <ImageView
+                        android:layout_width="26.6666dp"
+                        android:layout_height="26.6666dp"
+                        android:id="@+id/account_skin_face"
+                        android:src="@drawable/ic_steve"
+                        android:layout_centerInParent="true" />
+
+                    <ImageView
+                        android:id="@+id/account_skin_hat"
+                        android:layout_width="30dp"
+                        android:layout_height="30dp" />
+
+                </RelativeLayout>
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="35dp"
+                    android:layout_gravity="center"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:singleLine="true"
+                        android:id="@+id/account_name_text"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="6dp"
+                        android:text="@string/launcher_scroll_account_name"
+                        android:textColor="@color/colorPureWhite"
+                        android:textSize="@dimen/text_size_middle"/>
+
+                    <TextView
+                        android:singleLine="true"
+                        android:id="@+id/account_state_text"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="6dp"
+                        android:text="@string/launcher_scroll_account_state"
+                        android:textColor="@color/colorLightWhite"
+                        android:textSize="@dimen/text_size_small"/>
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+            <!-- 2. 当前版本 -->
+            <LinearLayout
+                android:background="@drawable/qcl_button_gray"
+                android:focusable="true"
+                android:id="@+id/start_ui_game_manager"
+                android:clickable="true"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginEnd="6dp"
+                android:padding="10dp">
+
+                <ImageView
+                    android:layout_width="30dp"
+                    android:layout_height="30dp"
+                    android:layout_gravity="center"
+                    android:id="@+id/current_version_icon"
+                    android:background="@drawable/ic_grass"/>
+
+                <LinearLayout
+                    android:id="@+id/no_version_alert_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="35dp"
+                    android:layout_gravity="center"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:singleLine="true"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="6dp"
+                        android:text="@string/launcher_scroll_game_manager"
+                        android:textColor="@color/colorPureWhite"
+                        android:textSize="@dimen/text_size_middle"/>
+
+                    <TextView
+                        android:singleLine="true"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="6dp"
+                        android:text="@string/launcher_scroll_game_none"
+                        android:textColor="@color/colorLightWhite"
+                        android:textSize="@dimen/text_size_small"/>
+
+                </LinearLayout>
+
+                <TextView
+                    android:singleLine="true"
+                    android:visibility="gone"
+                    android:layout_width="wrap_content"
+                    android:layout_height="35dp"
+                    android:layout_gravity="center"
+                    android:gravity="center"
+                    android:layout_marginStart="6dp"
+                    android:id="@+id/current_version_name_text"
+                    android:textColor="@color/colorPureWhite"
+                    android:textSize="@dimen/text_size_middle"/>
+
+            </LinearLayout>
+
+            <!-- 3. 版本列表 -->
+            <LinearLayout
+                android:background="@drawable/qcl_button_gray"
+                android:focusable="true"
+                android:id="@+id/start_ui_version_list"
+                android:clickable="true"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginEnd="6dp"
+                android:padding="10dp">
+
+                <ImageView
+                    android:id="@+id/version_list_icon"
+                    android:layout_width="30dp"
+                    android:layout_height="30dp"
+                    android:layout_gravity="center"
+                    android:background="@drawable/ic_bookshelf"/>
+
+                <TextView
+                    android:singleLine="true"
+                    android:layout_width="wrap_content"
+                    android:layout_height="35dp"
+                    android:layout_gravity="center"
+                    android:gravity="center"
+                    android:layout_marginStart="6dp"
+                    android:text="@string/launcher_scroll_version_list"
+                    android:textColor="@color/colorPureWhite"
+                    android:textSize="@dimen/text_size_middle"/>
+
+            </LinearLayout>
+
+            <!-- 4. 下载 -->
+            <LinearLayout
+                android:background="@drawable/qcl_button_gray"
+                android:focusable="true"
+                android:id="@+id/start_ui_download"
+                android:clickable="true"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginEnd="6dp"
+                android:padding="10dp">
+
+                <ImageView
+                    android:id="@+id/download_icon"
+                    android:layout_width="30dp"
+                    android:layout_height="30dp"
+                    android:layout_gravity="center"
+                    android:background="@drawable/ic_chest"/>
+
+                <TextView
+                    android:singleLine="true"
+                    android:layout_width="wrap_content"
+                    android:layout_height="35dp"
+                    android:layout_gravity="center"
+                    android:gravity="center"
+                    android:layout_marginStart="6dp"
+                    android:text="@string/launcher_scroll_download"
+                    android:textColor="@color/colorPureWhite"
+                    android:textSize="@dimen/text_size_middle"/>
+
+            </LinearLayout>
+
+
+            <!-- 5. 多人游戏（沿用原有隐藏状态） -->
+            <LinearLayout
+                android:background="@drawable/qcl_button_gray"
+                android:focusable="true"
+                android:id="@+id/start_ui_multi_player"
+                android:clickable="true"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginEnd="6dp"
+                android:padding="10dp">
+
+                <ImageView
+                    android:id="@+id/multiplayer_icon"
+                    android:layout_gravity="center"
+                    android:layout_width="30dp"
+                    android:layout_height="30dp"
+                    android:background="@drawable/ic_qcl_multiplayer_white"/>
+
+                <TextView
+                    android:singleLine="true"
+                    android:layout_width="wrap_content"
+                    android:layout_height="35dp"
+                    android:layout_gravity="center"
+                    android:gravity="center"
+                    android:layout_marginStart="6dp"
+                    android:text="@string/launcher_scroll_multi_player"
+                    android:textColor="@color/colorPureWhite"
+                    android:textSize="@dimen/text_size_middle"/>
+
+            </LinearLayout>
+
+            <!-- 6. 设置 -->
+            <LinearLayout
+                android:background="@drawable/qcl_button_gray"
+                android:focusable="true"
+                android:id="@+id/start_ui_setting"
+                android:clickable="true"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:padding="10dp">
+
+                <ImageView
+                    android:id="@+id/setting_icon"
+                    android:layout_gravity="center"
+                    android:layout_width="30dp"
+                    android:layout_height="30dp"
+                    android:background="@drawable/ic_command"/>
+
+                <TextView
+                    android:singleLine="true"
+                    android:layout_width="wrap_content"
+                    android:layout_height="35dp"
+                    android:layout_gravity="center"
+                    android:gravity="center"
+                    android:layout_marginStart="6dp"
+                    android:text="@string/launcher_scroll_setting"
+                    android:textColor="@color/colorPureWhite"
+                    android:textSize="@dimen/text_size_middle"/>
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </HorizontalScrollView>
+
+    <!-- 中间：持续显示当前账号的 3D 人物 -->
+    <FrameLayout
+        android:id="@+id/account_model_container"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <LinearLayout
+            android:id="@+id/account_model_view"
+            android:layout_width="match_parent"
+            android:layout_height="320dp"
+            android:layout_gravity="center"
+            android:orientation="vertical"/>
+
+    </FrameLayout>
+
+    <!-- 底部：启动游戏按钮，屏幕水平居中 -->
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingBottom="24dp">
+
+        <LinearLayout
+            android:tag="tint_accent_color"
+            android:id="@+id/launcher_play_button"
+            android:focusable="true"
+            android:clickable="true"
+            android:background="@drawable/launcher_button_blue"
+            android:layout_width="200dp"
+            android:layout_height="55dp"
+            android:layout_centerHorizontal="true"
+            android:orientation="horizontal">
+
+            <LinearLayout
+                android:layout_width="179dp"
+                android:layout_height="match_parent"
+                android:weightSum="2"
+                android:paddingTop="9dp"
+                android:paddingBottom="9dp"
+                android:orientation="vertical">
+
+                <TextView
+                    android:singleLine="true"
+                    android:layout_weight="1"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:text="@string/launcher_button_launch"
+                    android:textSize="14sp"
+                    android:textColor="@color/colorPureWhite"/>
+
+                <TextView
+                    android:paddingLeft="7dp"
+                    android:paddingRight="7dp"
+                    android:id="@+id/launch_version_text"
+                    android:ellipsize="end"
+                    android:layout_weight="1"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:singleLine="true"
+                    android:text="@string/launcher_button_current_version"
+                    android:textSize="@dimen/text_size_small"
+                    android:textColor="@color/colorPureWhite"/>
+
+            </LinearLayout>
+
+            <View
+                android:layout_width="1dp"
+                android:layout_height="match_parent"
+                android:background="@color/colorGray"/>
+
+            <RelativeLayout
+                android:layout_width="20dp"
+                android:layout_height="match_parent">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:gravity="center"
+                    android:text="@string/launcher_spinner_text"
+                    android:textColor="@color/colorPureWhite"
+                    android:textSize="8sp"/>
+
+                <androidx.appcompat.widget.AppCompatSpinner
+                    android:overlapAnchor="false"
+                    android:popupBackground="@android:color/transparent"
+                    android:spinnerMode="dropdown"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@color/colorTransparent"
+                    android:id="@+id/launcher_spinner_version"/>
+
+            </RelativeLayout>
+
+        </LinearLayout>
+
+    </RelativeLayout>
+
+</LinearLayout>

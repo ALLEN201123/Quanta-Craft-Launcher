@@ -1,0 +1,29 @@
+# ===== 构建产物 =====
+build/
+.gradle/
+.cxx/
+.externalNativeBuild/
+captures/
+*.iml
+.idea/
+local.properties
+
+# ===== 签名密钥（千万不要公开，另外务必自行备份）=====
+qcl.keystore
+*.jks
+*.keystore
+
+# ===== 打包产物（APK 请放到 Release，不入源码仓库）=====
+*.apk
+*.aab
+*.ap_
+*.dex
+
+# ===== 第三方预编译 Java 运行时（体积 700MB+，且非本项目代码；
+#      获取方式见 README「获取运行库」一节）=====
+HMCLPE/src/main/assets/app_runtime/java/
+runtime-source/
+
+# ===== 其它 =====
+*.log
+*.hprof

@@ -1,0 +1,278 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:visibility="invisible"
+    android:id="@+id/ui_game_manager"
+    android:background="@color/launcher_ui_background"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <HorizontalScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:scrollbars="none">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp"
+            android:paddingTop="8dp"
+            android:paddingBottom="8dp"
+            android:orientation="horizontal">
+
+            <LinearLayout
+                android:layout_height="72dp"
+                android:minWidth="84dp"
+                android:layout_marginStart="12dp"
+                android:gravity="center"
+                android:padding="10dp"
+                android:background="@drawable/launcher_button_parent"
+                android:focusable="true"
+                android:clickable="true"
+                android:id="@+id/game_manager_game_setting"
+                android:layout_width="wrap_content"
+                android:orientation="vertical">
+
+                <ImageView
+                    android:layout_gravity="center_horizontal"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:background="@drawable/ic_outline_settings_black"/>
+
+                <TextView
+                    android:layout_marginTop="6dp"
+                    android:gravity="center_horizontal"
+                    android:singleLine="true"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/game_manager_ui_game_setting"
+                    android:textSize="14sp"
+                    android:textColor="@color/colorPureBlack"/>
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_height="72dp"
+                android:minWidth="84dp"
+                android:layout_marginStart="8dp"
+                android:gravity="center"
+                android:padding="10dp"
+                android:background="@drawable/launcher_button_parent"
+                android:focusable="true"
+                android:clickable="true"
+                android:id="@+id/game_manager_manage_mod"
+                android:layout_width="wrap_content"
+                android:orientation="vertical">
+
+                <ImageView
+                    android:layout_gravity="center_horizontal"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:background="@drawable/ic_outline_extension_black"/>
+
+                <TextView
+                    android:layout_marginTop="6dp"
+                    android:gravity="center_horizontal"
+                    android:singleLine="true"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/game_manager_ui_mod_manage"
+                    android:textSize="14sp"
+                    android:textColor="@color/colorPureBlack"/>
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_height="72dp"
+                android:minWidth="84dp"
+                android:layout_marginStart="8dp"
+                android:gravity="center"
+                android:padding="10dp"
+                android:background="@drawable/launcher_button_parent"
+                android:focusable="true"
+                android:clickable="true"
+                android:id="@+id/game_manager_auto_install"
+                android:layout_width="wrap_content"
+                android:orientation="vertical">
+
+                <ImageView
+                    android:layout_gravity="center_horizontal"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:background="@drawable/ic_baseline_cube_black"/>
+
+                <TextView
+                    android:layout_marginTop="6dp"
+                    android:gravity="center_horizontal"
+                    android:singleLine="true"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/game_manager_ui_auto_install"
+                    android:textSize="14sp"
+                    android:textColor="@color/colorPureBlack"/>
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_height="72dp"
+                android:minWidth="84dp"
+                android:layout_marginStart="8dp"
+                android:gravity="center"
+                android:padding="10dp"
+                android:background="@drawable/launcher_button_parent"
+                android:focusable="true"
+                android:clickable="true"
+                android:id="@+id/game_manager_world"
+                android:layout_width="wrap_content"
+                android:orientation="vertical">
+
+                <ImageView
+                    android:layout_gravity="center_horizontal"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:background="@drawable/ic_baseline_earth_black"/>
+
+                <TextView
+                    android:layout_marginTop="6dp"
+                    android:gravity="center_horizontal"
+                    android:singleLine="true"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/game_manager_ui_world"
+                    android:textSize="14sp"
+                    android:textColor="@color/colorPureBlack"/>
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_height="72dp"
+                android:minWidth="84dp"
+                android:layout_marginStart="8dp"
+                android:gravity="center"
+                android:padding="10dp"
+                android:background="@drawable/launcher_button_parent"
+                android:focusable="true"
+                android:clickable="true"
+                android:id="@+id/game_manager_test_game"
+                android:layout_width="wrap_content"
+                android:orientation="vertical">
+
+                <ImageView
+                    android:layout_gravity="center_horizontal"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:background="@drawable/ic_baseline_launch_black"/>
+
+                <TextView
+                    android:layout_marginTop="6dp"
+                    android:gravity="center_horizontal"
+                    android:singleLine="true"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/game_manager_ui_test_game"
+                    android:textSize="14sp"
+                    android:textColor="@color/colorPureBlack"/>
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_height="72dp"
+                android:minWidth="84dp"
+                android:layout_marginStart="8dp"
+                android:gravity="center"
+                android:padding="10dp"
+                android:background="@drawable/launcher_button_parent"
+                android:focusable="true"
+                android:clickable="true"
+                android:id="@+id/game_manager_browse"
+                android:layout_width="wrap_content"
+                android:orientation="vertical">
+
+                <ImageView
+                    android:layout_gravity="center_horizontal"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:background="@drawable/ic_outline_folder_open_black"/>
+
+                <TextView
+                    android:layout_marginTop="6dp"
+                    android:gravity="center_horizontal"
+                    android:singleLine="true"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/game_manager_ui_browse"
+                    android:textSize="14sp"
+                    android:textColor="@color/colorPureBlack"/>
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_height="72dp"
+                android:minWidth="84dp"
+                android:layout_marginStart="8dp"
+                android:gravity="center"
+                android:padding="10dp"
+                android:background="@drawable/launcher_button_parent"
+                android:focusable="true"
+                android:clickable="true"
+                android:id="@+id/game_manager_manage"
+                android:layout_width="wrap_content"
+                android:orientation="vertical">
+
+                <ImageView
+                    android:layout_gravity="center_horizontal"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:background="@drawable/ic_outline_build_black"/>
+
+                <TextView
+                    android:layout_marginTop="6dp"
+                    android:gravity="center_horizontal"
+                    android:singleLine="true"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/game_manager_ui_manage"
+                    android:textSize="14sp"
+                    android:textColor="@color/colorPureBlack"/>
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </HorizontalScrollView>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <include
+            layout="@layout/ui_game_manager_game"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"/>
+
+        <include
+            layout="@layout/ui_game_manager_mod"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"/>
+
+        <include
+            layout="@layout/ui_game_manager_install"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"/>
+
+        <include
+            layout="@layout/ui_game_manager_world"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"/>
+
+    </RelativeLayout>
+
+</LinearLayout>

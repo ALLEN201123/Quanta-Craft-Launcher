@@ -1,0 +1,241 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:visibility="invisible"
+    android:id="@+id/ui_version_list"
+    android:background="@color/launcher_ui_background"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <!-- 顶排：操作按钮 + 游戏目录，全部从左到右排列，可左右滑动（QCL 风格） -->
+    <HorizontalScrollView
+        android:background="@color/qcl_gray_translucent_bar"
+        android:scrollbars="none"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <LinearLayout
+            android:orientation="horizontal"
+            android:padding="6dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+
+            <!-- 1. 添加游戏目录 -->
+            <LinearLayout
+                android:background="@drawable/qcl_button_gray"
+                android:focusable="true"
+                android:clickable="true"
+                android:id="@+id/start_add_game_directory_ui"
+                android:layout_marginEnd="6dp"
+                android:paddingLeft="12dp"
+                android:paddingRight="12dp"
+                android:paddingTop="8dp"
+                android:paddingBottom="8dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <ImageView
+                    android:layout_gravity="center"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:background="@drawable/ic_baseline_add_white"/>
+
+                <TextView
+                    android:singleLine="true"
+                    android:layout_gravity="center"
+                    android:layout_marginStart="8dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/version_list_ui_add_dir"
+                    android:textSize="14sp"
+                    android:textColor="@color/colorPureWhite"/>
+
+            </LinearLayout>
+
+            <!-- 2. 下载新版本 -->
+            <LinearLayout
+                android:background="@drawable/qcl_button_gray"
+                android:focusable="true"
+                android:clickable="true"
+                android:id="@+id/start_ui_download_minecraft"
+                android:layout_marginEnd="6dp"
+                android:paddingLeft="12dp"
+                android:paddingRight="12dp"
+                android:paddingTop="8dp"
+                android:paddingBottom="8dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <ImageView
+                    android:layout_gravity="center"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:background="@drawable/ic_baseline_add_white"/>
+
+                <TextView
+                    android:singleLine="true"
+                    android:layout_gravity="center"
+                    android:layout_marginStart="8dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/version_list_ui_download_new_version"
+                    android:textSize="14sp"
+                    android:textColor="@color/colorPureWhite"/>
+
+            </LinearLayout>
+
+            <!-- 3. 安装整合包 -->
+            <LinearLayout
+                android:background="@drawable/qcl_button_gray"
+                android:focusable="true"
+                android:clickable="true"
+                android:id="@+id/start_install_package_ui"
+                android:layout_marginEnd="6dp"
+                android:paddingLeft="12dp"
+                android:paddingRight="12dp"
+                android:paddingTop="8dp"
+                android:paddingBottom="8dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <ImageView
+                    android:layout_gravity="center"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:background="@drawable/ic_baseline_pack_white"/>
+
+                <TextView
+                    android:singleLine="true"
+                    android:layout_gravity="center"
+                    android:layout_marginStart="8dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/version_list_ui_install_package"
+                    android:textSize="14sp"
+                    android:textColor="@color/colorPureWhite"/>
+
+            </LinearLayout>
+
+            <!-- 4. 刷新 -->
+            <LinearLayout
+                android:background="@drawable/qcl_button_gray"
+                android:focusable="true"
+                android:clickable="true"
+                android:id="@+id/refresh_local_version_list"
+                android:layout_marginEnd="6dp"
+                android:paddingLeft="12dp"
+                android:paddingRight="12dp"
+                android:paddingTop="8dp"
+                android:paddingBottom="8dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <ImageView
+                    android:layout_gravity="center"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:background="@drawable/ic_baseline_refresh_white"/>
+
+                <TextView
+                    android:singleLine="true"
+                    android:layout_gravity="center"
+                    android:layout_marginStart="8dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/version_list_ui_refresh"
+                    android:textSize="14sp"
+                    android:textColor="@color/colorPureWhite"/>
+
+            </LinearLayout>
+
+            <!-- 5. 全局设置 -->
+            <LinearLayout
+                android:background="@drawable/qcl_button_gray"
+                android:focusable="true"
+                android:clickable="true"
+                android:id="@+id/start_ui_global_setting"
+                android:layout_marginEnd="6dp"
+                android:paddingLeft="12dp"
+                android:paddingRight="12dp"
+                android:paddingTop="8dp"
+                android:paddingBottom="8dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <ImageView
+                    android:layout_gravity="center"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:background="@drawable/ic_baseline_settings_white"/>
+
+                <TextView
+                    android:singleLine="true"
+                    android:layout_gravity="center"
+                    android:layout_marginStart="8dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/version_list_ui_global_setting"
+                    android:textSize="14sp"
+                    android:textColor="@color/colorPureWhite"/>
+
+            </LinearLayout>
+
+            <!-- 6. 游戏目录（与上面按钮同一排） -->
+            <LinearLayout
+                android:id="@+id/content_list_parent"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <LinearLayout
+                    android:orientation="horizontal"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/game_dir_row"/>
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </HorizontalScrollView>
+
+    <!-- 版本列表 -->
+    <RelativeLayout
+        android:padding="10dp"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <ProgressBar
+            android:visibility="gone"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:id="@+id/loading_local_version_progress"/>
+
+        <TextView
+            android:clickable="true"
+            android:focusable="true"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:textColor="@color/colorLinkBlue"
+            android:textSize="23sp"
+            android:text="@string/version_list_ui_none"
+            android:id="@+id/start_download_mc_ui"/>
+
+        <ListView
+            android:visibility="gone"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/qcl_dialog_gray"
+            android:id="@+id/local_version_list"/>
+
+    </RelativeLayout>
+
+</LinearLayout>
