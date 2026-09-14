@@ -272,8 +272,11 @@ public class LaunchLogWindow {
                 String existing = FileStringUtils.getStringFromFile(file.getAbsolutePath());
                 if (existing != null && !existing.isEmpty()) {
                     buffer.append(existing);
+                    if (logView.hasSelection()) {
+                        return;   // 正在选择文本：跳过本次刷新，避免选区被重置
+                    }
                     logView.setText(trim(buffer));
-                autoScrollIfAtBottom();
+                    autoScrollIfAtBottom();
                     scrollToEnd();
                 }
             }
@@ -293,6 +296,9 @@ public class LaunchLogWindow {
             buffer.append(text);
             if (!text.endsWith("\n")) buffer.append('\n');
             if (attached && logView != null) {
+                if (logView.hasSelection()) {
+                    return;   // 正在选择文本：跳过本次刷新，避免选区被重置
+                }
                 logView.setText(trim(buffer));
                 autoScrollIfAtBottom();
                 scrollToEnd();
