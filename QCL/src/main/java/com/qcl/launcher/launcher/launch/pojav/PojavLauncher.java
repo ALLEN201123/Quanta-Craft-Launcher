@@ -90,20 +90,11 @@ public class PojavLauncher {
             args.add("-Djava.home=" + javaPath);
             args.add("-Djava.io.tmpdir=" + AppManifest.DEFAULT_CACHE_DIR);
             args.add("-Duser.home=" + new File(gameLaunchSetting.gameFileDirectory).getParent());
-            // 1.0.9 关键修复：JRE21/25 上用中文 locale 会导致 DateTimeFormatter.<clinit> NPE：
-            //   ExceptionInInitializerError → DateTimeTextProvider$LocaleStore.<init> → HashMap.put(null)
-            //   （真机 1.20.6 实抓：gui.<clinit> 失败 → main 退出 exit 1 → 等待界面后黑屏）
-            // JRE21/25 裁剪 jimage 的 CLDR 实现对 zh locale 异常（JRE17 及以下数据完整不受影响）。
-            // 修法：21/25 强制 JVM locale 为 en（游戏内语言由 options.txt 的 lang 决定，与此无关）。
-            // JRE17/Java8 维持跟随系统，避免改变既有行为。
-            String qclRuntimeName = new File(javaPath).getName();
-            int qclRuntimeMajor = GameLaunchSetting.runtimeMajor(qclRuntimeName);
-            if (qclRuntimeMajor >= 21) {
-                args.add("-Duser.language=en");
-                args.add("-Duser.country=US");
-            } else {
-                args.add("-Duser.language=" + System.getProperty("user.language"));
-            }
+            // 1.0.9 修复：不传 -Duser.language（对齐 FCL）。
+            // 之前继承自 HMCL-PE 的 `-Duser.language=系统值`（中文设备=zh）会在 JRE21/25 的
+            // 裁剪 jimage 上触发 CLDR 的 DateTimeFormatter 初始化 NPE（1.20.5+/26.x 黑屏真因）。
+            // FCL 的默认 JVM 参数里根本没有这一项，JVM 用默认 locale 即可正常启动。
+            // 游戏内语言由 options.txt 的 lang 决定，与 JVM locale 无关。
             args.add("-Dos.name=Linux");
             args.add("-Dos.version=Android-" + Build.VERSION.RELEASE);
             args.add("-Dpojav.path.minecraft=" + gameLaunchSetting.gameFileDirectory);
