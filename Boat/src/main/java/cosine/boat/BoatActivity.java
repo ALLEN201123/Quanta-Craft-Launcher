@@ -68,8 +68,15 @@ public class BoatActivity extends AppCompatActivity implements TextureView.Surfa
 		// 逻辑绕且易漏。改成 boolean 标志，只通知一次，语义清楚。
 		if (!picOutputNotified) {
 			picOutputNotified = true;
+			android.util.Log.i("jrelog", "[画面切换] 游戏首帧到达（onSurfaceTextureUpdated）");
 			boatCallback.onPicOutput();
 		}
+	}
+
+	/** 1.0.9：时序竞争修复 —— onStart（showBackground）盖回等待界面后清零标志，
+	 *  让游戏下一帧重新触发 onPicOutput → hideBackground（见 Pojav 侧同款注释）。 */
+	public void resetPicOutputFlag() {
+		picOutputNotified = false;
 	}
 
 	public void startGame(final String javaPath,final String home,final boolean highVersion,final Vector<String> args,String renderer,String gameDir){
