@@ -35,6 +35,58 @@ import java.util.UUID;
 
 public class AccountPatch {
 
+    /**
+     * 校验 authlib-injector.jar 是否真的可用。
+     *
+     * <p>为什么必须校验：`-javaagent` 在 JVM 启动的 premain 阶段加载 jar。
+     * 如果这个 jar 读不了（文件缺失 / 结构异常 / 与当前 JVM 不兼容），
+     * JVM 会在 premain 直接 FATAL ERROR + SIGABRT，**把整个游戏进程带走**，
+     * 玩家看到的就是"点启动后黑屏"（1.20.6 在 Java 21 下就是这么崩的）。
+     * 所以宁可退化成"没有自定义皮肤"，也不能把启动参数加错。
+     *
+     * <p>校验方式参照 FCL（FoldCraftLauncher）的
+     * {@code AuthlibInjectorArtifactInfo.from()}：读 Manifest，
+     * 确认 Implementation-Title 是 authlib-injector 且 Build-Number 可解析。
+     */
+    public static boolean isAuthlibInjectorUsable(String path) {
+        File jar = new File(path);
+        if (!jar.isFile() || jar.length() == 0) {
+            Log.e("AccountPatch", "authlib-injector.jar missing or empty: " + path);
+            return false;
+        }
+        try (java.util.jar.JarFile jarFile = new java.util.jar.JarFile(jar)) {
+            java.util.jar.Manifest manifest = jarFile.getManifest();
+            if (manifest == null) {
+                Log.e("AccountPatch", "authlib-injector.jar has no manifest: " + path);
+                return false;
+            }
+            java.util.jar.Attributes attributes = manifest.getMainAttributes();
+            String title = attributes.getValue("Implementation-Title");
+            if (!"authlib-injector".equals(title)) {
+                Log.e("AccountPatch", "bad Implementation-Title: " + title);
+                return false;
+            }
+            String buildNumber = attributes.getValue("Build-Number");
+            if (buildNumber == null) {
+                Log.e("AccountPatch", "missing Build-Number");
+                return false;
+            }
+            Integer.parseInt(buildNumber);
+            String premain = attributes.getValue("Premain-Class");
+            if (premain == null || premain.isEmpty()) {
+                Log.e("AccountPatch", "missing Premain-Class");
+                return false;
+            }
+            Log.i("AccountPatch", "authlib-injector OK: version="
+                    + attributes.getValue("Implementation-Version") + " build=" + buildNumber);
+            return true;
+        } catch (Throwable e) {
+            // 宁可这里失败，也不要让 JVM 在 premain 阶段 SIGABRT
+            Log.e("AccountPatch", "authlib-injector.jar not usable: " + e);
+            return false;
+        }
+    }
+
     public static String[] getAccountArgs(Context context,Account account) {
         String authlibPath = context.getFilesDir().getAbsolutePath() + "/plugin/login/authlib-injector/authlib-injector.jar";
         switch (account.loginType) {
@@ -43,6 +95,11 @@ public class AccountPatch {
                     return new String[0];
                 }
                 else {
+                    // jar 不可用就不加 -javaagent：牺牲自定义皮肤，换取游戏能正常启动
+                    if (!isAuthlibInjectorUsable(authlibPath)) {
+                        Log.e("AccountPatch", "skip -javaagent (offline skin) to avoid JVM crash");
+                        return new String[0];
+                    }
                     YggdrasilServer server = new YggdrasilServer(0);
                     try {
                         server.start();
@@ -57,12 +114,20 @@ public class AccountPatch {
                     };
                 }
             case 4:
+                if (!isAuthlibInjectorUsable(authlibPath)) {
+                    Log.e("AccountPatch", "skip -javaagent (authlib login) to avoid JVM crash");
+                    return new String[0];
+                }
                 return new String[] {
                         "-javaagent:" + authlibPath + "=" + account.loginServer,
                         "-Dauthlibinjector.side=client"
                 };
             case 5:
                 String nide8authPath = context.getFilesDir().getAbsolutePath() + "/plugin/login/nide8auth/nide8auth.jar";
+                if (!new File(nide8authPath).isFile()) {
+                    Log.e("AccountPatch", "nide8auth.jar missing, skip -javaagent");
+                    return new String[0];
+                }
                 String serverId = account.loginServer.substring(account.loginServer.length() - 33,account.loginServer.length() - 1);
                 return new String[] {
                         "-javaagent:" + nide8authPath + "=" + serverId,
