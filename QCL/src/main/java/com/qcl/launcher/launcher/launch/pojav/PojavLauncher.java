@@ -90,7 +90,20 @@ public class PojavLauncher {
             args.add("-Djava.home=" + javaPath);
             args.add("-Djava.io.tmpdir=" + AppManifest.DEFAULT_CACHE_DIR);
             args.add("-Duser.home=" + new File(gameLaunchSetting.gameFileDirectory).getParent());
-            args.add("-Duser.language=" + System.getProperty("user.language"));
+            // 1.0.9 关键修复：JRE21/25 上用中文 locale 会导致 DateTimeFormatter.<clinit> NPE：
+            //   ExceptionInInitializerError → DateTimeTextProvider$LocaleStore.<init> → HashMap.put(null)
+            //   （真机 1.20.6 实抓：gui.<clinit> 失败 → main 退出 exit 1 → 等待界面后黑屏）
+            // JRE21/25 裁剪 jimage 的 CLDR 实现对 zh locale 异常（JRE17 及以下数据完整不受影响）。
+            // 修法：21/25 强制 JVM locale 为 en（游戏内语言由 options.txt 的 lang 决定，与此无关）。
+            // JRE17/Java8 维持跟随系统，避免改变既有行为。
+            String qclRuntimeName = new File(javaPath).getName();
+            int qclRuntimeMajor = GameLaunchSetting.runtimeMajor(qclRuntimeName);
+            if (qclRuntimeMajor >= 21) {
+                args.add("-Duser.language=en");
+                args.add("-Duser.country=US");
+            } else {
+                args.add("-Duser.language=" + System.getProperty("user.language"));
+            }
             args.add("-Dos.name=Linux");
             args.add("-Dos.version=Android-" + Build.VERSION.RELEASE);
             args.add("-Dpojav.path.minecraft=" + gameLaunchSetting.gameFileDirectory);
