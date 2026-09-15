@@ -110,11 +110,28 @@ public class GameLaunchSetting {
         // 注意：不能映射到 JRE21 —— 那是我搞错了，已改回。
         // 26.x（2026 官方命名）用 Java 25；万一元数据声明了 >25，也兜底到 JRE25，别抛异常崩启动器。
         if (required > 25) required = 25;
+        // 32 位运行时（aarch32 / i386）没有 Java 21 / 25 的构建，且 32 位地址空间也装不下。
+        // 自动选择时把要求降到 17，让游戏至少能起来（Cacio 窗口用 Java 17 也能工作）。
+        // 启动前的 CheckJavaTask 会对"玩家手动选了 JRE21/JRE25"的情况给出明确提示。
+        if (required > 17 && is32BitRuntime()) {
+            required = 17;
+        }
         if (required <= 8) return "default";
         if (required <= 17) return "JRE17";
         if (required <= 21) return "JRE21";
         if (required <= 25) return "JRE25";
         throw new IllegalArgumentException("No bundled Java runtime for Java " + required);
+    }
+
+    /** 当前实际会用的运行时是不是 32 位（aarch32 / i386）。 */
+    private static boolean is32BitRuntime() {
+        try {
+            int arch = com.qcl.launcher.utils.Architecture.getRuntimeArchitecture();
+            return arch == com.qcl.launcher.utils.Architecture.ARCH_ARM
+                    || arch == com.qcl.launcher.utils.Architecture.ARCH_X86;
+        } catch (Throwable ignored) {
+            return false;
+        }
     }
 
     public static int runtimeMajor(String name) {
