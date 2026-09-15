@@ -85,8 +85,18 @@ public class CheckJavaTask extends AsyncTask<Object,Integer,Exception> {
                     ? GameLaunchSetting.selectJavaRuntime(expectedJava) : privateGameSetting.javaSetting.name;
             java = GameLaunchSetting.runtimeMajor(runtimeName);
             File runtime = new File(AppManifest.JAVA_DIR, runtimeName == null ? "" : runtimeName);
+            // 32 位运行时（aarch32 / i386）**不支持 Java 21 和 25**：
+            //  - 这两个版本的 32 位构建不存在（assets 里只有 21-arm64 / 25-arm64 等 64 位包）；
+            //  - 即便装上，Java 21+ 的 JVM 在 32 位地址空间里也几乎起不来。
+            // 所以只要"实际会用的运行时"是 32 位，就直接拦下来给玩家一个明确的提示，
+            // 而不是让他启动后看到黑屏/闪退。
+            int runtimeArch = Architecture.getRuntimeArchitecture();
+            boolean is32BitRuntime = runtimeArch == Architecture.ARCH_ARM
+                    || runtimeArch == Architecture.ARCH_X86;
+            if (java >= 21 && is32BitRuntime) {
+                return new Exception(activity.getString(R.string.revival_java_unavailable_32bit) + " -- " + runtimeName);
+            }
             if (java < 0 || !new File(runtime, "release").isFile()
-                    || (java == 25 && Architecture.getDeviceArchitecture() == Architecture.ARCH_X86)
                     || (java >= 21 && (!new File(runtime, "version").isFile()
                     || new File(runtime, "lib/server/libjvm.so").length() == 0
                     || new File(runtime, "lib/modules").length() == 0
