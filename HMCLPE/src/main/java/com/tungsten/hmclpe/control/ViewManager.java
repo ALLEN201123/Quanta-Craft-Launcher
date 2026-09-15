@@ -80,8 +80,7 @@ public class ViewManager implements SensorEventListener {
         menuFloat.addCallback(new MenuFloat.MenuFloatCallback() {
             @Override
             public void onClick() {
-                menuHelper.drawerLayout.openDrawer(GravityCompat.END,true);
-                menuHelper.drawerLayout.openDrawer(GravityCompat.START,true);
+                menuHelper.toggleGameMenu();
             }
 
             @Override
@@ -95,8 +94,7 @@ public class ViewManager implements SensorEventListener {
         menuView.addCallback(new MenuView.MenuCallback() {
             @Override
             public void onRelease() {
-                menuHelper.drawerLayout.openDrawer(GravityCompat.END,true);
-                menuHelper.drawerLayout.openDrawer(GravityCompat.START,true);
+                menuHelper.toggleGameMenu();
             }
 
             @Override

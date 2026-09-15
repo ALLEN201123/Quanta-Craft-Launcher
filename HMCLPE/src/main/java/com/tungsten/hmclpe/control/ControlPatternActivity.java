@@ -24,7 +24,7 @@ public class ControlPatternActivity extends AppCompatActivity implements View.On
     public static final int CONTROL_PATTERN_REQUEST_CODE = 3000;
     public static final int CONTROL_PATTERN_REQUEST_CODE_ISOLATE = 7700;
 
-    private DrawerLayout drawerLayout;
+    private android.widget.FrameLayout drawerLayout;
     private LayoutPanel baseLayout;
 
     public MenuHelper menuHelper;

@@ -41,7 +41,7 @@ public class BoatMinecraftActivity extends BoatActivity {
     private boolean eventPipeReady;
     private int bufferWidth;
     private int bufferHeight;
-    private DrawerLayout drawerLayout;
+    private android.widget.FrameLayout drawerLayout;
     private LayoutPanel baseLayout;
 
     public MenuHelper menuHelper;
@@ -67,9 +67,9 @@ public class BoatMinecraftActivity extends BoatActivity {
 
         setContentView(cosine.boat.R.layout.activity_boat);
 
-        DrawerLayout.LayoutParams params = new DrawerLayout.LayoutParams(DrawerLayout.LayoutParams.MATCH_PARENT, DrawerLayout.LayoutParams.MATCH_PARENT);
+        android.widget.FrameLayout.LayoutParams params = new android.widget.FrameLayout.LayoutParams(android.widget.FrameLayout.LayoutParams.MATCH_PARENT, android.widget.FrameLayout.LayoutParams.MATCH_PARENT);
 
-        drawerLayout = (DrawerLayout) getLayoutInflater().inflate(R.layout.activity_control_pattern, null);
+        drawerLayout = (android.widget.FrameLayout) getLayoutInflater().inflate(R.layout.activity_control_pattern, null);
         addContentView(drawerLayout, params);
 
         baseLayout = findViewById(R.id.base_layout);

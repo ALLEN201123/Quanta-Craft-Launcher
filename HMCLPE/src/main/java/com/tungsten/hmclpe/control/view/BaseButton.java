@@ -194,8 +194,7 @@ public class BaseButton extends androidx.appcompat.widget.AppCompatButton {
                         initialPositionX = getX();
                         initialPositionY = getY();
                         if (info.openMenu) {
-                            menuHelper.drawerLayout.openDrawer(GravityCompat.END,true);
-                            menuHelper.drawerLayout.openDrawer(GravityCompat.START,true);
+                            menuHelper.toggleGameMenu();
                         }
                         if (info.switchTouchMode) {
                             if (menuHelper.gameMenuSetting.touchMode == 0) {
@@ -428,8 +427,7 @@ public class BaseButton extends androidx.appcompat.widget.AppCompatButton {
 
     private void handleDoubleClick() {
         if (info.openMenu) {
-            menuHelper.drawerLayout.openDrawer(GravityCompat.END,true);
-            menuHelper.drawerLayout.openDrawer(GravityCompat.START,true);
+            menuHelper.toggleGameMenu();
         }
         if (info.switchTouchMode) {
             if (menuHelper.gameMenuSetting.touchMode == 0) {

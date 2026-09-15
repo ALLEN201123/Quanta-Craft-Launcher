@@ -45,7 +45,8 @@ public class MenuHelper implements CompoundButton.OnCheckedChangeListener, View.
     public AppCompatActivity activity;
     public boolean fullscreen;
     public String gameDir;
-    public DrawerLayout drawerLayout;
+    public android.widget.FrameLayout drawerLayout;
+    public android.view.View gameMenuContainer;
     public LayoutPanel baseLayout;
     public int launcher;
     public float scaleFactor;
@@ -111,7 +112,7 @@ public class MenuHelper implements CompoundButton.OnCheckedChangeListener, View.
     public float currentX;
     public float currentY;
 
-    public MenuHelper(Context context, AppCompatActivity activity,boolean fullscreen,String gameDir, DrawerLayout drawerLayout, LayoutPanel baseLayout,boolean editMode,String currentPattern,int launcher,float scaleFactor){
+    public MenuHelper(Context context, AppCompatActivity activity,boolean fullscreen,String gameDir, android.widget.FrameLayout drawerLayout, LayoutPanel baseLayout,boolean editMode,String currentPattern,int launcher,float scaleFactor){
         this.context = context;
         this.activity = activity;
         this.fullscreen = fullscreen;
@@ -197,6 +198,7 @@ public class MenuHelper implements CompoundButton.OnCheckedChangeListener, View.
         touchCharInput = activity.findViewById(R.id.input_scanner);
         touchCharInput.setCharacterSender(this, new LwjglCharSender());
 
+        gameMenuContainer = activity.findViewById(R.id.game_menu_container);
         switchMenuFloat = activity.findViewById(R.id.switch_float_button);
         switchMenuView = activity.findViewById(R.id.switch_bar);
         switchMenuSlide = activity.findViewById(R.id.switch_gesture);
@@ -329,12 +331,13 @@ public class MenuHelper implements CompoundButton.OnCheckedChangeListener, View.
             checkOpenMenuSetting();
         });
 
-        if (gameMenuSetting.menuSlideSetting){
-            drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
-        }
-        else {
-            drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
-        }
+    }
+
+    /** 开/关居中的游戏菜单（合并后单窗口） */
+    public void toggleGameMenu() {
+        if (gameMenuContainer == null) return;
+        boolean show = gameMenuContainer.getVisibility() != View.VISIBLE;
+        gameMenuContainer.setVisibility(show ? View.VISIBLE : View.GONE);
     }
 
     private void checkOpenMenuSetting(){
@@ -396,12 +399,6 @@ public class MenuHelper implements CompoundButton.OnCheckedChangeListener, View.
         }
         if (compoundButton == switchMenuSlide) {
             gameMenuSetting.menuSlideSetting = b;
-            if (b){
-                drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
-            }
-            else {
-                drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
-            }
             checkOpenMenuSetting();
             GameMenuSetting.saveGameMenuSetting(gameMenuSetting);
         }

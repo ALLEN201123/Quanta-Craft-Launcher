@@ -50,7 +50,7 @@
         "percentSize": 0.06
       },
       "xPosition": {
-        "absolutePosition": 615,
+        "absolutePosition": 614,
         "percentPosition": 0.8
       },
       "yPosition": {
@@ -108,11 +108,11 @@
         "percentSize": 0.06
       },
       "xPosition": {
-        "absolutePosition": 664,
-        "percentPosition": 0.88000005
+        "absolutePosition": 676,
+        "percentPosition": 0.88
       },
       "yPosition": {
-        "absolutePosition": 233,
+        "absolutePosition": 240,
         "percentPosition": 0.75
       }
     },
@@ -166,12 +166,12 @@
         "percentSize": 0.06
       },
       "xPosition": {
-        "absolutePosition": 739,
+        "absolutePosition": 730,
         "percentPosition": 0.95
       },
       "yPosition": {
-        "absolutePosition": 295,
-        "percentPosition": 0.9509108
+        "absolutePosition": 304,
+        "percentPosition": 0.95
       }
     },
     {
@@ -224,11 +224,11 @@
         "percentSize": 0.06
       },
       "xPosition": {
-        "absolutePosition": 588,
+        "absolutePosition": 599,
         "percentPosition": 0.78
       },
       "yPosition": {
-        "absolutePosition": 233,
+        "absolutePosition": 240,
         "percentPosition": 0.75
       }
     },
@@ -282,11 +282,11 @@
         "percentSize": 0.06
       },
       "xPosition": {
-        "absolutePosition": 664,
-        "percentPosition": 0.88000005
+        "absolutePosition": 676,
+        "percentPosition": 0.88
       },
       "yPosition": {
-        "absolutePosition": 161,
+        "absolutePosition": 166,
         "percentPosition": 0.52
       }
     },
@@ -338,7 +338,7 @@
         "percentSize": 0.06
       },
       "xPosition": {
-        "absolutePosition": 764,
+        "absolutePosition": 768,
         "percentPosition": 1.0
       },
       "yPosition": {
@@ -394,12 +394,12 @@
         "percentSize": 0.06
       },
       "xPosition": {
-        "absolutePosition": 377,
-        "percentPosition": 0.5
+        "absolutePosition": 292,
+        "percentPosition": 0.38
       },
       "yPosition": {
-        "absolutePosition": 0,
-        "percentPosition": 0.0
+        "absolutePosition": 6,
+        "percentPosition": 0.02
       }
     },
     {
@@ -452,12 +452,12 @@
         "percentSize": 0.06
       },
       "xPosition": {
-        "absolutePosition": 0,
-        "percentPosition": 0.0
+        "absolutePosition": 15,
+        "percentPosition": 0.02
       },
       "yPosition": {
-        "absolutePosition": 0,
-        "percentPosition": 0.0
+        "absolutePosition": 6,
+        "percentPosition": 0.02
       }
     },
     {
@@ -510,12 +510,12 @@
         "percentSize": 0.06
       },
       "xPosition": {
-        "absolutePosition": 90,
-        "percentPosition": 0.1
+        "absolutePosition": 108,
+        "percentPosition": 0.14
       },
       "yPosition": {
-        "absolutePosition": 0,
-        "percentPosition": 0.0
+        "absolutePosition": 6,
+        "percentPosition": 0.02
       }
     },
     {
@@ -568,12 +568,12 @@
         "percentSize": 0.06
       },
       "xPosition": {
-        "absolutePosition": 0,
-        "percentPosition": 0.2
+        "absolutePosition": 200,
+        "percentPosition": 0.26
       },
       "yPosition": {
-        "absolutePosition": 0,
-        "percentPosition": 0.0
+        "absolutePosition": 6,
+        "percentPosition": 0.02
       }
     },
     {
@@ -629,8 +629,8 @@
         "percentSize": 0.06
       },
       "xPosition": {
-        "absolutePosition": 0,
-        "percentPosition": 0.0
+        "absolutePosition": 15,
+        "percentPosition": 0.02
       },
       "yPosition": {
         "absolutePosition": 58,
@@ -691,7 +691,7 @@
         "percentPosition": 0.0
       },
       "yPosition": {
-        "absolutePosition": 129,
+        "absolutePosition": 128,
         "percentPosition": 0.4
       }
     },
@@ -745,12 +745,12 @@
         "percentSize": 0.06
       },
       "xPosition": {
-        "absolutePosition": 744,
-        "percentPosition": 1.0
+        "absolutePosition": 476,
+        "percentPosition": 0.62
       },
       "yPosition": {
-        "absolutePosition": 0,
-        "percentPosition": 0.0
+        "absolutePosition": 6,
+        "percentPosition": 0.02
       }
     },
     {
@@ -803,12 +803,128 @@
         "percentSize": 0.06
       },
       "xPosition": {
-        "absolutePosition": 577,
-        "percentPosition": 0.9
+        "absolutePosition": 384,
+        "percentPosition": 0.5
       },
       "yPosition": {
-        "absolutePosition": 0,
-        "percentPosition": 0.0
+        "absolutePosition": 6,
+        "percentPosition": 0.02
+      }
+    },
+    {
+      "autoClick": false,
+      "autoKeep": false,
+      "buttonStyle": {
+        "cornerRadius": 16,
+        "cornerRadiusPress": 16,
+        "fillColor": "#666E6E6E",
+        "fillColorPress": "#995E5E5E",
+        "name": "Default",
+        "strokeColor": "#33555555",
+        "strokeColorPress": "#55555555",
+        "strokeWidth": 1.5,
+        "strokeWidthPress": 2.0,
+        "textColor": "#FFFFFFFF",
+        "textColorPress": "#FFFFFFFF",
+        "textSize": 13,
+        "textSizePress": 13
+      },
+      "child": "game_layout",
+      "functionType": 0,
+      "height": {
+        "absoluteSize": 40,
+        "object": 0,
+        "percentSize": 0.06
+      },
+      "movable": false,
+      "openMenu": false,
+      "outputKeycode": [
+        73
+      ],
+      "outputText": "",
+      "pattern": "Default",
+      "positionType": 0,
+      "showInputDialog": false,
+      "showType": 1,
+      "sizeType": 1,
+      "switchLeftPad": false,
+      "switchSensor": false,
+      "switchTouchMode": false,
+      "text": "I",
+      "usingExist": true,
+      "uuid": "b9c41043-6bc7-40e2-b769-2a2e1f5de251-qcl-1",
+      "viewMove": false,
+      "visibilityControl": [],
+      "width": {
+        "absoluteSize": 40,
+        "object": 0,
+        "percentSize": 0.06
+      },
+      "xPosition": {
+        "absolutePosition": 476,
+        "percentPosition": 0.62
+      },
+      "yPosition": {
+        "absolutePosition": 282,
+        "percentPosition": 0.88
+      }
+    },
+    {
+      "autoClick": false,
+      "autoKeep": false,
+      "buttonStyle": {
+        "cornerRadius": 16,
+        "cornerRadiusPress": 16,
+        "fillColor": "#666E6E6E",
+        "fillColorPress": "#995E5E5E",
+        "name": "Default",
+        "strokeColor": "#33555555",
+        "strokeColorPress": "#55555555",
+        "strokeWidth": 1.5,
+        "strokeWidthPress": 2.0,
+        "textColor": "#FFFFFFFF",
+        "textColorPress": "#FFFFFFFF",
+        "textSize": 13,
+        "textSizePress": 13
+      },
+      "child": "game_layout",
+      "functionType": 0,
+      "height": {
+        "absoluteSize": 40,
+        "object": 0,
+        "percentSize": 0.06
+      },
+      "movable": false,
+      "openMenu": false,
+      "outputKeycode": [
+        66
+      ],
+      "outputText": "",
+      "pattern": "Default",
+      "positionType": 0,
+      "showInputDialog": false,
+      "showType": 1,
+      "sizeType": 1,
+      "switchLeftPad": false,
+      "switchSensor": false,
+      "switchTouchMode": false,
+      "text": "B",
+      "usingExist": true,
+      "uuid": "b9c41043-6bc7-40e2-b769-2a2e1f5de251-qcl-2",
+      "viewMove": false,
+      "visibilityControl": [],
+      "width": {
+        "absoluteSize": 40,
+        "object": 0,
+        "percentSize": 0.06
+      },
+      "xPosition": {
+        "absolutePosition": 476,
+        "percentPosition": 0.62
+      },
+      "yPosition": {
+        "absolutePosition": 243,
+        "percentPosition": 0.76
       }
     }
   ],
@@ -852,5 +968,6 @@
     }
   ],
   "name": "Default",
-  "visibility": 0
+  "visibility": 0,
+  "versionName": "1.3"
 }
