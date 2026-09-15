@@ -2,7 +2,7 @@
     <string name="app_name" translatable="false">Quanta Craft Launcher</string>
     <string name="app_name_pri" translatable="false">Quanta Craft Launcher</string>
     <string name="app_name_sec" translatable="false">量子方块启动器</string>
-    <string name="version_name" translatable="false">v1.0.8</string>
+    <string name="version_name" translatable="false">v1.0.9</string>
     <string name="app_bar_title" translatable="false">QCL · Quanta Craft Launcher v1.0.4</string>
 
     <string name="dialog_outdated_warning_title">Warning</string>
@@ -1000,7 +1000,7 @@
     <string name="feedback_ui_join_qq">Join QQ group</string>
     <string name="revival_sdl_unavailable">This version requires SDL3. The bundled Boat/Pojav window backends do not support SDL3 yet; selecting Java 25 does not enable it.</string>
     <string name="revival_java_unavailable">The selected Java runtime is unavailable or incomplete on this architecture. Java 25 is not available for 32-bit x86.</string>
-    <string name="revival_java_unavailable_32bit">Java 21 and Java 25 are not supported on 32-bit devices. Please use a 64-bit runtime, or launch a version that runs on Java 8 or 17.</string>
+    <string name="revival_java_unavailable_32bit">Java 25 has no 32-bit x86 build, so it cannot run on this device. Please use a 64-bit runtime, launch a version that needs Java 21 or lower, or pick another Java runtime in the game settings.</string>
     <string name="revival_archive_install_unsupported">Archived build: this version must use the archive install path (historical archive, covering almost every ancient version).</string>
     <string name="ui_about_upstream_main">HMCL-PE (upstream project)</string>
     <string name="ui_about_upstream_sub">Original author: Tungs (bilibili 18115101)
