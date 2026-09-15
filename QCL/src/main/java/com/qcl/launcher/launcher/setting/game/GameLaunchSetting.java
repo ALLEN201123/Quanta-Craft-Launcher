@@ -110,28 +110,17 @@ public class GameLaunchSetting {
         // 注意：不能映射到 JRE21 —— 那是我搞错了，已改回。
         // 26.x（2026 官方命名）用 Java 25；万一元数据声明了 >25，也兜底到 JRE25，别抛异常崩启动器。
         if (required > 25) required = 25;
-        // 32 位运行时（aarch32 / i386）没有 Java 21 / 25 的构建，且 32 位地址空间也装不下。
-        // 自动选择时把要求降到 17，让游戏至少能起来（Cacio 窗口用 Java 17 也能工作）。
-        // 启动前的 CheckJavaTask 会对"玩家手动选了 JRE21/JRE25"的情况给出明确提示。
-        if (required > 17 && is32BitRuntime()) {
-            required = 17;
-        }
+        // ⚠️ 1.0.8 曾在这里对"所有 32 位运行时"把 required>17 降级为 17 —— **那是错的**。
+        // QCL 内置的运行时按架构分目录（`assets/app_runtime/java/21-arm`、`21-x86` …），
+        // 32 位设备本来就有能用的 Java 21（`InstallLauncherFile.prepareModernJava` 会按
+        // getRuntimeArchitecture() 拷对应架构的那份）。降级会让 1.20.6 被换成 JRE17 → 起不来。
+        // 目前**唯一**真的缺构建的组合是「Java 25 + 32 位 x86」（没有 `25-x86` 目录），
+        // 那个情况由启动前的 CheckJavaTask 给出明确提示，这里照样返回 JRE25 即可。
         if (required <= 8) return "default";
         if (required <= 17) return "JRE17";
         if (required <= 21) return "JRE21";
         if (required <= 25) return "JRE25";
         throw new IllegalArgumentException("No bundled Java runtime for Java " + required);
-    }
-
-    /** 当前实际会用的运行时是不是 32 位（aarch32 / i386）。 */
-    private static boolean is32BitRuntime() {
-        try {
-            int arch = com.qcl.launcher.utils.Architecture.getRuntimeArchitecture();
-            return arch == com.qcl.launcher.utils.Architecture.ARCH_ARM
-                    || arch == com.qcl.launcher.utils.Architecture.ARCH_X86;
-        } catch (Throwable ignored) {
-            return false;
-        }
     }
 
     public static int runtimeMajor(String name) {
