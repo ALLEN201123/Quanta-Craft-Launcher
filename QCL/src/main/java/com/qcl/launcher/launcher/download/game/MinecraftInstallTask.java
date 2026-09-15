@@ -1,0 +1,256 @@
+package com.qcl.launcher.launcher.download.game;
+
+import android.os.AsyncTask;
+
+import com.google.gson.Gson;
+import com.qcl.launcher.R;
+import com.qcl.launcher.launcher.MainActivity;
+import com.qcl.launcher.launcher.game.Argument;
+import com.qcl.launcher.launcher.game.Artifact;
+import com.qcl.launcher.launcher.game.AssetIndex;
+import com.qcl.launcher.launcher.game.AssetObject;
+import com.qcl.launcher.launcher.game.Library;
+import com.qcl.launcher.launcher.game.RuledArgument;
+import com.qcl.launcher.launcher.game.Version;
+import com.qcl.launcher.launcher.list.install.DownloadTaskListAdapter;
+import com.qcl.launcher.launcher.list.install.DownloadTaskListBean;
+import com.qcl.launcher.launcher.uis.game.download.DownloadUrlSource;
+import com.qcl.launcher.utils.gson.JsonUtils;
+import com.qcl.launcher.utils.io.DownloadUtil;
+import com.qcl.launcher.utils.io.NetworkUtils;
+import com.qcl.launcher.utils.platform.Bits;
+
+import java.io.IOException;
+import java.util.ArrayList;
+
+public class MinecraftInstallTask extends AsyncTask<VersionManifest.Version,Integer, Version> {
+
+    private MainActivity activity;
+    private String name;
+    private DownloadTaskListAdapter adapter;
+    private InstallMinecraftCallback callback;
+
+    private DownloadTaskListBean priBean;
+    private DownloadTaskListBean secBean;
+    private DownloadTaskListBean thiBean;
+
+    public MinecraftInstallTask(MainActivity activity, String name, DownloadTaskListAdapter adapter, InstallMinecraftCallback callback) {
+        this.activity = activity;
+        this.name = name;
+        this.adapter = adapter;
+        this.callback = callback;
+
+        this.priBean = new DownloadTaskListBean(activity.getString(R.string.dialog_install_game_install_game),"","","");
+        this.secBean = new DownloadTaskListBean(activity.getString(R.string.dialog_install_game_install_game_libs),"","","");
+        this.thiBean = new DownloadTaskListBean(activity.getString(R.string.dialog_install_game_install_game_assets),"","","");
+    }
+
+    @Override
+    protected void onPreExecute() {
+        super.onPreExecute();
+        callback.onStart();
+    }
+
+    private String readMetadata(String selected, String original) throws IOException {
+        try {
+            return NetworkUtils.doGet(NetworkUtils.toURL(selected));
+        } catch (IOException failure) {
+            if (selected.equals(original)) throw failure;
+            return NetworkUtils.doGet(NetworkUtils.toURL(original));
+        }
+    }
+
+    @Override
+    protected Version doInBackground(VersionManifest.Version... versions) {
+        VersionManifest.Version gameVersion = versions[0];
+
+        activity.runOnUiThread(() -> {
+            onProgressUpdate(0);
+        });
+
+        if (LegacyVersionArchive.TYPE_ARCHIVE.equals(gameVersion.type)) {
+            // Archived builds carry no Mojang metadata to install from.
+            if (!isCancelled()) callback.onFailed(new IOException(activity.getString(R.string.revival_archive_install_unsupported)));
+            cancel(true);
+            return null;
+        }
+
+        String versionJsonUrl = DownloadUrlSource.replaceSubUrl(gameVersion.url,
+                DownloadUrlSource.getSource(activity.launcherSetting.downloadUrlSource), DownloadUrlSource.VERSION_JSON);
+
+        String versionJson = null;
+        try {
+            versionJson = readMetadata(versionJsonUrl, gameVersion.url);
+        } catch (IOException e) {
+            e.printStackTrace();
+            if (!isCancelled()) callback.onFailed(e);
+            cancel(true);
+            return null;
+        }
+        Gson gson = JsonUtils.defaultGsonBuilder()
+                .registerTypeAdapter(Artifact.class, new Artifact.Serializer())
+                .registerTypeAdapter(Bits.class, new Bits.Serializer())
+                .registerTypeAdapter(RuledArgument.class, new RuledArgument.Serializer())
+                .registerTypeAdapter(Argument.class, new Argument.Deserializer())
+                .create();
+        Version rawPatch;
+        try {
+            rawPatch = gson.fromJson(versionJson, Version.class);
+            if (rawPatch == null || rawPatch.getId() == null) {
+                throw new IllegalArgumentException("Missing Minecraft version metadata");
+            }
+        } catch (RuntimeException invalidMetadata) {
+            if (!isCancelled()) callback.onFailed(invalidMetadata);
+            cancel(true);
+            return null;
+        }
+
+        String assetIndexUrl = DownloadUrlSource.replaceSubUrl(rawPatch.getAssetIndex().getUrl(),
+                DownloadUrlSource.getSource(activity.launcherSetting.downloadUrlSource), DownloadUrlSource.ASSETS_INDEX_JSON);
+        String assetIndexJson = null;
+        try {
+            assetIndexJson = readMetadata(assetIndexUrl, rawPatch.getAssetIndex().getUrl());
+        } catch (IOException e) {
+            e.printStackTrace();
+            if (!isCancelled()) callback.onFailed(e);
+            cancel(true);
+            return null;
+        }
+        AssetIndex assetIndex;
+        try {
+            assetIndex = gson.fromJson(assetIndexJson, AssetIndex.class);
+            if (assetIndex == null || assetIndex.getObjects() == null) {
+                throw new IllegalArgumentException("Missing Minecraft asset index");
+            }
+        } catch (RuntimeException invalidMetadata) {
+            if (!isCancelled()) callback.onFailed(invalidMetadata);
+            cancel(true);
+            return null;
+        }
+
+        ArrayList<DownloadTaskListBean> libList = new ArrayList<>();
+        libList.add(new DownloadTaskListBean(name + ".jar",
+                DownloadUrlSource.replaceSubUrl(rawPatch.getDownloadInfo().getUrl(), DownloadUrlSource.getSource(activity.launcherSetting.downloadUrlSource), DownloadUrlSource.VERSION_JAR),
+                activity.launcherSetting.gameFileDirectory + "/versions/" + name + "/" + name + ".jar",
+                rawPatch.getDownloadInfo().getSha1()).withFallback(rawPatch.getDownloadInfo().getUrl()));
+        for (Library library : rawPatch.getLibraries()){
+            if (!library.getPath().contains("tv/twitch") && !library.getPath().contains("lwjgl-platform-2.9.1-nightly")) {
+                DownloadTaskListBean bean = new DownloadTaskListBean(library.getArtifactFileName(),
+                        DownloadUrlSource.replaceSubUrl(library.getDownload().getUrl(),
+                                DownloadUrlSource.getSource(activity.launcherSetting.downloadUrlSource), DownloadUrlSource.LIBRARIES),
+                        activity.launcherSetting.gameFileDirectory + "/libraries/" + library.getPath(),
+                        library.getDownload().getSha1()).withFallback(library.getDownload().getUrl());
+                libList.add(bean);
+            }
+        }
+
+        ArrayList<DownloadTaskListBean> assetsList = new ArrayList<>();
+        assetsList.add(new DownloadTaskListBean(rawPatch.getAssetIndex().id + ".json",
+                assetIndexUrl,
+                activity.launcherSetting.gameFileDirectory + "/assets/indexes/" + rawPatch.getAssetIndex().id + ".json",
+                rawPatch.getAssetIndex().getSha1()).withFallback(rawPatch.getAssetIndex().getUrl()));
+        for (AssetObject object : assetIndex.getObjects().values()){
+            DownloadTaskListBean bean = new DownloadTaskListBean(object.getHash(),
+                    DownloadUrlSource.getSubUrl(DownloadUrlSource.getSource(activity.launcherSetting.downloadUrlSource),DownloadUrlSource.ASSETS_OBJ) + "/" + object.getLocation(),
+                    activity.launcherSetting.gameFileDirectory + "/assets/objects/" + object.getLocation(),
+                    object.getHash()).withFallback(DownloadUrlSource.getSubUrl(
+                            DownloadUrlSource.DOWNLOAD_URL_SOURCE_OFFICIAL, DownloadUrlSource.ASSETS_OBJ)
+                            + "/" + object.getLocation());
+            assetsList.add(bean);
+        }
+
+        int maxDownloadTask = activity.launcherSetting.maxDownloadTask;
+        if (activity.launcherSetting.autoDownloadTaskQuantity) {
+            maxDownloadTask = 64;
+        }
+
+        DownloadUtil.DownloadMultipleFilesCallback downloadCallback = new DownloadUtil.DownloadMultipleFilesCallback() {
+            @Override
+            public void onTaskStart(DownloadTaskListBean bean) {
+                if (!isCancelled()) adapter.addDownloadTask(bean);
+            }
+
+            @Override
+            public void onTaskProgress(DownloadTaskListBean bean) {
+                if (!isCancelled()) adapter.onProgress(bean);
+            }
+
+            @Override
+            public void onTaskFinish(DownloadTaskListBean bean) {
+                if (!isCancelled()) adapter.onComplete(bean);
+            }
+
+            @Override
+            public void onFailed(Exception e) {
+                e.printStackTrace();
+                if (!isCancelled()) callback.onFailed(e);
+                cancel(true);
+            }
+        };
+
+        activity.runOnUiThread(() -> {
+            onProgressUpdate(1);
+        });
+        ArrayList<DownloadTaskListBean> failedLibs = DownloadUtil.downloadMultipleFiles(libList, maxDownloadTask, this, activity, downloadCallback);
+        if (failedLibs.size() > 0) {
+            StringBuilder stringBuilder = new StringBuilder();
+            stringBuilder.append("The following files failed to download:");
+            for (DownloadTaskListBean bean : failedLibs) {
+                stringBuilder.append("\n\n  ").append(bean.name).append("\n\n").append(bean.url);
+            }
+            Exception e = new Exception(stringBuilder.toString());
+            e.printStackTrace();
+            if (!isCancelled()) callback.onFailed(e);
+            cancel(true);
+        }
+
+        activity.runOnUiThread(() -> {
+            onProgressUpdate(2);
+        });
+        ArrayList<DownloadTaskListBean> failedAssets = DownloadUtil.downloadMultipleFiles(assetsList, maxDownloadTask, this, activity, downloadCallback);
+        if (failedAssets.size() > 0) {
+            StringBuilder stringBuilder = new StringBuilder();
+            stringBuilder.append("The following files failed to download:");
+            for (DownloadTaskListBean bean : failedAssets) {
+                stringBuilder.append("\n\n  ").append(bean.name);
+            }
+            Exception e = new Exception(stringBuilder.toString());
+            e.printStackTrace();
+            if (!isCancelled()) callback.onFailed(e);
+            cancel(true);
+        }
+
+        return rawPatch.addPatch(rawPatch.setId("game").setVersion(rawPatch.getId()).setPriority(0));
+    }
+
+    @Override
+    protected void onProgressUpdate(Integer... values) {
+        super.onProgressUpdate(values);
+        switch (values[0]) {
+            case 0:
+                if (!isCancelled()) adapter.addDownloadTask(priBean);
+                break;
+            case 1:
+                if (!isCancelled()) adapter.onComplete(priBean);
+                if (!isCancelled()) adapter.addDownloadTask(secBean);
+                break;
+            case 2:
+                if (!isCancelled()) adapter.onComplete(secBean);
+                if (!isCancelled()) adapter.addDownloadTask(thiBean);
+                break;
+        }
+    }
+
+    @Override
+    protected void onPostExecute(Version version) {
+        super.onPostExecute(version);
+        if (!isCancelled()) adapter.onComplete(thiBean);
+        callback.onFinish(version);
+    }
+
+    public interface InstallMinecraftCallback{
+        void onStart();
+        void onFailed(Exception e);
+        void onFinish(Version version);
+    }
+}

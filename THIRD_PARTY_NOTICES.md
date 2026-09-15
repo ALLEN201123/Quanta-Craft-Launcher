@@ -2,14 +2,14 @@
 
 ## 本项目自身的许可
 QCL 是基于 **HMCL-PE**（Hello Minecraft! Launcher Pocket Edition）重构的衍生作品。
-HMCL-PE 以 **GNU GPL-3.0** 授权，因此 **QCL 同样以 GNU GPL-3.0（或更新版本）授权**，
+HMCL-PE 以 **GNU GPL-3.0** 授权；但 QCL 链接了 **AGPL-3.0** 的 Terracotta，因此 **QCL 整体以 GNU AGPL-3.0 授权**，
 完整协议全文见工程根目录的 `LICENSE`。
 
-### 发布者的义务（GPL-3.0）
+### 发布者的义务（AGPL-3.0）
 1. **分发（发布 APK / 任何形式分发）时必须同时提供完整对应的源码**（可放到公开仓库并在下载页给出链接）。
 2. 保留所有版权声明与许可声明（本文件与 `LICENSE` 必须随源码一起提供）。
-3. 若修改了上游代码，需以 GPL-3.0 兼容许可开放修改后的源码。
-4. 网络提供服务时不强制公开源码（GPL-3.0 本身不含 AGPL 的网络条款），但本项目选择一并公开以便社区协作。
+3. 若修改了上游代码，需以 AGPL-3.0 兼容许可开放修改后的源码。
+4. **网络条款（AGPL-3.0 §13）**：若把本软件作为网络服务提供给他人，须向网络用户提供源码。
 
 ## 第三方组件清单
 | 组件 | 作者 / 来源 | 许可 | 用途 |
@@ -17,7 +17,7 @@ HMCL-PE 以 **GNU GPL-3.0** 授权，因此 **QCL 同样以 GNU GPL-3.0（或更
 | HMCL-PE | Tungs（B 站 18115101） | GPL-3.0 | 本项目的前身与代码基础 |
 | PojavLauncher | PojavLauncherTeam（已归档，后继 Amethyst-Android） | LGPL-3.0 | JVM 启动、LWJGL 移植、caciocavallo 等 |
 | Boat（Cosine / 摆渡人后端） | Cosine 相关作者 | 见其仓库 | 另一套启动后端与 lwjgl2 移植 |
-| Terracotta（陶瓷联机） | **BurningTNT** | GPL-3.0 | 多人联机（NAT 穿透 / 组网 / 房间邀请码） |
+| Terracotta（陶瓷联机） | **BurningTNT** | **AGPL-3.0** | 多人联机（NAT 穿透 / 组网 / 房间邀请码）；源码见 `third_party_sources/Terracotta/` |
 | LWJGL 2 / 3 | LWJGL 团队 | BSD-3-Clause | OpenGL / 输入 / 音频绑定 |
 | GL4ES | ptitSeb 等 | MIT | OpenGL 2.x → OpenGL ES 1.1/2.0 转换层 |
 | OpenAL Soft | kcat 等 | LGPL-2.0 | 音频 |
@@ -33,3 +33,10 @@ HMCL-PE 以 **GNU GPL-3.0** 授权，因此 **QCL 同样以 GNU GPL-3.0（或更
 ## 多人联机的使用限制（合规与免责）
 多人联机功能仅限 **中国大陆地区** 使用；在境外使用本功能，本启动器不承担任何责任，
 并可能带来法律风险，由使用者自行评估与承担。开启前会在启动器内弹出协议与免责声明并要求确认。
+
+## ⚠️ Terracotta 是 AGPL-3.0（重要）
+Terracotta（BurningTNT）实际许可是 **AGPL-3.0**（不是 GPL-3.0）。这意味着：
+1. **分发必须提供对应源码** —— 其 Rust 源码已随本仓库提供在 `third_party_sources/Terracotta/`。
+2. AGPL-3.0 有「网络条款」（§13）：若把该软件作为网络服务提供给他人使用，须向网络用户提供源码。
+3. QCL 同时链接 GPL-3.0（HMCL-PE）与 AGPL-3.0（Terracotta），**合并作品应按更严格的 AGPL-3.0 对待**；
+   建议将本项目 LICENSE 也升级为 AGPL-3.0 以彻底合规。

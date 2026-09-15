@@ -8,7 +8,7 @@ Maintainer: **Rod123456** (bilibili UID 550905358).
 alpha / beta / RC) — 181 archived builds are listed and installed with dependencies and assets fetched
 automatically. It also supports modern versions up to 26.x (Java 25). Two launch backends (Boat / Pojav),
 automatic 32/64-bit runtime detection, dynamic memory clamping, a launch-log overlay, a crash screen, and
-multiplayer powered by Terracotta (China mainland only). Licensed under **GNU GPL-3.0** — see
+multiplayer powered by Terracotta (China mainland only). Licensed under **GNU AGPL-3.0** — see
 [`LICENSE`](LICENSE) and [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md).
 
 > 中文说明在下方。The Chinese documentation follows.
@@ -64,15 +64,15 @@ QCL 是一个安卓平台的 Minecraft Java 版启动器，界面按自己的「
 
 ```bash
 export JAVA_HOME=/path/to/jdk-17
-./gradlew :HMCLPE:assembleRelease
-# 产物：HMCLPE/build/outputs/apk/release/HMCLPE-release.apk
+./gradlew :QCL:assembleRelease
+# 产物：QCL/build/outputs/apk/release/QCL-release.apk
 ```
 
 - 环境：Gradle 7.3.3 / JDK 17 / NDK 27.3.13750724 / compileSdk 34 / minSdk 26
-- 签名：请**自备** keystore（仓库不包含签名密钥），在 `HMCLPE/build.gradle` 中配置
+- 签名：请**自备** keystore（仓库不包含签名密钥），在 `QCL/build.gradle` 中配置
 
 ### 运行库（已内置）
-`HMCLPE/src/main/assets/app_runtime/java/` 已包含全部常用 Java 运行时，克隆即可完整构建：
+`QCL/src/main/assets/app_runtime/java/` 已包含全部常用 Java 运行时，克隆即可完整构建：
 
 - Java 8：`default`、`8-arm`、`8-arm64`、`8-x86`、`8-x86_64`
 - Java 17：`JRE17`、`17-arm`、`17-arm64`、`17-x86`、`17-x86_64`
@@ -80,11 +80,11 @@ export JAVA_HOME=/path/to/jdk-17
 - Java 25：`25-arm`、`25-arm64`、`25-x86_64`
 
 唯一例外是 **JRE25**：它的 `lib/modules` 单文件 121MB，超过 GitHub 100MB 硬上限、无法入库。
-请从 Release 附件下载 `JRE25-runtime.zip`，解压到 `HMCLPE/src/main/assets/app_runtime/java/JRE25/` 即可。
+请从 Release 附件下载 `JRE25-runtime.zip`，解压到 `QCL/src/main/assets/app_runtime/java/JRE25/` 即可。
 
 ## 开源许可
 
-- 本项目以 **GNU GPL-3.0**（或更新版本）授权，全文见 [`LICENSE`](LICENSE)。
+- 本项目以 **GNU AGPL-3.0** 授权（因链接 AGPL-3.0 的 Terracotta；HMCL-PE 上游为 GPL-3.0），全文见 [`LICENSE`](LICENSE)。
   它继承自 HMCL-PE，因此**分发（包括发布 APK）时必须同时提供完整对应源码**。
 - 第三方组件与各自许可、署名见 `THIRD_PARTY_NOTICES.md`
 

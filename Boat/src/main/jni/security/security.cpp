@@ -27,11 +27,11 @@ bool isInit = false;
 
 
 JNIEXPORT void JNICALL
-Java_com_tungsten_hmclpe_launcher_MainActivity_securityInit(JNIEnv *env, jobject obj_context) {
+Java_com_qcl_launcher_launcher_MainActivity_securityInit(JNIEnv *env, jobject obj_context) {
     // TODO: implement securityInit()
     isInit = true;
 
-    jclass mainClass = env->FindClass("com/tungsten/hmclpe/launcher/MainActivity");
+    jclass mainClass = env->FindClass("com/qcl/launcher/launcher/MainActivity");
     jmethodID initMethod = env->GetMethodID(mainClass, "init", "()V");
     env->CallVoidMethod(obj_context, initMethod);
 
@@ -60,12 +60,12 @@ Java_com_tungsten_hmclpe_launcher_MainActivity_securityInit(JNIEnv *env, jobject
 
 
 JNIEXPORT jboolean JNICALL
-Java_com_tungsten_hmclpe_launcher_MainActivity_isValid(JNIEnv *env, jobject obj_context,
+Java_com_qcl_launcher_launcher_MainActivity_isValid(JNIEnv *env, jobject obj_context,
                                                        jstring str) {
     // TODO: implement isValid()
     const char *pw = env->GetStringUTFChars(str, 0);
 
-    jclass DigestUtils = env->FindClass("com/tungsten/hmclpe/utils/DigestUtils");
+    jclass DigestUtils = env->FindClass("com/qcl/launcher/utils/DigestUtils");
     jclass DeviceIdentifier = env->FindClass("com/github/gzuliyujiang/oaid/DeviceIdentifier");
     jmethodID getOAID = env->GetStaticMethodID(DeviceIdentifier, "getOAID",
                                                "(Landroid/content/Context;)Ljava/lang/String;");
@@ -121,7 +121,7 @@ Java_com_tungsten_hmclpe_launcher_MainActivity_isValid(JNIEnv *env, jobject obj_
 
 
 JNIEXPORT void JNICALL
-Java_com_tungsten_hmclpe_launcher_MainActivity_verify(JNIEnv *env, jclass clazz) {
+Java_com_qcl_launcher_launcher_MainActivity_verify(JNIEnv *env, jclass clazz) {
     // TODO: implement verify()
     if (!isPublic && !isCracked && access(dir.c_str(), 0) == F_OK || !isInit) {
         abort();
@@ -130,7 +130,7 @@ Java_com_tungsten_hmclpe_launcher_MainActivity_verify(JNIEnv *env, jclass clazz)
 
 
 JNIEXPORT void JNICALL
-Java_com_tungsten_hmclpe_launcher_MainActivity_verifyFunc(JNIEnv *env, jclass clazz) {
+Java_com_qcl_launcher_launcher_MainActivity_verifyFunc(JNIEnv *env, jclass clazz) {
     // TODO: implement verify()
     if (!isCracked && access(dir.c_str(), 0) == F_OK || !isInit) {
         abort();
@@ -139,13 +139,13 @@ Java_com_tungsten_hmclpe_launcher_MainActivity_verifyFunc(JNIEnv *env, jclass cl
 
 
 JNIEXPORT void JNICALL
-Java_com_tungsten_hmclpe_launcher_MainActivity_launch(JNIEnv *env, jobject obj_context,
+Java_com_qcl_launcher_launcher_MainActivity_launch(JNIEnv *env, jobject obj_context,
                                                       jobject intent) {
     // TODO: implement verify()
     if (!isPublic && !isCracked && access(dir.c_str(), 0) == F_OK || !isInit) {
         abort();
     } else {
-        jclass activity = env->FindClass("com/tungsten/hmclpe/launcher/MainActivity");
+        jclass activity = env->FindClass("com/qcl/launcher/launcher/MainActivity");
         jmethodID method_startGame = env->GetMethodID(activity, "startActivity",
                                                       "(Landroid/content/Intent;)V");
         env->CallVoidMethod(obj_context, method_startGame, intent);
@@ -175,12 +175,12 @@ JNIEXPORT jint JNI_OnLoad(JavaVM *vm, void *reserved) {
     if (env == NULL) {
         abort();
     }
-    char *app_packageName = "com.tungsten.hmclpe";
+    char *app_packageName = "com.qcl.launcher";
     jint app_signature_hash_code_debug = 369753433;
     jint app_signature_hash_code_debug_ = 3665141352;
     jint app_signature_hash_code_release = 606150242;
     jclass class_HMCLPEApplication = env->FindClass(
-            "com/tungsten/hmclpe/launcher/HMCLPEApplication");
+            "com/qcl/launcher/launcher/HMCLPEApplication");
     jmethodID method_getContext = env->GetStaticMethodID(class_HMCLPEApplication, "getContext",
                                                          "()Landroid/content/Context;");
     jobject obj_context = env->CallStaticObjectMethod(class_HMCLPEApplication, method_getContext);
@@ -234,7 +234,7 @@ JNIEXPORT jint JNI_OnLoad(JavaVM *vm, void *reserved) {
     return JNI_VERSION_1_6;
 }
 JNIEXPORT void JNICALL
-Java_com_tungsten_hmclpe_launcher_MainActivity_onCreate(JNIEnv *env, jobject thiz,
+Java_com_qcl_launcher_launcher_MainActivity_onCreate(JNIEnv *env, jobject thiz,
                                                         jobject saved_instance_state) {
     // TODO: implement onCreate()
     //super.onCreate(savedInstanceState);
@@ -244,20 +244,20 @@ Java_com_tungsten_hmclpe_launcher_MainActivity_onCreate(JNIEnv *env, jobject thi
     env->CallNonvirtualVoidMethod(thiz, AppCompatActivity, onCreate, saved_instance_state);
 
     jmethodID setContentView = env->GetMethodID(MainActivity, "setContentView", "(I)V");
-    jclass Layout = env->FindClass("com/tungsten/hmclpe/R$layout");
+    jclass Layout = env->FindClass("com/qcl/launcher/R$layout");
     jfieldID activity_main = env->GetStaticFieldID(Layout, "activity_main", "I");
     jint id_activity_main = env->GetStaticIntField(Layout, activity_main);
     env->CallVoidMethod(thiz, setContentView, id_activity_main);
 
     jmethodID findViewById = env->GetMethodID(MainActivity, "findViewById",
                                               "(I)Landroid/view/View;");
-    jclass id = env->FindClass("com/tungsten/hmclpe/R$id");
+    jclass id = env->FindClass("com/qcl/launcher/R$id");
     jfieldID launcher_layout = env->GetStaticFieldID(id, "launcher_layout", "I");
     jint id_launcher_layout = env->GetStaticIntField(id, launcher_layout);
     jobject launcherLayout = env->CallObjectMethod(thiz, findViewById, id_launcher_layout);
     jfieldID id_launcherLayout = env->GetFieldID(MainActivity, "launcherLayout",
                                                  "Landroid/widget/LinearLayout;");
     env->SetObjectField(thiz, id_launcherLayout, launcherLayout);
-    Java_com_tungsten_hmclpe_launcher_MainActivity_securityInit(env, thiz);
+    Java_com_qcl_launcher_launcher_MainActivity_securityInit(env, thiz);
 }
 }

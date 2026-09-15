@@ -10,8 +10,8 @@ dependencyResolutionManagement {
         maven { url 'https://www.jitpack.io' }
     }
 }
-rootProject.name = "Hello Minecraft Launcher Pocket Edition"
-include ':HMCLPE'
+rootProject.name = "Quanta Craft Launcher"
+include ':QCL'
 include ':FilePicker'
 include ':Boat'
 include ':PojavLauncher'

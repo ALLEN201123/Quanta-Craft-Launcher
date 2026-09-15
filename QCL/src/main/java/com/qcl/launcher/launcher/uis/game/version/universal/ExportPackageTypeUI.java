@@ -1,0 +1,62 @@
+package com.qcl.launcher.launcher.uis.game.version.universal;
+
+import android.content.Context;
+import android.view.View;
+import android.widget.LinearLayout;
+
+import com.qcl.launcher.R;
+import com.qcl.launcher.launcher.MainActivity;
+import com.qcl.launcher.launcher.uis.tools.BaseUI;
+import com.qcl.launcher.utils.animation.CustomAnimationUtils;
+
+public class ExportPackageTypeUI extends BaseUI implements View.OnClickListener {
+
+    public LinearLayout exportPackageTypeUI;
+
+    private LinearLayout hmclPackage;
+    private LinearLayout multimc;
+    private LinearLayout server;
+
+    public ExportPackageTypeUI(Context context, MainActivity activity) {
+        super(context, activity);
+    }
+
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        exportPackageTypeUI = activity.findViewById(R.id.ui_export_package_type);
+
+        hmclPackage = activity.findViewById(R.id.export_package_hmcl);
+        multimc = activity.findViewById(R.id.export_package_multimc);
+        server = activity.findViewById(R.id.export_package_server);
+        hmclPackage.setOnClickListener(this);
+        multimc.setOnClickListener(this);
+        server.setOnClickListener(this);
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        activity.showBarTitle(context.getResources().getString(R.string.export_package_type_ui_title),false,true);
+        CustomAnimationUtils.showViewFromLeft(exportPackageTypeUI,activity,context,true);
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        CustomAnimationUtils.hideViewToLeft(exportPackageTypeUI,activity,context,true);
+    }
+
+    @Override
+    public void onClick(View view) {
+        if (view == hmclPackage) {
+
+        }
+        if (view == multimc) {
+
+        }
+        if (view == server) {
+
+        }
+    }
+}
