@@ -292,5 +292,11 @@ public class LayoutPanel extends RelativeLayout {
         // 游戏画面已出来，背景不再可见 → 停掉轮换，省 CPU / 电
         bgHandler.removeCallbacks(bgTimeout);
         stopBgRotation();
+        // 1.0.9 关键修复：必须主动触发重绘！
+        // showBackground 只改了内部标志，若没人 invalidate，View 保持最后一帧——
+        // 屏幕上等待背景依然显示（真机实测：信号链路全部走通但画面不切换，
+        // 只有切后台/回前台强制全量重绘后才按新状态画出游戏画面）。
+        // TextureView 的内容更新走独立合成路径，不会自动带动本 View 重绘。
+        invalidate();
     }
 }
