@@ -502,12 +502,13 @@ public class BaseButton extends androidx.appcompat.widget.AppCompatButton {
         for (ChildLayout childLayout : SettingUtils.getChildList(info.pattern)){
             childNames.add(childLayout.name);
         }
-        for (String child : info.visibilityControl) {
+        for (java.util.Iterator<String> it = info.visibilityControl.iterator(); it.hasNext(); ) {
+            String child = it.next();
             if (childNames.contains(child)) {
                 menuHelper.viewManager.setChildVisibility(child);
             }
             else {
-                info.visibilityControl.remove(child);
+                it.remove();
                 saveButtonInfo();
             }
         }
