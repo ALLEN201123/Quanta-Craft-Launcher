@@ -1107,4 +1107,6 @@
     <string name="ui_about_boat_sub">提供大量技术支持</string>
     <string name="ui_about_libs_main">LWJGL / GL4ES / OpenAL / OpenJDK</string>
     <string name="ui_about_libs_sub">图形、音频与 Java 运行时</string>
+    <string name="drawer_custom_menu_create_pattern">新建布局</string>
+    <string name="drawer_custom_menu_create_button_style">新建按键样式</string>
 </resources>

@@ -1025,4 +1025,6 @@ Multiplayer is powered by Terracotta (by BurningTNT, also AGPL-3.0). The multipl
     <string name="ui_about_boat_sub">Provided extensive technical support</string>
     <string name="ui_about_libs_main">LWJGL / GL4ES / OpenAL / OpenJDK</string>
     <string name="ui_about_libs_sub">Graphics, audio and Java runtime</string>
+    <string name="drawer_custom_menu_create_pattern">New layout</string>
+    <string name="drawer_custom_menu_create_button_style">New button style</string>
 </resources>

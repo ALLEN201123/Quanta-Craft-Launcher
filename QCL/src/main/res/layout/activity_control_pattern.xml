@@ -896,6 +896,70 @@
 
                     </LinearLayout>
 
+                    <LinearLayout
+                        android:layout_marginTop="5dp"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_weight="1"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:text="@string/drawer_custom_menu_create_pattern"
+                            android:textSize="12sp"
+                            android:textColor="@color/colorPureBlack"
+                            android:singleLine="true"
+                            android:layout_gravity="center"/>
+
+                        <Button
+                            android:singleLine="true"
+                            android:textAllCaps="false"
+                            android:layout_width="wrap_content"
+                            android:layout_height="30dp"
+                            android:layout_gravity="center"
+                            android:paddingLeft="8dp"
+                            android:paddingRight="8dp"
+                            android:text="@string/drawer_custom_menu_create_pattern"
+                            android:textColor="@color/colorAccent"
+                            android:textSize="12sp"
+                            android:gravity="center"
+                            android:background="@drawable/launcher_setting_button"
+                            android:id="@+id/create_pattern"/>
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_marginTop="5dp"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_weight="1"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:text="@string/drawer_custom_menu_create_button_style"
+                            android:textSize="12sp"
+                            android:textColor="@color/colorPureBlack"
+                            android:singleLine="true"
+                            android:layout_gravity="center"/>
+
+                        <Button
+                            android:singleLine="true"
+                            android:textAllCaps="false"
+                            android:layout_width="wrap_content"
+                            android:layout_height="30dp"
+                            android:layout_gravity="center"
+                            android:paddingLeft="8dp"
+                            android:paddingRight="8dp"
+                            android:text="@string/drawer_custom_menu_create_button_style"
+                            android:textColor="@color/colorAccent"
+                            android:textSize="12sp"
+                            android:gravity="center"
+                            android:background="@drawable/launcher_setting_button"
+                            android:id="@+id/create_button_style"/>
+                    </LinearLayout>
+
                 </LinearLayout>
                 </LinearLayout>
 

@@ -141,6 +141,7 @@
 
         <activity
             android:name=".launcher.CrashReportActivity"
+            android:screenOrientation="landscape"
             android:process=":crash"
             android:exported="false"
             android:excludeFromRecents="true" />

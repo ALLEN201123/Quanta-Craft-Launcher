@@ -27,6 +27,9 @@ import com.qcl.launcher.control.view.TouchCharInput;
 import com.qcl.launcher.launcher.dialogs.control.AddViewDialog;
 import com.qcl.launcher.launcher.dialogs.control.ChildManagerDialog;
 import com.qcl.launcher.launcher.dialogs.control.EditControlPatternDialog;
+import com.qcl.launcher.launcher.dialogs.control.CreateButtonStyleDialog;
+import com.qcl.launcher.launcher.dialogs.control.CreateControlPatternDialog;
+import com.qcl.launcher.control.bean.button.ButtonStyle;
 import com.qcl.launcher.launcher.list.local.controller.ChildLayout;
 import com.qcl.launcher.launcher.list.local.controller.ControlPattern;
 import com.qcl.launcher.manifest.AppManifest;
@@ -87,6 +90,8 @@ public class MenuHelper implements CompoundButton.OnCheckedChangeListener, View.
     public Button manageChild;
     public Spinner childSpinner;
     public Button addView;
+    public Button createPattern;
+    public Button createButtonStyle;
 
     public ArrayList<ControlPattern> patternList;
     public ControlPattern currentPattern;
@@ -270,6 +275,8 @@ public class MenuHelper implements CompoundButton.OnCheckedChangeListener, View.
         manageChild = activity.findViewById(R.id.manage_child_layout);
         childSpinner = activity.findViewById(R.id.current_child_spinner);
         addView = activity.findViewById(R.id.add_view);
+        createPattern = activity.findViewById(R.id.create_pattern);
+        createButtonStyle = activity.findViewById(R.id.create_button_style);
 
         sensitivityText.setText(Integer.toString(gameMenuSetting.sensitivity));
         sensitivitySeekbar.setProgress(gameMenuSetting.sensitivity);
@@ -304,12 +311,16 @@ public class MenuHelper implements CompoundButton.OnCheckedChangeListener, View.
             manageChild.setEnabled(true);
             childSpinner.setEnabled(true);
             addView.setEnabled(true);
+            createPattern.setEnabled(true);
+            createButtonStyle.setEnabled(true);
         }
         else {
             editInfo.setEnabled(false);
             manageChild.setEnabled(false);
             childSpinner.setEnabled(false);
             addView.setEnabled(false);
+            createPattern.setEnabled(false);
+            createButtonStyle.setEnabled(false);
         }
         editModeSwitch.setChecked(editMode);
 
@@ -322,6 +333,8 @@ public class MenuHelper implements CompoundButton.OnCheckedChangeListener, View.
         manageChild.setOnClickListener(this);
         childSpinner.setOnItemSelectedListener(this);
         addView.setOnClickListener(this);
+        createPattern.setOnClickListener(this);
+        createButtonStyle.setOnClickListener(this);
 
         baseLayout.post(() -> {
             screenWidth = baseLayout.getWidth();
@@ -450,12 +463,16 @@ public class MenuHelper implements CompoundButton.OnCheckedChangeListener, View.
                 manageChild.setEnabled(true);
                 childSpinner.setEnabled(true);
                 addView.setEnabled(true);
+            createPattern.setEnabled(true);
+            createButtonStyle.setEnabled(true);
             }
             else {
                 editInfo.setEnabled(false);
                 manageChild.setEnabled(false);
                 childSpinner.setEnabled(false);
                 addView.setEnabled(false);
+            createPattern.setEnabled(false);
+            createButtonStyle.setEnabled(false);
             }
             viewManager.refreshLayout(currentPattern.name,currentChild,b);
         }
@@ -524,6 +541,29 @@ public class MenuHelper implements CompoundButton.OnCheckedChangeListener, View.
         }
         if (view == manageChild){
             ChildManagerDialog dialog = new ChildManagerDialog(context,this,currentPattern);
+            dialog.show();
+        }
+        if (view == createPattern){
+            CreateControlPatternDialog dialog = new CreateControlPatternDialog(context, activity, new CreateControlPatternDialog.OnPatternCreateListener() {
+                @Override
+                public void OnPatternCreate(ControlPattern controlPattern) {
+                    FileUtils.createDirectory(AppManifest.CONTROLLER_DIR + "/" + controlPattern.name);
+                    Gson gson = new Gson();
+                    String string = gson.toJson(controlPattern);
+                    FileStringUtils.writeFile(AppManifest.CONTROLLER_DIR + "/" + controlPattern.name + "/info.json", string);
+                }
+            });
+            dialog.show();
+        }
+        if (view == createButtonStyle){
+            CreateButtonStyleDialog dialog = new CreateButtonStyleDialog(context, SettingUtils.getButtonStyleList(), new CreateButtonStyleDialog.OnButtonStyleCreateListener() {
+                @Override
+                public void onButtonStyleCreate(ButtonStyle buttonStyle) {
+                    ArrayList<ButtonStyle> styles = SettingUtils.getButtonStyleList();
+                    styles.add(buttonStyle);
+                    SettingUtils.saveButtonStyle(styles);
+                }
+            });
             dialog.show();
         }
         if (view == addView){
