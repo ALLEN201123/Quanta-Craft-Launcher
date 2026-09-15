@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 草方块 UI · 次级面板：泥土贴图平铺（比草方块面板更素） -->
+<!--
+  草方块 UI · 次级面板（1.0.6 重构）
+  与主面板的区别：不带草皮条，纯泥土平铺 —— 用于内容区/列表底色，
+  避免整屏都是草，视觉上「草在面板顶、泥土在内容区」，层次更清楚。
+-->
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
     <item>
         <bitmap

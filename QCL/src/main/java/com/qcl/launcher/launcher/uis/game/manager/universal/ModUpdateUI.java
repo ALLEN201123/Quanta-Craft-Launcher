@@ -57,7 +57,7 @@ public class ModUpdateUI extends BaseUI implements View.OnClickListener {
     @Override
     public void onStart() {
         super.onStart();
-        activity.showBarTitle(context.getResources().getString(R.string.mod_update_ui_title),activity.uiManager.uis.get(activity.uiManager.uis.size() - 2) != activity.uiManager.mainUI,false);
+        activity.showBarTitle(context.getResources().getString(R.string.mod_update_ui_title),canGoBackToLast(),false);
         CustomAnimationUtils.showViewFromLeft(modUpdateUI,activity,context,true);
         init();
     }

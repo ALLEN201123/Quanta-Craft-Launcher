@@ -80,7 +80,7 @@ public class GameManagerUI extends BaseUI implements View.OnClickListener {
     @Override
     public void onStart() {
         super.onStart();
-        activity.showBarTitle(context.getResources().getString(R.string.game_manager_ui_title) + " - " + versionName,activity.uiManager.uis.get(activity.uiManager.uis.size() - 2) != activity.uiManager.mainUI,false);
+        activity.showBarTitle(context.getResources().getString(R.string.game_manager_ui_title) + " - " + versionName,canGoBackToLast(),false);
         CustomAnimationUtils.showViewFromLeft(gameManagerUI,activity,context,true);
         init();
     }

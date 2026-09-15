@@ -145,7 +145,12 @@ public class UIManager {
         uis.add(ui);
         ui.onStart();
         if (uis.size() > 1){
-            uis.get(uis.size() - 2).onStop();
+            // 1.0.6：加 try/catch，避免被切出去的那个页面在 onStop 里抛异常时
+            // 连带打断本次切换（表现为主界面之后黑屏 / 返回栏不显示）。
+            try {
+                uis.get(uis.size() - 2).onStop();
+            } catch (Throwable ignored) {
+            }
         }
         System.out.println("-----------------------------------------------------------------------------------------------------------------------------switch to new ui");
     }

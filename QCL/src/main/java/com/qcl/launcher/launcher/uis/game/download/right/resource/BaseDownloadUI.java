@@ -56,7 +56,7 @@ public class BaseDownloadUI extends BaseUI {
         layoutParams.width = ViewGroup.LayoutParams.MATCH_PARENT;
         layoutParams.height = ViewGroup.LayoutParams.MATCH_PARENT;
         baseDownloadUI.setLayoutParams(layoutParams);
-        activity.showBarTitle(bean.getTitle(),activity.uiManager.uis.get(activity.uiManager.uis.size() - 2) != activity.uiManager.mainUI,false);
+        activity.showBarTitle(bean.getTitle(),canGoBackToLast(),false);
         CustomAnimationUtils.showViewFromLeft(baseDownloadUI,activity,context,true);
     }
 

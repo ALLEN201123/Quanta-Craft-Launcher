@@ -205,26 +205,61 @@ public final class QclThemeUtils {
      * （本项目 90% 的按钮都是 selector）**永远不成立** —— 每次 getDrawable 都会新建
      * ConstantState，所以按钮类主题替换实际上是失效的，这正是「部分区域没换成草方块」的根因。
      *
-     * <p>现在改为：优先用 Drawable 内部的 mResourceId 字段（反射读取，Android 各版本
-     * 都是这个字段名），它记录了「这个 drawable 是从哪个资源 id 加载出来的」——
-     * 对 selector / shape / bitmap / layer-list 全部有效，且稳定可靠。
-     * 读不到时才退回 ConstantState 比较。
+     * <p>现在改为：递归读取 Drawable 内部的 mResourceId 字段（反射，Android 各版本都是这个名字），
+     * 它记录了「这个 drawable 是从哪个资源 id 加载出来的」，对 selector / ripple / layer-list
+     * 的子层同样有效，稳定可靠。最后再兜一层 ConstantState 比较。
      */
     private static boolean sameDrawable(Activity activity, Drawable current, int resId) {
         try {
+            if (current == null) return false;
+            if (containsResId(current, resId, 0)) return true;
+            // 兜底：ConstantState 对象相等（shape / bitmap 共享缓存的情况）
             Drawable target = ContextCompat.getDrawable(activity, resId);
             if (target == null) return false;
-            // 首选：反射读 mResourceId（最可靠，selector 也能命中）
-            int curId = reflectResourceId(current);
-            int targetId = reflectResourceId(target);
-            if (curId != 0 && targetId != 0 && curId == targetId) return true;
-            // 次选：ConstantState 对象相等（shape / bitmap 共享缓存的情况）
             Drawable.ConstantState a = current.getConstantState();
             Drawable.ConstantState b = target.getConstantState();
             return a != null && b != null && a == b;
         } catch (Throwable ignored) {
             return false;
         }
+    }
+
+    /** 递归判断 drawable 自身或其子层是否来自指定资源 id */
+    private static boolean containsResId(Drawable d, int resId, int depth) {
+        if (d == null || depth > 4) return false;
+        if (reflectResourceId(d) == resId) return true;
+        try {
+            // RippleDrawable 不是 DrawableContainer，但它有 getDrawable(int) / getLayerCount，
+            // 需要单独处理它的内容层与遮罩层。
+            if (d instanceof android.graphics.drawable.RippleDrawable) {
+                android.graphics.drawable.RippleDrawable r = (android.graphics.drawable.RippleDrawable) d;
+                int n = r.getNumberOfLayers();
+                for (int i = 0; i < n; i++) {
+                    if (containsResId(r.getDrawable(i), resId, depth + 1)) return true;
+                }
+            }
+            if (d instanceof android.graphics.drawable.LayerDrawable) {
+                android.graphics.drawable.LayerDrawable l = (android.graphics.drawable.LayerDrawable) d;
+                for (int i = 0; i < l.getNumberOfLayers(); i++) {
+                    if (containsResId(l.getDrawable(i), resId, depth + 1)) return true;
+                }
+            }
+            if (d instanceof android.graphics.drawable.DrawableContainer) {
+                Drawable.ConstantState cs = d.getConstantState();
+                if (cs != null) {
+                    java.lang.reflect.Method m = cs.getClass().getDeclaredMethod("getChildren");
+                    m.setAccessible(true);
+                    Object arr = m.invoke(cs);
+                    if (arr instanceof Drawable[]) {
+                        for (Drawable child : (Drawable[]) arr) {
+                            if (containsResId(child, resId, depth + 1)) return true;
+                        }
+                    }
+                }
+            }
+        } catch (Throwable ignored) {
+        }
+        return false;
     }
 
     /** 反射读取 Drawable.mResourceId（隐藏字段，但各版本稳定存在） */

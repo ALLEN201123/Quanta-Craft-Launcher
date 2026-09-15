@@ -40,6 +40,12 @@ public class LaunchLogWindow {
     private View panel;
     private TextView logView;
     private ScrollView scroller;
+    /** 1.0.6：圆形关闭按钮（原来是无背景的裸「×」） */
+    private TextView closeBtn;
+    /** 1.0.6：拖动用的窗口布局参数（拖动时改 leftMargin / topMargin） */
+    private FrameLayout.LayoutParams panelLp;
+    /** 1.0.6：标题栏 —— 拖动把手 */
+    private LinearLayout headerBar;
     private boolean attached;
     private static LaunchLogWindow current;
     private volatile boolean closed;
@@ -210,18 +216,17 @@ public class LaunchLogWindow {
     private final Runnable silenceChecker = new Runnable() {
         @Override
         public void run() {
-            if (!attached) return;
-            long now = android.os.SystemClock.uptimeMillis();
-            // 加载过程中日志是持续输出的；一旦停了，说明游戏已经加载完进入主界面
-            if (gotAnyLine && now - lastLogTime >= LOG_SILENCE_MS) {
-                close();
-                return;
-            }
-            if (now - shownAt >= MAX_SHOW_MS) {
-                close();
-                return;
-            }
-            mainHandler.postDelayed(this, 250);
+            // 1.0.6：自动关闭逻辑已**整体停用**（用户要求"不要自己关闭，需要一直显示"）。
+            //
+            // 原来这里有三套自动关闭，都造成了用户反馈的"窗口自己消失"：
+            //  ① MENU_MARKERS 命中即关 —— 那些标记（Sound engine started / Created: 16x16x4）
+            //     在较早版本里就会打印，用户还在看加载过程，窗口却突然没了；
+            //  ② LOG_SILENCE_MS 静默判定 —— 比较的是 logcat 时间戳（CLOCK_MONOTONIC）与
+            //     uptimeMillis，两者不同源，差值恒为一个极大的数，导致窗口**一打开就立刻关闭**；
+            //  ③ MAX_SHOW_MS 兜底上限 —— 到点无条件关。
+            //
+            // 现在三条都不再触发：窗口只在用户点右上角 ×（或随 Activity 销毁）时关闭。
+            // 这里保留空实现，仅为让 show() 里的调用点继续编译通过。
         }
     };
 
@@ -320,6 +325,41 @@ public class LaunchLogWindow {
         });
     }
 
+    /**
+     * 1.0.6：进入文本选择模式。
+     *
+     * <p>为什么需要这个方法：{@code setTextIsSelectable(true)} 只是「允许」选择，
+     * 但日志外层套了 ScrollView，**长按手势会优先被滚动容器截走**，
+     * 所以用户长按没有任何反应 —— 表现就是"选不了、复制不了"。
+     * 这里在 TextView 自己的 OnLongClickListener 里主动调用
+     * {@code performLongClick()}，让文本组件自己接管这次长按并进入选择态。
+     */
+    private boolean startTextSelection() {
+        try {
+            if (logView == null) return false;
+            // 让 TextView 走它自己的长按处理（进入选择模式）
+            logView.performHapticFeedback(android.view.HapticFeedbackConstants.LONG_PRESS);
+            logView.performLongClick();
+            return true;
+        } catch (Throwable ignored) {
+            return false;
+        }
+    }
+
+    /** 触点是否落在某个 View 的屏幕矩形内（用于把点击让给关闭按钮）。 */
+    private boolean isTouchInside(View v, android.view.MotionEvent event) {
+        try {
+            int[] loc = new int[2];
+            v.getLocationOnScreen(loc);
+            float x = event.getRawX();
+            float y = event.getRawY();
+            return x >= loc[0] && x <= loc[0] + v.getWidth()
+                    && y >= loc[1] && y <= loc[1] + v.getHeight();
+        } catch (Throwable ignored) {
+            return false;
+        }
+    }
+
     public void close() {
         closed = true;
         current = null;
@@ -338,8 +378,9 @@ public class LaunchLogWindow {
         if (attached) return;
         int pad = dp(8);
 
-        LinearLayout box = new LinearLayout(activity);
-        box.setOrientation(LinearLayout.VERTICAL);
+        // ⚠️ 外层必须是 FrameLayout：窗口既要被拖动（改 LayoutParams 的 margin），
+        // 又要在右下角放一个绝对定位的缩放手柄。LinearLayout 装不下 FrameLayout.LayoutParams。
+        FrameLayout box = new FrameLayout(activity);
         GradientDrawable background = new GradientDrawable();
         background.setColor(0xCC1C1C1C);
         background.setCornerRadius(dp(8));
@@ -347,24 +388,47 @@ public class LaunchLogWindow {
         box.setBackground(background);
         box.setPadding(pad, pad, pad, pad);
 
-        // 标题栏：标题 + 关闭按钮
+        // 内容竖排容器（标题栏 + 日志区）
+        LinearLayout column = new LinearLayout(activity);
+        column.setOrientation(LinearLayout.VERTICAL);
+        box.addView(column, new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.MATCH_PARENT));
+
+        // 标题栏：标题 + 关闭按钮（1.0.6 起同时作为**拖动把手**）
         LinearLayout header = new LinearLayout(activity);
+
+        headerBar = header;
         header.setOrientation(LinearLayout.HORIZONTAL);
         header.setGravity(Gravity.CENTER_VERTICAL);
         TextView title = new TextView(activity);
-        title.setText("启动日志");
+        // 1.0.6：标题加一个「可拖动」的视觉暗示（≡ 图标），让玩家知道这里能拖
+        title.setText("≡ 启动日志");
         title.setTextColor(0xFFE6E6E6);
         title.setTextSize(12);
+        title.setPadding(dp(2), dp(4), dp(2), dp(4));
         header.addView(title, new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
-        TextView close = new TextView(activity);
-        close.setText("×");
-        close.setTextColor(0xFFFFFFFF);
-        close.setTextSize(16);
-        close.setPadding(dp(10), 0, dp(2), 0);
-        close.setOnClickListener(v -> close());
-        header.addView(close, new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT));
-        box.addView(header, new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,
+
+        // 1.0.6：关闭按钮原来是一个裸 TextView「×」，没有任何背景和圆形边框，
+        // 贴在深色面板上看起来就是"一块带字的方块"，既不美观也不像按钮。
+        // 现在改为**圆形背景 + 居中 ×**，有按下反馈，尺寸也放大到易点。
+        closeBtn = new TextView(activity);
+        closeBtn.setText("×");
+        closeBtn.setTextColor(0xFFFFFFFF);
+        closeBtn.setTextSize(14);
+        closeBtn.setGravity(Gravity.CENTER);
+        GradientDrawable closeBg = new GradientDrawable();
+        closeBg.setShape(GradientDrawable.OVAL);
+        closeBg.setColor(0x33FFFFFF);
+        closeBg.setStroke(dp(1), 0x55FFFFFF);
+        closeBtn.setBackground(closeBg);
+        closeBtn.setClickable(true);
+        closeBtn.setFocusable(true);
+        closeBtn.setOnClickListener(v -> close());
+        int closeSize = dp(22);
+        LinearLayout.LayoutParams closeLp = new LinearLayout.LayoutParams(closeSize, closeSize);
+        closeLp.leftMargin = dp(4);
+        header.addView(closeBtn, closeLp);
+        column.addView(header, new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT));
 
         // 日志区
@@ -374,20 +438,117 @@ public class LaunchLogWindow {
         logView.setTextColor(0xFFDDDDDD);
         logView.setTextSize(10);
         logView.setTypeface(android.graphics.Typeface.MONOSPACE);
+        // 1.0.6：让日志可以长按选择并复制。
+        //  - setTextIsSelectable(true) 打开选择能力；
+        //  - 关键：给它设一个**可长按的 OnLongClickListener**，
+        //    否则在 ScrollView 里长按手势会被滚动容器吃掉，表现为"选择不了、复制不了"。
         logView.setTextIsSelectable(true);
+        logView.setLongClickable(true);
+        logView.setClickable(true);
+        logView.setOnLongClickListener(v -> {
+            // 长按命中某个词 → 直接进入选择模式（返回 true 表示已消费，不再冒泡）
+            return startTextSelection();
+        });
         scroller.addView(logView, new ScrollView.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT));
-        box.addView(scroller, new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f));
+        column.addView(scroller, new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f));
 
-        FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(dp(250), dp(160),
+        panelLp = new FrameLayout.LayoutParams(dp(250), dp(160),
                 Gravity.BOTTOM | Gravity.START);
-        lp.leftMargin = dp(8);
-        lp.bottomMargin = dp(8);
-        box.setLayoutParams(lp);
+        panelLp.leftMargin = dp(8);
+        panelLp.bottomMargin = dp(8);
+        box.setLayoutParams(panelLp);
+
+        // 1.0.6：窗口可拖动 —— 拖标题栏即可。原来窗口是钉死在左下角的，挡视线也没法让开。
+        // 拖动改的是 LayoutParams 的 leftMargin / topMargin，并用 clamp 限制在父容器内。
+        header.setOnTouchListener(new View.OnTouchListener() {
+            private float downRawX, downRawY;
+            private int startLeft, startTop;
+
+            @Override
+            public boolean onTouch(View v, android.view.MotionEvent event) {
+                switch (event.getActionMasked()) {
+                    case android.view.MotionEvent.ACTION_DOWN:
+                        // ⚠️ 关闭按钮也在标题栏里。要是这里一律 return true 吃掉手势，
+                        // × 就永远点不到了 → 落点在关闭按钮上时不接管，交给它自己处理。
+                        if (closeBtn != null && isTouchInside(closeBtn, event)) return false;
+                        downRawX = event.getRawX();
+                        downRawY = event.getRawY();
+                        startLeft = panelLp.leftMargin;
+                        startTop = panelLp.topMargin;
+                        return true;
+                    case android.view.MotionEvent.ACTION_MOVE: {
+                        int dx = (int) (event.getRawX() - downRawX);
+                        int dy = (int) (event.getRawY() - downRawY);
+                        int newLeft = startLeft + dx;
+                        int newTop = startTop + dy;
+                        // clamp 到父容器范围内，避免拖出屏幕外找不回来
+                        int maxLeft = Math.max(0, parent.getWidth() - panel.getWidth());
+                        int maxTop = Math.max(0, parent.getHeight() - panel.getHeight());
+                        newLeft = Math.max(0, Math.min(maxLeft, newLeft));
+                        newTop = Math.max(0, Math.min(maxTop, newTop));
+                        // 拖过之后统一改成 TOP|START + margin 定位，避免 BOTTOM 锚点导致抖动
+                        panelLp.gravity = Gravity.TOP | Gravity.START;
+                        panelLp.leftMargin = newLeft;
+                        panelLp.topMargin = newTop;
+                        panel.setLayoutParams(panelLp);
+                        return true;
+                    }
+                    case android.view.MotionEvent.ACTION_UP:
+                    case android.view.MotionEvent.ACTION_CANCEL:
+                        return true;
+                }
+                return false;
+            }
+        });
 
         parent.addView(box);
         panel = box;
         attached = true;
+
+        // 1.0.6：右下角拖拽调大小。用户反馈"边框不能拖动"——标题栏负责挪位置，
+        // 右下角这个把手负责改尺寸，两者配合才能把窗口摆到不挡视线的地方。
+        try {
+            TextView resizer = new TextView(activity);
+            resizer.setText("◢");
+            resizer.setTextColor(0x88FFFFFF);
+            resizer.setTextSize(11);
+            resizer.setGravity(Gravity.BOTTOM | Gravity.END);
+            int rSize = dp(20);
+            FrameLayout.LayoutParams rLp = new FrameLayout.LayoutParams(rSize, rSize);
+            rLp.gravity = Gravity.BOTTOM | Gravity.END;
+            box.addView(resizer, rLp);
+            resizer.setOnTouchListener(new View.OnTouchListener() {
+                private float downRawX, downRawY;
+                private int startW, startH;
+
+                @Override
+                public boolean onTouch(View v, android.view.MotionEvent event) {
+                    switch (event.getActionMasked()) {
+                        case android.view.MotionEvent.ACTION_DOWN:
+                            downRawX = event.getRawX();
+                            downRawY = event.getRawY();
+                            startW = panelLp.width;
+                            startH = panelLp.height;
+                            return true;
+                        case android.view.MotionEvent.ACTION_MOVE: {
+                            int w = startW + (int) (event.getRawX() - downRawX);
+                            int h = startH + (int) (event.getRawY() - downRawY);
+                            // 下限保证还能看清日志、还能点到关闭按钮
+                            panelLp.width = Math.max(dp(180), Math.min(dp(640), w));
+                            panelLp.height = Math.max(dp(110), Math.min(dp(520), h));
+                            panel.setLayoutParams(panelLp);
+                            return true;
+                        }
+                        case android.view.MotionEvent.ACTION_UP:
+                        case android.view.MotionEvent.ACTION_CANCEL:
+                            return true;
+                    }
+                    return false;
+                }
+            });
+        } catch (Throwable ignored) {
+        }
 
         // 回填已经写入的日志（启动可能早于窗口创建）。
         // 1.0.6：先插基础信息，再把历史文件内容追加在后面，保证信息区在顶部。
@@ -415,10 +576,11 @@ public class LaunchLogWindow {
     private void onLogLine(String text) {
         lastLogTime = android.os.SystemClock.uptimeMillis();
         gotAnyLine = true;
-        if (isMenuMarker(text)) {
-            mainHandler.post(this::close);
-            return;
-        }
+        // 1.0.6：**移除「命中主界面标记就自动关闭」**。
+        // 原来 isMenuMarker() 一旦匹配（Sound engine started / Created: 16x16x4 等）
+        // 就立刻 close()，而较早版本在主界面出现时就会打印这些内容 ——
+        // 用户看到的就是"启动完自己就关了"，还没看完日志。
+        // 现在不在这里关闭，由用户点 × 决定。
         // 1.0.6：过滤无信息量噪声 + 截断超长行，否则窗口会被刷屏看不到有用内容
         String filtered = filterLine(text);
         if (filtered == null) return;

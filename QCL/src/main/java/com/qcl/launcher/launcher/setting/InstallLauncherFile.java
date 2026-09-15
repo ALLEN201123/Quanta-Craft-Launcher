@@ -193,9 +193,10 @@ public class InstallLauncherFile {
         String installed = FileStringUtils.getStringFromFile(targetPath + "/version");
         File marker = new File(targetPath, "version");
         if (expected == null) return;
-        expected = expected.trim() + "-verified-copy-2";
+        expected = expected.trim() + "-verified-copy-3";
         if (!marker.exists() || installed == null || !expected.trim().equals(installed.trim())
                 || !new File(targetPath, "lib/server/libjvm.so").isFile()
+                || !new File(targetPath, "release").isFile()
                 || !new File(targetPath, "lib/modules").isFile()) {
             try {
                 if (marker.exists() && !marker.delete()) throw new IOException("Cannot invalidate runtime: " + marker);

@@ -125,6 +125,21 @@ public class PojavMinecraftActivity extends BaseMainActivity {
                 final int argHeight = usableHeight;
                 new Thread(() -> {
                     Vector<String> args = PojavLauncher.getMcArgs(gameLaunchSetting, PojavMinecraftActivity.this, (int) (argWidth * scaleFactor), (int) (argHeight * scaleFactor), gameLaunchSetting.server);
+                    if (args == null) {
+                        // 启动参数构造失败（通常是 Java 运行库缺文件 / 版本 json 损坏）。
+                        // 具体原因已由 PojavLauncher 写进启动日志窗；这里只负责别把进程打死，
+                        // 并把玩家退回启动器，让他能换个运行时或版本重试。
+                        runOnUiThread(() -> {
+                            try {
+                                android.widget.Toast.makeText(PojavMinecraftActivity.this,
+                                        "启动失败：运行库或版本文件不完整，详情见启动日志",
+                                        android.widget.Toast.LENGTH_LONG).show();
+                            } catch (Throwable ignored) {
+                            }
+                            finish();
+                        });
+                        return;
+                    }
                     runOnUiThread(() -> {
                         JREUtils.setupBridgeWindow(new Surface(surface));
                         startGame(gameLaunchSetting.javaPath,

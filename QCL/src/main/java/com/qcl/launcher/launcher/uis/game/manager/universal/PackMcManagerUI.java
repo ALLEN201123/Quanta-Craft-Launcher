@@ -81,7 +81,7 @@ public class PackMcManagerUI extends BaseUI implements View.OnClickListener {
     @Override
     public void onStart() {
         super.onStart();
-        activity.showBarTitle(context.getResources().getString(R.string.manage_datapack_ui_title).replace("%w",world.getWorldName()),activity.uiManager.uis.get(activity.uiManager.uis.size() - 2) != activity.uiManager.mainUI,false);
+        activity.showBarTitle(context.getResources().getString(R.string.manage_datapack_ui_title).replace("%w",world.getWorldName()),canGoBackToLast(),false);
         CustomAnimationUtils.showViewFromLeft(packMcManagerUI,activity,context,true);
         init();
     }

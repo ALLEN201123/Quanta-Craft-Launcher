@@ -1,10 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  草方块 UI · 按钮背景
-  Alpha 草方块贴图平铺 + 状态遮罩（按下变暗）。用 LayerDrawable 组合：
-  第一层是平铺的草方块位图，第二层是按钮的按压遮罩。
+  草方块 UI · 按钮背景（1.0.6 重构）
+
+  ⚠️ 旧实现同样是整块草方块 repeat → 按钮上糊满草。
+  现在改成与面板一致的三层结构：泥土打底 + 草皮条在顶部 + 状态描边/按压遮罩。
+  这样按钮看起来就是一块「迷你草方块」：顶上是草、下面是泥土。
 -->
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:drawable="@drawable/qcl_grass_tile_drawable" />
+    <!-- 1) 泥土底 -->
+    <item>
+        <bitmap
+            android:src="@drawable/qcl_dirt_tile"
+            android:tileMode="repeat" />
+    </item>
+    <!-- 2) 顶部草皮条（按钮矮，取 6dp 即可，太多会盖住泥土） -->
+    <item android:gravity="top" android:height="6dp">
+        <bitmap
+            android:src="@drawable/qcl_grass_strip"
+            android:tileMode="repeat" />
+    </item>
+    <!-- 3) 状态层：常态描边，按下加暗 -->
     <item android:drawable="@drawable/qcl_grass_button_overlay" />
 </layer-list>

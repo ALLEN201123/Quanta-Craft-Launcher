@@ -157,16 +157,15 @@ public class GameLaunchSetting {
                 javaPath = AppManifest.JAVA_DIR + "/" + privateGameSetting.javaSetting.name;
             }
             else {
+                // ⚠️ 运行时目录名就是 `JRE21` / `JRE25`，**不要**在这里拼架构后缀。
+                // InstallLauncherFile.prepareModernJava() 会把
+                //   app_runtime/java/JRE21  +  app_runtime/java/21-<arch>
+                // 两层**合并**拷进设备上的 JAVA_DIR/JRE21。
+                // 早期版本运行时装在独立的 `21-arm` / `21-x86_64` 目录，这里曾据此拼后缀；
+                // 改成合并安装后这段拼接就变成了错的 —— 会指向设备上不存在的目录，
+                // 导致 `JRE21/release` 读不到（FileNotFoundException）→ mcArgs 为 null
+                // → Tools.launchMinecraft() 抛 NPE 直接崩掉（1.20.6 起不来的真凶）。
                 String runtimeName = selectJavaRuntime(requiredJava(version));
-                // 21/25 的主目录（JRE21/JRE25）是 aarch64 构建；其他架构必须用按架构目录
-                // （21-arm/21-arm64/21-x86/21-x86_64、25-arm/...），否则 dlopen 64 位 libjvm 直接失败。
-                if (runtimeName.equals("JRE21") || runtimeName.equals("JRE25")) {
-                    int arch = com.qcl.launcher.utils.Architecture.getRuntimeArchitecture();
-                    String suffix = arch == com.qcl.launcher.utils.Architecture.ARCH_ARM ? "arm"
-                            : arch == com.qcl.launcher.utils.Architecture.ARCH_ARM64 ? "arm64"
-                            : arch == com.qcl.launcher.utils.Architecture.ARCH_X86 ? "x86" : "x86_64";
-                    runtimeName = (runtimeName.equals("JRE21") ? "21-" : "25-") + suffix;
-                }
                 javaPath = AppManifest.JAVA_DIR + "/" + runtimeName;
             }
         }

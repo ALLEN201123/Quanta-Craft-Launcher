@@ -1,7 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 草方块 UI · 面板：草方块贴图平铺 + 深色描边（不透明） -->
+<!--
+  草方块 UI · 主面板（1.0.6 重构）
+
+  ⚠️ 关键修正：旧实现把 48x48 的「整块草方块」直接 tileMode=repeat 平铺，
+  于是每隔 48px 就重复一次草边 —— 整个面板到处冒草，而看不到泥土。
+  这正是用户反馈的「一大堆草的贴图、没有泥土的贴图」。
+
+  正确做法：把面板拆成「顶部固定草皮条」+「下方可重复泥土」两层：
+    · 第 1 层：纯泥土位图，tileMode=repeat —— 整块面板铺满泥土（这才是主体）
+    · 第 2 层：草皮条，只贴在**最顶部**一条（gravity=top，不重复）—— 草只在最上面
+    · 第 3 层：描边
+  这样无论面板多高，草都只出现在顶部一条，下方全是泥土，符合「草方块」的直觉。
+-->
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:drawable="@drawable/qcl_grass_tile_drawable" />
+    <!-- 1) 泥土底：整块平铺 -->
+    <item>
+        <bitmap
+            android:src="@drawable/qcl_dirt_tile"
+            android:tileMode="repeat" />
+    </item>
+    <!-- 2) 顶部草皮条：横向平铺、竖直只占顶部一条 -->
+    <item android:gravity="top" android:height="16dp">
+        <bitmap
+            android:src="@drawable/qcl_grass_strip"
+            android:tileMode="repeat" />
+    </item>
+    <!-- 3) 描边 -->
     <item>
         <shape>
             <stroke android:width="2dp" android:color="#CC2E1B08" />

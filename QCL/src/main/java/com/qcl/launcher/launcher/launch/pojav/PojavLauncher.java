@@ -30,8 +30,30 @@ public class PojavLauncher {
 
     public static Vector<String> getMcArgs(GameLaunchSetting gameLaunchSetting, Context context,int width,int height,String server){
         try {
+            // ⚠️ 这里曾经不留痕迹地把异常吞掉 → 返回 null → Tools.launchMinecraft() 里
+            // `args.size()` 抛 NPE 直接把启动器打死，日志里只有一句看不懂的 NPE。
+            // 现在缺 release 时给出**可读的**原因（哪个 runtime、哪个文件缺），并且仍然返回 null，
+            // 由调用方按 null 处理，不再让它炸到 Tools。
+            File jreRelease = new File(gameLaunchSetting.javaPath, "release");
+            if (!jreRelease.isFile()) {
+                net.kdt.pojavlaunch.Logger.getInstance(context).appendToLog(
+                        "启动失败：Java 运行库不完整 —— 缺少 " + jreRelease.getAbsolutePath()
+                        + "\n请到「设置 → Java 运行时」重新安装该运行时，或改用其它版本。");
+                return null;
+            }
             JREUtils.jreReleaseList = JREUtils.readJREReleaseProperties(gameLaunchSetting.javaPath);
+            if (JREUtils.jreReleaseList == null || JREUtils.jreReleaseList.isEmpty()) {
+                net.kdt.pojavlaunch.Logger.getInstance(context).appendToLog(
+                        "启动失败：Java 运行库无法解析 —— " + jreRelease.getAbsolutePath()
+                        + "\n该文件可能损坏，请重新安装运行时。");
+                return null;
+            }
             LaunchVersion version = LaunchVersion.fromDirectory(new File(gameLaunchSetting.currentVersion));
+            if (version == null) {
+                net.kdt.pojavlaunch.Logger.getInstance(context).appendToLog(
+                        "启动失败：版本文件损坏或缺少 json —— " + gameLaunchSetting.currentVersion);
+                return null;
+            }
             String javaPath = gameLaunchSetting.javaPath;
         // 运行架构自动判定：按应用实际安装的 ABI 决定用 32 位还是 64 位 JVM，
         // 结果写进启动日志（悬浮窗可见）。手机是 64 位却装成 32 位版时给出重装提示。
@@ -141,6 +163,12 @@ public class PojavLauncher {
         }
         catch (Exception e){
             e.printStackTrace();
+            // 把异常打到启动日志窗，否则玩家只看到「启动失败」却不知道为什么。
+            try {
+                net.kdt.pojavlaunch.Logger.getInstance(context).appendToLog(
+                        "启动参数构造失败：" + e.getClass().getSimpleName() + ": " + e.getMessage());
+            } catch (Throwable ignored) {
+            }
             return null;
         }
     }

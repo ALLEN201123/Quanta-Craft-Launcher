@@ -36,7 +36,6 @@ import com.qcl.launcher.launcher.uis.tools.UIManager;
 import com.qcl.launcher.launcher.uis.universal.setting.right.launcher.ExteriorSettingUI;
 import com.qcl.launcher.update.UpdateChecker;
 import com.qcl.launcher.utils.LocaleUtils;
-import com.qcl.launcher.utils.animation.CustomAnimationUtils;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
@@ -213,24 +212,59 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      * @param close 是否显示「关闭当前页面」按钮
      */
     public void showBarTitle(String title, boolean home, boolean close) {
-        if (!isLoaded || backBar == null) return;
-        if (title != null && !title.isEmpty()) {
-            currentUIText.setText(title);
-            currentUIText.setVisibility(View.VISIBLE);
-        } else {
-            currentUIText.setVisibility(View.GONE);
+        // ⚠️ 1.0.6 修复：本方法必须**绝对可靠**。
+        // 之前这里对 currentUIText 无条件 setText/setVisibility，一旦 backBar 的某个子控件
+        // 找不到（或调用发生在 isLoaded 之前）就会抛 NPE，异常被上层吞掉后返回栏不显示，
+        // 表现为「页面能进、但返回不了」。现在整个方法用 try/catch 包住，任一控件为 null 都跳过，
+        // 保证「能进来就一定有点亮的返回栏」。
+        try {
+            if (currentUIText != null) {
+                if (title != null && !title.isEmpty()) {
+                    currentUIText.setText(title);
+                    currentUIText.setVisibility(View.VISIBLE);
+                } else {
+                    currentUIText.setVisibility(View.GONE);
+                }
+            }
+            if (backToLastUI != null) backToLastUI.setVisibility(View.VISIBLE);
+            if (backToHome != null) backToHome.setVisibility(home ? View.VISIBLE : View.GONE);
+            if (closeCurrentUI != null) closeCurrentUI.setVisibility(close ? View.VISIBLE : View.GONE);
+        } catch (Throwable ignored) {
         }
-        backToLastUI.setVisibility(View.VISIBLE);
-        backToHome.setVisibility(home ? View.VISIBLE : View.GONE);
-        closeCurrentUI.setVisibility(close ? View.VISIBLE : View.GONE);
-        CustomAnimationUtils.showViewFromRight(backBar, this, this, true);
+        // 容器显隐放在最后、单独兜底：即使上面任何一步失败，返回栏本身也必须亮起来。
+        showBackBar();
+    }
+
+    /**
+     * 点亮悬浮返回栏（1.0.6）。不依赖 isLoaded —— 二级页面的 onStart 有可能早于
+     * MainActivity 的 loadingHandler 完成，必须自行 findViewById 兜底，否则返回栏永远不出现。
+     */
+    public void showBackBar() {
+        try {
+            if (backBar == null) {
+                backBar = findViewById(R.id.qcl_back_bar);
+            }
+            if (backBar == null) return;
+            if (backBar.getVisibility() != View.VISIBLE) {
+                backBar.setVisibility(View.VISIBLE);
+            }
+            backBar.bringToFront();
+        } catch (Throwable ignored) {
+            // 极端情况下（布局未 attach）直接放弃显示，但不能影响页面本身的加载
+        }
     }
 
     /** 回到主界面时隐藏悬浮返回栏（1.0.6 重写）。 */
     public void hideBarTitle() {
-        if (!isLoaded || backBar == null) return;
-        CustomAnimationUtils.hideViewToLeft(backBar, this, this, true);
-        currentUIText.setText("");
+        try {
+            if (backBar == null) {
+                backBar = findViewById(R.id.qcl_back_bar);
+            }
+            if (backBar == null) return;
+            backBar.setVisibility(View.GONE);
+            if (currentUIText != null) currentUIText.setText("");
+        } catch (Throwable ignored) {
+        }
     }
 
     public void backToLastUI() {
