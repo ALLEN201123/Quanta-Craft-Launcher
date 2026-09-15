@@ -139,33 +139,105 @@ public final class QclThemeUtils {
         // 面板
         if (sameDrawable(activity, bg, R.drawable.launcher_view_white)) return ROLE_WHITE;
         if (sameDrawable(activity, bg, R.drawable.launcher_view_light_gray)) return ROLE_LIGHT_GRAY;
-        // 顶栏 / 底栏（布局里用的是 @color/qcl_gray_translucent_bar → 按颜色值判）
+        // 顶栏 / 底栏：布局里用的是 @color/qcl_gray_translucent_bar (#B3545454) /
+        // qcl_gray_translucent (#B3575757) → 按颜色值判。
+        // 1.0.6：原来只精确匹配这两个色值，凡是「差不多的半透明深灰」就会漏掉，
+        // 表现为「切了草方块主题，标题栏还是灰的」。改为通用判定：
+        //   半透明(alpha 在 0x66~0xE0) + 低饱和的深灰(R≈G≈B 且 0x40~0x80) → 视为栏。
+        // 这样 bar 的任意细微色差变体都能覆盖。
         if (bg instanceof ColorDrawable) {
             int c = ((ColorDrawable) bg).getColor();
-            if (c == 0xB3545454 || c == 0xB3575757) return ROLE_BAR;
+            if (isTranslucentGrayBar(c)) return ROLE_BAR;
         }
-        // 按钮：主界面顶部一排 + 启动按钮
-        if (sameDrawable(activity, bg, R.drawable.qcl_button_gray)) return ROLE_BUTTON;
-        if (sameDrawable(activity, bg, R.drawable.launcher_button_gray)) return ROLE_BUTTON;
-        if (sameDrawable(activity, bg, R.drawable.launcher_button_blue)) return ROLE_BUTTON;
-        if (sameDrawable(activity, bg, R.drawable.launcher_button_white)) return ROLE_BUTTON;
+        // 按钮：主界面顶部一排 + 启动按钮 + 各页面操作按钮。
+        // 1.0.6：原来只认 4 种，导致 launcher_button_gray_blue / light_gray / normal /
+        // transparent_blue / white_blue / launcher_setting_button 这 6 种在草方块主题下
+        // 仍然保持原灰色 —— 这就是用户反馈的「部分区域没正确替换成草方块 UI」。
+        if (isButtonDrawable(activity, bg)) return ROLE_BUTTON;
         return ROLE_NONE;
+    }
+
+    /** 全部按钮类 drawable（草方块主题下统一替换为草方块按钮） */
+    private static final int[] BUTTON_DRAWABLES = new int[]{
+            R.drawable.qcl_button_gray,
+            R.drawable.launcher_button_gray,
+            R.drawable.launcher_button_blue,
+            R.drawable.launcher_button_white,
+            R.drawable.launcher_button_gray_blue,
+            R.drawable.launcher_button_light_gray,
+            R.drawable.launcher_button_normal,
+            R.drawable.launcher_button_transparent_blue,
+            R.drawable.launcher_button_white_blue,
+            R.drawable.launcher_setting_button,
+            R.drawable.launcher_button_item,
+            R.drawable.launcher_button_parent,
+            R.drawable.launcher_button_selected,
+    };
+
+    private static boolean isButtonDrawable(Activity activity, Drawable bg) {
+        for (int id : BUTTON_DRAWABLES) {
+            if (sameDrawable(activity, bg, id)) return true;
+        }
+        return false;
+    }
+
+    /**
+     * 判定一个颜色是否是「半透明深灰栏」。
+     * 覆盖 qcl_gray_translucent_bar(#B3545454)、qcl_gray_translucent(#B3575757)
+     * 以及任何近似变体，避免因一两个色阶之差导致主题漏刷。
+     */
+    private static boolean isTranslucentGrayBar(int c) {
+        int a = (c >>> 24) & 0xFF;
+        int r = (c >>> 16) & 0xFF;
+        int g = (c >>> 8) & 0xFF;
+        int b = c & 0xFF;
+        if (a < 0x66 || a > 0xE0) return false;      // 必须是有一定透明度的
+        int max = Math.max(r, Math.max(g, b));
+        int min = Math.min(r, Math.min(g, b));
+        if (max - min > 12) return false;            // 必须是接近中性灰（无色偏）
+        return min >= 0x38 && max <= 0x88;           // 深灰区间
     }
 
     /**
      * 判断两个 drawable 是否「来自同一份资源」。
-     * ConstantState 是同一个对象时通常就是同一资源（同主题、同密度下成立）。
+     *
+     * <p>⚠️ 1.0.6 重要修正：原来只靠 ConstantState 对象相等，但对 &lt;selector&gt; 类型
+     * （本项目 90% 的按钮都是 selector）**永远不成立** —— 每次 getDrawable 都会新建
+     * ConstantState，所以按钮类主题替换实际上是失效的，这正是「部分区域没换成草方块」的根因。
+     *
+     * <p>现在改为：优先用 Drawable 内部的 mResourceId 字段（反射读取，Android 各版本
+     * 都是这个字段名），它记录了「这个 drawable 是从哪个资源 id 加载出来的」——
+     * 对 selector / shape / bitmap / layer-list 全部有效，且稳定可靠。
+     * 读不到时才退回 ConstantState 比较。
      */
     private static boolean sameDrawable(Activity activity, Drawable current, int resId) {
         try {
             Drawable target = ContextCompat.getDrawable(activity, resId);
             if (target == null) return false;
+            // 首选：反射读 mResourceId（最可靠，selector 也能命中）
+            int curId = reflectResourceId(current);
+            int targetId = reflectResourceId(target);
+            if (curId != 0 && targetId != 0 && curId == targetId) return true;
+            // 次选：ConstantState 对象相等（shape / bitmap 共享缓存的情况）
             Drawable.ConstantState a = current.getConstantState();
             Drawable.ConstantState b = target.getConstantState();
-            return a != null && a == b;
+            return a != null && b != null && a == b;
         } catch (Throwable ignored) {
             return false;
         }
+    }
+
+    /** 反射读取 Drawable.mResourceId（隐藏字段，但各版本稳定存在） */
+    private static int reflectResourceId(Drawable d) {
+        if (d == null) return 0;
+        try {
+            java.lang.reflect.Field f = Drawable.class.getDeclaredField("mResourceId");
+            f.setAccessible(true);
+            Object v = f.get(d);
+            if (v instanceof Integer) return (Integer) v;
+        } catch (Throwable ignored) {
+        }
+        return 0;
     }
 
     /** 按角色生成草方块风格的不透明背景（全部用真实 Alpha 草方块材质） */

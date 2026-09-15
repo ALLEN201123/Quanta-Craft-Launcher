@@ -227,7 +227,7 @@ public class GameManagerUI extends BaseUI implements View.OnClickListener {
                             }
                             versionName = name;
                             activity.runOnUiThread(() -> {
-                                activity.currentUIText.setText(context.getResources().getString(R.string.game_manager_ui_title) + " - " + name);
+                                // 1.0.6：顶部标题栏已移除，不再更新标题文本。
                                 init();
                             });
                             activity.uiManager.versionListUI.refreshVersionList();

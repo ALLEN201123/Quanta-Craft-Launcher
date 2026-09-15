@@ -62,14 +62,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     public UpdateChecker updateChecker;
 
-    public Toolbar appBar;
-    public LinearLayout appBarTitle;
-    public ImageButton backToLastUI;
-    public TextView currentUIText;
-    public ImageButton backToHome;
-    public ImageButton closeCurrentUI;
-    public ImageButton backToDesktop;
-    public ImageButton closeApp;
+    // 1.0.6：顶部标题栏已移除，原 appBar / appBarTitle / backToLastUI / currentUIText /
+    // backToHome / closeCurrentUI / backToDesktop / closeApp 等控件与字段一并删除。
 
     public RelativeLayout uiContainer;
     public UIManager uiManager;
@@ -110,20 +104,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 if (!isLoaded) {
                     exteriorConfig = ATE.config(MainActivity.this, null);
 
-                    appBar = findViewById(R.id.app_bar);
-                    appBarTitle = findViewById(R.id.app_bar_title);
-                    backToLastUI = findViewById(R.id.back_to_last_ui);
-                    currentUIText = findViewById(R.id.text_current_ui);
-                    backToHome = findViewById(R.id.back_to_home);
-                    closeCurrentUI = findViewById(R.id.close_current_ui);
-                    backToDesktop = findViewById(R.id.back_to_desktop);
-                    closeApp = findViewById(R.id.close_app);
-
-                    backToLastUI.setOnClickListener(MainActivity.this);
-                    backToHome.setOnClickListener(MainActivity.this);
-                    closeCurrentUI.setOnClickListener(MainActivity.this);
-                    backToDesktop.setOnClickListener(MainActivity.this);
-                    closeApp.setOnClickListener(MainActivity.this);
+                    // 顶部标题栏已在 1.0.6 移除（合成台图标 + 标题 + 返回/主页/关闭等窗口按钮），
+                    // 六个主界面入口按钮整体上移到原位置。这里不再 findViewById 那批控件。
 
                     uiContainer = findViewById(R.id.main_ui_container);
                     uiManager = new UIManager(MainActivity.this,MainActivity.this);
@@ -131,7 +113,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     exteriorConfig.primaryColor(Color.parseColor(ExteriorSettingUI.getThemeColor(MainActivity.this,launcherSetting.launcherTheme)));
                     exteriorConfig.accentColor(Color.parseColor(ExteriorSettingUI.getThemeColor(MainActivity.this,launcherSetting.launcherTheme)));
                     exteriorConfig.apply(MainActivity.this);
-                    appBar.setBackgroundColor(launcherSetting.transBar ? getResources().getColor(R.color.launcher_ui_background) : Color.parseColor(ExteriorSettingUI.getThemeColor(MainActivity.this,launcherSetting.launcherTheme)));
 
                     // Development plans are available in About; no startup warning.
 
@@ -185,9 +166,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public void applyUiTheme() {
         try {
             com.qcl.launcher.launcher.uis.tools.QclThemeUtils.apply(this, launcherSetting.uiTheme);
-            if (launcherSetting.uiTheme == 1 && appBar != null) {
-                appBar.setBackgroundColor(0xFF6E9B2E);
-            }
+            // 1.0.6：顶部标题栏已移除，不再需要给 appBar 单独上色。
         } catch (Throwable ignored) {
         }
     }
@@ -207,40 +186,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         uiManager.mainUI.customTheme();
     }
 
+    /** 顶部标题栏已移除（1.0.6），方法保留为空实现以免调用方报错。 */
     public void showBarTitle(String title,boolean home,boolean close) {
-        if (isLoaded){
-            CustomAnimationUtils.hideViewToLeft(appBarTitle,this,this,true);
-            CustomAnimationUtils.showViewFromRight(backToLastUI,this,this,true);
-            if (home){
-                CustomAnimationUtils.showViewFromRight(backToHome,this,this,true);
-            }
-            else {
-                CustomAnimationUtils.hideViewToLeft(backToHome,this,this,true);
-            }
-            if (close){
-                CustomAnimationUtils.showViewFromRight(closeCurrentUI,this,this,true);
-            }
-            else {
-                CustomAnimationUtils.hideViewToLeft(closeCurrentUI,this,this,true);
-            }
-            CustomAnimationUtils.showViewFromRight(currentUIText,this,this,true);
-            currentUIText.setText(title);
-        }
     }
 
+    /** 顶部标题栏已移除（1.0.6），方法保留为空实现以免调用方报错。 */
     public void hideBarTitle() {
-        if (isLoaded){
-            CustomAnimationUtils.showViewFromLeft(appBarTitle,this,this,true);
-            CustomAnimationUtils.hideViewToLeft(backToLastUI,this,this,true);
-            if (backToHome.getVisibility() == View.VISIBLE){
-                CustomAnimationUtils.hideViewToLeft(backToHome,this,this,true);
-            }
-            if (closeCurrentUI.getVisibility() == View.VISIBLE){
-                CustomAnimationUtils.hideViewToLeft(closeCurrentUI,this,this,true);
-            }
-            CustomAnimationUtils.hideViewToLeft(currentUIText,this,this,true);
-            currentUIText.setText("");
-        }
     }
 
     public void backToLastUI() {
@@ -347,21 +298,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     public void onClick(View v) {
-        if (v == backToLastUI){
-            backToLastUI();
-        }
-        if (v == backToHome){
-            backToHome();
-        }
-        if (v == closeCurrentUI){
-            closeCurrentUI();
-        }
-        if (v == backToDesktop){
-            backToDeskTop();
-        }
-        if (v == closeApp){
-            finish();
-        }
+        // 1.0.6：原顶部标题栏的返回/主页/关闭/桌面/退出按钮已移除，这里不再有对应分支。
+        // 返回操作改由系统返回键（onBackPressed -> backToLastUI）承担。
     }
 
     @Override

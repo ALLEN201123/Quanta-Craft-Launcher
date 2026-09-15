@@ -123,8 +123,9 @@ public class DynamicBackground {
         int w = o.outWidth, h = o.outHeight;
         if (w <= 0 || h <= 0) return null;
 
-        // 背景不需要原始分辨率，压到屏幕宽度的一半以内即可（再放大铺满，肉眼无差）
-        int reqW = Math.max(720, activity.getResources().getDisplayMetrics().widthPixels / 2);
+        // 1.0.6：原来压到「屏幕宽度的一半」，在 1080p 以上屏幕上放大铺满后会明显发糊。
+        // 改为按屏幕宽度的 1.5 倍作为目标宽度，留出余量，既不糊也不至于太吃内存。
+        int reqW = Math.max(1080, activity.getResources().getDisplayMetrics().widthPixels * 3 / 2);
         int sample = 1;
         while (w / sample > reqW * 2) sample *= 2;
 
@@ -139,30 +140,12 @@ public class DynamicBackground {
     }
 
     /**
-     * 压暗 + 降饱和。让背景退到后面去，保证前景文字/面板的可读性。
+     * 1.0.6：不再做任何压暗 / 降饱和处理，原图直出。
+     * 方法保留（调用点不动），但内部已改为恒等变换 —— 这样万一以后想再调，
+     * 只需改这里的参数，不用动调用链。
      */
     private Bitmap dim(Bitmap src) {
-        try {
-            Bitmap out = Bitmap.createBitmap(src.getWidth(), src.getHeight(), Bitmap.Config.RGB_565);
-            Canvas canvas = new Canvas(out);
-            Paint paint = new Paint(Paint.FILTER_BITMAP_FLAG);
-
-            // 饱和度降到 75%，整体亮度压到 62%，稍微压一点让白字更清楚
-            ColorMatrix cm = new ColorMatrix();
-            cm.setSaturation(0.75f);
-            float scale = 0.62f;
-            float[] m = cm.getArray();
-            for (int i = 0; i < 3; i++) {
-                for (int j = 0; j < 3; j++) {
-                    m[i * 5 + j] *= scale;
-                }
-            }
-            paint.setColorFilter(new ColorMatrixColorFilter(cm));
-            canvas.drawBitmap(src, 0, 0, paint);
-            return out;
-        } catch (Throwable t) {
-            return src;
-        }
+        return src;
     }
 
     /** 静态便利：直接给某个 View 铺一张（用于不需要轮换的场景） */

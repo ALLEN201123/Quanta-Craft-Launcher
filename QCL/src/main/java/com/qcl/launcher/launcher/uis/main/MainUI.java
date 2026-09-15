@@ -606,7 +606,7 @@ public class MainUI extends BaseUI implements View.OnClickListener, AdapterView.
                 activity.exteriorConfig.primaryColor(Color.parseColor(jsonObject.getString("primaryColor")));
                 activity.exteriorConfig.accentColor(Color.parseColor(jsonObject.getString("accentColor")));
                 activity.exteriorConfig.apply(activity);
-                activity.appBar.setBackgroundColor(Color.parseColor(jsonObject.getString("primaryColor")));
+                // 1.0.6：顶部标题栏已移除，主题色不再需要刷到 appBar。
             } catch (Exception e) {
                 e.printStackTrace();
                 Toast.makeText(activity, e.toString(), Toast.LENGTH_SHORT).show();

@@ -348,7 +348,6 @@ public class ExteriorSettingUI extends BaseUI implements View.OnClickListener, C
                     activity.exteriorConfig.primaryColor(color);
                     activity.exteriorConfig.accentColor(color);
                     activity.exteriorConfig.apply(activity);
-                    activity.appBar.setBackgroundColor(activity.launcherSetting.transBar ? context.getResources().getColor(R.color.launcher_ui_background) : color);
                     colorView.setBackgroundColor(color);
                     colorText.setText("#" + Integer.toHexString(color));
                 }
@@ -361,7 +360,6 @@ public class ExteriorSettingUI extends BaseUI implements View.OnClickListener, C
                     activity.exteriorConfig.primaryColor(destColor);
                     activity.exteriorConfig.accentColor(destColor);
                     activity.exteriorConfig.apply(activity);
-                    activity.appBar.setBackgroundColor(activity.launcherSetting.transBar ? context.getResources().getColor(R.color.launcher_ui_background) : destColor);
                     colorView.setBackgroundColor(destColor);
                     colorText.setText("#" + Integer.toHexString(destColor));
                 }
@@ -372,7 +370,6 @@ public class ExteriorSettingUI extends BaseUI implements View.OnClickListener, C
                     activity.exteriorConfig.primaryColor(initColor);
                     activity.exteriorConfig.accentColor(initColor);
                     activity.exteriorConfig.apply(activity);
-                    activity.appBar.setBackgroundColor(activity.launcherSetting.transBar ? context.getResources().getColor(R.color.launcher_ui_background) : initColor);
                     colorView.setBackgroundColor(initColor);
                     colorText.setText("#" + Integer.toHexString(initColor));
                 }
@@ -423,10 +420,8 @@ public class ExteriorSettingUI extends BaseUI implements View.OnClickListener, C
             activity.launcherSetting.transBar = isChecked;
             GsonUtils.saveLauncherSetting(activity.launcherSetting,AppManifest.SETTING_DIR + "/launcher_setting.json");
             if (isChecked){
-                activity.appBar.setBackgroundColor(context.getResources().getColor(R.color.launcher_ui_background));
             }
             else {
-                activity.appBar.setBackgroundColor(Color.parseColor(getThemeColor(context,activity.launcherSetting.launcherTheme)));
             }
         }
         if (buttonView == fullscreenSwitch){
@@ -449,16 +444,7 @@ public class ExteriorSettingUI extends BaseUI implements View.OnClickListener, C
             QclThemeUtils.apply(activity, activity.launcherSetting.uiTheme);
             // 2) 草方块 UI 下禁用颜色自定义
             refreshColorEditable();
-            // 3) 顶栏颜色跟着走（草方块下用不透明草绿）
-            if (activity.appBar != null) {
-                if (isChecked) {
-                    activity.appBar.setBackgroundColor(0xFF6E9B2E);
-                } else if (activity.launcherSetting.transBar) {
-                    activity.appBar.setBackgroundColor(context.getResources().getColor(R.color.launcher_ui_background));
-                } else {
-                    activity.appBar.setBackgroundColor(Color.parseColor(getThemeColor(context, activity.launcherSetting.launcherTheme)));
-                }
-            }
+            // 3) 1.0.6：顶部标题栏已移除，不再需要同步顶栏颜色。
         }
         if (buttonView == defaultRadio && isChecked){
             classicRadio.setChecked(false);
