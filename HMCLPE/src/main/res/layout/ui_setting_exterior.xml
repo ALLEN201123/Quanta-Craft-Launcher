@@ -83,6 +83,56 @@
 
                 </LinearLayout>
 
+                <LinearLayout
+                    android:padding="15dp"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:singleLine="true"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/exterior_setting_ui_panel_color"
+                        android:textColor="@color/colorPureBlack"
+                        android:textSize="@dimen/text_size_middle"
+                        android:layout_gravity="center"/>
+
+                    <View
+                        android:layout_width="0dp"
+                        android:layout_height="0dp"
+                        android:layout_weight="1"/>
+
+                    <LinearLayout
+                        android:id="@+id/select_panel_color"
+                        android:padding="6dp"
+                        android:layout_width="120dp"
+                        android:layout_height="28dp"
+                        android:layout_gravity="center"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:background="@drawable/launcher_button_gray"
+                        android:orientation="horizontal">
+
+                        <View
+                            android:layout_marginStart="6dp"
+                            android:layout_width="16dp"
+                            android:layout_height="16dp"
+                            android:id="@+id/panel_color_view"/>
+
+                        <TextView
+                            android:singleLine="true"
+                            android:layout_width="match_parent"
+                            android:layout_height="16dp"
+                            android:id="@+id/panel_color_text"
+                            android:textColor="@color/colorPureBlack"
+                            android:textSize="@dimen/text_size_small"
+                            android:gravity="center"/>
+
+                    </LinearLayout>
+
+                </LinearLayout>
+
                 <View
                     android:layout_width="match_parent"
                     android:layout_height="1px"

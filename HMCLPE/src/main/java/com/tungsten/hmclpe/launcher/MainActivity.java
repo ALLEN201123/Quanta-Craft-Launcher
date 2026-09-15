@@ -137,6 +137,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
                     isLoaded = true;
                     onLoad();
+                    ExteriorSettingUI.applyPanelTint(MainActivity.this, getWindow().getDecorView(), ExteriorSettingUI.getPanelColor(MainActivity.this, launcherSetting.panelColor));
                 }
             }
         }

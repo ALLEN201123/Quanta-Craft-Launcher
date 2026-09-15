@@ -1015,4 +1015,5 @@ Multiplayer is powered by Terracotta (by BurningTNT, also GPL-3.0). The multipla
     <string name="qcl_runtime_bit_auto">Auto</string>
     <string name="qcl_runtime_bit_64">64-bit</string>
     <string name="qcl_runtime_bit_32">32-bit</string>
+    <string name="exterior_setting_ui_panel_color">Panel color</string>
 </resources>

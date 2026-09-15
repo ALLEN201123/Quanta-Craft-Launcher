@@ -1097,4 +1097,5 @@
     <string name="qcl_runtime_bit_auto">自动</string>
     <string name="qcl_runtime_bit_64">64 位</string>
     <string name="qcl_runtime_bit_32">32 位</string>
+    <string name="exterior_setting_ui_panel_color">背景板颜色</string>
 </resources>

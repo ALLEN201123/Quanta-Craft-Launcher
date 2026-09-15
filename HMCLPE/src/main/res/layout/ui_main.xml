@@ -162,7 +162,7 @@
                     android:layout_width="26dp"
                     android:layout_height="26dp"
                     android:layout_gravity="center"
-                    android:background="@drawable/ic_bookshelf"/>
+                    android:background="@drawable/ic_qcl_version_list_white"/>
 
                 <TextView
                     android:singleLine="true"
@@ -194,7 +194,7 @@
                     android:layout_width="26dp"
                     android:layout_height="26dp"
                     android:layout_gravity="center"
-                    android:background="@drawable/ic_chest"/>
+                    android:background="@drawable/ic_qcl_download_white"/>
 
                 <TextView
                     android:singleLine="true"
@@ -258,7 +258,7 @@
                     android:layout_gravity="center"
                     android:layout_width="26dp"
                     android:layout_height="26dp"
-                    android:background="@drawable/ic_command"/>
+                    android:background="@drawable/ic_qcl_setting_white"/>
 
                 <TextView
                     android:singleLine="true"

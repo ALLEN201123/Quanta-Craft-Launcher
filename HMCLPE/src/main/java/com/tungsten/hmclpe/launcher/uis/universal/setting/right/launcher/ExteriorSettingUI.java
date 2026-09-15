@@ -54,6 +54,9 @@ public class ExteriorSettingUI extends BaseUI implements View.OnClickListener, C
     private LinearLayout selectTheme;
     private View colorView;
     private TextView colorText;
+    private LinearLayout selectPanelColor;
+    private View panelColorView;
+    private TextView panelColorText;
     private SwitchCompat transBarSwitch;
     private SwitchCompat fullscreenSwitch;
     private LinearLayout fullscreenSetting;
@@ -78,6 +81,9 @@ public class ExteriorSettingUI extends BaseUI implements View.OnClickListener, C
         selectTheme = activity.findViewById(R.id.select_theme);
         colorView = activity.findViewById(R.id.theme_color_view);
         colorText = activity.findViewById(R.id.theme_color_text);
+        selectPanelColor = activity.findViewById(R.id.select_panel_color);
+        panelColorView = activity.findViewById(R.id.panel_color_view);
+        panelColorText = activity.findViewById(R.id.panel_color_text);
         transBarSwitch = activity.findViewById(R.id.switch_trans_bar);
         fullscreenSwitch = activity.findViewById(R.id.switch_full_screen);
         fullscreenSetting = activity.findViewById(R.id.fullscreen_layout);
@@ -140,6 +146,7 @@ public class ExteriorSettingUI extends BaseUI implements View.OnClickListener, C
         editBgUrl.setText(activity.launcherSetting.launcherBackground.url);
 
         selectTheme.setOnClickListener(this);
+        selectPanelColor.setOnClickListener(this);
         transBarSwitch.setOnCheckedChangeListener(this);
         fullscreenSwitch.setOnCheckedChangeListener(this);
         defaultRadio.setOnCheckedChangeListener(this);
@@ -222,6 +229,9 @@ public class ExteriorSettingUI extends BaseUI implements View.OnClickListener, C
         }
         colorView.setBackgroundColor(Color.parseColor(getThemeColor(context,activity.launcherSetting.launcherTheme)));
         colorText.setText(getThemeColor(context,activity.launcherSetting.launcherTheme));
+        int pc = getPanelColor(context, activity.launcherSetting.panelColor);
+        panelColorView.setBackgroundColor(pc);
+        panelColorText.setText("#" + Integer.toHexString(pc));
     }
 
     @SuppressLint("UseCompatLoadingForDrawables")
@@ -241,6 +251,34 @@ public class ExteriorSettingUI extends BaseUI implements View.OnClickListener, C
             if (resultCode == RESULT_OK) {
                 Uri uri = data.getData();
                 editBgPath.setText(UriUtils.getRealPathFromUri_AboveApi19(context,uri));
+            }
+        }
+    }
+
+    /** 背景板颜色（默认灰色，null 安全） */
+    public static int getPanelColor(Context context, String color){
+        if (color == null || color.equals("DEFAULT") || color.isEmpty()){
+            return context.getResources().getColor(R.color.qcl_panel_gray_alt);
+        }
+        try { return Color.parseColor(color); } catch (Throwable t) { return context.getResources().getColor(R.color.qcl_panel_gray_alt); }
+    }
+
+    /** 递归给面板 drawable 着色（按 constantState 匹配 launcher_view_white / launcher_view_light_gray） */
+    public static void applyPanelTint(Context context, View root, int color){
+        if (root == null) return;
+        if (root instanceof android.view.ViewGroup){
+            android.view.ViewGroup g = (android.view.ViewGroup) root;
+            for (int i = 0; i < g.getChildCount(); i++){
+                applyPanelTint(context, g.getChildAt(i), color);
+            }
+        }
+        android.graphics.drawable.Drawable bg = root.getBackground();
+        if (bg == null || bg.getConstantState() == null) return;
+        for (int id : new int[]{R.drawable.launcher_view_white, R.drawable.launcher_view_light_gray}){
+            android.graphics.drawable.Drawable ref = context.getResources().getDrawable(id);
+            if (ref != null && ref.getConstantState() != null && ref.getConstantState().equals(bg.getConstantState())){
+                bg.mutate().setTint(color);
+                break;
             }
         }
     }
@@ -301,6 +339,34 @@ public class ExteriorSettingUI extends BaseUI implements View.OnClickListener, C
                     activity.appBar.setBackgroundColor(activity.launcherSetting.transBar ? context.getResources().getColor(R.color.launcher_ui_background) : initColor);
                     colorView.setBackgroundColor(initColor);
                     colorText.setText("#" + Integer.toHexString(initColor));
+                }
+            });
+            dialog.show();
+        }
+        if (v == selectPanelColor){
+            ColorSelectorDialog dialog = new ColorSelectorDialog(context,true,getPanelColor(context,activity.launcherSetting.panelColor));
+            dialog.setColorSelectorDialogListener(new ColorSelectorDialog.ColorSelectorDialogListener() {
+                @SuppressLint("SetTextI18n")
+                @Override
+                public void onColorSelected(int color) {
+                    panelColorView.setBackgroundColor(color);
+                    panelColorText.setText("#" + Integer.toHexString(color));
+                }
+                @SuppressLint("SetTextI18n")
+                @Override
+                public void onPositive(int destColor) {
+                    activity.launcherSetting.panelColor = "#" + Integer.toHexString(destColor);
+                    GsonUtils.saveLauncherSetting(activity.launcherSetting,AppManifest.SETTING_DIR + "/launcher_setting.json");
+                    panelColorView.setBackgroundColor(destColor);
+                    panelColorText.setText("#" + Integer.toHexString(destColor));
+                    applyPanelTint(context, exteriorSettingUI, destColor);
+                    applyPanelTint(context, activity.getWindow().getDecorView(), destColor);
+                }
+                @SuppressLint("SetTextI18n")
+                @Override
+                public void onNegative(int initColor) {
+                    panelColorView.setBackgroundColor(initColor);
+                    panelColorText.setText("#" + Integer.toHexString(initColor));
                 }
             });
             dialog.show();
