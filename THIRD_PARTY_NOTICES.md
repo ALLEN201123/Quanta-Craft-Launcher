@@ -28,7 +28,7 @@ HMCL-PE 以 **GNU GPL-3.0** 授权；但 QCL 链接了 **AGPL-3.0** 的 Terracot
 
 ## 署名位置
 启动器内「设置 → 关于」页已列出：BMCLAPI、MC 百科、原版项目（HMCL-PE / Tungs）、
-本作作者（Rod123456）、以及 **Terracotta / BurningTNT** 与 GPL-3.0 说明。
+本作作者（Rod123456）、以及 **Terracotta / BurningTNT** 与 AGPL-3.0 说明。
 
 ## 多人联机的使用限制（合规与免责）
 多人联机功能仅限 **中国大陆地区** 使用；在境外使用本功能，本启动器不承担任何责任，
@@ -38,5 +38,5 @@ HMCL-PE 以 **GNU GPL-3.0** 授权；但 QCL 链接了 **AGPL-3.0** 的 Terracot
 Terracotta（BurningTNT）实际许可是 **AGPL-3.0**（不是 GPL-3.0）。这意味着：
 1. **分发必须提供对应源码** —— 其 Rust 源码已随本仓库提供在 `third_party_sources/Terracotta/`。
 2. AGPL-3.0 有「网络条款」（§13）：若把该软件作为网络服务提供给他人使用，须向网络用户提供源码。
-3. QCL 同时链接 GPL-3.0（HMCL-PE）与 AGPL-3.0（Terracotta），**合并作品应按更严格的 AGPL-3.0 对待**；
-   建议将本项目 LICENSE 也升级为 AGPL-3.0 以彻底合规。
+3. QCL 同时链接 GPL-3.0（HMCL-PE）与 AGPL-3.0（Terracotta），**合并作品按更严格的 AGPL-3.0 对待**；
+   本项目 LICENSE 已升级为 AGPL-3.0。
