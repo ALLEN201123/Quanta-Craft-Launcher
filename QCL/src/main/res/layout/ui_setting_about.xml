@@ -377,6 +377,54 @@
                 android:layout_height="1px"
                 android:background="@color/colorDarkGray"/>
 
+            <!-- FoldCraftLauncher（部分实现借用了 FCL 的代码与思路） -->
+            <LinearLayout
+                android:paddingTop="12dp"
+                android:paddingBottom="12dp"
+                android:paddingLeft="15dp"
+                android:paddingRight="15dp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <ImageView
+                    android:layout_width="30dp"
+                    android:layout_height="30dp"
+                    android:background="@drawable/ic_craft_table"
+                    android:layout_gravity="center"/>
+
+                <LinearLayout
+                    android:layout_gravity="center"
+                    android:layout_marginStart="15dp"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:singleLine="true"
+                        android:text="@string/ui_about_fcl_main"
+                        android:textSize="14sp"
+                        android:textColor="@color/colorPureBlack" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:singleLine="true"
+                        android:text="@string/ui_about_fcl_sub"
+                        android:textSize="12sp" />
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1px"
+                android:background="@color/colorDarkGray"/>
+
             <!-- 本作作者 -->
             <LinearLayout
                 android:paddingTop="12dp"
