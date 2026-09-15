@@ -85,15 +85,13 @@ public class CheckJavaTask extends AsyncTask<Object,Integer,Exception> {
                     ? GameLaunchSetting.selectJavaRuntime(expectedJava) : privateGameSetting.javaSetting.name;
             java = GameLaunchSetting.runtimeMajor(runtimeName);
             File runtime = new File(AppManifest.JAVA_DIR, runtimeName == null ? "" : runtimeName);
-            // 32 位运行时（aarch32 / i386）**不支持 Java 21 和 25**：
-            //  - 这两个版本的 32 位构建不存在（assets 里只有 21-arm64 / 25-arm64 等 64 位包）；
-            //  - 即便装上，Java 21+ 的 JVM 在 32 位地址空间里也几乎起不来。
-            // 所以只要"实际会用的运行时"是 32 位，就直接拦下来给玩家一个明确的提示，
-            // 而不是让他启动后看到黑屏/闪退。
+            // ⚠️ QCL 内置的运行时是**按架构**分目录的（`assets/app_runtime/java/21-arm`、`21-x86` …），
+            // `InstallLauncherFile.prepareModernJava()` 会按 getRuntimeArchitecture() 拷对应那份。
+            // 所以 32 位设备**有**能用的 Java 21（21-arm / 21-x86 都在）。
+            // 1.0.8 曾在这里把所有 32 位运行时的 Java 21/25 全拦掉 —— 那是错的，会让 1.20.6 起不来。
+            // 目前**唯一**真的缺构建的组合是「Java 25 + 32 位 x86」（没有 assets/app_runtime/java/25-x86）。
             int runtimeArch = Architecture.getRuntimeArchitecture();
-            boolean is32BitRuntime = runtimeArch == Architecture.ARCH_ARM
-                    || runtimeArch == Architecture.ARCH_X86;
-            if (java >= 21 && is32BitRuntime) {
+            if (java >= 25 && runtimeArch == Architecture.ARCH_X86) {
                 return new Exception(activity.getString(R.string.revival_java_unavailable_32bit) + " -- " + runtimeName);
             }
             if (java < 0 || !new File(runtime, "release").isFile()
