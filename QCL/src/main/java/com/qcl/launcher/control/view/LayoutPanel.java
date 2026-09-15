@@ -50,6 +50,14 @@ public class LayoutPanel extends RelativeLayout {
     private static final long BG_INTERVAL_MS = 10_000L;
     private static final int BG_FADE_MS = 600;
 
+    /**
+     * 1.0.7：等待界面最长遮挡时间。
+     * 游戏真的在跑却因为回调没派发而永远卡在等待画面，是玩家最不能接受的失败方式
+     * —— 至少要让画面出来，哪怕背景撤早了看到一瞬间黑屏。
+     * 取 30 秒：够慢设备冷启动 JVM + 加载资源，又不至于让人等到心慌。
+     */
+    private static final long BG_MAX_SHOW_MS = 30_000L;
+
     private static final int[] BG_RES_IDS = new int[]{
             R.drawable.qcl_bg_1,
             R.drawable.qcl_bg_2,
@@ -69,6 +77,19 @@ public class LayoutPanel extends RelativeLayout {
     private long bgLastFrame = 0L;
 
     private final Handler bgHandler = new Handler(Looper.getMainLooper());
+
+    /** 1.0.7：硬超时兜底，到点无条件撤走等待背景 */
+    private final Runnable bgTimeout = new Runnable() {
+        @Override
+        public void run() {
+            if (showBackground) {
+                android.util.Log.w("QCL", "LayoutPanel: 等待背景超过 "
+                        + BG_MAX_SHOW_MS + "ms 仍未收到画面回调，强制撤除遮挡");
+                hideBackground();
+            }
+        }
+    };
+
     private final Runnable bgTick = new Runnable() {
         @Override
         public void run() {
@@ -159,6 +180,7 @@ public class LayoutPanel extends RelativeLayout {
 
     @Override
     protected void onDetachedFromWindow() {
+        bgHandler.removeCallbacks(bgTimeout);
         stopBgRotation();
         super.onDetachedFromWindow();
     }
@@ -252,12 +274,23 @@ public class LayoutPanel extends RelativeLayout {
         showBackground = true;
         // 1.0.6：显示背景的同时启动轮换
         startBgRotation();
+        // 1.0.7：第三层保险 —— 「最长遮挡时间」兜底。
+        //
+        // 前两层保险是：①启动器自己的 onSurfaceTextureUpdated → onPicOutput() 正规回调；
+        // ②GameFrameProbe 主动采样 TextureView 位图。
+        // 但只要这两层任何一层因为设备 / 驱动差异没生效，玩家就会**永远卡在等待界面**
+        // （游戏其实在后台跑，只是画面被这层盖着 —— 用户 1.0.6 实机就是这个症状）。
+        // 所以这里加一个硬超时：无论游戏有没有真正出画面，到点都必须把遮挡撤掉，
+        // 「最坏情况是能玩，而不是永远看不见」。
+        bgHandler.removeCallbacks(bgTimeout);
+        bgHandler.postDelayed(bgTimeout, BG_MAX_SHOW_MS);
         invalidate();
     }
 
     public void hideBackground() {
         showBackground = false;
         // 游戏画面已出来，背景不再可见 → 停掉轮换，省 CPU / 电
+        bgHandler.removeCallbacks(bgTimeout);
         stopBgRotation();
     }
 }

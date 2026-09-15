@@ -29,14 +29,22 @@ public class BaseMainActivity extends AppCompatActivity implements TextureView.S
     public PojavCallback pojavCallback;
 
     boolean mouseMode;
-    int output = 0;
+    /** 1.0.7：游戏画面已输出通知是否已发出（只发一次） */
+    private boolean picOutputNotified = false;
 
     protected void init(String gameDir , boolean highVersion) {
 
         isInputStackCall = highVersion;
 
         minecraftGLView = findViewById(R.id.main_game_render_view);
-        minecraftGLView.setOpaque(false);
+        // ⚠️ 1.0.7 关键修复：这里原本是 setOpaque(false)（透明）。
+        // 透明 TextureView 在部分设备/驱动上**不会触发 onSurfaceTextureUpdated 回调**
+        // （系统认为没有可见内容需要合成），而关掉「启动等待界面」的唯一正规路径
+        // 正是 onSurfaceTextureUpdated → onPicOutput()。
+        // 结果：游戏其实已经在后台正常渲染，但等待界面永远不消失 →
+        // 玩家看到的就是「卡在启动画面、游戏窗口不显示」。
+        // 游戏画面本身就是不透明的，这里必须是 true。
+        minecraftGLView.setOpaque(true);
 
         minecraftGLView.setSurfaceTextureListener(this);
     }
@@ -59,12 +67,12 @@ public class BaseMainActivity extends AppCompatActivity implements TextureView.S
 
     @Override
     public void onSurfaceTextureUpdated(@NonNull SurfaceTexture surfaceTexture) {
-        if (output == 1) {
+        // 1.0.7：原来用的是 int output 计数器（output==1 才触发一次），
+        // 逻辑绕且易漏（第一次调用时 output 还不到 1，要等第二次；一旦有别的路径
+        // 动过这个值就再也不会触发）。改成直白的 boolean，语义清楚、只触发一次。
+        if (!picOutputNotified) {
+            picOutputNotified = true;
             pojavCallback.onPicOutput();
-            output++;
-        }
-        if (output < 1) {
-            output++;
         }
     }
 
@@ -73,6 +81,10 @@ public class BaseMainActivity extends AppCompatActivity implements TextureView.S
     }
 
     public void startGame(String javaPath,String home,boolean highVersion,final Vector<String> args, String renderer,String gameDir,String glesVersion) {
+        // 1.0.7：重置「画面已输出」标志。
+        // 必须在每次启动时清零 —— 否则上一次启动（或视图预热阶段）可能已经把它置位，
+        // 导致这次的等待界面再也等不到 onPicOutput()，界面就一直卡着。
+        picOutputNotified = false;
         Thread JVMThread = new Thread(() -> {
             runOnUiThread(() -> {
                 pojavCallback.onStart();

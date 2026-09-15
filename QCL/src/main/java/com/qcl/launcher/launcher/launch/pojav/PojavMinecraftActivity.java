@@ -42,6 +42,12 @@ public class PojavMinecraftActivity extends BaseMainActivity {
     private android.widget.FrameLayout drawerLayout;
     private LayoutPanel baseLayout;
 
+    /**
+     * 1.0.7：等待界面兜底关闭探测器。
+     * 详见 {@link com.qcl.launcher.launcher.launch.GameFrameProbe} 的说明。
+     */
+    private com.qcl.launcher.launcher.launch.GameFrameProbe frameProbe;
+
     public MenuHelper menuHelper;
 
     @Override
@@ -92,6 +98,23 @@ public class PojavMinecraftActivity extends BaseMainActivity {
         LaunchLogWindow.setBasics(info);
         new LaunchLogWindow(this, drawerLayout).show(info);
 
+    }
+
+    /** 1.0.7：启动画面探测兜底（逻辑在 GameFrameProbe，与 Boat 侧共用） */
+    private void startFrameProbe() {
+        if (frameProbe == null) {
+            frameProbe = new com.qcl.launcher.launcher.launch.GameFrameProbe(
+                    minecraftGLView, () -> {
+                baseLayout.hideBackground();
+            });
+        }
+        frameProbe.start();
+    }
+
+    private void stopFrameProbe() {
+        if (frameProbe != null) {
+            frameProbe.stop();
+        }
     }
 
     public void handleCallback() {
@@ -176,10 +199,14 @@ public class PojavMinecraftActivity extends BaseMainActivity {
             @Override
             public void onStart() {
                 baseLayout.showBackground();
+                // 1.0.7：等待界面一出现就启动画面探测兜底（见 frameProbe 注释）
+                startFrameProbe();
             }
 
             @Override
             public void onPicOutput() {
+                // 正规路径：回调来了就正常关掉，并停掉探测
+                stopFrameProbe();
                 baseLayout.hideBackground();
             }
 

@@ -44,6 +44,9 @@ public class BoatMinecraftActivity extends BoatActivity {
     private android.widget.FrameLayout drawerLayout;
     private LayoutPanel baseLayout;
 
+    /** 1.0.7：等待界面兜底关闭探测器（与 Pojav 侧共用 GameFrameProbe） */
+    private com.qcl.launcher.launcher.launch.GameFrameProbe frameProbe;
+
     public MenuHelper menuHelper;
 
     @Override
@@ -125,7 +128,25 @@ public class BoatMinecraftActivity extends BoatActivity {
     @SuppressLint("HandlerLeak")
     private final Handler windowSizeHandler = new Handler(android.os.Looper.getMainLooper());
 
-    private void handleCallback() {        setBoatCallback(new BoatCallback() {
+    /** 1.0.7：启动画面探测兜底（逻辑在 GameFrameProbe，与 Pojav 侧共用） */
+    private void startFrameProbe() {
+        if (frameProbe == null) {
+            frameProbe = new com.qcl.launcher.launcher.launch.GameFrameProbe(
+                    getMainTextureView(), () -> {
+                baseLayout.hideBackground();
+            });
+        }
+        frameProbe.start();
+    }
+
+    private void stopFrameProbe() {
+        if (frameProbe != null) {
+            frameProbe.stop();
+        }
+    }
+
+    private void handleCallback() {
+        setBoatCallback(new BoatCallback() {
             @Override
             public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
                 // ⚠️ TextureView 回调时若布局尚未完成，width/height 可能是 0 或极小值。
@@ -209,10 +230,14 @@ public class BoatMinecraftActivity extends BoatActivity {
             @Override
             public void onStart() {
                 baseLayout.showBackground();
+                // 1.0.7：等待界面一出现就启动画面探测兜底
+                startFrameProbe();
             }
 
             @Override
             public void onPicOutput() {
+                // 正规路径：回调来了就正常关掉，并停掉探测
+                stopFrameProbe();
                 baseLayout.hideBackground();
             }
 

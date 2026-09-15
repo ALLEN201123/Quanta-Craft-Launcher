@@ -42,6 +42,8 @@ public class LaunchLogWindow {
     private ScrollView scroller;
     /** 1.0.6：圆形关闭按钮（原来是无背景的裸「×」） */
     private TextView closeBtn;
+    /** 1.0.7：标题栏的「选择」按钮 —— 点一下进入文本选择模式 */
+    private TextView selectBtn;
     /** 1.0.6：拖动用的窗口布局参数（拖动时改 leftMargin / topMargin） */
     private FrameLayout.LayoutParams panelLp;
     /** 1.0.6：标题栏 —— 拖动把手 */
@@ -49,6 +51,8 @@ public class LaunchLogWindow {
     private boolean attached;
     private static LaunchLogWindow current;
     private volatile boolean closed;
+    /** 1.0.7：是否处于「文本选择模式」 */
+    private boolean selecting;
 
     public LaunchLogWindow(Activity activity, ViewGroup parent) {
         this.activity = activity;
@@ -326,23 +330,86 @@ public class LaunchLogWindow {
     }
 
     /**
-     * 1.0.6：进入文本选择模式。
+     * 1.0.7：切换文本选择模式（由标题栏「选择」按钮触发）。
      *
-     * <p>为什么需要这个方法：{@code setTextIsSelectable(true)} 只是「允许」选择，
-     * 但日志外层套了 ScrollView，**长按手势会优先被滚动容器截走**，
-     * 所以用户长按没有任何反应 —— 表现就是"选不了、复制不了"。
-     * 这里在 TextView 自己的 OnLongClickListener 里主动调用
-     * {@code performLongClick()}，让文本组件自己接管这次长按并进入选择态。
+     * <p>⚠️ 为什么放弃长按选中：
+     * 1.0.6 曾用「TextView 的 OnLongClickListener + performLongClick()」来进选择态，
+     * 但在游戏 Activity 这种**高帧率、多层重叠 View、还挂着拖动/缩放 Touch 监听**的
+     * 环境里完全不可靠：
+     * <ul>
+     *   <li>长按手势要先经过外层的 ScrollView，容易被判成「开始滑动」而吃掉；</li>
+     *   <li>窗口标题栏与缩放手柄都挂了 OnTouchListener，ACTION_DOWN 一旦被上层消费，
+     *       TextView 就收不到完整手势序列；</li>
+     *   <li>{@code performLongClick()} 自 Android 12 起对可选文本的 TextView 基本无效。</li>
+     * </ul>
+     * 改为显式按钮后，行为是确定的：点一下 = 进入/退出选择模式，不依赖手势时序。
+     * 进入选择模式时把外层 ScrollView 的滚动关掉，避免"想拖选区却滚了页面"。
      */
-    private boolean startTextSelection() {
+    private void toggleTextSelection() {
         try {
-            if (logView == null) return false;
-            // 让 TextView 走它自己的长按处理（进入选择模式）
-            logView.performHapticFeedback(android.view.HapticFeedbackConstants.LONG_PRESS);
-            logView.performLongClick();
-            return true;
+            if (logView == null) return;
+            selecting = !selecting;
+            if (selecting) {
+                // 关掉 ScrollView 的触摸拦截，让手势全部落到 TextView 上
+                scroller.requestDisallowInterceptTouchEvent(true);
+                // 让 TextView 自己接管：先聚焦再进入选择态
+                logView.setFocusableInTouchMode(true);
+                logView.requestFocus();
+                logView.setTextIsSelectable(true);
+                // 用长按触发一次，让系统把光标放上去并弹出选择手柄
+                logView.performLongClick();
+                if (selectBtn != null) selectBtn.setText("完成");
+            } else {
+                scroller.requestDisallowInterceptTouchEvent(false);
+                android.content.ClipboardManager cm = (android.content.ClipboardManager)
+                        activity.getSystemService(android.content.Context.CLIPBOARD_SERVICE);
+                if (cm != null && logView.hasSelection()) {
+                    // 退出时顺手把选中内容放进剪贴板，省得玩家再点一次"复制"
+                    cm.setPrimaryClip(android.content.ClipData.newPlainText("QCL 日志",
+                            logView.getText().subSequence(logView.getSelectionStart(),
+                                    logView.getSelectionEnd())));
+                    toast("已复制选中的日志");
+                }
+                logView.clearFocus();
+                if (selectBtn != null) selectBtn.setText("选择");
+            }
+        } catch (Throwable t) {
+            // 任何一步不支持都不致命，至少不要崩
+            toast("此设备不支持文本选择，可直接截图反馈");
+        }
+    }
+
+    private void toast(String msg) {
+        try {
+            android.widget.Toast.makeText(activity, msg, android.widget.Toast.LENGTH_SHORT).show();
         } catch (Throwable ignored) {
-            return false;
+        }
+    }
+
+    /**
+     * 1.0.7：一键把**全部日志**复制到剪贴板。
+     *
+     * <p>这是文本选择的兜底方案 —— 玩家反馈问题时最需要的其实是"把完整日志发给我"，
+     * 逐字选反而麻烦。长按「选择」按钮即触发全选复制。
+     */
+    private void copyAllToClipboard() {
+        try {
+            if (logView == null) return;
+            CharSequence text = logView.getText();
+            if (text == null || text.length() == 0) {
+                toast("日志还是空的，等启动跑一会儿再试");
+                return;
+            }
+            android.content.ClipboardManager cm = (android.content.ClipboardManager)
+                    activity.getSystemService(android.content.Context.CLIPBOARD_SERVICE);
+            if (cm == null) {
+                toast("此设备不支持剪贴板");
+                return;
+            }
+            cm.setPrimaryClip(android.content.ClipData.newPlainText("QCL 日志", text));
+            toast("已复制全部日志（" + text.length() + " 字）");
+        } catch (Throwable ignored) {
+            toast("复制失败，可截图反馈");
         }
     }
 
@@ -408,9 +475,41 @@ public class LaunchLogWindow {
         title.setPadding(dp(2), dp(4), dp(2), dp(4));
         header.addView(title, new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
 
+        // 1.0.7：「选择」按钮。
+        // ⚠️ 为什么不用长按？—— 1.0.6 试过长按选中，但在游戏 Activity 这种
+        // 高帧率 + 重叠 View 的环境里非常不可靠：
+        //   ① 长按手势要先经过 ScrollView → 常被判成"开始滑动"从而吃掉；
+        //   ② 窗口本身还挂着拖动/缩放的 Touch 监听，ACTION_DOWN 一旦被上层消费，
+        //      TextView 压根收不到完整手势序列；
+        //   ③ `performLongClick()` 自 Android 12 起对可选文本的 TextView 基本无效。
+        // 所以 1.0.7 改为**显式的按钮**：点一下切到选择模式，行为确定、不靠手势时序。
+        selectBtn = new TextView(activity);
+        selectBtn.setText("选择");
+        selectBtn.setTextColor(0xFFFFFFFF);
+        selectBtn.setTextSize(10);
+        selectBtn.setGravity(Gravity.CENTER);
+        GradientDrawable selBg = new GradientDrawable();
+        selBg.setCornerRadius(dp(11));
+        selBg.setColor(0x33FFFFFF);
+        selBg.setStroke(dp(1), 0x55FFFFFF);
+        selectBtn.setBackground(selBg);
+        selectBtn.setClickable(true);
+        selectBtn.setFocusable(true);
+        selectBtn.setPadding(dp(8), 0, dp(8), 0);
+        selectBtn.setOnClickListener(v -> toggleTextSelection());
+        // 长按「选择」= 一键复制全部日志（反馈问题时最常用的操作）
+        selectBtn.setOnLongClickListener(v -> {
+            copyAllToClipboard();
+            return true;
+        });
+        LinearLayout.LayoutParams selLp = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT, dp(22));
+        selLp.leftMargin = dp(4);
+        header.addView(selectBtn, selLp);
+
         // 1.0.6：关闭按钮原来是一个裸 TextView「×」，没有任何背景和圆形边框，
         // 贴在深色面板上看起来就是"一块带字的方块"，既不美观也不像按钮。
-        // 现在改为**圆形背景 + 居中 ×**，有按下反馈，尺寸也放大到易点。
+        // 现在改为**圆形背景 + 居中 ×**，有按压反馈，尺寸也放大到易点。
         closeBtn = new TextView(activity);
         closeBtn.setText("×");
         closeBtn.setTextColor(0xFFFFFFFF);
@@ -438,17 +537,20 @@ public class LaunchLogWindow {
         logView.setTextColor(0xFFDDDDDD);
         logView.setTextSize(10);
         logView.setTypeface(android.graphics.Typeface.MONOSPACE);
-        // 1.0.6：让日志可以长按选择并复制。
-        //  - setTextIsSelectable(true) 打开选择能力；
-        //  - 关键：给它设一个**可长按的 OnLongClickListener**，
-        //    否则在 ScrollView 里长按手势会被滚动容器吃掉，表现为"选择不了、复制不了"。
+        // 1.0.7：文本选择改由标题栏的「选择」按钮驱动（见 toggleTextSelection()）。
+        //  原则：**不要给 logView 挂任何 LongClickListener** ——
+        //  setTextIsSelectable 依赖 TextView 自己的长按处理来进入选择态，
+        //  一旦挂上监听并且 return true，等于告诉系统"我处理完了"，
+        //  系统就不会再弹选择手柄，表现为"长按完全没反应"。
+        //  同时把 maxLines 去掉限制，保证长日志不被裁掉。
         logView.setTextIsSelectable(true);
-        logView.setLongClickable(true);
+        logView.setFocusable(true);
+        logView.setFocusableInTouchMode(true);
         logView.setClickable(true);
-        logView.setOnLongClickListener(v -> {
-            // 长按命中某个词 → 直接进入选择模式（返回 true 表示已消费，不再冒泡）
-            return startTextSelection();
-        });
+        logView.setLongClickable(true);
+        logView.setHorizontallyScrolling(false);
+        // 单行自动换行：日志一行往往很长，横向滚动反而不好选
+        logView.setMaxLines(Integer.MAX_VALUE);
         scroller.addView(logView, new ScrollView.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT));
         column.addView(scroller, new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f));
@@ -469,9 +571,10 @@ public class LaunchLogWindow {
             public boolean onTouch(View v, android.view.MotionEvent event) {
                 switch (event.getActionMasked()) {
                     case android.view.MotionEvent.ACTION_DOWN:
-                        // ⚠️ 关闭按钮也在标题栏里。要是这里一律 return true 吃掉手势，
-                        // × 就永远点不到了 → 落点在关闭按钮上时不接管，交给它自己处理。
+                        // ⚠️ 关闭按钮和「选择」按钮都在标题栏里。要是这里一律 return true
+                        // 吃掉手势，这两个按钮就永远点不到了 → 落点在按钮上时不接管。
                         if (closeBtn != null && isTouchInside(closeBtn, event)) return false;
+                        if (selectBtn != null && isTouchInside(selectBtn, event)) return false;
                         downRawX = event.getRawX();
                         downRawY = event.getRawY();
                         startLeft = panelLp.leftMargin;
