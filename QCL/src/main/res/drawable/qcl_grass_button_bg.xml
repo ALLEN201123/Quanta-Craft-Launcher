@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  草方块 UI · 按钮背景
+  Alpha 草方块贴图平铺 + 状态遮罩（按下变暗）。用 LayerDrawable 组合：
+  第一层是平铺的草方块位图，第二层是按钮的按压遮罩。
+-->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:drawable="@drawable/qcl_grass_tile_drawable" />
+    <item android:drawable="@drawable/qcl_grass_button_overlay" />
+</layer-list>

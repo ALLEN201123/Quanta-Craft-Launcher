@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 草方块 UI · 面板：草方块贴图平铺 + 深色描边（不透明） -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:drawable="@drawable/qcl_grass_tile_drawable" />
+    <item>
+        <shape>
+            <stroke android:width="2dp" android:color="#CC2E1B08" />
+            <solid android:color="#00000000" />
+            <corners
+                android:topLeftRadius="4.0dip"
+                android:topRightRadius="4.0dip"
+                android:bottomLeftRadius="4.0dip"
+                android:bottomRightRadius="4.0dip"/>
+        </shape>
+    </item>
+</layer-list>

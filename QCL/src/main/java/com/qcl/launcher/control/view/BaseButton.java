@@ -46,7 +46,6 @@ public class BaseButton extends androidx.appcompat.widget.AppCompatButton {
     public GradientDrawable drawableNormal;
     public GradientDrawable drawablePress;
 
-    private long downTime;
     private float initialX;
     private float initialY;
     private float initialPositionX;
@@ -121,7 +120,6 @@ public class BaseButton extends androidx.appcompat.widget.AppCompatButton {
         if (menuHelper.editMode) {
             switch (event.getActionMasked()) {
                 case MotionEvent.ACTION_DOWN:
-                    downTime = System.currentTimeMillis();
                     initialX = event.getX();
                     initialY = event.getY();
                     initialPositionX = getX();
@@ -166,7 +164,10 @@ public class BaseButton extends androidx.appcompat.widget.AppCompatButton {
                 case MotionEvent.ACTION_UP:
                 case MotionEvent.ACTION_CANCEL:
                     deleteHandler.removeCallbacks(deleteRunnable);
-                    if (System.currentTimeMillis() - downTime <= 200 && Math.abs(event.getX() - initialX) <= 10 && Math.abs(event.getY() - initialY) <= 10){
+                    // 轻点（没怎么移动）= 打开该控件的设置：
+                    // 只要位移够小就认，不再卡 200ms 时长——否则"按慢了一点"会毫无反应，
+                    // 玩家会以为编辑模式坏了。真正想删除是长按 600ms，两者不会混淆。
+                    if (Math.abs(event.getX() - initialX) <= 10 && Math.abs(event.getY() - initialY) <= 10){
                         setX(initialPositionX);
                         setY(initialPositionY);
                         info.xPosition.absolutePosition = ConvertUtils.px2dip(getContext(),initialPositionX);

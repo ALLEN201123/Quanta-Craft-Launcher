@@ -1,12 +1,16 @@
 # QCL · Quanta Craft Launcher
 
+> **目前手机启动器唯一支持下载所有考古社区已归档远古版本的。**
+
 **Quanta Craft Launcher (QCL, 量子方块启动器)** is an Android launcher for Minecraft: Java Edition,
 rebuilt from [HMCL-PE](https://github.com/Tungs-HMCL/HMCL-PE) by Tungs.
 Maintainer: **Rod123456** (bilibili UID 550905358).
 
 **English summary:** QCL focuses on *ancient* Minecraft versions (pre-classic / classic / indev / infdev /
-alpha / beta / RC) — 181 archived builds are listed and installed with dependencies and assets fetched
-automatically. It also supports modern versions up to 26.x (Java 25). Two launch backends (Boat / Pojav),
+alpha / beta / RC) — **the only Android launcher that currently supports downloading every *archived* ancient
+version** (181 archived builds; builds the community never archived are not downloadable). Each archived build
+is installed with its dependencies and assets fetched automatically. It also supports modern
+versions up to 26.x (Java 25). Two launch backends (Boat / Pojav),
 automatic 32/64-bit runtime detection, dynamic memory clamping, a launch-log overlay, a crash screen, and
 multiplayer powered by Terracotta (China mainland only). Licensed under **GNU AGPL-3.0** — see
 [`LICENSE`](LICENSE) and [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md).
@@ -18,6 +22,8 @@ multiplayer powered by Terracotta (China mainland only). Licensed under **GNU AG
 
 > 基于 [HMCL-PE](https://github.com/Tungs-HMCL/HMCL-PE)（Tungs）重构的 Android 版 Minecraft: Java Edition 启动器。
 > 作者：**Rod123456**（bilibili UID 550905358）—— 喜欢研究 Minecraft 1.0 以前的所有远古版本，视频也主要围绕这些老版本。
+>
+> **目前手机启动器唯一支持下载所有考古社区已归档远古版本的。**
 
 ---
 
@@ -37,9 +43,12 @@ QCL 是一个安卓平台的 Minecraft Java 版启动器，界面按自己的「
 - **启动日志悬浮窗**：默认开启，实时显示 JVM 与游戏输出，进入游戏主界面自动关闭（可在游戏内悬浮窗开关）
 
 ### 远古版本
-- 内置 **181 条历史归档**（几乎涵盖全部远古版本，来自考古社区归档），点击即可安装
+- **手机启动器里，目前唯一支持下载全部「已归档」远古版本的版本** —— 内置 **181 条历史归档**
+  （pre-classic / classic / indev / infdev / alpha / beta / RC 几乎全覆盖，来自考古社区归档），点击即可安装
+  - ⚠️ 说明：社区没有归档的版本（当年未公开、或归档站已失传）同样无法下载 —— 归档里没有的，这里也没有
 - 安装时自动补齐 **jar / 版本 json / 依赖库 / 资源文件**，完成后提示安装成功
 - 启动前自动检查并补齐缺失文件（json 损坏也能用模板重建）
+- 远古版本（LWJGL2 时代）**补齐了 paulscode SoundSystem 音频链**，进游戏不再无声
 
 ### 下载
 - 国内默认走 **BMCLAPI** 镜像；Mod / 资源包 / 整合包 / **光影** / 世界分页浏览

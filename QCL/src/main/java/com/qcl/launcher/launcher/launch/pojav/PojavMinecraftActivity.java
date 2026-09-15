@@ -89,19 +89,33 @@ public class PojavMinecraftActivity extends BaseMainActivity {
         pojavCallback = new PojavCallback() {
             @Override
             public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
-                CallbackBridge.windowWidth = (int) (width * scaleFactor);
-                CallbackBridge.windowHeight = (int) (height * scaleFactor);
+                // 布局未完成时 width/height 可能是 0 或极小值 → 兜底取屏幕尺寸
+                // 注意：lambda 捕获要求 effectively final，故用新变量名
+                int usableWidth = width;
+                int usableHeight = height;
+                if (usableWidth < 64 || usableHeight < 64) {
+                    android.util.DisplayMetrics dm = getResources().getDisplayMetrics();
+                    usableWidth = dm.widthPixels;
+                    usableHeight = dm.heightPixels;
+                }
+                CallbackBridge.windowWidth = (int) (usableWidth * scaleFactor);
+                CallbackBridge.windowHeight = (int) (usableHeight * scaleFactor);
                 surface.setDefaultBufferSize(CallbackBridge.windowWidth, CallbackBridge.windowHeight);
                 CallbackBridge.sendUpdateWindowSize(windowWidth, windowHeight);
 
                 MCOptionUtils.load(gameLaunchSetting.game_directory);
                 MCOptionUtils.set("overrideWidth", String.valueOf(CallbackBridge.windowWidth));
                 MCOptionUtils.set("overrideHeight", String.valueOf(CallbackBridge.windowHeight));
-                MCOptionUtils.set("fullscreen", "false");
+                // 远古版本（LWJGL2 时代）没有 fullscreen 键，写入未知键会破坏其 options 解析
+                if (GameLaunchSetting.isHighVersion(gameLaunchSetting)) {
+                    MCOptionUtils.set("fullscreen", "false");
+                }
                 MCOptionUtils.save(gameLaunchSetting.game_directory);
 
+                final int argWidth = usableWidth;
+                final int argHeight = usableHeight;
                 new Thread(() -> {
-                    Vector<String> args = PojavLauncher.getMcArgs(gameLaunchSetting, PojavMinecraftActivity.this,(int) (width * scaleFactor),(int) (height * scaleFactor),gameLaunchSetting.server);
+                    Vector<String> args = PojavLauncher.getMcArgs(gameLaunchSetting, PojavMinecraftActivity.this, (int) (argWidth * scaleFactor), (int) (argHeight * scaleFactor), gameLaunchSetting.server);
                     runOnUiThread(() -> {
                         JREUtils.setupBridgeWindow(new Surface(surface));
                         startGame(gameLaunchSetting.javaPath,

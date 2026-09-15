@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 草方块 UI · 顶栏/底栏：草皮横条平铺（不透明，禁用半透明） -->
+<bitmap xmlns:android="http://schemas.android.com/apk/res/android"
+    android:src="@drawable/qcl_grass_strip"
+    android:tileMode="repeat" />

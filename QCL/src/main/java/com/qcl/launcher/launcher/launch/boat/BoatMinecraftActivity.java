@@ -88,20 +88,64 @@ public class BoatMinecraftActivity extends BoatActivity {
 
     }
 
-    private void handleCallback() {
-        setBoatCallback(new BoatCallback() {
+    /**
+     * 远古版本（LWJGL2）拿窗口尺寸的唯一途径是 ConfigureNotify 事件。
+     * 事件管道刚建立时游戏还没开始 poll，第一条会被丢；
+     * 这里在启动后按 30ms 间隔连推若干次当前 surface 尺寸，保证游戏一定读到。
+     * 只推「当前真实 buffer 尺寸」，不做任何缩放换算。
+     */
+    private void scheduleWindowSizePush() {
+        for (int delay : new int[]{0, 30, 80, 160, 300, 600, 1200, 2400}) {
+            windowSizeHandler.postDelayed(this::pushCurrentWindowSize, delay);
+        }
+    }
+
+    private void pushCurrentWindowSize() {
+        if (!eventPipeReady || windowSizeHandler == null) return;
+        int w = bufferWidth > 0 ? bufferWidth : 1;
+        int h = bufferHeight > 0 ? bufferHeight : 1;
+        if (w < 64 || h < 64) {
+            // buffer 尺寸还没拿到有效值 → 用屏幕尺寸兜底，别把窗口推成小条
+            android.util.DisplayMetrics dm = getResources().getDisplayMetrics();
+            w = dm.widthPixels;
+            h = dm.heightPixels;
+        }
+        BoatInput.pushEventWindow(w, h);
+    }
+
+    @SuppressLint("HandlerLeak")
+    private final Handler windowSizeHandler = new Handler(android.os.Looper.getMainLooper());
+
+    private void handleCallback() {        setBoatCallback(new BoatCallback() {
             @Override
             public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
-                bufferWidth = Math.max(1, Math.round(width * scaleFactor));
-                bufferHeight = Math.max(1, Math.round(height * scaleFactor));
+                // ⚠️ TextureView 回调时若布局尚未完成，width/height 可能是 0 或极小值。
+                // 直接用它算 buffer / overrideWidth 会把窗口缩成一小条（远古版本尤其明显，
+                // 因为远古版本完全依赖 overrideWidth/overrideHeight 决定窗口尺寸）。
+                // 这里兜底取「屏幕可用尺寸」，保证远古版本首次进入一定是满屏。
+                int safeW = width;
+                int safeH = height;
+                if (safeW < 64 || safeH < 64) {
+                    android.util.DisplayMetrics dm = getResources().getDisplayMetrics();
+                    safeW = dm.widthPixels;
+                    safeH = dm.heightPixels;
+                }
+                bufferWidth = Math.max(1, Math.round(safeW * scaleFactor));
+                bufferHeight = Math.max(1, Math.round(safeH * scaleFactor));
                 surface.setDefaultBufferSize(bufferWidth, bufferHeight);
 
                 MCOptionUtils.load(gameLaunchSetting.game_directory);
                 int finalWidth = bufferWidth;
                 int finalHeight = bufferHeight;
+                boolean highVersion = GameLaunchSetting.isHighVersion(gameLaunchSetting);
                 MCOptionUtils.set("overrideWidth", String.valueOf(finalWidth));
                 MCOptionUtils.set("overrideHeight", String.valueOf(finalHeight));
-                MCOptionUtils.set("fullscreen", String.valueOf(gameLaunchSetting.fullscreen));
+                // ⚠️ 远古版本（LWJGL2 时代）的 options.txt 没有 fullscreen 这个键，
+                // 写进去会让它的解析器读到未知键 → 部分版本直接抛异常 / 后续选项全丢，
+                // 结果窗口按默认 854x480 且非全屏。只有现代版本才需要写 fullscreen。
+                if (highVersion) {
+                    MCOptionUtils.set("fullscreen", String.valueOf(gameLaunchSetting.fullscreen));
+                }
                 MCOptionUtils.save(gameLaunchSetting.game_directory);
 
                 new Thread(() -> {
@@ -110,8 +154,6 @@ public class BoatMinecraftActivity extends BoatActivity {
                         BoatActivity.setBoatNativeWindow(new Surface(surface));
                         BoatInput.setEventPipe();
                         eventPipeReady = true;
-                        // Surface size may have changed while the arguments were prepared.
-                        BoatInput.pushEventWindow(bufferWidth, bufferHeight);
 
                         startGame(gameLaunchSetting.javaPath,
                                 gameLaunchSetting.home,
@@ -119,14 +161,27 @@ public class BoatMinecraftActivity extends BoatActivity {
                                 args,
                                 gameLaunchSetting.boatRenderer,
                                 gameLaunchSetting.game_directory);
+
+                        // ⚠️ 远古版本（LWJGL2）的窗口尺寸**完全**依赖 ConfigureNotify 事件。
+                        // 但事件管道刚建立时游戏还没开始 poll 事件，此时推的那一条会被丢掉
+                        // → 游戏退回默认窗口（远古版本是 854x480）→ 画面只占屏幕一小块。
+                        // 因此这里在游戏起来之后**多次**重推当前 surface 尺寸，直到游戏真正读到。
+                        scheduleWindowSizePush();
                     });
                 }).start();
             }
 
             @Override
             public void onSurfaceTextureSizeChanged(SurfaceTexture surface, int width, int height) {
-                bufferWidth = Math.max(1, Math.round(width * scaleFactor));
-                bufferHeight = Math.max(1, Math.round(height * scaleFactor));
+                int safeW = width;
+                int safeH = height;
+                if (safeW < 64 || safeH < 64) {
+                    // 尺寸异常时沿用上一次的有效值，别把窗口缩成小条
+                    safeW = Math.max(bufferWidth, 64);
+                    safeH = Math.max(bufferHeight, 64);
+                }
+                bufferWidth = Math.max(1, Math.round(safeW * scaleFactor));
+                bufferHeight = Math.max(1, Math.round(safeH * scaleFactor));
                 int finalWidth = bufferWidth;
                 int finalHeight = bufferHeight;
                 surface.setDefaultBufferSize(finalWidth, finalHeight);

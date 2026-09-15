@@ -12,7 +12,6 @@ import android.view.View;
 
 import androidx.core.view.GravityCompat;
 
-import com.google.gson.Gson;
 import com.qcl.launcher.control.bean.BaseButtonInfo;
 import com.qcl.launcher.control.bean.BaseRockerViewInfo;
 import com.qcl.launcher.control.view.BaseButton;
@@ -22,10 +21,8 @@ import com.qcl.launcher.control.view.MenuFloat;
 import com.qcl.launcher.control.view.MenuView;
 import com.qcl.launcher.control.view.TouchPad;
 import com.qcl.launcher.launcher.list.local.controller.ChildLayout;
-import com.qcl.launcher.manifest.AppManifest;
 import com.qcl.launcher.launcher.setting.SettingUtils;
 import com.qcl.launcher.launcher.setting.game.GameMenuSetting;
-import com.qcl.launcher.utils.file.FileStringUtils;
 
 import java.util.ArrayList;
 
@@ -177,35 +174,24 @@ public class ViewManager implements SensorEventListener {
             layoutPanel.removeView(v);
         }
         if (SettingUtils.getChildList(pattern).size() > 0) {
-            if (editMode) {
-                String string = FileStringUtils.getStringFromFile(AppManifest.CONTROLLER_DIR + "/" + pattern + "/" + child + ".json");
-                Gson gson = new Gson();
-                ChildLayout childLayout = gson.fromJson(string, ChildLayout.class);
-                // 空文件/坏 JSON 会让 gson 返回 null 或字段为 null，必须判空，否则 NPE
-                if (childLayout != null && childLayout.baseButtonList != null) {
-                    for (BaseButtonInfo buttonInfo : childLayout.baseButtonList) {
-                        loadButton(buttonInfo, View.VISIBLE);
+            // 无论是否编辑模式，都要把所有 child 的控件都加载出来。
+            // 编辑模式只额外做一件事：把「正在编辑的那个 child」强制显示，
+            // 这样玩家能一边看着其他按键、一边摆弄当前这组控件。
+            // （旧实现编辑模式只加载当前 child，导致其他所有按键"全部消失"。）
+            ArrayList<ChildLayout> childLayouts = SettingUtils.getChildList(pattern);
+            for (ChildLayout layout : childLayouts) {
+                if (layout == null) continue;
+                boolean editingThis = editMode && layout.name != null && layout.name.equals(child);
+                if (layout.baseButtonList != null) {
+                    for (BaseButtonInfo buttonInfo : layout.baseButtonList) {
+                        if (buttonInfo == null) continue;
+                        loadButton(buttonInfo, editingThis ? View.VISIBLE : layout.visibility);
                     }
                 }
-                if (childLayout != null && childLayout.baseRockerViewList != null) {
-                    for (BaseRockerViewInfo rockerViewInfo : childLayout.baseRockerViewList) {
-                        loadRocker(rockerViewInfo, View.VISIBLE);
-                    }
-                }
-            }
-            else {
-                ArrayList<ChildLayout> childLayouts = SettingUtils.getChildList(pattern);
-                for (ChildLayout layout : childLayouts) {
-                    if (layout == null) continue;
-                    if (layout.baseButtonList != null) {
-                        for (BaseButtonInfo buttonInfo : layout.baseButtonList) {
-                            loadButton(buttonInfo, layout.visibility);
-                        }
-                    }
-                    if (layout.baseRockerViewList != null) {
-                        for (BaseRockerViewInfo rockerViewInfo : layout.baseRockerViewList) {
-                            loadRocker(rockerViewInfo, layout.visibility);
-                        }
+                if (layout.baseRockerViewList != null) {
+                    for (BaseRockerViewInfo rockerViewInfo : layout.baseRockerViewList) {
+                        if (rockerViewInfo == null) continue;
+                        loadRocker(rockerViewInfo, editingThis ? View.VISIBLE : layout.visibility);
                     }
                 }
             }

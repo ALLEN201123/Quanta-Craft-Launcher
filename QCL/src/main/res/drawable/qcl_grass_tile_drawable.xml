@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Alpha 草方块贴图 · 平铺（repeat） -->
+<bitmap xmlns:android="http://schemas.android.com/apk/res/android"
+    android:src="@drawable/qcl_grass_block"
+    android:tileMode="repeat" />

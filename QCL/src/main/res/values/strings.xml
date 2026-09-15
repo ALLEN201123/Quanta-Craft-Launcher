@@ -701,6 +701,7 @@
     <string name="exterior_setting_ui_theme_title">Appearance</string>
     <string name="exterior_setting_ui_theme">Theme</string>
     <string name="exterior_setting_ui_bar_trans">Transparent titlebar</string>
+    <string name="exterior_setting_ui_style">Grass Block UI</string>
     <string name="exterior_setting_ui_full_screen">Ignore notch</string>
     <string name="exterior_setting_ui_bg_title">Background Image</string>
     <string name="exterior_setting_ui_bg_default">Default</string>

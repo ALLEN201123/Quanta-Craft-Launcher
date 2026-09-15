@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 草方块 UI · 按钮状态遮罩：常态透明，按下变暗 -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_pressed="true">
+        <shape>
+            <solid android:color="#55000000" />
+            <stroke android:width="2dp" android:color="#CC2E1B08" />
+        </shape>
+    </item>
+    <item>
+        <shape>
+            <solid android:color="#00000000" />
+            <stroke android:width="2dp" android:color="#CC2E1B08" />
+        </shape>
+    </item>
+</selector>

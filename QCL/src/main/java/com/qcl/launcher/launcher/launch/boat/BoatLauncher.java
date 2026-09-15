@@ -68,7 +68,9 @@ public class BoatLauncher {
             }
             if (!highVersion){
                 libraryPath = javaLibDir + ":" + AppManifest.BOAT_LIB_DIR + ":" + AppManifest.BOAT_LIB_DIR + "/lwjgl-2:" + AppManifest.BOAT_LIB_DIR + "/renderer/" + r;
-                classPath = AppManifest.BOAT_LIB_DIR + "/lwjgl-2/lwjgl.jar:" + AppManifest.BOAT_LIB_DIR + "/lwjgl-2/lwjgl_util.jar:" + version.getClassPath(gameLaunchSetting.gameFileDirectory,false,false);
+                // 远古版本（LWJGL2 时代）音频依赖 paulscode SoundSystem，
+                // 上游 classpath 漏了这几个 jar，导致进游戏完全无声 → 这里补上。
+                classPath = AppManifest.BOAT_LIB_DIR + "/lwjgl-2/lwjgl.jar:" + AppManifest.BOAT_LIB_DIR + "/lwjgl-2/lwjgl_util.jar:" + AudioLibs.classPath() + version.getClassPath(gameLaunchSetting.gameFileDirectory,false,false);
             }
             else {
                 libraryPath = javaLibDir + ":" + AppManifest.BOAT_LIB_DIR + ":" + AppManifest.BOAT_LIB_DIR + "/lwjgl-3:" + AppManifest.BOAT_LIB_DIR + "/renderer/" + r;

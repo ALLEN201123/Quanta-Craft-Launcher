@@ -138,10 +138,67 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     isLoaded = true;
                     onLoad();
                     ExteriorSettingUI.applyPanelTint(MainActivity.this, getWindow().getDecorView(), ExteriorSettingUI.getPanelColor(MainActivity.this, launcherSetting.panelColor));
+                    startDynamicBackgroundIfNeeded();
+                    // 1.0.5：套用 UI 风格（默认 / 草方块）
+                    applyUiTheme();
                 }
             }
         }
     };
+
+    /** 1.0.5 动态背景：默认背景（launcherBackground.type == 0）时启动 4 图 10 秒轮换 */
+    private com.qcl.launcher.launcher.uis.main.DynamicBackground dynamicBackground;
+
+    private void startDynamicBackgroundIfNeeded() {
+        try {
+            if (launcherSetting.launcherBackground.type != 0) {
+                // 「经典」「自定义」「在线」背景不参与轮换
+                return;
+            }
+            if (dynamicBackground == null) {
+                dynamicBackground = new com.qcl.launcher.launcher.uis.main.DynamicBackground(this, launcherLayout);
+            }
+            dynamicBackground.start();
+        } catch (Throwable ignored) {
+        }
+    }
+
+    /** 供外观设置切换背景类型时调用：切回默认则重启轮换，切走则停掉 */
+    public void refreshDynamicBackground() {
+        try {
+            if (launcherSetting.launcherBackground.type == 0) {
+                startDynamicBackgroundIfNeeded();
+            }
+            else if (dynamicBackground != null) {
+                dynamicBackground.stop();
+            }
+        } catch (Throwable ignored) {
+        }
+    }
+
+    /**
+     * 1.0.5：套用 UI 风格。草方块 UI 下：
+     * 1) 面板/按钮/顶底栏换成真实 Alpha 草方块材质；
+     * 2) 禁用所有半透明（顶栏、底栏、面板全部不透明实色）。
+     * ⚠️ 不替换启动器整体背景图 —— 背景仍由 4 张动态壁纸负责。
+     */
+    public void applyUiTheme() {
+        try {
+            com.qcl.launcher.launcher.uis.tools.QclThemeUtils.apply(this, launcherSetting.uiTheme);
+            if (launcherSetting.uiTheme == 1 && appBar != null) {
+                appBar.setBackgroundColor(0xFF6E9B2E);
+            }
+        } catch (Throwable ignored) {
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        if (dynamicBackground != null) {
+            dynamicBackground.stop();
+        }
+        super.onDestroy();
+    }
 
     public void onLoad() {
         uiManager.gameManagerUI.gameManagerUIManager.versionSettingUI.onLoaded();
@@ -365,11 +422,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
         }
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN, WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN);
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
     }
 
     public void startVerify() {
