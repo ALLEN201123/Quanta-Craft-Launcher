@@ -140,6 +140,65 @@
 
     </LinearLayout>
 
+    <!-- 二级页面返回栏（1.0.6 新增）。
+         顶部标题栏已整体移除，但二级页面（下载 / 版本列表 / 账户 / 设置 / 游戏管理等）
+         仍需返回入口。这里用一层**悬浮**控件实现，不占布局空间、不引入标题栏：
+         只在进入二级页面时由 showBarTitle() 点亮，主界面保持隐藏。
+         放在 launcher_layout 之外，避免被 LinearLayout 垂直排版影响。 -->
+    <LinearLayout
+        android:id="@+id/qcl_back_bar"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:visibility="gone"
+        android:background="@drawable/qcl_back_bar_bg"
+        android:paddingLeft="8dp"
+        android:paddingRight="8dp"
+        android:paddingTop="4dp"
+        android:paddingBottom="4dp"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentEnd="true"
+        android:layout_marginTop="6dp"
+        android:layout_marginEnd="8dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
+
+        <ImageButton
+            android:layout_width="22dp"
+            android:layout_height="22dp"
+            android:scaleType="fitCenter"
+            android:id="@+id/back_to_last_ui"
+            android:background="@drawable/ic_baseline_arrow_white"/>
+
+        <ImageButton
+            android:layout_width="22dp"
+            android:layout_height="22dp"
+            android:layout_marginStart="10dp"
+            android:scaleType="fitCenter"
+            android:id="@+id/back_to_home"
+            android:background="@drawable/ic_baseline_home_white"/>
+
+        <TextView
+            android:singleLine="true"
+            android:textStyle="bold"
+            android:visibility="gone"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="@dimen/text_size_middle"
+            android:layout_marginStart="10dp"
+            android:layout_gravity="center"
+            android:id="@+id/text_current_ui"
+            android:textColor="@color/colorPureWhite"/>
+
+        <ImageButton
+            android:layout_width="22dp"
+            android:layout_height="22dp"
+            android:layout_marginStart="10dp"
+            android:scaleType="fitCenter"
+            android:id="@+id/close_current_ui"
+            android:background="@drawable/ic_baseline_close_white"/>
+
+    </LinearLayout>
+
     <Button
         android:id="@+id/fake_dialog_background"
         android:stateListAnimator="@null"

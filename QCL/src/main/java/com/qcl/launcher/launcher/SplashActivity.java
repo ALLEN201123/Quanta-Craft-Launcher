@@ -52,6 +52,9 @@ public class SplashActivity extends AppCompatActivity {
     public TextView titleTextThird;
     public ConstraintLayout background;
 
+    /** 动态背景（1.0.6）：与主界面同源的 4 张图轮换 */
+    private com.qcl.launcher.launcher.uis.main.DynamicBackground dynamicBackground;
+
     public LauncherSetting launcherSetting;
 
     @Override
@@ -69,7 +72,35 @@ public class SplashActivity extends AppCompatActivity {
         background = findViewById(R.id.background);
 
         initTheme();
+        startDynamicBackground();
         requestPermission();
+    }
+
+    /** 动态背景（1.0.6 新增）：与主界面同一套 4 张图，每 10 秒淡入淡出轮换。
+     *
+     *  <p>注意：必须在 {@link #initTheme()} 之后调用 —— 如果玩家在 Theme 目录里放了自己的
+     *  启动图（splashBackground.png），那属于自定义主题，应当**优先保留**，此时不再启用动态背景。
+     */
+    private void startDynamicBackground() {
+        try {
+            File themePath = getExternalFilesDir("Theme");
+            if (themePath != null && new File(themePath, "splashBackground.png").exists()) {
+                return;   // 玩家自定义了启动图 → 尊重它
+            }
+            if (background == null) return;
+            dynamicBackground = new com.qcl.launcher.launcher.uis.main.DynamicBackground(this, background);
+            dynamicBackground.start();
+        } catch (Throwable ignored) {
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        if (dynamicBackground != null) {
+            dynamicBackground.stop();
+            dynamicBackground = null;
+        }
+        super.onDestroy();
     }
 
     @Override

@@ -52,16 +52,65 @@ public class LaunchLogWindow {
     /** 是否额外从 logcat 抓取游戏输出（Boat 后端的 JVM 输出只在这里） */
     private static boolean captureLogcat = false;
 
+    /**
+     * 需要抓取的 logcat 标签。
+     *
+     * <p>1.0.6：原来只抓 {@code jrelog:V}，导致窗口里常常只有零散的
+     * {@code dlopen libxhook.so success} 之类 —— 而玩家真正需要的启动信息
+     * （环境变量、JVM 参数、OpenJDK 警告、GL 库加载）散落在别的标签里。
+     *
+     * <p>现在覆盖各后端实际使用的全部标签：
+     * <ul>
+     *   <li>{@code jrelog} — Pojav 的 JRE 输出主通道</li>
+     *   <li>{@code LIBGL} — GL4ES / VirGL 图形库</li>
+     *   <li>{@code Boat} — Boat 原生层的 LoadMe / dlopen</li>
+     *   <li>{@code xhook} — 原生 hook 库</li>
+     *   <li>{@code System.out} / {@code System.err} — {@code LoadMe} 的 println</li>
+     *   <li>{@code OpenJDK} — JVM 自身警告</li>
+     * </ul>
+     */
+    private static final String[] LOGCAT_TAGS = {
+            "jrelog", "LIBGL", "Boat", "xhook", "System.out", "System.err", "OpenJDK",
+    };
+
+    /** 单行超过这个长度就截断（避免超长串把窗口刷屏） */
+    private static final int MAX_LINE_CHARS = 400;
+
+    /** 这些行是完全无信息量的噪声，直接丢弃 */
+    private static final String[] NOISE_PREFIXES = {
+            "--------- beginning of",
+            "GLib-GIO",           // GTK 噪声（与游戏无关）
+            "libc    ",           // 无堆栈的 libc 行
+            "Zygote  ",
+    };
+
     /** Boat 后端用：Boat 的原生层把游戏输出打到 logcat 的 jrelog 标签，Logger 里拿不到 */
     public static void showForBoat(Activity activity, ViewGroup parent) {
+        showForBoat(activity, parent, null);
+    }
+
+    /** Boat 后端 + 基础启动信息（1.0.6） */
+    public static void showForBoat(Activity activity, ViewGroup parent, GameLaunchSettingInfo info) {
         captureLogcat = true;
-        new LaunchLogWindow(activity, parent).show();
+        new LaunchLogWindow(activity, parent).show(info);
     }
 
     private void startLogcatCapture() {
         try {
-            final Process process = Runtime.getRuntime().exec(
-                    new String[]{"logcat", "-v", "brief", "-s", "jrelog:V"});
+            // 先清一次缓冲，避免把上次启动的旧日志翻出来
+            try {
+                Runtime.getRuntime().exec(new String[]{"logcat", "-c"}).waitFor();
+            } catch (Throwable ignored) {
+            }
+            String[] cmd = new String[4 + LOGCAT_TAGS.length];
+            cmd[0] = "logcat";
+            cmd[1] = "-v";
+            cmd[2] = "brief";
+            cmd[3] = "-s";
+            for (int i = 0; i < LOGCAT_TAGS.length; i++) {
+                cmd[4 + i] = LOGCAT_TAGS[i] + ":V";
+            }
+            final Process process = Runtime.getRuntime().exec(cmd);
             final java.io.BufferedReader reader = new java.io.BufferedReader(
                     new java.io.InputStreamReader(process.getInputStream()));
             Thread thread = new Thread(() -> {
@@ -125,15 +174,21 @@ public class LaunchLogWindow {
      *  关闭时机跟随游戏日志：日志连续一段时间不再输出（游戏进入主界面后空闲不打印）即自动关闭；
      *  另有 2 分钟兜底上限，避免卡死时窗口一直挂着。 */
     public void show() {
+        show(null);
+    }
+
+    /** 带基础信息显示（推荐：info 非空时窗口顶部会先打一段设备/运行时摘要） */
+    public void show(GameLaunchSettingInfo info) {
         if (attached) return;
         shownAt = android.os.SystemClock.uptimeMillis();
         lastLogTime = shownAt;
         current = this;
         Logger.getInstance(activity).setLogListener(this::onLogLine);
-        // 所有后端都抓 logcat 的 jrelog：Boat 只走 logcat；Pojav 的 21/25 运行时也可能
+        // 所有后端都抓 logcat：Boat 只走 logcat；Pojav 的 21/25 运行时也可能
         // 不经过 Logger 管道 —— 有 logcat 兜底，窗口永远有内容可看（用于定位启动问题）。
         startLogcatCapture();
         mainHandler.post(this::attach);
+        mainHandler.post(() -> appendBasics(info));
         mainHandler.postDelayed(silenceChecker, 1000);
     }
 
@@ -177,11 +232,80 @@ public class LaunchLogWindow {
         if (w != null) w.close();
     }
 
-    /** 供悬浮窗开关调用：重新显示日志窗 */
-    public static void showFor(Activity activity, ViewGroup parent) {
-        if (current == null || !current.attached) {
-            new LaunchLogWindow(activity, parent).show();
+    /**
+     * 打印一组「基础启动信息」。
+     *
+     * <p>1.0.6 新增：用户反馈日志窗内容太少，看不出环境。这里在窗口打开时主动输出
+     * 设备、运行时、后端等关键信息 —— 这些在原生层/其他标签里拿不到，
+     * 但对定位「为什么这个版本起不来」极有用。
+     * 刻意只打**基础**内容，不打长串（如完整 classpath、完整 args）。
+     */
+    private void appendBasics(GameLaunchSettingInfo info) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("==== QCL 启动信息 ====").append('\n');
+        sb.append("App     : ").append(activity.getPackageName()).append('\n');
+        sb.append("Device  : ").append(android.os.Build.MANUFACTURER).append(' ')
+                .append(android.os.Build.MODEL).append('\n');
+        sb.append("Android : ").append(android.os.Build.VERSION.RELEASE)
+                .append("  (API ").append(android.os.Build.VERSION.SDK_INT).append(')').append('\n');
+        sb.append("ABI     : ").append(android.os.Build.SUPPORTED_ABIS.length > 0
+                ? android.os.Build.SUPPORTED_ABIS[0] : "?").append('\n');
+        if (info != null) {
+            sb.append("Backend : ").append(info.backend).append('\n');
+            sb.append("Version : ").append(info.version).append('\n');
+            sb.append("Java    : ").append(info.javaRuntime).append('\n');
+            sb.append("Render  : ").append(info.renderer).append('\n');
+            sb.append("RAM     : ").append(info.ramMb).append(" MB").append('\n');
         }
+        sb.append("====================").append('\n');
+        onLogLine(sb.toString());
+    }
+
+    /** 基础信息载体（避免依赖 GameLaunchSetting 的字段签名） */
+    public static class GameLaunchSettingInfo {
+        public String backend = "?";
+        public String version = "?";
+        public String javaRuntime = "?";
+        public String renderer = "?";
+        public int ramMb = 0;
+    }
+
+    /**
+     * 全局缓存的基础启动信息。
+     *
+     * <p>1.0.6：{@code MenuHelper}（悬浮窗开关）拿不到 {@code GameLaunchSetting}，
+     * 但玩家从开关打开日志窗时同样应该看到基础信息。所以由启动 Activity 在创建时
+     * 写一份到这里，任何入口打开日志窗都能取到。
+     */
+    private static GameLaunchSettingInfo sBasics;
+
+    /** 由启动 Activity 调用：登记本局游戏的基础信息 */
+    public static void setBasics(GameLaunchSettingInfo info) {
+        sBasics = info;
+    }
+
+    /**
+     * 供悬浮窗开关「显示日志」调用：重新显示日志窗。
+     *
+     * <p>⚠️ 1.0.6 修正：原来这里调的是无参 {@code show()}，导致
+     * ①不打印基础信息 ②{@code captureLogcat} 沿用静态值（若首次是通过开关打开的，
+     * 它还是 false → 窗口里几乎没有内容）。现在统一按「完整模式」打开。
+     */
+    public static void showFor(Activity activity, ViewGroup parent) {
+        showFor(activity, parent, null);
+    }
+
+    /**
+     * 供悬浮窗开关调用：重新显示日志窗。
+     *
+     * @param info 基础启动信息，可为 null（null 时也会打印设备/系统摘要）
+     */
+    public static void showFor(Activity activity, ViewGroup parent, GameLaunchSettingInfo info) {
+        if (current != null && current.attached) return;
+        // 关键：无论从哪条路径打开，都保证 logcat 抓取是开的，且会补基础信息
+        captureLogcat = true;
+        // 没显式传就用启动时登记的（悬浮窗开关走这条）
+        new LaunchLogWindow(activity, parent).show(info != null ? info : sBasics);
     }
 
     private void autoScrollIfAtBottom() {
@@ -265,7 +389,11 @@ public class LaunchLogWindow {
         panel = box;
         attached = true;
 
-        // 回填已经写入的日志（启动可能早于窗口创建）
+        // 回填已经写入的日志（启动可能早于窗口创建）。
+        // 1.0.6：先插基础信息，再把历史文件内容追加在后面，保证信息区在顶部。
+        if (logView != null && buffer.length() > 0) {
+            logView.setText(trim(buffer));
+        }
         try {
             File file = new File(activity.getExternalFilesDir("debug"), "pojav_latest_log.txt");
             if (file.isFile()) {
@@ -291,10 +419,14 @@ public class LaunchLogWindow {
             mainHandler.post(this::close);
             return;
         }
+        // 1.0.6：过滤无信息量噪声 + 截断超长行，否则窗口会被刷屏看不到有用内容
+        String filtered = filterLine(text);
+        if (filtered == null) return;
+        final String out = filtered;
         mainHandler.post(() -> {
             if (!attached) return;
-            buffer.append(text);
-            if (!text.endsWith("\n")) buffer.append('\n');
+            buffer.append(out);
+            if (!out.endsWith("\n")) buffer.append('\n');
             if (attached && logView != null) {
                 if (logView.hasSelection()) {
                     return;   // 正在选择文本：跳过本次刷新，避免选区被重置
@@ -304,6 +436,24 @@ public class LaunchLogWindow {
                 scrollToEnd();
             }
         });
+    }
+
+    /**
+     * 过滤单行日志：无信息量的噪声返回 null，超长行截断。
+     * 目标：窗口里留下的都是「能看出启动到哪一步、哪一步出错」的有效内容。
+     */
+    private static String filterLine(String text) {
+        if (text == null) return null;
+        String t = text.trim();
+        if (t.isEmpty()) return null;
+        for (String noise : NOISE_PREFIXES) {
+            if (t.startsWith(noise)) return null;
+        }
+        // 超长行（如长堆栈、超长 JSON、base64）截断，保留头尾
+        if (t.length() > MAX_LINE_CHARS) {
+            t = t.substring(0, MAX_LINE_CHARS) + " …[已截断 " + (text.length() - MAX_LINE_CHARS) + " 字符]";
+        }
+        return t;
     }
 
     private boolean isMenuMarker(String text) {

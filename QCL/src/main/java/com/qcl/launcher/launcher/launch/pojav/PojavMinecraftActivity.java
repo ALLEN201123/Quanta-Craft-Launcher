@@ -81,7 +81,16 @@ public class PojavMinecraftActivity extends BaseMainActivity {
         menuHelper = new MenuHelper(this,this,gameLaunchSetting.fullscreen,gameLaunchSetting.game_directory,drawerLayout,baseLayout,false,gameLaunchSetting.controlLayout,2,scaleFactor);
         // 启动日志悬浮窗：默认开启；退出游戏回主界面时随 Activity 销毁自动关闭
         // 默认显示（老存档里 log=false 也照样显示），游戏进主界面后自动关闭；× 可手动关
-        new LaunchLogWindow(this, drawerLayout).show();
+        // 1.0.6：带上基础启动信息（设备/后端/运行时/渲染器/内存），避免日志窗内容太少
+        LaunchLogWindow.GameLaunchSettingInfo info = new LaunchLogWindow.GameLaunchSettingInfo();
+        info.backend = "Pojav";
+        info.version = gameLaunchSetting.currentVersion;
+        info.javaRuntime = gameLaunchSetting.javaPath;
+        info.renderer = gameLaunchSetting.pojavRenderer;
+        info.ramMb = gameLaunchSetting.maxRam;
+        // 登记基础信息：之后从悬浮窗开关打开日志窗也能带上
+        LaunchLogWindow.setBasics(info);
+        new LaunchLogWindow(this, drawerLayout).show(info);
 
     }
 

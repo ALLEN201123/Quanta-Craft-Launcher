@@ -62,8 +62,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     public UpdateChecker updateChecker;
 
-    // 1.0.6：顶部标题栏已移除，原 appBar / appBarTitle / backToLastUI / currentUIText /
-    // backToHome / closeCurrentUI / backToDesktop / closeApp 等控件与字段一并删除。
+    // 1.0.6：顶部标题栏已整体移除（不再有 appBar / appBarTitle / backToDesktop / closeApp）。
+    // 但二级页面仍需返回入口 —— 改为右下/右上角的**悬浮返回栏**（qcl_back_bar），
+    // 只在二级页面点亮，主界面隐藏。只保留返回相关的 4 个控件，不再有任何标题栏元素。
+    public android.widget.LinearLayout backBar;
+    public android.widget.ImageButton backToLastUI;
+    public android.widget.TextView currentUIText;
+    public android.widget.ImageButton backToHome;
+    public android.widget.ImageButton closeCurrentUI;
 
     public RelativeLayout uiContainer;
     public UIManager uiManager;
@@ -105,7 +111,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     exteriorConfig = ATE.config(MainActivity.this, null);
 
                     // 顶部标题栏已在 1.0.6 移除（合成台图标 + 标题 + 返回/主页/关闭等窗口按钮），
-                    // 六个主界面入口按钮整体上移到原位置。这里不再 findViewById 那批控件。
+                    // 六个主界面入口按钮整体上移到原位置。这里只接管**悬浮返回栏**：
+                    // 它不含任何标题栏元素，仅在二级页面点亮，为下载/版本列表/账户/设置等页面提供返回入口。
+                    backBar = findViewById(R.id.qcl_back_bar);
+                    backToLastUI = findViewById(R.id.back_to_last_ui);
+                    currentUIText = findViewById(R.id.text_current_ui);
+                    backToHome = findViewById(R.id.back_to_home);
+                    closeCurrentUI = findViewById(R.id.close_current_ui);
+                    if (backToLastUI != null) backToLastUI.setOnClickListener(MainActivity.this);
+                    if (backToHome != null) backToHome.setOnClickListener(MainActivity.this);
+                    if (closeCurrentUI != null) closeCurrentUI.setOnClickListener(MainActivity.this);
 
                     uiContainer = findViewById(R.id.main_ui_container);
                     uiManager = new UIManager(MainActivity.this,MainActivity.this);
@@ -187,11 +202,35 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     /** 顶部标题栏已移除（1.0.6），方法保留为空实现以免调用方报错。 */
-    public void showBarTitle(String title,boolean home,boolean close) {
+    /**
+     * 进入二级页面时点亮悬浮返回栏（1.0.6 重写）。
+     *
+     * <p>顶部标题栏已整体移除，所以不再有「标题左滑出去」的动画；
+     * 改为整个返回栏（backBar）淡入/淡出，内部按参数决定「回主页」和「关闭」按钮是否显示。
+     *
+     * @param title 当前页面标题，null/空则不显示文字
+     * @param home  是否显示「回到主界面」按钮
+     * @param close 是否显示「关闭当前页面」按钮
+     */
+    public void showBarTitle(String title, boolean home, boolean close) {
+        if (!isLoaded || backBar == null) return;
+        if (title != null && !title.isEmpty()) {
+            currentUIText.setText(title);
+            currentUIText.setVisibility(View.VISIBLE);
+        } else {
+            currentUIText.setVisibility(View.GONE);
+        }
+        backToLastUI.setVisibility(View.VISIBLE);
+        backToHome.setVisibility(home ? View.VISIBLE : View.GONE);
+        closeCurrentUI.setVisibility(close ? View.VISIBLE : View.GONE);
+        CustomAnimationUtils.showViewFromRight(backBar, this, this, true);
     }
 
-    /** 顶部标题栏已移除（1.0.6），方法保留为空实现以免调用方报错。 */
+    /** 回到主界面时隐藏悬浮返回栏（1.0.6 重写）。 */
     public void hideBarTitle() {
+        if (!isLoaded || backBar == null) return;
+        CustomAnimationUtils.hideViewToLeft(backBar, this, this, true);
+        currentUIText.setText("");
     }
 
     public void backToLastUI() {
@@ -298,8 +337,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     public void onClick(View v) {
-        // 1.0.6：原顶部标题栏的返回/主页/关闭/桌面/退出按钮已移除，这里不再有对应分支。
-        // 返回操作改由系统返回键（onBackPressed -> backToLastUI）承担。
+        // 1.0.6：只保留悬浮返回栏的 3 个按钮。
+        // 原顶部标题栏的「回桌面 / 退出应用」等按钮已随标题栏一起移除，
+        // 系统返回键仍由 onBackPressed() -> backToLastUI() 接管。
+        if (v == backToLastUI) {
+            backToLastUI();
+        }
+        else if (v == backToHome) {
+            backToHome();
+        }
+        else if (v == closeCurrentUI) {
+            closeCurrentUI();
+        }
     }
 
     @Override

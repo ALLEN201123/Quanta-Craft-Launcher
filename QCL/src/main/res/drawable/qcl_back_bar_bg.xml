@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- QCL 二级页面返回栏背景（1.0.6）：半透明圆角深灰，悬浮在页面右上角 -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <solid android:color="#B3545454" />
+    <corners android:radius="16dp" />
+</shape>
