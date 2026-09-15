@@ -186,6 +186,33 @@ public class GameLaunchSetting {
         } catch (Throwable ignored) {
         }
 
+        // 1.0.9：高版本（需要 Java 21 = 1.20.5+ / 26.x）要求 OpenGL 3.2+，
+        // 而 opengles2 / opengles2_5 / opengles3 / opengles3_vgpu 走 GL4ES（底层 GLES 2.0），
+        // 只能提供 OpenGL 2.1 级别 → 渲染初始化失败，真机表现是 gl4es "Using GLES 2.0 backend"
+        // 之后直接崩/黑屏。这里自动把这些版本切换到 vulkan_zink（Zink 走 Vulkan，提供 GL 4.6）。
+        // 老版本（Java 8/17）不受影响，仍按玩家选择的渲染器走。
+        String qclPojavRenderer = privateGameSetting.pojavLauncherSetting.renderer;
+        try {
+            String qclVjson = FileStringUtils.getStringFromFile(((v == null || v.equals("")) ? publicGameSetting.currentVersion : v) + "/" + (new File(((v == null || v.equals("")) ? publicGameSetting.currentVersion : v))).getName() + ".json");
+            if (qclVjson != null) {
+                Gson qclGson = JsonUtils.defaultGsonBuilder()
+                        .registerTypeAdapter(Artifact.class, new Artifact.Serializer())
+                        .registerTypeAdapter(Bits.class, new Bits.Serializer())
+                        .registerTypeAdapter(RuledArgument.class, new RuledArgument.Serializer())
+                        .registerTypeAdapter(Argument.class, new Argument.Deserializer())
+                        .create();
+                Version qclVer = qclGson.fromJson(qclVjson, Version.class);
+                if (qclVer != null && requiredJava(qclVer) >= 21) {
+                    if ("opengles2".equals(qclPojavRenderer) || "opengles2_5".equals(qclPojavRenderer)
+                            || "opengles3".equals(qclPojavRenderer) || "opengles3_vgpu".equals(qclPojavRenderer)) {
+                        qclPojavRenderer = "vulkan_zink";
+                    }
+                }
+            }
+        } catch (Throwable ignored) {
+            // 版本 json 读不到/解析失败时不改渲染器，保持玩家原选择
+        }
+
         return new GameLaunchSetting(publicGameSetting.account,
                 publicGameSetting.home,
                 (v == null || v.equals("")) ? publicGameSetting.currentVersion : v,
@@ -194,7 +221,7 @@ public class GameLaunchSetting {
                 privateGameSetting.extraMinecraftFlags,
                 gameDir,
                 privateGameSetting.boatLauncherSetting.renderer,
-                privateGameSetting.pojavLauncherSetting.renderer,
+                qclPojavRenderer,
                 privateGameSetting.touchInjector,
                 privateGameSetting.scaleFactor,
                 launcherSetting.gameFileDirectory,
