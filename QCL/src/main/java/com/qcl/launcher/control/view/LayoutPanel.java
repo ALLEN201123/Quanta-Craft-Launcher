@@ -293,10 +293,13 @@ public class LayoutPanel extends RelativeLayout {
         bgHandler.removeCallbacks(bgTimeout);
         stopBgRotation();
         // 1.0.9 关键修复：必须主动触发重绘！
-        // showBackground 只改了内部标志，若没人 invalidate，View 保持最后一帧——
+        // showBackground 只改了内部标志，若没人触发重绘，View 保持最后一帧——
         // 屏幕上等待背景依然显示（真机实测：信号链路全部走通但画面不切换，
         // 只有切后台/回前台强制全量重绘后才按新状态画出游戏画面）。
         // TextureView 的内容更新走独立合成路径，不会自动带动本 View 重绘。
-        invalidate();
+        // ⚠️ 用 postInvalidateOnAnimation 而非 invalidate()：GameFrameProbe 的兜底回调
+        // 可能来自后台线程，非主线程调 invalidate() 操作 View 会导致偶发崩溃（白屏闪退）。
+        // postInvalidateOnAnimation 线程安全，任何线程都能安全调度重绘。
+        postInvalidateOnAnimation();
     }
 }
