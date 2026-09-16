@@ -78,15 +78,6 @@ public class BoatLauncher {
             }
             Vector<String> args = new Vector<String>();
             args.add(javaPath + "/bin/java");
-            // ★ 1.1.0 隔离：Boat 后端同样只对高版本启用 cacio17
-            try {
-                Tools.qclUseCacio17 = Tools.read(new java.io.FileInputStream(
-                        new java.io.File(gameLaunchSetting.currentVersion,
-                                new java.io.File(gameLaunchSetting.currentVersion).getName() + ".json")))
-                        .contains("lwjgl/3.3.3");
-            } catch (Throwable ignored) {
-                Tools.qclUseCacio17 = false;
-            }
             Tools.getCacioJavaArgs(context, args, isJava8, width, height);
             args.add("-cp");
             args.add(classPath);

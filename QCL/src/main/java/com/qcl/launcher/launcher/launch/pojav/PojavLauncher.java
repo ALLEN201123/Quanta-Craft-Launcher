@@ -73,10 +73,9 @@ public class PojavLauncher {
 
             JREUtils.relocateLibPath(context,javaPath);
             String libraryPath = JREUtils.getJavaLibDir(javaPath) + ":" + AppManifest.POJAV_LIB_DIR + "/lwjgl3:" + JREUtils.LD_LIBRARY_PATH + ":" + AppManifest.POJAV_LIB_DIR + "/lwjgl3";
-            // ★ 1.1.0：老版本（LWJGL 2 时代，b1.x / 1.7.x 等）的 native 支持。
-            // 原本只有 Boat 后端做了这件事（拷 lwjgl-2/<abi>/liblwjgl.so + 加 libraryPath），
-            // Pojav 后端缺失 -> 老版本报 "[LWJGL] Failed to load a library" 后黑屏。
-            // 判断：版本 json 依赖 org.lwjgl:lwjgl:2.9.x。
+            // ★ 1.1.0 最小改动：Pojav 后端补 LWJGL 2 原生库支持（老版本 b1.x/1.7.x 等）。
+            // 原版只有 Boat 后端做了这件事，Pojav 后端缺失 -> 老版本报
+            // "[LWJGL] Failed to load a library" 后黑屏。只对「json 依赖 lwjgl/2.9」的版本生效。
             final boolean qclNeedLwjgl2 = qclNeedsLwjgl2(gameLaunchSetting.currentVersion);
             if (qclNeedLwjgl2) {
                 try {
@@ -108,8 +107,12 @@ public class PojavLauncher {
             boolean useCacio17 = !isJava8;
             String classPath;
             if (qclNeedLwjgl2) {
-                // 老版本：LWJGL 2 的类 + 音频（Paulscode SoundSystem，上游 classpath 漏了）
-                classPath = AppManifest.BOAT_LIB_DIR + "/lwjgl-2/lwjgl.jar:"
+                // ★ 顺序关键：getLWJGL3ClassPath() 里的 lwjgl-glfw-classes.jar 是 Pojav 特制大包，
+                // 其 org.lwjgl.* (LWJGL 2) 类是「Pojav 适配版」（Sys 2482B vs 标准 4958B）——
+                // 必须排最前，否则会用到 lwjgl-2/lwjgl.jar 标准版的 LWJGLUtil，
+                // 其平台检测在 Android 上直接 NPE（实测 b1.7.3: LWJGLUtil.<clinit>）。
+                classPath = getLWJGL3ClassPath() + ":"
+                        + AppManifest.BOAT_LIB_DIR + "/lwjgl-2/lwjgl.jar:"
                         + AppManifest.BOAT_LIB_DIR + "/lwjgl-2/lwjgl_util.jar:"
                         + com.qcl.launcher.launcher.launch.boat.AudioLibs.classPath() + ":"
                         + version.getClassPath(gameLaunchSetting.gameFileDirectory,false,false);
@@ -117,27 +120,12 @@ public class PojavLauncher {
                 classPath = getLWJGL3ClassPath() + ":" + version.getClassPath(gameLaunchSetting.gameFileDirectory,isHighVersion(gameLaunchSetting),useCacio17);
             }
             Vector<String> args = new Vector<String>();
-            // ★ 1.1.0 隔离：只有需要新栈的高版本（1.20.5+）才启用 cacio17
-            Tools.qclUseCacio17 = qclNeedsLwjgl333(gameLaunchSetting.currentVersion);
             Tools.getCacioJavaArgs(context, args, isJava8, width, height);
             args.add("-Djava.library.path=" + libraryPath);
             args.add("-Djava.home=" + javaPath);
             args.add("-Djava.io.tmpdir=" + AppManifest.DEFAULT_CACHE_DIR);
             args.add("-Duser.home=" + new File(gameLaunchSetting.gameFileDirectory).getParent());
-            // 1.1.0（测试中）：JRE21 裁剪 jimage 在 zh locale 下 DateTimeFormatter.<clinit> NPE
-            // （gui.<clinit> → HashMap.put(null)），实测强制 en 可稳定通过。
-            // 待真机验证后再决定最终形态（跟 FCL 完全对齐 = 不传）。
-            args.add("-Duser.language=en");
-            args.add("-Duser.country=US");
-            // 1.1.0：MC 的 gui.<clinit> 在某些环境触发 DateTimeFormatter.<clinit> 的 CLDR
-            // 数据路径 NPE（LocaleStore 收到 null value）；改用 JDK 的 legacy COMPAT
-            // locale provider 数据源可绕开该路径（设备实测 COMPAT 可用）。
-            args.add("-Djava.locale.providers=COMPAT");
-            // 1.0.9 修复：不传 -Duser.language（对齐 FCL）。
-            // 之前继承自 HMCL-PE 的 `-Duser.language=系统值`（中文设备=zh）会在 JRE21/25 的
-            // 裁剪 jimage 上触发 CLDR 的 DateTimeFormatter 初始化 NPE（1.20.5+/26.x 黑屏真因）。
-            // FCL 的默认 JVM 参数里根本没有这一项，JVM 用默认 locale 即可正常启动。
-            // 游戏内语言由 options.txt 的 lang 决定，与 JVM locale 无关。
+            args.add("-Duser.language=" + System.getProperty("user.language"));
             args.add("-Dos.name=Linux");
             args.add("-Dos.version=Android-" + Build.VERSION.RELEASE);
             args.add("-Dpojav.path.minecraft=" + gameLaunchSetting.gameFileDirectory);
@@ -182,59 +170,9 @@ public class PojavLauncher {
             if (minRam > maxRam) minRam = maxRam;
             args.add("-Xms" + minRam + "M");
             args.add("-Xmx" + maxRam + "M");
-            // 1.1.0：对齐 FCL 的关键 JVM 参数。
-            // -XX:ActiveProcessorCount 显式限制 JVM 看到的 CPU 数 → 决定 JIT 编译线程数与
-            // 类初始化并发度。MC 的 gui.<clinit> → DateTimeFormatter.<clinit> 的 NPE
-            // 高度符合「多线程类初始化竞态」特征（同环境独立复现全 PASS，仅 MC 真身触发）。
-            try {
-                args.add("-XX:ActiveProcessorCount=" + Runtime.getRuntime().availableProcessors());
-            } catch (Throwable ignored) {
-            }
-            if (jvmArch.equals("aarch32") || jvmArch.equals("i386")) {
-                // FCL：32 位设备线程栈调到 1m，防 1.13+ 的 StackOverflowError
-                args.add("-Xss1m");
-            }
-            args.add("-Dloader.disable_forked_guis=true");
-            args.add("-Dfml.ignoreInvalidMinecraftCertificates=true");
-            args.add("-Dfml.ignorePatchDiscrepancies=true");
-            args.add("-Djdk.lang.Process.launchMechanism=FORK");
-            // ★ 1.1.0 关键对齐（FCL DefaultLauncher）：显式设置 JVM 三件套编码。
-            // Java 19+ 起 stdout/stderr 编码独立于 file.encoding（JEP 400），不显式设置时
-            // 会使用 Android native 编码 —— 可能影响类初始化期间字符串/资源数据处理
-            // （MC gui.<clinit> → DateTimeFormatter.<clinit> 的 CLDR 数据路径 NPE）。
-            args.add("-Dfile.encoding=UTF-8");
-            args.add("-Dstdout.encoding=UTF-8");
-            args.add("-Dstderr.encoding=UTF-8");
-            // FCL：让 MC 能自动定位版本 jar（部分资源/校验逻辑依赖它）
-            try {
-                args.add("-Dminecraft.client.jar=" + new File(gameLaunchSetting.currentVersion, new File(gameLaunchSetting.currentVersion).getName() + ".jar").getAbsolutePath());
-            } catch (Throwable ignored) {
-            }
-            // (-Xint 竞态验证已完成，1.1.0 回退：不再强加解释模式，恢复 JIT 性能)
             if (!gameLaunchSetting.extraJavaFlags.equals("")) {
                 String[] extraJavaFlags = gameLaunchSetting.extraJavaFlags.split(" ");
                 Collections.addAll(args, extraJavaFlags);
-            }
-            // ★★ 1.1.0 架构：新参数只对「需要 LWJGL 3.3.3 的高版本（1.20.5+）」启用，
-            // 完全不影响老版本/远古版本（它们用 Pojav 原版的 LWJGL 3.2.3 + LWJGL 2 兼容方案）。
-            // 判断方式：读版本 json，看是否有 org.lwjgl:lwjgl:3.3.x 的依赖。
-            boolean qclNeedNewLwjgl = qclNeedsLwjgl333(gameLaunchSetting.currentVersion);
-            if (qclNeedNewLwjgl) {
-                try {
-                    String qclRuntimeTmp = context.getCacheDir().getAbsolutePath();
-                    // json 里遗留的空值参数（HMCL-PE 时代）会让 MC 的 oshi/JNA 初始化失败，
-                    // 必须放在 JVM 参数区（mainClass 之前）覆盖。
-                    args.add("-Djna.tmpdir=" + qclRuntimeTmp);
-                    args.add("-Dorg.lwjgl.system.SharedLibraryExtractPath=" + qclRuntimeTmp);
-                    args.add("-Dio.netty.native.workdir=" + qclRuntimeTmp);
-                    // JNA 用 APK 自带的 Android 版 libjnidispatch.so（避免从 jar 解压 Linux 版）
-                    args.add("-Djna.boot.library.path=" + context.getApplicationInfo().nativeLibraryDir);
-                    // LWJGL 的 native 加载路径（FCL 同款）
-                    args.add("-Dorg.lwjgl.librarypath=" + context.getApplicationInfo().nativeLibraryDir);
-                    // 定制 GLFW stub 从配置读库名，必须指向 libpojavexec.so
-                    args.add("-Dorg.lwjgl.glfw.libname=pojavexec");
-                } catch (Throwable ignored) {
-                }
             }
             args.add("-Dorg.lwjgl.opengl.libname=" + JREUtils.getGraphicsLibrary(gameLaunchSetting.pojavRenderer));
             args.add("-cp");
@@ -270,14 +208,7 @@ public class PojavLauncher {
         }
     }
 
-    /**
-     * 1.1.0：判断该版本是否需要 LWJGL 3.3.3 的新方案。
-     * 只有 1.20.5+ 的版本（其版本 json 依赖 org.lwjgl:lwjgl:3.3.3）才需要：
-     *   - 新的 native 路径参数（jna/lwjgl.librarypath 等）
-     *   - 定制编译的 GLFW stub（pojavexec 接口）
-     * 老版本（3.2.3 / LWJGL 2）继续走 Pojav 原版方案，不受任何影响。
-     */
-    /** 1.1.0：判断该版本是否需要 LWJGL 2（老版本 b1.x / 1.7.x 等）。 */
+    /** 1.1.0：判断该版本是否需要 LWJGL 2（老版本 b1.x / 1.7.x / 1.12 及以下）。 */
     private static boolean qclNeedsLwjgl2(String versionPath) {
         if (versionPath == null) return false;
         try {
@@ -286,22 +217,6 @@ public class PojavLauncher {
             if (!json.isFile()) return false;
             String content = Tools.read(new java.io.FileInputStream(json));
             return content.contains("lwjgl/2.9") || content.contains("lwjgl-2.9");
-        } catch (Throwable ignored) {
-            return false;
-        }
-    }
-
-    private static boolean qclNeedsLwjgl333(String versionPath) {
-        if (versionPath == null) return false;
-        try {
-            File dir = new File(versionPath);
-            File json = new File(dir, dir.getName() + ".json");
-            if (!json.isFile()) return false;
-            String content = Tools.read(new java.io.FileInputStream(json));
-            // 只认 3.3.3 及以上（1.20.5+ 的依赖）
-            return content.contains("lwjgl/3.3.3") || content.contains("lwjgl/3.3.4")
-                || content.contains("lwjgl/3.3.5") || content.contains("lwjgl/3.4.0")
-                || content.contains("lwjgl/3.4.1");
         } catch (Throwable ignored) {
             return false;
         }
