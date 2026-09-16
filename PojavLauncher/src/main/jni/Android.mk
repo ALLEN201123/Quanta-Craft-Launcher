@@ -31,11 +31,36 @@ LOCAL_LDLIBS := -ldl -llog -landroid
 LOCAL_MODULE := pojavexec
 # LOCAL_CFLAGS += -DDEBUG
 # -DGLES_TEST
+# 1.1.0：渲染桥从 HMCL-PE 旧版（egl_bridge.c 仅 GL4ES/OSMesa）移植为 FCL 新版
+# （ctxbridges 模块化渲染桥，支持 Mesa zink-on-Vulkan 桌面 GL）。
+# 新增：ctxbridges/*（渲染桥）、environ/*（渲染状态）、virgl/*（virgl 支持）、
+#       androidnsbypass/*（linker 命名空间绕过，加载驱动库用）、qcl_bridge_compat.c（兼容层）
 LOCAL_SRC_FILES := \
     egl_bridge.c \
+    qcl_bridge_compat.c \
     input_bridge_v3.c \
     jre_launcher.c \
-    utils.c
+    utils.c \
+    ctxbridges/loader_dlopen.c \
+    ctxbridges/gl_bridge.c \
+    ctxbridges/osm_bridge.c \
+    ctxbridges/egl_loader.c \
+    ctxbridges/osmesa_loader.c \
+    ctxbridges/swap_interval_no_egl.c \
+    environ/environ.c \
+    virgl/virgl.c \
+    androidnsbypass/android_linker_ns.cpp \
+    androidnsbypass/elf_soname_patcher.c \
+    androidnsbypass/nsbypass.c \
+    androidnsbypass/nsbypass_dlfcn.c \
+    androidnsbypass/utils.c
+LOCAL_C_INCLUDES := \
+    $(LOCAL_PATH) \
+    $(LOCAL_PATH)/ctxbridges \
+    $(LOCAL_PATH)/environ \
+    $(LOCAL_PATH)/virgl \
+    $(LOCAL_PATH)/androidnsbypass/include
+LOCAL_CPPFLAGS := -std=c++17
 include $(BUILD_SHARED_LIBRARY)
 
 include $(CLEAR_VARS)

@@ -257,7 +257,10 @@ public class LaunchVersion {
                     else if (key.equals("game_directory")) {
                         value = gameLaunchSetting.game_directory;
                     }
-                    else if (key.equals("assets_root")) {
+                    else if (key.equals("assets_root") || key.equals("game_assets")) {
+                        // ★ 1.1.0 修复：老版本（b1.x / 1.7.x 等）的 json 用 ${game_assets} 变量，
+                        // 原实现只认 assets_root，导致值替换为空 -> "--assetsDir" 后直接跟
+                        // "--width"（参数错位）-> 图标路径变成 "--width/icons/..." -> IIOException 崩溃。
                         value = gameLaunchSetting.gameFileDirectory + "/assets";
                     }
                     else if (key.equals("user_properties")) {
@@ -362,7 +365,10 @@ public class LaunchVersion {
                     else if (key.equals("game_directory")) {
                         value = gameLaunchSetting.game_directory;
                     }
-                    else if (key.equals("assets_root")) {
+                    else if (key.equals("assets_root") || key.equals("game_assets")) {
+                        // ★ 1.1.0 修复：老版本（b1.x / 1.7.x 等）的 json 用 ${game_assets} 变量，
+                        // 原实现只认 assets_root，导致值替换为空 -> "--assetsDir" 后直接跟
+                        // "--width"（参数错位）-> 图标路径变成 "--width/icons/..." -> IIOException 崩溃。
                         value = gameLaunchSetting.gameFileDirectory + "/assets";
                     }
                     else if (key.equals("user_properties")) {

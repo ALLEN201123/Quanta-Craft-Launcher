@@ -90,6 +90,11 @@ public class InstallLauncherFile {
             FileUtils.deleteDirectory(AppManifest.BOAT_LIB_DIR);
             FileUtils.deleteDirectory(AppManifest.POJAV_LIB_DIR);
             FileUtils.deleteDirectory(AppManifest.CACIOCAVALLO_DIR);
+            // 1.1.0：caciocavallo17 也必须删干净再重拷 —— 否则旧版 jar（1.18）会和新版
+            // （1.19.1 + cacio-agent.jar）混在同一个目录里，而 -Xbootclasspath/a 会把
+            // 目录下**所有** jar 加进 bootstrap classpath → 新旧类冲突
+            // （实测报 IllegalAccessError: CTCJavaAgent → FontManagerUtil → -javaagent failed）。
+            FileUtils.deleteDirectory(AppManifest.CACIOCAVALLO17_DIR);
             if (new File(AppManifest.DEFAULT_RUNTIME_DIR + "/version").exists()) {
                 new File(AppManifest.DEFAULT_RUNTIME_DIR + "/version").delete();
             }

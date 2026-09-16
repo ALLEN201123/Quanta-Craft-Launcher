@@ -32,6 +32,9 @@ android {
 }
 
 dependencies {
+    // 1.1.0：kopper-zink 的渲染库（libEGL_mesa/libzink_dri 等）已直接解压到
+    // src/main/jniLibs/*/ 随 APK 打包（library 模块不能直接依赖本地 aar，Gradle 会报
+    // "Direct local .aar file dependencies are not supported"）。
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation 'commons-codec:commons-codec:1.16.0'
     implementation 'com.google.code.gson:gson:2.10.1'

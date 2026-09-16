@@ -1,45 +1,47 @@
 package com.qcl.launcher.launcher.launch;
 
-import android.graphics.Bitmap;
-import android.os.Handler;
-import android.os.Looper;
+import android.graphics.SurfaceTexture;
 import android.view.TextureView;
 
 /**
- * 1.0.7：游戏画面输出探测（「卡在启动等待界面」的兜底）。
+ * 1.0.9：游戏画面输出探测（「卡在启动等待界面」的兜底）。
  *
  * <h3>要解决的问题</h3>
- * 关掉启动等待界面（露出游戏画面）的**唯一正规路径**是：
+ * 关掉启动等待界面（露出游戏画面）的**正规路径**是：
  * <pre>
  *   TextureView.onSurfaceTextureUpdated()
  *     → PojavCallback.onPicOutput() / BoatCallback.onPicOutput()
  *     → LayoutPanel.hideBackground()
  * </pre>
- * 但在实际设备上这条链路可能**永远不触发**：
+ * 但在实际设备上这条链路可能**不触发或被时序竞争吞掉**：
  * <ul>
- *   <li>Pojav 侧渲染视图曾被 {@code setOpaque(false)} 设成透明 ——
- *       透明 TextureView 在部分驱动上不会产生 {@code onSurfaceTextureUpdated}
- *       （系统认为没有可见内容需要合成）；</li>
- *   <li>部分设备的 SurfaceFlinger 在游戏首帧尚未合成时不派发更新；</li>
- *   <li>时序竞争：回调可能早于等待界面创建。</li>
+ *   <li>部分设备/驱动不派发 {@code onSurfaceTextureUpdated}（尤其透明/特殊合成路径）；</li>
+ *   <li>时序竞争：游戏首帧早于 {@code onStart}（showBackground）到达时，
+ *       「只通知一次」的标志被提前置位，等待界面随后又盖回来，正规回调从此断路。</li>
  * </ul>
- * 结果就是**游戏其实已经在后台正常渲染，但等待界面永远盖在上面**，
- * 玩家看到的现象是「卡在启动画面进不去」。
  *
- * <h3>兜底做法</h3>
- * 主动轮询 {@link TextureView#getBitmap(int, int)} 采样，
- * 只要取到「非全透明、且不是纯黑」的像素，就认定游戏画面已经出来了，
- * 立即回调放行。同时设一个最大探测时长，超时后**无条件放行** ——
- * 宁可露出尚未就绪的画面，也不要让玩家卡死在等待界面。
+ * <h3>1.0.9 的做法（替换 1.0.7 的 getBitmap 轮询）</h3>
+ * 1.0.7 用主线程每 250ms 调 {@code TextureView.getBitmap()} 采样像素：
+ * <ul>
+ *   <li>getBitmap 是**同步 GPU 回读**，软件渲染/转译环境下会阻塞数秒 → 启动器 ANR；</li>
+ *   <li>真机驱动上 GL 内容常读出**全黑帧**，像素判定形同虚设，只能靠 10 秒超时。</li>
+ * </ul>
+ * 现在改为**后台线程轮询 {@link SurfaceTexture#getTimestamp()}**：
+ * <ul>
+ *   <li>纯元数据读取（一个 long），无 GPU/CPU 回读，**零 ANR 风险**；</li>
+ *   <li>时间戳变化 = 游戏真的画了新帧，**黑帧也能检出**；</li>
+ *   <li>检出即回调放行 —— 等待界面在游戏首帧后 ≤200ms 内切换，而不是等 10 秒。</li>
+ * </ul>
+ * 仍保留最大探测时长超时无条件放行 —— 宁可早切，也不让玩家卡死在等待界面。
  *
  * <p>Pojav 与 Boat 两个后端共用这一份实现，行为保持一致。
  */
 public class GameFrameProbe {
 
-    /** 采样间隔 */
-    private static final int INTERVAL_MS = 250;
-    /** 最大探测次数（40 × 250ms ≈ 10 秒）；超时无条件放行 */
-    private static final int MAX_TRIES = 40;
+    /** 轮询间隔（后台线程，开销可忽略） */
+    private static final int INTERVAL_MS = 200;
+    /** 最大探测时长（10 秒）；超时无条件放行 */
+    private static final long MAX_PROBE_MS = 10_000L;
 
     /** 画面已输出时的回调 */
     public interface Callback {
@@ -48,88 +50,80 @@ public class GameFrameProbe {
 
     private final TextureView target;
     private final Callback callback;
-    private final Handler handler = new Handler(Looper.getMainLooper());
 
-    private int tries;
-    private boolean stopped;
-    private boolean fired;
+    private Thread worker;
+    private volatile boolean stopped;
 
     public GameFrameProbe(TextureView target, Callback callback) {
         this.target = target;
         this.callback = callback;
     }
 
-    /** 开始探测（主线程调用） */
-    public void start() {
-        tries = 0;
+    /** 开始探测（可在任意线程调用） */
+    public synchronized void start() {
+        stop();
         stopped = false;
-        fired = false;
-        handler.removeCallbacks(tick);
-        handler.postDelayed(tick, INTERVAL_MS);
+        worker = new Thread(() -> {
+            long deadline = System.currentTimeMillis() + MAX_PROBE_MS;
+            long lastTs = currentTimestamp();
+            long startTs = lastTs;
+            while (!stopped) {
+                try {
+                    Thread.sleep(INTERVAL_MS);
+                } catch (InterruptedException e) {
+                    return;
+                }
+                if (stopped) return;
+                long ts = currentTimestamp();
+                if (ts > 0 && (ts != startTs || ts != lastTs)) {
+                    // 游戏画出了新帧（时间戳在推进）→ 立即放行
+                    fire(true, ts, startTs);
+                    return;
+                }
+                lastTs = ts;
+                if (System.currentTimeMillis() >= deadline) {
+                    // 10 秒兜底：无条件放行
+                    fire(false, ts, startTs);
+                    return;
+                }
+            }
+        }, "GameFrameProbe");
+        worker.setDaemon(true);
+        worker.start();
     }
 
     /** 停止探测（正规回调到达时调用，避免重复触发） */
-    public void stop() {
+    public synchronized void stop() {
         stopped = true;
-        handler.removeCallbacks(tick);
+        Thread t = worker;
+        worker = null;
+        if (t != null) t.interrupt();
     }
 
-    private final Runnable tick = new Runnable() {
-        @Override
-        public void run() {
-            if (stopped) return;
-            tries++;
-            boolean ready = false;
-            try {
-                ready = hasVisibleFrame();
-            } catch (Throwable ignored) {
-                // 采样失败不算致命：可能视图还没就绪，下一轮再试
-            }
-            if (ready || tries >= MAX_TRIES) {
-                fire();
-                return;
-            }
-            handler.postDelayed(this, INTERVAL_MS);
+    private long currentTimestamp() {
+        try {
+            if (target == null) return 0;
+            SurfaceTexture st = target.getSurfaceTexture();
+            if (st == null) return 0;
+            return st.getTimestamp();
+        } catch (Throwable ignored) {
+            return 0;
         }
-    };
+    }
 
-    private void fire() {
-        if (fired) return;
-        fired = true;
-        stopped = true;
-        handler.removeCallbacks(tick);
+    private void fire(boolean frameDetected, long ts, long startTs) {
+        try {
+            android.util.Log.i("jrelog", "[GameFrameProbe] 放行: "
+                    + (frameDetected
+                       ? "探测到新帧 ts=" + ts + " (start=" + startTs + ")"
+                       : ts > 0
+                         ? "10s 超时放行（时间戳未推进 ts=" + ts + "）"
+                         : "10s 超时放行（SurfaceTexture 未就绪）"));
+        } catch (Throwable ignored) {
+        }
         try {
             callback.onFirstFrame();
         } catch (Throwable ignored) {
-        }
-    }
-
-    /**
-     * 采样一个很小的位图，判断是否已经有可见内容。
-     *
-     * <p>判定刻意宽松：只要**存在任意一个 alpha &gt; 0 且不是纯黑**的像素就返回 true。
-     * 因为游戏画面一旦出来就会盖住一切，早一点放行没有任何副作用。
-     */
-    private boolean hasVisibleFrame() {
-        if (target == null || !target.isAvailable()) return false;
-        Bitmap bmp = target.getBitmap(32, 18);
-        if (bmp == null) return false;
-        try {
-            for (int y = 0; y < bmp.getHeight(); y++) {
-                for (int x = 0; x < bmp.getWidth(); x++) {
-                    int p = bmp.getPixel(x, y);
-                    int a = (p >>> 24) & 0xFF;
-                    int r = (p >> 16) & 0xFF;
-                    int g = (p >> 8) & 0xFF;
-                    int b = p & 0xFF;
-                    if (a > 0 && (r > 8 || g > 8 || b > 8)) {
-                        return true;
-                    }
-                }
-            }
-            return false;
-        } finally {
-            bmp.recycle();
         }
     }
 }

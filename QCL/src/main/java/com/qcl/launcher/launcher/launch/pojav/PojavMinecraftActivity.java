@@ -201,11 +201,19 @@ public class PojavMinecraftActivity extends BaseMainActivity {
                 baseLayout.showBackground();
                 // 1.0.7：等待界面一出现就启动画面探测兜底（见 frameProbe 注释）
                 startFrameProbe();
+                // 1.0.9：修复时序竞争 —— 游戏首帧可能早于本回调到达，此时「只通知一次」的
+                // picOutputNotified 已被置位，等待界面随后盖回来后正规回调就永远断路了
+                //（现象：停在等待页，只有 10s/30s 兜底能救）。
+                // 这里在 showBackground 之后清零标志：游戏下一帧立刻重新触发
+                // onSurfaceTextureUpdated → onPicOutput → hideBackground，等待界面只在
+                // 「真正没有帧」时显示，游戏出画即切换。
+                resetPicOutputFlag();
             }
 
             @Override
             public void onPicOutput() {
                 // 正规路径：回调来了就正常关掉，并停掉探测
+                android.util.Log.i("jrelog", "[画面切换] 收到 onPicOutput，撤除等待界面");
                 stopFrameProbe();
                 baseLayout.hideBackground();
             }

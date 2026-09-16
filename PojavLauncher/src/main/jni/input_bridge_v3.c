@@ -16,9 +16,14 @@
 #include <libgen.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdatomic.h>
+#include <math.h>
 
 #include "log.h"
 #include "utils.h"
+#include "environ/environ.h"
+
+extern void updateMonitorSize(int width, int height);
 
 #define EVENT_TYPE_CHAR 1000
 #define EVENT_TYPE_CHAR_MODS 1001
@@ -82,6 +87,39 @@ void JNI_OnUnload(JavaVM* vm, void* reserved) {
     runtimeJNIEnvPtr_ANDROID = NULL;
 }
 
+/*
+ * 初始化 GLFW/JVM 侧通信所需的方法 ID 与按键缓冲。
+ * 由定制版 GLFW.java 的静态块在类加载后调用（GLFW.java:559-560 的
+ * System.loadLibrary("pojavexec") + nativeInitializeGLFWNativeBridge()）。
+ * GLFW 的加载时机远晚于 pojavexec 被 dlopen，此时 FindClass 才能成功。
+ * [1.1.0 移植自 FCL，QCL 原版缺失此函数 -> UnsatisfiedLinkError]
+ */
+JNIEXPORT void JNICALL
+Java_org_lwjgl_glfw_GLFW_nativeInitializeGLFWNativeBridge(__attribute__((unused)) JNIEnv *env,
+                                                          __attribute__((unused)) jclass clazz) {
+    JNIEnv *vmEnv;
+    (*pojav_environ->runtimeJavaVMPtr)->GetEnv(pojav_environ->runtimeJavaVMPtr, (void **) &vmEnv,
+                                               JNI_VERSION_1_4);
+    pojav_environ->vmGlfwClass = (*vmEnv)->NewGlobalRef(vmEnv,
+                                                        (*vmEnv)->FindClass(vmEnv,
+                                                                            "org/lwjgl/glfw/GLFW"));
+    pojav_environ->method_glftSetWindowAttrib = (*vmEnv)->GetStaticMethodID(
+            vmEnv, pojav_environ->vmGlfwClass, "glfwSetWindowAttrib", "(JII)V");
+    pojav_environ->method_internalWindowSizeChanged = (*vmEnv)->GetStaticMethodID(
+            vmEnv, pojav_environ->vmGlfwClass, "internalWindowSizeChanged", "(J)V");
+    pojav_environ->method_internalChangeMonitorSize = (*vmEnv)->GetStaticMethodID(
+            vmEnv, pojav_environ->vmGlfwClass, "internalChangeMonitorSize", "(II)V");
+    jfieldID field_keyDownBuffer = (*vmEnv)->GetStaticFieldID(
+            vmEnv, pojav_environ->vmGlfwClass, "keyDownBuffer", "Ljava/nio/ByteBuffer;");
+    jobject keyDownBufferJ = (*vmEnv)->GetStaticObjectField(
+            vmEnv, pojav_environ->vmGlfwClass, field_keyDownBuffer);
+    pojav_environ->keyDownBuffer = (*vmEnv)->GetDirectBufferAddress(vmEnv, keyDownBufferJ);
+    jfieldID field_mouseDownBuffer = (*vmEnv)->GetStaticFieldID(
+            vmEnv, pojav_environ->vmGlfwClass, "mouseDownBuffer", "Ljava/nio/ByteBuffer;");
+    jobject mouseDownBufferJ = (*vmEnv)->GetStaticObjectField(
+            vmEnv, pojav_environ->vmGlfwClass, field_mouseDownBuffer);
+    pojav_environ->mouseDownBuffer = (*vmEnv)->GetDirectBufferAddress(vmEnv, mouseDownBufferJ);
+}
 #define ADD_CALLBACK_WWIN(NAME) \
 GLFW_invoke_##NAME##_func* GLFW_invoke_##NAME; \
 JNIEXPORT jlong JNICALL Java_org_lwjgl_glfw_GLFW_nglfwSet##NAME##Callback(JNIEnv * env, jclass cls, jlong window, jlong callbackptr) { \
@@ -359,8 +397,6 @@ JNIEXPORT void JNICALL Java_org_lwjgl_glfw_CallbackBridge_nativeSendKey(JNIEnv* 
     }
 }
 
-
-
 JNIEXPORT void JNICALL Java_org_lwjgl_glfw_CallbackBridge_nativeSendMouseButton(JNIEnv* env, jclass clazz, jint button, jint action, jint mods) {
     if (isInputReady) {
         if (button == -1) {
@@ -439,3 +475,111 @@ Java_org_lwjgl_glfw_CallbackBridge_setClass(JNIEnv *env, jclass clazz) {
     inputBridgeMethod_ANDROID = (*env)->GetStaticMethodID(env, clazz, "receiveCallback", "(IIIII)V");
     inputBridgeClass_ANDROID = (*env)->NewGlobalRef(env, clazz);
 }
+
+
+/*
+ * [1.1.0 移植自 FCL] GLFW 事件泵函数。
+ * 定制版 GLFW.java 的 GLFW$Functions 需要 pojavStartPumping/pojavPumpEvents/
+ * pojavStopPumping 三个符号（apiGetFunctionAddress 查找），QCL 原版缺失
+ * -> "A required function is missing: pojavPumpEvents" -> GLFW 初始化失败。
+ */
+
+void updateWindowSize(void *window) {
+    (*pojav_environ->glfwThreadVmEnv)->CallStaticVoidMethod(
+            pojav_environ->glfwThreadVmEnv, pojav_environ->vmGlfwClass,
+            pojav_environ->method_internalWindowSizeChanged, (jlong) window);
+}
+
+void pojavPumpEvents(void *window) {
+    if (pojav_environ->shouldUpdateMouse) {
+        pojav_environ->GLFW_invoke_CursorPos(window, floor(pojav_environ->cursorX),
+                                             floor(pojav_environ->cursorY));
+    }
+    if (pojav_environ->shouldUpdateMonitorSize) {
+        updateWindowSize(window);
+    }
+
+    size_t index = pojav_environ->outEventIndex;
+    size_t targetIndex = pojav_environ->outTargetIndex;
+
+    while (targetIndex != index) {
+        GLFWInputEvent event = pojav_environ->events[index];
+        switch (event.type) {
+            case EVENT_TYPE_CHAR:
+                if (pojav_environ->GLFW_invoke_Char)
+                    pojav_environ->GLFW_invoke_Char(window, event.i1);
+                break;
+            case EVENT_TYPE_CHAR_MODS:
+                if (pojav_environ->GLFW_invoke_CharMods)
+                    pojav_environ->GLFW_invoke_CharMods(window, event.i1, event.i2);
+                break;
+            case EVENT_TYPE_KEY:
+                if (pojav_environ->GLFW_invoke_Key)
+                    pojav_environ->GLFW_invoke_Key(window, event.i1, event.i2, event.i3, event.i4);
+                break;
+            case EVENT_TYPE_MOUSE_BUTTON:
+                if (pojav_environ->GLFW_invoke_MouseButton)
+                    pojav_environ->GLFW_invoke_MouseButton(window, event.i1, event.i2, event.i3);
+                break;
+            case EVENT_TYPE_CURSOR_ENTER:
+                if (pojav_environ->GLFW_invoke_CursorEnter)
+                    pojav_environ->GLFW_invoke_CursorEnter(window, event.i1);
+                break;
+            case EVENT_TYPE_SCROLL:
+                if (pojav_environ->GLFW_invoke_Scroll)
+                    pojav_environ->GLFW_invoke_Scroll(window, event.i1, event.i2);
+                break;
+        }
+
+        index++;
+        if (index >= EVENT_WINDOW_SIZE)
+            index -= EVENT_WINDOW_SIZE;
+    }
+}
+
+/** Prepare the library for sending out callbacks to all windows */
+void pojavStartPumping() {
+    size_t counter = atomic_load_explicit(&pojav_environ->eventCounter, memory_order_acquire);
+    size_t index = pojav_environ->outEventIndex;
+
+    unsigned targetIndex = index + counter;
+    if (targetIndex >= EVENT_WINDOW_SIZE)
+        targetIndex -= EVENT_WINDOW_SIZE;
+
+    // Only accessed by one unique thread, no need to atomic store
+    pojav_environ->inEventCount = counter;
+    pojav_environ->outTargetIndex = targetIndex;
+
+    //PumpEvents is called for every window, so this logic should be there in order to correctly distribute events to all windows.
+    if ((pojav_environ->cLastX != pojav_environ->cursorX ||
+         pojav_environ->cLastY != pojav_environ->cursorY) && pojav_environ->GLFW_invoke_CursorPos) {
+        pojav_environ->cLastX = pojav_environ->cursorX;
+        pojav_environ->cLastY = pojav_environ->cursorY;
+        pojav_environ->shouldUpdateMouse = true;
+    }
+    if (pojav_environ->shouldUpdateMonitorSize) {
+        // Perform a monitor size update here to avoid doing it on every single window
+        updateMonitorSize(pojav_environ->savedWidth, pojav_environ->savedHeight);
+        // Mark the monitor size as consumed (since GLFW was made aware of it)
+        pojav_environ->monitorSizeConsumed = true;
+    }
+}
+
+/** Prepare the library for the next round of new events */
+void pojavStopPumping() {
+    pojav_environ->outEventIndex = pojav_environ->outTargetIndex;
+
+    // New events may have arrived while pumping, so remove only the difference before the start and end of execution
+    atomic_fetch_sub_explicit(&pojav_environ->eventCounter, pojav_environ->inEventCount,
+                              memory_order_acquire);
+    // Make sure the next frame won't send mouse or monitor updates if it's unnecessary
+    pojav_environ->shouldUpdateMouse = false;
+    // Only reset the update flag if the monitor size was consumed by pojavStartPumping. This
+    // will delay the update to next frame if it had occured between pojavStartPumping and pojavStopPumping,
+    // but it's better than not having it apply at all
+    if (pojav_environ->shouldUpdateMonitorSize && pojav_environ->monitorSizeConsumed) {
+        pojav_environ->shouldUpdateMonitorSize = false;
+        pojav_environ->monitorSizeConsumed = false;
+    }
+}
+

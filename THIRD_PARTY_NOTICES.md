@@ -22,13 +22,28 @@ HMCL-PE 以 **GNU GPL-3.0** 授权；但 QCL 链接了 **AGPL-3.0** 的 Terracot
 | GL4ES | ptitSeb 等 | MIT | OpenGL 2.x → OpenGL ES 1.1/2.0 转换层 |
 | OpenAL Soft | kcat 等 | LGPL-2.0 | 音频 |
 | OpenJDK / 移动端 JRE 构建 | OpenJDK、FCL 项目 | GPL-2.0 with Classpath Exception | Java 运行时 |
+| **FoldCraftLauncher (FCL)** | **FCL-Team** | **GPL-3.0** | **部分实现参考/借用**：Java 运行时的选择与安装、authlib-injector 的引入与校验等（详见下方说明） |
 | BMCLAPI | bangbang93 | 见其服务说明 | 国内下载镜像 |
 | mcmod.cn（MC 百科） | mcmod.cn | 见其站点说明 | 百科链接 |
 | Minecraft（游戏资源/贴图，仅作图标与界面参考） | Mojang / Microsoft | 专有资产，遵循 Minecraft EULA | 本项目不分发游戏本体 |
 
+## ⚠️ 关于 FCL（FoldCraftLauncher）的代码/思路借用说明
+QCL 在实现下列功能时，**参考并借用了 FCL（FoldCraftLauncher，FCL-Team）的开源代码与设计思路**：
+
+1. **Java 运行时的选择与安装**：按版本所需 Java 大版本 + 设备实际架构选择并安装对应运行时。
+2. **authlib-injector 的引入与校验**：注入前读取 jar 的 Manifest
+   （校验 `Implementation-Title` / `Build-Number` / `Premain-Class`），校验不通过则不注入 `-javaagent`；
+   以及把内置 jar 升级到与 Java 21+ 兼容的新版本。
+3. **部分接口/流程设计**参考了 FCL 的对应实现。
+
+FCL 以 **GPL-3.0** 授权。若你需要 FCL 的源码或其许可全文，请见其官方仓库
+<https://github.com/FCL-Team/FoldCraftLauncher>。
+在此对 FCL 的作者与社区致以诚挚谢意。
+
 ## 署名位置
 启动器内「设置 → 关于」页已列出：BMCLAPI、MC 百科、原版项目（HMCL-PE / Tungs）、
-本作作者（Rod123456）、以及 **Terracotta / BurningTNT** 与 AGPL-3.0 说明。
+本作作者（Rod123456）、**Terracotta / BurningTNT** 与 **FoldCraftLauncher（FCL-Team）**，
+以及 AGPL-3.0 说明。
 
 ## 多人联机的使用限制（合规与免责）
 多人联机功能仅限 **中国大陆地区** 使用；在境外使用本功能，本启动器不承担任何责任，

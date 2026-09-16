@@ -98,6 +98,9 @@ export JAVA_HOME=/path/to/jdk-17
 - 第三方组件与各自许可、署名见 `THIRD_PARTY_NOTICES.md`
 
 ### 特别鸣谢
+
+本项目的 Java 运行时方案、authlib-injector 用法等部分实现，**参考并借用了 FCL（FoldCraftLauncher）的开源代码与思路**，在此特别致谢。
+
 | 项目 | 作者 | 用途 |
 |---|---|---|
 | HMCL-PE | Tungs（bilibili 18115101） | 本项目的前身 |
@@ -105,6 +108,11 @@ export JAVA_HOME=/path/to/jdk-17
 | Terracotta | BurningTNT | 多人联机 |
 | LWJGL / GL4ES / OpenAL / OpenJDK | 各自作者 | 图形、音频与运行时 |
 | BMCLAPI | bangbang93 | 国内下载镜像 |
+| **FoldCraftLauncher (FCL)** | **[FCL-Team](https://github.com/FCL-Team/FoldCraftLauncher)** | **部分实现参考/借用**：Java 运行时方案、authlib-injector 用法等 |
+
+> ⚠️ 关于 FCL：QCL 在实现 Java 运行时的选择与安装、authlib-injector 的引入与校验等部分功能时，
+> **参考并借用了 FCL 的开源代码与设计思路**。FCL 以 GPL-3.0 授权，其源码与许可详见其官方仓库。
+> 在此对其作者与社区致以诚挚谢意。
 
 ## 免责声明
 本项目不包含 Minecraft 游戏本体与资源，使用需自备正版账号（或自建离线账号）。

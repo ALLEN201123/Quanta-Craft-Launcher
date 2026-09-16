@@ -193,6 +193,11 @@ public class JREUtils {
         envMap.put("TMPDIR", activity.getCacheDir().getAbsolutePath());
         envMap.put("LIBGL_MIPMAP", "3");
 
+        // 1.1.0：新渲染桥（FCL 版 egl_bridge）的 pojavInitOpenGL 会读 FORCE_VSYNC。
+        // 缺这个 env 时 getenv 返回 NULL，随后的 strcmp(NULL,"true") 直接 SIGSEGV
+        //（真机实测 fault addr 0x45，崩溃于 JVM Main thread）。FCL 恒定设置该值。
+        envMap.put("FORCE_VSYNC", "false");
+
         // On certain GLES drivers, overloading default functions shader hack fails, so disable it
         envMap.put("LIBGL_NOINTOVLHACK", "1");
 
@@ -227,6 +232,17 @@ public class JREUtils {
         if(renderer != null) {
             if (renderer.equals("opengles2_5") || renderer.equals("opengles3") || renderer.equals("opengles3_vgpu")) {
                 renderer = "opengles2";
+            }
+            // 1.1.0：zink 渲染器（Mesa zink-on-Vulkan → 桌面 GL 4.6）。
+            // 1.20.5+/26.x 需要 OpenGL 3.2+，GL4ES 只到 2.1 跑不了；zink 提供完整桌面 GL，
+            // 且向下兼容 —— 高版本与低版本通吃。
+            // 走新版 ctxbridges 的 gl_bridge（eglBindAPI(EGL_OPENGL_API) 桌面 GL 模式）
+            // + kopper-zink 的 Mesa EGL（libEGL_mesa.so）与 zink driver（libzink_dri.so），
+            // 两个库已随 APK 的 native 目录打包，egl_loader 经 loader_dlopen 加载。
+            if (renderer.equals("zink") || renderer.equals("opengles3_desktopgl_zink_kopper")) {
+                envMap.put("LIBGL_ES", "3");
+                envMap.put("POJAVEXEC_EGL", "libEGL_mesa.so");
+                renderer = "opengles3_desktopgl_zink_kopper";
             }
             envMap.put("POJAV_RENDERER", renderer);
         }
@@ -321,6 +337,15 @@ public class JREUtils {
             case "vulkan_zink":
                 renderLibrary = "libOSMesa_8.so";
                 break;
+            // 1.1.0：zink（Mesa zink-on-Vulkan，桌面 GL）。LWJGL 3.3.5 之前的版本
+            // （QCL 用 3.2.3）只认 glXGetProcAddress —— kopper-zink 提供的 libglxshim.so
+            // 会把 glXGetProcAddress 转发到 Mesa EGL 的 eglGetProcAddress，
+            // 从而把 GL 调用链引到 libglapi/libzink_dri（Vulkan）。缺了这个就是
+            // 「native 走 zink、LWJGL 却加载 GL4ES」的冲突（真机实测 GL Caps: ERR）。
+            case "zink":
+            case "opengles3_desktopgl_zink_kopper":
+                renderLibrary = "libglxshim.so";
+                break;
             case "mg":
                 renderLibrary = "libMobileGlues.so";
                 break;
@@ -350,6 +375,11 @@ public class JREUtils {
             case "opengles3_virgl":
             case "vulkan_zink":
                 renderLibrary = "libOSMesa_8.so";
+                break;
+            // 1.1.0：zink 用 glxshim（→ Mesa EGL → libglapi/libzink_dri）
+            case "zink":
+            case "opengles3_desktopgl_zink_kopper":
+                renderLibrary = "libglxshim.so";
                 break;
             default:
                 Log.w("RENDER_LIBRARY", "No renderer selected, defaulting to opengles2");

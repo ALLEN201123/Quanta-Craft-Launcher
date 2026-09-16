@@ -232,11 +232,15 @@ public class BoatMinecraftActivity extends BoatActivity {
                 baseLayout.showBackground();
                 // 1.0.7：等待界面一出现就启动画面探测兜底
                 startFrameProbe();
+                // 1.0.9：时序竞争修复（与 Pojav 侧同款）—— 首帧早于 onStart 到达时
+                // 标志被提前置位，等待界面盖回来后正规回调断路；清零让下一帧重新触发。
+                resetPicOutputFlag();
             }
 
             @Override
             public void onPicOutput() {
                 // 正规路径：回调来了就正常关掉，并停掉探测
+                android.util.Log.i("jrelog", "[画面切换] 收到 onPicOutput，撤除等待界面");
                 stopFrameProbe();
                 baseLayout.hideBackground();
             }

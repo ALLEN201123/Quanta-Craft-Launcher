@@ -165,7 +165,11 @@ public class MainUI extends BaseUI implements View.OnClickListener, AdapterView.
                 options.put("OpenGL ES 3.0", "opengles3");
                 options.put("OpenGL ES 3.0 VirGPU", "opengles3_vgpu");
                 options.put("OpenGL ES 3.0 VirGL", "opengles3_virgl");
-                options.put("Vulkan ZGC（Zink）", "vulkan_zink");
+                // 1.1.0：zink（Mesa zink-on-Vulkan，桌面 GL 4.6）。
+                // 旧 "vulkan_zink" 实际是 OSMesa 软件渲染（跑不动高版本），已由新版
+                // ctxbridges 渲染桥的 zink 取代 —— 需要 OpenGL 3.2+ 的 1.20.5+/26.x
+                // 以及低版本/远古版本都用它（桌面 GL 向下兼容）。
+                options.put("Zink（Vulkan 桌面 GL，高低版本通吃）", "zink");
                 options.put("MobileGlues（MG 外部渲染器）", "mg");
             }
             for (java.util.Map.Entry<String, String> e : options.entrySet()) {

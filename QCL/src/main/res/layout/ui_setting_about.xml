@@ -409,10 +409,13 @@
                         android:textSize="14sp"
                         android:textColor="@color/colorPureBlack" />
 
+                    <!-- 1.0.9：FCL 副标题较长（约 67 字），原来 singleLine 会被截断看不全；
+                         改为最多 3 行 + 末尾省略 -->
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:singleLine="true"
+                        android:maxLines="3"
+                        android:ellipsize="end"
                         android:text="@string/ui_about_fcl_sub"
                         android:textSize="12sp" />
 

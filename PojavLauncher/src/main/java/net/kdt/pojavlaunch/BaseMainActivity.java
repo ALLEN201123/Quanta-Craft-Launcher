@@ -72,8 +72,24 @@ public class BaseMainActivity extends AppCompatActivity implements TextureView.S
         // 动过这个值就再也不会触发）。改成直白的 boolean，语义清楚、只触发一次。
         if (!picOutputNotified) {
             picOutputNotified = true;
+            android.util.Log.i("jrelog", "[画面切换] 游戏首帧到达（onSurfaceTextureUpdated）");
             pojavCallback.onPicOutput();
         }
+    }
+
+    /**
+     * 1.0.9：修复「等待界面盖回来后切换信号断路」的时序竞争。
+     *
+     * 场景：游戏首帧早于 onStart（showBackground）到达 → picOutputNotified 提前置位
+     * → onStart 把等待界面盖回来 → 此后标志一直是 true，onSurfaceTextureUpdated
+     * 不再转发 onPicOutput → 等待界面永远不撤（只剩 10s/30s 兜底）。
+     *
+     * 修法：onStart 在 showBackground() 之后调用本方法清零标志，
+     * 游戏下一帧（每秒几十帧）立刻重新触发 onPicOutput → hideBackground。
+     * 等待界面只在「真正没有帧」时显示，游戏出画即切换。
+     */
+    public void resetPicOutputFlag() {
+        picOutputNotified = false;
     }
 
     public static void onExit(Context ctx, int code) {
