@@ -41,7 +41,9 @@ public class DynamicBackground {
             R.drawable.qcl_bg_1,
             R.drawable.qcl_bg_2,
             R.drawable.qcl_bg_3,
-            R.drawable.qcl_bg_4
+            R.drawable.qcl_bg_4,
+            R.drawable.qcl_bg_5,
+            R.drawable.qcl_bg_6
     };
 
     private final Activity activity;

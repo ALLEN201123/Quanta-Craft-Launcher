@@ -73,28 +73,6 @@ public class PojavLauncher {
 
             JREUtils.relocateLibPath(context,javaPath);
             String libraryPath = JREUtils.getJavaLibDir(javaPath) + ":" + AppManifest.POJAV_LIB_DIR + "/lwjgl3:" + JREUtils.LD_LIBRARY_PATH + ":" + AppManifest.POJAV_LIB_DIR + "/lwjgl3";
-            // ★ 1.1.0 最小改动：Pojav 后端补 LWJGL 2 原生库支持（老版本 b1.x/1.7.x 等）。
-            // 原版只有 Boat 后端做了这件事，Pojav 后端缺失 -> 老版本报
-            // "[LWJGL] Failed to load a library" 后黑屏。只对「json 依赖 lwjgl/2.9」的版本生效。
-            final boolean qclNeedLwjgl2 = qclNeedsLwjgl2(gameLaunchSetting.currentVersion);
-            if (qclNeedLwjgl2) {
-                try {
-                    int arch = com.qcl.launcher.utils.Architecture.getRuntimeArchitecture();
-                    String abiDir = arch == com.qcl.launcher.utils.Architecture.ARCH_ARM ? "arm"
-                            : arch == com.qcl.launcher.utils.Architecture.ARCH_ARM64 ? "arm64"
-                            : arch == com.qcl.launcher.utils.Architecture.ARCH_X86 ? "x86" : "x86_64";
-                    java.io.File srcSo = new java.io.File(AppManifest.BOAT_LIB_DIR + "/lwjgl-2/" + abiDir + "/liblwjgl.so");
-                    java.io.File dstSo = new java.io.File(AppManifest.BOAT_LIB_DIR + "/lwjgl-2/liblwjgl.so");
-                    if (srcSo.isFile()) {
-                        java.io.File dstParent = dstSo.getParentFile();
-                        if (dstParent != null) dstParent.mkdirs();
-                        java.nio.file.Files.copy(srcSo.toPath(), dstSo.toPath(),
-                                java.nio.file.StandardCopyOption.REPLACE_EXISTING);
-                    }
-                } catch (Throwable ignored) {
-                }
-                libraryPath = libraryPath + ":" + AppManifest.BOAT_LIB_DIR + "/lwjgl-2";
-            }
             // 外部渲染器（MobileGlues/MG 等）：把 <游戏目录>/renderer/mg 挂到库路径（用户把渲染器文件放这里）
             try {
                 java.io.File mgDir = new java.io.File(gameLaunchSetting.game_directory, "renderer/mg");
@@ -105,20 +83,7 @@ public class PojavLauncher {
             }
             boolean isJava8 = javaPath.endsWith("default");
             boolean useCacio17 = !isJava8;
-            String classPath;
-            if (qclNeedLwjgl2) {
-                // ★ 顺序关键：getLWJGL3ClassPath() 里的 lwjgl-glfw-classes.jar 是 Pojav 特制大包，
-                // 其 org.lwjgl.* (LWJGL 2) 类是「Pojav 适配版」（Sys 2482B vs 标准 4958B）——
-                // 必须排最前，否则会用到 lwjgl-2/lwjgl.jar 标准版的 LWJGLUtil，
-                // 其平台检测在 Android 上直接 NPE（实测 b1.7.3: LWJGLUtil.<clinit>）。
-                classPath = getLWJGL3ClassPath() + ":"
-                        + AppManifest.BOAT_LIB_DIR + "/lwjgl-2/lwjgl.jar:"
-                        + AppManifest.BOAT_LIB_DIR + "/lwjgl-2/lwjgl_util.jar:"
-                        + com.qcl.launcher.launcher.launch.boat.AudioLibs.classPath() + ":"
-                        + version.getClassPath(gameLaunchSetting.gameFileDirectory,false,false);
-            } else {
-                classPath = getLWJGL3ClassPath() + ":" + version.getClassPath(gameLaunchSetting.gameFileDirectory,isHighVersion(gameLaunchSetting),useCacio17);
-            }
+            String classPath = getLWJGL3ClassPath() + ":" + version.getClassPath(gameLaunchSetting.gameFileDirectory,isHighVersion(gameLaunchSetting),useCacio17);
             Vector<String> args = new Vector<String>();
             Tools.getCacioJavaArgs(context, args, isJava8, width, height);
             args.add("-Djava.library.path=" + libraryPath);
@@ -205,20 +170,6 @@ public class PojavLauncher {
             } catch (Throwable ignored) {
             }
             return null;
-        }
-    }
-
-    /** 1.1.0：判断该版本是否需要 LWJGL 2（老版本 b1.x / 1.7.x / 1.12 及以下）。 */
-    private static boolean qclNeedsLwjgl2(String versionPath) {
-        if (versionPath == null) return false;
-        try {
-            File dir = new File(versionPath);
-            File json = new File(dir, dir.getName() + ".json");
-            if (!json.isFile()) return false;
-            String content = Tools.read(new java.io.FileInputStream(json));
-            return content.contains("lwjgl/2.9") || content.contains("lwjgl-2.9");
-        } catch (Throwable ignored) {
-            return false;
         }
     }
 
