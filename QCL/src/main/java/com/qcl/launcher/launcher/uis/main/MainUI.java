@@ -164,121 +164,99 @@ public class MainUI extends BaseUI implements View.OnClickListener, AdapterView.
                 .show();
     }
 
-    /** 长按启动按钮弹出的渲染器选择窗口（QCL 灰色半透明面板，点击即保存） */
+    /** ★★★ 1.1.0：长按启动按钮弹出的渲染器选择窗口。
+     *  改用系统 AlertDialog.Builder.setItems —— 系统自带滚动支持（项多时可上下滑动），
+     *  彻底解决「小屏手机上列表超屏且无法滑动」的问题。
+     *  列表项 = RendererCompat 注册表（全称 + 支持版本 + ★推荐 + 当前选中✓），
+     *  GL 库文件不存在的渲染器（如未导入的 MobileGlues）不显示。 */
     private void showRendererDialog(){
         try {
-            android.app.Dialog dialog = new android.app.Dialog(activity);
-            android.widget.LinearLayout root = new android.widget.LinearLayout(activity);
-            root.setOrientation(android.widget.LinearLayout.VERTICAL);
-            int pad = Math.round(14 * activity.getResources().getDisplayMetrics().density);
-            root.setPadding(pad, pad, pad, pad);
-            android.graphics.drawable.GradientDrawable bg = new android.graphics.drawable.GradientDrawable();
-            bg.setColor(0xE65E5E5E);
-            bg.setCornerRadius(Math.round(14 * activity.getResources().getDisplayMetrics().density));
-            root.setBackground(bg);
-
-            android.widget.TextView title = new android.widget.TextView(activity);
-            title.setText(activity.getString(R.string.launcher_button_launch) + " · 选择渲染器");
-            title.setTextColor(0xFFFFFFFF);
-            title.setTextSize(15);
-            root.addView(title, new android.widget.LinearLayout.LayoutParams(
-                    android.view.ViewGroup.LayoutParams.MATCH_PARENT, android.widget.LinearLayout.LayoutParams.WRAP_CONTENT));
-
             boolean boat = activity.privateGameSetting.boatLauncherSetting.enable;
-            String current = boat ? activity.privateGameSetting.boatLauncherSetting.renderer
-                    : activity.privateGameSetting.pojavLauncherSetting.renderer;
-            java.util.LinkedHashMap<String, String> options = new java.util.LinkedHashMap<>();
             if (boat) {
-                options.put("GL4ES 1.1.5（推荐）", "GL4ES115");
-                options.put("VirGL（转发渲染）", "VirGL");
-            } else {
-                // ★★★ 1.1.0：改用 FCL 风格的渲染器注册表（名字/最高支持版本见 RendererCompat）
-                // ★★★ 1.1.0：只显示「GL 库已存在」的渲染器 ——
-                // 外部渲染器（如 MobileGlues 的 libMobileGlues.so）没导入就不该出现在列表里。
-                String nativeDir = activity.getApplicationInfo().nativeLibraryDir;
-                for (com.qcl.launcher.launcher.launch.RendererCompat.Info info
-                        : com.qcl.launcher.launcher.launch.RendererCompat.ALL) {
-                    if (info.glName != null && !info.glName.isEmpty()) {
-                        java.io.File glFile = new java.io.File(nativeDir, info.glName);
-                        if (!glFile.isFile()) {
-                            continue;   // 库不存在 → 不显示（外部渲染器需先导入）
-                        }
-                    }
-                    options.put(info.uiLabel(), info.id);
+                // Boat 后端保持原有简单选项
+                final String[] labels = { "GL4ES 1.1.5（推荐）", "VirGL（转发渲染）" };
+                final String[] ids = { "GL4ES115", "VirGL" };
+                String cur = activity.privateGameSetting.boatLauncherSetting.renderer;
+                for (int i = 0; i < ids.length; i++) {
+                    if (ids[i].equals(cur)) labels[i] = labels[i] + "  ✓";
                 }
-            }
-            for (java.util.Map.Entry<String, String> e : options.entrySet()) {
-                android.widget.TextView row = new android.widget.TextView(activity);
-                row.setText(e.getKey() + (e.getValue().equals(current) ? "  ✓" : ""));
-                row.setTextColor(0xFFFFFFFF);
-                row.setTextSize(14);
-                int rpad = Math.round(10 * activity.getResources().getDisplayMetrics().density);
-                row.setPadding(rpad, Math.round(9 * activity.getResources().getDisplayMetrics().density),
-                        rpad, Math.round(9 * activity.getResources().getDisplayMetrics().density));
-                android.graphics.drawable.GradientDrawable pill = new android.graphics.drawable.GradientDrawable();
-                pill.setColor(e.getValue().equals(current) ? 0xFF6E9E6E : 0x59545454);
-                pill.setCornerRadius(Math.round(10 * activity.getResources().getDisplayMetrics().density));
-                row.setBackground(pill);
-                android.widget.LinearLayout.LayoutParams lp = new android.widget.LinearLayout.LayoutParams(
-                        android.view.ViewGroup.LayoutParams.MATCH_PARENT, android.widget.LinearLayout.LayoutParams.WRAP_CONTENT);
-                lp.topMargin = Math.round(6 * activity.getResources().getDisplayMetrics().density);
-                row.setLayoutParams(lp);
-                final String qclRendererId = e.getValue();
-                final String qclLabel = e.getKey();
-                row.setOnClickListener(v -> {
-                    // ★★★ 1.1.0：先做版本兼容性检查（参考 FCL message_check_renderer）——
-                    // 不兼容时弹「我就要用这个渲染器 / 取消」，确认后才写入设置。
-                    if (!boat) {
-                        checkRendererCompat(qclRendererId, () -> {
-                            activity.privateGameSetting.pojavLauncherSetting.renderer = qclRendererId;
-                            com.qcl.launcher.utils.gson.GsonUtils.savePrivateGameSetting(activity.privateGameSetting,
+                new android.app.AlertDialog.Builder(activity)
+                        .setTitle("选择渲染器（Boat 后端）")
+                        .setItems(labels, (d, which) -> {
+                            activity.privateGameSetting.boatLauncherSetting.renderer = ids[which];
+                            com.qcl.launcher.utils.gson.GsonUtils.savePrivateGameSetting(
+                                    activity.privateGameSetting,
                                     com.qcl.launcher.manifest.AppManifest.SETTING_DIR + "/private_game_setting.json");
-                            android.widget.Toast.makeText(activity, "渲染器已切换: " + qclLabel, android.widget.Toast.LENGTH_SHORT).show();
-                            dialog.dismiss();
-                        });
-                    } else {
-                        activity.privateGameSetting.boatLauncherSetting.renderer = qclRendererId;
-                        com.qcl.launcher.utils.gson.GsonUtils.savePrivateGameSetting(activity.privateGameSetting,
-                                com.qcl.launcher.manifest.AppManifest.SETTING_DIR + "/private_game_setting.json");
-                        android.widget.Toast.makeText(activity, "渲染器已切换: " + qclLabel, android.widget.Toast.LENGTH_SHORT).show();
-                        dialog.dismiss();
-                    }
-                });
-                root.addView(row, lp);
+                            android.widget.Toast.makeText(activity, "渲染器已切换: " + ids[which],
+                                    android.widget.Toast.LENGTH_SHORT).show();
+                        })
+                        .setNegativeButton("取消", null)
+                        .show();
+                return;
             }
-            android.widget.ScrollView scroll = new android.widget.ScrollView(activity);
-            scroll.addView(root, new android.view.ViewGroup.LayoutParams(
-                    android.view.ViewGroup.LayoutParams.MATCH_PARENT, android.view.ViewGroup.LayoutParams.WRAP_CONTENT));
-            // ★★★ 1.1.0 修复：渲染器列表超出屏幕时无法滚动的问题。
-            // 做法：ScrollView 高度限制为「屏幕短边的 80%」，内容超出即可上下滑动；
-            // 顺便给弹窗设了同款最大高度，避免贴边。
-            scroll.setFillViewport(true);
-            {
-                android.util.DisplayMetrics dm = activity.getResources().getDisplayMetrics();
-                int shortSide = Math.min(dm.widthPixels, dm.heightPixels);
-                int maxH = (int) (Math.max(dm.widthPixels, dm.heightPixels) * 0.8);
-                scroll.setLayoutParams(new android.view.ViewGroup.LayoutParams(
-                        android.view.ViewGroup.LayoutParams.MATCH_PARENT, maxH));
+
+            // Pojav 后端：从注册表生成列表（只含库存在的 + 全称 + 版本范围）
+            java.util.List<String> labels = new java.util.ArrayList<>();
+            final java.util.List<String> ids = new java.util.ArrayList<>();
+            String current = activity.privateGameSetting.pojavLauncherSetting.renderer;
+            String mcVer = null;
+            try {
+                String vp = activity.publicGameSetting.currentVersion;
+                if (vp != null && !vp.isEmpty()) mcVer = new java.io.File(vp).getName();
+            } catch (Throwable ignored) {}
+            String nativeDir = activity.getApplicationInfo().nativeLibraryDir;
+            for (com.qcl.launcher.launcher.launch.RendererCompat.Info info
+                    : com.qcl.launcher.launcher.launch.RendererCompat.ALL) {
+                if (info.glName != null && !info.glName.isEmpty()) {
+                    if (!new java.io.File(nativeDir, info.glName).isFile()) continue;  // 库不存在不显示
+                }
+                String line = info.displayName + "\n（" + info.supportRangeText() + "）"
+                        + (info.recommended ? " ★推荐" : "")
+                        + (info.id.equals(current) ? "  ✓当前" : "")
+                        + (com.qcl.launcher.launcher.launch.RendererCompat.supports(info.id, mcVer)
+                            ? "" : "  ⚠不支持当前版本");
+                labels.add(line);
+                ids.add(info.id);
             }
-            dialog.setContentView(scroll);
-            android.view.Window w = dialog.getWindow();
-            if (w != null) {
-                android.util.DisplayMetrics dm3 = activity.getResources().getDisplayMetrics();
-                android.view.WindowManager.LayoutParams wlp = w.getAttributes();
-                wlp.height = (int) (Math.max(dm3.widthPixels, dm3.heightPixels) * 0.8);
-                wlp.width = android.view.WindowManager.LayoutParams.MATCH_PARENT;
-                w.setAttributes(wlp);
-            }
-            if (w != null) {
-                w.setLayout(android.view.ViewGroup.LayoutParams.MATCH_PARENT,
-                        Math.round(440 * activity.getResources().getDisplayMetrics().density));
-                w.setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(0x00000000));
-            }
-            dialog.show();
-        } catch (Throwable t) {
-            t.printStackTrace();
+            final String mcVerF = mcVer;
+            new android.app.AlertDialog.Builder(activity)
+                    .setTitle("选择渲染器（当前版本 " + (mcVerF != null ? mcVerF : "?") + "）")
+                    .setItems(labels.toArray(new String[0]), (d, which) -> {
+                        final String id = ids.get(which);
+                        final String warnText = com.qcl.launcher.launcher.launch.RendererCompat
+                                .warningOf(id, mcVerF);
+                        if (warnText != null) {
+                            new android.app.AlertDialog.Builder(activity)
+                                    .setTitle("渲染器兼容性提示")
+                                    .setMessage(warnText)
+                                    .setPositiveButton("我就要用这个渲染器", (d2, w2) -> applyRendererChoice(id))
+                                    .setNegativeButton("取消", null)
+                                    .show();
+                        } else {
+                            applyRendererChoice(id);
+                        }
+                    })
+                    .setNegativeButton("取消", null)
+                    .show();
+        } catch (Throwable e) {
+            android.widget.Toast.makeText(activity, "打开渲染器选择失败: " + e.getMessage(),
+                    android.widget.Toast.LENGTH_SHORT).show();
         }
     }
+
+    /** 应用渲染器选择（写设置 + Toast） */
+    private void applyRendererChoice(String id) {
+        try {
+            activity.privateGameSetting.pojavLauncherSetting.renderer = id;
+            com.qcl.launcher.utils.gson.GsonUtils.savePrivateGameSetting(activity.privateGameSetting,
+                    com.qcl.launcher.manifest.AppManifest.SETTING_DIR + "/private_game_setting.json");
+            com.qcl.launcher.launcher.launch.RendererCompat.Info info =
+                    com.qcl.launcher.launcher.launch.RendererCompat.find(id);
+            android.widget.Toast.makeText(activity, "渲染器已切换: "
+                    + (info != null ? info.displayName : id), android.widget.Toast.LENGTH_SHORT).show();
+        } catch (Throwable ignored) {}
+    }
+
 
     private AuthlibInjectorServer getServerFromUrl(String url){
         ArrayList<AuthlibInjectorServer> list = InitializeSetting.initializeAuthlibInjectorServer(context);

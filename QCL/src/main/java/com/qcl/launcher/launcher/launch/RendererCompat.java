@@ -30,6 +30,14 @@ public final class RendererCompat {
             this.builtin = builtin; this.recommended = recommended;
         }
 
+        /** 支持版本范围的文字描述（UI 用），如「支持 ≤ 1.21.4（含远古版本）」 */
+        public String supportRangeText() {
+            if (minMcVer.isEmpty() && maxMcVer.isEmpty()) return "支持所有版本";
+            if (minMcVer.isEmpty()) return "支持 ≤ " + displayMax + "（含远古版本）";
+            if (maxMcVer.isEmpty()) return "支持 ≥ " + minMcVer;
+            return "支持 " + minMcVer + " ~ " + displayMax;
+        }
+
         /** UI 上显示的一行文字：全称（支持 MC x ~ y） */
         public String uiLabel() {
             String range;
