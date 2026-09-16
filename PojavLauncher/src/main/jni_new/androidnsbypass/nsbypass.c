@@ -537,6 +537,21 @@ bool test_namespace_funcs(private_namespace_funcs nsFuncs)
  */
 __attribute__((constructor)) static void resolve_global_symbols()
 {
+    // ★★★ 1.1.0 QCL 关键修复：默认**跳过** nsbypass 初始化。
+    // 原因：本函数是 __attribute__((constructor))，在 libpojavexec_new.so 被 dlopen 时自动执行；
+    // get_private_namespace_functions() 需要解析 linker 私有结构，在 MuMu 等模拟器的
+    // houdini/转译层上会直接触发 SIGILL（实测崩溃栈：
+    //   #01 libpojavexec_new.so (get_private_namespace_functions+60)
+    //   #02 libpojavexec_new.so (resolve_global_symbols+128)
+    //   #03 /system/lib64/arm64/nb/libtcb.so）。
+    // 而 nsbypass 只用于「给 zink 加载自定义 Turnip 驱动」，是可选功能 —— 跳过它，
+    // 渲染自动回退到系统 Vulkan，游戏照常启动。
+    // 需要时可用环境变量 POJAV_NSBYPASS_ENABLE=1 打开。
+    if (getenv("POJAV_NSBYPASS_ENABLE") == NULL) {
+        LOGW("nsbypass skipped by default (QCL 1.1.0; set POJAV_NSBYPASS_ENABLE=1 to enable)");
+        s_nsbypass_available = false;
+        return;
+    }
     if (is_android_6_or_lower()){
         LOGW("This library is not supposed to be used on sdk23 and lower. All APIs will remain "
              "non-functional. nsbypass_dlfcn will redirect to the real public API.");

@@ -180,4 +180,61 @@ public class Lwjgl333Helper {
         //noinspection ResultOfMethodCallIgnored
         f.delete();
     }
+
+    // ============ 渲染器智能选择 ============
+
+    private static Boolean sZinkUsable = null;
+
+    /**
+     * ★★★ 运行时检测 zink 渲染链是否真正可用。
+     * zink = libglxshim.so → libEGL_mesa.so → libglapi/libzink_dri。
+     * 只检查"文件存在"不够（模拟器上文件在但架构不匹配），
+     * 这里直接 System.load 试加载 —— 加载不上就说明这套链路用不了。
+     * 结果缓存（进程内只测一次）。
+     */
+    public static synchronized boolean isZinkUsable(Context context) {
+        if (sZinkUsable != null) return sZinkUsable;
+        String dir = context.getApplicationInfo().nativeLibraryDir;
+        try {
+            System.load(dir + "/libglxshim.so");
+        } catch (Throwable ignored) {
+        }
+        try {
+            System.load(dir + "/libEGL_mesa.so");
+            System.load(dir + "/libzink_dri.so");
+            sZinkUsable = Boolean.TRUE;
+        } catch (Throwable t) {
+            sZinkUsable = Boolean.FALSE;
+        }
+        return sZinkUsable;
+    }
+
+    /**
+     * ★★★ 渲染器选择（尊重玩家意图优先）：
+     * <ol>
+     *   <li><b>玩家显式选择了非 zink 渲染器</b>（mg / opengles2 / opengles3 / opengles3_virgl /
+     *       vulkan_zink 等，包括外部导入的 MobileGlues 这类）→ <b>原样尊重</b>，绝不改写；</li>
+     *   <li>玩家选的是 <b>zink</b>（或没选/auto）→ 运行时检测 zink 链路
+     *       （glxshim→EGL_mesa→zink_dri）能否真正加载：
+     *       能 → zink（桌面 GL 4.6，高版本与老版本通吃）；
+     *       不能 → 回退 gl4es（老版本可用；高版本会走不通，提示玩家换渲染器）。</li>
+     * </ol>
+     * 说明：长按启动可自选渲染器，玩家选了 mg 等外部渲染器时必须保留。
+     */
+    public static String pickRenderer(Context context, String userRenderer) {
+        // 1. 玩家显式选择（非 zink）→ 原样尊重
+        if (userRenderer != null && !userRenderer.isEmpty()
+                && !"zink".equals(userRenderer)
+                && !"opengles3_desktopgl_zink_kopper".equals(userRenderer)) {
+            return userRenderer;
+        }
+        // 2. zink / auto → 可用性检测
+        if (isZinkUsable(context)) return "opengles3_desktopgl_zink_kopper";
+        return "opengles3";
+    }
+
+    /** zink 不可用时的最终回退（老版本 gl4es；高版本也没别的选择）*/
+    public static String fallbackRenderer() {
+        return "opengles3";
+    }
 }

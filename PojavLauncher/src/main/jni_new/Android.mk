@@ -41,3 +41,29 @@ LOCAL_C_INCLUDES := \
     $(LOCAL_PATH)/androidnsbypass/liblinkernsbypass_compat
 LOCAL_CFLAGS := -fvisibility=default
 include $(BUILD_SHARED_LIBRARY)
+
+include $(CLEAR_VARS)
+# ★★★ 1.1.0（移植自 FCL）：jsound —— OpenJDK libjsound 核心 + OpenAL 平台后端。
+# 为四套 JRE（8/17/21/25）提供 javax.sound.sampled 的原生实现。
+# 远古版本（LWJGL 2 时代）走 Java Sound 播放音频，Android 上的 JRE 不带 libjsound，
+# 所以 Pojav 后端远古版本"没声音"—— 这个库补上该实现（FCL 已用同方案修复）。
+# 核心 .c/.h vendor 自 openjdk/jdk17u（GPL-2.0 + Classpath，与 GPL-3.0 兼容）。
+LOCAL_LDLIBS := -llog -ldl
+LOCAL_MODULE := jsound
+LOCAL_SRC_FILES := \
+    jsound/Utilities.c \
+    jsound/Platform.c \
+    jsound/DirectAudioDevice.c \
+    jsound/DirectAudioDeviceProvider.c \
+    jsound/PortMixer.c \
+    jsound/PortMixerProvider.c \
+    jsound/MidiOutDevice.c \
+    jsound/MidiOutDeviceProvider.c \
+    jsound/MidiInDevice.c \
+    jsound/MidiInDeviceProvider.c \
+    jsound/PlatformMidi.c \
+    jsound/jsound_openal.c \
+    jsound/jdk8_compat.c
+LOCAL_C_INCLUDES := $(LOCAL_PATH)/jsound
+LOCAL_CFLAGS := -DX_PLATFORM=X_LINUX -D_LITTLE_ENDIAN -DUSE_DAUDIO=TRUE -DUSE_PORTS=FALSE -DUSE_PLATFORM_MIDI_OUT=FALSE -DUSE_PLATFORM_MIDI_IN=FALSE -fvisibility=default -Wno-error
+include $(BUILD_SHARED_LIBRARY)

@@ -231,7 +231,19 @@ public class PojavLauncher {
                 String[] extraJavaFlags = gameLaunchSetting.extraJavaFlags.split(" ");
                 Collections.addAll(args, extraJavaFlags);
             }
-            args.add("-Dorg.lwjgl.opengl.libname=" + JREUtils.getGraphicsLibrary(gameLaunchSetting.pojavRenderer));
+            // ★★★ 1.1.0 双栈隔离（关键）：渲染器按版本自动选 ——
+            // 老版本（≤1.20.4 + 远古）用 gl4es（libgl4es_114.so，v1.0.9 的原方案）；
+            // 高版本（1.20.5+）才用 zink（libglxshim.so → Mesa EGL → libzink_dri）。
+            // 原因：pojavRenderer 是全局设置，若玩家为高版本选了 zink，老版本会被一起套用，
+            // 而 glxshim 依赖 libEGL_mesa.so，加载失败时老版本也会黑屏；
+            // 老版本根本不需要桌面 GL（GL4ES 到 ES 2.1 足够）。
+            System.setProperty("qcl.highver", qclNeed333 ? "1" : "0");
+            // ★★★ 渲染器：**完全尊重玩家选择**（长按启动可选，含 mg 等外部渲染器）。
+            // 不做任何强制替换 —— 兼容性提醒改由选择对话框（MainUI.showRendererDialog）
+            // 在不兼容时弹「我就要用这个渲染器 / 取消」二次确认。
+            String qclEffectiveRenderer = gameLaunchSetting.pojavRenderer;
+            System.setProperty("qcl.renderer.picked", qclEffectiveRenderer);
+            args.add("-Dorg.lwjgl.opengl.libname=" + JREUtils.getGraphicsLibrary(qclEffectiveRenderer));
             args.add("-cp");
             args.add(classPath);
             args.add(version.mainClass);

@@ -132,6 +132,38 @@ public class MainUI extends BaseUI implements View.OnClickListener, AdapterView.
         });
     }
 
+    /**
+     * ★★★ 1.1.0：选择渲染器后做版本兼容性检查（参考 FCL 的 message_check_renderer）。
+     * 不兼容时弹二次确认：「我就要用这个渲染器」/「取消」。
+     */
+    private void checkRendererCompat(String rendererId, Runnable onConfirm) {
+        String mcVer = null;
+        try {
+            String path = activity.publicGameSetting.currentVersion;
+            if (path != null && !path.isEmpty()) {
+                java.io.File dir = new java.io.File(path);
+                mcVer = dir.getName();
+            }
+        } catch (Throwable ignored) {
+        }
+        String warn = null;
+        try {
+            warn = com.qcl.launcher.launcher.launch.RendererCompat.warningOf(rendererId, mcVer);
+        } catch (Throwable ignored) {
+        }
+        if (warn == null) {
+            onConfirm.run();
+            return;
+        }
+        final String warnText = warn;
+        new android.app.AlertDialog.Builder(activity)
+                .setTitle("渲染器兼容性提示")
+                .setMessage(warnText)
+                .setPositiveButton("我就要用这个渲染器", (d, w) -> onConfirm.run())
+                .setNegativeButton("取消", null)
+                .show();
+    }
+
     /** 长按启动按钮弹出的渲染器选择窗口（QCL 灰色半透明面板，点击即保存） */
     private void showRendererDialog(){
         try {
@@ -160,17 +192,20 @@ public class MainUI extends BaseUI implements View.OnClickListener, AdapterView.
                 options.put("GL4ES 1.1.5（推荐）", "GL4ES115");
                 options.put("VirGL（转发渲染）", "VirGL");
             } else {
-                options.put("OpenGL ES 2.0（默认）", "opengles2");
-                options.put("OpenGL ES 2.5", "opengles2_5");
-                options.put("OpenGL ES 3.0", "opengles3");
-                options.put("OpenGL ES 3.0 VirGPU", "opengles3_vgpu");
-                options.put("OpenGL ES 3.0 VirGL", "opengles3_virgl");
-                // 1.1.0：zink（Mesa zink-on-Vulkan，桌面 GL 4.6）。
-                // 旧 "vulkan_zink" 实际是 OSMesa 软件渲染（跑不动高版本），已由新版
-                // ctxbridges 渲染桥的 zink 取代 —— 需要 OpenGL 3.2+ 的 1.20.5+/26.x
-                // 以及低版本/远古版本都用它（桌面 GL 向下兼容）。
-                options.put("Zink（Vulkan 桌面 GL，高低版本通吃）", "zink");
-                options.put("MobileGlues（MG 外部渲染器）", "mg");
+                // ★★★ 1.1.0：改用 FCL 风格的渲染器注册表（名字/最高支持版本见 RendererCompat）
+                // ★★★ 1.1.0：只显示「GL 库已存在」的渲染器 ——
+                // 外部渲染器（如 MobileGlues 的 libMobileGlues.so）没导入就不该出现在列表里。
+                String nativeDir = activity.getApplicationInfo().nativeLibraryDir;
+                for (com.qcl.launcher.launcher.launch.RendererCompat.Info info
+                        : com.qcl.launcher.launcher.launch.RendererCompat.ALL) {
+                    if (info.glName != null && !info.glName.isEmpty()) {
+                        java.io.File glFile = new java.io.File(nativeDir, info.glName);
+                        if (!glFile.isFile()) {
+                            continue;   // 库不存在 → 不显示（外部渲染器需先导入）
+                        }
+                    }
+                    options.put(info.uiLabel(), info.id);
+                }
             }
             for (java.util.Map.Entry<String, String> e : options.entrySet()) {
                 android.widget.TextView row = new android.widget.TextView(activity);
@@ -188,13 +223,26 @@ public class MainUI extends BaseUI implements View.OnClickListener, AdapterView.
                         android.view.ViewGroup.LayoutParams.MATCH_PARENT, android.widget.LinearLayout.LayoutParams.WRAP_CONTENT);
                 lp.topMargin = Math.round(6 * activity.getResources().getDisplayMetrics().density);
                 row.setLayoutParams(lp);
+                final String qclRendererId = e.getValue();
+                final String qclLabel = e.getKey();
                 row.setOnClickListener(v -> {
-                    if (boat) activity.privateGameSetting.boatLauncherSetting.renderer = e.getValue();
-                    else activity.privateGameSetting.pojavLauncherSetting.renderer = e.getValue();
-                    com.qcl.launcher.utils.gson.GsonUtils.savePrivateGameSetting(activity.privateGameSetting,
-                            com.qcl.launcher.manifest.AppManifest.SETTING_DIR + "/private_game_setting.json");
-                    android.widget.Toast.makeText(activity, "渲染器已切换: " + e.getKey(), android.widget.Toast.LENGTH_SHORT).show();
-                    dialog.dismiss();
+                    // ★★★ 1.1.0：先做版本兼容性检查（参考 FCL message_check_renderer）——
+                    // 不兼容时弹「我就要用这个渲染器 / 取消」，确认后才写入设置。
+                    if (!boat) {
+                        checkRendererCompat(qclRendererId, () -> {
+                            activity.privateGameSetting.pojavLauncherSetting.renderer = qclRendererId;
+                            com.qcl.launcher.utils.gson.GsonUtils.savePrivateGameSetting(activity.privateGameSetting,
+                                    com.qcl.launcher.manifest.AppManifest.SETTING_DIR + "/private_game_setting.json");
+                            android.widget.Toast.makeText(activity, "渲染器已切换: " + qclLabel, android.widget.Toast.LENGTH_SHORT).show();
+                            dialog.dismiss();
+                        });
+                    } else {
+                        activity.privateGameSetting.boatLauncherSetting.renderer = qclRendererId;
+                        com.qcl.launcher.utils.gson.GsonUtils.savePrivateGameSetting(activity.privateGameSetting,
+                                com.qcl.launcher.manifest.AppManifest.SETTING_DIR + "/private_game_setting.json");
+                        android.widget.Toast.makeText(activity, "渲染器已切换: " + qclLabel, android.widget.Toast.LENGTH_SHORT).show();
+                        dialog.dismiss();
+                    }
                 });
                 root.addView(row, lp);
             }

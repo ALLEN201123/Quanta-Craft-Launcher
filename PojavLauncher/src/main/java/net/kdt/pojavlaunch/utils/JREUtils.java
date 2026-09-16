@@ -247,6 +247,16 @@ public class JREUtils {
             // 走新版 ctxbridges 的 gl_bridge（eglBindAPI(EGL_OPENGL_API) 桌面 GL 模式）
             // + kopper-zink 的 Mesa EGL（libEGL_mesa.so）与 zink driver（libzink_dri.so），
             // 两个库已随 APK 的 native 目录打包，egl_loader 经 loader_dlopen 加载。
+            // ★★★ 1.1.0：渲染器按版本分流（同 PojavLauncher.getMcArgs）。
+            // qcl.highver 由 getMcArgs 设置：1=高版本(1.20.5+)，0=老版本。
+            // 老版本用 zink 会因 libEGL_mesa.so 加载问题黑屏（模拟器尤其明显），
+            // 所以老版本一律降级到 gl4es（GL4ES 到 ES 2.1，老版本够用）。
+            // ★★★ 渲染器：读 getMcArgs 传过来的玩家选择（可能是 mg / gl4es / zink / virgl…），
+            // 不做强制替换；不兼容的提醒在选择对话框里做。
+            String qclPicked = System.getProperty("qcl.renderer.picked", null);
+            if (qclPicked != null) {
+                renderer = qclPicked;
+            }
             if (renderer.equals("zink") || renderer.equals("opengles3_desktopgl_zink_kopper")) {
                 envMap.put("LIBGL_ES", "3");
                 envMap.put("POJAVEXEC_EGL", "libEGL_mesa.so");

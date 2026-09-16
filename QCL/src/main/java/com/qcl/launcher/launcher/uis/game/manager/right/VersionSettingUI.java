@@ -726,7 +726,10 @@ public class VersionSettingUI extends BaseUI implements View.OnClickListener, Co
         if (v == showBoatRendererSetting || v == showBoatRenderer){
             HiddenAnimationUtils.newInstance(context,boatRendererSetting,showBoatRenderer,boatRendererSettingHeight).toggle();
         }
-        if (v == showPojavRendererSetting || v == showPojavRenderer){
+        if (v == showPojavRendererSetting && showPojavRendererSetting != null){
+            // ★★★ 1.1.0：改为弹出完整渲染器选择对话框（含 FCL 全部 6 个内置 + 兼容性检查）
+            showFullRendererDialog();
+        } else if (v == showPojavRenderer){
             HiddenAnimationUtils.newInstance(context,pojavRendererSetting,showPojavRenderer,pojavRendererSettingHeight).toggle();
         }
         if (v == checkJavaAuto && privateGameSetting != null){
@@ -955,4 +958,68 @@ public class VersionSettingUI extends BaseUI implements View.OnClickListener, Co
     public void onStopTrackingTouch(SeekBar seekBar) {
 
     }
+
+    /** ★★★ 1.1.0：完整渲染器选择对话框（FCL 6 个内置 + MobileGlues；不兼容弹二次确认） */
+    private void showFullRendererDialog() {
+        try {
+            String current = activity.privateGameSetting.pojavLauncherSetting.renderer;
+            String mcVer = null;
+            try {
+                String vp = activity.publicGameSetting.currentVersion;
+                if (vp != null && !vp.isEmpty()) mcVer = new java.io.File(vp).getName();
+            } catch (Throwable ignored) {
+            }
+            final String[] ids = new String[com.qcl.launcher.launcher.launch.RendererCompat.ALL.length];
+            final String[] labels = new String[ids.length];
+            for (int i = 0; i < ids.length; i++) {
+                com.qcl.launcher.launcher.launch.RendererCompat.Info info =
+                        com.qcl.launcher.launcher.launch.RendererCompat.ALL[i];
+                ids[i] = info.id;
+                String mark = info.id.equals(current) ? "  ✓" : "";
+                String warn = com.qcl.launcher.launcher.launch.RendererCompat.supports(info.id, mcVer)
+                        ? "" : "  ⚠不支持当前版本";
+                labels[i] = info.displayName + "\n（支持 ≤ " + info.displayMax + "）" + mark + warn;
+            }
+            final String mcVerF = mcVer;
+            new android.app.AlertDialog.Builder(activity)
+                    .setTitle("选择渲染器（当前版本 " + (mcVerF != null ? mcVerF : "?") + "）")
+                    .setItems(labels, (d, which) -> {
+                        final String id = ids[which];
+                        final String warnText = com.qcl.launcher.launcher.launch.RendererCompat.warningOf(id, mcVerF);
+                        if (warnText != null) {
+                            new android.app.AlertDialog.Builder(activity)
+                                    .setTitle("渲染器兼容性提示")
+                                    .setMessage(warnText)
+                                    .setPositiveButton("我就要用这个渲染器", (d2, w2) -> applyRenderer(id))
+                                    .setNegativeButton("取消", null)
+                                    .show();
+                        } else {
+                            applyRenderer(id);
+                        }
+                    })
+                    .setNegativeButton("取消", null)
+                    .show();
+        } catch (Throwable e) {
+            android.widget.Toast.makeText(activity, "打开渲染器选择失败: " + e.getMessage(),
+                    android.widget.Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    /** 应用渲染器选择（写设置 + 刷新显示） */
+    private void applyRenderer(String id) {
+        try {
+            activity.privateGameSetting.pojavLauncherSetting.renderer = id;
+            com.qcl.launcher.utils.gson.GsonUtils.savePrivateGameSetting(activity.privateGameSetting,
+                    com.qcl.launcher.manifest.AppManifest.SETTING_DIR + "/private_game_setting.json");
+            com.qcl.launcher.launcher.launch.RendererCompat.Info info =
+                    com.qcl.launcher.launcher.launch.RendererCompat.find(id);
+            if (currentPojavRenderer != null && info != null) {
+                currentPojavRenderer.setText(info.displayName);
+            }
+            android.widget.Toast.makeText(activity, "渲染器已切换: " + (info != null ? info.displayName : id),
+                    android.widget.Toast.LENGTH_SHORT).show();
+        } catch (Throwable ignored) {
+        }
+    }
+
 }
