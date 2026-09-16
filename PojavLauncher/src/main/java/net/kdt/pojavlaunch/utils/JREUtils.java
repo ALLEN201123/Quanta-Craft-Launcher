@@ -197,6 +197,14 @@ public class JREUtils {
         // 缺这个 env 时 getenv 返回 NULL，随后的 strcmp(NULL,"true") 直接 SIGSEGV
         //（真机实测 fault addr 0x45，崩溃于 JVM Main thread）。FCL 恒定设置该值。
         envMap.put("FORCE_VSYNC", "false");
+        // ★★★ 1.1.0 修复（模拟器实测崩溃点）：
+        // 新渲染桥 pojavInit 末尾会调用 setNativeWindowSwapInterval(pojavWindow, 0)，
+        // 但该调用在部分设备/模拟器上会崩进系统库：
+        //   Fatal signal 11 (SEGV_ACCERR) /system/lib/libgui.so
+        //   android::Surface::hook_setSwapInterval(ANativeWindow*, int)+42
+        // 新桥用 POJAV_VSYNC_IN_ZINK 作为该调用的开关（非空即跳过）。设上它即可规避，
+        // 代价是不强制异步垂直同步（对帧率影响很小，远好过崩溃）。
+        envMap.put("POJAV_VSYNC_IN_ZINK", "1");
 
         // On certain GLES drivers, overloading default functions shader hack fails, so disable it
         envMap.put("LIBGL_NOINTOVLHACK", "1");

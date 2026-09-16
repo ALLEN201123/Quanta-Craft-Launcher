@@ -149,6 +149,9 @@ public class PojavLauncher {
                 // -Xint（纯解释模式）绕开 JIT 对 LambdaForm 的编译，是实测可用的规避手段；
                 // 编码三件套对齐 FCL（Java 19+ 的 stdout/stderr 编码独立于 file.encoding）。
                 args.add("-Xint");
+                // 诊断：让 LWJGL 打印具体是哪个 native 库加载失败（定位用，找到后可移除）
+                args.add("-Dorg.lwjgl.util.Debug=true");
+                args.add("-Dorg.lwjgl.util.DebugLoader=true");
                 args.add("-Dfile.encoding=UTF-8");
                 args.add("-Dstdout.encoding=UTF-8");
                 args.add("-Dstderr.encoding=UTF-8");
