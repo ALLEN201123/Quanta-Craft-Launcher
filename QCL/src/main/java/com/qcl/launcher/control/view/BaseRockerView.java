@@ -176,7 +176,18 @@ public class BaseRockerView extends RockerView{
 
     public void refreshVisibility(){
         int mode = menuHelper.viewManager == null ? 0 : menuHelper.gameCursorMode;
-        if (menuHelper.editMode || (isShowing && (info.showType == 0 || (mode == 1 && info.showType == 1) || (mode == 0 && info.showType == 2)))) {
+        // ★★★ 1.1.0 修复（与 BaseButton 同步）：编辑模式只显示「当前编辑目标布局」的摇杆，
+        // 否则 game_keyboard_layout 里的摇杆也会冒出来。
+        boolean qclEditTargetMatches = true;
+        if (menuHelper.editMode) {
+            String c = info.child;
+            qclEditTargetMatches = c == null || c.isEmpty()
+                    || "game_layout".equals(c)
+                    || (menuHelper.currentChild != null && !menuHelper.currentChild.isEmpty()
+                        && menuHelper.currentChild.equals(c));
+        }
+        if ((menuHelper.editMode && qclEditTargetMatches)
+                || (isShowing && (info.showType == 0 || (mode == 1 && info.showType == 1) || (mode == 0 && info.showType == 2)))) {
             setVisibility(VISIBLE);
         }
         else {

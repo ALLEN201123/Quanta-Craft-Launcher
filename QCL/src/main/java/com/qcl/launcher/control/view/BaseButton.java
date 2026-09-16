@@ -556,7 +556,20 @@ public class BaseButton extends androidx.appcompat.widget.AppCompatButton {
 
     public void refreshVisibility(){
         int mode = menuHelper.viewManager == null ? 0 : menuHelper.gameCursorMode;
-        if (menuHelper.editMode || (isShowing && (info.showType == 0 || (mode == 1 && info.showType == 1) || (mode == 0 && info.showType == 2)))) {
+        // ★★★ 1.1.0 修复（用户反馈）：编辑模式下**只**强制显示「当前编辑目标布局」的按键。
+        // 原实现是 editMode 就无脑全显，导致 game_keyboard_layout（键盘布局）的按键
+        // 也跟着冒出来，玩家以为编辑模式坏了。
+        // 现在：主布局(game_layout) + 当前选中的子布局(currentChild) 之外的一律不显示。
+        boolean qclEditTargetMatches = true;
+        if (menuHelper.editMode) {
+            String c = info.child;
+            qclEditTargetMatches = c == null || c.isEmpty()
+                    || "game_layout".equals(c)
+                    || (menuHelper.currentChild != null && !menuHelper.currentChild.isEmpty()
+                        && menuHelper.currentChild.equals(c));
+        }
+        if ((menuHelper.editMode && qclEditTargetMatches)
+                || (isShowing && (info.showType == 0 || (mode == 1 && info.showType == 1) || (mode == 0 && info.showType == 2)))) {
             setVisibility(VISIBLE);
         }
         else {

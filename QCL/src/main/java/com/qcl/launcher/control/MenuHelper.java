@@ -347,10 +347,36 @@ public class MenuHelper implements CompoundButton.OnCheckedChangeListener, View.
     }
 
     /** 开/关居中的游戏菜单（合并后单窗口） */
+    /**
+     * ★★★ 1.1.0 新增：菜单打开期间，在控件层监听「点击菜单外的空白处」并自动收起。
+     * 触摸能走到 baseLayout 的空白处的，说明没被任何子控件消费 —— 那就算是点在空白上了。
+     */
+    private final android.view.View.OnTouchListener qclMenuOutsideCloser = (v, event) -> {
+        if (event.getAction() == android.view.MotionEvent.ACTION_DOWN
+                && gameMenuContainer != null
+                && gameMenuContainer.getVisibility() == View.VISIBLE) {
+            int[] loc = new int[2];
+            gameMenuContainer.getLocationOnScreen(loc);
+            float rx = event.getRawX();
+            float ry = event.getRawY();
+            boolean inside = rx >= loc[0] && rx <= loc[0] + gameMenuContainer.getWidth()
+                    && ry >= loc[1] && ry <= loc[1] + gameMenuContainer.getHeight();
+            if (!inside) {
+                toggleGameMenu();
+                return true;
+            }
+        }
+        return false;
+    };
+
     public void toggleGameMenu() {
         if (gameMenuContainer == null) return;
         boolean show = gameMenuContainer.getVisibility() != View.VISIBLE;
         gameMenuContainer.setVisibility(show ? View.VISIBLE : View.GONE);
+        // ★ 菜单显示 → 挂上"点空白关闭"；收起 → 摘掉
+        if (baseLayout != null) {
+            baseLayout.setOnTouchListener(show ? qclMenuOutsideCloser : null);
+        }
     }
 
     private void checkOpenMenuSetting(){
