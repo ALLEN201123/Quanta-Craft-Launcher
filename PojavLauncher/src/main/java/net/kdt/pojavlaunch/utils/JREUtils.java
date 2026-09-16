@@ -364,6 +364,10 @@ public class JREUtils {
             case "opengles3_desktopgl_zink_kopper":
                 renderLibrary = "libglxshim.so";
                 break;
+            case "ng_gl4es":
+                // ★★★ 1.1.0：Krypton Wrapper（NG-GL4ES，OpenGL 3.1+，全版本通吃）
+                renderLibrary = "libng_gl4es.so";
+                break;
             case "mg":
                 renderLibrary = "libMobileGlues.so";
                 break;
@@ -398,6 +402,13 @@ public class JREUtils {
             case "zink":
             case "opengles3_desktopgl_zink_kopper":
                 renderLibrary = "libglxshim.so";
+                break;
+            case "ng_gl4es":
+                // ★★★ 1.1.0：Krypton Wrapper（NG-GL4ES，OpenGL 3.1+，全版本通吃）
+                renderLibrary = "libng_gl4es.so";
+                break;
+            case "mg":
+                renderLibrary = "libMobileGlues.so";
                 break;
             default:
                 Log.w("RENDER_LIBRARY", "No renderer selected, defaulting to opengles2");

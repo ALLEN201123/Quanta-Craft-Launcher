@@ -2,7 +2,7 @@
     <string name="app_name" translatable="false">Quanta Craft Launcher</string>
     <string name="app_name_pri" translatable="false">Quanta Craft Launcher</string>
     <string name="app_name_sec" translatable="false">量子方块启动器</string>
-    <string name="version_name" translatable="false">v1.0.9</string>
+    <string name="version_name" translatable="false">v1.1.0</string>
     <string name="app_bar_title" translatable="false">QCL · Quanta Craft Launcher v1.0.4</string>
 
     <string name="dialog_outdated_warning_title">Warning</string>

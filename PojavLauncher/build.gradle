@@ -7,6 +7,7 @@ android {
     ndkVersion "27.3.13750724"
 
     defaultConfig {
+        ndk { abiFilters 'armeabi-v7a' }   // TEST-ONLY
         minSdk 26
         targetSdk 34
 

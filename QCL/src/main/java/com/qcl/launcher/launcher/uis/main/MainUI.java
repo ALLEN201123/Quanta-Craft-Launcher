@@ -249,8 +249,26 @@ public class MainUI extends BaseUI implements View.OnClickListener, AdapterView.
             android.widget.ScrollView scroll = new android.widget.ScrollView(activity);
             scroll.addView(root, new android.view.ViewGroup.LayoutParams(
                     android.view.ViewGroup.LayoutParams.MATCH_PARENT, android.view.ViewGroup.LayoutParams.WRAP_CONTENT));
+            // ★★★ 1.1.0 修复：渲染器列表超出屏幕时无法滚动的问题。
+            // 做法：ScrollView 高度限制为「屏幕短边的 80%」，内容超出即可上下滑动；
+            // 顺便给弹窗设了同款最大高度，避免贴边。
+            scroll.setFillViewport(true);
+            {
+                android.util.DisplayMetrics dm = activity.getResources().getDisplayMetrics();
+                int shortSide = Math.min(dm.widthPixels, dm.heightPixels);
+                int maxH = (int) (Math.max(dm.widthPixels, dm.heightPixels) * 0.8);
+                scroll.setLayoutParams(new android.view.ViewGroup.LayoutParams(
+                        android.view.ViewGroup.LayoutParams.MATCH_PARENT, maxH));
+            }
             dialog.setContentView(scroll);
             android.view.Window w = dialog.getWindow();
+            if (w != null) {
+                android.util.DisplayMetrics dm3 = activity.getResources().getDisplayMetrics();
+                android.view.WindowManager.LayoutParams wlp = w.getAttributes();
+                wlp.height = (int) (Math.max(dm3.widthPixels, dm3.heightPixels) * 0.8);
+                wlp.width = android.view.WindowManager.LayoutParams.MATCH_PARENT;
+                w.setAttributes(wlp);
+            }
             if (w != null) {
                 w.setLayout(android.view.ViewGroup.LayoutParams.MATCH_PARENT,
                         Math.round(440 * activity.getResources().getDisplayMetrics().density));
