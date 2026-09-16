@@ -237,4 +237,25 @@ public class Lwjgl333Helper {
     public static String fallbackRenderer() {
         return "opengles3";
     }
+
+    /**
+     * ★★★ 1.1.0：判断版本是否为 LWJGL 2 时代（b1.x / 远古 / 1.0~1.6 / 1.7.x）。
+     * 判据：该版本 json 里声明了 org.lwjgl:lwjgl:2.9.x（或 lwjgl_util:2.9.x）。
+     * 这类版本需要 lwjgl.jar / lwjgl_util.jar 提供 org.lwjgl.opengl.Display 等类，
+     * 否则 NoClassDefFoundError（真机 b1.7.3 实测）。
+     */
+    public static boolean needsLwjgl2(String versionPath) {
+        if (versionPath == null) return false;
+        try {
+            File dir = new File(versionPath);
+            File json = new File(dir, dir.getName() + ".json");
+            if (!json.isFile()) return false;
+            String content = readText(new FileInputStream(json));
+            return content.contains("lwjgl/2.9") || content.contains("lwjgl_util/2.9")
+                    || content.contains(":lwjgl:2.") || content.contains(":lwjgl_util:2.")
+                    || content.contains("lwjgl/2.8");
+        } catch (Throwable t) {
+            return false;
+        }
+    }
 }
