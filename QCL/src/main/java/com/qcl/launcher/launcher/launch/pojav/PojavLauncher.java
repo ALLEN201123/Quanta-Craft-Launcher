@@ -81,6 +81,20 @@ public class PojavLauncher {
             // 避免与 APK jniLibs 里 v1.0.9 的 3.2.3 so 冲突。
             final boolean qclNeed333 = com.qcl.launcher.launcher.launch.Lwjgl333Helper
                     .needs(gameLaunchSetting.currentVersion);
+            // ★★★ 1.1.0 双栈隔离（关键时机）：JREUtils 的静态块（System.loadLibrary）在
+            // **Android/dalvik 进程**里执行，读不到传给 MC 的 -Dqcl.pojavexec.lib（那是游戏
+            // JVM 的参数）。必须在这里用 System.setProperty 提前设好 —— getMcArgs 跑在
+            // 子线程且早于 setupBridgeWindow()，是设置它的最佳时机。
+            try {
+                if (qclNeed333) {
+                    System.setProperty("qcl.pojavexec.lib", "pojavexec_new");
+                    System.setProperty("qcl.pojavexec.libfile", "libpojavexec_new.so");
+                } else {
+                    System.clearProperty("qcl.pojavexec.lib");
+                    System.clearProperty("qcl.pojavexec.libfile");
+                }
+            } catch (Throwable ignored) {
+            }
             java.io.File qclNatives333 = null;
             if (qclNeed333) {
                 qclNatives333 = com.qcl.launcher.launcher.launch.Lwjgl333Helper.prepare(context);

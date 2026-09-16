@@ -13,6 +13,7 @@
 #include <assert.h>
 #include <dlfcn.h>
 #include <jni.h>
+#include <android/log.h>
 #include <libgen.h>
 #include <stdlib.h>
 #include <string.h>
@@ -97,9 +98,28 @@ void JNI_OnUnload(JavaVM* vm, void* reserved) {
 JNIEXPORT void JNICALL
 Java_org_lwjgl_glfw_GLFW_nativeInitializeGLFWNativeBridge(__attribute__((unused)) JNIEnv *env,
                                                           __attribute__((unused)) jclass clazz) {
-    JNIEnv *vmEnv;
-    (*pojav_environ->runtimeJavaVMPtr)->GetEnv(pojav_environ->runtimeJavaVMPtr, (void **) &vmEnv,
-                                               JNI_VERSION_1_4);
+    // ★★★ 1.1.0 修复（2026-09-16 模拟器实测）：
+    // 原实现直接解引用 pojav_environ->runtimeJavaVMPtr，但该**结构体字段**从未被赋值
+    // （JNI_OnLoad 里设置的是同名的**静态全局变量** runtimeJavaVMPtr），于是这里是 NULL
+    // -> (*NULL)->GetEnv 直接 SIGSEGV（实测崩溃地址 = 本函数 +35 字节）。
+    // 三层兜底：结构体字段 → 静态全局 → 从传入的 JNIEnv 反查。全拿不到就安全返回。
+    JavaVM *qclVm = pojav_environ->runtimeJavaVMPtr;
+    if (qclVm == NULL) qclVm = runtimeJavaVMPtr;
+    if (qclVm == NULL && env != NULL) (*env)->GetJavaVM(env, &qclVm);
+    if (qclVm == NULL) {
+        __android_log_print(ANDROID_LOG_ERROR, "QCL_DBG", "nativeInitializeGLFWNativeBridge: JavaVM unavailable, skip");
+        return;
+    }
+    pojav_environ->runtimeJavaVMPtr = qclVm;
+
+    JNIEnv *vmEnv = NULL;
+    jint qclEnvRet = (*qclVm)->GetEnv(qclVm, (void **) &vmEnv, JNI_VERSION_1_4);
+    if (qclEnvRet != JNI_OK || vmEnv == NULL) {
+        if ((*qclVm)->AttachCurrentThread(qclVm, &vmEnv, NULL) != JNI_OK || vmEnv == NULL) {
+            __android_log_print(ANDROID_LOG_ERROR, "QCL_DBG", "nativeInitializeGLFWNativeBridge: attach failed (%d)", qclEnvRet);
+            return;
+        }
+    }
     pojav_environ->vmGlfwClass = (*vmEnv)->NewGlobalRef(vmEnv,
                                                         (*vmEnv)->FindClass(vmEnv,
                                                                             "org/lwjgl/glfw/GLFW"));

@@ -423,11 +423,22 @@ public class JREUtils {
     public static native boolean dlopen(String libPath);
     public static native void setLdLibraryPath(String ldLibraryPath);
     public static native void setupBridgeWindow(Surface surface);
+    /** 1.1.0：新渲染桥（libpojavexec_new.so）的对应实现，高版本用 */
+    public static native void setupBridgeWindowNew(Surface surface);
     public static native void setupExitTrap(Context context);
     // Obtain AWT screen pixels to render on Android SurfaceView
     public static native int[] renderAWTScreenFrame(/* Object canvas, int width, int height */);
     static {
-        System.loadLibrary("pojavexec");
+        // ★★★ 1.1.0 双栈隔离（最终方案）：
+        // 两套渲染桥**都加载**（so 名不同，符号不冲突），Java 侧按 MC 版本显式调用
+        // 对应的 JNI 方法（setupBridgeWindow / setupBridgeWindowNew）。
+        // 这样彻底避免"进程级属性 + 静态块只执行一次"导致的串味
+        //（先跑高版本再跑老版本时，老版本会错误地用上新桥 → 黑屏）。
+        System.loadLibrary("pojavexec");        // v1.0.9 旧桥（老版本用）
+        try {
+            System.loadLibrary("pojavexec_new"); // FCL 新桥（1.20.5+ 用）
+        } catch (Throwable ignored) {
+        }
         System.loadLibrary("pojavexec_awt");
         dlopen("libxhook.so");
         System.loadLibrary("istdio");

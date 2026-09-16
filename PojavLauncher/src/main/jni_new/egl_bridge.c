@@ -88,6 +88,23 @@ EXTERNAL_API void pojavTerminate() {
     }
 }
 
+// ★★★ 1.1.0 双栈隔离（关键）：新桥的 setupBridgeWindow 用**独立 JNI 名**。
+// 原因：旧 so（libpojavexec.so）也有同名的 Java_..._setupBridgeWindow 符号。
+// JREUtils 的静态块在**同一个 App 进程**里只执行一次，若两个 so 注册了同名 JNI 函数，
+// 后加载的会被忽略 —— 导致"先跑高版本、再跑老版本"时老版本错误地用了新桥（黑屏）。
+// 用独立名字后，Java 侧可按版本显式调用对应实现，互不干扰。
+JNIEXPORT void JNICALL
+Java_net_kdt_pojavlaunch_utils_JREUtils_setupBridgeWindowNew(JNIEnv *env, ABI_COMPAT jclass clazz,
+                                                             jobject surface) {
+    bool windowRecreated = pojav_environ->pojavWindow != NULL;
+    pojav_environ->pojavWindow = ANativeWindow_fromSurface(env, surface);
+    if (windowRecreated && pojav_environ->config_renderer != RENDERER_VULKAN) {
+        if (lastSwapInterval >= 0) setNativeWindowSwapInterval(pojav_environ->pojavWindow, lastSwapInterval);
+        else if (!getenv("POJAV_VSYNC_IN_ZINK")) setNativeWindowSwapInterval(pojav_environ->pojavWindow, 0);
+    }
+    if (br_setup_window != NULL) br_setup_window();
+}
+
 JNIEXPORT void JNICALL
 Java_net_kdt_pojavlaunch_utils_JREUtils_setupBridgeWindow(JNIEnv *env, ABI_COMPAT jclass clazz,
                                                           jobject surface) {

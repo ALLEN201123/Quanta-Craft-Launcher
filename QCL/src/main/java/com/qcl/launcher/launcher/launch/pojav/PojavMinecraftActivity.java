@@ -164,7 +164,13 @@ public class PojavMinecraftActivity extends BaseMainActivity {
                         return;
                     }
                     runOnUiThread(() -> {
-                        JREUtils.setupBridgeWindow(new Surface(surface));
+                        // ★★★ 1.1.0 双栈隔离：按版本调用对应渲染桥的 setupBridgeWindow
+                        if (com.qcl.launcher.launcher.launch.Lwjgl333Helper
+                                .needs(gameLaunchSetting.currentVersion)) {
+                            JREUtils.setupBridgeWindowNew(new Surface(surface));
+                        } else {
+                            JREUtils.setupBridgeWindow(new Surface(surface));
+                        }
                         startGame(gameLaunchSetting.javaPath,
                                 gameLaunchSetting.home,
                                 GameLaunchSetting.isHighVersion(gameLaunchSetting),
