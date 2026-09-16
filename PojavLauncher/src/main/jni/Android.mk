@@ -73,6 +73,12 @@ LOCAL_SHARED_LIBRARIES := awt_headless
 LOCAL_SRC_FILES := xawt_fake.c
 include $(BUILD_SHARED_LIBRARY)
 
+# ★★★ 1.1.0 双栈隔离：第二套渲染桥（FCL 新版 ctxbridges，支持 Mesa zink 桌面 GL）。
+# 编译成 libpojavexec_new.so，与上面 v1.0.9 的 libpojavexec.so 并存。
+# 由 Java 层按 MC 版本决定给 GLFW 加载哪个（老版本→pojavexec，1.20.5+→pojavexec_new）。
+# ⚠️ 必须放在本文件最后：jni_new/Android.mk 会重设 LOCAL_PATH，不能影响上面的模块。
+include $(HERE_PATH)/../jni_new/Android.mk
+
 # delete fake libs after linked
 $(info $(shell (rm $(HERE_PATH)/../jniLibs/*/libawt_headless.so)))
 

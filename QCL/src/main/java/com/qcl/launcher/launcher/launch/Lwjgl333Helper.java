@@ -50,6 +50,16 @@ public class Lwjgl333Helper {
     }
 
     /**
+     * 返回解压后的 JNA native 目录（供 -Djna.boot.library.path 用）。
+     * ★ 关键：MC 1.20.6/1.21 用 jna-5.14.0，而 APK jniLibs 里的是 5.1.0（v1.0.9 时代），
+     * 版本不匹配会让 com.sun.jna.Native.<clinit> 失败 → oshi/LinuxOperatingSystem 初始化崩。
+     * 所以高版本用这里解压出来的 5.14.0（从 Maven 的 jna-5.14.0.aar 提取）。
+     */
+    public static File jnaDir(Context context) {
+        return new File(context.getFilesDir(), DIR_NAME + "/jna");
+    }
+
+    /**
      * 判断该版本是否需要 LWJGL 3.3.3（读版本 json 的 libraries 声明）。
      * 只有 1.20.5+ 声明 org.lwjgl:lwjgl:3.3.x —— 老版本一律 false（零影响）。
      */
@@ -98,6 +108,13 @@ public class Lwjgl333Helper {
             if (list == null || list.length == 0) abi = "armeabi-v7a";
             for (String name : am.list(ASSET_ROOT + "/natives/" + abi)) {
                 if (name.endsWith(".so")) copyAsset(am, ASSET_ROOT + "/natives/" + abi + "/" + name, new File(natives, name));
+            }
+            // ★ 同时解压 JNA 5.14.0（高版本专用，见 jnaDir 注释）
+            File jnaDir = jnaDir(context);
+            deleteRecursively(jnaDir);
+            jnaDir.mkdirs();
+            for (String name : am.list(ASSET_ROOT + "/jna/" + abi)) {
+                if (name.endsWith(".so")) copyAsset(am, ASSET_ROOT + "/jna/" + abi + "/" + name, new File(jnaDir, name));
             }
             new File(natives, ".ok").createNewFile();
             sPrepared = true;

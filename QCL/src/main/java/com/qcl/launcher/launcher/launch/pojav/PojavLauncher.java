@@ -112,21 +112,10 @@ public class PojavLauncher {
                 args.add("-Dorg.lwjgl.librarypath=" + qclNatives333.getAbsolutePath());
                 // 定制 GLFW stub（pojavexec 接口）在 3.3.3 下从配置读库名
                 args.add("-Dorg.lwjgl.glfw.libname=pojavexec");
-                // ★ JNA 相关（1.20.5+ 的 oshi/jna 才需要；老版本 v1.0.9 不带这些参数）：
-                // json 里遗留的空值 -Djna.tmpdir= 会让 oshi 走 JNA 时直接失败
-                // （JNA temporary directory '' does not exist -> NoClassDefFoundError:
-                //  Could not initialize class com.sun.jna.Native）。
-                // 必须放在 JVM 参数区（mainClass 之前）覆盖空值。
-                try {
-                    String qclTmp = context.getCacheDir().getAbsolutePath();
-                    args.add("-Djna.tmpdir=" + qclTmp);
-                    args.add("-Dorg.lwjgl.system.SharedLibraryExtractPath=" + qclTmp);
-                    args.add("-Dio.netty.native.workdir=" + qclTmp);
-                    // 让 JNA 直接用 APK 自带的 Android 版 libjnidispatch.so，
-                    // 而不是从 jna.jar 解压 Linux 版（后者 dlopen 报 libc.so.6 找不到）。
-                    args.add("-Djna.boot.library.path=" + context.getApplicationInfo().nativeLibraryDir);
-                } catch (Throwable ignored) {
-                }
+                // ★★★ 1.1.0 双栈隔离（关键）：高版本加载 FCL 新版渲染桥 libpojavexec_new.so。
+                // GLFW stub 从这两个系统属性读库名（老版本不设 → 默认走 v1.0.9 的 libpojavexec.so）。
+                args.add("-Dqcl.pojavexec.lib=pojavexec_new");
+                args.add("-Dqcl.pojavexec.libfile=libpojavexec_new.so");
             }
             args.add("-Djava.library.path=" + libraryPath);
             args.add("-Djava.home=" + javaPath);
@@ -169,6 +158,31 @@ public class PojavLauncher {
                 }
                 if (!JVMArgs[i].startsWith("-DFabricMcEmu") && !JVMArgs[i].startsWith("net.minecraft.client.main.Main")) {
                     args.add(JVMArgs[i]);
+                }
+            }
+            // ★★★ 1.1.0 关键顺序修复（高版本专用）：
+            // MC 版本 json 里遗留了空值参数 -Djna.tmpdir= / -Dorg.lwjgl.system.SharedLibraryExtractPath=，
+            // 它们在上面的 JVMArgs 循环里被加入，会**覆盖**我们先前设置的同一个属性
+            // （实测：写在前面的 -Djna.tmpdir=<cache> 被后面的 -Djna.tmpdir= 顶掉，
+            //  导致 JNA temporary directory '' does not exist -> oshi 初始化失败）。
+            // 所以必须在 json 参数**之后**再设一遍才能生效。
+            if (qclNeed333) {
+                try {
+                    String qclTmp = context.getCacheDir().getAbsolutePath();
+                    args.add("-Djna.tmpdir=" + qclTmp);
+                    args.add("-Dorg.lwjgl.system.SharedLibraryExtractPath=" + qclTmp);
+                    args.add("-Dio.netty.native.workdir=" + qclTmp);
+                    // ★ JNA native 路径：高版本必须用 5.14.0（匹配 MC 的 jna-5.14.0.jar），
+                    // 用隔离目录 files/lwjgl333/jna/；APK 自带的 5.1.0 只给老版本用。
+                    java.io.File qclJna = com.qcl.launcher.launcher.launch.Lwjgl333Helper.jnaDir(context);
+                    if (qclJna.isDirectory() && qclJna.list() != null && qclJna.list().length > 0) {
+                        args.add("-Djna.boot.library.path=" + qclJna.getAbsolutePath());
+                    } else {
+                        args.add("-Djna.boot.library.path=" + context.getApplicationInfo().nativeLibraryDir);
+                    }
+                    // 同时把 JNA 的临时目录解压目标固定，避免它自己去 jna.jar 里找 Linux 版
+                    args.add("-Djna.nosys=false");
+                } catch (Throwable ignored) {
                 }
             }
             // 32 位 JVM 地址空间有限，堆要 2GB 时 VM 初始化直接失败
