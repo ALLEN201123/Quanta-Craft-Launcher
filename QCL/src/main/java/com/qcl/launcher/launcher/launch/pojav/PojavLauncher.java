@@ -73,6 +73,21 @@ public class PojavLauncher {
 
             JREUtils.relocateLibPath(context,javaPath);
             String libraryPath = JREUtils.getJavaLibDir(javaPath) + ":" + AppManifest.POJAV_LIB_DIR + "/lwjgl3:" + JREUtils.LD_LIBRARY_PATH + ":" + AppManifest.POJAV_LIB_DIR + "/lwjgl3";
+            // ★★★ 1.1.0 隔离（2026-09-16 对比实验结论）：
+            // 只有 1.20.5+（版本 json 声明 org.lwjgl:lwjgl:3.3.x）才启用 LWJGL 3.3.3 新栈。
+            // 老版本（b1.x/1.7.x/≤1.20.4）走上面这条 v1.0.9 的原路径，**一个字节都不改**。
+            // 3.3.3 的 jar/native 全部来自 assets/app_runtime/lwjgl333/（与老版本零交集），
+            // native 解压到私有目录并保持原名，用 -Dorg.lwjgl.librarypath 指过去，
+            // 避免与 APK jniLibs 里 v1.0.9 的 3.2.3 so 冲突。
+            final boolean qclNeed333 = com.qcl.launcher.launcher.launch.Lwjgl333Helper
+                    .needs(gameLaunchSetting.currentVersion);
+            java.io.File qclNatives333 = null;
+            if (qclNeed333) {
+                qclNatives333 = com.qcl.launcher.launcher.launch.Lwjgl333Helper.prepare(context);
+                if (qclNatives333 != null) {
+                    libraryPath = qclNatives333.getAbsolutePath() + ":" + libraryPath;
+                }
+            }
             // 外部渲染器（MobileGlues/MG 等）：把 <游戏目录>/renderer/mg 挂到库路径（用户把渲染器文件放这里）
             try {
                 java.io.File mgDir = new java.io.File(gameLaunchSetting.game_directory, "renderer/mg");
@@ -84,13 +99,59 @@ public class PojavLauncher {
             boolean isJava8 = javaPath.endsWith("default");
             boolean useCacio17 = !isJava8;
             String classPath = getLWJGL3ClassPath() + ":" + version.getClassPath(gameLaunchSetting.gameFileDirectory,isHighVersion(gameLaunchSetting),useCacio17);
+            if (qclNeed333) {
+                // 3.3.3 的 jar 必须排最前：原版 lwjgl-glfw-classes.jar 里也有 org.lwjgl.* (3.2.3)，
+                // 靠 classpath 顺序让 3.3.3 的类优先（同时也提供 3.3.3 的 lwjgl-glfw stub）。
+                String j333 = com.qcl.launcher.launcher.launch.Lwjgl333Helper.jarsClassPath(context);
+                if (j333.length() > 0) classPath = j333 + ":" + classPath;
+            }
             Vector<String> args = new Vector<String>();
             Tools.getCacioJavaArgs(context, args, isJava8, width, height);
+            if (qclNatives333 != null) {
+                // 3.3.3 的 native 目录（保持 liblwjgl.so 等原名）
+                args.add("-Dorg.lwjgl.librarypath=" + qclNatives333.getAbsolutePath());
+                // 定制 GLFW stub（pojavexec 接口）在 3.3.3 下从配置读库名
+                args.add("-Dorg.lwjgl.glfw.libname=pojavexec");
+                // ★ JNA 相关（1.20.5+ 的 oshi/jna 才需要；老版本 v1.0.9 不带这些参数）：
+                // json 里遗留的空值 -Djna.tmpdir= 会让 oshi 走 JNA 时直接失败
+                // （JNA temporary directory '' does not exist -> NoClassDefFoundError:
+                //  Could not initialize class com.sun.jna.Native）。
+                // 必须放在 JVM 参数区（mainClass 之前）覆盖空值。
+                try {
+                    String qclTmp = context.getCacheDir().getAbsolutePath();
+                    args.add("-Djna.tmpdir=" + qclTmp);
+                    args.add("-Dorg.lwjgl.system.SharedLibraryExtractPath=" + qclTmp);
+                    args.add("-Dio.netty.native.workdir=" + qclTmp);
+                    // 让 JNA 直接用 APK 自带的 Android 版 libjnidispatch.so，
+                    // 而不是从 jna.jar 解压 Linux 版（后者 dlopen 报 libc.so.6 找不到）。
+                    args.add("-Djna.boot.library.path=" + context.getApplicationInfo().nativeLibraryDir);
+                } catch (Throwable ignored) {
+                }
+            }
             args.add("-Djava.library.path=" + libraryPath);
             args.add("-Djava.home=" + javaPath);
             args.add("-Djava.io.tmpdir=" + AppManifest.DEFAULT_CACHE_DIR);
             args.add("-Duser.home=" + new File(gameLaunchSetting.gameFileDirectory).getParent());
-            args.add("-Duser.language=" + System.getProperty("user.language"));
+            // ★ 1.1.0 隔离：JRE21/25 的裁剪 jimage 在 zh locale 下会在 JVM 引导阶段
+            // 报 MissingResourceException(sun.launcher.resources.launcher) /
+            // BootstrapMethodError(BoundMethodHandle) —— 实测 1.20.6 直接起不来。
+            // v1.0.9 对老版本传 -Duser.language 是安全的（JRE8 的 jimage 完整），
+            // 所以这里按版本条件化：老版本保持原行为，高版本(1.20.5+)改走 COMPAT + JVM 默认 locale。
+            if (qclNeed333) {
+                args.add("-Djava.locale.providers=COMPAT");
+                // ★★ 高版本专用稳定性参数（老版本一个都不加，保持 v1.0.9 行为）：
+                // JRE21/25 在 Android 上跑 MC 1.20.5+ 时，JDK 内部的 invokedynamic（Lambda）
+                // 会在引导阶段抛 BootstrapMethodError（实测：Collectors.joining / UUID.randomUUID
+                // → SecureRandom.<init> → ArrayIndexOutOfBoundsException: Index -48）。
+                // -Xint（纯解释模式）绕开 JIT 对 LambdaForm 的编译，是实测可用的规避手段；
+                // 编码三件套对齐 FCL（Java 19+ 的 stdout/stderr 编码独立于 file.encoding）。
+                args.add("-Xint");
+                args.add("-Dfile.encoding=UTF-8");
+                args.add("-Dstdout.encoding=UTF-8");
+                args.add("-Dstderr.encoding=UTF-8");
+            } else {
+                args.add("-Duser.language=" + System.getProperty("user.language"));
+            }
             args.add("-Dos.name=Linux");
             args.add("-Dos.version=Android-" + Build.VERSION.RELEASE);
             args.add("-Dpojav.path.minecraft=" + gameLaunchSetting.gameFileDirectory);
