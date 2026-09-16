@@ -81,16 +81,3 @@ include $(HERE_PATH)/../jni_new/Android.mk
 
 # delete fake libs after linked
 $(info $(shell (rm $(HERE_PATH)/../jniLibs/*/libawt_headless.so)))
-
-# ★★★ 1.1.0：glxshim —— 放在最后（此处 LOCAL_PATH 已被 jni_new/Android.mk 设为 jni_new/）。
-# LWJGL 3.3.5 之前只认 glXGetProcAddress（不回退 eglGetProcAddress），此 shim 转发给新桥的
-# getProcAddress。缺失时任何用到 LWJGL3 GL 类的版本都会 UnsatisfiedLinkError: libglxshim.so
-# （实测 1.20.6 / b1.9-pre6 都卡在这）。
-include $(CLEAR_VARS)
-LOCAL_LDLIBS := -ldl -llog -landroid
-LOCAL_MODULE := glxshim
-LOCAL_SRC_FILES := driver_helper/glxshim/glxshim.c
-LOCAL_C_INCLUDES :=     $(LOCAL_PATH)     $(LOCAL_PATH)/ctxbridges     $(LOCAL_PATH)/environ
-LOCAL_CFLAGS := -fvisibility=default
-LOCAL_SHARED_LIBRARIES := pojavexec_new
-include $(BUILD_SHARED_LIBRARY)

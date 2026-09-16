@@ -39,7 +39,10 @@ bool dlsym_EGL() {
     char* gles = getenv("LIBGL_GLES");
     char* eglName = (strncmp(gles ? gles : "", "libGLESv2_angle.so", 18) == 0) ? "libEGL_angle.so" : getenv("POJAVEXEC_EGL");
     // 普通 dlopen 失败时 loader_dlopen 内部会改用逃逸命名空间重试（mesa 等随驱动一起打包的库）
+    __android_log_print(ANDROID_LOG_ERROR, "QCL_EGL", "dlsym_EGL: eglName=%s POJAVEXEC_EGL=%s",
+                        eglName ? eglName : "(null)", getenv("POJAVEXEC_EGL") ? getenv("POJAVEXEC_EGL") : "(null)");
     void* dl_handle = loader_dlopen(eglName,"libEGL.so", RTLD_LOCAL|RTLD_LAZY);
+    __android_log_print(ANDROID_LOG_ERROR, "QCL_EGL", "dlsym_EGL: dl_handle=%p err=%s", dl_handle, dlerror());
     if(dl_handle == NULL) return false;
     eglGetProcAddress_p = dlsym(dl_handle, "eglGetProcAddress");
     if(eglGetProcAddress_p == NULL) {
