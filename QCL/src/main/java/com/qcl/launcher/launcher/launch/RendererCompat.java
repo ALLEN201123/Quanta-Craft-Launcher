@@ -82,8 +82,9 @@ public final class RendererCompat {
 
     /** 默认渲染器（新装用户）*/
     public static String defaultRendererId() {
-        // Krypton Wrapper（NG-GL4ES）：OpenGL 3.1+，全版本通吃（FCL 默认）
-        return "ng_gl4es";
+        // ★ 默认 Holy GL4ES —— v1.0.9 的默认，老版本（LWJGL2 时代）实测最稳。
+        // Krypton(ng_gl4es)/Zink 面向高版本（GL 3.1+），老版本选它们会崩 —— 玩家可在长按列表里自选。
+        return "opengles2";
     }
 
     /**

@@ -120,13 +120,20 @@ public class PojavLauncher {
             final boolean qclNeedsLwjgl2 = com.qcl.launcher.launcher.launch.Lwjgl333Helper
                     .needsLwjgl2(gameLaunchSetting.currentVersion);
             if (qclNeedsLwjgl2) {
+                // ★★★ 顺序关键：LWJGL2 的真实现必须排在「Pojav 特制包 lwjgl-glfw-classes.jar」之前。
+                // 特制包里虽也有 org/lwjgl/opengl/Display 等类（3.x 风格兼容层），但 b1.7.3 调用方式
+                // 不兼容 —— 实测：只有特制包时 NoClassDefFoundError；只有 lwjgl.jar 排最后时卡死。
+                StringBuilder l2b = new StringBuilder();
                 File l2 = new File(AppManifest.POJAV_LIB_DIR, "lwjgl2");
                 if (l2.isDirectory()) {
                     for (File f : l2.listFiles()) {
                         if (f.getName().endsWith(".jar")) {
-                            classPath = classPath + ":" + f.getAbsolutePath();
+                            l2b.append(f.getAbsolutePath()).append(":");
                         }
                     }
+                }
+                if (l2b.length() > 0) {
+                    classPath = l2b + classPath;   // ★ 排最前
                 }
             }
             if (qclNeed333) {

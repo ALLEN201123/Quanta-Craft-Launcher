@@ -116,7 +116,7 @@ public class InitializeSetting {
         }
         else {
             int ram = MemoryUtils.findBestRAMAllocation(context);
-            privateGameSetting = new PrivateGameSetting(false,true,true,false,false,false,false,new JavaSetting(true,AppManifest.JAVA_DIR + "/default"),"","","",new GameDirSetting(0,AppManifest.DEFAULT_GAME_DIR),new BoatLauncherSetting(false,"GL4ES115","default"),new PojavLauncherSetting(true,"ng_gl4es","default"),new RamSetting(ram,ram,true),"Default",1.0F);
+            privateGameSetting = new PrivateGameSetting(false,true,true,false,false,false,false,new JavaSetting(true,AppManifest.JAVA_DIR + "/default"),"","","",new GameDirSetting(0,AppManifest.DEFAULT_GAME_DIR),new BoatLauncherSetting(false,"GL4ES115","default"),new PojavLauncherSetting(true,"opengles2","default"),new RamSetting(ram,ram,true),"Default",1.0F);
             GsonUtils.savePrivateGameSetting(privateGameSetting,AppManifest.SETTING_DIR + "/private_game_setting.json");
         }
         return privateGameSetting;
