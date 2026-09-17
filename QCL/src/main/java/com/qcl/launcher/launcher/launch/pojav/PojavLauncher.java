@@ -113,29 +113,6 @@ public class PojavLauncher {
             boolean isJava8 = javaPath.endsWith("default");
             boolean useCacio17 = !isJava8;
             String classPath = getLWJGL3ClassPath() + ":" + version.getClassPath(gameLaunchSetting.gameFileDirectory,isHighVersion(gameLaunchSetting),useCacio17);
-            // ★★★ 1.1.0 关键修复：LWJGL 2 时代的版本（b1.x / 1.0~1.6，json 声明 lwjgl/2.9.x）
-            // 需要 org.lwjgl.opengl.Display 等 LWJGL2 类 + liblwjgl.so。
-            // 这些类由 lwjgl.jar / lwjgl_util.jar 提供，缺了直接
-            // NoClassDefFoundError: org/lwjgl/opengl/Display（真机 b1.7.3 实测）。
-            final boolean qclNeedsLwjgl2 = com.qcl.launcher.launcher.launch.Lwjgl333Helper
-                    .needsLwjgl2(gameLaunchSetting.currentVersion);
-            if (qclNeedsLwjgl2) {
-                // ★★★ 顺序关键：LWJGL2 的真实现必须排在「Pojav 特制包 lwjgl-glfw-classes.jar」之前。
-                // 特制包里虽也有 org/lwjgl/opengl/Display 等类（3.x 风格兼容层），但 b1.7.3 调用方式
-                // 不兼容 —— 实测：只有特制包时 NoClassDefFoundError；只有 lwjgl.jar 排最后时卡死。
-                StringBuilder l2b = new StringBuilder();
-                File l2 = new File(AppManifest.POJAV_LIB_DIR, "lwjgl2");
-                if (l2.isDirectory()) {
-                    for (File f : l2.listFiles()) {
-                        if (f.getName().endsWith(".jar")) {
-                            l2b.append(f.getAbsolutePath()).append(":");
-                        }
-                    }
-                }
-                if (l2b.length() > 0) {
-                    classPath = l2b + classPath;   // ★ 排最前
-                }
-            }
             if (qclNeed333) {
                 // 3.3.3 的 jar 必须排最前：原版 lwjgl-glfw-classes.jar 里也有 org.lwjgl.* (3.2.3)，
                 // 靠 classpath 顺序让 3.3.3 的类优先（同时也提供 3.3.3 的 lwjgl-glfw stub）。
