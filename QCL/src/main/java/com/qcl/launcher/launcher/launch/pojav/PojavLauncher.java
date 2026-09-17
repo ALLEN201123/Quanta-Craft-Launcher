@@ -73,6 +73,15 @@ public class PojavLauncher {
 
             JREUtils.relocateLibPath(context,javaPath);
             String libraryPath = JREUtils.getJavaLibDir(javaPath) + ":" + AppManifest.POJAV_LIB_DIR + "/lwjgl3:" + JREUtils.LD_LIBRARY_PATH + ":" + AppManifest.POJAV_LIB_DIR + "/lwjgl3";
+            // ★★★ 1.1.0 关键修复：把 APK 的 native 目录加进 java.library.path ——
+            // LWJGL 的 LoadLibrary 只搜 java.library.path，而 GLFW stub（libpojavexec_new.so）
+            // 与 lwjglx 需要的 native 都在 APK 的 nativeLibraryDir 里。
+            // v1.0.9 的 path 末尾本来就有 /data/app/.../lib/arm（对比实验确认），
+            // 缺了它 → UnsatisfiedLinkError: nativeInitializeGLFWNativeBridge / pojavSetWindowHint missing。
+            try {
+                libraryPath = libraryPath + ":" + context.getApplicationInfo().nativeLibraryDir;
+            } catch (Throwable ignored) {
+            }
             // ★★★ 1.1.0 隔离（2026-09-16 对比实验结论）：
             // 只有 1.20.5+（版本 json 声明 org.lwjgl:lwjgl:3.3.x）才启用 LWJGL 3.3.3 新栈。
             // 老版本（b1.x/1.7.x/≤1.20.4）走上面这条 v1.0.9 的原路径，**一个字节都不改**。
@@ -141,8 +150,12 @@ public class PojavLauncher {
             if (qclNatives333 != null) {
                 // 3.3.3 的 native 目录（保持 liblwjgl.so 等原名）
                 args.add("-Dorg.lwjgl.librarypath=" + qclNatives333.getAbsolutePath());
-                // 定制 GLFW stub（pojavexec 接口）在 3.3.3 下从配置读库名
-                args.add("-Dorg.lwjgl.glfw.libname=pojavexec");
+                // 定制 GLFW stub：必须指向**新桥** libpojavexec_new.so ——
+                // lwjglx 的 GLFW 类需要 pojavSetWindowHint / nativeInitializeGLFWNativeBridge 等新接口，
+                // 旧 libpojavexec.so（v1.0.9）没有这些符号，会报
+                // "ExceptionInInitializerError -> A required function is missing: pojavSetWindowHint"。
+                // 注意：本分支只在 qclNeed333 || qclNeedsLwjglX 时进入，老版本(v1.0.9 路径)完全不设此参数。
+                args.add("-Dorg.lwjgl.glfw.libname=pojavexec_new");
                 // ★★★ 1.1.0 双栈隔离（关键）：高版本加载 FCL 新版渲染桥 libpojavexec_new.so。
                 // GLFW stub 从这两个系统属性读库名（老版本不设 → 默认走 v1.0.9 的 libpojavexec.so）。
                 args.add("-Dqcl.pojavexec.lib=pojavexec_new");
