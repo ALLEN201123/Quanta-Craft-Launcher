@@ -31,6 +31,9 @@ android {
      
     defaultConfig {
 
+
+
+
         applicationId "com.qcl.launcher"
         minSdk 26
         targetSdk 34

@@ -165,8 +165,15 @@ public class PojavMinecraftActivity extends BaseMainActivity {
                     }
                     runOnUiThread(() -> {
                         // ★★★ 1.1.0 双栈隔离：按版本调用对应渲染桥的 setupBridgeWindow
+                        // ★★★ 修复（白屏崩溃根因）：新栈的判定必须与 PojavLauncher.getMcArgs
+                        // 的 qclNatives333 一致 —— 除 1.20.5+（needs）外，LWJGL2 时代
+                        // （b1.x/远古/1.7.x，needsLwjglX）也跑在 FCL 新桥（lwjglx 兼容层）上，
+                        // 必须走 setupBridgeWindowNew 设置新桥的 pojav_environ->pojavWindow；
+                        // 否则新桥 pojavInit 里 ANativeWindow_acquire(NULL) → SIGSEGV（实测白屏崩溃）。
                         if (com.qcl.launcher.launcher.launch.Lwjgl333Helper
-                                .needs(gameLaunchSetting.currentVersion)) {
+                                .needs(gameLaunchSetting.currentVersion)
+                                || com.qcl.launcher.launcher.launch.Lwjgl333Helper
+                                .needsLwjglX(gameLaunchSetting.currentVersion)) {
                             JREUtils.setupBridgeWindowNew(new Surface(surface));
                         } else {
                             JREUtils.setupBridgeWindow(new Surface(surface));
