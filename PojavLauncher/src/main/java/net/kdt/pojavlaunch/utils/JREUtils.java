@@ -257,6 +257,21 @@ public class JREUtils {
             if (qclPicked != null) {
                 renderer = qclPicked;
             }
+            // ★★★ Krypton Wrapper（NG-GL4ES）—— 完整环境变量照抄 FCL 的 FCLauncher.addRendererEnvInner
+            // （FCL 源码：FCL/src/main/java/com/tungsten/fclauncher/FCLauncher.java 的 ID_NGGL4ES 分支）。
+            // 缺了这些（特别是 DLOPEN / LIBGL_GL / LIBGL_ES=3 / POJAV_RENDERER=opengles3），
+            // Krypton 会挂在 "Unable to initialize GLFW" / 渲染链起不来。
+            if ("ng_gl4es".equals(renderer)) {
+                envMap.put("LIBGL_USE_MC_COLOR", "1");
+                envMap.put("DLOPEN", "libspirv-cross-c-shared.so");
+                envMap.put("LIBGL_GL", "31");
+                envMap.put("LIBGL_ES", "3");
+                envMap.put("LIBGL_NORMALIZE", "1");
+                envMap.put("LIBGL_NOINTOVLHACK", "1");
+                envMap.put("LIBGL_NOERROR", "1");
+                envMap.put("POJAV_RENDERER", "opengles3");
+                envMap.put("POJAVEXEC_EGL", "libEGL.so");
+            }
             if (renderer.equals("zink") || renderer.equals("opengles3_desktopgl_zink_kopper")) {
                 envMap.put("LIBGL_ES", "3");
                 envMap.put("POJAVEXEC_EGL", "libEGL_mesa.so");
