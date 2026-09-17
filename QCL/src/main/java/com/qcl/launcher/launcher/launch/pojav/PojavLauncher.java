@@ -81,6 +81,9 @@ public class PojavLauncher {
             // 避免与 APK jniLibs 里 v1.0.9 的 3.2.3 so 冲突。
             final boolean qclNeed333 = com.qcl.launcher.launcher.launch.Lwjgl333Helper
                     .needs(gameLaunchSetting.currentVersion);
+            // ★★★ 照抄 FCL：LWJGL 2.x 时代（b1.x/远古/1.7.x）需要 lwjglx 兼容层 —— 提前算，供 prepare 与 classpath 共用
+            final boolean qclNeedsLwjglX = !qclNeed333 && com.qcl.launcher.launcher.launch.Lwjgl333Helper
+                    .needsLwjglX(gameLaunchSetting.currentVersion);
             // ★★★ 1.1.0 双栈隔离（关键时机）：JREUtils 的静态块（System.loadLibrary）在
             // **Android/dalvik 进程**里执行，读不到传给 MC 的 -Dqcl.pojavexec.lib（那是游戏
             // JVM 的参数）。必须在这里用 System.setProperty 提前设好 —— getMcArgs 跑在
@@ -96,7 +99,9 @@ public class PojavLauncher {
             } catch (Throwable ignored) {
             }
             java.io.File qclNatives333 = null;
-            if (qclNeed333) {
+            String qclLwjglXDiag = null;
+            if (qclNeed333 || qclNeedsLwjglX) {
+                // ★★★ 关键修复：LWJGL2 时代也要 prepare！否则 lwjgl333/jars 从未解压 → lwjglx 加不上 → 白改
                 qclNatives333 = com.qcl.launcher.launcher.launch.Lwjgl333Helper.prepare(context);
                 if (qclNatives333 != null) {
                     libraryPath = qclNatives333.getAbsolutePath() + ":" + libraryPath;
@@ -118,16 +123,20 @@ public class PojavLauncher {
                 // 靠 classpath 顺序让 3.3.3 的类优先（同时也提供 3.3.3 的 lwjgl-glfw stub）。
                 String j333 = com.qcl.launcher.launcher.launch.Lwjgl333Helper.jarsClassPath(context);
                 if (j333.length() > 0) classPath = j333 + ":" + classPath;
-            } else if (com.qcl.launcher.launcher.launch.Lwjgl333Helper
-                    .needsLwjglX(gameLaunchSetting.currentVersion)) {
+            } else if (qclNeedsLwjglX) {
                 // ★★★ 照抄 FCL：LWJGL 2.x 时代（b1.x/远古/1.7.x）——
                 // 用 FCL 定制的 LWJGL 3.3.3 全套 jar（含 lwjgl-lwjglx.jar 兼容层）排到 classpath 最前。
                 // lwjglx 提供 org.lwjgl.opengl.Display 等 LWJGL2 API 并桥接到渲染桥（不走 GLFW）。
                 // 这正是 FCL 让"全版本通吃"的关键 —— 原版 lwjgl-glfw-classes.jar 的 Display 会走 GLFW 失败。
                 String jx = com.qcl.launcher.launcher.launch.Lwjgl333Helper.jarsClassPath(context);
+                qclLwjglXDiag = "len=" + jx.length() + " | " + (jx.length() > 300 ? jx.substring(0, 300) : jx);
                 if (jx.length() > 0) classPath = jx + ":" + classPath;
             }
             Vector<String> args = new Vector<String>();
+            // 诊断：把 lwjglx 的 jar 装载结果打进启动参数，下次日志可见
+            if (qclLwjglXDiag != null) {
+                args.add("-Dqcl.lwjglx=" + qclLwjglXDiag);
+            }
             Tools.getCacioJavaArgs(context, args, isJava8, width, height);
             if (qclNatives333 != null) {
                 // 3.3.3 的 native 目录（保持 liblwjgl.so 等原名）
