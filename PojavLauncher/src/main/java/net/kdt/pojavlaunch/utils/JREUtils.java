@@ -262,6 +262,14 @@ public class JREUtils {
             // 缺了这些（特别是 DLOPEN / LIBGL_GL / LIBGL_ES=3 / POJAV_RENDERER=opengles3），
             // Krypton 会挂在 "Unable to initialize GLFW" / 渲染链起不来。
             if ("ng_gl4es".equals(renderer)) {
+                // ★★★ 清掉前面无条件设置的 zink/virgl 残留变量！
+                // 实测真机日志：ng_gl4es 时仍带着 MESA_LOADER_DRIVER_OVERRIDE=zink /
+                // MESA_GL_VERSION_OVERRIDE=4.6 / VTEST_SOCKET_NAME 等 —— 会污染 Krypton 的初始化。
+                envMap.remove("MESA_LOADER_DRIVER_OVERRIDE");
+                envMap.remove("MESA_GL_VERSION_OVERRIDE");
+                envMap.remove("MESA_GLSL_VERSION_OVERRIDE");
+                envMap.remove("VTEST_SOCKET_NAME");
+                envMap.remove("GALLIUM_DRIVER");
                 envMap.put("LIBGL_USE_MC_COLOR", "1");
                 envMap.put("DLOPEN", "libspirv-cross-c-shared.so");
                 envMap.put("LIBGL_GL", "31");
