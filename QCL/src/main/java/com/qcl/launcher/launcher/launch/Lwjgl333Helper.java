@@ -258,4 +258,31 @@ public class Lwjgl333Helper {
             return false;
         }
     }
+
+    /**
+     * ★★★ 照抄 FCL（DefaultLauncher.setLwjglVersion）：
+     * 版本 json 的 LWJGL 版本 < 3.0（即 2.9.x，b1.x/远古/1.7.x 等）时，
+     * 需要用 FCL 的 LWJGLX 兼容层（lwjgl-lwjglx.jar）提供 org.lwjgl.opengl.Display 等 LWJGL2 API ——
+     * lwjglx 把这些 API 桥接到 LWJGL3 + Pojav 渲染桥，**不碰 GLFW**（这正是 b1.7.3 黑屏的根因：
+     * 原 Pojav lwjgl-glfw-classes.jar 里的 Display 会去初始化 GLFW 而失败）。
+     */
+    public static boolean needsLwjglX(String versionPath) {
+        if (versionPath == null) return false;
+        try {
+            File dir = new File(versionPath);
+            File json = new File(dir, dir.getName() + ".json");
+            if (!json.isFile()) return false;
+            String content = readText(new FileInputStream(json));
+            // 找 lwjgl 的版本号：org.lwjgl:lwjgl:2.9.1 / lwjgl/2.9.0 等形式
+            java.util.regex.Matcher m = java.util.regex.Pattern
+                    .compile("(?:org\\.lwjgl:lwjgl:|lwjgl/)(\\d+)\\.(\\d+)").matcher(content);
+            while (m.find()) {
+                int major = Integer.parseInt(m.group(1));
+                if (major < 3) return true;      // LWJGL 2.x → 需要 LWJGLX
+            }
+            return false;
+        } catch (Throwable t) {
+            return false;
+        }
+    }
 }

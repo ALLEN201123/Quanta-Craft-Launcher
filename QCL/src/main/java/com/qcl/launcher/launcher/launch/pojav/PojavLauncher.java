@@ -118,6 +118,14 @@ public class PojavLauncher {
                 // 靠 classpath 顺序让 3.3.3 的类优先（同时也提供 3.3.3 的 lwjgl-glfw stub）。
                 String j333 = com.qcl.launcher.launcher.launch.Lwjgl333Helper.jarsClassPath(context);
                 if (j333.length() > 0) classPath = j333 + ":" + classPath;
+            } else if (com.qcl.launcher.launcher.launch.Lwjgl333Helper
+                    .needsLwjglX(gameLaunchSetting.currentVersion)) {
+                // ★★★ 照抄 FCL：LWJGL 2.x 时代（b1.x/远古/1.7.x）——
+                // 用 FCL 定制的 LWJGL 3.3.3 全套 jar（含 lwjgl-lwjglx.jar 兼容层）排到 classpath 最前。
+                // lwjglx 提供 org.lwjgl.opengl.Display 等 LWJGL2 API 并桥接到渲染桥（不走 GLFW）。
+                // 这正是 FCL 让"全版本通吃"的关键 —— 原版 lwjgl-glfw-classes.jar 的 Display 会走 GLFW 失败。
+                String jx = com.qcl.launcher.launcher.launch.Lwjgl333Helper.jarsClassPath(context);
+                if (jx.length() > 0) classPath = jx + ":" + classPath;
             }
             Vector<String> args = new Vector<String>();
             Tools.getCacioJavaArgs(context, args, isJava8, width, height);
