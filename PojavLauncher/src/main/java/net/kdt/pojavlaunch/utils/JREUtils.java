@@ -176,13 +176,24 @@ public class JREUtils {
                 javaLibDir + "/jli:" +
                         javaLibDir + ":"
         );
+        // ★★★ 全面对齐 FCL：appendCommonPaths() 的系统库列表含 /system_ext/<lib>
+        //（Android 10+ 部分系统库被移到 system_ext 分区；旧 Pojav 列表没有它）。
         ldLibraryPath.append(
                 "/system/" + libName + ":" +
                         "/vendor/" + libName + ":" +
                         "/vendor/" + libName + "/hw:" +
+                        "/system_ext/" + libName + ":" +
                         nativeLibDir
         );
         LD_LIBRARY_PATH = ldLibraryPath.toString();
+    }
+
+    /**
+     * 设备系统库目录名（lib64 / lib）—— 对齐 FCL FCLauncher.appendCommonPaths 的 libDirName；
+     * 供 PojavLauncher.buildFclLibraryPath() 构建 java.library.path 时复用同一判断。
+     */
+    public static String getAndroidLibDirName() {
+        return is64BitsDevice() ? "lib64" : "lib";
     }
 
     public static void setJavaEnvironment(Activity activity,String javaPath,String home,String renderer,String glesVersion) throws Throwable {

@@ -72,22 +72,21 @@ public class PojavLauncher {
         }
 
             JREUtils.relocateLibPath(context,javaPath);
-            String libraryPath = JREUtils.getJavaLibDir(javaPath) + ":" + AppManifest.POJAV_LIB_DIR + "/lwjgl3:" + JREUtils.LD_LIBRARY_PATH + ":" + AppManifest.POJAV_LIB_DIR + "/lwjgl3";
-            // ★★★ 1.1.0 关键修复：把 APK 的 native 目录加进 java.library.path ——
-            // LWJGL 的 LoadLibrary 只搜 java.library.path，而 GLFW stub（libpojavexec_new.so）
-            // 与 lwjglx 需要的 native 都在 APK 的 nativeLibraryDir 里。
-            // v1.0.9 的 path 末尾本来就有 /data/app/.../lib/arm（对比实验确认），
-            // 缺了它 → UnsatisfiedLinkError: nativeInitializeGLFWNativeBridge / pojavSetWindowHint missing。
-            try {
-                libraryPath = libraryPath + ":" + context.getApplicationInfo().nativeLibraryDir;
-            } catch (Throwable ignored) {
-            }
-            // ★★★ 1.1.0 隔离（2026-09-16 对比实验结论）：
-            // 只有 1.20.5+（版本 json 声明 org.lwjgl:lwjgl:3.3.x）才启用 LWJGL 3.3.3 新栈。
-            // 老版本（b1.x/1.7.x/≤1.20.4）走上面这条 v1.0.9 的原路径，**一个字节都不改**。
-            // 3.3.3 的 jar/native 全部来自 assets/app_runtime/lwjgl333/（与老版本零交集），
-            // native 解压到私有目录并保持原名，用 -Dorg.lwjgl.librarypath 指过去，
-            // 避免与 APK jniLibs 里 v1.0.9 的 3.2.3 so 冲突。
+            // ★★★ 全面对齐 FCL（用户指令：一切以 FCL 为准，不再对着 v1.0.9 往回补）：
+            // java.library.path 按 FCLauncher.getLibraryPath()/appendCommonPaths() 的完整列表构建
+            //（FCL 源码：FCL/src/main/java/com/tungsten/fclauncher/FCLauncher.java L116-172）。
+            // 旧 Pojav 短列表缺的关键项：javaPath/lib/<arch>/{server,client}（libjvm.so）、
+            // /system_ext/lib{64}（Android 10+ 系统库分区）；且列表末尾必须恒为 APK native 目录 ——
+            // LWJGL 的 LoadLibrary 只搜 java.library.path，GLFW stub（libpojavexec_new.so）
+            // 与 lwjglx 的 native 都在该目录，缺了就是 UnsatisfiedLinkError:
+            // nativeInitializeGLFWNativeBridge / pojavSetWindowHint missing。
+            String libraryPath = buildFclLibraryPath(context, javaPath) + ":" + JREUtils.LD_LIBRARY_PATH;
+            // ★★★ LWJGL 3.3.3 新栈接入范围（对齐 FCL 的"全版本通吃"路线）：
+            //  · qclNeed333    —— 1.20.5+（版本 json 声明 org.lwjgl:lwjgl:3.3.x）
+            //  · qclNeedsLwjglX —— b1.x/远古/1.7.x（LWJGL2 时代），经 lwjgl-lwjglx.jar 兼容层
+            //    桥接到同一套 3.3.3 native 与渲染桥（FCL 同款做法）
+            // 两类的 jar/native 都来自 assets/app_runtime/lwjgl333/：native 解压到私有目录并
+            // 保持原名，用 -Dorg.lwjgl.librarypath 指过去（避免与 APK jniLibs 的 3.2.3 so 抢名）。
             final boolean qclNeed333 = com.qcl.launcher.launcher.launch.Lwjgl333Helper
                     .needs(gameLaunchSetting.currentVersion);
             // ★★★ 照抄 FCL：LWJGL 2.x 时代（b1.x/远古/1.7.x）需要 lwjglx 兼容层 —— 提前算，供 prepare 与 classpath 共用
@@ -305,6 +304,54 @@ public class PojavLauncher {
             }
             return null;
         }
+    }
+
+    /**
+     * ★★★ 全面对齐 FCL：按 FCLauncher.getLibraryPath()/appendCommonPaths() 的列表构建
+     * java.library.path（FCL 源码：FCL/src/main/java/com/tungsten/fclauncher/FCLauncher.java）。
+     * 同构映射（QCL ↔ FCL）：
+     *   1) javaPath/lib/<arch>                     —— getJavaLibDir（FCL 同名方法）
+     *   2) javaPath/lib/<arch>/jli                 —— libjli.so
+     *   3) javaPath/lib/<arch>/{server,client}      —— libjvm.so（FCL 取其一，这里都列更稳）
+     *   4) javaPath/jre/lib/<arch>[/{server,client}] —— JDK8 的 jre 子布局（存在才加）
+     *   5) /system/lib{64} : /vendor/lib{64} : /vendor/lib{64}/hw : /system_ext/lib{64}
+     *   6) lwjgl3 目录                              —— 对应 FCL 的 LWJGL_DIR/<ver>/natives/<arch>
+     *   7) APK native 目录                          —— FCL 列表末尾恒为该目录
+     * 调用方随后前置 3.3.3 隔离目录（若有）并追加 LD_LIBRARY_PATH 兜底。
+     */
+    private static String buildFclLibraryPath(android.content.Context context, String javaPath) {
+        StringBuilder sb = new StringBuilder();
+        try {
+            String javaLibDir = JREUtils.getJavaLibDir(javaPath);
+            sb.append(javaLibDir).append(":");
+            sb.append(javaLibDir).append("/jli:");      // libjli.so
+            sb.append(javaLibDir).append("/server:");   // libjvm.so（server 布局）
+            sb.append(javaLibDir).append("/client:");   // libjvm.so（client 布局兜底）
+            File jreDir = new File(javaPath, "jre");    // JDK8 子布局（FCL isJDK8 分支）
+            if (jreDir.isDirectory()) {
+                String jreLib = new File(jreDir, "lib/" + JREUtils.getJavaArchName()).getAbsolutePath();
+                sb.append(jreLib).append(":");
+                sb.append(jreLib).append("/server:");
+                sb.append(jreLib).append("/client:");
+            }
+        } catch (Throwable ignored) {
+        }
+        try {
+            String libName = JREUtils.getAndroidLibDirName();
+            sb.append("/system/").append(libName).append(":");
+            sb.append("/vendor/").append(libName).append(":");
+            sb.append("/vendor/").append(libName).append("/hw:");
+            sb.append("/system_ext/").append(libName).append(":");
+        } catch (Throwable ignored) {
+        }
+        // LWJGL native（QCL 的 lwjgl3 目录；3.3.3 隔离目录由调用方前置）
+        sb.append(AppManifest.POJAV_LIB_DIR).append("/lwjgl3:");
+        // FCL 列表末尾恒为 APK native 目录
+        try {
+            sb.append(context.getApplicationInfo().nativeLibraryDir);
+        } catch (Throwable ignored) {
+        }
+        return sb.toString();
     }
 
     private static String getLWJGL3ClassPath() {
