@@ -154,7 +154,9 @@ public class PojavLauncher {
             }
             if (qclNeed333 || qclNeed341) {
                 args.add("-Djava.locale.providers=COMPAT");
-                args.add("-Xint");
+                // ★★★ 1.1.2 性能优化（照搬 FCL）：移除 -Xint。
+                // 旧逻辑对高版本加 -Xint（关闭 JIT 纯解释执行），导致 MC 慢几十倍、直接"卡死人"。
+                // FCL 从不对游戏加 -Xint，现代移动 JRE 跑 JIT 完全正常，故删除。
                 args.add("-Dfile.encoding=UTF-8");
                 args.add("-Dstdout.encoding=UTF-8");
                 args.add("-Dstderr.encoding=UTF-8");
@@ -171,8 +173,13 @@ public class PojavLauncher {
                 }
             }
             if (qclNeed333 || qclNeedsLwjglX || qclNeed341) {
-                args.add("-Dorg.lwjgl.util.Debug=true");
-                args.add("-Dorg.lwjgl.util.DebugLoader=true");
+                // ★★★ 1.1.2 性能优化（照搬 FCL）：默认关闭 LWJGL 调试模式。
+                // 旧逻辑无条件开 Debug=true + DebugLoader=true，会对每个 GL 调用做校验+打日志，
+                // 是"卡死人"的头号原因。FCL 这三项全是注释掉的。仅调试开关开启时保留。
+                if ("true".equals(System.getProperty("qcl.debug.lwjgl", "false"))) {
+                    args.add("-Dorg.lwjgl.util.Debug=true");
+                    args.add("-Dorg.lwjgl.util.DebugLoader=true");
+                }
             }
             args.add("-Dos.name=Linux");
             args.add("-Dos.version=Android-" + Build.VERSION.RELEASE);

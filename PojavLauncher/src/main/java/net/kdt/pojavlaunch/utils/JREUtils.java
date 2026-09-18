@@ -23,7 +23,7 @@ import org.lwjgl.glfw.CallbackBridge;
 /* loaded from: classes2.dex */
 public class JREUtils {
     public static String LD_LIBRARY_PATH = null;
-    public static final boolean QCL_DEBUG_INPUT = true;
+    public static final boolean QCL_DEBUG_INPUT = false;
     public static Map<String, String> jreReleaseList;
     public static String jvmLibraryPath;
     private static String nativeLibDir;
@@ -195,6 +195,10 @@ public class JREUtils {
         arrayMap.put("TMPDIR", activity.getCacheDir().getAbsolutePath());
         arrayMap.put("LIBGL_MIPMAP", "3");
         arrayMap.put("FORCE_VSYNC", "false");
+        // ★★★ 1.1.2 音频修复：照搬 FCL（FCLauncher 的 envMap 里有 ALSOFT_DRIVERS=opensl）。
+        // 不设这个变量时，OpenAL-soft 在模拟器/部分机型上会落到静音后端（"OpenAL initialized" 成功却没声）。
+        // 强制走 OpenSL ES 后端，libopenal.so 已内置该后端（DT_NEEDED/libOpenSLES 在 .so 内）。
+        arrayMap.put("ALSOFT_DRIVERS", "opensl");
         arrayMap.put("POJAV_VSYNC_IN_ZINK", "1");
         arrayMap.put("LIBGL_NOINTOVLHACK", "1");
         arrayMap.put("LIBGL_NORMALIZE", "1");
@@ -214,7 +218,8 @@ public class JREUtils {
         arrayMap.put("REGAL_GL_VENDOR", "Android");
         arrayMap.put("REGAL_GL_RENDERER", "Regal");
         arrayMap.put("REGAL_GL_VERSION", "4.5");
-        arrayMap.put("QCL_DBG_INPUT", "1");
+        // ★★★ 1.1.2：输入调试日志开关交给常量 QCL_DEBUG_INPUT（发布版默认 false，关掉冗余 native 日志）
+        arrayMap.put("QCL_DBG_INPUT", QCL_DEBUG_INPUT ? "1" : "0");
         if (str6 != null) {
             if (str6.equals("opengles2_5") || str6.equals("opengles3") || str6.equals("opengles3_vgpu")) {
                 str6 = "opengles2";
@@ -320,6 +325,11 @@ public class JREUtils {
         String[] strArr = {"-Dglfwstub.windowWidth=" + CallbackBridge.windowWidth, "-Dglfwstub.windowHeight=" + CallbackBridge.windowHeight, "-Dglfwstub.initEgl=false", "-Dext.net.resolvPath=" + new File(context.getFilesDir().getParent(), "resolv.conf").getAbsolutePath(), "-Dlog4j2.formatMsgNoLookups=true"};
         ArrayList arrayList = new ArrayList();
         arrayList.addAll(Arrays.asList(strArr));
+        // ★★★ 1.1.2 性能优化（照搬 FCL DefaultLauncher）：让 JVM 用满设备全部核心。
+        // 不设这个时 JVM 可能只识别到部分核心，导致渲染/世界生成线程跑不满、卡顿。
+        arrayList.add("-XX:ActiveProcessorCount=" + String.valueOf(Runtime.getRuntime().availableProcessors()));
+        // FCL 专用：LWJGL 用系统分配器，减少内存碎片（低风险提示，FCL 一贯启用）
+        arrayList.add("-Dorg.lwjgl.system.allocator=system");
         return arrayList;
     }
 
