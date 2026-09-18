@@ -682,7 +682,6 @@
     <string name="game_setting_ui_alert_jump">Chỉnh sửa cài đặt phiên bản hiện tại</string>
     <string name="game_setting_ui_alert_text">Phiên bản hiện tại [%s] đã bật cài đặt cho mỗi phiên bản, tất cả các tùy chọn trên trang này sẽ không ảnh hưởng đến phiên bản đó. Bấm vào đây để sửa đổi các tùy chọn của riêng nó.</string>
     <string name="game_setting_ui_auto_ram">Tự động phân bổ</string>
-    <string name="game_setting_ui_boat_renderer">Trình kết xuất thuyền</string>
     <string name="game_setting_ui_check_forge">Không chọn hoạt ảnh Forge loading</string>
     <string name="game_setting_ui_check_game">Không kiểm tra tính toàn vẹn của trò chơi</string>
     <string name="game_setting_ui_check_java">Không kiểm tra tính tương thích của JVM</string>
@@ -695,7 +694,6 @@
     <string name="game_setting_ui_game_dir_alert">Thông tin</string>
     <string name="game_setting_ui_game_dir_alert_text">"Bật tùy chọn 'Isolated' trong 'Working Directory' để cho phép phiên bản hiện tại lưu trữ cài đặt, lưu và mod của nó trong một thư mục riêng biệt.\n\nBạn nên bật tùy chọn này để tránh xung đột mod, nhưng bạn sẽ cần phải di chuyển các bản lưu của mình theo cách thủ công."</string>
     <string name="game_setting_ui_game_launcher">Khởi chạy trò chơi</string>
-    <string name="game_setting_ui_game_launcher_hint">Thuyền được khuyến khích.</string>
     <string name="game_setting_ui_game_ram">Ram trò chơi</string>
     <string name="game_setting_ui_java_path">Đường dẫn Java</string>
     <string name="game_setting_ui_java_path_17">17 (64 bit)</string>

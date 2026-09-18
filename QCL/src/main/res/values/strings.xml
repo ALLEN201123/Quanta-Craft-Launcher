@@ -2,7 +2,7 @@
     <string name="app_name" translatable="false">Quanta Craft Launcher</string>
     <string name="app_name_pri" translatable="false">Quanta Craft Launcher</string>
     <string name="app_name_sec" translatable="false">量子方块启动器</string>
-    <string name="version_name" translatable="false">v1.1.0</string>
+    <string name="version_name" translatable="false">v1.1.1</string>
     <string name="app_bar_title" translatable="false">QCL · Quanta Craft Launcher v1.0.4</string>
 
     <string name="dialog_outdated_warning_title">Warning</string>
@@ -29,10 +29,7 @@
     <string name="download_resource_modrinth" translatable="false">Modrinth</string>
     <string name="download_resource_mcmod" translatable="false">MCMod</string>
     <string name="game_setting_ui_ram" translatable="false">MB</string>
-    <string name="game_setting_ui_game_launcher_boat" translatable="false">Boat</string>
     <string name="game_setting_ui_game_launcher_pojav" translatable="false">PojavLauncher</string>
-    <string name="game_setting_ui_boat_renderer_gl4es_114" translatable="false">Holy GL4ES (OpenGL 2.1/3.2)</string>
-    <string name="game_setting_ui_boat_renderer_virgl" translatable="false">VirGLRenderer (OpenGL 4.3)</string>
     <string name="game_setting_ui_pojav_renderer_gl4es_114" translatable="false">Holy GL4ES (OpenGL 2.1/3.2)</string>
     <string name="game_setting_ui_pojav_renderer_virgl" translatable="false">VirGLRenderer (OpenGL 4.3)</string>
     <string name="dialog_color_selector_arrow" translatable="false">→</string>
@@ -697,8 +694,6 @@
     <string name="game_setting_ui_control_layout_manage">Manage</string>
     <string name="game_setting_ui_launch_setting">Launch options</string>
     <string name="game_setting_ui_game_launcher">Game Launch</string>
-    <string name="game_setting_ui_game_launcher_hint">Boat is recommended.</string>
-    <string name="game_setting_ui_boat_renderer">Boat Renderer</string>
     <string name="game_setting_ui_pojav_renderer">PojavLauncher Renderer</string>
     <string name="universal_setting_ui_declare">QCL (Quanta Craft Launcher) is a free, libre and open source Minecraft launcher. Your sponsorship helps this project grow.</string>
     <string name="universal_setting_ui_update">Update</string>
@@ -1050,8 +1045,6 @@ Multiplayer is powered by Terracotta (by BurningTNT, also AGPL-3.0). The multipl
     <string name="ui_about_pojav_sub">JVM launching and LWJGL port</string>
     <string name="ui_about_terracotta_main">Terracotta (BurningTNT)</string>
     <string name="ui_about_terracotta_sub">Multiplayer framework (AGPL-3.0)</string>
-    <string name="ui_about_boat_main">Boat (cosine)</string>
-    <string name="ui_about_boat_sub">Provided extensive technical support</string>
     <string name="ui_about_fcl_main">FoldCraftLauncher (FCL-Team)</string>
     <string name="ui_about_fcl_sub">Some implementations in this project (Java runtime handling, authlib-injector usage) reference or reuse code and ideas from the FCL open-source project. Special thanks.</string>
     <string name="ui_about_libs_main">LWJGL / GL4ES / OpenAL / OpenJDK</string>

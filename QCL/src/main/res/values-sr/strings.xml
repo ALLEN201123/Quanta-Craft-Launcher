@@ -611,8 +611,6 @@
     <string name="game_setting_ui_control_layout_manage">Upravljati</string>
     <string name="game_setting_ui_launch_setting">Opcije pokretanja</string>
     <string name="game_setting_ui_game_launcher">Pokretanje igre</string>
-    <string name="game_setting_ui_game_launcher_hint">Boat je preporučen.</string>
-    <string name="game_setting_ui_boat_renderer">Boat Renderer</string>
     <string name="game_setting_ui_pojav_renderer">PojavLauncher Renderer</string>
     <string name="universal_setting_ui_declare">Zdravo Minecraft! Launcher Pocket Edition je Android Minecraft pokretač koji omogućava korisnicima da lako upravljaju višestrukim Minecraft instancama. Možete nam donirati na Afdian-u da podržite naš hosting datoteka i razvoj projekta.</string>
     <string name="universal_setting_ui_update">Ažuriraj</string>

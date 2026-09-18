@@ -125,138 +125,14 @@ public class MainUI extends BaseUI implements View.OnClickListener, AdapterView.
         startSettingUI.setOnClickListener(this);
 
         startGame.setOnClickListener(this);
-        // 长按启动按钮：切换当前后端（Boat/Pojav）的渲染器
+        // ★★★ 1.1.1：长按启动按钮 → 选择渲染器（公共选择器，版本设置/全局设置共用同一套）
         startGame.setOnLongClickListener(v -> {
-            showRendererDialog();
+            com.qcl.launcher.launcher.launch.RendererPicker.show(activity,
+                    activity.privateGameSetting,
+                    activity.publicGameSetting.currentVersion, null);
             return true;
         });
     }
-
-    /**
-     * ★★★ 1.1.0：选择渲染器后做版本兼容性检查（参考 FCL 的 message_check_renderer）。
-     * 不兼容时弹二次确认：「我就要用这个渲染器」/「取消」。
-     */
-    private void checkRendererCompat(String rendererId, Runnable onConfirm) {
-        String mcVer = null;
-        try {
-            String path = activity.publicGameSetting.currentVersion;
-            if (path != null && !path.isEmpty()) {
-                java.io.File dir = new java.io.File(path);
-                mcVer = dir.getName();
-            }
-        } catch (Throwable ignored) {
-        }
-        String warn = null;
-        try {
-            warn = com.qcl.launcher.launcher.launch.RendererCompat.warningOf(rendererId, mcVer);
-        } catch (Throwable ignored) {
-        }
-        if (warn == null) {
-            onConfirm.run();
-            return;
-        }
-        final String warnText = warn;
-        new android.app.AlertDialog.Builder(activity)
-                .setTitle("渲染器兼容性提示")
-                .setMessage(warnText)
-                .setPositiveButton("我就要用这个渲染器", (d, w) -> onConfirm.run())
-                .setNegativeButton("取消", null)
-                .show();
-    }
-
-    /** ★★★ 1.1.0：长按启动按钮弹出的渲染器选择窗口。
-     *  改用系统 AlertDialog.Builder.setItems —— 系统自带滚动支持（项多时可上下滑动），
-     *  彻底解决「小屏手机上列表超屏且无法滑动」的问题。
-     *  列表项 = RendererCompat 注册表（全称 + 支持版本 + ★推荐 + 当前选中✓），
-     *  GL 库文件不存在的渲染器（如未导入的 MobileGlues）不显示。 */
-    private void showRendererDialog(){
-        try {
-            boolean boat = activity.privateGameSetting.boatLauncherSetting.enable;
-            if (boat) {
-                // Boat 后端保持原有简单选项
-                final String[] labels = { "GL4ES 1.1.5（推荐）", "VirGL（转发渲染）" };
-                final String[] ids = { "GL4ES115", "VirGL" };
-                String cur = activity.privateGameSetting.boatLauncherSetting.renderer;
-                for (int i = 0; i < ids.length; i++) {
-                    if (ids[i].equals(cur)) labels[i] = labels[i] + "  ✓";
-                }
-                new android.app.AlertDialog.Builder(activity)
-                        .setTitle("选择渲染器（Boat 后端）")
-                        .setItems(labels, (d, which) -> {
-                            activity.privateGameSetting.boatLauncherSetting.renderer = ids[which];
-                            com.qcl.launcher.utils.gson.GsonUtils.savePrivateGameSetting(
-                                    activity.privateGameSetting,
-                                    com.qcl.launcher.manifest.AppManifest.SETTING_DIR + "/private_game_setting.json");
-                            android.widget.Toast.makeText(activity, "渲染器已切换: " + ids[which],
-                                    android.widget.Toast.LENGTH_SHORT).show();
-                        })
-                        .setNegativeButton("取消", null)
-                        .show();
-                return;
-            }
-
-            // Pojav 后端：从注册表生成列表（只含库存在的 + 全称 + 版本范围）
-            java.util.List<String> labels = new java.util.ArrayList<>();
-            final java.util.List<String> ids = new java.util.ArrayList<>();
-            String current = activity.privateGameSetting.pojavLauncherSetting.renderer;
-            String mcVer = null;
-            try {
-                String vp = activity.publicGameSetting.currentVersion;
-                if (vp != null && !vp.isEmpty()) mcVer = new java.io.File(vp).getName();
-            } catch (Throwable ignored) {}
-            String nativeDir = activity.getApplicationInfo().nativeLibraryDir;
-            for (com.qcl.launcher.launcher.launch.RendererCompat.Info info
-                    : com.qcl.launcher.launcher.launch.RendererCompat.ALL) {
-                if (info.glName != null && !info.glName.isEmpty()) {
-                    if (!new java.io.File(nativeDir, info.glName).isFile()) continue;  // 库不存在不显示
-                }
-                String line = info.displayName + "\n（" + info.supportRangeText() + "）"
-                        + (info.recommended ? " ★推荐" : "")
-                        + (info.id.equals(current) ? "  ✓当前" : "")
-                        + (com.qcl.launcher.launcher.launch.RendererCompat.supports(info.id, mcVer)
-                            ? "" : "  ⚠不支持当前版本");
-                labels.add(line);
-                ids.add(info.id);
-            }
-            final String mcVerF = mcVer;
-            new android.app.AlertDialog.Builder(activity)
-                    .setTitle("选择渲染器（当前版本 " + (mcVerF != null ? mcVerF : "?") + "）")
-                    .setItems(labels.toArray(new String[0]), (d, which) -> {
-                        final String id = ids.get(which);
-                        final String warnText = com.qcl.launcher.launcher.launch.RendererCompat
-                                .warningOf(id, mcVerF);
-                        if (warnText != null) {
-                            new android.app.AlertDialog.Builder(activity)
-                                    .setTitle("渲染器兼容性提示")
-                                    .setMessage(warnText)
-                                    .setPositiveButton("我就要用这个渲染器", (d2, w2) -> applyRendererChoice(id))
-                                    .setNegativeButton("取消", null)
-                                    .show();
-                        } else {
-                            applyRendererChoice(id);
-                        }
-                    })
-                    .setNegativeButton("取消", null)
-                    .show();
-        } catch (Throwable e) {
-            android.widget.Toast.makeText(activity, "打开渲染器选择失败: " + e.getMessage(),
-                    android.widget.Toast.LENGTH_SHORT).show();
-        }
-    }
-
-    /** 应用渲染器选择（写设置 + Toast） */
-    private void applyRendererChoice(String id) {
-        try {
-            activity.privateGameSetting.pojavLauncherSetting.renderer = id;
-            com.qcl.launcher.utils.gson.GsonUtils.savePrivateGameSetting(activity.privateGameSetting,
-                    com.qcl.launcher.manifest.AppManifest.SETTING_DIR + "/private_game_setting.json");
-            com.qcl.launcher.launcher.launch.RendererCompat.Info info =
-                    com.qcl.launcher.launcher.launch.RendererCompat.find(id);
-            android.widget.Toast.makeText(activity, "渲染器已切换: "
-                    + (info != null ? info.displayName : id), android.widget.Toast.LENGTH_SHORT).show();
-        } catch (Throwable ignored) {}
-    }
-
 
     private AuthlibInjectorServer getServerFromUrl(String url){
         ArrayList<AuthlibInjectorServer> list = InitializeSetting.initializeAuthlibInjectorServer(context);

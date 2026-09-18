@@ -611,8 +611,6 @@
     <string name="game_setting_ui_control_layout_manage">Gerenciar</string>
     <string name="game_setting_ui_launch_setting">Opções de lançamento</string>
     <string name="game_setting_ui_game_launcher">Lançamento do jogo</string>
-    <string name="game_setting_ui_game_launcher_hint">Boat é recomendado.</string>
-    <string name="game_setting_ui_boat_renderer">Renderizador Boat</string>
     <string name="game_setting_ui_pojav_renderer">Renderizador PojavLauncher</string>
     <string name="universal_setting_ui_declare">QCL (Quanta Craft Launcher) é um lançador de Minecraft de código aberto, livre e gratuito. Você pode doar para nós no Afdian para apoiar nossa hospedagem de arquivos e desenvolvimento de projetos.</string>
     <string name="universal_setting_ui_update">Atualizar</string>

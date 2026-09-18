@@ -112,16 +112,8 @@ SeekBar.OnSeekBarChangeListener {
     private ImageView showGameLauncher;
     private LinearLayout gameLauncherSetting;
     private int gameLauncherSettingHeight;
-    private LinearLayout showBoatRendererSetting;
-    private TextView currentBoatRenderer;
-    private ImageView showBoatRenderer;
-    private LinearLayout boatRendererSetting;
-    private int boatRendererSettingHeight;
     private LinearLayout showPojavRendererSetting;
     private TextView currentPojavRenderer;
-    private ImageView showPojavRenderer;
-    private LinearLayout pojavRendererSetting;
-    private int pojavRendererSettingHeight;
     private RadioButton checkJavaAuto;
     private RadioButton checkJava8;
     private RadioButton checkJava17;
@@ -136,12 +128,7 @@ SeekBar.OnSeekBarChangeListener {
     private RadioButton checkGameDirCustom;
     private EditText editGameDir;
     private ImageButton selectGameDir;
-    private RadioButton launchByBoat;
     private RadioButton launchByPojav;
-    private RadioButton boatRendererGL4ES114;
-    private RadioButton boatRendererVirGL;
-    private RadioButton pojavRendererGL4ES114;
-    private RadioButton pojavRendererVirGL;
     private CheckBox checkAutoRam;
     private SeekBar ramSeekBar;
     private EditText editRam;
@@ -188,14 +175,8 @@ SeekBar.OnSeekBarChangeListener {
         this.currentLauncher = (TextView)this.activity.findViewById(R.id.current_launcher_isolate);
         this.showGameLauncher = (ImageView)this.activity.findViewById(R.id.show_game_launcher_isolate);
         this.gameLauncherSetting = (LinearLayout)this.activity.findViewById(R.id.game_launcher_selector_isolate);
-        this.showBoatRendererSetting = (LinearLayout)this.activity.findViewById(R.id.show_boat_render_selector_isolate);
-        this.currentBoatRenderer = (TextView)this.activity.findViewById(R.id.current_boat_renderer_isolate);
-        this.showBoatRenderer = (ImageView)this.activity.findViewById(R.id.show_boat_renderer_isolate);
-        this.boatRendererSetting = (LinearLayout)this.activity.findViewById(R.id.boat_render_selector_isolate);
         this.showPojavRendererSetting = (LinearLayout)this.activity.findViewById(R.id.show_pojav_render_selector_isolate);
         this.currentPojavRenderer = (TextView)this.activity.findViewById(R.id.current_pojav_renderer_isolate);
-        this.showPojavRenderer = (ImageView)this.activity.findViewById(R.id.show_pojav_renderer_isolate);
-        this.pojavRendererSetting = (LinearLayout)this.activity.findViewById(R.id.pojav_render_selector_isolate);
         this.checkJavaAuto = (RadioButton)this.activity.findViewById(R.id.check_java_path_auto_isolate);
         this.checkJava8 = (RadioButton)this.activity.findViewById(R.id.check_java_path_8_isolate);
         this.checkJava17 = (RadioButton)this.activity.findViewById(R.id.check_java_path_17_isolate);
@@ -215,12 +196,7 @@ SeekBar.OnSeekBarChangeListener {
         this.checkGameDirCustom = (RadioButton)this.activity.findViewById(R.id.check_custom_game_dir_isolate);
         this.editGameDir = (EditText)this.activity.findViewById(R.id.edit_game_dir_path_isolate);
         this.selectGameDir = (ImageButton)this.activity.findViewById(R.id.select_game_dir_path_isolate);
-        this.launchByBoat = (RadioButton)this.activity.findViewById(R.id.launch_by_boat_isolate);
         this.launchByPojav = (RadioButton)this.activity.findViewById(R.id.launch_by_pojav_isolate);
-        this.boatRendererGL4ES114 = (RadioButton)this.activity.findViewById(R.id.boat_renderer_gl4es_114_isolate);
-        this.boatRendererVirGL = (RadioButton)this.activity.findViewById(R.id.boat_renderer_virgl_isolate);
-        this.pojavRendererGL4ES114 = (RadioButton)this.activity.findViewById(R.id.pojav_renderer_gl4es_114_isolate);
-        this.pojavRendererVirGL = (RadioButton)this.activity.findViewById(R.id.pojav_renderer_virgl_isolate);
         this.checkAutoRam = (CheckBox)this.activity.findViewById(R.id.check_auto_ram_isolate);
         this.ramSeekBar = (SeekBar)this.activity.findViewById(R.id.ram_seek_bar_isolate);
         this.editRam = (EditText)this.activity.findViewById(R.id.edit_ram_isolate);
@@ -286,10 +262,7 @@ SeekBar.OnSeekBarChangeListener {
         this.showGameDir.setOnClickListener((View.OnClickListener)this);
         this.showGameLauncherSetting.setOnClickListener((View.OnClickListener)this);
         this.showGameLauncher.setOnClickListener((View.OnClickListener)this);
-        this.showBoatRendererSetting.setOnClickListener((View.OnClickListener)this);
-        this.showBoatRenderer.setOnClickListener((View.OnClickListener)this);
         this.showPojavRendererSetting.setOnClickListener((View.OnClickListener)this);
-        this.showPojavRenderer.setOnClickListener((View.OnClickListener)this);
         this.checkJavaAuto.setOnClickListener((View.OnClickListener)this);
         this.checkJava8.setOnClickListener((View.OnClickListener)this);
         this.checkJava17.setOnClickListener((View.OnClickListener)this);
@@ -315,12 +288,7 @@ SeekBar.OnSeekBarChangeListener {
                 }
             }
         });
-        this.launchByBoat.setOnClickListener((View.OnClickListener)this);
         this.launchByPojav.setOnClickListener((View.OnClickListener)this);
-        this.boatRendererGL4ES114.setOnClickListener((View.OnClickListener)this);
-        this.boatRendererVirGL.setOnClickListener((View.OnClickListener)this);
-        this.pojavRendererGL4ES114.setOnClickListener((View.OnClickListener)this);
-        this.pojavRendererVirGL.setOnClickListener((View.OnClickListener)this);
         this.checkAutoRam.setOnCheckedChangeListener((CompoundButton.OnCheckedChangeListener)this);
         this.ramSeekBar.setOnSeekBarChangeListener((SeekBar.OnSeekBarChangeListener)this);
         this.editRam.addTextChangedListener(new TextWatcher(){
@@ -379,14 +347,6 @@ SeekBar.OnSeekBarChangeListener {
         this.gameLauncherSetting.post(() -> {
             this.gameLauncherSettingHeight = this.gameLauncherSetting.getHeight();
             this.gameLauncherSetting.setVisibility(8);
-        });
-        this.boatRendererSetting.post(() -> {
-            this.boatRendererSettingHeight = this.boatRendererSetting.getHeight();
-            this.boatRendererSetting.setVisibility(8);
-        });
-        this.pojavRendererSetting.post(() -> {
-            this.pojavRendererSettingHeight = this.pojavRendererSetting.getHeight();
-            this.pojavRendererSetting.setVisibility(8);
         });
     }
 
@@ -582,32 +542,12 @@ SeekBar.OnSeekBarChangeListener {
             this.checkGameDirIsolate.setChecked(false);
             this.checkGameDirCustom.setChecked(true);
         }
-        if (setting.boatLauncherSetting.enable) {
-            this.launchByBoat.setChecked(true);
-            this.launchByPojav.setChecked(false);
-            this.currentLauncher.setText(this.context.getText(R.string.game_setting_ui_game_launcher_boat));
-        } else {
-            this.launchByBoat.setChecked(false);
-            this.launchByPojav.setChecked(true);
-            this.currentLauncher.setText(this.context.getText(R.string.game_setting_ui_game_launcher_pojav));
-        }
-        if (setting.boatLauncherSetting.renderer.equals("libGL112.so.1") || setting.boatLauncherSetting.renderer.equals("libGL115.so.1") || setting.boatLauncherSetting.renderer.equals("libgl4es_114.so") || setting.boatLauncherSetting.renderer.equals("libvgpu.so") || setting.boatLauncherSetting.renderer.equals("GL4ES115") || setting.boatLauncherSetting.renderer.equals("GL4ES114")) {
-            this.boatRendererGL4ES114.setChecked(true);
-            this.boatRendererVirGL.setChecked(false);
-            this.currentBoatRenderer.setText(this.context.getText(R.string.game_setting_ui_boat_renderer_gl4es_114));
-        } else if (setting.boatLauncherSetting.renderer.equals("VirGL")) {
-            this.boatRendererGL4ES114.setChecked(false);
-            this.boatRendererVirGL.setChecked(true);
-            this.currentBoatRenderer.setText(this.context.getText(R.string.game_setting_ui_boat_renderer_virgl));
-        }
-        if (setting.pojavLauncherSetting.renderer.equals("opengles2") || setting.pojavLauncherSetting.renderer.equals("opengles2_5") || setting.pojavLauncherSetting.renderer.equals("opengles3") || setting.pojavLauncherSetting.renderer.equals("opengles3_vgpu")) {
-            this.pojavRendererGL4ES114.setChecked(true);
-            this.pojavRendererVirGL.setChecked(false);
-            this.currentPojavRenderer.setText(this.context.getText(R.string.game_setting_ui_pojav_renderer_gl4es_114));
-        } else if (setting.pojavLauncherSetting.renderer.equals("opengles3_virgl")) {
-            this.pojavRendererGL4ES114.setChecked(false);
-            this.pojavRendererVirGL.setChecked(true);
-            this.currentPojavRenderer.setText(this.context.getText(R.string.game_setting_ui_pojav_renderer_virgl));
+        // ★★★ 1.1.1：Boat 后端已删除，只有 Pojav 一种后端
+        this.launchByPojav.setChecked(true);
+        this.currentLauncher.setText(this.context.getText(R.string.game_setting_ui_game_launcher_pojav));
+        if (this.currentPojavRenderer != null) {
+            this.currentPojavRenderer.setText((CharSequence)com.qcl.launcher.launcher.launch.RendererPicker
+                    .displayNameOf(setting.pojavLauncherSetting.renderer));
         }
     }
 
@@ -661,13 +601,8 @@ SeekBar.OnSeekBarChangeListener {
         if (v == this.showGameLauncherSetting || v == this.showGameLauncher) {
             HiddenAnimationUtils.newInstance(this.context, (View)this.gameLauncherSetting, (View)this.showGameLauncher, this.gameLauncherSettingHeight).toggle();
         }
-        if (v == this.showBoatRendererSetting || v == this.showBoatRenderer) {
-            HiddenAnimationUtils.newInstance(this.context, (View)this.boatRendererSetting, (View)this.showBoatRenderer, this.boatRendererSettingHeight).toggle();
-        }
         if (v == this.showPojavRendererSetting && this.showPojavRendererSetting != null) {
             this.showFullRendererDialog();
-        } else if (v == this.showPojavRenderer) {
-            HiddenAnimationUtils.newInstance(this.context, (View)this.pojavRendererSetting, (View)this.showPojavRenderer, this.pojavRendererSettingHeight).toggle();
         }
         if (v == this.checkJavaAuto && this.privateGameSetting != null) {
             this.javaPathText.setText((CharSequence)this.context.getString(R.string.game_setting_ui_java_path_auto));
@@ -751,53 +686,10 @@ SeekBar.OnSeekBarChangeListener {
             intent.putExtra("INITIAL_DIRECTORY", new File(AppManifest.DEFAULT_GAME_DIR).getAbsolutePath());
             this.activity.startActivityForResult(intent, 7300);
         }
-        if (v == this.launchByBoat && this.privateGameSetting != null) {
-            if (Architecture.getDeviceArchitecture() == Architecture.ARCH_ARM64) {
-                this.launchByPojav.setChecked(false);
-                this.privateGameSetting.boatLauncherSetting.enable = true;
-                this.privateGameSetting.pojavLauncherSetting.enable = false;
-                GsonUtils.savePrivateGameSetting(this.privateGameSetting, this.activity.launcherSetting.gameFileDirectory + "/versions/" + this.versionName + "/qcl.cfg");
-                this.currentLauncher.setText(this.context.getText(R.string.game_setting_ui_game_launcher_boat));
-            } else {
-                Toast.makeText((Context)this.context, (CharSequence)"Not available for now!", (int)0).show();
-                this.launchByBoat.setChecked(false);
-                this.launchByPojav.setChecked(true);
-                this.privateGameSetting.boatLauncherSetting.enable = false;
-                this.privateGameSetting.pojavLauncherSetting.enable = true;
-                GsonUtils.savePrivateGameSetting(this.privateGameSetting, this.activity.launcherSetting.gameFileDirectory + "/versions/" + this.versionName + "/qcl.cfg");
-                this.currentLauncher.setText(this.context.getText(R.string.game_setting_ui_game_launcher_pojav));
-            }
-        }
         if (v == this.launchByPojav && this.privateGameSetting != null) {
-            this.launchByBoat.setChecked(false);
-            this.privateGameSetting.boatLauncherSetting.enable = false;
             this.privateGameSetting.pojavLauncherSetting.enable = true;
             GsonUtils.savePrivateGameSetting(this.privateGameSetting, this.activity.launcherSetting.gameFileDirectory + "/versions/" + this.versionName + "/qcl.cfg");
             this.currentLauncher.setText(this.context.getText(R.string.game_setting_ui_game_launcher_pojav));
-        }
-        if (v == this.boatRendererGL4ES114) {
-            this.boatRendererVirGL.setChecked(false);
-            this.privateGameSetting.boatLauncherSetting.renderer = "GL4ES114";
-            GsonUtils.savePrivateGameSetting(this.privateGameSetting, this.activity.launcherSetting.gameFileDirectory + "/versions/" + this.versionName + "/qcl.cfg");
-            this.currentBoatRenderer.setText(this.context.getText(R.string.game_setting_ui_boat_renderer_gl4es_114));
-        }
-        if (v == this.boatRendererVirGL) {
-            this.boatRendererGL4ES114.setChecked(false);
-            this.privateGameSetting.boatLauncherSetting.renderer = "VirGL";
-            GsonUtils.savePrivateGameSetting(this.privateGameSetting, this.activity.launcherSetting.gameFileDirectory + "/versions/" + this.versionName + "/qcl.cfg");
-            this.currentBoatRenderer.setText(this.context.getText(R.string.game_setting_ui_boat_renderer_virgl));
-        }
-        if (v == this.pojavRendererGL4ES114 && this.privateGameSetting != null) {
-            this.pojavRendererVirGL.setChecked(false);
-            this.privateGameSetting.pojavLauncherSetting.renderer = "opengles2";
-            GsonUtils.savePrivateGameSetting(this.privateGameSetting, this.activity.launcherSetting.gameFileDirectory + "/versions/" + this.versionName + "/qcl.cfg");
-            this.currentPojavRenderer.setText(this.context.getText(R.string.game_setting_ui_pojav_renderer_gl4es_114));
-        }
-        if (v == this.pojavRendererVirGL && this.privateGameSetting != null) {
-            this.pojavRendererGL4ES114.setChecked(false);
-            this.privateGameSetting.pojavLauncherSetting.renderer = "opengles3_virgl";
-            GsonUtils.savePrivateGameSetting(this.privateGameSetting, this.activity.launcherSetting.gameFileDirectory + "/versions/" + this.versionName + "/qcl.cfg");
-            this.currentPojavRenderer.setText(this.context.getText(R.string.game_setting_ui_pojav_renderer_virgl));
         }
         if (v == this.manageController && this.privateGameSetting != null) {
             this.controllerManagerDialog = new ControllerManagerDialog(this.context, this.activity, this.activity.launcherSetting.fullscreen, this.privateGameSetting.controlLayout, new ControllerManagerDialog.OnPatternChangeListener(){

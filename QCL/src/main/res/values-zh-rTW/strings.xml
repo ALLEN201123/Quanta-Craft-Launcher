@@ -589,7 +589,7 @@
     <string name="game_setting_ui_java_path_auto">自動選擇合適的 Java</string>
     <string name="game_setting_ui_java_path_8">1.8.0 (64位)</string>
     <string name="game_setting_ui_java_path_17">17 (64位)</string>
-    <string name="game_setting_ui_version_isolation">版本隔離（建議使用模組時開啟“各版本隔離”，改後需移動存檔模組等相關遊戲文件）</string>
+    <string name="game_setting_ui_version_isolation">版本隔離</string>
     <string name="game_setting_ui_version_isolation_default">默認 (.minecraft/)</string>
     <string name="game_setting_ui_version_isolation_isolate">各版本獨立 (.minecraft/versions/&#60;版本名>/, 除 assets、libraries)</string>
     <string name="game_setting_ui_version_isolation_custom">自定義</string>
@@ -619,8 +619,6 @@
     <string name="game_setting_ui_control_layout_manage">管理</string>
     <string name="game_setting_ui_launch_setting">啟動選項</string>
     <string name="game_setting_ui_game_launcher">遊戲啟動方式</string>
-    <string name="game_setting_ui_game_launcher_hint">推薦使用 Boat 啟動器。</string>
-    <string name="game_setting_ui_boat_renderer">Boat 渲染方式</string>
     <string name="game_setting_ui_pojav_renderer">PojavLauncher 渲染方式</string>
     <string name="universal_setting_ui_declare">QCL（Quanta Craft Launcher，量子方塊啟動器）是一個免費、自由、開放原始碼的 Minecraft 啟動器。您的贊助將幫助本專案獲得更好的發展。</string>
     <string name="universal_setting_ui_update">啟動器更新</string>
