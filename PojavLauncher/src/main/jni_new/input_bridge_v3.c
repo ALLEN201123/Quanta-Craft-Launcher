@@ -534,34 +534,18 @@ JNIEXPORT void JNICALL Java_org_lwjgl_glfw_CallbackBridge_nativeSendCursorPos(JN
             }
         }
 
-        if (pojav_environ->isGrabbing) {
-            if (!isPrepareGrabPos) {
-                grabCursorX += x - lastCursorX;
-                grabCursorY += y - lastCursorY;
-            }
-            
-            lastCursorX = x;
-            lastCursorY = y;
-            
-            if (isPrepareGrabPos) {
-                isPrepareGrabPos = false;
-                return;
-            }
-        }
-
         if (!pojav_environ->isUseStackQueueCall) {
             pojav_environ->GLFW_invoke_CursorPos((void*) pojav_environ->showingWindow, (double) (x), (double) (y));
         } else {
-            // ★★★ 2026-09-18 修复 1.20.6「鼠标能移动、按钮点不动」的**第三层**病根。
-            // 队列模式下光标位置是「状态」而不是「事件」：必须存进 pojav_environ，
-            // 由 pojavStartPumping() 比较 cLastX/cLastY 后置 shouldUpdateMouse，
-            // 再在 pojavPumpEvents() 开头 GLFW_invoke_CursorPos(window, cursorX, cursorY) 发一次。
-            // 原写法 sendData(EVENT_TYPE_CURSOR_POS, ...) 是错的：pojavPumpEvents 的 switch
-            // 里**根本没有 case EVENT_TYPE_CURSOR_POS**（FCL 也没有），事件被静默丢弃，
-            // 于是 cursorX/cursorY 永远是 0 → 点击命中 (0,0) → 按钮毫无反应。
-            // 严格对齐 FCL/.../jni/input_bridge_v3.c:571-572。
-            pojav_environ->cursorX = (pojav_environ->isGrabbing ? grabCursorX : x);
-            pojav_environ->cursorY = (pojav_environ->isGrabbing ? grabCursorY : y);
+            // ★★★ 2026-09-19 修复「1.20.6 转视角迟钝/极难转动」（b1.7.3 同机丝滑）：
+            //   严格对齐 FCL FCL/src/main/jni/input_bridge_v3.c:567-573 —— 队列模式**纯赋值绝对坐标**。
+            //   原 QCL 私货：isGrabbing 时写 grabCursorX（`grabCursorX += x - lastCursorX` 从 0 累积的
+            //   相对位移），poke 给 MC 的位置序列是「0 起步的累积值」，而 MC 的 MouseHandler 用
+            //   屏幕中心作初始基准算 delta → delta 整体错乱（首帧就是 -中心X 的巨大跳变）→
+            //   表现为「视角极难转动 / 怎么滑都转不动」。
+            //   低版本（b1.7.3 <21）走直接回调分支传原始绝对坐标，所以同机丝滑 —— 与用户观察一致。
+            pojav_environ->cursorX = x;
+            pojav_environ->cursorY = y;
         }
         
         lastCursorX = x;

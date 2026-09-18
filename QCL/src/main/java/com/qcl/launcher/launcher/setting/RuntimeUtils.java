@@ -37,7 +37,7 @@ public final class RuntimeUtils {
 
     public static boolean isLatest(Context context, String str, String str2) throws IOException {
         File file = new File(str + "/version");
-        InputStream open = context.getAssets().open(str2 + "/version");
+        InputStream open = openAssetCompat(context, str2 + "/version");
         if (open == null) {
             return true;
         }
@@ -291,7 +291,7 @@ public final class RuntimeUtils {
         if (parentFile != null && !parentFile.exists() && !parentFile.mkdirs()) {
             throw new IOException("Cannot create dir: " + parentFile);
         }
-        InputStream open = context.getAssets().open(str);
+        InputStream open = openAssetCompat(context, str);
         try {
             FileOutputStream fileOutputStream = new FileOutputStream(str2);
             try {
@@ -323,8 +323,35 @@ public final class RuntimeUtils {
         }
     }
 
+    /**
+     * ★ assets 读取兜底：先按给定路径（全小写，与 FCL 一致）打开；
+     * 打不开时把运行时目录名换成大写再试一次（jre17 -> JRE17）。
+     *
+     * <p>背景：APK 内 zip 路径**大小写敏感**。历史上出现过 assets 目录名被建成大写
+     * （JRE17/JRE21/JRE25）的版本，而代码按小写读取 → 直接 FileNotFoundException →
+     * 安装页"检测不到 Java 17/21/25"、点安装弹「运行环境安装失败」。
+     * 这层兜底让两种布局都能正常工作，避免同类问题再次发生。
+     */
+    private static InputStream openAssetCompat(Context context, String path) throws IOException {
+        try {
+            return context.getAssets().open(path);
+        } catch (IOException first) {
+            String alt = path.replace("java/jre8", "java/JRE8")
+                    .replace("java/jre17", "java/JRE17")
+                    .replace("java/jre21", "java/JRE21")
+                    .replace("java/jre25", "java/JRE25");
+            if (!alt.equals(path)) {
+                try {
+                    return context.getAssets().open(alt);
+                } catch (IOException ignored) {
+                }
+            }
+            throw first;
+        }
+    }
+
     public static String readAssetText(Context context, String str) throws IOException {
-        InputStream open = context.getAssets().open(str);
+        InputStream open = openAssetCompat(context, str);
         try {
             String readFullyAsString = IOUtils.readFullyAsString(open);
             if (open != null) {
