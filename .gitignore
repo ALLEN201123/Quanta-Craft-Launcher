@@ -20,11 +20,12 @@ qcl.keystore
 *.dex
 
 # ===== 第三方预编译 Java 运行时 =====
-# 仓库内已包含：Java 8 全家（default/8-arm/8-arm64/8-x86/8-x86_64）与 JRE17（单文件均 <100MB）
-# 未包含：JRE25（其 lib/modules 单文件 121MB 超 GitHub 100MB 硬上限，
-# 作为 Release 附件分发，见 README）；runtime-source/ 为构建中间产物。
+# 全部运行时均以 tar.xz 压缩包（universal.tar.xz + bin-<abi>.tar.xz）内置在
+# assets/app_runtime/java/jre{8,17,21,25}/，单文件均 <100MB，正常纳入 git 跟踪。
+# ★ 目录名必须全小写（jre8/jre17/jre21/jre25）—— APK 内 zip 路径大小写敏感，
+#   代码里读的是小写（与 FCL 一致）；曾因目录名写成大写 JRE25 导致安装页检测不到。
+# runtime-source/ 为构建中间产物。
 runtime-source/
-QCL/src/main/assets/app_runtime/java/JRE25/
 
 # ===== 其它 =====
 *.log
