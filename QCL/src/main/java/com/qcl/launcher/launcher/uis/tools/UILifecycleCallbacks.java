@@ -2,24 +2,25 @@ package com.qcl.launcher.launcher.uis.tools;
 
 import android.content.Intent;
 
+/* loaded from: classes2.dex */
 public interface UILifecycleCallbacks {
+    void onActivityResult(int i, int i2, Intent intent);
+
     void onCreate();
-
-    void onStart();
-
-    void onResume();
-
-    void onRestart();
-
-    void onPause();
-
-    void onStop();
 
     void onDestroy();
 
     void onLoaded();
 
-    void onActivityResult(int requestCode, int resultCode, Intent data);
-
     void onNewIntent();
+
+    void onPause();
+
+    void onRestart();
+
+    void onResume();
+
+    void onStart();
+
+    void onStop();
 }

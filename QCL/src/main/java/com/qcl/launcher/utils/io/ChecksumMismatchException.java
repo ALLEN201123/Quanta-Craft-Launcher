@@ -2,39 +2,38 @@ package com.qcl.launcher.utils.io;
 
 import com.qcl.launcher.utils.DigestUtils;
 import com.qcl.launcher.utils.Hex;
-
 import java.io.IOException;
 import java.nio.file.Path;
 
+/* loaded from: classes2.dex */
 public class ChecksumMismatchException extends IOException {
-
+    private final String actualChecksum;
     private final String algorithm;
     private final String expectedChecksum;
-    private final String actualChecksum;
 
-    public ChecksumMismatchException(String algorithm, String expectedChecksum, String actualChecksum) {
-        super("Incorrect checksum (" + algorithm + "), expected: " + expectedChecksum + ", actual: " + actualChecksum);
-        this.algorithm = algorithm;
-        this.expectedChecksum = expectedChecksum;
-        this.actualChecksum = actualChecksum;
+    public ChecksumMismatchException(String str, String str2, String str3) {
+        super("Incorrect checksum (" + str + "), expected: " + str2 + ", actual: " + str3);
+        this.algorithm = str;
+        this.expectedChecksum = str2;
+        this.actualChecksum = str3;
     }
 
     public String getAlgorithm() {
-        return algorithm;
+        return this.algorithm;
     }
 
     public String getExpectedChecksum() {
-        return expectedChecksum;
+        return this.expectedChecksum;
     }
 
     public String getActualChecksum() {
-        return actualChecksum;
+        return this.actualChecksum;
     }
 
-    public static void verifyChecksum(Path file, String algorithm, String expectedChecksum) throws IOException {
-        String checksum = Hex.encodeHex(DigestUtils.digest(algorithm, file));
-        if (!checksum.equalsIgnoreCase(expectedChecksum)) {
-            throw new ChecksumMismatchException(algorithm, expectedChecksum, checksum);
+    public static void verifyChecksum(Path path, String str, String str2) throws IOException {
+        String encodeHex = Hex.encodeHex(DigestUtils.digest(str, path));
+        if (!encodeHex.equalsIgnoreCase(str2)) {
+            throw new ChecksumMismatchException(str, str2, encodeHex);
         }
     }
 }

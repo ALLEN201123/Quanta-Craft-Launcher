@@ -3,17 +3,19 @@ package com.qcl.launcher.control;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
-
-import net.kdt.pojavlaunch.keyboard.LwjglGlfwKeycode;
-
 import org.lwjgl.glfw.CallbackBridge;
 
+/* loaded from: classes2.dex */
 public class MKManager implements View.OnKeyListener, View.OnCapturedPointerListener, View.OnGenericMotionListener {
-
-    private final MenuHelper menuHelper;
-    
     private boolean capslockMode;
+    private final MenuHelper menuHelper;
     private boolean shiftMode;
+
+    public void disableCursor() {
+    }
+
+    public void enableCursor() {
+    }
 
     public MKManager(MenuHelper menuHelper) {
         this.menuHelper = menuHelper;
@@ -26,50 +28,35 @@ public class MKManager implements View.OnKeyListener, View.OnCapturedPointerList
         System.out.println("----------------------------------MKManager initialized!");
     }
 
-    public void enableCursor() {
-
-    }
-
-    public void disableCursor() {
-
-    }
-
     public boolean handleMouseEvent(MotionEvent motionEvent) {
-        if (motionEvent.getActionMasked() == MotionEvent.ACTION_BUTTON_PRESS) {
-            if (motionEvent.getActionButton() == MotionEvent.BUTTON_PRIMARY) {
-                InputBridge.sendMouseEvent(menuHelper.launcher, InputBridge.MOUSE_LEFT, true);
+        if (motionEvent.getActionMasked() == 11) {
+            if (motionEvent.getActionButton() == 1) {
+                InputBridge.sendMouseEvent(this.menuHelper.launcher, 0, true);
+            } else if (motionEvent.getActionButton() == 2 || motionEvent.getActionButton() == 8) {
+                InputBridge.sendMouseEvent(this.menuHelper.launcher, 1, true);
+            } else if (motionEvent.getActionButton() == 4) {
+                InputBridge.sendMouseEvent(this.menuHelper.launcher, 2, true);
             }
-            else if (motionEvent.getActionButton() == MotionEvent.BUTTON_SECONDARY || motionEvent.getActionButton() == MotionEvent.BUTTON_BACK) {
-                InputBridge.sendMouseEvent(menuHelper.launcher, InputBridge.MOUSE_RIGHT, true);
+        } else if (motionEvent.getActionMasked() == 12) {
+            if (motionEvent.getActionButton() == 1) {
+                InputBridge.sendMouseEvent(this.menuHelper.launcher, 0, false);
+            } else if (motionEvent.getActionButton() == 2 || motionEvent.getActionButton() == 8) {
+                InputBridge.sendMouseEvent(this.menuHelper.launcher, 1, false);
+            } else if (motionEvent.getActionButton() == 4) {
+                InputBridge.sendMouseEvent(this.menuHelper.launcher, 2, false);
             }
-            else if (motionEvent.getActionButton() == MotionEvent.BUTTON_TERTIARY) {
-                InputBridge.sendMouseEvent(menuHelper.launcher, InputBridge.MOUSE_MIDDLE, true);
-            }
-        }
-        else if (motionEvent.getActionMasked() == MotionEvent.ACTION_BUTTON_RELEASE) {
-            if (motionEvent.getActionButton() == MotionEvent.BUTTON_PRIMARY) {
-                InputBridge.sendMouseEvent(menuHelper.launcher, InputBridge.MOUSE_LEFT, false);
-            }
-            else if (motionEvent.getActionButton() == MotionEvent.BUTTON_SECONDARY || motionEvent.getActionButton() == MotionEvent.BUTTON_BACK) {
-                InputBridge.sendMouseEvent(menuHelper.launcher, InputBridge.MOUSE_RIGHT, false);
-            }
-            else if (motionEvent.getActionButton() == MotionEvent.BUTTON_TERTIARY) {
-                InputBridge.sendMouseEvent(menuHelper.launcher, InputBridge.MOUSE_MIDDLE, false);
-            }
-        }
-        else if (motionEvent.getActionMasked() == MotionEvent.ACTION_SCROLL) {
-            if (menuHelper.launcher == 2) {
-                CallbackBridge.sendScroll(motionEvent.getAxisValue(MotionEvent.AXIS_HSCROLL), motionEvent.getAxisValue(MotionEvent.AXIS_VSCROLL));
-            }
-            else {
-                if (motionEvent.getAxisValue(MotionEvent.AXIS_VSCROLL) > 0) {
-                    for (int i = 0;i < Math.abs((int) motionEvent.getAxisValue(MotionEvent.AXIS_VSCROLL));i++) {
-                        InputBridge.sendMouseEvent(menuHelper.launcher, InputBridge.MOUSE_SCROLL_UP, true);
+        } else if (motionEvent.getActionMasked() == 8) {
+            if (this.menuHelper.launcher == 2) {
+                CallbackBridge.sendScroll(motionEvent.getAxisValue(10), motionEvent.getAxisValue(9));
+            } else {
+                if (motionEvent.getAxisValue(9) > 0.0f) {
+                    for (int i = 0; i < Math.abs((int) motionEvent.getAxisValue(9)); i++) {
+                        InputBridge.sendMouseEvent(this.menuHelper.launcher, 3, true);
                     }
                 }
-                if (motionEvent.getAxisValue(MotionEvent.AXIS_VSCROLL) < 0) {
-                    for (int i = 0;i < Math.abs((int) motionEvent.getAxisValue(MotionEvent.AXIS_VSCROLL));i++) {
-                        InputBridge.sendMouseEvent(menuHelper.launcher, InputBridge.MOUSE_SCROLL_DOWN, true);
+                if (motionEvent.getAxisValue(9) < 0.0f) {
+                    for (int i2 = 0; i2 < Math.abs((int) motionEvent.getAxisValue(9)); i2++) {
+                        InputBridge.sendMouseEvent(this.menuHelper.launcher, 4, true);
                     }
                 }
             }
@@ -77,564 +64,610 @@ public class MKManager implements View.OnKeyListener, View.OnCapturedPointerList
         return true;
     }
 
-    @Override
+    @Override // android.view.View.OnGenericMotionListener
     public boolean onGenericMotion(View view, MotionEvent motionEvent) {
-        if (!menuHelper.touchCharInput.isEnabled()) {
-            menuHelper.baseLayout.requestFocus();
-            menuHelper.baseLayout.requestPointerCapture();
+        if (this.menuHelper.touchCharInput.isEnabled()) {
+            return true;
         }
+        this.menuHelper.baseLayout.requestFocus();
+        this.menuHelper.baseLayout.requestPointerCapture();
         return true;
     }
 
-    @Override
+    @Override // android.view.View.OnCapturedPointerListener
     public boolean onCapturedPointer(View view, MotionEvent motionEvent) {
-        if (menuHelper.gameCursorMode == 0) {
-            float targetX;
-            float targetY;
-            if (menuHelper.cursorX + motionEvent.getX() * menuHelper.gameMenuSetting.mouseSpeed < 0){
-                targetX = 0;
+        float x;
+        if (this.menuHelper.gameCursorMode == 0) {
+            float f = 0.0f;
+            if (this.menuHelper.cursorX + (motionEvent.getX() * this.menuHelper.gameMenuSetting.mouseSpeed) < 0.0f) {
+                x = 0.0f;
+            } else if (this.menuHelper.cursorX + (motionEvent.getX() * this.menuHelper.gameMenuSetting.mouseSpeed) > this.menuHelper.baseLayout.getWidth()) {
+                x = this.menuHelper.baseLayout.getWidth();
+            } else {
+                x = this.menuHelper.cursorX + (motionEvent.getX() * this.menuHelper.gameMenuSetting.mouseSpeed);
             }
-            else if (menuHelper.cursorX + motionEvent.getX() * menuHelper.gameMenuSetting.mouseSpeed > menuHelper.baseLayout.getWidth()){
-                targetX = menuHelper.baseLayout.getWidth();
+            if (this.menuHelper.cursorY + (motionEvent.getY() * this.menuHelper.gameMenuSetting.mouseSpeed) >= 0.0f) {
+                if (this.menuHelper.cursorY + (motionEvent.getY() * this.menuHelper.gameMenuSetting.mouseSpeed) > this.menuHelper.baseLayout.getHeight()) {
+                    f = this.menuHelper.baseLayout.getHeight();
+                } else {
+                    f = this.menuHelper.cursorY + (motionEvent.getY() * this.menuHelper.gameMenuSetting.mouseSpeed);
+                }
             }
-            else {
-                targetX = menuHelper.cursorX + motionEvent.getX() * menuHelper.gameMenuSetting.mouseSpeed;
-            }
-            if (menuHelper.cursorY + motionEvent.getY() * menuHelper.gameMenuSetting.mouseSpeed < 0){
-                targetY = 0;
-            }
-            else if (menuHelper.cursorY + motionEvent.getY() * menuHelper.gameMenuSetting.mouseSpeed > menuHelper.baseLayout.getHeight()){
-                targetY = menuHelper.baseLayout.getHeight();
-            }
-            else {
-                targetY = menuHelper.cursorY + motionEvent.getY() * menuHelper.gameMenuSetting.mouseSpeed;
-            }
-            menuHelper.cursorX = targetX;
-            menuHelper.cursorY = targetY;
-            menuHelper.pointerX = targetX;
-            menuHelper.pointerY = targetY;
-            InputBridge.setPointer(menuHelper.launcher,(int) (targetX * menuHelper.scaleFactor),(int) (targetY * menuHelper.scaleFactor));
-        }
-        else {
-            menuHelper.pointerX += motionEvent.getX() * menuHelper.gameMenuSetting.mouseSpeed;
-            menuHelper.pointerY += motionEvent.getY() * menuHelper.gameMenuSetting.mouseSpeed;
+            this.menuHelper.cursorX = x;
+            this.menuHelper.cursorY = f;
+            this.menuHelper.pointerX = x;
+            this.menuHelper.pointerY = f;
+            InputBridge.setPointer(this.menuHelper.launcher, (int) (x * this.menuHelper.scaleFactor), (int) (f * this.menuHelper.scaleFactor));
+        } else {
+            this.menuHelper.pointerX += motionEvent.getX() * this.menuHelper.gameMenuSetting.mouseSpeed;
+            this.menuHelper.pointerY += motionEvent.getY() * this.menuHelper.gameMenuSetting.mouseSpeed;
+            MenuHelper menuHelper = this.menuHelper;
             menuHelper.currentX = menuHelper.pointerX;
-            menuHelper.currentY = menuHelper.pointerY;
-            InputBridge.setPointer(menuHelper.launcher,(int) (menuHelper.pointerX * menuHelper.scaleFactor),(int) (menuHelper.pointerY * menuHelper.scaleFactor));
+            MenuHelper menuHelper2 = this.menuHelper;
+            menuHelper2.currentY = menuHelper2.pointerY;
+            InputBridge.setPointer(this.menuHelper.launcher, (int) (this.menuHelper.pointerX * this.menuHelper.scaleFactor), (int) (this.menuHelper.pointerY * this.menuHelper.scaleFactor));
         }
         return handleMouseEvent(motionEvent);
     }
 
-    @Override
+    @Override // android.view.View.OnKeyListener
     public boolean onKey(View view, int i, KeyEvent keyEvent) {
-        if((keyEvent.getFlags() & KeyEvent.FLAG_SOFT_KEYBOARD) == KeyEvent.FLAG_SOFT_KEYBOARD) {
-            if(keyEvent.getKeyCode() == KeyEvent.KEYCODE_ENTER) return true; //We already listen to it.
-            menuHelper.touchCharInput.dispatchKeyEvent(keyEvent);
+        char c = 'B';
+        if ((keyEvent.getFlags() & 2) == 2) {
+            if (keyEvent.getKeyCode() == 66) {
+                return true;
+            }
+            this.menuHelper.touchCharInput.dispatchKeyEvent(keyEvent);
             return true;
         }
-        switch (keyEvent.getKeyCode()) {
-            case KeyEvent.KEYCODE_UNKNOWN:
-            case KeyEvent.KEYCODE_BACK:
-                return true;
-            case KeyEvent.KEYCODE_ENTER:
-                if (!menuHelper.enterLock && keyEvent.getAction() == KeyEvent.ACTION_UP && menuHelper.touchCharInput != null && !menuHelper.touchCharInput.isEnabled()) {
-                    menuHelper.touchCharInput.switchKeyboardState();
+        int keyCode = keyEvent.getKeyCode();
+        if (keyCode != 0) {
+            char c2 = 'C';
+            char c3 = 'A';
+            char c4 = 'y';
+            char c5 = 'Q';
+            if (keyCode == 81) {
+                InputBridge.sendEvent(this.menuHelper.launcher, 334, keyEvent.getAction() == 0);
+            } else if (keyCode == 111) {
+                InputBridge.sendEvent(this.menuHelper.launcher, 256, keyEvent.getAction() == 0);
+            } else if (keyCode == 121) {
+                InputBridge.sendEvent(this.menuHelper.launcher, 284, keyEvent.getAction() == 0);
+            } else if (keyCode == 124) {
+                InputBridge.sendEvent(this.menuHelper.launcher, 260, keyEvent.getAction() == 0);
+            } else if (keyCode == 3) {
+                InputBridge.sendEvent(this.menuHelper.launcher, 268, keyEvent.getAction() == 0);
+            } else if (keyCode != 4) {
+                if (keyCode == 92) {
+                    InputBridge.sendEvent(this.menuHelper.launcher, 266, keyEvent.getAction() == 0);
+                } else if (keyCode != 93) {
+                    switch (keyCode) {
+                        case 7:
+                            InputBridge.sendEvent(this.menuHelper.launcher, 48, keyEvent.getAction() == 0);
+                            break;
+                        case 8:
+                            InputBridge.sendEvent(this.menuHelper.launcher, 49, keyEvent.getAction() == 0);
+                            break;
+                        case 9:
+                            InputBridge.sendEvent(this.menuHelper.launcher, 50, keyEvent.getAction() == 0);
+                            break;
+                        case 10:
+                            InputBridge.sendEvent(this.menuHelper.launcher, 51, keyEvent.getAction() == 0);
+                            break;
+                        case 11:
+                            InputBridge.sendEvent(this.menuHelper.launcher, 52, keyEvent.getAction() == 0);
+                            break;
+                        case 12:
+                            InputBridge.sendEvent(this.menuHelper.launcher, 53, keyEvent.getAction() == 0);
+                            break;
+                        case 13:
+                            InputBridge.sendEvent(this.menuHelper.launcher, 54, keyEvent.getAction() == 0);
+                            break;
+                        case 14:
+                            InputBridge.sendEvent(this.menuHelper.launcher, 55, keyEvent.getAction() == 0);
+                            break;
+                        case 15:
+                            InputBridge.sendEvent(this.menuHelper.launcher, 56, keyEvent.getAction() == 0);
+                            break;
+                        case 16:
+                            InputBridge.sendEvent(this.menuHelper.launcher, 57, keyEvent.getAction() == 0);
+                            break;
+                        default:
+                            switch (keyCode) {
+                                case 18:
+                                    InputBridge.sendEvent(this.menuHelper.launcher, 51, keyEvent.getAction() == 0);
+                                    break;
+                                case 19:
+                                    InputBridge.sendEvent(this.menuHelper.launcher, 265, keyEvent.getAction() == 0);
+                                    break;
+                                case 20:
+                                    InputBridge.sendEvent(this.menuHelper.launcher, 264, keyEvent.getAction() == 0);
+                                    break;
+                                case 21:
+                                    InputBridge.sendEvent(this.menuHelper.launcher, 263, keyEvent.getAction() == 0);
+                                    break;
+                                case 22:
+                                    InputBridge.sendEvent(this.menuHelper.launcher, 262, keyEvent.getAction() == 0);
+                                    break;
+                                default:
+                                    switch (keyCode) {
+                                        case 29:
+                                            InputBridge.sendEvent(this.menuHelper.launcher, 65, keyEvent.getAction() == 0);
+                                            break;
+                                        case 30:
+                                            InputBridge.sendEvent(this.menuHelper.launcher, 66, keyEvent.getAction() == 0);
+                                            break;
+                                        case 31:
+                                            InputBridge.sendEvent(this.menuHelper.launcher, 67, keyEvent.getAction() == 0);
+                                            break;
+                                        case 32:
+                                            InputBridge.sendEvent(this.menuHelper.launcher, 68, keyEvent.getAction() == 0);
+                                            break;
+                                        case 33:
+                                            InputBridge.sendEvent(this.menuHelper.launcher, 69, keyEvent.getAction() == 0);
+                                            break;
+                                        case 34:
+                                            InputBridge.sendEvent(this.menuHelper.launcher, 70, keyEvent.getAction() == 0);
+                                            break;
+                                        case 35:
+                                            InputBridge.sendEvent(this.menuHelper.launcher, 71, keyEvent.getAction() == 0);
+                                            break;
+                                        case 36:
+                                            InputBridge.sendEvent(this.menuHelper.launcher, 72, keyEvent.getAction() == 0);
+                                            break;
+                                        case 37:
+                                            InputBridge.sendEvent(this.menuHelper.launcher, 73, keyEvent.getAction() == 0);
+                                            break;
+                                        case 38:
+                                            InputBridge.sendEvent(this.menuHelper.launcher, 74, keyEvent.getAction() == 0);
+                                            break;
+                                        case 39:
+                                            InputBridge.sendEvent(this.menuHelper.launcher, 75, keyEvent.getAction() == 0);
+                                            break;
+                                        case 40:
+                                            InputBridge.sendEvent(this.menuHelper.launcher, 76, keyEvent.getAction() == 0);
+                                            break;
+                                        case 41:
+                                            InputBridge.sendEvent(this.menuHelper.launcher, 77, keyEvent.getAction() == 0);
+                                            break;
+                                        case 42:
+                                            InputBridge.sendEvent(this.menuHelper.launcher, 78, keyEvent.getAction() == 0);
+                                            break;
+                                        case 43:
+                                            InputBridge.sendEvent(this.menuHelper.launcher, 79, keyEvent.getAction() == 0);
+                                            break;
+                                        case 44:
+                                            InputBridge.sendEvent(this.menuHelper.launcher, 80, keyEvent.getAction() == 0);
+                                            break;
+                                        case 45:
+                                            InputBridge.sendEvent(this.menuHelper.launcher, 81, keyEvent.getAction() == 0);
+                                            break;
+                                        case 46:
+                                            InputBridge.sendEvent(this.menuHelper.launcher, 82, keyEvent.getAction() == 0);
+                                            break;
+                                        case 47:
+                                            InputBridge.sendEvent(this.menuHelper.launcher, 83, keyEvent.getAction() == 0);
+                                            break;
+                                        case 48:
+                                            InputBridge.sendEvent(this.menuHelper.launcher, 84, keyEvent.getAction() == 0);
+                                            break;
+                                        case 49:
+                                            InputBridge.sendEvent(this.menuHelper.launcher, 85, keyEvent.getAction() == 0);
+                                            break;
+                                        case 50:
+                                            InputBridge.sendEvent(this.menuHelper.launcher, 86, keyEvent.getAction() == 0);
+                                            break;
+                                        case 51:
+                                            InputBridge.sendEvent(this.menuHelper.launcher, 87, keyEvent.getAction() == 0);
+                                            break;
+                                        case 52:
+                                            InputBridge.sendEvent(this.menuHelper.launcher, 88, keyEvent.getAction() == 0);
+                                            break;
+                                        case 53:
+                                            InputBridge.sendEvent(this.menuHelper.launcher, 89, keyEvent.getAction() == 0);
+                                            break;
+                                        case 54:
+                                            InputBridge.sendEvent(this.menuHelper.launcher, 90, keyEvent.getAction() == 0);
+                                            break;
+                                        case 55:
+                                            InputBridge.sendEvent(this.menuHelper.launcher, 44, keyEvent.getAction() == 0);
+                                            break;
+                                        case 56:
+                                            InputBridge.sendEvent(this.menuHelper.launcher, 46, keyEvent.getAction() == 0);
+                                            break;
+                                        case 57:
+                                            InputBridge.sendEvent(this.menuHelper.launcher, 342, keyEvent.getAction() == 0);
+                                            break;
+                                        case 58:
+                                            InputBridge.sendEvent(this.menuHelper.launcher, 346, keyEvent.getAction() == 0);
+                                            break;
+                                        case 59:
+                                            this.shiftMode = keyEvent.getAction() == 0;
+                                            InputBridge.sendEvent(this.menuHelper.launcher, 340, keyEvent.getAction() == 0);
+                                            break;
+                                        case 60:
+                                            this.shiftMode = keyEvent.getAction() == 0;
+                                            InputBridge.sendEvent(this.menuHelper.launcher, 344, keyEvent.getAction() == 0);
+                                            break;
+                                        case 61:
+                                            InputBridge.sendEvent(this.menuHelper.launcher, 258, keyEvent.getAction() == 0);
+                                            break;
+                                        case 62:
+                                            InputBridge.sendEvent(this.menuHelper.launcher, 32, keyEvent.getAction() == 0);
+                                            break;
+                                        default:
+                                            switch (keyCode) {
+                                                case 66:
+                                                    if (!this.menuHelper.enterLock && keyEvent.getAction() == 1 && this.menuHelper.touchCharInput != null && !this.menuHelper.touchCharInput.isEnabled()) {
+                                                        this.menuHelper.touchCharInput.switchKeyboardState();
+                                                    }
+                                                    if (this.menuHelper.enterLock) {
+                                                        this.menuHelper.enterLock = false;
+                                                    }
+                                                    return true;
+                                                case 67:
+                                                    InputBridge.sendEvent(this.menuHelper.launcher, 259, keyEvent.getAction() == 0);
+                                                    break;
+                                                case 68:
+                                                    InputBridge.sendEvent(this.menuHelper.launcher, 96, keyEvent.getAction() == 0);
+                                                    break;
+                                                case 69:
+                                                    InputBridge.sendEvent(this.menuHelper.launcher, 45, keyEvent.getAction() == 0);
+                                                    break;
+                                                case 70:
+                                                    InputBridge.sendEvent(this.menuHelper.launcher, 61, keyEvent.getAction() == 0);
+                                                    break;
+                                                case 71:
+                                                    InputBridge.sendEvent(this.menuHelper.launcher, 91, keyEvent.getAction() == 0);
+                                                    break;
+                                                case 72:
+                                                    InputBridge.sendEvent(this.menuHelper.launcher, 93, keyEvent.getAction() == 0);
+                                                    break;
+                                                case 73:
+                                                    InputBridge.sendEvent(this.menuHelper.launcher, 92, keyEvent.getAction() == 0);
+                                                    break;
+                                                case 74:
+                                                    InputBridge.sendEvent(this.menuHelper.launcher, 59, keyEvent.getAction() == 0);
+                                                    break;
+                                                case 75:
+                                                    InputBridge.sendEvent(this.menuHelper.launcher, 39, keyEvent.getAction() == 0);
+                                                    break;
+                                                case 76:
+                                                    InputBridge.sendEvent(this.menuHelper.launcher, 47, keyEvent.getAction() == 0);
+                                                    break;
+                                                case 77:
+                                                    InputBridge.sendEvent(this.menuHelper.launcher, 50, keyEvent.getAction() == 0);
+                                                    break;
+                                                default:
+                                                    switch (keyCode) {
+                                                        case 113:
+                                                            InputBridge.sendEvent(this.menuHelper.launcher, 341, keyEvent.getAction() == 0);
+                                                            break;
+                                                        case 114:
+                                                            InputBridge.sendEvent(this.menuHelper.launcher, 345, keyEvent.getAction() == 0);
+                                                            break;
+                                                        case 115:
+                                                            if (keyEvent.getAction() == 1) {
+                                                                this.capslockMode = !this.capslockMode;
+                                                            }
+                                                            InputBridge.sendEvent(this.menuHelper.launcher, 280, keyEvent.getAction() == 0);
+                                                            break;
+                                                        default:
+                                                            switch (keyCode) {
+                                                                case 131:
+                                                                    InputBridge.sendEvent(this.menuHelper.launcher, 290, keyEvent.getAction() == 0);
+                                                                    break;
+                                                                case 132:
+                                                                    InputBridge.sendEvent(this.menuHelper.launcher, 291, keyEvent.getAction() == 0);
+                                                                    break;
+                                                                case 133:
+                                                                    InputBridge.sendEvent(this.menuHelper.launcher, 292, keyEvent.getAction() == 0);
+                                                                    break;
+                                                                case 134:
+                                                                    InputBridge.sendEvent(this.menuHelper.launcher, 293, keyEvent.getAction() == 0);
+                                                                    break;
+                                                                case 135:
+                                                                    InputBridge.sendEvent(this.menuHelper.launcher, 294, keyEvent.getAction() == 0);
+                                                                    break;
+                                                                case 136:
+                                                                    InputBridge.sendEvent(this.menuHelper.launcher, 295, keyEvent.getAction() == 0);
+                                                                    break;
+                                                                case 137:
+                                                                    InputBridge.sendEvent(this.menuHelper.launcher, 296, keyEvent.getAction() == 0);
+                                                                    break;
+                                                                case 138:
+                                                                    InputBridge.sendEvent(this.menuHelper.launcher, 297, keyEvent.getAction() == 0);
+                                                                    break;
+                                                                case 139:
+                                                                    InputBridge.sendEvent(this.menuHelper.launcher, 298, keyEvent.getAction() == 0);
+                                                                    break;
+                                                                case 140:
+                                                                    InputBridge.sendEvent(this.menuHelper.launcher, 299, keyEvent.getAction() == 0);
+                                                                    break;
+                                                                case 141:
+                                                                    InputBridge.sendEvent(this.menuHelper.launcher, 300, keyEvent.getAction() == 0);
+                                                                    break;
+                                                                case 142:
+                                                                    InputBridge.sendEvent(this.menuHelper.launcher, 301, keyEvent.getAction() == 0);
+                                                                    break;
+                                                                case 143:
+                                                                    InputBridge.sendEvent(this.menuHelper.launcher, 282, keyEvent.getAction() == 0);
+                                                                    break;
+                                                                case 144:
+                                                                    InputBridge.sendEvent(this.menuHelper.launcher, 320, keyEvent.getAction() == 0);
+                                                                    break;
+                                                                case 145:
+                                                                    InputBridge.sendEvent(this.menuHelper.launcher, 321, keyEvent.getAction() == 0);
+                                                                    break;
+                                                                case 146:
+                                                                    InputBridge.sendEvent(this.menuHelper.launcher, 322, keyEvent.getAction() == 0);
+                                                                    break;
+                                                                case 147:
+                                                                    InputBridge.sendEvent(this.menuHelper.launcher, 323, keyEvent.getAction() == 0);
+                                                                    break;
+                                                                case 148:
+                                                                    InputBridge.sendEvent(this.menuHelper.launcher, 324, keyEvent.getAction() == 0);
+                                                                    break;
+                                                                case 149:
+                                                                    InputBridge.sendEvent(this.menuHelper.launcher, 325, keyEvent.getAction() == 0);
+                                                                    break;
+                                                                case 150:
+                                                                    InputBridge.sendEvent(this.menuHelper.launcher, 326, keyEvent.getAction() == 0);
+                                                                    break;
+                                                                case 151:
+                                                                    InputBridge.sendEvent(this.menuHelper.launcher, 327, keyEvent.getAction() == 0);
+                                                                    break;
+                                                                case 152:
+                                                                    InputBridge.sendEvent(this.menuHelper.launcher, 328, keyEvent.getAction() == 0);
+                                                                    break;
+                                                                case 153:
+                                                                    InputBridge.sendEvent(this.menuHelper.launcher, 329, keyEvent.getAction() == 0);
+                                                                    break;
+                                                                case 154:
+                                                                    InputBridge.sendEvent(this.menuHelper.launcher, 331, keyEvent.getAction() == 0);
+                                                                    break;
+                                                                case 155:
+                                                                    InputBridge.sendEvent(this.menuHelper.launcher, 332, keyEvent.getAction() == 0);
+                                                                    break;
+                                                                case 156:
+                                                                    InputBridge.sendEvent(this.menuHelper.launcher, 333, keyEvent.getAction() == 0);
+                                                                    break;
+                                                                case 157:
+                                                                    InputBridge.sendEvent(this.menuHelper.launcher, 334, keyEvent.getAction() == 0);
+                                                                    break;
+                                                                case 158:
+                                                                    InputBridge.sendEvent(this.menuHelper.launcher, 46, keyEvent.getAction() == 0);
+                                                                    break;
+                                                                case 159:
+                                                                    InputBridge.sendEvent(this.menuHelper.launcher, 44, keyEvent.getAction() == 0);
+                                                                    break;
+                                                                case 160:
+                                                                    InputBridge.sendEvent(this.menuHelper.launcher, 257, keyEvent.getAction() == 0);
+                                                                    break;
+                                                                case 161:
+                                                                    InputBridge.sendEvent(this.menuHelper.launcher, 61, keyEvent.getAction() == 0);
+                                                                    break;
+                                                            }
+                                                    }
+                                            }
+                                    }
+                            }
+                    }
+                } else {
+                    InputBridge.sendEvent(this.menuHelper.launcher, 267, keyEvent.getAction() == 0);
                 }
-                if (menuHelper.enterLock) {
-                    menuHelper.enterLock = false;
+            }
+            if (this.menuHelper.gameCursorMode == 0 && keyEvent.getAction() == 0) {
+                int keyCode2 = keyEvent.getKeyCode();
+                if (keyCode2 == 62) {
+                    InputBridge.sendKeyChar(this.menuHelper.launcher, ' ');
+                } else if (keyCode2 == 158) {
+                    InputBridge.sendKeyChar(this.menuHelper.launcher, '.');
+                } else if (keyCode2 != 159) {
+                    switch (keyCode2) {
+                        case 7:
+                            InputBridge.sendKeyChar(this.menuHelper.launcher, this.shiftMode ? ')' : '0');
+                            break;
+                        case 8:
+                            InputBridge.sendKeyChar(this.menuHelper.launcher, this.shiftMode ? '!' : '1');
+                            break;
+                        case 9:
+                            InputBridge.sendKeyChar(this.menuHelper.launcher, this.shiftMode ? '@' : '2');
+                            break;
+                        case 10:
+                            InputBridge.sendKeyChar(this.menuHelper.launcher, this.shiftMode ? '#' : '3');
+                            break;
+                        case 11:
+                            InputBridge.sendKeyChar(this.menuHelper.launcher, this.shiftMode ? '$' : '4');
+                            break;
+                        case 12:
+                            InputBridge.sendKeyChar(this.menuHelper.launcher, this.shiftMode ? '%' : '5');
+                            break;
+                        case 13:
+                            InputBridge.sendKeyChar(this.menuHelper.launcher, this.shiftMode ? '^' : '6');
+                            break;
+                        case 14:
+                            InputBridge.sendKeyChar(this.menuHelper.launcher, this.shiftMode ? '&' : '7');
+                            break;
+                        case 15:
+                            InputBridge.sendKeyChar(this.menuHelper.launcher, this.shiftMode ? '*' : '8');
+                            break;
+                        case 16:
+                            InputBridge.sendKeyChar(this.menuHelper.launcher, this.shiftMode ? '(' : '9');
+                            break;
+                        default:
+                            switch (keyCode2) {
+                                case 29:
+                                    int i2 = this.menuHelper.launcher;
+                                    if (!this.capslockMode ? !this.shiftMode : this.shiftMode) {
+                                        c3 = 'a';
+                                    }
+                                    InputBridge.sendKeyChar(i2, c3);
+                                    break;
+                                case 30:
+                                    int i3 = this.menuHelper.launcher;
+                                    if (!this.capslockMode ? !this.shiftMode : this.shiftMode) {
+                                        c = 'b';
+                                    }
+                                    InputBridge.sendKeyChar(i3, c);
+                                    break;
+                                case 31:
+                                    int i4 = this.menuHelper.launcher;
+                                    if (!this.capslockMode ? !this.shiftMode : this.shiftMode) {
+                                        c2 = 'c';
+                                    }
+                                    InputBridge.sendKeyChar(i4, c2);
+                                    break;
+                                case 32:
+                                    InputBridge.sendKeyChar(this.menuHelper.launcher, (!this.capslockMode ? this.shiftMode : !this.shiftMode) ? 'd' : 'D');
+                                    break;
+                                case 33:
+                                    InputBridge.sendKeyChar(this.menuHelper.launcher, (!this.capslockMode ? this.shiftMode : !this.shiftMode) ? 'e' : 'E');
+                                    break;
+                                case 34:
+                                    InputBridge.sendKeyChar(this.menuHelper.launcher, (!this.capslockMode ? this.shiftMode : !this.shiftMode) ? 'f' : 'F');
+                                    break;
+                                case 35:
+                                    InputBridge.sendKeyChar(this.menuHelper.launcher, (!this.capslockMode ? this.shiftMode : !this.shiftMode) ? 'g' : 'G');
+                                    break;
+                                case 36:
+                                    InputBridge.sendKeyChar(this.menuHelper.launcher, (!this.capslockMode ? this.shiftMode : !this.shiftMode) ? 'h' : 'H');
+                                    break;
+                                case 37:
+                                    InputBridge.sendKeyChar(this.menuHelper.launcher, (!this.capslockMode ? this.shiftMode : !this.shiftMode) ? 'i' : 'I');
+                                    break;
+                                case 38:
+                                    InputBridge.sendKeyChar(this.menuHelper.launcher, (!this.capslockMode ? this.shiftMode : !this.shiftMode) ? 'j' : 'J');
+                                    break;
+                                case 39:
+                                    InputBridge.sendKeyChar(this.menuHelper.launcher, (!this.capslockMode ? this.shiftMode : !this.shiftMode) ? 'k' : 'K');
+                                    break;
+                                case 40:
+                                    InputBridge.sendKeyChar(this.menuHelper.launcher, (!this.capslockMode ? this.shiftMode : !this.shiftMode) ? 'l' : 'L');
+                                    break;
+                                case 41:
+                                    InputBridge.sendKeyChar(this.menuHelper.launcher, (!this.capslockMode ? this.shiftMode : !this.shiftMode) ? 'm' : 'M');
+                                    break;
+                                case 42:
+                                    InputBridge.sendKeyChar(this.menuHelper.launcher, (!this.capslockMode ? this.shiftMode : !this.shiftMode) ? 'n' : 'N');
+                                    break;
+                                case 43:
+                                    InputBridge.sendKeyChar(this.menuHelper.launcher, (!this.capslockMode ? this.shiftMode : !this.shiftMode) ? 'o' : 'O');
+                                    break;
+                                case 44:
+                                    InputBridge.sendKeyChar(this.menuHelper.launcher, (!this.capslockMode ? this.shiftMode : !this.shiftMode) ? 'p' : 'P');
+                                    break;
+                                case 45:
+                                    int i5 = this.menuHelper.launcher;
+                                    if (!this.capslockMode ? !this.shiftMode : this.shiftMode) {
+                                        c5 = 'q';
+                                    }
+                                    InputBridge.sendKeyChar(i5, c5);
+                                    break;
+                                case 46:
+                                    InputBridge.sendKeyChar(this.menuHelper.launcher, (!this.capslockMode ? this.shiftMode : !this.shiftMode) ? 'r' : 'R');
+                                    break;
+                                case 47:
+                                    InputBridge.sendKeyChar(this.menuHelper.launcher, (!this.capslockMode ? this.shiftMode : !this.shiftMode) ? 's' : 'S');
+                                    break;
+                                case 48:
+                                    InputBridge.sendKeyChar(this.menuHelper.launcher, (!this.capslockMode ? this.shiftMode : !this.shiftMode) ? 't' : 'T');
+                                    break;
+                                case 49:
+                                    InputBridge.sendKeyChar(this.menuHelper.launcher, (!this.capslockMode ? this.shiftMode : !this.shiftMode) ? 'u' : 'U');
+                                    break;
+                                case 50:
+                                    InputBridge.sendKeyChar(this.menuHelper.launcher, (!this.capslockMode ? this.shiftMode : !this.shiftMode) ? 'v' : 'V');
+                                    break;
+                                case 51:
+                                    InputBridge.sendKeyChar(this.menuHelper.launcher, (!this.capslockMode ? this.shiftMode : !this.shiftMode) ? 'w' : 'W');
+                                    break;
+                                case 52:
+                                    InputBridge.sendKeyChar(this.menuHelper.launcher, (!this.capslockMode ? this.shiftMode : !this.shiftMode) ? 'x' : 'X');
+                                    break;
+                                case 53:
+                                    int i6 = this.menuHelper.launcher;
+                                    if (!this.capslockMode ? this.shiftMode : !this.shiftMode) {
+                                        c4 = 'Y';
+                                    }
+                                    InputBridge.sendKeyChar(i6, c4);
+                                    break;
+                                case 54:
+                                    InputBridge.sendKeyChar(this.menuHelper.launcher, (!this.capslockMode ? this.shiftMode : !this.shiftMode) ? 'z' : 'Z');
+                                    break;
+                                case 55:
+                                    InputBridge.sendKeyChar(this.menuHelper.launcher, this.shiftMode ? '<' : ',');
+                                    break;
+                                case 56:
+                                    InputBridge.sendKeyChar(this.menuHelper.launcher, this.shiftMode ? '>' : '.');
+                                    break;
+                                default:
+                                    switch (keyCode2) {
+                                        case 68:
+                                            InputBridge.sendKeyChar(this.menuHelper.launcher, this.shiftMode ? '~' : '`');
+                                            break;
+                                        case 69:
+                                            InputBridge.sendKeyChar(this.menuHelper.launcher, this.shiftMode ? '_' : '-');
+                                            break;
+                                        case 70:
+                                            InputBridge.sendKeyChar(this.menuHelper.launcher, this.shiftMode ? '+' : '=');
+                                            break;
+                                        case 71:
+                                            InputBridge.sendKeyChar(this.menuHelper.launcher, this.shiftMode ? '{' : '[');
+                                            break;
+                                        case 72:
+                                            InputBridge.sendKeyChar(this.menuHelper.launcher, this.shiftMode ? '}' : ']');
+                                            break;
+                                        case 73:
+                                            InputBridge.sendKeyChar(this.menuHelper.launcher, this.shiftMode ? '|' : '\\');
+                                            break;
+                                        case 74:
+                                            InputBridge.sendKeyChar(this.menuHelper.launcher, this.shiftMode ? ':' : ';');
+                                            break;
+                                        case 75:
+                                            InputBridge.sendKeyChar(this.menuHelper.launcher, this.shiftMode ? '\"' : '\'');
+                                            break;
+                                        case 76:
+                                            InputBridge.sendKeyChar(this.menuHelper.launcher, this.shiftMode ? '?' : '/');
+                                            break;
+                                        default:
+                                            switch (keyCode2) {
+                                                case 144:
+                                                    InputBridge.sendKeyChar(this.menuHelper.launcher, '0');
+                                                    break;
+                                                case 145:
+                                                    InputBridge.sendKeyChar(this.menuHelper.launcher, '1');
+                                                    break;
+                                                case 146:
+                                                    InputBridge.sendKeyChar(this.menuHelper.launcher, '2');
+                                                    break;
+                                                case 147:
+                                                    InputBridge.sendKeyChar(this.menuHelper.launcher, '3');
+                                                    break;
+                                                case 148:
+                                                    InputBridge.sendKeyChar(this.menuHelper.launcher, '4');
+                                                    break;
+                                                case 149:
+                                                    InputBridge.sendKeyChar(this.menuHelper.launcher, '5');
+                                                    break;
+                                                case 150:
+                                                    InputBridge.sendKeyChar(this.menuHelper.launcher, '6');
+                                                    break;
+                                                case 151:
+                                                    InputBridge.sendKeyChar(this.menuHelper.launcher, '7');
+                                                    break;
+                                                case 152:
+                                                    InputBridge.sendKeyChar(this.menuHelper.launcher, '8');
+                                                    break;
+                                                case 153:
+                                                    InputBridge.sendKeyChar(this.menuHelper.launcher, '9');
+                                                    break;
+                                            }
+                                    }
+                            }
+                    }
+                } else {
+                    InputBridge.sendKeyChar(this.menuHelper.launcher, ',');
                 }
-                return true;
-            case KeyEvent.KEYCODE_POUND:
-                InputBridge.sendEvent(menuHelper.launcher, LwjglGlfwKeycode.GLFW_KEY_3, keyEvent.getAction() == KeyEvent.ACTION_DOWN);
-                break;
-            case KeyEvent.KEYCODE_AT:
-                InputBridge.sendEvent(menuHelper.launcher, LwjglGlfwKeycode.GLFW_KEY_2, keyEvent.getAction() == KeyEvent.ACTION_DOWN);
-                break;
-            case KeyEvent.KEYCODE_PLUS:
-                InputBridge.sendEvent(menuHelper.launcher, LwjglGlfwKeycode.GLFW_KEY_KP_ADD, keyEvent.getAction() == KeyEvent.ACTION_DOWN);
-                break;
-            case KeyEvent.KEYCODE_F1:
-                InputBridge.sendEvent(menuHelper.launcher, LwjglGlfwKeycode.GLFW_KEY_F1, keyEvent.getAction() == KeyEvent.ACTION_DOWN);
-                break;
-            case KeyEvent.KEYCODE_F2:
-                InputBridge.sendEvent(menuHelper.launcher, LwjglGlfwKeycode.GLFW_KEY_F2, keyEvent.getAction() == KeyEvent.ACTION_DOWN);
-                break;
-            case KeyEvent.KEYCODE_F3:
-                InputBridge.sendEvent(menuHelper.launcher, LwjglGlfwKeycode.GLFW_KEY_F3, keyEvent.getAction() == KeyEvent.ACTION_DOWN);
-                break;
-            case KeyEvent.KEYCODE_F4:
-                InputBridge.sendEvent(menuHelper.launcher, LwjglGlfwKeycode.GLFW_KEY_F4, keyEvent.getAction() == KeyEvent.ACTION_DOWN);
-                break;
-            case KeyEvent.KEYCODE_F5:
-                InputBridge.sendEvent(menuHelper.launcher, LwjglGlfwKeycode.GLFW_KEY_F5, keyEvent.getAction() == KeyEvent.ACTION_DOWN);
-                break;
-            case KeyEvent.KEYCODE_F6:
-                InputBridge.sendEvent(menuHelper.launcher, LwjglGlfwKeycode.GLFW_KEY_F6, keyEvent.getAction() == KeyEvent.ACTION_DOWN);
-                break;
-            case KeyEvent.KEYCODE_F7:
-                InputBridge.sendEvent(menuHelper.launcher, LwjglGlfwKeycode.GLFW_KEY_F7, keyEvent.getAction() == KeyEvent.ACTION_DOWN);
-                break;
-            case KeyEvent.KEYCODE_F8:
-                InputBridge.sendEvent(menuHelper.launcher, LwjglGlfwKeycode.GLFW_KEY_F8, keyEvent.getAction() == KeyEvent.ACTION_DOWN);
-                break;
-            case KeyEvent.KEYCODE_F9:
-                InputBridge.sendEvent(menuHelper.launcher, LwjglGlfwKeycode.GLFW_KEY_F9, keyEvent.getAction() == KeyEvent.ACTION_DOWN);
-                break;
-            case KeyEvent.KEYCODE_F10:
-                InputBridge.sendEvent(menuHelper.launcher, LwjglGlfwKeycode.GLFW_KEY_F10, keyEvent.getAction() == KeyEvent.ACTION_DOWN);
-                break;
-            case KeyEvent.KEYCODE_F11:
-                InputBridge.sendEvent(menuHelper.launcher, LwjglGlfwKeycode.GLFW_KEY_F11, keyEvent.getAction() == KeyEvent.ACTION_DOWN);
-                break;
-            case KeyEvent.KEYCODE_F12:
-                InputBridge.sendEvent(menuHelper.launcher, LwjglGlfwKeycode.GLFW_KEY_F12, keyEvent.getAction() == KeyEvent.ACTION_DOWN);
-                break;
-            case KeyEvent.KEYCODE_0:
-                InputBridge.sendEvent(menuHelper.launcher, LwjglGlfwKeycode.GLFW_KEY_0, keyEvent.getAction() == KeyEvent.ACTION_DOWN);
-                break;
-            case KeyEvent.KEYCODE_1:
-                InputBridge.sendEvent(menuHelper.launcher, LwjglGlfwKeycode.GLFW_KEY_1, keyEvent.getAction() == KeyEvent.ACTION_DOWN);
-                break;
-            case KeyEvent.KEYCODE_2:
-                InputBridge.sendEvent(menuHelper.launcher, LwjglGlfwKeycode.GLFW_KEY_2, keyEvent.getAction() == KeyEvent.ACTION_DOWN);
-                break;
-            case KeyEvent.KEYCODE_3:
-                InputBridge.sendEvent(menuHelper.launcher, LwjglGlfwKeycode.GLFW_KEY_3, keyEvent.getAction() == KeyEvent.ACTION_DOWN);
-                break;
-            case KeyEvent.KEYCODE_4:
-                InputBridge.sendEvent(menuHelper.launcher, LwjglGlfwKeycode.GLFW_KEY_4, keyEvent.getAction() == KeyEvent.ACTION_DOWN);
-                break;
-            case KeyEvent.KEYCODE_5:
-                InputBridge.sendEvent(menuHelper.launcher, LwjglGlfwKeycode.GLFW_KEY_5, keyEvent.getAction() == KeyEvent.ACTION_DOWN);
-                break;
-            case KeyEvent.KEYCODE_6:
-                InputBridge.sendEvent(menuHelper.launcher, LwjglGlfwKeycode.GLFW_KEY_6, keyEvent.getAction() == KeyEvent.ACTION_DOWN);
-                break;
-            case KeyEvent.KEYCODE_7:
-                InputBridge.sendEvent(menuHelper.launcher, LwjglGlfwKeycode.GLFW_KEY_7, keyEvent.getAction() == KeyEvent.ACTION_DOWN);
-                break;
-            case KeyEvent.KEYCODE_8:
-                InputBridge.sendEvent(menuHelper.launcher, LwjglGlfwKeycode.GLFW_KEY_8, keyEvent.getAction() == KeyEvent.ACTION_DOWN);
-                break;
-            case KeyEvent.KEYCODE_9:
-                InputBridge.sendEvent(menuHelper.launcher, LwjglGlfwKeycode.GLFW_KEY_9, keyEvent.getAction() == KeyEvent.ACTION_DOWN);
-                break;
-            case KeyEvent.KEYCODE_A:
-                InputBridge.sendEvent(menuHelper.launcher, LwjglGlfwKeycode.GLFW_KEY_A, keyEvent.getAction() == KeyEvent.ACTION_DOWN);
-                break;
-            case KeyEvent.KEYCODE_B:
-                InputBridge.sendEvent(menuHelper.launcher, LwjglGlfwKeycode.GLFW_KEY_B, keyEvent.getAction() == KeyEvent.ACTION_DOWN);
-                break;
-            case KeyEvent.KEYCODE_C:
-                InputBridge.sendEvent(menuHelper.launcher, LwjglGlfwKeycode.GLFW_KEY_C, keyEvent.getAction() == KeyEvent.ACTION_DOWN);
-                break;
-            case KeyEvent.KEYCODE_D:
-                InputBridge.sendEvent(menuHelper.launcher, LwjglGlfwKeycode.GLFW_KEY_D, keyEvent.getAction() == KeyEvent.ACTION_DOWN);
-                break;
-            case KeyEvent.KEYCODE_E:
-                InputBridge.sendEvent(menuHelper.launcher, LwjglGlfwKeycode.GLFW_KEY_E, keyEvent.getAction() == KeyEvent.ACTION_DOWN);
-                break;
-            case KeyEvent.KEYCODE_F:
-                InputBridge.sendEvent(menuHelper.launcher, LwjglGlfwKeycode.GLFW_KEY_F, keyEvent.getAction() == KeyEvent.ACTION_DOWN);
-                break;
-            case KeyEvent.KEYCODE_G:
-                InputBridge.sendEvent(menuHelper.launcher, LwjglGlfwKeycode.GLFW_KEY_G, keyEvent.getAction() == KeyEvent.ACTION_DOWN);
-                break;
-            case KeyEvent.KEYCODE_H:
-                InputBridge.sendEvent(menuHelper.launcher, LwjglGlfwKeycode.GLFW_KEY_H, keyEvent.getAction() == KeyEvent.ACTION_DOWN);
-                break;
-            case KeyEvent.KEYCODE_I:
-                InputBridge.sendEvent(menuHelper.launcher, LwjglGlfwKeycode.GLFW_KEY_I, keyEvent.getAction() == KeyEvent.ACTION_DOWN);
-                break;
-            case KeyEvent.KEYCODE_J:
-                InputBridge.sendEvent(menuHelper.launcher, LwjglGlfwKeycode.GLFW_KEY_J, keyEvent.getAction() == KeyEvent.ACTION_DOWN);
-                break;
-            case KeyEvent.KEYCODE_K:
-                InputBridge.sendEvent(menuHelper.launcher, LwjglGlfwKeycode.GLFW_KEY_K, keyEvent.getAction() == KeyEvent.ACTION_DOWN);
-                break;
-            case KeyEvent.KEYCODE_L:
-                InputBridge.sendEvent(menuHelper.launcher, LwjglGlfwKeycode.GLFW_KEY_L, keyEvent.getAction() == KeyEvent.ACTION_DOWN);
-                break;
-            case KeyEvent.KEYCODE_M:
-                InputBridge.sendEvent(menuHelper.launcher, LwjglGlfwKeycode.GLFW_KEY_M, keyEvent.getAction() == KeyEvent.ACTION_DOWN);
-                break;
-            case KeyEvent.KEYCODE_N:
-                InputBridge.sendEvent(menuHelper.launcher, LwjglGlfwKeycode.GLFW_KEY_N, keyEvent.getAction() == KeyEvent.ACTION_DOWN);
-                break;
-            case KeyEvent.KEYCODE_O:
-                InputBridge.sendEvent(menuHelper.launcher, LwjglGlfwKeycode.GLFW_KEY_O, keyEvent.getAction() == KeyEvent.ACTION_DOWN);
-                break;
-            case KeyEvent.KEYCODE_P:
-                InputBridge.sendEvent(menuHelper.launcher, LwjglGlfwKeycode.GLFW_KEY_P, keyEvent.getAction() == KeyEvent.ACTION_DOWN);
-                break;
-            case KeyEvent.KEYCODE_Q:
-                InputBridge.sendEvent(menuHelper.launcher, LwjglGlfwKeycode.GLFW_KEY_Q, keyEvent.getAction() == KeyEvent.ACTION_DOWN);
-                break;
-            case KeyEvent.KEYCODE_R:
-                InputBridge.sendEvent(menuHelper.launcher, LwjglGlfwKeycode.GLFW_KEY_R, keyEvent.getAction() == KeyEvent.ACTION_DOWN);
-                break;
-            case KeyEvent.KEYCODE_S:
-                InputBridge.sendEvent(menuHelper.launcher, LwjglGlfwKeycode.GLFW_KEY_S, keyEvent.getAction() == KeyEvent.ACTION_DOWN);
-                break;
-            case KeyEvent.KEYCODE_T:
-                InputBridge.sendEvent(menuHelper.launcher, LwjglGlfwKeycode.GLFW_KEY_T, keyEvent.getAction() == KeyEvent.ACTION_DOWN);
-                break;
-            case KeyEvent.KEYCODE_U:
-                InputBridge.sendEvent(menuHelper.launcher, LwjglGlfwKeycode.GLFW_KEY_U, keyEvent.getAction() == KeyEvent.ACTION_DOWN);
-                break;
-            case KeyEvent.KEYCODE_V:
-                InputBridge.sendEvent(menuHelper.launcher, LwjglGlfwKeycode.GLFW_KEY_V, keyEvent.getAction() == KeyEvent.ACTION_DOWN);
-                break;
-            case KeyEvent.KEYCODE_W:
-                InputBridge.sendEvent(menuHelper.launcher, LwjglGlfwKeycode.GLFW_KEY_W, keyEvent.getAction() == KeyEvent.ACTION_DOWN);
-                break;
-            case KeyEvent.KEYCODE_X:
-                InputBridge.sendEvent(menuHelper.launcher, LwjglGlfwKeycode.GLFW_KEY_X, keyEvent.getAction() == KeyEvent.ACTION_DOWN);
-                break;
-            case KeyEvent.KEYCODE_Y:
-                InputBridge.sendEvent(menuHelper.launcher, LwjglGlfwKeycode.GLFW_KEY_Y, keyEvent.getAction() == KeyEvent.ACTION_DOWN);
-                break;
-            case KeyEvent.KEYCODE_Z:
-                InputBridge.sendEvent(menuHelper.launcher, LwjglGlfwKeycode.GLFW_KEY_Z, keyEvent.getAction() == KeyEvent.ACTION_DOWN);
-                break;
-            case KeyEvent.KEYCODE_NUM_LOCK:
-                InputBridge.sendEvent(menuHelper.launcher, LwjglGlfwKeycode.GLFW_KEY_NUM_LOCK, keyEvent.getAction() == KeyEvent.ACTION_DOWN);
-                break;
-            case KeyEvent.KEYCODE_NUMPAD_DIVIDE:
-                InputBridge.sendEvent(menuHelper.launcher, LwjglGlfwKeycode.GLFW_KEY_KP_DIVIDE, keyEvent.getAction() == KeyEvent.ACTION_DOWN);
-                break;
-            case KeyEvent.KEYCODE_NUMPAD_MULTIPLY:
-                InputBridge.sendEvent(menuHelper.launcher, LwjglGlfwKeycode.GLFW_KEY_KP_MULTIPLY, keyEvent.getAction() == KeyEvent.ACTION_DOWN);
-                break;
-            case KeyEvent.KEYCODE_NUMPAD_SUBTRACT:
-                InputBridge.sendEvent(menuHelper.launcher, LwjglGlfwKeycode.GLFW_KEY_KP_SUBTRACT, keyEvent.getAction() == KeyEvent.ACTION_DOWN);
-                break;
-            case KeyEvent.KEYCODE_NUMPAD_ADD:
-                InputBridge.sendEvent(menuHelper.launcher, LwjglGlfwKeycode.GLFW_KEY_KP_ADD, keyEvent.getAction() == KeyEvent.ACTION_DOWN);
-                break;
-            case KeyEvent.KEYCODE_NUMPAD_DOT:
-                InputBridge.sendEvent(menuHelper.launcher, LwjglGlfwKeycode.GLFW_KEY_PERIOD, keyEvent.getAction() == KeyEvent.ACTION_DOWN);
-                break;
-            case KeyEvent.KEYCODE_NUMPAD_COMMA:
-                InputBridge.sendEvent(menuHelper.launcher, LwjglGlfwKeycode.GLFW_KEY_COMMA, keyEvent.getAction() == KeyEvent.ACTION_DOWN);
-                break;
-            case KeyEvent.KEYCODE_NUMPAD_ENTER:
-                InputBridge.sendEvent(menuHelper.launcher, LwjglGlfwKeycode.GLFW_KEY_ENTER, keyEvent.getAction() == KeyEvent.ACTION_DOWN);
-                break;
-            case KeyEvent.KEYCODE_NUMPAD_EQUALS:
-                InputBridge.sendEvent(menuHelper.launcher, LwjglGlfwKeycode.GLFW_KEY_EQUAL, keyEvent.getAction() == KeyEvent.ACTION_DOWN);
-                break;
-            case KeyEvent.KEYCODE_NUMPAD_0:
-                InputBridge.sendEvent(menuHelper.launcher, LwjglGlfwKeycode.GLFW_KEY_KP_0, keyEvent.getAction() == KeyEvent.ACTION_DOWN);
-                break;
-            case KeyEvent.KEYCODE_NUMPAD_1:
-                InputBridge.sendEvent(menuHelper.launcher, LwjglGlfwKeycode.GLFW_KEY_KP_1, keyEvent.getAction() == KeyEvent.ACTION_DOWN);
-                break;
-            case KeyEvent.KEYCODE_NUMPAD_2:
-                InputBridge.sendEvent(menuHelper.launcher, LwjglGlfwKeycode.GLFW_KEY_KP_2, keyEvent.getAction() == KeyEvent.ACTION_DOWN);
-                break;
-            case KeyEvent.KEYCODE_NUMPAD_3:
-                InputBridge.sendEvent(menuHelper.launcher, LwjglGlfwKeycode.GLFW_KEY_KP_3, keyEvent.getAction() == KeyEvent.ACTION_DOWN);
-                break;
-            case KeyEvent.KEYCODE_NUMPAD_4:
-                InputBridge.sendEvent(menuHelper.launcher, LwjglGlfwKeycode.GLFW_KEY_KP_4, keyEvent.getAction() == KeyEvent.ACTION_DOWN);
-                break;
-            case KeyEvent.KEYCODE_NUMPAD_5:
-                InputBridge.sendEvent(menuHelper.launcher, LwjglGlfwKeycode.GLFW_KEY_KP_5, keyEvent.getAction() == KeyEvent.ACTION_DOWN);
-                break;
-            case KeyEvent.KEYCODE_NUMPAD_6:
-                InputBridge.sendEvent(menuHelper.launcher, LwjglGlfwKeycode.GLFW_KEY_KP_6, keyEvent.getAction() == KeyEvent.ACTION_DOWN);
-                break;
-            case KeyEvent.KEYCODE_NUMPAD_7:
-                InputBridge.sendEvent(menuHelper.launcher, LwjglGlfwKeycode.GLFW_KEY_KP_7, keyEvent.getAction() == KeyEvent.ACTION_DOWN);
-                break;
-            case KeyEvent.KEYCODE_NUMPAD_8:
-                InputBridge.sendEvent(menuHelper.launcher, LwjglGlfwKeycode.GLFW_KEY_KP_8, keyEvent.getAction() == KeyEvent.ACTION_DOWN);
-                break;
-            case KeyEvent.KEYCODE_NUMPAD_9:
-                InputBridge.sendEvent(menuHelper.launcher, LwjglGlfwKeycode.GLFW_KEY_KP_9, keyEvent.getAction() == KeyEvent.ACTION_DOWN);
-                break;
-            case KeyEvent.KEYCODE_ESCAPE:
-                InputBridge.sendEvent(menuHelper.launcher, LwjglGlfwKeycode.GLFW_KEY_ESCAPE, keyEvent.getAction() == KeyEvent.ACTION_DOWN);
-                break;
-            case KeyEvent.KEYCODE_GRAVE:
-                InputBridge.sendEvent(menuHelper.launcher, LwjglGlfwKeycode.GLFW_KEY_GRAVE_ACCENT, keyEvent.getAction() == KeyEvent.ACTION_DOWN);
-                break;
-            case KeyEvent.KEYCODE_MINUS:
-                InputBridge.sendEvent(menuHelper.launcher, LwjglGlfwKeycode.GLFW_KEY_MINUS, keyEvent.getAction() == KeyEvent.ACTION_DOWN);
-                break;
-            case KeyEvent.KEYCODE_EQUALS:
-                InputBridge.sendEvent(menuHelper.launcher, LwjglGlfwKeycode.GLFW_KEY_EQUAL, keyEvent.getAction() == KeyEvent.ACTION_DOWN);
-                break;
-            case KeyEvent.KEYCODE_DEL:
-                InputBridge.sendEvent(menuHelper.launcher, LwjglGlfwKeycode.GLFW_KEY_BACKSPACE, keyEvent.getAction() == KeyEvent.ACTION_DOWN);
-                break;
-            case KeyEvent.KEYCODE_TAB:
-                InputBridge.sendEvent(menuHelper.launcher, LwjglGlfwKeycode.GLFW_KEY_TAB, keyEvent.getAction() == KeyEvent.ACTION_DOWN);
-                break;
-            case KeyEvent.KEYCODE_LEFT_BRACKET:
-                InputBridge.sendEvent(menuHelper.launcher, LwjglGlfwKeycode.GLFW_KEY_LEFT_BRACKET, keyEvent.getAction() == KeyEvent.ACTION_DOWN);
-                break;
-            case KeyEvent.KEYCODE_RIGHT_BRACKET:
-                InputBridge.sendEvent(menuHelper.launcher, LwjglGlfwKeycode.GLFW_KEY_RIGHT_BRACKET, keyEvent.getAction() == KeyEvent.ACTION_DOWN);
-                break;
-            case KeyEvent.KEYCODE_BACKSLASH:
-                InputBridge.sendEvent(menuHelper.launcher, LwjglGlfwKeycode.GLFW_KEY_BACKSLASH, keyEvent.getAction() == KeyEvent.ACTION_DOWN);
-                break;
-            case KeyEvent.KEYCODE_CAPS_LOCK:
-                if (keyEvent.getAction() == KeyEvent.ACTION_UP) {
-                    capslockMode = !capslockMode;
-                }
-                InputBridge.sendEvent(menuHelper.launcher, LwjglGlfwKeycode.GLFW_KEY_CAPS_LOCK, keyEvent.getAction() == KeyEvent.ACTION_DOWN);
-                break;
-            case KeyEvent.KEYCODE_SEMICOLON:
-                InputBridge.sendEvent(menuHelper.launcher, LwjglGlfwKeycode.GLFW_KEY_SEMICOLON, keyEvent.getAction() == KeyEvent.ACTION_DOWN);
-                break;
-            case KeyEvent.KEYCODE_APOSTROPHE:
-                InputBridge.sendEvent(menuHelper.launcher, LwjglGlfwKeycode.GLFW_KEY_APOSTROPHE, keyEvent.getAction() == KeyEvent.ACTION_DOWN);
-                break;
-            case KeyEvent.KEYCODE_SHIFT_LEFT:
-                shiftMode = keyEvent.getAction() == KeyEvent.ACTION_DOWN;
-                InputBridge.sendEvent(menuHelper.launcher, LwjglGlfwKeycode.GLFW_KEY_LEFT_SHIFT, keyEvent.getAction() == KeyEvent.ACTION_DOWN);
-                break;
-            case KeyEvent.KEYCODE_SHIFT_RIGHT:
-                shiftMode = keyEvent.getAction() == KeyEvent.ACTION_DOWN;
-                InputBridge.sendEvent(menuHelper.launcher, LwjglGlfwKeycode.GLFW_KEY_RIGHT_SHIFT, keyEvent.getAction() == KeyEvent.ACTION_DOWN);
-                break;
-            case KeyEvent.KEYCODE_COMMA:
-                InputBridge.sendEvent(menuHelper.launcher, LwjglGlfwKeycode.GLFW_KEY_COMMA, keyEvent.getAction() == KeyEvent.ACTION_DOWN);
-                break;
-            case KeyEvent.KEYCODE_PERIOD:
-                InputBridge.sendEvent(menuHelper.launcher, LwjglGlfwKeycode.GLFW_KEY_PERIOD, keyEvent.getAction() == KeyEvent.ACTION_DOWN);
-                break;
-            case KeyEvent.KEYCODE_SLASH:
-                InputBridge.sendEvent(menuHelper.launcher, LwjglGlfwKeycode.GLFW_KEY_SLASH, keyEvent.getAction() == KeyEvent.ACTION_DOWN);
-                break;
-            case KeyEvent.KEYCODE_CTRL_LEFT:
-                InputBridge.sendEvent(menuHelper.launcher, LwjglGlfwKeycode.GLFW_KEY_LEFT_CONTROL, keyEvent.getAction() == KeyEvent.ACTION_DOWN);
-                break;
-            case KeyEvent.KEYCODE_CTRL_RIGHT:
-                InputBridge.sendEvent(menuHelper.launcher, LwjglGlfwKeycode.GLFW_KEY_RIGHT_CONTROL, keyEvent.getAction() == KeyEvent.ACTION_DOWN);
-                break;
-            case KeyEvent.KEYCODE_ALT_LEFT:
-                InputBridge.sendEvent(menuHelper.launcher, LwjglGlfwKeycode.GLFW_KEY_LEFT_ALT, keyEvent.getAction() == KeyEvent.ACTION_DOWN);
-                break;
-            case KeyEvent.KEYCODE_ALT_RIGHT:
-                InputBridge.sendEvent(menuHelper.launcher, LwjglGlfwKeycode.GLFW_KEY_RIGHT_ALT, keyEvent.getAction() == KeyEvent.ACTION_DOWN);
-                break;
-            case KeyEvent.KEYCODE_SPACE:
-                InputBridge.sendEvent(menuHelper.launcher, LwjglGlfwKeycode.GLFW_KEY_SPACE, keyEvent.getAction() == KeyEvent.ACTION_DOWN);
-                break;
-            case KeyEvent.KEYCODE_DPAD_UP:
-                InputBridge.sendEvent(menuHelper.launcher, LwjglGlfwKeycode.GLFW_KEY_UP, keyEvent.getAction() == KeyEvent.ACTION_DOWN);
-                break;
-            case KeyEvent.KEYCODE_DPAD_DOWN:
-                InputBridge.sendEvent(menuHelper.launcher, LwjglGlfwKeycode.GLFW_KEY_DOWN, keyEvent.getAction() == KeyEvent.ACTION_DOWN);
-                break;
-            case KeyEvent.KEYCODE_DPAD_LEFT:
-                InputBridge.sendEvent(menuHelper.launcher, LwjglGlfwKeycode.GLFW_KEY_LEFT, keyEvent.getAction() == KeyEvent.ACTION_DOWN);
-                break;
-            case KeyEvent.KEYCODE_DPAD_RIGHT:
-                InputBridge.sendEvent(menuHelper.launcher, LwjglGlfwKeycode.GLFW_KEY_RIGHT, keyEvent.getAction() == KeyEvent.ACTION_DOWN);
-                break;
-            case KeyEvent.KEYCODE_INSERT:
-                InputBridge.sendEvent(menuHelper.launcher, LwjglGlfwKeycode.GLFW_KEY_INSERT, keyEvent.getAction() == KeyEvent.ACTION_DOWN);
-                break;
-            case KeyEvent.KEYCODE_HOME:
-                InputBridge.sendEvent(menuHelper.launcher, LwjglGlfwKeycode.GLFW_KEY_HOME, keyEvent.getAction() == KeyEvent.ACTION_DOWN);
-                break;
-            case KeyEvent.KEYCODE_BREAK:
-                InputBridge.sendEvent(menuHelper.launcher, LwjglGlfwKeycode.GLFW_KEY_PAUSE, keyEvent.getAction() == KeyEvent.ACTION_DOWN);
-                break;
-            case KeyEvent.KEYCODE_PAGE_UP:
-                InputBridge.sendEvent(menuHelper.launcher, LwjglGlfwKeycode.GLFW_KEY_PAGE_UP, keyEvent.getAction() == KeyEvent.ACTION_DOWN);
-                break;
-            case KeyEvent.KEYCODE_PAGE_DOWN:
-                InputBridge.sendEvent(menuHelper.launcher, LwjglGlfwKeycode.GLFW_KEY_PAGE_DOWN, keyEvent.getAction() == KeyEvent.ACTION_DOWN);
-                break;
-        }
-        if (menuHelper.gameCursorMode == 0 && keyEvent.getAction() == KeyEvent.ACTION_DOWN) {
-            switch (keyEvent.getKeyCode()) {
-                case KeyEvent.KEYCODE_0:
-                    InputBridge.sendKeyChar(menuHelper.launcher, shiftMode ? ')' : '0');
-                    break;
-                case KeyEvent.KEYCODE_1:
-                    InputBridge.sendKeyChar(menuHelper.launcher, shiftMode ? '!' : '1');
-                    break;
-                case KeyEvent.KEYCODE_2:
-                    InputBridge.sendKeyChar(menuHelper.launcher, shiftMode ? '@' : '2');
-                    break;
-                case KeyEvent.KEYCODE_3:
-                    InputBridge.sendKeyChar(menuHelper.launcher, shiftMode ? '#' : '3');
-                    break;
-                case KeyEvent.KEYCODE_4:
-                    InputBridge.sendKeyChar(menuHelper.launcher, shiftMode ? '$' : '4');
-                    break;
-                case KeyEvent.KEYCODE_5:
-                    InputBridge.sendKeyChar(menuHelper.launcher, shiftMode ? '%' : '5');
-                    break;
-                case KeyEvent.KEYCODE_6:
-                    InputBridge.sendKeyChar(menuHelper.launcher, shiftMode ? '^' : '6');
-                    break;
-                case KeyEvent.KEYCODE_7:
-                    InputBridge.sendKeyChar(menuHelper.launcher, shiftMode ? '&' : '7');
-                    break;
-                case KeyEvent.KEYCODE_8:
-                    InputBridge.sendKeyChar(menuHelper.launcher, shiftMode ? '*' : '8');
-                    break;
-                case KeyEvent.KEYCODE_9:
-                    InputBridge.sendKeyChar(menuHelper.launcher, shiftMode ? '(' : '9');
-                    break;
-                case KeyEvent.KEYCODE_A:
-                    InputBridge.sendKeyChar(menuHelper.launcher, capslockMode ? (shiftMode ? 'a' : 'A') : (shiftMode ? 'A' : 'a'));
-                    break;
-                case KeyEvent.KEYCODE_B:
-                    InputBridge.sendKeyChar(menuHelper.launcher, capslockMode ? (shiftMode ? 'b' : 'B') : (shiftMode ? 'B' : 'b'));
-                    break;
-                case KeyEvent.KEYCODE_C:
-                    InputBridge.sendKeyChar(menuHelper.launcher, capslockMode ? (shiftMode ? 'c' : 'C') : (shiftMode ? 'C' : 'c'));
-                    break;
-                case KeyEvent.KEYCODE_D:
-                    InputBridge.sendKeyChar(menuHelper.launcher, capslockMode ? (shiftMode ? 'd' : 'D') : (shiftMode ? 'D' : 'd'));
-                    break;
-                case KeyEvent.KEYCODE_E:
-                    InputBridge.sendKeyChar(menuHelper.launcher, capslockMode ? (shiftMode ? 'e' : 'E') : (shiftMode ? 'E' : 'e'));
-                    break;
-                case KeyEvent.KEYCODE_F:
-                    InputBridge.sendKeyChar(menuHelper.launcher, capslockMode ? (shiftMode ? 'f' : 'F') : (shiftMode ? 'F' : 'f'));
-                    break;
-                case KeyEvent.KEYCODE_G:
-                    InputBridge.sendKeyChar(menuHelper.launcher, capslockMode ? (shiftMode ? 'g' : 'G') : (shiftMode ? 'G' : 'g'));
-                    break;
-                case KeyEvent.KEYCODE_H:
-                    InputBridge.sendKeyChar(menuHelper.launcher, capslockMode ? (shiftMode ? 'h' : 'H') : (shiftMode ? 'H' : 'h'));
-                    break;
-                case KeyEvent.KEYCODE_I:
-                    InputBridge.sendKeyChar(menuHelper.launcher, capslockMode ? (shiftMode ? 'i' : 'I') : (shiftMode ? 'I' : 'i'));
-                    break;
-                case KeyEvent.KEYCODE_J:
-                    InputBridge.sendKeyChar(menuHelper.launcher, capslockMode ? (shiftMode ? 'j' : 'J') : (shiftMode ? 'J' : 'j'));
-                    break;
-                case KeyEvent.KEYCODE_K:
-                    InputBridge.sendKeyChar(menuHelper.launcher, capslockMode ? (shiftMode ? 'k' : 'K') : (shiftMode ? 'K' : 'k'));
-                    break;
-                case KeyEvent.KEYCODE_L:
-                    InputBridge.sendKeyChar(menuHelper.launcher, capslockMode ? (shiftMode ? 'l' : 'L') : (shiftMode ? 'L' : 'l'));
-                    break;
-                case KeyEvent.KEYCODE_M:
-                    InputBridge.sendKeyChar(menuHelper.launcher, capslockMode ? (shiftMode ? 'm' : 'M') : (shiftMode ? 'M' : 'm'));
-                    break;
-                case KeyEvent.KEYCODE_N:
-                    InputBridge.sendKeyChar(menuHelper.launcher, capslockMode ? (shiftMode ? 'n' : 'N') : (shiftMode ? 'N' : 'n'));
-                    break;
-                case KeyEvent.KEYCODE_O:
-                    InputBridge.sendKeyChar(menuHelper.launcher, capslockMode ? (shiftMode ? 'o' : 'O') : (shiftMode ? 'O' : 'o'));
-                    break;
-                case KeyEvent.KEYCODE_P:
-                    InputBridge.sendKeyChar(menuHelper.launcher, capslockMode ? (shiftMode ? 'p' : 'P') : (shiftMode ? 'P' : 'p'));
-                    break;
-                case KeyEvent.KEYCODE_Q:
-                    InputBridge.sendKeyChar(menuHelper.launcher, capslockMode ? (shiftMode ? 'q' : 'Q') : (shiftMode ? 'Q' : 'q'));
-                    break;
-                case KeyEvent.KEYCODE_R:
-                    InputBridge.sendKeyChar(menuHelper.launcher, capslockMode ? (shiftMode ? 'r' : 'R') : (shiftMode ? 'R' : 'r'));
-                    break;
-                case KeyEvent.KEYCODE_S:
-                    InputBridge.sendKeyChar(menuHelper.launcher, capslockMode ? (shiftMode ? 's' : 'S') : (shiftMode ? 'S' : 's'));
-                    break;
-                case KeyEvent.KEYCODE_T:
-                    InputBridge.sendKeyChar(menuHelper.launcher, capslockMode ? (shiftMode ? 't' : 'T') : (shiftMode ? 'T' : 't'));
-                    break;
-                case KeyEvent.KEYCODE_U:
-                    InputBridge.sendKeyChar(menuHelper.launcher, capslockMode ? (shiftMode ? 'u' : 'U') : (shiftMode ? 'U' : 'u'));
-                    break;
-                case KeyEvent.KEYCODE_V:
-                    InputBridge.sendKeyChar(menuHelper.launcher, capslockMode ? (shiftMode ? 'v' : 'V') : (shiftMode ? 'V' : 'v'));
-                    break;
-                case KeyEvent.KEYCODE_W:
-                    InputBridge.sendKeyChar(menuHelper.launcher, capslockMode ? (shiftMode ? 'w' : 'W') : (shiftMode ? 'W' : 'w'));
-                    break;
-                case KeyEvent.KEYCODE_X:
-                    InputBridge.sendKeyChar(menuHelper.launcher, capslockMode ? (shiftMode ? 'x' : 'X') : (shiftMode ? 'X' : 'x'));
-                    break;
-                case KeyEvent.KEYCODE_Y:
-                    InputBridge.sendKeyChar(menuHelper.launcher, capslockMode ? (shiftMode ? 'y' : 'Y') : (shiftMode ? 'Y' : 'y'));
-                    break;
-                case KeyEvent.KEYCODE_Z:
-                    InputBridge.sendKeyChar(menuHelper.launcher, capslockMode ? (shiftMode ? 'z' : 'Z') : (shiftMode ? 'Z' : 'z'));
-                    break;
-                case KeyEvent.KEYCODE_NUMPAD_DOT:
-                    InputBridge.sendKeyChar(menuHelper.launcher, '.');
-                    break;
-                case KeyEvent.KEYCODE_NUMPAD_COMMA:
-                    InputBridge.sendKeyChar(menuHelper.launcher, ',');
-                    break;
-                case KeyEvent.KEYCODE_NUMPAD_0:
-                    InputBridge.sendKeyChar(menuHelper.launcher, '0');
-                    break;
-                case KeyEvent.KEYCODE_NUMPAD_1:
-                    InputBridge.sendKeyChar(menuHelper.launcher, '1');
-                    break;
-                case KeyEvent.KEYCODE_NUMPAD_2:
-                    InputBridge.sendKeyChar(menuHelper.launcher, '2');
-                    break;
-                case KeyEvent.KEYCODE_NUMPAD_3:
-                    InputBridge.sendKeyChar(menuHelper.launcher, '3');
-                    break;
-                case KeyEvent.KEYCODE_NUMPAD_4:
-                    InputBridge.sendKeyChar(menuHelper.launcher, '4');
-                    break;
-                case KeyEvent.KEYCODE_NUMPAD_5:
-                    InputBridge.sendKeyChar(menuHelper.launcher, '5');
-                    break;
-                case KeyEvent.KEYCODE_NUMPAD_6:
-                    InputBridge.sendKeyChar(menuHelper.launcher, '6');
-                    break;
-                case KeyEvent.KEYCODE_NUMPAD_7:
-                    InputBridge.sendKeyChar(menuHelper.launcher, '7');
-                    break;
-                case KeyEvent.KEYCODE_NUMPAD_8:
-                    InputBridge.sendKeyChar(menuHelper.launcher, '8');
-                    break;
-                case KeyEvent.KEYCODE_NUMPAD_9:
-                    InputBridge.sendKeyChar(menuHelper.launcher, '9');
-                    break;
-                case KeyEvent.KEYCODE_GRAVE:
-                    InputBridge.sendKeyChar(menuHelper.launcher, shiftMode ? '~' : '`');
-                    break;
-                case KeyEvent.KEYCODE_MINUS:
-                    InputBridge.sendKeyChar(menuHelper.launcher, shiftMode ? '_' : '-');
-                    break;
-                case KeyEvent.KEYCODE_EQUALS:
-                    InputBridge.sendKeyChar(menuHelper.launcher, shiftMode ? '+' : '=');
-                    break;
-                case KeyEvent.KEYCODE_LEFT_BRACKET:
-                    InputBridge.sendKeyChar(menuHelper.launcher, shiftMode ? '{' : '[');
-                    break;
-                case KeyEvent.KEYCODE_RIGHT_BRACKET:
-                    InputBridge.sendKeyChar(menuHelper.launcher, shiftMode ? '}' : ']');
-                    break;
-                case KeyEvent.KEYCODE_BACKSLASH:
-                    InputBridge.sendKeyChar(menuHelper.launcher, shiftMode ? '|' : '\\');
-                    break;
-                case KeyEvent.KEYCODE_SEMICOLON:
-                    InputBridge.sendKeyChar(menuHelper.launcher, shiftMode ? ':' : ';');
-                    break;
-                case KeyEvent.KEYCODE_APOSTROPHE:
-                    InputBridge.sendKeyChar(menuHelper.launcher, shiftMode ? '"' : '\'');
-                    break;
-                case KeyEvent.KEYCODE_COMMA:
-                    InputBridge.sendKeyChar(menuHelper.launcher, shiftMode ? '<' : ',');
-                    break;
-                case KeyEvent.KEYCODE_PERIOD:
-                    InputBridge.sendKeyChar(menuHelper.launcher, shiftMode ? '>' : '.');
-                    break;
-                case KeyEvent.KEYCODE_SLASH:
-                    InputBridge.sendKeyChar(menuHelper.launcher, shiftMode ? '?' : '/');
-                    break;
-                case KeyEvent.KEYCODE_SPACE:
-                    InputBridge.sendKeyChar(menuHelper.launcher, ' ');
-                    break;
             }
         }
         return true;

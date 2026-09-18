@@ -2,6 +2,7 @@ package com.qcl.launcher.launcher.game;
 
 import com.google.gson.annotations.SerializedName;
 
+/* loaded from: classes2.dex */
 public class IdDownloadInfo extends DownloadInfo {
 
     @SerializedName("id")
@@ -11,17 +12,16 @@ public class IdDownloadInfo extends DownloadInfo {
         this("", "");
     }
 
-    public IdDownloadInfo(String id, String url) {
-        this(id, url, null);
+    public IdDownloadInfo(String str, String str2) {
+        this(str, str2, null);
     }
 
-    public IdDownloadInfo(String id, String url, String sha1) {
-        this(id, url, sha1, 0);
+    public IdDownloadInfo(String str, String str2, String str3) {
+        this(str, str2, str3, 0);
     }
 
-    public IdDownloadInfo(String id, String url, String sha1, int size) {
-        super(url, sha1, size);
-        this.id = id;
+    public IdDownloadInfo(String str, String str2, String str3, int i) {
+        super(str2, str3, i);
+        this.id = str;
     }
-
 }

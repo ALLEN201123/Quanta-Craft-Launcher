@@ -3,83 +3,79 @@ package com.qcl.launcher.launcher.mod.multimc;
 import com.google.gson.annotations.SerializedName;
 import com.qcl.launcher.utils.gson.JsonUtils;
 import com.qcl.launcher.utils.io.IOUtils;
-
+import java.io.IOException;
+import java.util.List;
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipFile;
 
-import java.io.IOException;
-import java.util.List;
-
+/* loaded from: classes2.dex */
 public final class MultiMCManifest {
-
-    @SerializedName("formatVersion")
-    private final int formatVersion;
 
     @SerializedName("components")
     private final List<MultiMCManifestComponent> components;
 
-    public MultiMCManifest(int formatVersion, List<MultiMCManifestComponent> components) {
-        this.formatVersion = formatVersion;
-        this.components = components;
+    @SerializedName("formatVersion")
+    private final int formatVersion;
+
+    public MultiMCManifest(int i, List<MultiMCManifestComponent> list) {
+        this.formatVersion = i;
+        this.components = list;
     }
 
     public int getFormatVersion() {
-        return formatVersion;
+        return this.formatVersion;
     }
 
     public List<MultiMCManifestComponent> getComponents() {
-        return components;
+        return this.components;
     }
 
-    /**
-     * Read MultiMC modpack manifest from zip file
-     * @param zipFile the zip file
-     * @return the MultiMC modpack manifest.
-     * @throws IOException if zip file is malformed
-     * @throws com.google.gson.JsonParseException if manifest is malformed.
-     */
-    public static MultiMCManifest readMultiMCModpackManifest(ZipFile zipFile, String rootEntryName) throws IOException {
-        ZipArchiveEntry mmcPack = zipFile.getEntry(rootEntryName + "mmc-pack.json");
-        if (mmcPack == null)
+    public static MultiMCManifest readMultiMCModpackManifest(ZipFile zipFile, String str) throws IOException {
+        ZipArchiveEntry entry = zipFile.getEntry(str + "mmc-pack.json");
+        if (entry == null) {
             return null;
-        String json = IOUtils.readFullyAsString(zipFile.getInputStream(mmcPack));
-        MultiMCManifest manifest = JsonUtils.fromNonNullJson(json, MultiMCManifest.class);
-        if (manifest.getComponents() == null)
-            throw new IOException("mmc-pack.json malformed.");
-
-        return manifest;
+        }
+        MultiMCManifest multiMCManifest = (MultiMCManifest) JsonUtils.fromNonNullJson(IOUtils.readFullyAsString(zipFile.getInputStream(entry)), MultiMCManifest.class);
+        if (multiMCManifest.getComponents() != null) {
+            return multiMCManifest;
+        }
+        throw new IOException("mmc-pack.json malformed.");
     }
 
+    /* loaded from: classes2.dex */
     public static final class MultiMCManifestCachedRequires {
+
         @SerializedName("equals")
         private final String equalsVersion;
-
-        @SerializedName("uid")
-        private final String uid;
 
         @SerializedName("suggests")
         private final String suggests;
 
-        public MultiMCManifestCachedRequires(String equalsVersion, String uid, String suggests) {
-            this.equalsVersion = equalsVersion;
-            this.uid = uid;
-            this.suggests = suggests;
+        @SerializedName("uid")
+        private final String uid;
+
+        public MultiMCManifestCachedRequires(String str, String str2, String str3) {
+            this.equalsVersion = str;
+            this.uid = str2;
+            this.suggests = str3;
         }
 
         public String getEqualsVersion() {
-            return equalsVersion;
+            return this.equalsVersion;
         }
 
         public String getUid() {
-            return uid;
+            return this.uid;
         }
 
         public String getSuggests() {
-            return suggests;
+            return this.suggests;
         }
     }
 
+    /* loaded from: classes2.dex */
     public static final class MultiMCManifestComponent {
+
         @SerializedName("cachedName")
         private final String cachedName;
 
@@ -89,11 +85,11 @@ public final class MultiMCManifest {
         @SerializedName("cachedVersion")
         private final String cachedVersion;
 
-        @SerializedName("important")
-        private final boolean important;
-
         @SerializedName("dependencyOnly")
         private final boolean dependencyOnly;
+
+        @SerializedName("important")
+        private final boolean important;
 
         @SerializedName("uid")
         private final String uid;
@@ -101,46 +97,46 @@ public final class MultiMCManifest {
         @SerializedName("version")
         private final String version;
 
-        public MultiMCManifestComponent(boolean important, boolean dependencyOnly, String uid, String version) {
-            this(null, null, null, important, dependencyOnly, uid, version);
+        public MultiMCManifestComponent(boolean z, boolean z2, String str, String str2) {
+            this(null, null, null, z, z2, str, str2);
         }
 
-        public MultiMCManifestComponent(String cachedName, List<MultiMCManifestCachedRequires> cachedRequires, String cachedVersion, boolean important, boolean dependencyOnly, String uid, String version) {
-            this.cachedName = cachedName;
-            this.cachedRequires = cachedRequires;
-            this.cachedVersion = cachedVersion;
-            this.important = important;
-            this.dependencyOnly = dependencyOnly;
-            this.uid = uid;
-            this.version = version;
+        public MultiMCManifestComponent(String str, List<MultiMCManifestCachedRequires> list, String str2, boolean z, boolean z2, String str3, String str4) {
+            this.cachedName = str;
+            this.cachedRequires = list;
+            this.cachedVersion = str2;
+            this.important = z;
+            this.dependencyOnly = z2;
+            this.uid = str3;
+            this.version = str4;
         }
 
         public String getCachedName() {
-            return cachedName;
+            return this.cachedName;
         }
 
         public List<MultiMCManifestCachedRequires> getCachedRequires() {
-            return cachedRequires;
+            return this.cachedRequires;
         }
 
         public String getCachedVersion() {
-            return cachedVersion;
+            return this.cachedVersion;
         }
 
         public boolean isImportant() {
-            return important;
+            return this.important;
         }
 
         public boolean isDependencyOnly() {
-            return dependencyOnly;
+            return this.dependencyOnly;
         }
 
         public String getUid() {
-            return uid;
+            return this.uid;
         }
 
         public String getVersion() {
-            return version;
+            return this.version;
         }
     }
 }

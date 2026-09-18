@@ -1,6 +1,5 @@
 package com.qcl.launcher.launcher.dialogs.control;
 
-import android.annotation.SuppressLint;
 import android.app.Dialog;
 import android.content.Context;
 import android.graphics.Color;
@@ -12,361 +11,331 @@ import android.widget.EditText;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
-
-import androidx.annotation.NonNull;
-
-import com.qcl.launcher.R;
 import com.qcl.launcher.control.bean.button.ButtonStyle;
 import com.qcl.launcher.launcher.dialogs.tools.ColorSelectorDialog;
-
 import java.util.ArrayList;
+import java.util.Iterator;
 
+import com.qcl.launcher.R;
+/* loaded from: classes2.dex */
 public class CreateButtonStyleDialog extends Dialog implements SeekBar.OnSeekBarChangeListener, View.OnClickListener, TextWatcher {
-
-    private ArrayList<ButtonStyle> list;
-    private OnButtonStyleCreateListener onButtonStyleCreateListener;
-
     private ButtonStyle buttonStyle;
-
-    private Button positive;
-    private Button negative;
-
-    private EditText editName;
-    private SeekBar textSizeSeekbar;
-    private SeekBar cornerRadiusSeekbar;
-    private SeekBar strokeWidthSeekbar;
-    private SeekBar textSizePressedSeekbar;
     private SeekBar cornerRadiusPressedSeekbar;
-    private SeekBar strokeWidthPressedSeekbar;
-    private TextView textSizeText;
-    private TextView cornerRadiusText;
-    private TextView strokeWidthText;
-    private TextView textSizePressedText;
     private TextView cornerRadiusPressedText;
-    private TextView strokeWidthPressedText;
-    private Button selectTextColor;
-    private Button selectStrokeColor;
-    private Button selectFillColor;
-    private Button selectTextColorPressed;
-    private Button selectStrokeColorPressed;
-    private Button selectFillColorPressed;
-    private View textColorPre;
-    private View strokeColorPre;
+    private SeekBar cornerRadiusSeekbar;
+    private TextView cornerRadiusText;
+    private EditText editName;
     private View fillColorPre;
-    private View textColorPressedPre;
-    private View strokeColorPressedPre;
     private View fillColorPressedPre;
-    private TextView textColorText;
-    private TextView strokeColorText;
-    private TextView fillColorText;
-    private TextView textColorPressedText;
-    private TextView strokeColorPressedText;
     private TextView fillColorPressedText;
+    private TextView fillColorText;
+    private ArrayList<ButtonStyle> list;
+    private Button negative;
+    private OnButtonStyleCreateListener onButtonStyleCreateListener;
+    private Button positive;
+    private Button selectFillColor;
+    private Button selectFillColorPressed;
+    private Button selectStrokeColor;
+    private Button selectStrokeColorPressed;
+    private Button selectTextColor;
+    private Button selectTextColorPressed;
+    private View strokeColorPre;
+    private View strokeColorPressedPre;
+    private TextView strokeColorPressedText;
+    private TextView strokeColorText;
+    private SeekBar strokeWidthPressedSeekbar;
+    private TextView strokeWidthPressedText;
+    private SeekBar strokeWidthSeekbar;
+    private TextView strokeWidthText;
+    private View textColorPre;
+    private View textColorPressedPre;
+    private TextView textColorPressedText;
+    private TextView textColorText;
+    private SeekBar textSizePressedSeekbar;
+    private TextView textSizePressedText;
+    private SeekBar textSizeSeekbar;
+    private TextView textSizeText;
 
-    public CreateButtonStyleDialog(@NonNull Context context, ArrayList<ButtonStyle> list, OnButtonStyleCreateListener onButtonStyleCreateListener) {
+    /* loaded from: classes2.dex */
+    public interface OnButtonStyleCreateListener {
+        void onButtonStyleCreate(ButtonStyle buttonStyle);
+    }
+
+    @Override // android.text.TextWatcher
+    public void beforeTextChanged(CharSequence charSequence, int i, int i2, int i3) {
+    }
+
+    @Override // android.widget.SeekBar.OnSeekBarChangeListener
+    public void onStartTrackingTouch(SeekBar seekBar) {
+    }
+
+    @Override // android.widget.SeekBar.OnSeekBarChangeListener
+    public void onStopTrackingTouch(SeekBar seekBar) {
+    }
+
+    @Override // android.text.TextWatcher
+    public void onTextChanged(CharSequence charSequence, int i, int i2, int i3) {
+    }
+
+    public CreateButtonStyleDialog(Context context, ArrayList<ButtonStyle> arrayList, OnButtonStyleCreateListener onButtonStyleCreateListener) {
         super(context);
-        this.list = list;
+        this.list = arrayList;
         this.onButtonStyleCreateListener = onButtonStyleCreateListener;
         setContentView(R.layout.dialog_create_button_style);
         setCancelable(false);
         init();
     }
 
-    @SuppressLint("SetTextI18n")
-    private void init () {
-        buttonStyle = new ButtonStyle();
-
-        positive = findViewById(R.id.create_button_style);
-        negative = findViewById(R.id.exit);
-
-        positive.setOnClickListener(this);
-        negative.setOnClickListener(this);
-
-        editName = findViewById(R.id.edit_button_style_name);
-        textSizeSeekbar = findViewById(R.id.exterior_text_size_seekbar);
-        cornerRadiusSeekbar = findViewById(R.id.exterior_corner_radius_seekbar);
-        strokeWidthSeekbar = findViewById(R.id.exterior_stroke_width_seekbar);
-        textSizePressedSeekbar = findViewById(R.id.exterior_text_size_seekbar_pressed);
-        cornerRadiusPressedSeekbar = findViewById(R.id.exterior_corner_radius_seekbar_pressed);
-        strokeWidthPressedSeekbar = findViewById(R.id.exterior_stroke_width_seekbar_pressed);
-        textSizeText = findViewById(R.id.text_size_text);
-        cornerRadiusText = findViewById(R.id.corner_radius_text);
-        strokeWidthText = findViewById(R.id.stroke_width_text);
-        textSizePressedText = findViewById(R.id.text_size_pressed_text);
-        cornerRadiusPressedText = findViewById(R.id.corner_radius_pressed_text);
-        strokeWidthPressedText = findViewById(R.id.stroke_width_pressed_text);
-        selectTextColor = findViewById(R.id.exterior_text_color);
-        selectStrokeColor = findViewById(R.id.exterior_stroke_color);
-        selectFillColor = findViewById(R.id.exterior_fill_color);
-        selectTextColorPressed = findViewById(R.id.exterior_text_color_pressed);
-        selectStrokeColorPressed = findViewById(R.id.exterior_stroke_color_pressed);
-        selectFillColorPressed = findViewById(R.id.exterior_fill_color_pressed);
-        textColorPre = findViewById(R.id.text_color_preview);
-        strokeColorPre = findViewById(R.id.stroke_color_preview);
-        fillColorPre = findViewById(R.id.fill_color_preview);
-        textColorPressedPre = findViewById(R.id.text_color_pressed_preview);
-        strokeColorPressedPre = findViewById(R.id.stroke_color_pressed_preview);
-        fillColorPressedPre = findViewById(R.id.fill_color_pressed_preview);
-        textColorText = findViewById(R.id.text_color_text);
-        strokeColorText = findViewById(R.id.stroke_color_text);
-        fillColorText = findViewById(R.id.fill_color_text);
-        textColorPressedText = findViewById(R.id.text_color_pressed_text);
-        strokeColorPressedText = findViewById(R.id.stroke_color_pressed_text);
-        fillColorPressedText = findViewById(R.id.fill_color_pressed_text);
-
-        textSizeSeekbar.setProgress(buttonStyle.textSize);
-        cornerRadiusSeekbar.setProgress(buttonStyle.cornerRadius);
-        strokeWidthSeekbar.setProgress((int) (buttonStyle.strokeWidth * 10));
-        textSizePressedSeekbar.setProgress(buttonStyle.textSizePress);
-        cornerRadiusPressedSeekbar.setProgress(buttonStyle.cornerRadiusPress);
-        strokeWidthPressedSeekbar.setProgress((int) (buttonStyle.strokeWidthPress * 10));
-        textSizeText.setText(buttonStyle.textSize + " sp");
-        cornerRadiusText.setText(buttonStyle.cornerRadius + " dp");
-        strokeWidthText.setText(buttonStyle.strokeWidth + " dp");
-        textSizePressedText.setText(buttonStyle.textSizePress + " sp");
-        cornerRadiusPressedText.setText(buttonStyle.cornerRadiusPress + " dp");
-        strokeWidthPressedText.setText(buttonStyle.strokeWidthPress + " dp");
-        textColorPre.setBackgroundColor(Color.parseColor(buttonStyle.textColor));
-        strokeColorPre.setBackgroundColor(Color.parseColor(buttonStyle.strokeColor));
-        fillColorPre.setBackgroundColor(Color.parseColor(buttonStyle.fillColor));
-        textColorPressedPre.setBackgroundColor(Color.parseColor(buttonStyle.textColorPress));
-        strokeColorPressedPre.setBackgroundColor(Color.parseColor(buttonStyle.strokeColorPress));
-        fillColorPressedPre.setBackgroundColor(Color.parseColor(buttonStyle.fillColorPress));
-        textColorText.setText(buttonStyle.textColor);
-        strokeColorText.setText(buttonStyle.strokeColor);
-        fillColorText.setText(buttonStyle.fillColor);
-        textColorPressedText.setText(buttonStyle.textColorPress);
-        strokeColorPressedText.setText(buttonStyle.strokeColorPress);
-        fillColorPressedText.setText(buttonStyle.fillColorPress);
-
-        editName.addTextChangedListener(this);
-        textSizeSeekbar.setOnSeekBarChangeListener(this);
-        cornerRadiusSeekbar.setOnSeekBarChangeListener(this);
-        strokeWidthSeekbar.setOnSeekBarChangeListener(this);
-        textSizePressedSeekbar.setOnSeekBarChangeListener(this);
-        cornerRadiusPressedSeekbar.setOnSeekBarChangeListener(this);
-        strokeWidthPressedSeekbar.setOnSeekBarChangeListener(this);
-        selectTextColor.setOnClickListener(this);
-        selectStrokeColor.setOnClickListener(this);
-        selectFillColor.setOnClickListener(this);
-        selectTextColorPressed.setOnClickListener(this);
-        selectStrokeColorPressed.setOnClickListener(this);
-        selectFillColorPressed.setOnClickListener(this);
+    private void init() {
+        this.buttonStyle = new ButtonStyle();
+        this.positive = (Button) findViewById(R.id.create_button_style);
+        this.negative = (Button) findViewById(R.id.exit);
+        this.positive.setOnClickListener(this);
+        this.negative.setOnClickListener(this);
+        this.editName = (EditText) findViewById(R.id.edit_button_style_name);
+        this.textSizeSeekbar = (SeekBar) findViewById(R.id.exterior_text_size_seekbar);
+        this.cornerRadiusSeekbar = (SeekBar) findViewById(R.id.exterior_corner_radius_seekbar);
+        this.strokeWidthSeekbar = (SeekBar) findViewById(R.id.exterior_stroke_width_seekbar);
+        this.textSizePressedSeekbar = (SeekBar) findViewById(R.id.exterior_text_size_seekbar_pressed);
+        this.cornerRadiusPressedSeekbar = (SeekBar) findViewById(R.id.exterior_corner_radius_seekbar_pressed);
+        this.strokeWidthPressedSeekbar = (SeekBar) findViewById(R.id.exterior_stroke_width_seekbar_pressed);
+        this.textSizeText = (TextView) findViewById(R.id.text_size_text);
+        this.cornerRadiusText = (TextView) findViewById(R.id.corner_radius_text);
+        this.strokeWidthText = (TextView) findViewById(R.id.stroke_width_text);
+        this.textSizePressedText = (TextView) findViewById(R.id.text_size_pressed_text);
+        this.cornerRadiusPressedText = (TextView) findViewById(R.id.corner_radius_pressed_text);
+        this.strokeWidthPressedText = (TextView) findViewById(R.id.stroke_width_pressed_text);
+        this.selectTextColor = (Button) findViewById(R.id.exterior_text_color);
+        this.selectStrokeColor = (Button) findViewById(R.id.exterior_stroke_color);
+        this.selectFillColor = (Button) findViewById(R.id.exterior_fill_color);
+        this.selectTextColorPressed = (Button) findViewById(R.id.exterior_text_color_pressed);
+        this.selectStrokeColorPressed = (Button) findViewById(R.id.exterior_stroke_color_pressed);
+        this.selectFillColorPressed = (Button) findViewById(R.id.exterior_fill_color_pressed);
+        this.textColorPre = findViewById(R.id.text_color_preview);
+        this.strokeColorPre = findViewById(R.id.stroke_color_preview);
+        this.fillColorPre = findViewById(R.id.fill_color_preview);
+        this.textColorPressedPre = findViewById(R.id.text_color_pressed_preview);
+        this.strokeColorPressedPre = findViewById(R.id.stroke_color_pressed_preview);
+        this.fillColorPressedPre = findViewById(R.id.fill_color_pressed_preview);
+        this.textColorText = (TextView) findViewById(R.id.text_color_text);
+        this.strokeColorText = (TextView) findViewById(R.id.stroke_color_text);
+        this.fillColorText = (TextView) findViewById(R.id.fill_color_text);
+        this.textColorPressedText = (TextView) findViewById(R.id.text_color_pressed_text);
+        this.strokeColorPressedText = (TextView) findViewById(R.id.stroke_color_pressed_text);
+        this.fillColorPressedText = (TextView) findViewById(R.id.fill_color_pressed_text);
+        this.textSizeSeekbar.setProgress(this.buttonStyle.textSize);
+        this.cornerRadiusSeekbar.setProgress(this.buttonStyle.cornerRadius);
+        this.strokeWidthSeekbar.setProgress((int) (this.buttonStyle.strokeWidth * 10.0f));
+        this.textSizePressedSeekbar.setProgress(this.buttonStyle.textSizePress);
+        this.cornerRadiusPressedSeekbar.setProgress(this.buttonStyle.cornerRadiusPress);
+        this.strokeWidthPressedSeekbar.setProgress((int) (this.buttonStyle.strokeWidthPress * 10.0f));
+        this.textSizeText.setText(this.buttonStyle.textSize + " sp");
+        this.cornerRadiusText.setText(this.buttonStyle.cornerRadius + " dp");
+        this.strokeWidthText.setText(this.buttonStyle.strokeWidth + " dp");
+        this.textSizePressedText.setText(this.buttonStyle.textSizePress + " sp");
+        this.cornerRadiusPressedText.setText(this.buttonStyle.cornerRadiusPress + " dp");
+        this.strokeWidthPressedText.setText(this.buttonStyle.strokeWidthPress + " dp");
+        this.textColorPre.setBackgroundColor(Color.parseColor(this.buttonStyle.textColor));
+        this.strokeColorPre.setBackgroundColor(Color.parseColor(this.buttonStyle.strokeColor));
+        this.fillColorPre.setBackgroundColor(Color.parseColor(this.buttonStyle.fillColor));
+        this.textColorPressedPre.setBackgroundColor(Color.parseColor(this.buttonStyle.textColorPress));
+        this.strokeColorPressedPre.setBackgroundColor(Color.parseColor(this.buttonStyle.strokeColorPress));
+        this.fillColorPressedPre.setBackgroundColor(Color.parseColor(this.buttonStyle.fillColorPress));
+        this.textColorText.setText(this.buttonStyle.textColor);
+        this.strokeColorText.setText(this.buttonStyle.strokeColor);
+        this.fillColorText.setText(this.buttonStyle.fillColor);
+        this.textColorPressedText.setText(this.buttonStyle.textColorPress);
+        this.strokeColorPressedText.setText(this.buttonStyle.strokeColorPress);
+        this.fillColorPressedText.setText(this.buttonStyle.fillColorPress);
+        this.editName.addTextChangedListener(this);
+        this.textSizeSeekbar.setOnSeekBarChangeListener(this);
+        this.cornerRadiusSeekbar.setOnSeekBarChangeListener(this);
+        this.strokeWidthSeekbar.setOnSeekBarChangeListener(this);
+        this.textSizePressedSeekbar.setOnSeekBarChangeListener(this);
+        this.cornerRadiusPressedSeekbar.setOnSeekBarChangeListener(this);
+        this.strokeWidthPressedSeekbar.setOnSeekBarChangeListener(this);
+        this.selectTextColor.setOnClickListener(this);
+        this.selectStrokeColor.setOnClickListener(this);
+        this.selectFillColor.setOnClickListener(this);
+        this.selectTextColorPressed.setOnClickListener(this);
+        this.selectStrokeColorPressed.setOnClickListener(this);
+        this.selectFillColorPressed.setOnClickListener(this);
     }
 
-    @SuppressLint("SetTextI18n")
-    @Override
-    public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
-        if (seekBar == textSizeSeekbar) {
-            textSizeText.setText(i + " sp");
-            buttonStyle.textSize = i;
+    @Override // android.widget.SeekBar.OnSeekBarChangeListener
+    public void onProgressChanged(SeekBar seekBar, int i, boolean z) {
+        if (seekBar == this.textSizeSeekbar) {
+            this.textSizeText.setText(i + " sp");
+            this.buttonStyle.textSize = i;
         }
-        if (seekBar == cornerRadiusSeekbar) {
-            cornerRadiusText.setText(i + " dp");
-            buttonStyle.cornerRadius = i;
+        if (seekBar == this.cornerRadiusSeekbar) {
+            this.cornerRadiusText.setText(i + " dp");
+            this.buttonStyle.cornerRadius = i;
         }
-        if (seekBar == strokeWidthSeekbar) {
-            strokeWidthText.setText((float) i / 10f + " dp");
-            buttonStyle.strokeWidth = (float) i / 10f;
+        if (seekBar == this.strokeWidthSeekbar) {
+            float f = i / 10.0f;
+            this.strokeWidthText.setText(f + " dp");
+            this.buttonStyle.strokeWidth = f;
         }
-        if (seekBar == textSizePressedSeekbar) {
-            textSizePressedText.setText(i + " sp");
-            buttonStyle.textSizePress = i;
+        if (seekBar == this.textSizePressedSeekbar) {
+            this.textSizePressedText.setText(i + " sp");
+            this.buttonStyle.textSizePress = i;
         }
-        if (seekBar == cornerRadiusPressedSeekbar) {
-            cornerRadiusPressedText.setText(i + " dp");
-            buttonStyle.cornerRadiusPress = i;
+        if (seekBar == this.cornerRadiusPressedSeekbar) {
+            this.cornerRadiusPressedText.setText(i + " dp");
+            this.buttonStyle.cornerRadiusPress = i;
         }
-        if (seekBar == strokeWidthPressedSeekbar) {
-            strokeWidthPressedText.setText((float) i / 10f + " dp");
-            buttonStyle.strokeWidthPress = (float) i / 10f;
+        if (seekBar == this.strokeWidthPressedSeekbar) {
+            float f2 = i / 10.0f;
+            this.strokeWidthPressedText.setText(f2 + " dp");
+            this.buttonStyle.strokeWidthPress = f2;
         }
     }
 
-    @Override
-    public void onStartTrackingTouch(SeekBar seekBar) {
-
-    }
-
-    @Override
-    public void onStopTrackingTouch(SeekBar seekBar) {
-
-    }
-
-    @SuppressLint("SetTextI18n")
-    @Override
+    @Override // android.view.View.OnClickListener
     public void onClick(View view) {
-        if (view == positive) {
-            ArrayList<String> names = new ArrayList<>();
-            for (ButtonStyle style : list) {
-                names.add(style.name);
+        if (view == this.positive) {
+            ArrayList arrayList = new ArrayList();
+            Iterator<ButtonStyle> it = this.list.iterator();
+            while (it.hasNext()) {
+                arrayList.add(it.next().name);
             }
-            if (editName.getText().toString().equals("")) {
-                Toast.makeText(getContext(),getContext().getString(R.string.dialog_create_button_style_name_empty),Toast.LENGTH_SHORT).show();
-            }
-            else if (names.contains(editName.getText().toString())) {
-                Toast.makeText(getContext(),getContext().getString(R.string.dialog_create_button_style_name_exist),Toast.LENGTH_SHORT).show();
-            }
-            else {
-                onButtonStyleCreateListener.onButtonStyleCreate(buttonStyle);
+            if (this.editName.getText().toString().equals("")) {
+                Toast.makeText(getContext(), getContext().getString(R.string.dialog_create_button_style_name_empty), 0).show();
+            } else if (arrayList.contains(this.editName.getText().toString())) {
+                Toast.makeText(getContext(), getContext().getString(R.string.dialog_create_button_style_name_exist), 0).show();
+            } else {
+                this.onButtonStyleCreateListener.onButtonStyleCreate(this.buttonStyle);
                 dismiss();
             }
         }
-        if (view == negative) {
+        if (view == this.negative) {
             dismiss();
         }
-
-        if (view == selectTextColor) {
-            ColorSelectorDialog colorSelectorDialog = new ColorSelectorDialog(getContext(),false,Color.parseColor(buttonStyle.textColor));
-            colorSelectorDialog.setColorSelectorDialogListener(new ColorSelectorDialog.ColorSelectorDialogListener() {
-                @Override
-                public void onColorSelected(int color) {
-
+        if (view == this.selectTextColor) {
+            ColorSelectorDialog colorSelectorDialog = new ColorSelectorDialog(getContext(), false, Color.parseColor(this.buttonStyle.textColor));
+            colorSelectorDialog.setColorSelectorDialogListener(new ColorSelectorDialog.ColorSelectorDialogListener() { // from class: com.qcl.launcher.launcher.dialogs.control.CreateButtonStyleDialog.1
+                @Override // com.qcl.launcher.launcher.dialogs.tools.ColorSelectorDialog.ColorSelectorDialogListener
+                public void onColorSelected(int i) {
                 }
 
-                @Override
-                public void onPositive(int destColor) {
-                    textColorPre.setBackgroundColor(destColor);
-                    textColorText.setText("#" + Integer.toHexString(destColor));
-                    buttonStyle.textColor = "#" + Integer.toHexString(destColor);
+                @Override // com.qcl.launcher.launcher.dialogs.tools.ColorSelectorDialog.ColorSelectorDialogListener
+                public void onNegative(int i) {
                 }
 
-                @Override
-                public void onNegative(int initColor) {
-
+                @Override // com.qcl.launcher.launcher.dialogs.tools.ColorSelectorDialog.ColorSelectorDialogListener
+                public void onPositive(int i) {
+                    CreateButtonStyleDialog.this.textColorPre.setBackgroundColor(i);
+                    CreateButtonStyleDialog.this.textColorText.setText("#" + Integer.toHexString(i));
+                    CreateButtonStyleDialog.this.buttonStyle.textColor = "#" + Integer.toHexString(i);
                 }
             });
             colorSelectorDialog.show();
         }
-        if (view == selectStrokeColor) {
-            ColorSelectorDialog colorSelectorDialog = new ColorSelectorDialog(getContext(),false,Color.parseColor(buttonStyle.strokeColor));
-            colorSelectorDialog.setColorSelectorDialogListener(new ColorSelectorDialog.ColorSelectorDialogListener() {
-                @Override
-                public void onColorSelected(int color) {
-
+        if (view == this.selectStrokeColor) {
+            ColorSelectorDialog colorSelectorDialog2 = new ColorSelectorDialog(getContext(), false, Color.parseColor(this.buttonStyle.strokeColor));
+            colorSelectorDialog2.setColorSelectorDialogListener(new ColorSelectorDialog.ColorSelectorDialogListener() { // from class: com.qcl.launcher.launcher.dialogs.control.CreateButtonStyleDialog.2
+                @Override // com.qcl.launcher.launcher.dialogs.tools.ColorSelectorDialog.ColorSelectorDialogListener
+                public void onColorSelected(int i) {
                 }
 
-                @Override
-                public void onPositive(int destColor) {
-                    strokeColorPre.setBackgroundColor(destColor);
-                    strokeColorText.setText("#" + Integer.toHexString(destColor));
-                    buttonStyle.strokeColor = "#" + Integer.toHexString(destColor);
+                @Override // com.qcl.launcher.launcher.dialogs.tools.ColorSelectorDialog.ColorSelectorDialogListener
+                public void onNegative(int i) {
                 }
 
-                @Override
-                public void onNegative(int initColor) {
-
+                @Override // com.qcl.launcher.launcher.dialogs.tools.ColorSelectorDialog.ColorSelectorDialogListener
+                public void onPositive(int i) {
+                    CreateButtonStyleDialog.this.strokeColorPre.setBackgroundColor(i);
+                    CreateButtonStyleDialog.this.strokeColorText.setText("#" + Integer.toHexString(i));
+                    CreateButtonStyleDialog.this.buttonStyle.strokeColor = "#" + Integer.toHexString(i);
                 }
             });
-            colorSelectorDialog.show();
+            colorSelectorDialog2.show();
         }
-        if (view == selectFillColor) {
-            ColorSelectorDialog colorSelectorDialog = new ColorSelectorDialog(getContext(),false,Color.parseColor(buttonStyle.fillColor));
-            colorSelectorDialog.setColorSelectorDialogListener(new ColorSelectorDialog.ColorSelectorDialogListener() {
-                @Override
-                public void onColorSelected(int color) {
-
+        if (view == this.selectFillColor) {
+            ColorSelectorDialog colorSelectorDialog3 = new ColorSelectorDialog(getContext(), false, Color.parseColor(this.buttonStyle.fillColor));
+            colorSelectorDialog3.setColorSelectorDialogListener(new ColorSelectorDialog.ColorSelectorDialogListener() { // from class: com.qcl.launcher.launcher.dialogs.control.CreateButtonStyleDialog.3
+                @Override // com.qcl.launcher.launcher.dialogs.tools.ColorSelectorDialog.ColorSelectorDialogListener
+                public void onColorSelected(int i) {
                 }
 
-                @Override
-                public void onPositive(int destColor) {
-                    fillColorPre.setBackgroundColor(destColor);
-                    fillColorText.setText("#" + Integer.toHexString(destColor));
-                    buttonStyle.fillColor = "#" + Integer.toHexString(destColor);
+                @Override // com.qcl.launcher.launcher.dialogs.tools.ColorSelectorDialog.ColorSelectorDialogListener
+                public void onNegative(int i) {
                 }
 
-                @Override
-                public void onNegative(int initColor) {
-
+                @Override // com.qcl.launcher.launcher.dialogs.tools.ColorSelectorDialog.ColorSelectorDialogListener
+                public void onPositive(int i) {
+                    CreateButtonStyleDialog.this.fillColorPre.setBackgroundColor(i);
+                    CreateButtonStyleDialog.this.fillColorText.setText("#" + Integer.toHexString(i));
+                    CreateButtonStyleDialog.this.buttonStyle.fillColor = "#" + Integer.toHexString(i);
                 }
             });
-            colorSelectorDialog.show();
+            colorSelectorDialog3.show();
         }
-        if (view == selectTextColorPressed) {
-            ColorSelectorDialog colorSelectorDialog = new ColorSelectorDialog(getContext(),false,Color.parseColor(buttonStyle.textColorPress));
-            colorSelectorDialog.setColorSelectorDialogListener(new ColorSelectorDialog.ColorSelectorDialogListener() {
-                @Override
-                public void onColorSelected(int color) {
-
+        if (view == this.selectTextColorPressed) {
+            ColorSelectorDialog colorSelectorDialog4 = new ColorSelectorDialog(getContext(), false, Color.parseColor(this.buttonStyle.textColorPress));
+            colorSelectorDialog4.setColorSelectorDialogListener(new ColorSelectorDialog.ColorSelectorDialogListener() { // from class: com.qcl.launcher.launcher.dialogs.control.CreateButtonStyleDialog.4
+                @Override // com.qcl.launcher.launcher.dialogs.tools.ColorSelectorDialog.ColorSelectorDialogListener
+                public void onColorSelected(int i) {
                 }
 
-                @Override
-                public void onPositive(int destColor) {
-                    textColorPressedPre.setBackgroundColor(destColor);
-                    textColorPressedText.setText("#" + Integer.toHexString(destColor));
-                    buttonStyle.textColorPress = "#" + Integer.toHexString(destColor);
+                @Override // com.qcl.launcher.launcher.dialogs.tools.ColorSelectorDialog.ColorSelectorDialogListener
+                public void onNegative(int i) {
                 }
 
-                @Override
-                public void onNegative(int initColor) {
-
+                @Override // com.qcl.launcher.launcher.dialogs.tools.ColorSelectorDialog.ColorSelectorDialogListener
+                public void onPositive(int i) {
+                    CreateButtonStyleDialog.this.textColorPressedPre.setBackgroundColor(i);
+                    CreateButtonStyleDialog.this.textColorPressedText.setText("#" + Integer.toHexString(i));
+                    CreateButtonStyleDialog.this.buttonStyle.textColorPress = "#" + Integer.toHexString(i);
                 }
             });
-            colorSelectorDialog.show();
+            colorSelectorDialog4.show();
         }
-        if (view == selectStrokeColorPressed) {
-            ColorSelectorDialog colorSelectorDialog = new ColorSelectorDialog(getContext(),false,Color.parseColor(buttonStyle.strokeColorPress));
-            colorSelectorDialog.setColorSelectorDialogListener(new ColorSelectorDialog.ColorSelectorDialogListener() {
-                @Override
-                public void onColorSelected(int color) {
-
+        if (view == this.selectStrokeColorPressed) {
+            ColorSelectorDialog colorSelectorDialog5 = new ColorSelectorDialog(getContext(), false, Color.parseColor(this.buttonStyle.strokeColorPress));
+            colorSelectorDialog5.setColorSelectorDialogListener(new ColorSelectorDialog.ColorSelectorDialogListener() { // from class: com.qcl.launcher.launcher.dialogs.control.CreateButtonStyleDialog.5
+                @Override // com.qcl.launcher.launcher.dialogs.tools.ColorSelectorDialog.ColorSelectorDialogListener
+                public void onColorSelected(int i) {
                 }
 
-                @Override
-                public void onPositive(int destColor) {
-                    strokeColorPressedPre.setBackgroundColor(destColor);
-                    strokeColorPressedText.setText("#" + Integer.toHexString(destColor));
-                    buttonStyle.strokeColorPress = "#" + Integer.toHexString(destColor);
+                @Override // com.qcl.launcher.launcher.dialogs.tools.ColorSelectorDialog.ColorSelectorDialogListener
+                public void onNegative(int i) {
                 }
 
-                @Override
-                public void onNegative(int initColor) {
-
+                @Override // com.qcl.launcher.launcher.dialogs.tools.ColorSelectorDialog.ColorSelectorDialogListener
+                public void onPositive(int i) {
+                    CreateButtonStyleDialog.this.strokeColorPressedPre.setBackgroundColor(i);
+                    CreateButtonStyleDialog.this.strokeColorPressedText.setText("#" + Integer.toHexString(i));
+                    CreateButtonStyleDialog.this.buttonStyle.strokeColorPress = "#" + Integer.toHexString(i);
                 }
             });
-            colorSelectorDialog.show();
+            colorSelectorDialog5.show();
         }
-        if (view == selectFillColorPressed) {
-            ColorSelectorDialog colorSelectorDialog = new ColorSelectorDialog(getContext(),false,Color.parseColor(buttonStyle.fillColorPress));
-            colorSelectorDialog.setColorSelectorDialogListener(new ColorSelectorDialog.ColorSelectorDialogListener() {
-                @Override
-                public void onColorSelected(int color) {
-
+        if (view == this.selectFillColorPressed) {
+            ColorSelectorDialog colorSelectorDialog6 = new ColorSelectorDialog(getContext(), false, Color.parseColor(this.buttonStyle.fillColorPress));
+            colorSelectorDialog6.setColorSelectorDialogListener(new ColorSelectorDialog.ColorSelectorDialogListener() { // from class: com.qcl.launcher.launcher.dialogs.control.CreateButtonStyleDialog.6
+                @Override // com.qcl.launcher.launcher.dialogs.tools.ColorSelectorDialog.ColorSelectorDialogListener
+                public void onColorSelected(int i) {
                 }
 
-                @Override
-                public void onPositive(int destColor) {
-                    fillColorPressedPre.setBackgroundColor(destColor);
-                    fillColorPressedText.setText("#" + Integer.toHexString(destColor));
-                    buttonStyle.fillColorPress = "#" + Integer.toHexString(destColor);
+                @Override // com.qcl.launcher.launcher.dialogs.tools.ColorSelectorDialog.ColorSelectorDialogListener
+                public void onNegative(int i) {
                 }
 
-                @Override
-                public void onNegative(int initColor) {
-
+                @Override // com.qcl.launcher.launcher.dialogs.tools.ColorSelectorDialog.ColorSelectorDialogListener
+                public void onPositive(int i) {
+                    CreateButtonStyleDialog.this.fillColorPressedPre.setBackgroundColor(i);
+                    CreateButtonStyleDialog.this.fillColorPressedText.setText("#" + Integer.toHexString(i));
+                    CreateButtonStyleDialog.this.buttonStyle.fillColorPress = "#" + Integer.toHexString(i);
                 }
             });
-            colorSelectorDialog.show();
+            colorSelectorDialog6.show();
         }
     }
 
-    @Override
-    public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-
-    }
-
-    @Override
-    public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-
-    }
-
-    @Override
+    @Override // android.text.TextWatcher
     public void afterTextChanged(Editable editable) {
-        buttonStyle.name = editName.getText().toString();
+        this.buttonStyle.name = this.editName.getText().toString();
     }
-
-    public interface OnButtonStyleCreateListener{
-        void onButtonStyleCreate(ButtonStyle buttonStyle);
-    }
-
 }

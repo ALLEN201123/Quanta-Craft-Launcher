@@ -1,15 +1,13 @@
 package com.qcl.launcher.skin.cape;
 
-import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
-
 import javax.microedition.khronos.opengles.GL10;
 
-public class CapeCube
-{
+/* loaded from: classes2.dex */
+public class CapeCube {
     protected float[] angle_axis;
     protected float[] face_vertices;
     protected float mAngle;
@@ -23,79 +21,93 @@ public class CapeCube
     protected float[] normal_vertices;
     protected float step_value;
 
-    public CapeCube(final float n, final float n2, final float n3, final float n4, final float n5, final float n6) {
-        this.mScale = new float[] { 0.0f, 0.0f, 0.0f };
-        this.mOffset = new float[] { 0.0f, 0.0f, 0.0f };
+    public CapeCube(float f, float f2, float f3, float f4, float f5, float f6) {
+        this.mScale = new float[]{0.0f, 0.0f, 0.0f};
+        this.mOffset = new float[]{0.0f, 0.0f, 0.0f};
         this.mAngle = 0.0f;
         this.step_value = -0.15f;
         this.max_angle = 3.0f;
         this.min_angle = -3.0f;
-        this.angle_axis = new float[] { 0.0f, 0.0f, 0.0f };
-        this.face_vertices = new float[] { -1.0f, -1.0f, 1.0f, -1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, -1.0f, 1.0f, -1.0f, 1.0f, 1.0f, -1.0f, 1.0f, -1.0f, 1.0f, 1.0f, -1.0f, 1.0f, 1.0f, 1.0f, 1.0f, -1.0f, 1.0f, 1.0f, -1.0f, -1.0f, -1.0f, -1.0f, -1.0f, -1.0f, -1.0f, 1.0f, 1.0f, -1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, -1.0f, 1.0f, -1.0f, -1.0f, -1.0f, -1.0f, -1.0f, -1.0f, 1.0f, -1.0f, -1.0f, 1.0f, 1.0f, -1.0f, -1.0f, 1.0f, 1.0f, -1.0f, -1.0f, 1.0f, 1.0f, -1.0f, -1.0f, 1.0f, -1.0f, -1.0f, -1.0f, -1.0f };
-        this.normal_vertices = new float[] { 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, -1.0f };
-        this.mTextureBuffers = new ArrayList<FloatBuffer>();
-        this.mScale[0] = n;
-        this.mScale[1] = n2;
-        this.mScale[2] = n3;
-        this.mOffset[0] = n4;
-        this.mOffset[1] = n5;
-        this.mOffset[2] = n6;
-        for (int i = 0; i < 24; ++i) {
-            this.face_vertices[i * 3] = this.face_vertices[i * 3] * this.mScale[0] / 2.0f;
-            this.face_vertices[i * 3 + 1] = this.face_vertices[i * 3 + 1] * this.mScale[1] / 2.0f;
-            this.face_vertices[i * 3 + 2] = this.face_vertices[i * 3 + 2] * this.mScale[2] / 2.0f;
+        this.angle_axis = new float[]{0.0f, 0.0f, 0.0f};
+        this.face_vertices = new float[]{-1.0f, -1.0f, 1.0f, -1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, -1.0f, 1.0f, -1.0f, 1.0f, 1.0f, -1.0f, 1.0f, -1.0f, 1.0f, 1.0f, -1.0f, 1.0f, 1.0f, 1.0f, 1.0f, -1.0f, 1.0f, 1.0f, -1.0f, -1.0f, -1.0f, -1.0f, -1.0f, -1.0f, -1.0f, 1.0f, 1.0f, -1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, -1.0f, 1.0f, -1.0f, -1.0f, -1.0f, -1.0f, -1.0f, -1.0f, 1.0f, -1.0f, -1.0f, 1.0f, 1.0f, -1.0f, -1.0f, 1.0f, 1.0f, -1.0f, -1.0f, 1.0f, 1.0f, -1.0f, -1.0f, 1.0f, -1.0f, -1.0f, -1.0f, -1.0f};
+        this.normal_vertices = new float[]{0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, -1.0f};
+        this.mTextureBuffers = new ArrayList<>();
+        float[] fArr = this.mScale;
+        fArr[0] = f;
+        fArr[1] = f2;
+        fArr[2] = f3;
+        float[] fArr2 = this.mOffset;
+        fArr2[0] = f4;
+        fArr2[1] = f5;
+        fArr2[2] = f6;
+        for (int i = 0; i < 24; i++) {
+            float[] fArr3 = this.face_vertices;
+            int i2 = i * 3;
+            float f7 = fArr3[i2];
+            float[] fArr4 = this.mScale;
+            fArr3[i2] = (f7 * fArr4[0]) / 2.0f;
+            int i3 = i2 + 1;
+            fArr3[i3] = (fArr3[i3] * fArr4[1]) / 2.0f;
+            int i4 = i2 + 2;
+            fArr3[i4] = (fArr3[i4] * fArr4[2]) / 2.0f;
         }
-        final ByteBuffer allocateDirect = ByteBuffer.allocateDirect(this.face_vertices.length * 4);
+        ByteBuffer allocateDirect = ByteBuffer.allocateDirect(this.face_vertices.length * 4);
         allocateDirect.order(ByteOrder.nativeOrder());
-        (this.mVertexBuffer = allocateDirect.asFloatBuffer()).put(this.face_vertices);
+        FloatBuffer asFloatBuffer = allocateDirect.asFloatBuffer();
+        this.mVertexBuffer = asFloatBuffer;
+        asFloatBuffer.put(this.face_vertices);
         this.mVertexBuffer.position(0);
-        final ByteBuffer allocateDirect2 = ByteBuffer.allocateDirect(this.normal_vertices.length * 4);
+        ByteBuffer allocateDirect2 = ByteBuffer.allocateDirect(this.normal_vertices.length * 4);
         allocateDirect2.order(ByteOrder.nativeOrder());
-        (this.mNormalVertexBuffer = allocateDirect2.asFloatBuffer()).put(this.normal_vertices);
+        FloatBuffer asFloatBuffer2 = allocateDirect2.asFloatBuffer();
+        this.mNormalVertexBuffer = asFloatBuffer2;
+        asFloatBuffer2.put(this.normal_vertices);
         this.mNormalVertexBuffer.position(0);
     }
 
-    public CapeCube(final float n, final float n2, final float n3, final float n4, final float n5, final float n6, final float step_value, final float n7, final float n8, final float n9, final float max_angle, final float min_angle) {
-        this(n, n2, n3, n4, n5, n6);
-        this.step_value = step_value;
-        this.max_angle = max_angle;
-        this.min_angle = min_angle;
-        this.angle_axis[0] = n7;
-        this.angle_axis[1] = n8;
-        this.angle_axis[2] = n9;
+    public CapeCube(float f, float f2, float f3, float f4, float f5, float f6, float f7, float f8, float f9, float f10, float f11, float f12) {
+        this(f, f2, f3, f4, f5, f6);
+        this.step_value = f7;
+        this.max_angle = f11;
+        this.min_angle = f12;
+        float[] fArr = this.angle_axis;
+        fArr[0] = f8;
+        fArr[1] = f9;
+        fArr[2] = f10;
     }
 
-    public FloatBuffer AddTextures(final float[] array) {
-        final ByteBuffer allocateDirect = ByteBuffer.allocateDirect(array.length * 4);
+    public FloatBuffer AddTextures(float[] fArr) {
+        ByteBuffer allocateDirect = ByteBuffer.allocateDirect(fArr.length * 4);
         allocateDirect.order(ByteOrder.nativeOrder());
-        final FloatBuffer floatBuffer = allocateDirect.asFloatBuffer();
-        floatBuffer.put(array);
-        floatBuffer.position(0);
-        this.mTextureBuffers.add(floatBuffer);
-        return floatBuffer;
+        FloatBuffer asFloatBuffer = allocateDirect.asFloatBuffer();
+        asFloatBuffer.put(fArr);
+        asFloatBuffer.position(0);
+        this.mTextureBuffers.add(asFloatBuffer);
+        return asFloatBuffer;
     }
 
     public void ClearAllTextures() {
         this.mTextureBuffers.clear();
     }
 
-    public void draw(final GL10 gl10, final boolean b) {
+    public void draw(GL10 gl10, boolean z) {
         gl10.glEnable(3042);
         gl10.glBlendFunc(1, 771);
         gl10.glEnableClientState(32884);
         gl10.glEnableClientState(32885);
         gl10.glEnableClientState(32888);
-        gl10.glVertexPointer(3, 5126, 0, (Buffer)this.mVertexBuffer);
-        gl10.glNormalPointer(5126, 0, (Buffer)this.mNormalVertexBuffer);
+        gl10.glVertexPointer(3, 5126, 0, this.mVertexBuffer);
+        gl10.glNormalPointer(5126, 0, this.mNormalVertexBuffer);
         gl10.glPushMatrix();
-        gl10.glTranslatef(this.mOffset[0], this.mOffset[1], this.mOffset[2]);
-        gl10.glTranslatef(0.0f, this.mScale[1] / 4.0f * 3.0f, 0.0f);
-        gl10.glRotatef(12f, 1f, 0f, 0f);
-        gl10.glTranslatef(0.0f, -this.mScale[1] / 4.0f * 3.0f, 0.0f);
-        for (int i = 0; i < this.mTextureBuffers.size(); ++i) {
-            gl10.glTexCoordPointer(2, 5126, 0, (Buffer)this.mTextureBuffers.get(i));
-            for (int j = 0; j < 6; ++j) {
-                gl10.glDrawArrays(6, j * 4, 4);
+        float[] fArr = this.mOffset;
+        gl10.glTranslatef(fArr[0], fArr[1], fArr[2]);
+        gl10.glTranslatef(0.0f, (this.mScale[1] / 4.0f) * 3.0f, 0.0f);
+        gl10.glRotatef(12.0f, 1.0f, 0.0f, 0.0f);
+        gl10.glTranslatef(0.0f, ((-this.mScale[1]) / 4.0f) * 3.0f, 0.0f);
+        for (int i = 0; i < this.mTextureBuffers.size(); i++) {
+            gl10.glTexCoordPointer(2, 5126, 0, this.mTextureBuffers.get(i));
+            for (int i2 = 0; i2 < 6; i2++) {
+                gl10.glDrawArrays(6, i2 * 4, 4);
             }
         }
         gl10.glPopMatrix();

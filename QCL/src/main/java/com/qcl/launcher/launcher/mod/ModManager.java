@@ -1,293 +1,287 @@
 package com.qcl.launcher.launcher.mod;
 
+import com.qcl.launcher.launcher.mod.LocalModFile;
 import com.qcl.launcher.utils.io.FileUtils;
 import com.qcl.launcher.utils.io.ZipTools;
 import com.qcl.launcher.utils.string.StringUtils;
 import com.qcl.launcher.utils.versioning.VersionNumber;
-
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.*;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
+import java.nio.file.LinkOption;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+import java.nio.file.attribute.FileAttribute;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Objects;
 import java.util.TreeSet;
+import java.util.function.Function;
 
+/* loaded from: classes2.dex */
 public final class ModManager {
+    public static final String DISABLED_EXTENSION = ".disabled";
+    public static final String OLD_EXTENSION = ".old";
     private final String modsDir;
     private final TreeSet<LocalModFile> localModFiles = new TreeSet<>();
     private final HashMap<LocalMod, LocalMod> localMods = new HashMap<>();
-
     private boolean loaded = false;
 
-    public ModManager(String modsDir) {
-        this.modsDir = modsDir;
+    /* JADX INFO: Access modifiers changed from: package-private */
+    public static /* synthetic */ LocalMod lambda$getLocalMod$0(LocalMod localMod) {
+        return localMod;
+    }
+
+    public ModManager(String str) {
+        this.modsDir = str;
     }
 
     public Path getModsDirectory() {
-        return new File(modsDir).toPath();
+        return new File(this.modsDir).toPath();
     }
 
-    public LocalMod getLocalMod(String id, ModLoaderType modLoaderType) {
-        return localMods.computeIfAbsent(new LocalMod(id, modLoaderType), x -> x);
-    }
-
-    private void addModInfo(Path file) {
-        try {
-            LocalModFile localModFile = getModInfo(file);
-            if (!localModFile.isOld()) {
-                localModFiles.add(localModFile);
+    public LocalMod getLocalMod(String str, ModLoaderType modLoaderType) {
+        return this.localMods.computeIfAbsent(new LocalMod(str, modLoaderType), new Function() { // from class: com.qcl.launcher.launcher.mod.ModManager$$ExternalSyntheticLambda0
+            @Override // java.util.function.Function
+            public final Object apply(Object obj) {
+                return ModManager.lambda$getLocalMod$0((LocalMod) obj);
             }
-        } catch (IllegalArgumentException ignore) {
+        });
+    }
+
+    private void addModInfo(Path path) {
+        try {
+            LocalModFile modInfo = getModInfo(path);
+            if (modInfo.isOld()) {
+                return;
+            }
+            this.localModFiles.add(modInfo);
+        } catch (IllegalArgumentException unused) {
         }
     }
 
-    public LocalModFile getModInfo(Path modFile) {
-        String fileName = StringUtils.removeSuffix(FileUtils.getName(modFile), DISABLED_EXTENSION, OLD_EXTENSION);
-        String description;
-        if (fileName.endsWith(".zip") || fileName.endsWith(".jar")) {
+    public LocalModFile getModInfo(Path path) {
+        String str;
+        String removeSuffix = StringUtils.removeSuffix(FileUtils.getName(path), ".disabled", ".old");
+        if (removeSuffix.endsWith(".zip") || removeSuffix.endsWith(".jar")) {
             try {
-                return ForgeOldModMetadata.fromFile(this, modFile);
-            } catch (Exception ignore) {
+                try {
+                    try {
+                        try {
+                            return ForgeOldModMetadata.fromFile(this, path);
+                        } catch (Exception unused) {
+                            return PackMcMeta.fromFile(this, path);
+                        }
+                    } catch (Exception unused2) {
+                        return FabricModMetadata.fromFile(this, path);
+                    }
+                } catch (Exception unused3) {
+                    return ForgeNewModMetadata.fromFile(this, path);
+                }
+            } catch (Exception unused4) {
+                str = "";
             }
-
+        } else if (removeSuffix.endsWith(".litemod")) {
             try {
-                return ForgeNewModMetadata.fromFile(this, modFile);
-            } catch (Exception ignore) {
-            }
-
-            try {
-                return FabricModMetadata.fromFile(this, modFile);
-            } catch (Exception ignore) {
-            }
-
-            try {
-                return PackMcMeta.fromFile(this, modFile);
-            } catch (Exception ignore) {
-            }
-
-            description = "";
-        } else if (fileName.endsWith(".litemod")) {
-            try {
-                return LiteModMetadata.fromFile(this, modFile);
-            } catch (Exception ignore) {
-                description = "LiteLoader Mod";
+                return LiteModMetadata.fromFile(this, path);
+            } catch (Exception unused5) {
+                str = "LiteLoader Mod";
             }
         } else {
-            throw new IllegalArgumentException("File " + modFile + " is not a mod file.");
+            throw new IllegalArgumentException("File " + path + " is not a mod file.");
         }
-        return new LocalModFile(this,
-                getLocalMod(FileUtils.getNameWithoutExtension(modFile), ModLoaderType.UNKNOWN),
-                modFile,
-                FileUtils.getNameWithoutExtension(modFile),
-                new LocalModFile.Description(description));
+        return new LocalModFile(this, getLocalMod(FileUtils.getNameWithoutExtension(path), ModLoaderType.UNKNOWN), path, FileUtils.getNameWithoutExtension(path), new LocalModFile.Description(str));
     }
 
     public void refreshMods() throws IOException {
-        localModFiles.clear();
-        localMods.clear();
-        if (Files.isDirectory(getModsDirectory())) {
-            try (DirectoryStream<Path> modsDirectoryStream = Files.newDirectoryStream(getModsDirectory())) {
-                for (Path subitem : modsDirectoryStream) {
-                    if (Files.isDirectory(subitem) && VersionNumber.isIntVersionNumber(FileUtils.getName(subitem))) {
-                        // If the folder name is game version, forge will search mod in this subdirectory
-                        try (DirectoryStream<Path> subitemDirectoryStream = Files.newDirectoryStream(subitem)) {
-                            for (Path subsubitem : subitemDirectoryStream) {
-                                addModInfo(subsubitem);
+        this.localModFiles.clear();
+        this.localMods.clear();
+        if (Files.isDirectory(getModsDirectory(), new LinkOption[0])) {
+            DirectoryStream<Path> newDirectoryStream = Files.newDirectoryStream(getModsDirectory());
+            try {
+                for (Path path : newDirectoryStream) {
+                    if (Files.isDirectory(path, new LinkOption[0]) && VersionNumber.isIntVersionNumber(FileUtils.getName(path))) {
+                        DirectoryStream<Path> newDirectoryStream2 = Files.newDirectoryStream(path);
+                        try {
+                            Iterator<Path> it = newDirectoryStream2.iterator();
+                            while (it.hasNext()) {
+                                addModInfo(it.next());
                             }
+                            if (newDirectoryStream2 != null) {
+                                newDirectoryStream2.close();
+                            }
+                        } finally {
                         }
                     } else {
-                        addModInfo(subitem);
+                        addModInfo(path);
                     }
                 }
+                if (newDirectoryStream != null) {
+                    newDirectoryStream.close();
+                }
+            } catch (Throwable th) {
+                if (newDirectoryStream != null) {
+                    try {
+                        newDirectoryStream.close();
+                    } catch (Throwable th2) {
+                        th.addSuppressed(th2);
+                    }
+                }
+                throw th;
             }
         }
-        loaded = true;
+        this.loaded = true;
     }
 
     public Collection<LocalModFile> getMods() throws IOException {
-        if (!loaded)
+        if (!this.loaded) {
             refreshMods();
-        return localModFiles;
+        }
+        return this.localModFiles;
     }
 
-    public void addMod(Path file) throws IOException {
-        if (!isFileNameMod(file))
-            throw new IllegalArgumentException("File " + file + " is not a valid mod file.");
-
-        if (!loaded)
+    public void addMod(Path path) throws IOException {
+        if (!isFileNameMod(path)) {
+            throw new IllegalArgumentException("File " + path + " is not a valid mod file.");
+        }
+        if (!this.loaded) {
             refreshMods();
-
+        }
         Path modsDirectory = getModsDirectory();
-        Files.createDirectories(modsDirectory);
-
-        Path newFile = modsDirectory.resolve(file.getFileName());
-        FileUtils.copyFile(file, newFile);
-
-        addModInfo(newFile);
+        Files.createDirectories(modsDirectory, new FileAttribute[0]);
+        Path resolve = modsDirectory.resolve(path.getFileName());
+        FileUtils.copyFile(path, resolve);
+        addModInfo(resolve);
     }
 
-    public void removeMods(LocalModFile... localModFiles) throws IOException {
-        for (LocalModFile localModFile : localModFiles) {
+    public void removeMods(LocalModFile... localModFileArr) throws IOException {
+        for (LocalModFile localModFile : localModFileArr) {
             Files.deleteIfExists(localModFile.getFile());
         }
     }
 
-    public void rollback(LocalModFile from, LocalModFile to) throws IOException {
-        if (!loaded) {
+    public void rollback(LocalModFile localModFile, LocalModFile localModFile2) throws IOException {
+        if (!this.loaded) {
             throw new IllegalStateException("ModManager Not loaded");
         }
-        if (!localModFiles.contains(from)) {
-            throw new IllegalStateException("Rolling back an unknown mod " + from.getFileName());
+        if (!this.localModFiles.contains(localModFile)) {
+            throw new IllegalStateException("Rolling back an unknown mod " + localModFile.getFileName());
         }
-        if (from.isOld()) {
-            throw new IllegalArgumentException("Rolling back an old mod " + from.getFileName());
+        if (localModFile.isOld()) {
+            throw new IllegalArgumentException("Rolling back an old mod " + localModFile.getFileName());
         }
-        if (!to.isOld()) {
-            throw new IllegalArgumentException("Rolling back to an old path " + to.getFileName());
+        if (!localModFile2.isOld()) {
+            throw new IllegalArgumentException("Rolling back to an old path " + localModFile2.getFileName());
         }
-        if (from.getFileName().equals(to.getFileName())) {
-            // We cannot roll back to the mod with the same name.
+        if (localModFile.getFileName().equals(localModFile2.getFileName())) {
             return;
         }
-
-        LocalMod mod = Objects.requireNonNull(from.getMod());
-        if (mod != to.getMod()) {
-            throw new IllegalArgumentException("Rolling back mod " + from.getFileName() + " to a different mod " + to.getFileName());
+        LocalMod localMod = (LocalMod) Objects.requireNonNull(localModFile.getMod());
+        if (localMod != localModFile2.getMod()) {
+            throw new IllegalArgumentException("Rolling back mod " + localModFile.getFileName() + " to a different mod " + localModFile2.getFileName());
         }
-        if (!mod.getFiles().contains(from)
-                || !mod.getOldFiles().contains(to)) {
+        if (!localMod.getFiles().contains(localModFile) || !localMod.getOldFiles().contains(localModFile2)) {
             throw new IllegalStateException("LocalMod state corrupt");
         }
-
-        boolean active = from.isActive();
-        from.setActive(true);
-        from.setOld(true);
-        to.setOld(false);
-        to.setActive(active);
+        boolean isActive = localModFile.isActive();
+        localModFile.setActive(true);
+        localModFile.setOld(true);
+        localModFile2.setOld(false);
+        localModFile2.setActive(isActive);
     }
 
-    private Path backupMod(Path file) throws IOException {
-        Path newPath = file.resolveSibling(
-                StringUtils.addSuffix(
-                        StringUtils.removeSuffix(FileUtils.getName(file), DISABLED_EXTENSION),
-                        OLD_EXTENSION
-                )
-        );
-        if (Files.exists(file)) {
-            Files.move(file, newPath, StandardCopyOption.REPLACE_EXISTING);
+    private Path backupMod(Path path) throws IOException {
+        Path resolveSibling = path.resolveSibling(StringUtils.addSuffix(StringUtils.removeSuffix(FileUtils.getName(path), ".disabled"), ".old"));
+        if (Files.exists(path, new LinkOption[0])) {
+            Files.move(path, resolveSibling, StandardCopyOption.REPLACE_EXISTING);
         }
-        return newPath;
+        return resolveSibling;
     }
 
-    private Path restoreMod(Path file) throws IOException {
-        Path newPath = file.resolveSibling(
-                StringUtils.removeSuffix(FileUtils.getName(file), OLD_EXTENSION)
-        );
-        if (Files.exists(file)) {
-            Files.move(file, newPath, StandardCopyOption.REPLACE_EXISTING);
+    private Path restoreMod(Path path) throws IOException {
+        Path resolveSibling = path.resolveSibling(StringUtils.removeSuffix(FileUtils.getName(path), ".old"));
+        if (Files.exists(path, new LinkOption[0])) {
+            Files.move(path, resolveSibling, StandardCopyOption.REPLACE_EXISTING);
         }
-        return newPath;
+        return resolveSibling;
     }
 
-    public Path setOld(LocalModFile modFile, boolean old) throws IOException {
-        Path newPath;
-        if (old) {
-            newPath = backupMod(modFile.getFile());
-            localModFiles.remove(modFile);
-        } else {
-            newPath = restoreMod(modFile.getFile());
-            localModFiles.add(modFile);
+    public Path setOld(LocalModFile localModFile, boolean z) throws IOException {
+        if (z) {
+            Path backupMod = backupMod(localModFile.getFile());
+            this.localModFiles.remove(localModFile);
+            return backupMod;
         }
-        return newPath;
+        Path restoreMod = restoreMod(localModFile.getFile());
+        this.localModFiles.add(localModFile);
+        return restoreMod;
     }
 
-    public Path disableMod(Path file) throws IOException {
-        if (isOld(file)) return file; // no need to disable an old mod.
-        Path disabled = file.resolveSibling(StringUtils.addSuffix(FileUtils.getName(file), DISABLED_EXTENSION));
-        if (Files.exists(file))
-            Files.move(file, disabled, StandardCopyOption.REPLACE_EXISTING);
-        return disabled;
+    public Path disableMod(Path path) throws IOException {
+        if (isOld(path)) {
+            return path;
+        }
+        Path resolveSibling = path.resolveSibling(StringUtils.addSuffix(FileUtils.getName(path), ".disabled"));
+        if (Files.exists(path, new LinkOption[0])) {
+            Files.move(path, resolveSibling, StandardCopyOption.REPLACE_EXISTING);
+        }
+        return resolveSibling;
     }
 
-    public Path enableMod(Path file) throws IOException {
-        if (isOld(file)) return file;
-        Path enabled = file.resolveSibling(StringUtils.removeSuffix(FileUtils.getName(file), DISABLED_EXTENSION));
-        if (Files.exists(file))
-            Files.move(file, enabled, StandardCopyOption.REPLACE_EXISTING);
-        return enabled;
+    public Path enableMod(Path path) throws IOException {
+        if (isOld(path)) {
+            return path;
+        }
+        Path resolveSibling = path.resolveSibling(StringUtils.removeSuffix(FileUtils.getName(path), ".disabled"));
+        if (Files.exists(path, new LinkOption[0])) {
+            Files.move(path, resolveSibling, StandardCopyOption.REPLACE_EXISTING);
+        }
+        return resolveSibling;
     }
 
-    public static String getModName(Path file) {
-        return StringUtils.removeSuffix(FileUtils.getName(file), DISABLED_EXTENSION, OLD_EXTENSION);
+    public static String getModName(Path path) {
+        return StringUtils.removeSuffix(FileUtils.getName(path), ".disabled", ".old");
     }
 
-    public boolean isOld(Path file) {
-        return FileUtils.getName(file).endsWith(OLD_EXTENSION);
+    public boolean isOld(Path path) {
+        return FileUtils.getName(path).endsWith(".old");
     }
 
-    public boolean isDisabled(Path file) {
-        return FileUtils.getName(file).endsWith(DISABLED_EXTENSION);
+    public boolean isDisabled(Path path) {
+        return FileUtils.getName(path).endsWith(".disabled");
     }
 
-    public static boolean isFileNameMod(Path file) {
-        String name = getModName(file);
-        return name.endsWith(".zip") || name.endsWith(".jar") || name.endsWith(".litemod");
+    public static boolean isFileNameMod(Path path) {
+        String modName = getModName(path);
+        return modName.endsWith(".zip") || modName.endsWith(".jar") || modName.endsWith(".litemod");
     }
 
-    public static boolean isFileMod(Path modFile) {
+    public static boolean isFileMod(Path path) {
         try {
-            if (ZipTools.isFileExist(modFile.toString(),"mcmod.info") || ZipTools.isFileExist(modFile.toString(),"META-INF/mods.toml")) {
-                // Forge mod
+            if (ZipTools.isFileExist(path.toString(), "mcmod.info") || ZipTools.isFileExist(path.toString(), "META-INF/mods.toml") || ZipTools.isFileExist(path.toString(), "fabric.mod.json") || ZipTools.isFileExist(path.toString(), "litemod.json")) {
                 return true;
             }
-
-            if (ZipTools.isFileExist(modFile.toString(),"fabric.mod.json")) {
-                // Fabric mod
-                return true;
-            }
-
-            if (ZipTools.isFileExist(modFile.toString(),"litemod.json")) {
-                // Liteloader mod
-                return true;
-            }
-
-            if (ZipTools.isFileExist(modFile.toString(),"pack.mcmeta")) {
-                // resource pack, data pack
-                return true;
-            }
-
-            return false;
-        } catch (IOException e) {
+            return ZipTools.isFileExist(path.toString(), "pack.mcmeta");
+        } catch (IOException unused) {
             return false;
         }
     }
 
-    /**
-     * Check if "mods" directory has mod file named "fileName" no matter the mod is disabled or not
-     *
-     * @param fileName name of the file whose existence is being checked
-     * @return true if the file exists
-     */
-    public boolean hasSimpleMod(String fileName) {
-        return Files.exists(getModsDirectory().resolve(StringUtils.removeSuffix(fileName, DISABLED_EXTENSION)))
-                || Files.exists(getModsDirectory().resolve(StringUtils.addSuffix(fileName, DISABLED_EXTENSION)));
+    public boolean hasSimpleMod(String str) {
+        return Files.exists(getModsDirectory().resolve(StringUtils.removeSuffix(str, ".disabled")), new LinkOption[0]) || Files.exists(getModsDirectory().resolve(StringUtils.addSuffix(str, ".disabled")), new LinkOption[0]);
     }
 
-    public Path getSimpleModPath(String fileName) {
-        return getModsDirectory().resolve(fileName);
+    public Path getSimpleModPath(String str) {
+        return getModsDirectory().resolve(str);
     }
 
-    public static String getMcmodUrl(String mcmodId) {
-        return String.format("https://www.mcmod.cn/class/%s.html", mcmodId);
+    public static String getMcmodUrl(String str) {
+        return String.format("https://www.mcmod.cn/class/%s.html", str);
     }
 
-    public static String getModWikiUrl(String mcbbsId) {
-        // MCBBS is permanently offline, so the recorded thread id can no longer be opened directly.
-        // Fall back to a working domestic site instead of handing the user a dead link.
-        return String.format("https://search.mcmod.cn/s?key=%s", mcbbsId);
+    public static String getModWikiUrl(String str) {
+        return String.format("https://search.mcmod.cn/s?key=%s", str);
     }
-
-    public static final String DISABLED_EXTENSION = ".disabled";
-    public static final String OLD_EXTENSION = ".old";
 }

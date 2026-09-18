@@ -1,86 +1,92 @@
 package com.qcl.launcher.auth.offline;
 
-import androidx.annotation.Nullable;
-
 import com.google.gson.annotations.SerializedName;
 import com.qcl.launcher.auth.yggdrasil.TextureModel;
 import com.qcl.launcher.utils.string.StringUtils;
 
+/* loaded from: classes2.dex */
 public class SkinJson {
-    private final String username;
-    private final String skin;
     private final String cape;
     private final String elytra;
+    private final String skin;
 
-    @SerializedName(value = "textures", alternate = { "skins" })
+    @SerializedName(alternate = {"skins"}, value = "textures")
     private final TextureJson textures;
+    private final String username;
 
-    public SkinJson(String username, String skin, String cape, String elytra, TextureJson textures) {
-        this.username = username;
-        this.skin = skin;
-        this.cape = cape;
-        this.elytra = elytra;
-        this.textures = textures;
+    public SkinJson(String str, String str2, String str3, String str4, TextureJson textureJson) {
+        this.username = str;
+        this.skin = str2;
+        this.cape = str3;
+        this.elytra = str4;
+        this.textures = textureJson;
     }
 
     public boolean hasSkin() {
-        return StringUtils.isNotBlank(username);
+        return StringUtils.isNotBlank(this.username);
     }
 
-    @Nullable
     public TextureModel getModel() {
-        if (textures != null && textures.slim != null) {
+        TextureJson textureJson = this.textures;
+        if (textureJson != null && textureJson.slim != null) {
             return TextureModel.ALEX;
-        } else if (textures != null && textures.defaultSkin != null) {
-            return TextureModel.STEVE;
-        } else {
+        }
+        TextureJson textureJson2 = this.textures;
+        if (textureJson2 == null || textureJson2.defaultSkin == null) {
             return null;
         }
+        return TextureModel.STEVE;
     }
 
     public String getAlexModelHash() {
-        if (textures != null && textures.slim != null) {
-            return textures.slim;
-        } else {
+        TextureJson textureJson = this.textures;
+        if (textureJson == null || textureJson.slim == null) {
             return null;
         }
+        return this.textures.slim;
     }
 
     public String getSteveModelHash() {
-        if (textures != null && textures.defaultSkin != null) {
-            return textures.defaultSkin;
-        } else return skin;
+        TextureJson textureJson = this.textures;
+        if (textureJson == null || textureJson.defaultSkin == null) {
+            return this.skin;
+        }
+        return this.textures.defaultSkin;
     }
 
     public String getHash() {
         TextureModel model = getModel();
-        if (model == TextureModel.ALEX)
+        if (model == TextureModel.ALEX) {
             return getAlexModelHash();
-        else if (model == TextureModel.STEVE)
+        }
+        if (model == TextureModel.STEVE) {
             return getSteveModelHash();
-        else
-            return null;
+        }
+        return null;
     }
 
     public String getCapeHash() {
-        if (textures != null && textures.cape != null) {
-            return textures.cape;
-        } else return cape;
+        TextureJson textureJson = this.textures;
+        if (textureJson == null || textureJson.cape == null) {
+            return this.cape;
+        }
+        return this.textures.cape;
     }
 
+    /* loaded from: classes2.dex */
     public static class TextureJson {
+        private final String cape;
+
         @SerializedName("default")
         private final String defaultSkin;
-
-        private final String slim;
-        private final String cape;
         private final String elytra;
+        private final String slim;
 
-        public TextureJson(String defaultSkin, String slim, String cape, String elytra) {
-            this.defaultSkin = defaultSkin;
-            this.slim = slim;
-            this.cape = cape;
-            this.elytra = elytra;
+        public TextureJson(String str, String str2, String str3, String str4) {
+            this.defaultSkin = str;
+            this.slim = str2;
+            this.cape = str3;
+            this.elytra = str4;
         }
     }
 }

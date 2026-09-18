@@ -1,0 +1,611 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  运行环境安装/更新页（1.1.0 新增）
+
+  参照物 FCL：FCL/src/main/res/layout/fragment_runtime.xml
+
+  结构（逐字对齐 FCL）：
+    ConstraintLayout
+      ├─ 顶部标题条 @id/qcl_runtime_title（白底，splash_title 文案）
+      ├─ 左侧 ScrollView @id/qcl_runtime_parent（宽 70%）
+      │    └─ 竖排 LinearLayout，每项 = [名称] … [进度圈(默认 gone)] [状态图标] + [detail 行(默认 gone)]
+      │       项之间用 1dp 深灰分隔线
+      ├─ 竖直分割线 @id/qcl_runtime_split
+      ├─ 右侧说明文本 splash_runtime_title
+      └─ 底部按钮 @id/qcl_runtime_install
+
+  八项顺序与 FCL 一致：LWJGL / Caciocavallo / Caciocavallo 17 / JRE8 / JRE17 / JRE21 / JRE25 / JNA
+
+  说明：QCL 没有独立的 lwjgl 运行环境目录（LWJGL 随 pojav 后端走），
+  这里的 "LWJGL" 一项对应 AppManifest.POJAV_LIB_DIR + BOAT_LIB_DIR 的联合校验。
+-->
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?android:attr/colorBackground">
+
+    <TextView
+        android:id="@+id/qcl_runtime_title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/colorPureWhite"
+        android:padding="10dp"
+        android:text="@string/splash_title"
+        android:textColor="#FF000000"
+        android:textSize="16sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <ScrollView
+        android:id="@+id/qcl_runtime_parent"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/qcl_runtime_title"
+        app:layout_constraintWidth_percent="0.7">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <!-- ========== 1. LWJGL ========== -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:padding="10dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:text="@string/splash_runtime_lwjgl"
+                        android:textSize="15sp" />
+
+                    <View
+                        android:layout_width="0dp"
+                        android:layout_height="0dp"
+                        android:layout_weight="1" />
+
+                    <ProgressBar
+                        android:id="@+id/qcl_lwjgl_progress"
+                        style="?android:attr/progressBarStyle"
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:layout_gravity="center"
+                        android:layout_marginStart="10dp"
+                        android:visibility="gone" />
+
+                    <ImageView
+                        android:id="@+id/qcl_lwjgl_state"
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:layout_gravity="center"
+                        android:layout_marginStart="10dp"
+                        android:contentDescription="@string/splash_runtime_lwjgl" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/qcl_lwjgl_detail"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:ellipsize="middle"
+                    android:maxLines="1"
+                    android:paddingStart="10dp"
+                    android:paddingEnd="10dp"
+                    android:paddingBottom="6dp"
+                    android:textSize="12sp"
+                    android:visibility="gone" />
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@android:color/darker_gray" />
+
+            <!-- ========== 2. Caciocavallo ========== -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:padding="10dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:text="@string/splash_runtime_cacio"
+                        android:textSize="15sp" />
+
+                    <View
+                        android:layout_width="0dp"
+                        android:layout_height="0dp"
+                        android:layout_weight="1" />
+
+                    <ProgressBar
+                        android:id="@+id/qcl_cacio_progress"
+                        style="?android:attr/progressBarStyle"
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:layout_gravity="center"
+                        android:layout_marginStart="10dp"
+                        android:visibility="gone" />
+
+                    <ImageView
+                        android:id="@+id/qcl_cacio_state"
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:layout_gravity="center"
+                        android:layout_marginStart="10dp"
+                        android:contentDescription="@string/splash_runtime_cacio" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/qcl_cacio_detail"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:ellipsize="middle"
+                    android:maxLines="1"
+                    android:paddingStart="10dp"
+                    android:paddingEnd="10dp"
+                    android:paddingBottom="6dp"
+                    android:textSize="12sp"
+                    android:visibility="gone" />
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@android:color/darker_gray" />
+
+            <!-- ========== 3. Caciocavallo 17 ========== -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:padding="10dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:text="@string/splash_runtime_cacio17"
+                        android:textSize="15sp" />
+
+                    <View
+                        android:layout_width="0dp"
+                        android:layout_height="0dp"
+                        android:layout_weight="1" />
+
+                    <ProgressBar
+                        android:id="@+id/qcl_cacio17_progress"
+                        style="?android:attr/progressBarStyle"
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:layout_gravity="center"
+                        android:layout_marginStart="10dp"
+                        android:visibility="gone" />
+
+                    <ImageView
+                        android:id="@+id/qcl_cacio17_state"
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:layout_gravity="center"
+                        android:layout_marginStart="10dp"
+                        android:contentDescription="@string/splash_runtime_cacio17" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/qcl_cacio17_detail"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:ellipsize="middle"
+                    android:maxLines="1"
+                    android:paddingStart="10dp"
+                    android:paddingEnd="10dp"
+                    android:paddingBottom="6dp"
+                    android:textSize="12sp"
+                    android:visibility="gone" />
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@android:color/darker_gray" />
+
+            <!-- ========== 4. JRE 8 ========== -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:padding="10dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:text="@string/splash_runtime_java8"
+                        android:textSize="15sp" />
+
+                    <View
+                        android:layout_width="0dp"
+                        android:layout_height="0dp"
+                        android:layout_weight="1" />
+
+                    <ProgressBar
+                        android:id="@+id/qcl_java8_progress"
+                        style="?android:attr/progressBarStyle"
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:layout_gravity="center"
+                        android:layout_marginStart="10dp"
+                        android:visibility="gone" />
+
+                    <ImageView
+                        android:id="@+id/qcl_java8_state"
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:layout_gravity="center"
+                        android:layout_marginStart="10dp"
+                        android:contentDescription="@string/splash_runtime_java8" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/qcl_java8_detail"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:ellipsize="middle"
+                    android:maxLines="1"
+                    android:paddingStart="10dp"
+                    android:paddingEnd="10dp"
+                    android:paddingBottom="6dp"
+                    android:textSize="12sp"
+                    android:visibility="gone" />
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@android:color/darker_gray" />
+
+            <!-- ========== 5. JRE 17 ========== -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:padding="10dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:text="@string/splash_runtime_java17"
+                        android:textSize="15sp" />
+
+                    <View
+                        android:layout_width="0dp"
+                        android:layout_height="0dp"
+                        android:layout_weight="1" />
+
+                    <ProgressBar
+                        android:id="@+id/qcl_java17_progress"
+                        style="?android:attr/progressBarStyle"
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:layout_gravity="center"
+                        android:layout_marginStart="10dp"
+                        android:visibility="gone" />
+
+                    <ImageView
+                        android:id="@+id/qcl_java17_state"
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:layout_gravity="center"
+                        android:layout_marginStart="10dp"
+                        android:contentDescription="@string/splash_runtime_java17" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/qcl_java17_detail"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:ellipsize="middle"
+                    android:maxLines="1"
+                    android:paddingStart="10dp"
+                    android:paddingEnd="10dp"
+                    android:paddingBottom="6dp"
+                    android:textSize="12sp"
+                    android:visibility="gone" />
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@android:color/darker_gray" />
+
+            <!-- ========== 6. JRE 21 ========== -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:padding="10dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:text="@string/splash_runtime_java21"
+                        android:textSize="15sp" />
+
+                    <View
+                        android:layout_width="0dp"
+                        android:layout_height="0dp"
+                        android:layout_weight="1" />
+
+                    <ProgressBar
+                        android:id="@+id/qcl_java21_progress"
+                        style="?android:attr/progressBarStyle"
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:layout_gravity="center"
+                        android:layout_marginStart="10dp"
+                        android:visibility="gone" />
+
+                    <ImageView
+                        android:id="@+id/qcl_java21_state"
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:layout_gravity="center"
+                        android:layout_marginStart="10dp"
+                        android:contentDescription="@string/splash_runtime_java21" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/qcl_java21_detail"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:ellipsize="middle"
+                    android:maxLines="1"
+                    android:paddingStart="10dp"
+                    android:paddingEnd="10dp"
+                    android:paddingBottom="6dp"
+                    android:textSize="12sp"
+                    android:visibility="gone" />
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@android:color/darker_gray" />
+
+            <!-- ========== 7. JRE 25 ========== -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:padding="10dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:text="@string/splash_runtime_java25"
+                        android:textSize="15sp" />
+
+                    <View
+                        android:layout_width="0dp"
+                        android:layout_height="0dp"
+                        android:layout_weight="1" />
+
+                    <ProgressBar
+                        android:id="@+id/qcl_java25_progress"
+                        style="?android:attr/progressBarStyle"
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:layout_gravity="center"
+                        android:layout_marginStart="10dp"
+                        android:visibility="gone" />
+
+                    <ImageView
+                        android:id="@+id/qcl_java25_state"
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:layout_gravity="center"
+                        android:layout_marginStart="10dp"
+                        android:contentDescription="@string/splash_runtime_java25" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/qcl_java25_detail"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:ellipsize="middle"
+                    android:maxLines="1"
+                    android:paddingStart="10dp"
+                    android:paddingEnd="10dp"
+                    android:paddingBottom="6dp"
+                    android:textSize="12sp"
+                    android:visibility="gone" />
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@android:color/darker_gray" />
+
+            <!-- ========== 8. JNA ========== -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:padding="10dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:text="@string/splash_runtime_jna"
+                        android:textSize="15sp" />
+
+                    <View
+                        android:layout_width="0dp"
+                        android:layout_height="0dp"
+                        android:layout_weight="1" />
+
+                    <ProgressBar
+                        android:id="@+id/qcl_jna_progress"
+                        style="?android:attr/progressBarStyle"
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:layout_gravity="center"
+                        android:layout_marginStart="10dp"
+                        android:visibility="gone" />
+
+                    <ImageView
+                        android:id="@+id/qcl_jna_state"
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:layout_gravity="center"
+                        android:layout_marginStart="10dp"
+                        android:contentDescription="@string/splash_runtime_jna" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/qcl_jna_detail"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:ellipsize="middle"
+                    android:maxLines="1"
+                    android:paddingStart="10dp"
+                    android:paddingEnd="10dp"
+                    android:paddingBottom="6dp"
+                    android:textSize="12sp"
+                    android:visibility="gone" />
+            </LinearLayout>
+
+        </LinearLayout>
+    </ScrollView>
+
+    <View
+        android:id="@+id/qcl_runtime_split"
+        android:layout_width="1dp"
+        android:layout_height="0dp"
+        android:background="@android:color/darker_gray"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toEndOf="@id/qcl_runtime_parent"
+        app:layout_constraintTop_toBottomOf="@id/qcl_runtime_title" />
+
+    <TextView
+        android:id="@+id/qcl_runtime_note"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="10dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginEnd="10dp"
+        android:text="@string/splash_runtime_title"
+        android:textSize="14sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/qcl_runtime_split"
+        app:layout_constraintTop_toBottomOf="@id/qcl_runtime_title" />
+
+    <!--
+      ========== 启动准备进度区（1.1.0）==========
+      ★ 2026-09-17：旧的 SplashActivity（三行标题 + 进度条那页）已删除，
+        它原本负责的「申请权限 → 初始化 → 解压插件/控制布局/非 Java 运行环境」
+        全部搬到 RuntimeInstallActivity，进度就显示在这里。
+        准备完成后整块 GONE，玩家看到的就是纯粹的运行环境列表。
+    -->
+    <LinearLayout
+        android:id="@+id/qcl_prepare_layout"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingStart="10dp"
+        android:paddingEnd="10dp"
+        android:paddingBottom="6dp"
+        app:layout_constraintBottom_toTopOf="@id/qcl_runtime_install"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/qcl_runtime_split">
+
+        <TextView
+            android:id="@+id/loading_text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:maxLines="2"
+            android:textSize="13sp" />
+
+        <ProgressBar
+            android:id="@+id/loading_progress_bar"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:max="100" />
+
+        <TextView
+            android:id="@+id/loading_progress_text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="12sp" />
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/qcl_runtime_install"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="10dp"
+        android:layout_marginEnd="10dp"
+        android:layout_marginBottom="8dp"
+        android:text="@string/splash_runtime_install"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/qcl_runtime_split" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -2,26 +2,27 @@ package com.qcl.launcher.auth.offline;
 
 import com.qcl.launcher.auth.yggdrasil.TextureModel;
 
+/* loaded from: classes2.dex */
 public class LoadedSkin {
+    private final Texture cape;
     private final TextureModel model;
     private final Texture skin;
-    private final Texture cape;
 
-    public LoadedSkin(TextureModel model, Texture skin, Texture cape) {
-        this.model = model;
-        this.skin = skin;
-        this.cape = cape;
+    public LoadedSkin(TextureModel textureModel, Texture texture, Texture texture2) {
+        this.model = textureModel;
+        this.skin = texture;
+        this.cape = texture2;
     }
 
     public TextureModel getModel() {
-        return model;
+        return this.model;
     }
 
     public Texture getSkin() {
-        return skin;
+        return this.skin;
     }
 
     public Texture getCape() {
-        return cape;
+        return this.cape;
     }
 }

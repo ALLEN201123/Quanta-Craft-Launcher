@@ -2,12 +2,16 @@ LOCAL_PATH := $(call my-dir)
 HERE_PATH := $(LOCAL_PATH)
 
 include $(CLEAR_VARS)
-# ★★★ 1.1.0 隔离：第二套渲染桥（FCL 新版 ctxbridges，支持 Mesa zink-on-Vulkan 桌面 GL）。
-# 编译成 libpojavexec_new.so —— 与 v1.0.9 的 libpojavexec.so 并存于 APK 的 native 目录，
-# 由 Java 层按 MC 版本决定给 GLFW 加载哪一个（老版本→pojavexec，1.20.5+→pojavexec_new）。
-# 共用文件（jre_launcher.c / utils.c）在本目录也放了一份副本，与旧桥零交集。
+# ★★★ 2026-09-18 用户指令：**把旧桥的名字给新桥，不能改 GLFW 里的**。
+# 因此本模块名由 `pojavexec_new` 改回 `pojavexec` —— 产出的 so 就是 `libpojavexec.so`。
+#
+# 这么做的好处（正是用户要的）：
+#   · GLFW stub（定制版 GLFW.class）里 -Dqcl.pojavexec.lib 的**默认值就是 "pojavexec"**，
+#     改名后即使属性丢失/被清空，加载路径自动正确，不再有"属性错配 → 加载到不存在的库"风险。
+#   · 与 FCL 命名完全一致（FCL 也只有一个 libpojavexec.so）。
+#   · 旧的 libpojavexec.so（v1.0.9 遗留）已从 jni/Android.mk 删除，不会与它撞名。
 LOCAL_LDLIBS := -ldl -llog -landroid
-LOCAL_MODULE := pojavexec_new
+LOCAL_MODULE := pojavexec
 LOCAL_SRC_FILES := \
     egl_bridge.c \
     qcl_bridge_compat.c \

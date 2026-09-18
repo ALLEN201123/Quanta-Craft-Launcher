@@ -1,188 +1,207 @@
 package net.kdt.pojavlaunch;
 
-import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.SurfaceTexture;
 import android.os.Handler;
 import android.os.Message;
+import android.util.Log;
 import android.view.TextureView;
-import android.view.View;
-
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-
+import java.util.Vector;
 import net.kdt.pojavlaunch.function.PojavCallback;
-import net.kdt.pojavlaunch.keyboard.LwjglGlfwKeycode;
 import net.kdt.pojavlaunch.utils.JREUtils;
 import net.kdt.pojavlaunch.utils.Tools;
-
 import org.lwjgl.glfw.CallbackBridge;
 
-import java.util.Vector;
-
+/* loaded from: classes2.dex */
 public class BaseMainActivity extends AppCompatActivity implements TextureView.SurfaceTextureListener {
-
-    public TextureView minecraftGLView;
-    public float scaleFactor = 1.0F;
     public static boolean isInputStackCall;
-
-    public PojavCallback pojavCallback;
-
+    public TextureView minecraftGLView;
     boolean mouseMode;
-    /** 1.0.7：游戏画面已输出通知是否已发出（只发一次） */
+    public PojavCallback pojavCallback;
+    public float scaleFactor = 1.0f;
     private boolean picOutputNotified = false;
-
-    protected void init(String gameDir , boolean highVersion) {
-
-        isInputStackCall = highVersion;
-
-        minecraftGLView = findViewById(R.id.main_game_render_view);
-        // ⚠️ 1.0.7 关键修复：这里原本是 setOpaque(false)（透明）。
-        // 透明 TextureView 在部分设备/驱动上**不会触发 onSurfaceTextureUpdated 回调**
-        // （系统认为没有可见内容需要合成），而关掉「启动等待界面」的唯一正规路径
-        // 正是 onSurfaceTextureUpdated → onPicOutput()。
-        // 结果：游戏其实已经在后台正常渲染，但等待界面永远不消失 →
-        // 玩家看到的就是「卡在启动画面、游戏窗口不显示」。
-        // 游戏画面本身就是不透明的，这里必须是 true。
-        minecraftGLView.setOpaque(true);
-
-        minecraftGLView.setSurfaceTextureListener(this);
-    }
-
-    @Override
-    public void onSurfaceTextureAvailable(@NonNull SurfaceTexture surfaceTexture, int i, int i1) {
-        startMouseThread();
-        pojavCallback.onSurfaceTextureAvailable(surfaceTexture,i,i1);
-    }
-
-    @Override
-    public void onSurfaceTextureSizeChanged(@NonNull SurfaceTexture surfaceTexture, int i, int i1) {
-        pojavCallback.onSurfaceTextureSizeChanged(surfaceTexture,i,i1);
-    }
-
-    @Override
-    public boolean onSurfaceTextureDestroyed(@NonNull SurfaceTexture surfaceTexture) {
-        return false;
-    }
-
-    @Override
-    public void onSurfaceTextureUpdated(@NonNull SurfaceTexture surfaceTexture) {
-        // 1.0.7：原来用的是 int output 计数器（output==1 才触发一次），
-        // 逻辑绕且易漏（第一次调用时 output 还不到 1，要等第二次；一旦有别的路径
-        // 动过这个值就再也不会触发）。改成直白的 boolean，语义清楚、只触发一次。
-        if (!picOutputNotified) {
-            picOutputNotified = true;
-            android.util.Log.i("jrelog", "[画面切换] 游戏首帧到达（onSurfaceTextureUpdated）");
-            pojavCallback.onPicOutput();
-        }
-    }
-
-    /**
-     * 1.0.9：修复「等待界面盖回来后切换信号断路」的时序竞争。
-     *
-     * 场景：游戏首帧早于 onStart（showBackground）到达 → picOutputNotified 提前置位
-     * → onStart 把等待界面盖回来 → 此后标志一直是 true，onSurfaceTextureUpdated
-     * 不再转发 onPicOutput → 等待界面永远不撤（只剩 10s/30s 兜底）。
-     *
-     * 修法：onStart 在 showBackground() 之后调用本方法清零标志，
-     * 游戏下一帧（每秒几十帧）立刻重新触发 onPicOutput → hideBackground。
-     * 等待界面只在「真正没有帧」时显示，游戏出画即切换。
-     */
-    public void resetPicOutputFlag() {
-        picOutputNotified = false;
-    }
-
-    public static void onExit(Context ctx, int code) {
-        ((BaseMainActivity) ctx).pojavCallback.onExit(code);
-    }
-
-    public void startGame(String javaPath,String home,boolean highVersion,final Vector<String> args, String renderer,String gameDir,String glesVersion) {
-        // 1.0.7：重置「画面已输出」标志。
-        // 必须在每次启动时清零 —— 否则上一次启动（或视图预热阶段）可能已经把它置位，
-        // 导致这次的等待界面再也等不到 onPicOutput()，界面就一直卡着。
-        picOutputNotified = false;
-        Thread JVMThread = new Thread(() -> {
-            runOnUiThread(() -> {
-                pojavCallback.onStart();
-            });
-            try {
-                JREUtils.redirectAndPrintJRELog(this);
-                Tools.launchMinecraft(this, javaPath,home,renderer, args,gameDir,glesVersion);
-            } catch (Throwable throwable) {
-                throwable.printStackTrace();
-                runOnUiThread(() -> {
-                    pojavCallback.onError(new Exception(throwable));
-                });
+    public final Handler mouseModeHandler = new Handler() { // from class: net.kdt.pojavlaunch.BaseMainActivity.1
+        @Override // android.os.Handler
+        public void handleMessage(Message message) {
+            super.handleMessage(message);
+            if (message.what == 0) {
+                BaseMainActivity.this.pojavCallback.onCursorModeChange(0);
             }
-        }, "JVM Main thread");
-        JVMThread.setPriority(Thread.MAX_PRIORITY);
-        JVMThread.start();
-    }
-
-    public void startMouseThread() {
-        Thread virtualMouseGrabThread = new Thread(() -> {
-            while (true) {
-                if (!CallbackBridge.isGrabbing() && mouseMode) {
-                    mouseModeHandler.sendEmptyMessage(1);
-                    mouseMode = false;
-                }
-                if (CallbackBridge.isGrabbing() && !mouseMode) {
-                    mouseModeHandler.sendEmptyMessage(0);
-                    mouseMode = true;
-                }
-            }
-        }, "VirtualMouseGrabThread");
-        virtualMouseGrabThread.setPriority(Thread.MIN_PRIORITY);
-        virtualMouseGrabThread.start();
-    }
-
-    @SuppressLint("HandlerLeak")
-    public final Handler mouseModeHandler = new Handler() {
-        @Override
-        public void handleMessage(@NonNull Message msg) {
-            super.handleMessage(msg);
-            if (msg.what == 0) {
-                pojavCallback.onCursorModeChange(0);
-            }
-            if (msg.what == 1) {
-                pojavCallback.onCursorModeChange(1);
+            if (message.what == 1) {
+                BaseMainActivity.this.pojavCallback.onCursorModeChange(1);
             }
         }
     };
 
-    @Override
-    protected void onStart() {
-        super.onStart();
-        CallbackBridge.nativeSetWindowAttrib(LwjglGlfwKeycode.GLFW_VISIBLE, 1);
+    @Override // android.view.TextureView.SurfaceTextureListener
+    public boolean onSurfaceTextureDestroyed(SurfaceTexture surfaceTexture) {
+        return false;
     }
 
-    @Override
-    protected void onStop() {
-        CallbackBridge.nativeSetWindowAttrib(LwjglGlfwKeycode.GLFW_VISIBLE, 0);
+    /* JADX INFO: Access modifiers changed from: protected */
+    public void init(String str, boolean z) {
+        isInputStackCall = z;
+        CallbackBridge.nativeSetUseInputStackQueue(z);
+        TextureView textureView = (TextureView) findViewById(R.id.main_game_render_view);
+        this.minecraftGLView = textureView;
+        textureView.setOpaque(true);
+        this.minecraftGLView.setSurfaceTextureListener(this);
+    }
+
+    @Override // android.view.TextureView.SurfaceTextureListener
+    public void onSurfaceTextureAvailable(SurfaceTexture surfaceTexture, int i, int i2) {
+        startMouseThread();
+        this.pojavCallback.onSurfaceTextureAvailable(surfaceTexture, i, i2);
+    }
+
+    @Override // android.view.TextureView.SurfaceTextureListener
+    public void onSurfaceTextureSizeChanged(SurfaceTexture surfaceTexture, int i, int i2) {
+        this.pojavCallback.onSurfaceTextureSizeChanged(surfaceTexture, i, i2);
+    }
+
+    @Override // android.view.TextureView.SurfaceTextureListener
+    public void onSurfaceTextureUpdated(SurfaceTexture surfaceTexture) {
+        if (this.picOutputNotified) {
+            return;
+        }
+        this.picOutputNotified = true;
+        Log.i("jrelog", "[画面切换] 游戏首帧到达（onSurfaceTextureUpdated）");
+        this.pojavCallback.onPicOutput();
+    }
+
+    public void resetPicOutputFlag() {
+        this.picOutputNotified = false;
+    }
+
+    public static void onExit(Context context, int i) {
+        ((BaseMainActivity) context).pojavCallback.onExit(i);
+    }
+
+    public void startGame(final String str, final String str2, boolean z, final Vector<String> vector, final String str3, final String str4, final String str5) {
+        this.picOutputNotified = false;
+        Thread thread = new Thread(new Runnable() { // from class: net.kdt.pojavlaunch.BaseMainActivity$$ExternalSyntheticLambda3
+            @Override // java.lang.Runnable
+            public final void run() {
+                BaseMainActivity.this.m2268lambda$startGame$2$netkdtpojavlaunchBaseMainActivity(str, str2, str3, vector, str4, str5);
+            }
+        }, "JVM Main thread");
+        thread.setPriority(10);
+        thread.start();
+    }
+
+    /* JADX INFO: Access modifiers changed from: package-private */
+    /* renamed from: lambda$startGame$2$net-kdt-pojavlaunch-BaseMainActivity, reason: not valid java name */
+    public /* synthetic */ void m2268lambda$startGame$2$netkdtpojavlaunchBaseMainActivity(String str, String str2, String str3, Vector vector, String str4, String str5) {
+        runOnUiThread(new Runnable() { // from class: net.kdt.pojavlaunch.BaseMainActivity$$ExternalSyntheticLambda1
+            @Override // java.lang.Runnable
+            public final void run() {
+                BaseMainActivity.this.m2266lambda$startGame$0$netkdtpojavlaunchBaseMainActivity();
+            }
+        });
+        try {
+            JREUtils.redirectAndPrintJRELog(this);
+        } catch (Throwable th) {
+            Log.w("jrelog-logcat", "redirectAndPrintJRELog failed, continue launching anyway", th);
+        }
+        try {
+            Tools.launchMinecraft(this, str, str2, str3, vector, str4, str5);
+        } catch (Throwable th2) {
+            th2.printStackTrace();
+            runOnUiThread(new Runnable() { // from class: net.kdt.pojavlaunch.BaseMainActivity$$ExternalSyntheticLambda4
+                @Override // java.lang.Runnable
+                public final void run() {
+                    BaseMainActivity.this.m2267lambda$startGame$1$netkdtpojavlaunchBaseMainActivity(th2);
+                }
+            });
+        }
+    }
+
+    /* JADX INFO: Access modifiers changed from: package-private */
+    /* renamed from: lambda$startGame$0$net-kdt-pojavlaunch-BaseMainActivity, reason: not valid java name */
+    public /* synthetic */ void m2266lambda$startGame$0$netkdtpojavlaunchBaseMainActivity() {
+        this.pojavCallback.onStart();
+    }
+
+    /* JADX INFO: Access modifiers changed from: package-private */
+    /* renamed from: lambda$startGame$1$net-kdt-pojavlaunch-BaseMainActivity, reason: not valid java name */
+    public /* synthetic */ void m2267lambda$startGame$1$netkdtpojavlaunchBaseMainActivity(Throwable th) {
+        this.pojavCallback.onError(new Exception(th));
+    }
+
+    public void startMouseThread() {
+        Thread thread = new Thread(new Runnable() { // from class: net.kdt.pojavlaunch.BaseMainActivity$$ExternalSyntheticLambda2
+            @Override // java.lang.Runnable
+            public final void run() {
+                BaseMainActivity.this.m2269lambda$startMouseThread$3$netkdtpojavlaunchBaseMainActivity();
+            }
+        }, "VirtualMouseGrabThread");
+        thread.setPriority(1);
+        thread.setDaemon(true);
+        thread.start();
+    }
+
+    /* JADX INFO: Access modifiers changed from: package-private */
+    /* renamed from: lambda$startMouseThread$3$net-kdt-pojavlaunch-BaseMainActivity, reason: not valid java name */
+    public /* synthetic */ void m2269lambda$startMouseThread$3$netkdtpojavlaunchBaseMainActivity() {
+        while (true) {
+            if (!CallbackBridge.isGrabbing() && this.mouseMode) {
+                this.mouseModeHandler.sendEmptyMessage(1);
+                this.mouseMode = false;
+            }
+            if (CallbackBridge.isGrabbing() && !this.mouseMode) {
+                this.mouseModeHandler.sendEmptyMessage(0);
+                this.mouseMode = true;
+            }
+            try {
+                Thread.sleep(16L);
+            } catch (InterruptedException unused) {
+                return;
+            }
+        }
+    }
+
+    /* JADX INFO: Access modifiers changed from: protected */
+    @Override // androidx.appcompat.app.AppCompatActivity, androidx.fragment.app.FragmentActivity, android.app.Activity
+    public void onStart() {
+        super.onStart();
+        CallbackBridge.nativeSetWindowAttrib(131076, 1);
+    }
+
+    /* JADX INFO: Access modifiers changed from: protected */
+    @Override // androidx.appcompat.app.AppCompatActivity, androidx.fragment.app.FragmentActivity, android.app.Activity
+    public void onStop() {
+        CallbackBridge.nativeSetWindowAttrib(131076, 0);
         super.onStop();
     }
 
-    @Override
-    public void onWindowFocusChanged(boolean hasFocus) {
-        super.onWindowFocusChanged(hasFocus);
-        if (hasFocus) {
-            getWindow().getDecorView().setSystemUiVisibility(
-                    View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                            | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                            | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                            | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                            | View.SYSTEM_UI_FLAG_FULLSCREEN
-                            | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
+    @Override // android.app.Activity, android.view.Window.Callback
+    public void onWindowFocusChanged(boolean z) {
+        super.onWindowFocusChanged(z);
+        if (z) {
+            getWindow().getDecorView().setSystemUiVisibility(5894);
         }
     }
 
-    @Override
-    protected void onPostResume() {
+    /* JADX INFO: Access modifiers changed from: protected */
+    @Override // androidx.appcompat.app.AppCompatActivity, androidx.fragment.app.FragmentActivity, android.app.Activity
+    public void onPostResume() {
         super.onPostResume();
-        if (minecraftGLView != null && minecraftGLView.getSurfaceTexture() != null) {
-            minecraftGLView.post(() -> {
-                pojavCallback.onSurfaceTextureSizeChanged(minecraftGLView.getSurfaceTexture(),minecraftGLView.getWidth(),minecraftGLView.getHeight());
-            });
+        TextureView textureView = this.minecraftGLView;
+        if (textureView == null || textureView.getSurfaceTexture() == null) {
+            return;
         }
+        this.minecraftGLView.post(new Runnable() { // from class: net.kdt.pojavlaunch.BaseMainActivity$$ExternalSyntheticLambda0
+            @Override // java.lang.Runnable
+            public final void run() {
+                BaseMainActivity.this.m2265lambda$onPostResume$4$netkdtpojavlaunchBaseMainActivity();
+            }
+        });
+    }
+
+    /* JADX INFO: Access modifiers changed from: package-private */
+    /* renamed from: lambda$onPostResume$4$net-kdt-pojavlaunch-BaseMainActivity, reason: not valid java name */
+    public /* synthetic */ void m2265lambda$onPostResume$4$netkdtpojavlaunchBaseMainActivity() {
+        this.pojavCallback.onSurfaceTextureSizeChanged(this.minecraftGLView.getSurfaceTexture(), this.minecraftGLView.getWidth(), this.minecraftGLView.getHeight());
     }
 }

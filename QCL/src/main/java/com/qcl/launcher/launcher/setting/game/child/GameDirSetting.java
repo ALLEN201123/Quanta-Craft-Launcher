@@ -1,19 +1,15 @@
 package com.qcl.launcher.launcher.setting.game.child;
 
-import androidx.annotation.NonNull;
-
-public class GameDirSetting implements Cloneable{
-
-    public int type;
+/* loaded from: classes2.dex */
+public class GameDirSetting implements Cloneable {
     public String path;
+    public int type;
 
-    public GameDirSetting(int type,String path){
-        this.type = type;
-        this.path = path;
+    public GameDirSetting(int i, String str) {
+        this.type = i;
+        this.path = str;
     }
 
-    @NonNull
-    @Override
     public Object clone() throws CloneNotSupportedException {
         return super.clone();
     }

@@ -1,3 +1,23 @@
+/*
+ * Decompiled with CFR 0.152.
+ * 
+ * Could not load the following classes:
+ *  android.annotation.SuppressLint
+ *  android.app.Dialog
+ *  android.content.Context
+ *  android.graphics.Bitmap
+ *  android.graphics.BitmapFactory
+ *  android.os.Handler
+ *  android.os.Message
+ *  android.text.method.LinkMovementMethod
+ *  android.view.View
+ *  android.view.View$OnClickListener
+ *  android.widget.Button
+ *  android.widget.TextView
+ *  android.widget.Toast
+ *  androidx.annotation.NonNull
+ *  androidx.annotation.RequiresApi
+ */
 package com.qcl.launcher.launcher.dialogs.account;
 
 import android.annotation.SuppressLint;
@@ -5,7 +25,6 @@ import android.app.Dialog;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.os.Build;
 import android.os.Handler;
 import android.os.Message;
 import android.text.method.LinkMovementMethod;
@@ -13,11 +32,8 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
-
-import com.qcl.launcher.R;
 import com.qcl.launcher.auth.Account;
 import com.qcl.launcher.auth.AuthInfo;
 import com.qcl.launcher.auth.AuthenticationException;
@@ -27,7 +43,6 @@ import com.qcl.launcher.auth.yggdrasil.TextureType;
 import com.qcl.launcher.auth.yggdrasil.YggdrasilService;
 import com.qcl.launcher.auth.yggdrasil.YggdrasilSession;
 import com.qcl.launcher.skin.utils.Avatar;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
@@ -35,137 +50,119 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Map;
 
-public class AddMojangAccountDialog extends Dialog implements View.OnClickListener {
-
+import com.qcl.launcher.R;
+public class AddMojangAccountDialog
+extends Dialog
+implements View.OnClickListener {
     private ArrayList<Account> accounts;
     private OnMojangAccountAddListener onMojangAccountAddListener;
-
     private TextView editEmail;
     private TextView editPassword;
-
     private TextView migrateLink;
     private TextView helpLink;
     private TextView purchaseLink;
-
     private Button login;
     private Button cancel;
-
     Account account;
+    @SuppressLint(value={"HandlerLeak"})
+    public final Handler loginHandler = new Handler(){
 
-    public AddMojangAccountDialog(@NonNull Context context, ArrayList<Account> accounts,OnMojangAccountAddListener onMojangAccountAddListener) {
+        public void handleMessage(@NonNull Message msg) {
+            super.handleMessage(msg);
+            if (msg.what == 0) {
+                AddMojangAccountDialog.this.onMojangAccountAddListener.onPositive(AddMojangAccountDialog.this.account);
+                AddMojangAccountDialog.this.dismiss();
+            }
+            if (msg.what == 1) {
+                Toast.makeText((Context)AddMojangAccountDialog.this.getContext(), (CharSequence)AddMojangAccountDialog.this.getContext().getString(R.string.dialog_add_mojang_account_failed), (int)0).show();
+            }
+        }
+    };
+
+    public AddMojangAccountDialog(@NonNull Context context, ArrayList<Account> accounts, OnMojangAccountAddListener onMojangAccountAddListener) {
         super(context);
         this.accounts = accounts;
         this.onMojangAccountAddListener = onMojangAccountAddListener;
-        setContentView(R.layout.dialog_add_mojang_account);
-        setCancelable(false);
-        init();
+        this.setContentView(R.layout.dialog_add_mojang_account);
+        this.setCancelable(false);
+        this.init();
     }
 
-    private void init(){
-        editEmail = findViewById(R.id.edit_email);
-        editPassword = findViewById(R.id.edit_password);
-
-        migrateLink = findViewById(R.id.migrate_link);
-        helpLink = findViewById(R.id.help_link);
-        purchaseLink = findViewById(R.id.purchase_link);
-
-        migrateLink.setMovementMethod(LinkMovementMethod.getInstance());
-        helpLink.setMovementMethod(LinkMovementMethod.getInstance());
-        purchaseLink.setMovementMethod(LinkMovementMethod.getInstance());
-
-        login = findViewById(R.id.login_mojang);
-        cancel = findViewById(R.id.cancel_login_mojang);
-
-        login.setOnClickListener(this);
-        cancel.setOnClickListener(this);
+    private void init() {
+        this.editEmail = (TextView)this.findViewById(R.id.edit_email);
+        this.editPassword = (TextView)this.findViewById(R.id.edit_password);
+        this.migrateLink = (TextView)this.findViewById(R.id.migrate_link);
+        this.helpLink = (TextView)this.findViewById(R.id.help_link);
+        this.purchaseLink = (TextView)this.findViewById(R.id.purchase_link);
+        this.migrateLink.setMovementMethod(LinkMovementMethod.getInstance());
+        this.helpLink.setMovementMethod(LinkMovementMethod.getInstance());
+        this.purchaseLink.setMovementMethod(LinkMovementMethod.getInstance());
+        this.login = (Button)this.findViewById(R.id.login_mojang);
+        this.cancel = (Button)this.findViewById(R.id.cancel_login_mojang);
+        this.login.setOnClickListener((View.OnClickListener)this);
+        this.cancel.setOnClickListener((View.OnClickListener)this);
     }
 
-    @Override
     public void onClick(View v) {
-        if (v == login){
-            ArrayList<String> emails = new ArrayList<>();
-            for (Account account : accounts){
-                if (account.loginType == 2){
-                    emails.add(account.email);
-                }
+        if (v == this.login) {
+            ArrayList<String> emails = new ArrayList<String>();
+            for (Account account : this.accounts) {
+                if (account.loginType != 2) continue;
+                emails.add(account.email);
             }
-            if (emails.contains(editEmail.getText().toString())){
-                Toast.makeText(getContext(), getContext().getString(R.string.dialog_add_mojang_account_exist_warn), Toast.LENGTH_SHORT).show();
-            }
-            else if (editEmail.getText().toString().equals("") || editPassword.getText().toString().equals("")){
-                Toast.makeText(getContext(), getContext().getString(R.string.dialog_add_mojang_account_empty_warn), Toast.LENGTH_SHORT).show();
-            }
-            else {
-                String email = editEmail.getText().toString();
-                String password = editPassword.getText().toString();
-                new Thread() {
-                    @RequiresApi(api = Build.VERSION_CODES.N)
+            if (emails.contains(this.editEmail.getText().toString())) {
+                Toast.makeText((Context)this.getContext(), (CharSequence)this.getContext().getString(R.string.dialog_add_mojang_account_exist_warn), (int)0).show();
+            } else if (this.editEmail.getText().toString().equals("") || this.editPassword.getText().toString().equals("")) {
+                Toast.makeText((Context)this.getContext(), (CharSequence)this.getContext().getString(R.string.dialog_add_mojang_account_empty_warn), (int)0).show();
+            } else {
+                final String email = this.editEmail.getText().toString();
+                final String password = this.editPassword.getText().toString();
+                new Thread(){
+
                     @Override
+                    @RequiresApi(api=24)
                     public void run() {
                         YggdrasilService yggdrasilService = new YggdrasilService(new MojangYggdrasilProvider());
                         try {
-                            YggdrasilSession yggdrasilSession = yggdrasilService.authenticate(email,password,"00000000-0000-0000-0000-000000000000");
-                            AuthInfo authInfo = yggdrasilSession.toAuthInfo();
+                            final YggdrasilSession yggdrasilSession = yggdrasilService.authenticate(email, password, "00000000-0000-0000-0000-000000000000");
+                            final AuthInfo authInfo = yggdrasilSession.toAuthInfo();
                             Map<TextureType, Texture> map = YggdrasilService.getTextures(yggdrasilService.getCompleteGameProfile(authInfo.getUUID()).get()).get();
-                            Texture texture = map.get(TextureType.SKIN);
+                            Texture texture = map.get((Object)TextureType.SKIN);
                             String u = texture.getUrl();
-                            if (!u.startsWith("https")){
-                                u = u.replaceFirst("http","https");
+                            if (!u.startsWith("https")) {
+                                u = u.replaceFirst("http", "https");
                             }
                             URL url = new URL(u);
                             HttpURLConnection httpURLConnection = (HttpURLConnection)url.openConnection();
                             httpURLConnection.setDoInput(true);
                             httpURLConnection.connect();
                             InputStream inputStream = httpURLConnection.getInputStream();
-                            Bitmap skin = BitmapFactory.decodeStream(inputStream);
-                            loginHandler.post(new Runnable() {
+                            final Bitmap skin = BitmapFactory.decodeStream((InputStream)inputStream);
+                            AddMojangAccountDialog.this.loginHandler.post(new Runnable(){
+
                                 @Override
                                 public void run() {
                                     String skinTexture = Avatar.bitmapToString(skin);
-                                    account = new Account(2,
-                                            email,
-                                            password,
-                                            "mojang",
-                                            "0",
-                                            authInfo.getUsername(),
-                                            authInfo.getUUID().toString(),
-                                            authInfo.getAccessToken(),
-                                            yggdrasilSession.getClientToken(),
-                                            "",
-                                            "",
-                                            skinTexture);
+                                    AddMojangAccountDialog.this.account = new Account(2, email, password, "mojang", "0", authInfo.getUsername(), authInfo.getUUID().toString(), authInfo.getAccessToken(), yggdrasilSession.getClientToken(), "", "", skinTexture);
                                 }
                             });
-                            loginHandler.sendEmptyMessage(0);
-                        } catch (AuthenticationException | IOException e) {
+                            AddMojangAccountDialog.this.loginHandler.sendEmptyMessage(0);
+                        }
+                        catch (AuthenticationException | IOException e) {
                             e.printStackTrace();
-                            loginHandler.sendEmptyMessage(1);
+                            AddMojangAccountDialog.this.loginHandler.sendEmptyMessage(1);
                         }
                     }
                 }.start();
             }
         }
-        if (v == cancel){
+        if (v == this.cancel) {
             this.dismiss();
         }
     }
 
-    public interface OnMojangAccountAddListener{
-        void onPositive(Account account);
+    public static interface OnMojangAccountAddListener {
+        public void onPositive(Account var1);
     }
-
-    @SuppressLint("HandlerLeak")
-    public final Handler loginHandler = new Handler() {
-        @Override
-        public void handleMessage(@NonNull Message msg) {
-            super.handleMessage(msg);
-            if (msg.what == 0) {
-                onMojangAccountAddListener.onPositive(account);
-                AddMojangAccountDialog.this.dismiss();
-            }
-            if (msg.what == 1) {
-                Toast.makeText(getContext(), getContext().getString(R.string.dialog_add_mojang_account_failed), Toast.LENGTH_SHORT).show();
-            }
-        }
-    };
 }
+

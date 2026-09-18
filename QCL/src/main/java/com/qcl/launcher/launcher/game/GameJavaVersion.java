@@ -1,6 +1,9 @@
 package com.qcl.launcher.launcher.game;
 
+/* loaded from: classes2.dex */
 public class GameJavaVersion {
+    public static final GameJavaVersion JAVA_16 = new GameJavaVersion("java-runtime-alpha", 16);
+    public static final GameJavaVersion JAVA_8 = new GameJavaVersion("jre-legacy", 8);
     private final String component;
     private final int majorVersion;
 
@@ -8,19 +11,16 @@ public class GameJavaVersion {
         this("", 0);
     }
 
-    public GameJavaVersion(String component, int majorVersion) {
-        this.component = component;
-        this.majorVersion = majorVersion;
+    public GameJavaVersion(String str, int i) {
+        this.component = str;
+        this.majorVersion = i;
     }
 
     public String getComponent() {
-        return component;
+        return this.component;
     }
 
     public int getMajorVersion() {
-        return majorVersion;
+        return this.majorVersion;
     }
-
-    public static final GameJavaVersion JAVA_16 = new GameJavaVersion("java-runtime-alpha", 16);
-    public static final GameJavaVersion JAVA_8 = new GameJavaVersion("jre-legacy", 8);
 }

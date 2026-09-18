@@ -2,52 +2,37 @@ package com.qcl.launcher.auth;
 
 import java.util.UUID;
 
-/**
- *
- * @author huangyuhui
- */
+/* loaded from: classes2.dex */
 public class AuthInfo implements AutoCloseable {
-
-    private final String username;
-    private final UUID uuid;
     private final String accessToken;
     private final String userProperties;
+    private final String username;
+    private final UUID uuid;
 
-    public AuthInfo(String username, UUID uuid, String accessToken, String userProperties) {
-        this.username = username;
+    @Override // java.lang.AutoCloseable
+    public void close() throws Exception {
+    }
+
+    public AuthInfo(String str, UUID uuid, String str2, String str3) {
+        this.username = str;
         this.uuid = uuid;
-        this.accessToken = accessToken;
-        this.userProperties = userProperties;
+        this.accessToken = str2;
+        this.userProperties = str3;
     }
 
     public String getUsername() {
-        return username;
+        return this.username;
     }
 
     public UUID getUUID() {
-        return uuid;
+        return this.uuid;
     }
 
     public String getAccessToken() {
-        return accessToken;
+        return this.accessToken;
     }
 
-    /**
-     * Properties of this user.
-     * Don't know the difference between user properties and user property map.
-     *
-     * @return the user property map in JSON.
-     */
     public String getUserProperties() {
-        return userProperties;
-    }
-
-    /**
-     * Called when launching game.
-     * @return null if no argument is specified
-     */
-
-    @Override
-    public void close() throws Exception {
+        return this.userProperties;
     }
 }

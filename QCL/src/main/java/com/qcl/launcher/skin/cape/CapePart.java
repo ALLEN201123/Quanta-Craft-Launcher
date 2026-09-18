@@ -1,21 +1,21 @@
 package com.qcl.launcher.skin.cape;
 
+/* loaded from: classes2.dex */
 public enum CapePart {
-
-    CAPE(0, "Cape", new CapePartSection[] { CapePart.CapeSkin.FRONT.getCapePartSection(), CapePart.CapeSkin.RIGHT.getCapePartSection(), CapePart.CapeSkin.BACK.getCapePartSection(), CapePart.CapeSkin.LEFT.getCapePartSection(), CapePart.CapeSkin.TOP.getCapePartSection(), CapePart.CapeSkin.BOTTOM.getCapePartSection() });
+    CAPE(0, "Cape", new CapePartSection[]{CapeSkin.FRONT.getCapePartSection(), CapeSkin.RIGHT.getCapePartSection(), CapeSkin.BACK.getCapePartSection(), CapeSkin.LEFT.getCapePartSection(), CapeSkin.TOP.getCapePartSection(), CapeSkin.BOTTOM.getCapePartSection()});
 
     private CapePartSection[] capeParts;
     private String displayName;
     private int id;
 
-    private CapePart(final int id, final String displayName, final CapePartSection[] capeParts) {
-        this.id = id;
-        this.displayName = displayName;
-        this.capeParts = capeParts;
+    CapePart(int i, String str, CapePartSection[] capePartSectionArr) {
+        this.id = i;
+        this.displayName = str;
+        this.capeParts = capePartSectionArr;
     }
 
-    CapePartSection getCapePartSection(final int n) {
-        return this.capeParts[n];
+    CapePartSection getCapePartSection(int i) {
+        return this.capeParts[i];
     }
 
     String getDisplayName() {
@@ -26,8 +26,8 @@ public enum CapePart {
         return this.id;
     }
 
-    public enum CapeSkin
-    {
+    /* loaded from: classes2.dex */
+    public enum CapeSkin {
         BACK("BACK", 2, 2, "Back", 1, 1, 10, 16),
         BOTTOM("BOTTOM", 5, 5, "Bottom", 11, 0, 10, 1),
         FRONT("FRONT", 0, 0, "Front", 12, 1, 10, 16),
@@ -42,13 +42,13 @@ public enum CapePart {
         private int startY;
         private int width;
 
-        private CapeSkin(final String s2, final int n2, final int id, final String displayName, final int startX, final int startY, final int width, final int height) {
-            this.id = id;
-            this.width = width;
-            this.height = height;
-            this.displayName = displayName;
-            this.startX = startX;
-            this.startY = startY;
+        CapeSkin(String str, int i, int i2, String str2, int i3, int i4, int i5, int i6) {
+            this.id = i2;
+            this.width = i5;
+            this.height = i6;
+            this.displayName = str2;
+            this.startX = i3;
+            this.startY = i4;
         }
 
         CapePartSection getCapePartSection() {
@@ -79,5 +79,4 @@ public enum CapePart {
             return this.width;
         }
     }
-
 }

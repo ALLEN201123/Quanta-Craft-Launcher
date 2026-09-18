@@ -3,67 +3,59 @@ package com.qcl.launcher.utils;
 import java.util.Map;
 import java.util.Objects;
 
-/**
- *
- * @author huangyuhui
- */
+/* loaded from: classes2.dex */
 public final class Pair<K, V> implements Map.Entry<K, V> {
-
-    public static <K, V> Pair<K, V> pair(K key, V value) {
-        return new Pair<>(key, value);
-    }
-
     private K key;
     private V value;
 
-    private Pair(K key, V value) {
-        this.key = key;
-        this.value = value;
+    public static <K, V> Pair<K, V> pair(K k, V v) {
+        return new Pair<>(k, v);
     }
 
-    @Override
+    private Pair(K k, V v) {
+        this.key = k;
+        this.value = v;
+    }
+
+    @Override // java.util.Map.Entry
     public K getKey() {
-        return key;
+        return this.key;
     }
 
-    public void setKey(K key) {
-        this.key = key;
+    public void setKey(K k) {
+        this.key = k;
     }
 
-    @Override
+    @Override // java.util.Map.Entry
     public V getValue() {
-        return value;
+        return this.value;
     }
 
-    @Override
-    public V setValue(V value) {
-        V original = this.value;
-        this.value = value;
-        return original;
+    @Override // java.util.Map.Entry
+    public V setValue(V v) {
+        V v2 = this.value;
+        this.value = v;
+        return v2;
     }
 
-    @Override
+    @Override // java.util.Map.Entry
     public int hashCode() {
-        int hash = 7;
-        hash = 23 * hash + Objects.hashCode(this.key);
-        hash = 23 * hash + Objects.hashCode(this.value);
-        return hash;
+        return ((161 + Objects.hashCode(this.key)) * 23) + Objects.hashCode(this.value);
     }
 
-    @Override
+    @Override // java.util.Map.Entry
     public boolean equals(Object obj) {
-        if (this == obj)
+        if (this == obj) {
             return true;
-        if (obj == null)
+        }
+        if (obj == null || getClass() != obj.getClass()) {
             return false;
-        if (getClass() != obj.getClass())
-            return false;
-        final Pair<?, ?> other = (Pair<?, ?>) obj;
-        return Objects.equals(this.key, other.key) && Objects.equals(this.value, other.value);
+        }
+        Pair pair = (Pair) obj;
+        return Objects.equals(this.key, pair.key) && Objects.equals(this.value, pair.value);
     }
 
-    @Override
     public String toString() {
-        return "(" + key + ", " + value + ")";
+        return "(" + this.key + ", " + this.value + ")";
     }
 }

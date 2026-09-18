@@ -53,24 +53,31 @@ static float grabCursorX, grabCursorY, lastCursorX, lastCursorY;
 jclass inputBridgeClass_ANDROID, inputBridgeClass_JRE;
 jmethodID inputBridgeMethod_ANDROID, inputBridgeMethod_JRE;
 jclass bridgeClazz;
-jboolean isGrabbing;
+// ★★★ 2026-09-18：isGrabbing 原来在**本文件**里又定义了一份（与 environ.h 结构体的
+// `jboolean isGrabbing` 形成又一套「两套存储」）。FCL 只用 pojav_environ->isGrabbing，
+// 这里照 FCL 删掉本文件那份，全链路统一读结构体字段。
+// （grabCursor* / lastCursor* 是 QCL 触屏抓取独有，FCL 没有，继续保留在本文件。）
 
 jint JNI_OnLoad(JavaVM* vm, void* reserved) {
     if (dalvikJavaVMPtr == NULL) {
         //Save dalvik global JavaVM pointer
         dalvikJavaVMPtr = vm;
+        // ★ 同步写进 pojav_environ（FCL 全链路读的是结构体字段，utils.h 的 static 是
+        //   Pojav 旧桥遗留）。两边保持一致，避免将来某处读结构体那份拿到 NULL。
+        pojav_environ->dalvikJavaVMPtr = vm;
         (*vm)->GetEnv(vm, (void**) &dalvikJNIEnvPtr_ANDROID, JNI_VERSION_1_4);
         bridgeClazz = (*dalvikJNIEnvPtr_ANDROID)->NewGlobalRef(dalvikJNIEnvPtr_ANDROID,(*dalvikJNIEnvPtr_ANDROID) ->FindClass(dalvikJNIEnvPtr_ANDROID,"org/lwjgl/glfw/CallbackBridge"));
         assert(bridgeClazz != NULL);
-        isUseStackQueueCall = JNI_FALSE;
+        pojav_environ->isUseStackQueueCall = JNI_FALSE;
     } else if (dalvikJavaVMPtr != vm) {
         runtimeJavaVMPtr = vm;
+        pojav_environ->runtimeJavaVMPtr = vm;
         (*vm)->GetEnv(vm, (void**) &runtimeJNIEnvPtr_JRE, JNI_VERSION_1_4);
         hookExec();
     }
     
-    isGrabbing = JNI_FALSE;
-    
+    pojav_environ->isGrabbing = JNI_FALSE;
+
     return JNI_VERSION_1_4;
 }
 
@@ -123,12 +130,72 @@ Java_org_lwjgl_glfw_GLFW_nativeInitializeGLFWNativeBridge(__attribute__((unused)
     pojav_environ->vmGlfwClass = (*vmEnv)->NewGlobalRef(vmEnv,
                                                         (*vmEnv)->FindClass(vmEnv,
                                                                             "org/lwjgl/glfw/GLFW"));
+    // ★★★ 2026-09-17 诊断（b1.7.3 / 1.20.6 画面冻结）：
+    // FindClass 可能失败 —— GLFW 类是从**独立的 URLClassLoader**（lwjgl-glfw.jar）加载的，
+    // 而本函数若在非 app classloader 线程上跑，FindClass 会抛 ClassNotFoundException 并返回 NULL。
+    // 一旦 vmGlfwClass == NULL：
+    //   · 下面的 GetStaticMethodID 全部抛异常返回 NULL（还会留下 pending exception）
+    //   · updateMonitorSize() 里 `vmGlfwClass == NULL` 直接 return → 尺寸永远停在 0x0
+    //   · internalWindowSizeChanged 为 NULL → 窗口尺寸回调永不触发
+    //   · 游戏主循环认为窗口是 0x0 → GLThread 空转 → 画面冻结
+    // 这里把实际返回值落到 logcat，一眼可见。
+    __android_log_print(ANDROID_LOG_ERROR, "QCL_DBG",
+                        "nativeInitializeGLFWNativeBridge: vmGlfwClass=%p", pojav_environ->vmGlfwClass);
+    if (pojav_environ->vmGlfwClass == NULL) {
+        if ((*vmEnv)->ExceptionCheck(vmEnv)) {
+            (*vmEnv)->ExceptionDescribe(vmEnv);
+            (*vmEnv)->ExceptionClear(vmEnv);
+        }
+        // 兜底重试：用 Thread.currentThread().getContextClassLoader() 再找一次。
+        // MC 在 LaunchClassLoader 里跑，GLFW 由 URLClassLoader 加载，context classloader
+        // 通常就是那个 URLClassLoader —— 这是跨 classloader 拿类的标准做法。
+        jclass threadCls = (*vmEnv)->FindClass(vmEnv, "java/lang/Thread");
+        if (threadCls != NULL) {
+            jmethodID curThread = (*vmEnv)->GetStaticMethodID(vmEnv, threadCls, "currentThread",
+                                                              "()Ljava/lang/Thread;");
+            jmethodID getCcl = (*vmEnv)->GetMethodID(vmEnv, threadCls, "getContextClassLoader",
+                                                     "()Ljava/lang/ClassLoader;");
+            if (curThread != NULL && getCcl != NULL) {
+                jobject th = (*vmEnv)->CallStaticObjectMethod(vmEnv, threadCls, curThread);
+                jobject ccl = (*vmEnv)->CallObjectMethod(vmEnv, th, getCcl);
+                if (ccl != NULL) {
+                    jclass clCls = (*vmEnv)->FindClass(vmEnv, "java/lang/ClassLoader");
+                    jmethodID loadCls = (*vmEnv)->GetMethodID(vmEnv, clCls, "loadClass",
+                                                              "(Ljava/lang/String;)Ljava/lang/Class;");
+                    jstring nm = (*vmEnv)->NewStringUTF(vmEnv, "org.lwjgl.glfw.GLFW");
+                    jclass found = (jclass) (*vmEnv)->CallObjectMethod(vmEnv, ccl, loadCls, nm);
+                    __android_log_print(ANDROID_LOG_ERROR, "QCL_DBG",
+                                        "nativeInitializeGLFWNativeBridge: fallback loadClass=%p", found);
+                    if (found != NULL) {
+                        pojav_environ->vmGlfwClass = (*vmEnv)->NewGlobalRef(vmEnv, found);
+                    }
+                }
+                if ((*vmEnv)->ExceptionCheck(vmEnv)) (*vmEnv)->ExceptionClear(vmEnv);
+            }
+            if ((*vmEnv)->ExceptionCheck(vmEnv)) (*vmEnv)->ExceptionClear(vmEnv);
+        }
+        if ((*vmEnv)->ExceptionCheck(vmEnv)) (*vmEnv)->ExceptionClear(vmEnv);
+        if (pojav_environ->vmGlfwClass == NULL) {
+            __android_log_print(ANDROID_LOG_ERROR, "QCL_DBG",
+                                "nativeInitializeGLFWNativeBridge: GLFW class NOT FOUND, giving up");
+            return;
+        }
+    }
     pojav_environ->method_glftSetWindowAttrib = (*vmEnv)->GetStaticMethodID(
             vmEnv, pojav_environ->vmGlfwClass, "glfwSetWindowAttrib", "(JII)V");
     pojav_environ->method_internalWindowSizeChanged = (*vmEnv)->GetStaticMethodID(
             vmEnv, pojav_environ->vmGlfwClass, "internalWindowSizeChanged", "(J)V");
     pojav_environ->method_internalChangeMonitorSize = (*vmEnv)->GetStaticMethodID(
             vmEnv, pojav_environ->vmGlfwClass, "internalChangeMonitorSize", "(II)V");
+    __android_log_print(ANDROID_LOG_ERROR, "QCL_DBG",
+                        "nativeInitializeGLFWNativeBridge: setAttrib=%p windowSize=%p monitorSize=%p",
+                        pojav_environ->method_glftSetWindowAttrib,
+                        pojav_environ->method_internalWindowSizeChanged,
+                        pojav_environ->method_internalChangeMonitorSize);
+    if ((*vmEnv)->ExceptionCheck(vmEnv)) {
+        (*vmEnv)->ExceptionDescribe(vmEnv);
+        (*vmEnv)->ExceptionClear(vmEnv);
+    }
     jfieldID field_keyDownBuffer = (*vmEnv)->GetStaticFieldID(
             vmEnv, pojav_environ->vmGlfwClass, "keyDownBuffer", "Ljava/nio/ByteBuffer;");
     jobject keyDownBufferJ = (*vmEnv)->GetStaticObjectField(
@@ -140,11 +207,43 @@ Java_org_lwjgl_glfw_GLFW_nativeInitializeGLFWNativeBridge(__attribute__((unused)
             vmEnv, pojav_environ->vmGlfwClass, field_mouseDownBuffer);
     pojav_environ->mouseDownBuffer = (*vmEnv)->GetDirectBufferAddress(vmEnv, mouseDownBufferJ);
 }
+/*
+ * ★★★ 2026-09-17 深夜：本宏是 1.20.6 / 26.2「鼠标能移动、按不了按钮」的根因所在。
+ *
+ * 【症状】全量 logcat：
+ *   sendMouseButton ... GLFW_invoke_MouseButton=0x0
+ *   Pump MOUSE_BUTTON btn=0 act=1 mods=0 invoke=0x0
+ *   → isInputReady=1、isUseStackQueueCall=1、环形队列写入正常、
+ *     pojavPumpEvents 也确实读到了事件 —— 唯独回调指针是 NULL。
+ *
+ * 【根因】这里原来被写成往**本文件自己新建的全局变量** GLFW_invoke_##NAME 里写
+ *   （宏体里多了一行 `GLFW_invoke_##NAME##_func* GLFW_invoke_##NAME;`），
+ *   而 pojavPumpEvents() 读的是 **pojav_environ 结构体字段**
+ *   pojav_environ->GLFW_invoke_##NAME（environ.h:76-86 定义）。两套存储，永不相交。
+ *
+ * 【为什么 b1.7.3 却正常】低版本 isUseStackQueueCall=0，走「直接回调分支」，
+ *   那一支读的正好是同名全局变量 —— 与本宏写的是同一份，所以能用。
+ *   高版本（minimumLauncherVersion>=21）走队列分支，读结构体字段 → 恒 NULL。
+ *   ⇒ 这就是用户问的「为什么只有 b1.7.3 才能触屏有效」的答案。
+ *
+ * 【修法】严格对齐 FCL 原版（FCL/jni/input_bridge_v3.c:125-130）：
+ *   全局只保留结构体字段一份存储，注册写它、直接回调读它、队列 pump 也读它。
+ *   下面那些 JNIEXPORT 函数里原本的裸 `GLFW_invoke_XXX` 读，
+ *   也一并改成了 `pojav_environ->GLFW_invoke_XXX`。
+ *
+ * 【另注】`return *oldCallback` 在赋值之后取，所以返回的是新值而非旧值
+ *   （FCL 原版同样如此）。GLFW 只在卸载回调时用到返回值，不影响功能，先跟 FCL 保持一致。
+ */
 #define ADD_CALLBACK_WWIN(NAME) \
-GLFW_invoke_##NAME##_func* GLFW_invoke_##NAME; \
 JNIEXPORT jlong JNICALL Java_org_lwjgl_glfw_GLFW_nglfwSet##NAME##Callback(JNIEnv * env, jclass cls, jlong window, jlong callbackptr) { \
-    void** oldCallback = (void**) &GLFW_invoke_##NAME; \
-    GLFW_invoke_##NAME = (GLFW_invoke_##NAME##_func*) (uintptr_t) callbackptr; \
+    void** oldCallback = (void**) &pojav_environ->GLFW_invoke_##NAME; \
+    pojav_environ->GLFW_invoke_##NAME = (GLFW_invoke_##NAME##_func*) (uintptr_t) callbackptr; \
+    if (getenv("QCL_DBG_INPUT")) { \
+        __android_log_print(ANDROID_LOG_INFO, "QCL_INPUT", \
+            "SetCallback " #NAME " window=0x%llx ptr=0x%llx (old=0x%llx)", \
+            (unsigned long long) window, (unsigned long long) callbackptr, \
+            (unsigned long long) (uintptr_t) *oldCallback); \
+    } \
     return (jlong) (uintptr_t) *oldCallback; \
 }
 
@@ -165,7 +264,7 @@ jboolean attachThread(bool isAndroid, JNIEnv** secondJNIEnvPtr) {
     LOGD("Debug: Attaching %s thread to %s, javavm.isNull=%d\n", isAndroid ? "Android" : "JRE", isAndroid ? "JRE" : "Android", (isAndroid ? runtimeJavaVMPtr : dalvikJavaVMPtr) == NULL);
 #endif
 
-    if (*secondJNIEnvPtr != NULL || (!isUseStackQueueCall)) return JNI_TRUE;
+    if (*secondJNIEnvPtr != NULL || (!pojav_environ->isUseStackQueueCall)) return JNI_TRUE;
 
     if (isAndroid && runtimeJavaVMPtr) {
         (*runtimeJavaVMPtr)->AttachCurrentThread(runtimeJavaVMPtr, secondJNIEnvPtr, NULL);
@@ -178,22 +277,43 @@ jboolean attachThread(bool isAndroid, JNIEnv** secondJNIEnvPtr) {
     return JNI_FALSE;
 }
 
+/*
+ * ★★★ 2026-09-17 修复「1.20.6 / 26.2 触屏完全失效，b1.7.3 正常」根因。
+ *
+ * 原实现（旧 Pojav 模式）：把事件通过 CallStaticVoidMethod 回调 Java 静态方法
+ *   org.lwjgl.glfw.CallbackBridge.receiveCallback(IIIII)V
+ * 但 **QCL 的 CallbackBridge.java 里根本没有这个方法** ——
+ * （FCL 的 CallbackBridge 也没有，因为 FCL 根本不用这套机制）。
+ * 于是 setClass() 里的 GetStaticMethodID 返回 NULL，sendData 每次都撞上
+ *   if (inputBridgeClass_ANDROID == NULL) return;
+ * 事件被静默丢弃。
+ *
+ * 为什么 b1.7.3 没事、1.20.6 就废：
+ *   b1.7.3 的 minimumLauncherVersion=7 → isHighVersion=false → isUseStackQueueCall=false
+ *   → 输入走 **直接回调分支**（GLFW_invoke_* 直调），完全不经过 sendData。
+ *   1.20.6 / 26.2 的 minimumLauncherVersion=21 → true → 走 **队列分支** → 全部丢进黑洞。
+ *
+ * 修法（照抄参照物 FCL 的 input_bridge_v3.c）：sendData 改为把事件写进
+ * pojav_environ 里的 **native 环形缓冲**（events[] + 原子 eventCounter），
+ * 由 GLFW 每帧调用 pojavStartPumping/pojavPumpEvents/pojavStopPumping 消费。
+ * 这套消费端 QCL 在 1.1.0 移植渲染栈时已经带了（见下面的 pojavPumpEvents），
+ * environ.h 的字段也齐备 —— 只差这个生产端还是旧实现。
+ *
+ * 好处：跨线程零 JNI 调用，不再依赖任何 Java 侧方法，也不会踩
+ * 「在非 GL 线程上 CallStaticVoidMethod 到 GLFW」的坑。
+ */
 void sendData(int type, int i1, int i2, int i3, int i4) {
-#ifdef DEBUG
-    LOGD("Debug: Send data, jnienv.isNull=%d\n", runtimeJNIEnvPtr_ANDROID == NULL);
-#endif
-    if (runtimeJNIEnvPtr_ANDROID == NULL) {
-        LOGE("BUG: Input is ready but thread is not attached yet.");
-        return;
-    }
-    if(inputBridgeClass_ANDROID == NULL) return;
-    (*runtimeJNIEnvPtr_ANDROID)->CallStaticVoidMethod(
-        runtimeJNIEnvPtr_ANDROID,
-        inputBridgeClass_ANDROID,
-        inputBridgeMethod_ANDROID,
-        type,
-        i1, i2, i3, i4
-    );
+    GLFWInputEvent *event = &pojav_environ->events[pojav_environ->inEventIndex];
+    event->type = type;
+    event->i1 = i1;
+    event->i2 = i2;
+    event->i3 = i3;
+    event->i4 = i4;
+
+    if (++pojav_environ->inEventIndex >= EVENT_WINDOW_SIZE)
+        pojav_environ->inEventIndex -= EVENT_WINDOW_SIZE;
+
+    atomic_fetch_add_explicit(&pojav_environ->eventCounter, 1, memory_order_acquire);
 }
 
 void closeGLFWWindow() {
@@ -250,7 +370,10 @@ void hookExec() {
 JNIEXPORT void JNICALL
 Java_org_lwjgl_glfw_CallbackBridge_nativeSetUseInputStackQueue(JNIEnv *env, jclass clazz,
                                                                jboolean use_input_stack_queue) {
-    isUseStackQueueCall = (int) use_input_stack_queue;
+    pojav_environ->isUseStackQueueCall = (int) use_input_stack_queue;
+    // ★ 诊断：确认 Java 侧到底传了什么进来
+    __android_log_print(ANDROID_LOG_INFO, "QCL_INPUT",
+        "nativeSetUseInputStackQueue(%d)", (int) use_input_stack_queue);
 }
 
 JNIEXPORT jboolean JNICALL Java_org_lwjgl_glfw_CallbackBridge_nativeAttachThreadToOther(JNIEnv* env, jclass clazz, jboolean isAndroid, jboolean isUseStackQueueBool) {
@@ -268,7 +391,7 @@ JNIEXPORT jboolean JNICALL Java_org_lwjgl_glfw_CallbackBridge_nativeAttachThread
         // getJavaInputBridge(&inputBridgeClass_JRE, &inputBridgeMethod_JRE);
     } */
     
-    if (isUseStackQueueCall && isAndroid && result) {
+    if (pojav_environ->isUseStackQueueCall && isAndroid && result) {
         isPrepareGrabPos = true;
     }
     return result;
@@ -276,7 +399,7 @@ JNIEXPORT jboolean JNICALL Java_org_lwjgl_glfw_CallbackBridge_nativeAttachThread
 
 JNIEXPORT jstring JNICALL Java_org_lwjgl_glfw_CallbackBridge_nativeClipboard(JNIEnv* env, jclass clazz, jint action, jbyteArray copySrc) {
 #ifdef DEBUG
-    LOGD("Debug: Clipboard access is going on\n", isUseStackQueueCall);
+    LOGD("Debug: Clipboard access is going on\n", pojav_environ->isUseStackQueueCall);
 #endif
 
     JNIEnv *dalvikEnv;
@@ -308,15 +431,20 @@ JNIEXPORT jstring JNICALL Java_org_lwjgl_glfw_CallbackBridge_nativeClipboard(JNI
 
 JNIEXPORT jboolean JNICALL Java_org_lwjgl_glfw_CallbackBridge_nativeSetInputReady(JNIEnv* env, jclass clazz, jboolean inputReady) {
 #ifdef DEBUG
-    LOGD("Debug: Changing input state, isReady=%d, isUseStackQueueCall=%d\n", inputReady, isUseStackQueueCall);
+    LOGD("Debug: Changing input state, isReady=%d, isUseStackQueueCall=%d\n", inputReady, pojav_environ->isUseStackQueueCall);
 #endif
-    isInputReady = inputReady;
-    return isUseStackQueueCall;
+    // ★ 诊断：这条链路决定"输入是否放行"以及"走队列还是走直连"
+    __android_log_print(ANDROID_LOG_INFO, "QCL_INPUT",
+        "nativeSetInputReady(%d) -> isUseStackQueueCall=%d (env=%d)",
+        (int) inputReady, (int) pojav_environ->isUseStackQueueCall,
+        (int) pojav_environ->isUseStackQueueCall);
+    pojav_environ->isInputReady = inputReady;
+    return pojav_environ->isUseStackQueueCall;
 }
 
 JNIEXPORT void JNICALL Java_org_lwjgl_glfw_CallbackBridge_nativeSetGrabbing(JNIEnv* env, jclass clazz, jboolean grabbing, jint xset, jint yset) {
-    isGrabbing = grabbing;
-    if (isGrabbing == JNI_TRUE) {
+    pojav_environ->isGrabbing = grabbing;
+    if (pojav_environ->isGrabbing == JNI_TRUE) {
         grabCursorX = xset; // savedWidth / 2;
         grabCursorY = yset; // savedHeight / 2;
         isPrepareGrabPos = true;
@@ -324,15 +452,15 @@ JNIEXPORT void JNICALL Java_org_lwjgl_glfw_CallbackBridge_nativeSetGrabbing(JNIE
 }
 
 JNIEXPORT jboolean JNICALL Java_org_lwjgl_glfw_CallbackBridge_nativeIsGrabbing(JNIEnv* env, jclass clazz) {
-    return isGrabbing;
+    return pojav_environ->isGrabbing;
 }
 
 JNIEXPORT jboolean JNICALL Java_org_lwjgl_glfw_CallbackBridge_nativeSendChar(JNIEnv* env, jclass clazz, jchar codepoint /* jint codepoint */) {
-    if (GLFW_invoke_Char && isInputReady) {
-        if (isUseStackQueueCall) {
+    if (pojav_environ->GLFW_invoke_Char && pojav_environ->isInputReady) {
+        if (pojav_environ->isUseStackQueueCall) {
             sendData(EVENT_TYPE_CHAR, codepoint, 0, 0, 0);
         } else {
-            GLFW_invoke_Char((void*) showingWindow, (unsigned int) codepoint);
+            pojav_environ->GLFW_invoke_Char((void*) pojav_environ->showingWindow, (unsigned int) codepoint);
             // return lwjgl2_triggerCharEvent(codepoint);
         }
         return JNI_TRUE;
@@ -341,11 +469,11 @@ JNIEXPORT jboolean JNICALL Java_org_lwjgl_glfw_CallbackBridge_nativeSendChar(JNI
 }
 
 JNIEXPORT jboolean JNICALL Java_org_lwjgl_glfw_CallbackBridge_nativeSendCharMods(JNIEnv* env, jclass clazz, jchar codepoint, jint mods) {
-    if (GLFW_invoke_CharMods && isInputReady) {
-        if (isUseStackQueueCall) {
+    if (pojav_environ->GLFW_invoke_CharMods && pojav_environ->isInputReady) {
+        if (pojav_environ->isUseStackQueueCall) {
             sendData(EVENT_TYPE_CHAR_MODS, (unsigned int) codepoint, mods, 0, 0);
         } else {
-            GLFW_invoke_CharMods((void*) showingWindow, codepoint, mods);
+            pojav_environ->GLFW_invoke_CharMods((void*) pojav_environ->showingWindow, codepoint, mods);
         }
         return JNI_TRUE;
     }
@@ -353,8 +481,8 @@ JNIEXPORT jboolean JNICALL Java_org_lwjgl_glfw_CallbackBridge_nativeSendCharMods
 }
 /*
 JNIEXPORT void JNICALL Java_org_lwjgl_glfw_CallbackBridge_nativeSendCursorEnter(JNIEnv* env, jclass clazz, jint entered) {
-    if (GLFW_invoke_CursorEnter && isInputReady) {
-        GLFW_invoke_CursorEnter(showingWindow, entered);
+    if (pojav_environ->GLFW_invoke_CursorEnter && isInputReady) {
+        pojav_environ->GLFW_invoke_CursorEnter(showingWindow, entered);
     }
 }
 */
@@ -362,26 +490,26 @@ JNIEXPORT void JNICALL Java_org_lwjgl_glfw_CallbackBridge_nativeSendCursorPos(JN
 #ifdef DEBUG
     LOGD("Sending cursor position \n");
 #endif
-    if (GLFW_invoke_CursorPos && isInputReady) {
+    if (pojav_environ->GLFW_invoke_CursorPos && pojav_environ->isInputReady) {
 #ifdef DEBUG
-        LOGD("GLFW_invoke_CursorPos && isInputReady \n");
+        LOGD("pojav_environ->GLFW_invoke_CursorPos && isInputReady \n");
 #endif
-        if (!isCursorEntered) {
-            if (GLFW_invoke_CursorEnter) {
-                isCursorEntered = true;
-                if (isUseStackQueueCall) {
+        if (!pojav_environ->isCursorEntered) {
+            if (pojav_environ->GLFW_invoke_CursorEnter) {
+                pojav_environ->isCursorEntered = true;
+                if (pojav_environ->isUseStackQueueCall) {
                     sendData(EVENT_TYPE_CURSOR_ENTER, 1, 0, 0, 0);
                 } else {
-                    GLFW_invoke_CursorEnter((void*) showingWindow, 1);
+                    pojav_environ->GLFW_invoke_CursorEnter((void*) pojav_environ->showingWindow, 1);
                 }
-            } else if (isGrabbing) {
+            } else if (pojav_environ->isGrabbing) {
                 // Some Minecraft versions does not use GLFWCursorEnterCallback
                 // This is a smart check, as Minecraft will not in grab mode if already not.
-                isCursorEntered = true;
+                pojav_environ->isCursorEntered = true;
             }
         }
 
-        if (isGrabbing) {
+        if (pojav_environ->isGrabbing) {
             if (!isPrepareGrabPos) {
                 grabCursorX += x - lastCursorX;
                 grabCursorY += y - lastCursorY;
@@ -396,10 +524,19 @@ JNIEXPORT void JNICALL Java_org_lwjgl_glfw_CallbackBridge_nativeSendCursorPos(JN
             }
         }
 
-        if (!isUseStackQueueCall) {
-            GLFW_invoke_CursorPos((void*) showingWindow, (double) (x), (double) (y));
+        if (!pojav_environ->isUseStackQueueCall) {
+            pojav_environ->GLFW_invoke_CursorPos((void*) pojav_environ->showingWindow, (double) (x), (double) (y));
         } else {
-            sendData(EVENT_TYPE_CURSOR_POS, (isGrabbing ? grabCursorX : x), (isGrabbing ? grabCursorY : y), 0, 0);
+            // ★★★ 2026-09-18 修复 1.20.6「鼠标能移动、按钮点不动」的**第三层**病根。
+            // 队列模式下光标位置是「状态」而不是「事件」：必须存进 pojav_environ，
+            // 由 pojavStartPumping() 比较 cLastX/cLastY 后置 shouldUpdateMouse，
+            // 再在 pojavPumpEvents() 开头 GLFW_invoke_CursorPos(window, cursorX, cursorY) 发一次。
+            // 原写法 sendData(EVENT_TYPE_CURSOR_POS, ...) 是错的：pojavPumpEvents 的 switch
+            // 里**根本没有 case EVENT_TYPE_CURSOR_POS**（FCL 也没有），事件被静默丢弃，
+            // 于是 cursorX/cursorY 永远是 0 → 点击命中 (0,0) → 按钮毫无反应。
+            // 严格对齐 FCL/.../jni/input_bridge_v3.c:571-572。
+            pojav_environ->cursorX = (pojav_environ->isGrabbing ? grabCursorX : x);
+            pojav_environ->cursorY = (pojav_environ->isGrabbing ? grabCursorY : y);
         }
         
         lastCursorX = x;
@@ -408,71 +545,87 @@ JNIEXPORT void JNICALL Java_org_lwjgl_glfw_CallbackBridge_nativeSendCursorPos(JN
 }
 
 JNIEXPORT void JNICALL Java_org_lwjgl_glfw_CallbackBridge_nativeSendKey(JNIEnv* env, jclass clazz, jint key, jint scancode, jint action, jint mods) {
-    if (GLFW_invoke_Key && isInputReady) {
-        if (isUseStackQueueCall) {
+    if (pojav_environ->GLFW_invoke_Key && pojav_environ->isInputReady) {
+        if (pojav_environ->isUseStackQueueCall) {
             sendData(EVENT_TYPE_KEY, key, scancode, action, mods);
         } else {
-            GLFW_invoke_Key((void*) showingWindow, key, scancode, action, mods);
+            pojav_environ->GLFW_invoke_Key((void*) pojav_environ->showingWindow, key, scancode, action, mods);
         }
     }
 }
 
 JNIEXPORT void JNICALL Java_org_lwjgl_glfw_CallbackBridge_nativeSendMouseButton(JNIEnv* env, jclass clazz, jint button, jint action, jint mods) {
-    if (isInputReady) {
+    // ★ 2026-09-17 诊断打点：1.20.6 鼠标能移动但按不下去，这里把真实分支打出来。
+    // ★ 2026-09-18 补注：状态位统一到 pojav_environ 后，日志里 isInputReady 与
+    //   pojav_environ->isInputReady 已是**同一份**（原来打两份是为了暴露"两套存储"病灶）。
+    if (getenv("QCL_DBG_INPUT")) {
+        __android_log_print(ANDROID_LOG_INFO, "QCL_INPUT",
+            "sendMouseButton btn=%d act=%d mods=%d | isInputReady=%d isUseStackQueueCall=%d "
+            "invoke_MouseButton=%p",
+            button, action, mods,
+            (int) pojav_environ->isInputReady, (int) pojav_environ->isUseStackQueueCall,
+            (void*) pojav_environ->GLFW_invoke_MouseButton);
+    }
+    if (pojav_environ->isInputReady) {
         if (button == -1) {
             // Notify to prepare set new grab pos
             isPrepareGrabPos = true;
-        } else if (GLFW_invoke_MouseButton) {
-            if (isUseStackQueueCall) {
+        } else if (pojav_environ->GLFW_invoke_MouseButton) {
+            if (pojav_environ->isUseStackQueueCall) {
                 sendData(EVENT_TYPE_MOUSE_BUTTON, button, action, mods, 0);
             } else {
-                GLFW_invoke_MouseButton((void*) showingWindow, button, action, mods);
+                pojav_environ->GLFW_invoke_MouseButton((void*) pojav_environ->showingWindow, button, action, mods);
             }
         }
     }
 }
 
 JNIEXPORT void JNICALL Java_org_lwjgl_glfw_CallbackBridge_nativeSendScreenSize(JNIEnv* env, jclass clazz, jint width, jint height) {
-    savedWidth = width;
-    savedHeight = height;
+    // ★★★ 2026-09-18：同 showingWindow / isGrabbing，savedWidth/Height 也曾经是
+    // 「utils.h 的 static」与「environ.h 结构体字段」两份 —— 这里写 static 那份，
+    // 而 egl_bridge.c 写 pojav_environ->savedWidth、pojavStartPumping 读
+    // pojav_environ->savedWidth 做 monitor size 上报，于是屏幕尺寸永远对不上。
+    // 对齐 FCL/.../jni/input_bridge_v3.c:640-641，统一写结构体。
+    pojav_environ->savedWidth = width;
+    pojav_environ->savedHeight = height;
     
-    if (isInputReady) {
-        if (GLFW_invoke_FramebufferSize) {
-            if (isUseStackQueueCall) {
+    if (pojav_environ->isInputReady) {
+        if (pojav_environ->GLFW_invoke_FramebufferSize) {
+            if (pojav_environ->isUseStackQueueCall) {
                 sendData(EVENT_TYPE_FRAMEBUFFER_SIZE, width, height, 0, 0);
             } else {
-                GLFW_invoke_FramebufferSize((void*) showingWindow, width, height);
+                pojav_environ->GLFW_invoke_FramebufferSize((void*) pojav_environ->showingWindow, width, height);
             }
         }
         
-        if (GLFW_invoke_WindowSize) {
-            if (isUseStackQueueCall) {
+        if (pojav_environ->GLFW_invoke_WindowSize) {
+            if (pojav_environ->isUseStackQueueCall) {
                 sendData(EVENT_TYPE_WINDOW_SIZE, width, height, 0, 0);
             } else {
-                GLFW_invoke_WindowSize((void*) showingWindow, width, height);
+                pojav_environ->GLFW_invoke_WindowSize((void*) pojav_environ->showingWindow, width, height);
             }
         }
     }
     
-    // return (isInputReady && (GLFW_invoke_FramebufferSize || GLFW_invoke_WindowSize));
+    // return (isInputReady && (pojav_environ->GLFW_invoke_FramebufferSize || pojav_environ->GLFW_invoke_WindowSize));
 }
 
 JNIEXPORT void JNICALL Java_org_lwjgl_glfw_CallbackBridge_nativeSendScroll(JNIEnv* env, jclass clazz, jdouble xoffset, jdouble yoffset) {
-    if (GLFW_invoke_Scroll && isInputReady) {
-        if (isUseStackQueueCall) {
+    if (pojav_environ->GLFW_invoke_Scroll && pojav_environ->isInputReady) {
+        if (pojav_environ->isUseStackQueueCall) {
             sendData(EVENT_TYPE_SCROLL, xoffset, yoffset, 0, 0);
         } else {
-            GLFW_invoke_Scroll((void*) showingWindow, (double) xoffset, (double) yoffset);
+            pojav_environ->GLFW_invoke_Scroll((void*) pojav_environ->showingWindow, (double) xoffset, (double) yoffset);
         }
     }
 }
 
 JNIEXPORT void JNICALL Java_org_lwjgl_glfw_GLFW_nglfwSetShowingWindow(JNIEnv* env, jclass clazz, jlong window) {
-    showingWindow = (long) window;
+    pojav_environ->showingWindow = (long) window;
 }
 
 JNIEXPORT void JNICALL Java_org_lwjgl_glfw_CallbackBridge_nativeSetWindowAttrib(JNIEnv* env, jclass clazz, jint attrib, jint value) {
-    if (!showingWindow || !isUseStackQueueCall) {
+    if (!pojav_environ->showingWindow || !pojav_environ->isUseStackQueueCall) {
         // If the window is not shown, there is nothing to do yet.
         // For Minecraft < 1.13, calling to JNI functions here crashes the JVM for some reason, therefore it is skipped for now.
         return;
@@ -486,7 +639,7 @@ JNIEXPORT void JNICALL Java_org_lwjgl_glfw_CallbackBridge_nativeSetWindowAttrib(
     (*runtimeJNIEnvPtr_JRE)->CallStaticVoidMethod(
         runtimeJNIEnvPtr_JRE,
         glfwClazz, glfwMethod,
-        (jlong) showingWindow, attrib, value
+        (jlong) pojav_environ->showingWindow, attrib, value
     );
 }
 
@@ -538,6 +691,13 @@ void pojavPumpEvents(void *window) {
                     pojav_environ->GLFW_invoke_Key(window, event.i1, event.i2, event.i3, event.i4);
                 break;
             case EVENT_TYPE_MOUSE_BUTTON:
+                // ★ 诊断：确认队列消费端真的收到了鼠标按键
+                if (getenv("QCL_DBG_INPUT")) {
+                    __android_log_print(ANDROID_LOG_INFO, "QCL_INPUT",
+                        "Pump MOUSE_BUTTON btn=%d act=%d mods=%d invoke=%p",
+                        event.i1, event.i2, event.i3,
+                        (void*) pojav_environ->GLFW_invoke_MouseButton);
+                }
                 if (pojav_environ->GLFW_invoke_MouseButton)
                     pojav_environ->GLFW_invoke_MouseButton(window, event.i1, event.i2, event.i3);
                 break;

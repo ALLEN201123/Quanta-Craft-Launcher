@@ -1,20 +1,20 @@
 {
   "latestRelease": {
-    "versionCode": 300,
-    "versionName": "1.0.0",
-    "date": "2026.09.14",
+    "versionCode": 310,
+    "versionName": "1.1.0",
+    "date": "2026.09.18",
     "url": [
-      "https://github.com/"
+      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/latest"
     ],
-    "updateLog": "QCL 1.0.0"
+    "updateLog": "<b>Quanta Craft Launcher 1.1.0</b><br/>· 渲染栈与启动流程整体对齐 FCL<br/>· 修复 1.20.6 / 26.2 触屏点击无效（回调指针未注册）<br/>· 新增「安装或更新运行环境」页，运行环境状态一目了然<br/>· 已装齐后不再重复弹出安装页，仅启动器或运行环境更新时才提示<br/>· 新增启动器版本更新检测<br/>· 游戏内语言跟随启动器语言"
   },
   "latestPrerelease": {
-    "versionCode": 300,
-    "versionName": "1.0.0",
-    "date": "2026.09.14",
+    "versionCode": 310,
+    "versionName": "1.1.0",
+    "date": "2026.09.18",
     "url": [
-      "https://github.com/"
+      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/latest"
     ],
-    "updateLog": "QCL 1.0.0"
+    "updateLog": "<b>Quanta Craft Launcher 1.1.0</b><br/>当前没有独立的测试版，与正式版一致。"
   }
 }

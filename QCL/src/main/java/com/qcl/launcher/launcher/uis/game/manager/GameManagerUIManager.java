@@ -2,66 +2,66 @@ package com.qcl.launcher.launcher.uis.game.manager;
 
 import android.content.Context;
 import android.content.Intent;
-
 import com.qcl.launcher.launcher.MainActivity;
-import com.qcl.launcher.launcher.uis.game.download.DownloadUIManager;
-import com.qcl.launcher.launcher.uis.game.download.right.DownloadModUI;
 import com.qcl.launcher.launcher.uis.game.manager.right.AutoInstallUI;
 import com.qcl.launcher.launcher.uis.game.manager.right.ModManagerUI;
 import com.qcl.launcher.launcher.uis.game.manager.right.VersionSettingUI;
 import com.qcl.launcher.launcher.uis.game.manager.right.WorldManagerUI;
 import com.qcl.launcher.launcher.uis.tools.BaseUI;
 
+/* loaded from: classes2.dex */
 public class GameManagerUIManager {
-
-    public VersionSettingUI versionSettingUI;
-    public ModManagerUI modManagerUI;
     public AutoInstallUI autoInstallUI;
+    public BaseUI[] gameManagerUIs;
+    public ModManagerUI modManagerUI;
+    public VersionSettingUI versionSettingUI;
     public WorldManagerUI worldManagerUI;
 
-    public BaseUI[] gameManagerUIs;
-
-    public GameManagerUIManager (Context context, MainActivity activity){
-        versionSettingUI = new VersionSettingUI(context,activity);
-        modManagerUI = new ModManagerUI(context,activity);
-        autoInstallUI = new AutoInstallUI(context,activity);
-        worldManagerUI = new WorldManagerUI(context,activity);
-
-        versionSettingUI.onCreate();
-        modManagerUI.onCreate();
-        autoInstallUI.onCreate();
-        worldManagerUI.onCreate();
-
-        gameManagerUIs = new BaseUI[]{versionSettingUI,modManagerUI,autoInstallUI,worldManagerUI};
+    public GameManagerUIManager(Context context, MainActivity mainActivity) {
+        this.versionSettingUI = new VersionSettingUI(context, mainActivity);
+        this.modManagerUI = new ModManagerUI(context, mainActivity);
+        this.autoInstallUI = new AutoInstallUI(context, mainActivity);
+        this.worldManagerUI = new WorldManagerUI(context, mainActivity);
+        this.versionSettingUI.onCreate();
+        this.modManagerUI.onCreate();
+        this.autoInstallUI.onCreate();
+        this.worldManagerUI.onCreate();
+        VersionSettingUI versionSettingUI = this.versionSettingUI;
+        this.gameManagerUIs = new BaseUI[]{versionSettingUI, this.modManagerUI, this.autoInstallUI, this.worldManagerUI};
         switchGameManagerUIs(versionSettingUI);
     }
 
-    public void switchGameManagerUIs(BaseUI ui){
-        for (int i = 0;i < gameManagerUIs.length;i++){
-            if (gameManagerUIs[i] == ui){
-                gameManagerUIs[i].onStart();
+    public void switchGameManagerUIs(BaseUI baseUI) {
+        int i = 0;
+        while (true) {
+            BaseUI[] baseUIArr = this.gameManagerUIs;
+            if (i >= baseUIArr.length) {
+                return;
             }
-            else {
-                gameManagerUIs[i].onStop();
+            if (baseUIArr[i] == baseUI) {
+                baseUIArr[i].onStart();
+            } else {
+                baseUIArr[i].onStop();
             }
+            i++;
         }
     }
 
-    public void onActivityResult(int requestCode, int resultCode, Intent data){
-        for (BaseUI ui : gameManagerUIs){
-            ui.onActivityResult(requestCode,resultCode,data);
+    public void onActivityResult(int i, int i2, Intent intent) {
+        for (BaseUI baseUI : this.gameManagerUIs) {
+            baseUI.onActivityResult(i, i2, intent);
         }
     }
 
-    public void onPause(){
-        for (BaseUI ui : gameManagerUIs){
-            ui.onPause();
+    public void onPause() {
+        for (BaseUI baseUI : this.gameManagerUIs) {
+            baseUI.onPause();
         }
     }
 
-    public void onResume(){
-        for (BaseUI ui : gameManagerUIs){
-            ui.onResume();
+    public void onResume() {
+        for (BaseUI baseUI : this.gameManagerUIs) {
+            baseUI.onResume();
         }
     }
 }

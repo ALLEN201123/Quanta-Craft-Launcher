@@ -1,3 +1,42 @@
+/*
+ * Decompiled with CFR 0.152.
+ * 
+ * Could not load the following classes:
+ *  android.annotation.SuppressLint
+ *  android.app.Dialog
+ *  android.content.Context
+ *  android.content.Intent
+ *  android.content.res.AssetManager
+ *  android.graphics.Bitmap
+ *  android.graphics.BitmapFactory
+ *  android.net.Uri
+ *  android.os.Bundle
+ *  android.os.Handler
+ *  android.os.Message
+ *  android.text.method.LinkMovementMethod
+ *  android.view.View
+ *  android.view.View$OnClickListener
+ *  android.view.animation.Animation
+ *  android.view.animation.Interpolator
+ *  android.view.animation.LinearInterpolator
+ *  android.view.animation.RotateAnimation
+ *  android.widget.AdapterView
+ *  android.widget.AdapterView$OnItemSelectedListener
+ *  android.widget.Button
+ *  android.widget.EditText
+ *  android.widget.ImageButton
+ *  android.widget.ImageView
+ *  android.widget.LinearLayout
+ *  android.widget.ProgressBar
+ *  android.widget.Spinner
+ *  android.widget.SpinnerAdapter
+ *  android.widget.TextView
+ *  android.widget.Toast
+ *  androidx.annotation.NonNull
+ *  com.google.android.material.tabs.TabLayout
+ *  com.google.android.material.tabs.TabLayout$OnTabSelectedListener
+ *  com.google.android.material.tabs.TabLayout$Tab
+ */
 package com.qcl.launcher.launcher.dialogs.account;
 
 import android.annotation.SuppressLint;
@@ -14,6 +53,7 @@ import android.os.Message;
 import android.text.method.LinkMovementMethod;
 import android.view.View;
 import android.view.animation.Animation;
+import android.view.animation.Interpolator;
 import android.view.animation.LinearInterpolator;
 import android.view.animation.RotateAnimation;
 import android.widget.AdapterView;
@@ -24,13 +64,11 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.Spinner;
+import android.widget.SpinnerAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import androidx.annotation.NonNull;
-
 import com.google.android.material.tabs.TabLayout;
-import com.qcl.launcher.R;
 import com.qcl.launcher.auth.Account;
 import com.qcl.launcher.auth.AuthInfo;
 import com.qcl.launcher.auth.AuthenticationException;
@@ -43,13 +81,14 @@ import com.qcl.launcher.auth.yggdrasil.TextureType;
 import com.qcl.launcher.auth.yggdrasil.YggdrasilService;
 import com.qcl.launcher.auth.yggdrasil.YggdrasilSession;
 import com.qcl.launcher.launcher.MainActivity;
+import com.qcl.launcher.launcher.dialogs.account.SelectProfileDialog;
+import com.qcl.launcher.launcher.dialogs.account.SelectServerTypeDialog;
 import com.qcl.launcher.launcher.list.account.server.AuthlibInjectorServerSpinnerAdapter;
 import com.qcl.launcher.launcher.setting.InitializeSetting;
 import com.qcl.launcher.manifest.AppManifest;
 import com.qcl.launcher.skin.utils.Avatar;
 import com.qcl.launcher.utils.gson.GsonUtils;
 import com.qcl.launcher.utils.gson.UUIDTypeAdapter;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
@@ -59,21 +98,21 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 
-public class AddAccountDialog extends Dialog implements View.OnClickListener, TabLayout.OnTabSelectedListener, AdapterView.OnItemSelectedListener {
-
+import com.qcl.launcher.R;
+public class AddAccountDialog
+extends Dialog
+implements View.OnClickListener,
+TabLayout.OnTabSelectedListener,
+AdapterView.OnItemSelectedListener {
     private MainActivity activity;
     private AddAccountCallback callback;
-
     private TabLayout tabLayout;
-
     private LinearLayout offlineLayout;
     private LinearLayout microsoftLayout;
     private LinearLayout externalLayout;
-
     private Button login;
     private Button cancel;
     private ProgressBar progressBar;
-
     private EditText editName;
     private EditText editUUID;
     private TextView purchaseLink;
@@ -81,11 +120,9 @@ public class AddAccountDialog extends Dialog implements View.OnClickListener, Ta
     private ImageView spinView;
     private LinearLayout editUUIDLayout;
     private LinearLayout hintLayout;
-
     private TextView accountSettingLink;
     private TextView helpLink;
     private TextView mPurchaseLink;
-
     private Spinner editServer;
     private TextView signUp;
     private ImageButton addServer;
@@ -94,299 +131,253 @@ public class AddAccountDialog extends Dialog implements View.OnClickListener, Ta
     private AuthlibInjectorServerSpinnerAdapter serverListAdapter;
     private String signUpUrl;
     private AuthlibInjectorServer authlibInjectorServer;
-
     private Account account;
-
     public static final String NIDE_8_AUTH_SIGN_UP_PAGE = "https://login.mc-user.com:233/";
+    @SuppressLint(value={"HandlerLeak"})
+    public final Handler loginHandler = new Handler(){
 
-    public AddAccountDialog(@NonNull Context context,MainActivity activity,AddAccountCallback callback) {
+        public void handleMessage(@NonNull Message msg) {
+            super.handleMessage(msg);
+        }
+    };
+
+    public AddAccountDialog(@NonNull Context context, MainActivity activity, AddAccountCallback callback) {
         super(context);
         this.activity = activity;
         this.callback = callback;
-        setContentView(R.layout.dialog_add_account);
-        setCancelable(false);
-        init();
+        this.setContentView(R.layout.dialog_add_account);
+        this.setCancelable(false);
+        this.init();
     }
 
     private void init() {
-        tabLayout = findViewById(R.id.add_account_tab);
-        offlineLayout = findViewById(R.id.offline_layout);
-        microsoftLayout = findViewById(R.id.microsoft_layout);
-        externalLayout = findViewById(R.id.external_layout);
-        tabLayout.addOnTabSelectedListener(this);
-        tabLayout.selectTab(tabLayout.getTabAt(0));
-
-        login = findViewById(R.id.login);
-        cancel = findViewById(R.id.cancel_login);
-        progressBar = findViewById(R.id.login_progress);
-        login.setOnClickListener(this);
-        cancel.setOnClickListener(this);
-
-        editName = findViewById(R.id.edit_user_name);
-        editUUID = findViewById(R.id.edit_uuid);
-
-        purchaseLink = findViewById(R.id.purchase_link);
-        purchaseLink.setMovementMethod(LinkMovementMethod.getInstance());
-        showAdvanceSetting = findViewById(R.id.show_advance_setting);
-        showAdvanceSetting.setOnClickListener(this);
-        spinView = findViewById(R.id.spin_view);
-        editUUIDLayout = findViewById(R.id.edit_uuid_layout);
-        hintLayout = findViewById(R.id.hint_layout);
-
-        accountSettingLink = findViewById(R.id.setting_link);
-        helpLink = findViewById(R.id.help_link);
-        mPurchaseLink = findViewById(R.id.m_purchase_link);
-        accountSettingLink.setMovementMethod(LinkMovementMethod.getInstance());
-        helpLink.setMovementMethod(LinkMovementMethod.getInstance());
-        mPurchaseLink.setMovementMethod(LinkMovementMethod.getInstance());
-
-        editServer = findViewById(R.id.edit_server);
-        signUp = findViewById(R.id.sign_up);
-        addServer = findViewById(R.id.add_server);
-        editEmail = findViewById(R.id.edit_email);
-        editPassword = findViewById(R.id.edit_password);
-        signUp.setOnClickListener(this);
-        addServer.setOnClickListener(this);
-        ArrayList<AuthlibInjectorServer> authlibInjectorServers = InitializeSetting.initializeAuthlibInjectorServer(getContext());
-        serverListAdapter = new AuthlibInjectorServerSpinnerAdapter(getContext(), authlibInjectorServers);
-        editServer.setAdapter(serverListAdapter);
-        editServer.setOnItemSelectedListener(this);
+        this.tabLayout = (TabLayout)this.findViewById(R.id.add_account_tab);
+        this.offlineLayout = (LinearLayout)this.findViewById(R.id.offline_layout);
+        this.microsoftLayout = (LinearLayout)this.findViewById(R.id.microsoft_layout);
+        this.externalLayout = (LinearLayout)this.findViewById(R.id.external_layout);
+        this.tabLayout.addOnTabSelectedListener((TabLayout.OnTabSelectedListener)this);
+        this.tabLayout.selectTab(this.tabLayout.getTabAt(0));
+        this.login = (Button)this.findViewById(R.id.login);
+        this.cancel = (Button)this.findViewById(R.id.cancel_login);
+        this.progressBar = (ProgressBar)this.findViewById(R.id.login_progress);
+        this.login.setOnClickListener((View.OnClickListener)this);
+        this.cancel.setOnClickListener((View.OnClickListener)this);
+        this.editName = (EditText)this.findViewById(R.id.edit_user_name);
+        this.editUUID = (EditText)this.findViewById(R.id.edit_uuid);
+        this.purchaseLink = (TextView)this.findViewById(R.id.purchase_link);
+        this.purchaseLink.setMovementMethod(LinkMovementMethod.getInstance());
+        this.showAdvanceSetting = (LinearLayout)this.findViewById(R.id.show_advance_setting);
+        this.showAdvanceSetting.setOnClickListener((View.OnClickListener)this);
+        this.spinView = (ImageView)this.findViewById(R.id.spin_view);
+        this.editUUIDLayout = (LinearLayout)this.findViewById(R.id.edit_uuid_layout);
+        this.hintLayout = (LinearLayout)this.findViewById(R.id.hint_layout);
+        this.accountSettingLink = (TextView)this.findViewById(R.id.setting_link);
+        this.helpLink = (TextView)this.findViewById(R.id.help_link);
+        this.mPurchaseLink = (TextView)this.findViewById(R.id.m_purchase_link);
+        this.accountSettingLink.setMovementMethod(LinkMovementMethod.getInstance());
+        this.helpLink.setMovementMethod(LinkMovementMethod.getInstance());
+        this.mPurchaseLink.setMovementMethod(LinkMovementMethod.getInstance());
+        this.editServer = (Spinner)this.findViewById(R.id.edit_server);
+        this.signUp = (TextView)this.findViewById(R.id.sign_up);
+        this.addServer = (ImageButton)this.findViewById(R.id.add_server);
+        this.editEmail = (EditText)this.findViewById(R.id.edit_email);
+        this.editPassword = (EditText)this.findViewById(R.id.edit_password);
+        this.signUp.setOnClickListener((View.OnClickListener)this);
+        this.addServer.setOnClickListener((View.OnClickListener)this);
+        ArrayList<AuthlibInjectorServer> authlibInjectorServers = InitializeSetting.initializeAuthlibInjectorServer(this.getContext());
+        this.serverListAdapter = new AuthlibInjectorServerSpinnerAdapter(this.getContext(), authlibInjectorServers);
+        this.editServer.setAdapter((SpinnerAdapter)this.serverListAdapter);
+        this.editServer.setOnItemSelectedListener((AdapterView.OnItemSelectedListener)this);
         if (authlibInjectorServers.size() == 0) {
-            signUp.setVisibility(View.GONE);
-        }
-        else {
-            editServer.setSelection(0);
+            this.signUp.setVisibility(8);
+        } else {
+            this.editServer.setSelection(0);
         }
     }
 
-    @Override
     public void onClick(View view) {
-        if (view == login) {
-            if (offlineLayout.getVisibility() == View.VISIBLE) {
-                if (editName.getText().toString().equals("")){
-                    Toast.makeText(getContext(),getContext().getString(R.string.dialog_add_offline_account_empty_warn),Toast.LENGTH_SHORT).show();
-                }
-                else {
-                    AssetManager manager = getContext().getAssets();
-                    InputStream inputStream;
-                    Bitmap bitmap;
+        if (view == this.login) {
+            if (this.offlineLayout.getVisibility() == 0) {
+                if (this.editName.getText().toString().equals("")) {
+                    Toast.makeText((Context)this.getContext(), (CharSequence)this.getContext().getString(R.string.dialog_add_offline_account_empty_warn), (int)0).show();
+                } else {
+                    AssetManager manager = this.getContext().getAssets();
                     String skinTexture = "";
                     try {
-                        inputStream = manager.open("img/alex.png");
-                        bitmap = BitmapFactory.decodeStream(inputStream);
+                        InputStream inputStream = manager.open("img/alex.png");
+                        Bitmap bitmap = BitmapFactory.decodeStream((InputStream)inputStream);
                         skinTexture = Avatar.bitmapToString(bitmap);
-                    } catch (IOException e) {
+                    }
+                    catch (IOException e) {
                         e.printStackTrace();
                     }
-                    Account account = new Account(1,
-                            "",
-                            "",
-                            "mojang",
-                            "0",
-                            editName.getText().toString(),
-                            editUUID.getText().toString().equals("") ? UUID.randomUUID().toString() : editUUID.getText().toString(),
-                            UUIDTypeAdapter.fromUUID(UUID.randomUUID()),
-                            "",
-                            "",
-                            "",
-                            skinTexture);
-                    callback.onAccountAdd(account);
+                    Account account = new Account(1, "", "", "mojang", "0", this.editName.getText().toString(), this.editUUID.getText().toString().equals("") ? UUID.randomUUID().toString() : this.editUUID.getText().toString(), UUIDTypeAdapter.fromUUID(UUID.randomUUID()), "", "", "", skinTexture);
+                    this.callback.onAccountAdd(account);
                     this.dismiss();
                 }
             }
-            if (microsoftLayout.getVisibility() == View.VISIBLE) {
-                Intent i = new Intent(getContext(), MicrosoftLoginActivity.class);
+            if (this.microsoftLayout.getVisibility() == 0) {
+                Intent i = new Intent(this.getContext(), MicrosoftLoginActivity.class);
                 Bundle bundle = new Bundle();
-                bundle.putBoolean("fullscreen",activity.launcherSetting.fullscreen);
+                bundle.putBoolean("fullscreen", this.activity.launcherSetting.fullscreen);
                 i.putExtras(bundle);
-                activity.startActivityForResult(i,MicrosoftLoginActivity.AUTHENTICATE_MICROSOFT_REQUEST);
+                this.activity.startActivityForResult(i, 2000);
             }
-            if (externalLayout.getVisibility() == View.VISIBLE) {
-                if (authlibInjectorServer == null) {
-                    Toast.makeText(getContext(), getContext().getString(R.string.dialog_add_authlib_injector_account_server_warn), Toast.LENGTH_SHORT).show();
-                }
-                else if (editEmail.getText().toString().equals("") || editPassword.getText().toString().equals("")){
-                    Toast.makeText(getContext(), getContext().getString(R.string.dialog_add_authlib_injector_account_empty_warn), Toast.LENGTH_SHORT).show();
-                }
-                else {
-                    String email = editEmail.getText().toString();
-                    String password = editPassword.getText().toString();
-                    boolean isNide = authlibInjectorServer.getUrl().startsWith(AddNide8AuthServerDialog.NIDE_8_AUTH_SERVER);
+            if (this.externalLayout.getVisibility() == 0) {
+                if (this.authlibInjectorServer == null) {
+                    Toast.makeText((Context)this.getContext(), (CharSequence)this.getContext().getString(R.string.dialog_add_authlib_injector_account_server_warn), (int)0).show();
+                } else if (this.editEmail.getText().toString().equals("") || this.editPassword.getText().toString().equals("")) {
+                    Toast.makeText((Context)this.getContext(), (CharSequence)this.getContext().getString(R.string.dialog_add_authlib_injector_account_empty_warn), (int)0).show();
+                } else {
+                    String email = this.editEmail.getText().toString();
+                    String password = this.editPassword.getText().toString();
+                    boolean isNide = this.authlibInjectorServer.getUrl().startsWith("https://auth.mc-user.com:233/");
                     new Thread(() -> {
-                        loginHandler.post(() -> {
-                            progressBar.setVisibility(View.VISIBLE);
-                            login.setVisibility(View.GONE);
-                            cancel.setEnabled(false);
-                            tabLayout.setEnabled(false);
+                        this.loginHandler.post(() -> {
+                            this.progressBar.setVisibility(0);
+                            this.login.setVisibility(8);
+                            this.cancel.setEnabled(false);
+                            this.tabLayout.setEnabled(false);
                         });
-                        YggdrasilService yggdrasilService = authlibInjectorServer.getYggdrasilService();
+                        YggdrasilService yggdrasilService = this.authlibInjectorServer.getYggdrasilService();
                         try {
-                            YggdrasilSession yggdrasilSession = yggdrasilService.authenticate(email,password, UUID.randomUUID().toString());
+                            YggdrasilSession yggdrasilSession = yggdrasilService.authenticate(email, password, UUID.randomUUID().toString());
                             if (yggdrasilSession.getAvailableProfiles().size() > 1) {
-                                ArrayList<Bitmap> bitmaps = new ArrayList<>();
+                                ArrayList<Bitmap> bitmaps = new ArrayList<Bitmap>();
                                 for (GameProfile gameProfile : yggdrasilSession.getAvailableProfiles()) {
                                     if (yggdrasilService.getCompleteGameProfile(gameProfile.getId()).isPresent() && YggdrasilService.getTextures(yggdrasilService.getCompleteGameProfile(gameProfile.getId()).get()).isPresent()) {
                                         Map<TextureType, Texture> map = YggdrasilService.getTextures(yggdrasilService.getCompleteGameProfile(gameProfile.getId()).get()).get();
-                                        Texture texture = map.get(TextureType.SKIN);
+                                        Texture texture = map.get((Object)TextureType.SKIN);
                                         if (texture == null) {
-                                            AssetManager manager = getContext().getAssets();
-                                            InputStream inputStream;
-                                            inputStream = manager.open("img/alex.png");
-                                            Bitmap skin = BitmapFactory.decodeStream(inputStream);
+                                            AssetManager manager = this.getContext().getAssets();
+                                            InputStream inputStream = manager.open("img/alex.png");
+                                            Bitmap skin = BitmapFactory.decodeStream((InputStream)inputStream);
                                             bitmaps.add(skin);
+                                            continue;
                                         }
-                                        else {
-                                            String u = texture.getUrl();
-                                            if (!u.startsWith("https")){
-                                                u = u.replaceFirst("http","https");
-                                            }
-                                            URL url = new URL(u);
-                                            HttpURLConnection httpURLConnection = (HttpURLConnection)url.openConnection();
-                                            httpURLConnection.setDoInput(true);
-                                            httpURLConnection.connect();
-                                            InputStream inputStream = httpURLConnection.getInputStream();
-                                            Bitmap skin = BitmapFactory.decodeStream(inputStream);
-                                            bitmaps.add(skin);
-                                        }
-                                    }
-                                    else {
-                                        AssetManager manager = getContext().getAssets();
-                                        InputStream inputStream;
-                                        inputStream = manager.open("img/alex.png");
-                                        Bitmap skin = BitmapFactory.decodeStream(inputStream);
-                                        bitmaps.add(skin);
-                                    }
-                                }
-                                loginHandler.post(() -> {
-                                    SelectProfileDialog dialog = new SelectProfileDialog(getContext(), yggdrasilService, yggdrasilSession, email, password, authlibInjectorServer.getUrl(), bitmaps, account -> {
-                                        callback.onAccountAdd(account);
-                                    }, isNide);
-                                    dialog.show();
-                                    dismiss();
-                                });
-                            }
-                            else if (yggdrasilSession.getAvailableProfiles().size() == 1){
-                                AuthInfo authInfo = yggdrasilSession.toAuthInfo();
-                                Texture texture;
-                                Bitmap skin;
-                                if (yggdrasilService.getCompleteGameProfile(authInfo.getUUID()).isPresent() && YggdrasilService.getTextures(yggdrasilService.getCompleteGameProfile(authInfo.getUUID()).get()).isPresent()) {
-                                    Map<TextureType, Texture> map = YggdrasilService.getTextures(yggdrasilService.getCompleteGameProfile(authInfo.getUUID()).get()).get();
-                                    texture = map.get(TextureType.SKIN);
-                                    if (texture == null) {
-                                        AssetManager manager = getContext().getAssets();
-                                        InputStream inputStream;
-                                        inputStream = manager.open("img/alex.png");
-                                        skin = BitmapFactory.decodeStream(inputStream);
-                                    }
-                                    else {
                                         String u = texture.getUrl();
-                                        if (!u.startsWith("https")){
-                                            u = u.replaceFirst("http","https");
+                                        if (!u.startsWith("https")) {
+                                            u = u.replaceFirst("http", "https");
                                         }
                                         URL url = new URL(u);
                                         HttpURLConnection httpURLConnection = (HttpURLConnection)url.openConnection();
                                         httpURLConnection.setDoInput(true);
                                         httpURLConnection.connect();
                                         InputStream inputStream = httpURLConnection.getInputStream();
-                                        skin = BitmapFactory.decodeStream(inputStream);
+                                        Bitmap skin = BitmapFactory.decodeStream((InputStream)inputStream);
+                                        bitmaps.add(skin);
+                                        continue;
                                     }
+                                    AssetManager manager = this.getContext().getAssets();
+                                    InputStream inputStream = manager.open("img/alex.png");
+                                    Bitmap skin = BitmapFactory.decodeStream((InputStream)inputStream);
+                                    bitmaps.add(skin);
                                 }
-                                else {
-                                    AssetManager manager = getContext().getAssets();
-                                    InputStream inputStream;
-                                    inputStream = manager.open("img/alex.png");
-                                    skin = BitmapFactory.decodeStream(inputStream);
+                                this.loginHandler.post(() -> {
+                                    SelectProfileDialog dialog = new SelectProfileDialog(this.getContext(), yggdrasilService, yggdrasilSession, email, password, this.authlibInjectorServer.getUrl(), bitmaps, account -> this.callback.onAccountAdd(account), isNide);
+                                    dialog.show();
+                                    this.dismiss();
+                                });
+                            } else if (yggdrasilSession.getAvailableProfiles().size() == 1) {
+                                Bitmap skin;
+                                AuthInfo authInfo = yggdrasilSession.toAuthInfo();
+                                if (yggdrasilService.getCompleteGameProfile(authInfo.getUUID()).isPresent() && YggdrasilService.getTextures(yggdrasilService.getCompleteGameProfile(authInfo.getUUID()).get()).isPresent()) {
+                                    Map<TextureType, Texture> map = YggdrasilService.getTextures(yggdrasilService.getCompleteGameProfile(authInfo.getUUID()).get()).get();
+                                    Texture texture = map.get((Object)TextureType.SKIN);
+                                    if (texture == null) {
+                                        AssetManager manager = this.getContext().getAssets();
+                                        InputStream inputStream = manager.open("img/alex.png");
+                                        skin = BitmapFactory.decodeStream((InputStream)inputStream);
+                                    } else {
+                                        String u = texture.getUrl();
+                                        if (!u.startsWith("https")) {
+                                            u = u.replaceFirst("http", "https");
+                                        }
+                                        URL url = new URL(u);
+                                        HttpURLConnection httpURLConnection = (HttpURLConnection)url.openConnection();
+                                        httpURLConnection.setDoInput(true);
+                                        httpURLConnection.connect();
+                                        InputStream inputStream = httpURLConnection.getInputStream();
+                                        skin = BitmapFactory.decodeStream((InputStream)inputStream);
+                                    }
+                                } else {
+                                    AssetManager manager = this.getContext().getAssets();
+                                    InputStream inputStream = manager.open("img/alex.png");
+                                    skin = BitmapFactory.decodeStream((InputStream)inputStream);
                                 }
-                                loginHandler.post(() -> {
+                                this.loginHandler.post(() -> {
                                     String skinTexture = Avatar.bitmapToString(skin);
-                                    account = new Account(isNide ? 5 : 4,
-                                            email,
-                                            password,
-                                            "mojang",
-                                            "0",
-                                            yggdrasilSession.getSelectedProfile().getName(),
-                                            authInfo.getUUID().toString(),
-                                            authInfo.getAccessToken(),
-                                            yggdrasilSession.getClientToken(),
-                                            "",
-                                            authlibInjectorServer.getUrl(),
-                                            skinTexture);
-                                    callback.onAccountAdd(account);
-                                    dismiss();
+                                    this.account = new Account(isNide ? 5 : 4, email, password, "mojang", "0", yggdrasilSession.getSelectedProfile().getName(), authInfo.getUUID().toString(), authInfo.getAccessToken(), yggdrasilSession.getClientToken(), "", this.authlibInjectorServer.getUrl(), skinTexture);
+                                    this.callback.onAccountAdd(this.account);
+                                    this.dismiss();
                                 });
+                            } else {
+                                this.loginHandler.post(() -> Toast.makeText((Context)this.getContext(), (CharSequence)this.getContext().getString(R.string.dialog_add_authlib_injector_account_none), (int)0).show());
                             }
-                            else {
-                                loginHandler.post(() -> {
-                                    Toast.makeText(getContext(), getContext().getString(R.string.dialog_add_authlib_injector_account_none), Toast.LENGTH_SHORT).show();
-                                });
-                            }
-                        } catch (AuthenticationException | IOException e) {
-                            e.printStackTrace();
-                            loginHandler.post(() -> {
-                                Toast.makeText(getContext(), getContext().getString(R.string.dialog_add_authlib_injector_account_failed), Toast.LENGTH_SHORT).show();
-                            });
                         }
-                        loginHandler.post(() -> {
-                            progressBar.setVisibility(View.GONE);
-                            login.setVisibility(View.VISIBLE);
-                            cancel.setEnabled(true);
-                            tabLayout.setEnabled(true);
+                        catch (AuthenticationException | IOException e) {
+                            e.printStackTrace();
+                            this.loginHandler.post(() -> Toast.makeText((Context)this.getContext(), (CharSequence)this.getContext().getString(R.string.dialog_add_authlib_injector_account_failed), (int)0).show());
+                        }
+                        this.loginHandler.post(() -> {
+                            this.progressBar.setVisibility(8);
+                            this.login.setVisibility(0);
+                            this.cancel.setEnabled(true);
+                            this.tabLayout.setEnabled(true);
                         });
                     }).start();
                 }
             }
         }
-        if (view == cancel) {
-            dismiss();
-            callback.onCancel();
+        if (view == this.cancel) {
+            this.dismiss();
+            this.callback.onCancel();
         }
-
-        if (view == showAdvanceSetting){
-            if (editUUIDLayout.getVisibility() == View.GONE){
-                editUUIDLayout.setVisibility(View.VISIBLE);
-                hintLayout.setVisibility(View.VISIBLE);
-                Animation animation = new RotateAnimation(0, 180, Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f);
-                animation.setDuration(30);//设置动画持续时间
-                animation.setInterpolator(new LinearInterpolator());
-                animation.setRepeatMode(Animation.REVERSE);//设置反方向执行
-                animation.setFillAfter(true);//动画执行完后是否停留在执行完的状态
-                spinView.startAnimation(animation);
+        if (view == this.showAdvanceSetting) {
+            RotateAnimation animation;
+            if (this.editUUIDLayout.getVisibility() == 8) {
+                this.editUUIDLayout.setVisibility(0);
+                this.hintLayout.setVisibility(0);
+                animation = new RotateAnimation(0.0f, 180.0f, 1, 0.5f, 1, 0.5f);
+                animation.setDuration(30L);
+                animation.setInterpolator((Interpolator)new LinearInterpolator());
+                animation.setRepeatMode(2);
+                animation.setFillAfter(true);
+                this.spinView.startAnimation((Animation)animation);
+            } else {
+                this.editUUIDLayout.setVisibility(8);
+                this.hintLayout.setVisibility(8);
+                animation = new RotateAnimation(180.0f, 0.0f, 1, 0.5f, 1, 0.5f);
+                animation.setDuration(30L);
+                animation.setInterpolator((Interpolator)new LinearInterpolator());
+                animation.setRepeatMode(2);
+                animation.setFillAfter(true);
+                this.spinView.startAnimation((Animation)animation);
             }
-            else {
-                editUUIDLayout.setVisibility(View.GONE);
-                hintLayout.setVisibility(View.GONE);
-                Animation animation = new RotateAnimation(180, 0, Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f);
-                animation.setDuration(30);//设置动画持续时间
-                animation.setInterpolator(new LinearInterpolator());
-                animation.setRepeatMode(Animation.REVERSE);//设置反方向执行
-                animation.setFillAfter(true);//动画执行完后是否停留在执行完的状态
-                spinView.startAnimation(animation);
-            }
         }
-
-        if (view == signUp){
-            Uri uri = Uri.parse(signUpUrl);
-            Intent intent = new Intent(Intent.ACTION_VIEW, uri);
-            getContext().startActivity(intent);
+        if (view == this.signUp) {
+            Uri uri = Uri.parse((String)this.signUpUrl);
+            Intent intent = new Intent("android.intent.action.VIEW", uri);
+            this.getContext().startActivity(intent);
         }
-        if (view == addServer){
-            SelectServerTypeDialog dialog = new SelectServerTypeDialog(getContext(), server -> {
-                if (!activity.uiManager.accountUI.serverList.contains(server)){
-                    activity.uiManager.accountUI.serverList.add(server);
-                    activity.uiManager.accountUI.serverListAdapter.notifyDataSetChanged();
-                    GsonUtils.saveServer(activity.uiManager.accountUI.serverList, AppManifest.ACCOUNT_DIR + "/authlib_injector_server.json");
-                    ArrayList<AuthlibInjectorServer> authlibInjectorServers = InitializeSetting.initializeAuthlibInjectorServer(getContext());
-                    serverListAdapter = new AuthlibInjectorServerSpinnerAdapter(getContext(), authlibInjectorServers);
-                    editServer.setAdapter(serverListAdapter);
+        if (view == this.addServer) {
+            SelectServerTypeDialog dialog = new SelectServerTypeDialog(this.getContext(), server -> {
+                if (!this.activity.uiManager.accountUI.serverList.contains(server)) {
+                    this.activity.uiManager.accountUI.serverList.add(server);
+                    this.activity.uiManager.accountUI.serverListAdapter.notifyDataSetChanged();
+                    GsonUtils.saveServer(this.activity.uiManager.accountUI.serverList, AppManifest.ACCOUNT_DIR + "/authlib_injector_server.json");
+                    ArrayList<AuthlibInjectorServer> authlibInjectorServers = InitializeSetting.initializeAuthlibInjectorServer(this.getContext());
+                    this.serverListAdapter = new AuthlibInjectorServerSpinnerAdapter(this.getContext(), authlibInjectorServers);
+                    this.editServer.setAdapter((SpinnerAdapter)this.serverListAdapter);
                 }
             });
             dialog.show();
         }
     }
 
-    public void login(Intent intent){
+    public void login(Intent intent) {
         Uri data = null;
-        if (intent != null){
+        if (intent != null) {
             data = intent.getData();
         }
         if (data != null && data.getScheme().equals("ms-xal-00000000402b5328") && data.getHost().equals("auth")) {
@@ -394,151 +385,124 @@ public class AddAccountDialog extends Dialog implements View.OnClickListener, Ta
             String error_description = data.getQueryParameter("error_description");
             if (error != null) {
                 if (!error_description.startsWith("The user has denied access to the scope requested by the client application")) {
-                    Toast.makeText(getContext(), "Error: " + error + ": " + error_description, Toast.LENGTH_SHORT).show();
+                    Toast.makeText((Context)this.getContext(), (CharSequence)("Error: " + error + ": " + error_description), (int)0).show();
                 }
-            }
-            else {
+            } else {
                 String code = data.getQueryParameter("code");
                 new Thread(() -> {
-                    loginHandler.post(() -> {
-                        progressBar.setVisibility(View.VISIBLE);
-                        login.setVisibility(View.GONE);
-                        cancel.setEnabled(false);
-                        tabLayout.setEnabled(false);
+                    this.loginHandler.post(() -> {
+                        this.progressBar.setVisibility(0);
+                        this.login.setVisibility(8);
+                        this.cancel.setEnabled(false);
+                        this.tabLayout.setEnabled(false);
                     });
                     try {
-                        Msa msa = new Msa(false, code);
+                        final Msa msa = new Msa(false, code);
                         if (msa.doesOwnGame) {
+                            Bitmap skin;
                             Msa.MinecraftProfileResponse minecraftProfile = Msa.getMinecraftProfile(msa.tokenType, msa.mcToken);
                             Map<TextureType, Texture> map = Msa.getTextures(minecraftProfile).get();
-                            Texture texture = map.get(TextureType.SKIN);
-                            Bitmap skin;
+                            Texture texture = map.get((Object)TextureType.SKIN);
                             if (texture == null) {
-                                AssetManager manager = getContext().getAssets();
-                                InputStream inputStream;
-                                inputStream = manager.open("img/alex.png");
-                                skin = BitmapFactory.decodeStream(inputStream);
-                            }
-                            else {
+                                AssetManager manager = this.getContext().getAssets();
+                                InputStream inputStream = manager.open("img/alex.png");
+                                skin = BitmapFactory.decodeStream((InputStream)inputStream);
+                            } else {
                                 String u = texture.getUrl();
-                                if (!u.startsWith("https")){
-                                    u = u.replaceFirst("http","https");
+                                if (!u.startsWith("https")) {
+                                    u = u.replaceFirst("http", "https");
                                 }
                                 URL url = new URL(u);
                                 HttpURLConnection httpURLConnection = (HttpURLConnection)url.openConnection();
                                 httpURLConnection.setDoInput(true);
                                 httpURLConnection.connect();
                                 InputStream inputStream = httpURLConnection.getInputStream();
-                                skin = BitmapFactory.decodeStream(inputStream);
+                                skin = BitmapFactory.decodeStream((InputStream)inputStream);
                             }
-                            loginHandler.post(new Runnable() {
+                            this.loginHandler.post(new Runnable(){
+
                                 @Override
                                 public void run() {
                                     String skinTexture = Avatar.bitmapToString(skin);
-                                    account = new Account(3,
-                                            "",
-                                            "",
-                                            "mojang",
-                                            "0",
-                                            msa.mcName,
-                                            msa.mcUuid,
-                                            msa.mcToken,
-                                            "00000000-0000-0000-0000-000000000000",
-                                            msa.msRefreshToken,
-                                            "",
-                                            skinTexture);
-                                    callback.onAccountAdd(account);
-                                    dismiss();
+                                    AddAccountDialog.this.account = new Account(3, "", "", "mojang", "0", msa.mcName, msa.mcUuid, msa.mcToken, "00000000-0000-0000-0000-000000000000", msa.msRefreshToken, "", skinTexture);
+                                    AddAccountDialog.this.callback.onAccountAdd(AddAccountDialog.this.account);
+                                    AddAccountDialog.this.dismiss();
                                 }
                             });
                         }
                     }
-                    catch (Exception e){
+                    catch (Exception e) {
                         e.printStackTrace();
                     }
-                    loginHandler.post(() -> {
-                        progressBar.setVisibility(View.GONE);
-                        login.setVisibility(View.VISIBLE);
-                        cancel.setEnabled(true);
-                        tabLayout.setEnabled(true);
+                    this.loginHandler.post(() -> {
+                        this.progressBar.setVisibility(8);
+                        this.login.setVisibility(0);
+                        this.cancel.setEnabled(true);
+                        this.tabLayout.setEnabled(true);
                     });
                 }).start();
             }
         }
     }
 
-    @Override
     public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
-        if (adapterView == editServer){
-            authlibInjectorServer = (AuthlibInjectorServer) serverListAdapter.getItem(i);
-            signUpUrl = authlibInjectorServer.getLinks().get("register");
-            if (authlibInjectorServer.getUrl().startsWith(AddNide8AuthServerDialog.NIDE_8_AUTH_SERVER)) {
-                signUpUrl = NIDE_8_AUTH_SIGN_UP_PAGE + authlibInjectorServer.getUrl().substring(authlibInjectorServer.getUrl().length() - 33);
+        if (adapterView == this.editServer) {
+            this.authlibInjectorServer = (AuthlibInjectorServer)this.serverListAdapter.getItem(i);
+            this.signUpUrl = this.authlibInjectorServer.getLinks().get("register");
+            if (this.authlibInjectorServer.getUrl().startsWith("https://auth.mc-user.com:233/")) {
+                this.signUpUrl = NIDE_8_AUTH_SIGN_UP_PAGE + this.authlibInjectorServer.getUrl().substring(this.authlibInjectorServer.getUrl().length() - 33);
             }
-            if (signUpUrl == null){
-                signUp.setVisibility(View.GONE);
-            }
-            else {
-                signUp.setVisibility(View.VISIBLE);
+            if (this.signUpUrl == null) {
+                this.signUp.setVisibility(8);
+            } else {
+                this.signUp.setVisibility(0);
             }
         }
     }
 
-    @Override
     public void onNothingSelected(AdapterView<?> adapterView) {
-
     }
 
-    @SuppressLint("HandlerLeak")
-    public final Handler loginHandler = new Handler() {
-        @Override
-        public void handleMessage(@NonNull Message msg) {
-            super.handleMessage(msg);
-        }
-    };
-
-    @Override
     public void onTabSelected(TabLayout.Tab tab) {
-        if (Objects.requireNonNull(tab.getText()).toString().equals(getContext().getString(R.string.dialog_add_account_type_offline))) {
-            offlineLayout.setVisibility(View.VISIBLE);
+        if (Objects.requireNonNull(tab.getText()).toString().equals(this.getContext().getString(R.string.dialog_add_account_type_offline))) {
+            this.offlineLayout.setVisibility(0);
         }
-        if (Objects.requireNonNull(tab.getText()).toString().equals(getContext().getString(R.string.dialog_add_account_type_microsoft))) {
-            microsoftLayout.setVisibility(View.VISIBLE);
+        if (Objects.requireNonNull(tab.getText()).toString().equals(this.getContext().getString(R.string.dialog_add_account_type_microsoft))) {
+            this.microsoftLayout.setVisibility(0);
         }
-        if (Objects.requireNonNull(tab.getText()).toString().equals(getContext().getString(R.string.dialog_add_account_type_external))) {
-            externalLayout.setVisibility(View.VISIBLE);
+        if (Objects.requireNonNull(tab.getText()).toString().equals(this.getContext().getString(R.string.dialog_add_account_type_external))) {
+            this.externalLayout.setVisibility(0);
         }
     }
 
-    @Override
     public void onTabUnselected(TabLayout.Tab tab) {
-        if (Objects.requireNonNull(tab.getText()).toString().equals(getContext().getString(R.string.dialog_add_account_type_offline))) {
-            offlineLayout.setVisibility(View.GONE);
+        if (Objects.requireNonNull(tab.getText()).toString().equals(this.getContext().getString(R.string.dialog_add_account_type_offline))) {
+            this.offlineLayout.setVisibility(8);
         }
-        if (Objects.requireNonNull(tab.getText()).toString().equals(getContext().getString(R.string.dialog_add_account_type_microsoft))) {
-            microsoftLayout.setVisibility(View.GONE);
+        if (Objects.requireNonNull(tab.getText()).toString().equals(this.getContext().getString(R.string.dialog_add_account_type_microsoft))) {
+            this.microsoftLayout.setVisibility(8);
         }
-        if (Objects.requireNonNull(tab.getText()).toString().equals(getContext().getString(R.string.dialog_add_account_type_external))) {
-            externalLayout.setVisibility(View.GONE);
+        if (Objects.requireNonNull(tab.getText()).toString().equals(this.getContext().getString(R.string.dialog_add_account_type_external))) {
+            this.externalLayout.setVisibility(8);
         }
     }
 
-    @Override
     public void onTabReselected(TabLayout.Tab tab) {
-        if (Objects.requireNonNull(tab.getText()).toString().equals(getContext().getString(R.string.dialog_add_account_type_offline))) {
-            offlineLayout.setVisibility(View.VISIBLE);
+        if (Objects.requireNonNull(tab.getText()).toString().equals(this.getContext().getString(R.string.dialog_add_account_type_offline))) {
+            this.offlineLayout.setVisibility(0);
         }
-        if (Objects.requireNonNull(tab.getText()).toString().equals(getContext().getString(R.string.dialog_add_account_type_microsoft))) {
-            microsoftLayout.setVisibility(View.VISIBLE);
+        if (Objects.requireNonNull(tab.getText()).toString().equals(this.getContext().getString(R.string.dialog_add_account_type_microsoft))) {
+            this.microsoftLayout.setVisibility(0);
         }
-        if (Objects.requireNonNull(tab.getText()).toString().equals(getContext().getString(R.string.dialog_add_account_type_external))) {
-            externalLayout.setVisibility(View.VISIBLE);
+        if (Objects.requireNonNull(tab.getText()).toString().equals(this.getContext().getString(R.string.dialog_add_account_type_external))) {
+            this.externalLayout.setVisibility(0);
         }
     }
 
-    public interface AddAccountCallback{
-        void onAccountAdd(Account account);
-        void onCancel();
-    }
+    public static interface AddAccountCallback {
+        public void onAccountAdd(Account var1);
 
+        public void onCancel();
+    }
 }
+

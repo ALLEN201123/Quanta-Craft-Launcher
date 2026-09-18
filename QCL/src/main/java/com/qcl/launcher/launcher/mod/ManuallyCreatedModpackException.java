@@ -2,6 +2,7 @@ package com.qcl.launcher.launcher.mod;
 
 import java.nio.file.Path;
 
+/* loaded from: classes2.dex */
 public class ManuallyCreatedModpackException extends Exception {
     private final Path path;
 
@@ -10,6 +11,6 @@ public class ManuallyCreatedModpackException extends Exception {
     }
 
     public Path getPath() {
-        return path;
+        return this.path;
     }
 }

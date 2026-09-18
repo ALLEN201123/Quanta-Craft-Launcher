@@ -2,144 +2,158 @@ package com.qcl.launcher.launcher.download;
 
 import android.app.AlertDialog;
 import android.content.Context;
-
-import com.qcl.launcher.R;
+import android.content.DialogInterface;
 import com.qcl.launcher.launcher.game.Arguments;
 import com.qcl.launcher.launcher.game.Library;
 import com.qcl.launcher.launcher.game.Version;
 import com.qcl.launcher.utils.Lang;
-
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.List;
 
+import com.qcl.launcher.R;
+/* loaded from: classes2.dex */
 public class PatchMerger {
 
-    public interface ReMergeCallback{
+    /* loaded from: classes2.dex */
+    public interface ReMergeCallback {
         void onFailed();
     }
 
-    public static Version reMergePatch(Context context, Version gameVersionJson, Version patch, String type, ReMergeCallback callback) {
-        gameVersionJson = gameVersionJson.removePatchById(type);
-        if (patch != null) {
-            gameVersionJson = gameVersionJson.addPatch(patch);
+    /* JADX INFO: Access modifiers changed from: package-private */
+    public static /* synthetic */ void lambda$reMergePatch$0(DialogInterface dialogInterface, int i) {
+    }
+
+    public static Version reMergePatch(Context context, Version version, Version version2, String str, ReMergeCallback reMergeCallback) {
+        Version removePatchById = version.removePatchById(str);
+        if (version2 != null) {
+            removePatchById = removePatchById.addPatch(version2);
         }
-        final List<Version> patches = gameVersionJson.getPatches();
-        for (Version v : gameVersionJson.getPatches()) {
-            if (v.getId().equals("game")) {
-                gameVersionJson = v.setId(v.getVersion()).setVersion(null).setPriority(null).addPatch(v);
+        List<Version> patches = removePatchById.getPatches();
+        Iterator<Version> it = removePatchById.getPatches().iterator();
+        while (true) {
+            if (!it.hasNext()) {
+                break;
+            }
+            Version next = it.next();
+            if (next.getId().equals("game")) {
+                removePatchById = next.setId(next.getVersion()).setVersion(null).setPriority(null).addPatch(next);
                 break;
             }
         }
-        if (gameVersionJson == null) {
+        if (removePatchById == null) {
             AlertDialog.Builder builder = new AlertDialog.Builder(context);
             builder.setTitle(context.getString(R.string.dialog_unknown_error_title));
             builder.setMessage(context.getString(R.string.dialog_unknown_error_msg));
-            builder.setPositiveButton(context.getString(R.string.dialog_unknown_error_title), (dialogInterface, i) -> {});
-            callback.onFailed();
-            builder.create().show();
-        }
-        else {
-            patches.sort((version, t1) -> {
-                if (version.getPriority() > t1.getPriority()) {
-                    return -1;
-                }
-                else if (version.getPriority() > t1.getPriority()) {
-                    return 1;
-                }
-                else {
-                    return 0;
+            builder.setPositiveButton(context.getString(R.string.dialog_unknown_error_title), new DialogInterface.OnClickListener() { // from class: com.qcl.launcher.launcher.download.PatchMerger$$ExternalSyntheticLambda0
+                @Override // android.content.DialogInterface.OnClickListener
+                public final void onClick(DialogInterface dialogInterface, int i) {
+                    PatchMerger.lambda$reMergePatch$0(dialogInterface, i);
                 }
             });
-            for (Version v : patches) {
-                if (!v.getId().equals("game")) {
-                    if (v.getId().equals("optifine")) {
-                        gameVersionJson = PatchMerger.mergeOptifinePatch(gameVersionJson,v);
-                    }
-                    else {
-                        gameVersionJson = PatchMerger.mergePatch(gameVersionJson,v);
+            reMergeCallback.onFailed();
+            builder.create().show();
+        } else {
+            patches.sort(new Comparator() { // from class: com.qcl.launcher.launcher.download.PatchMerger$$ExternalSyntheticLambda1
+                @Override // java.util.Comparator
+                public final int compare(Object obj, Object obj2) {
+                    return PatchMerger.lambda$reMergePatch$1((Version) obj, (Version) obj2);
+                }
+            });
+            for (Version version3 : patches) {
+                if (!version3.getId().equals("game")) {
+                    if (version3.getId().equals("optifine")) {
+                        removePatchById = mergeOptifinePatch(removePatchById, version3);
+                    } else {
+                        removePatchById = mergePatch(removePatchById, version3);
                     }
                 }
             }
         }
-        return gameVersionJson;
+        return removePatchById;
     }
 
-    public static Version mergePatch(Version gameVersionJson, Version patch) {
-        gameVersionJson = gameVersionJson.addPatch(patch);
-        gameVersionJson = gameVersionJson.setMainClass(patch.getMainClass());
-        if (patch.getMinecraftArguments().isPresent()) {
-            gameVersionJson = gameVersionJson.setMinecraftArguments(patch.getMinecraftArguments().get());
+    /* JADX INFO: Access modifiers changed from: package-private */
+    public static /* synthetic */ int lambda$reMergePatch$1(Version version, Version version2) {
+        if (version.getPriority() > version2.getPriority()) {
+            return -1;
         }
-        if (patch.getArguments().isPresent()) {
-            if (gameVersionJson.getArguments().isPresent()) {
-                gameVersionJson = gameVersionJson.setArguments(Arguments.merge(gameVersionJson.getArguments().get(),patch.getArguments().get()));
-            }
-            else {
-                gameVersionJson = gameVersionJson.setArguments(patch.getArguments().get());
-            }
-        }
-        List<Library> libraries = new ArrayList<>(Lang.merge(gameVersionJson.getLibraries(), patch.getLibraries()));
-        for (Library library : gameVersionJson.getLibraries()) {
-            for (Library lib : patch.getLibraries()) {
-                if (library.equals(lib)) {
-                    libraries.remove(lib);
-                }
-                if (library.getArtifactId().equals(lib.getArtifactId()) && !library.getVersion().equals(lib.getVersion())) {
-                    libraries.remove(library);
-                }
-            }
-        }
-        gameVersionJson = gameVersionJson.setLibraries(libraries);
-        return gameVersionJson;
+        return version.getPriority() > version2.getPriority() ? 1 : 0;
     }
 
-    public static Version mergeOptifinePatch(Version gameVersionJson, Version patch) {
-        boolean forge = false;
-        for (Version v : gameVersionJson.getPatches()) {
-            if (v.getId().equals("forge")) {
-                forge = true;
+    public static Version mergePatch(Version version, Version version2) {
+        Version mainClass = version.addPatch(version2).setMainClass(version2.getMainClass());
+        if (version2.getMinecraftArguments().isPresent()) {
+            mainClass = mainClass.setMinecraftArguments(version2.getMinecraftArguments().get());
+        }
+        if (version2.getArguments().isPresent()) {
+            if (mainClass.getArguments().isPresent()) {
+                mainClass = mainClass.setArguments(Arguments.merge(mainClass.getArguments().get(), version2.getArguments().get()));
+            } else {
+                mainClass = mainClass.setArguments(version2.getArguments().get());
+            }
+        }
+        List<Library> arrayList = new ArrayList<>(Lang.merge(mainClass.getLibraries(), version2.getLibraries()));
+        for (Library library : mainClass.getLibraries()) {
+            for (Library library2 : version2.getLibraries()) {
+                if (library.equals(library2)) {
+                    arrayList.remove(library2);
+                }
+                if (library.getArtifactId().equals(library2.getArtifactId()) && !library.getVersion().equals(library2.getVersion())) {
+                    arrayList.remove(library);
+                }
+            }
+        }
+        return mainClass.setLibraries(arrayList);
+    }
+
+    public static Version mergeOptifinePatch(Version version, Version version2) {
+        boolean z;
+        Iterator<Version> it = version.getPatches().iterator();
+        while (true) {
+            if (!it.hasNext()) {
+                z = false;
+                break;
+            }
+            if (it.next().getId().equals("forge")) {
+                z = true;
                 break;
             }
         }
-        gameVersionJson = gameVersionJson.addPatch(patch);
-        if (patch.getMinecraftArguments().isPresent()) {
-            gameVersionJson = gameVersionJson.setMinecraftArguments(patch.getMinecraftArguments().get());
+        Version addPatch = version.addPatch(version2);
+        if (version2.getMinecraftArguments().isPresent()) {
+            addPatch = addPatch.setMinecraftArguments(version2.getMinecraftArguments().get());
         }
-        if (forge) {
-            if (patch.getArguments().isPresent()) {
-                if (gameVersionJson.getArguments().isPresent()) {
-                    gameVersionJson = gameVersionJson.setArguments(Arguments.merge(gameVersionJson.getArguments().get(),new Arguments().addGameArguments("--tweakClass", "optifine.OptiFineForgeTweaker")));
+        if (z) {
+            if (version2.getArguments().isPresent()) {
+                if (addPatch.getArguments().isPresent()) {
+                    addPatch = addPatch.setArguments(Arguments.merge(addPatch.getArguments().get(), new Arguments().addGameArguments("--tweakClass", "optifine.OptiFineForgeTweaker")));
+                } else {
+                    addPatch = addPatch.setArguments(new Arguments().addGameArguments("--tweakClass", "optifine.OptiFineForgeTweaker"));
                 }
-                else {
-                    gameVersionJson = gameVersionJson.setArguments(new Arguments().addGameArguments("--tweakClass", "optifine.OptiFineForgeTweaker"));
+            }
+        } else {
+            addPatch = addPatch.setMainClass(version2.getMainClass());
+            if (version2.getArguments().isPresent()) {
+                if (addPatch.getArguments().isPresent()) {
+                    addPatch = addPatch.setArguments(Arguments.merge(addPatch.getArguments().get(), version2.getArguments().get()));
+                } else {
+                    addPatch = addPatch.setArguments(version2.getArguments().get());
                 }
             }
         }
-        else {
-            gameVersionJson = gameVersionJson.setMainClass(patch.getMainClass());
-            if (patch.getArguments().isPresent()) {
-                if (gameVersionJson.getArguments().isPresent()) {
-                    gameVersionJson = gameVersionJson.setArguments(Arguments.merge(gameVersionJson.getArguments().get(),patch.getArguments().get()));
+        List<Library> arrayList = new ArrayList<>(Lang.merge(addPatch.getLibraries(), version2.getLibraries()));
+        for (Library library : addPatch.getLibraries()) {
+            for (Library library2 : version2.getLibraries()) {
+                if (library.equals(library2)) {
+                    arrayList.remove(library2);
                 }
-                else {
-                    gameVersionJson = gameVersionJson.setArguments(patch.getArguments().get());
-                }
-            }
-        }
-        List<Library> libraries = new ArrayList<>(Lang.merge(gameVersionJson.getLibraries(), patch.getLibraries()));
-        for (Library library : gameVersionJson.getLibraries()) {
-            for (Library lib : patch.getLibraries()) {
-                if (library.equals(lib)) {
-                    libraries.remove(lib);
-                }
-                if (library.getArtifactId().equals(lib.getArtifactId()) && !library.getVersion().equals(lib.getVersion())) {
-                    libraries.remove(library);
+                if (library.getArtifactId().equals(library2.getArtifactId()) && !library.getVersion().equals(library2.getVersion())) {
+                    arrayList.remove(library);
                 }
             }
         }
-        gameVersionJson = gameVersionJson.setLibraries(libraries);
-        return gameVersionJson;
+        return addPatch.setLibraries(arrayList);
     }
-
 }

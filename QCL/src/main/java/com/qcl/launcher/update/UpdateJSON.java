@@ -1,13 +1,12 @@
 package com.qcl.launcher.update;
 
+/* loaded from: classes2.dex */
 public class UpdateJSON {
-
-    public LauncherVersion latestRelease;
     public LauncherVersion latestPrerelease;
+    public LauncherVersion latestRelease;
 
-    public UpdateJSON (LauncherVersion latestRelease,LauncherVersion latestPrerelease) {
-        this.latestRelease = latestRelease;
-        this.latestPrerelease = latestPrerelease;
+    public UpdateJSON(LauncherVersion launcherVersion, LauncherVersion launcherVersion2) {
+        this.latestRelease = launcherVersion;
+        this.latestPrerelease = launcherVersion2;
     }
-
 }

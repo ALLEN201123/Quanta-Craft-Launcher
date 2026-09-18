@@ -1,7 +1,9 @@
 package com.oracle.dalvik;
 
+/* loaded from: classes.dex */
 public final class VMLauncher {
-	private VMLauncher() {
-	}
-	public static native int launchJVM(String[] args);
+    public static native int launchJVM(String[] strArr);
+
+    private VMLauncher() {
+    }
 }

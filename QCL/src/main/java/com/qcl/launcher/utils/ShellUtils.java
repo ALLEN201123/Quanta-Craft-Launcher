@@ -1,42 +1,41 @@
 package com.qcl.launcher.utils;
 
 import android.util.Log;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 
+/* loaded from: classes2.dex */
 public class ShellUtils {
-
-    public static void doShell(String cmd) throws Exception {
-        Log.e("命令",cmd);
-        Process proc = Runtime.getRuntime().exec((cmd).split(" "));
-        // 标准输入流（必须写在 waitFor 之前）
-        String inStr = consumeInputStream(proc.getInputStream());
-        // 标准错误流（必须写在 waitFor 之前）
-        String errStr = consumeInputStream(proc.getErrorStream());
-        int retCode = proc.waitFor();
-        if (retCode == 0) {
-            Log.e("成功",inStr);
+    public static void doShell(String str) throws Exception {
+        Log.e("命令", str);
+        Process exec = Runtime.getRuntime().exec(str.split(" "));
+        String consumeInputStream = consumeInputStream(exec.getInputStream());
+        String consumeInputStream2 = consumeInputStream(exec.getErrorStream());
+        if (exec.waitFor() == 0) {
+            Log.e("成功", consumeInputStream);
         } else {
-            Log.e("失败",errStr);
+            Log.e("失败", consumeInputStream2);
         }
     }
 
-    private static String consumeInputStream(InputStream is) {
+    private static String consumeInputStream(InputStream inputStream) {
         try {
-            BufferedReader br = new BufferedReader(new InputStreamReader(is));
-            String s;
+            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
             StringBuilder sb = new StringBuilder();
-            while ((s = br.readLine()) != null) {
-                System.out.println(s);
-                Log.e("ShellUtils",s);
-                sb.append(s + "\n");
+            while (true) {
+                String readLine = bufferedReader.readLine();
+                if (readLine != null) {
+                    System.out.println(readLine);
+                    Log.e("ShellUtils", readLine);
+                    sb.append(readLine + "\n");
+                } else {
+                    return sb.toString();
+                }
             }
-            return sb.toString();
-        } catch (IOException e) {
+        } catch (IOException unused) {
+            return "";
         }
-        return "";
     }
 }

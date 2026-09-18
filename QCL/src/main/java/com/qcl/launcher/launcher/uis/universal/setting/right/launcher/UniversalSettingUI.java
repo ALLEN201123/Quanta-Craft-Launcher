@@ -1,13 +1,7 @@
 package com.qcl.launcher.launcher.uis.universal.setting.right.launcher;
 
-import static android.app.Activity.RESULT_OK;
-
-import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
-import android.graphics.Color;
-import android.net.Uri;
 import android.os.Environment;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -22,14 +16,11 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RadioButton;
 import android.widget.Spinner;
+import android.widget.SpinnerAdapter;
 import android.widget.TextView;
-
-import com.tungsten.filepicker.Constants;
-import com.tungsten.filepicker.FolderChooser;
-import com.qcl.launcher.R;
 import com.qcl.launcher.launcher.MainActivity;
-import com.qcl.launcher.manifest.AppManifest;
 import com.qcl.launcher.launcher.uis.tools.BaseUI;
+import com.qcl.launcher.manifest.AppManifest;
 import com.qcl.launcher.update.UpdateChecker;
 import com.qcl.launcher.utils.LocaleUtils;
 import com.qcl.launcher.utils.animation.CustomAnimationUtils;
@@ -37,253 +28,239 @@ import com.qcl.launcher.utils.animation.HiddenAnimationUtils;
 import com.qcl.launcher.utils.file.FileUtils;
 import com.qcl.launcher.utils.file.UriUtils;
 import com.qcl.launcher.utils.gson.GsonUtils;
-
+import com.tungsten.filepicker.Constants;
+import com.tungsten.filepicker.FolderChooser;
 import java.io.File;
 import java.util.ArrayList;
 
+import com.qcl.launcher.R;
+/* loaded from: classes2.dex */
 public class UniversalSettingUI extends BaseUI implements View.OnClickListener, AdapterView.OnItemSelectedListener, CompoundButton.OnCheckedChangeListener, TextWatcher {
-
     private static final int PICK_CACHE_FOLDER_REQUEST = 1002;
-
-    public LinearLayout universalSettingUI;
-
-    private LinearLayout showUpdateSetting;
+    private TextView cachePathText;
+    private LinearLayout cacheSetting;
+    private int cacheSettingHeight;
+    private RadioButton checkBeta;
+    private RadioButton checkCustom;
+    private RadioButton checkDefault;
+    private RadioButton checkRelease;
+    private Button clearCache;
+    private EditText editCacheContent;
+    private Button exportLog;
+    private ImageButton selectCachePath;
+    private ImageView showCache;
     private LinearLayout showCacheSetting;
     private ImageView showUpdate;
-    private ImageView showCache;
-    private TextView updateStateText;
-    private TextView cachePathText;
+    private LinearLayout showUpdateSetting;
     private Spinner switchLang;
-    private Button clearCache;
-    private Button exportLog;
+    public LinearLayout universalSettingUI;
+    private UpdateChecker.UpdateCallback updateCallback;
     private LinearLayout updateSetting;
-    private RadioButton checkRelease;
-    private RadioButton checkBeta;
-    private LinearLayout cacheSetting;
-    private RadioButton checkDefault;
-    private RadioButton checkCustom;
-    private EditText editCacheContent;
-    private ImageButton selectCachePath;
-
     private int updateSettingHeight;
-    private int cacheSettingHeight;
+    private TextView updateStateText;
 
-    private UpdateChecker.UpdateCallback updateCallback = new UpdateChecker.UpdateCallback() {
-        @Override
-        public void onCheck() {
-            updateStateText.setText(context.getString(R.string.universal_setting_ui_update_state_checking));
-        }
-
-        @Override
-        public void onFinish(boolean latest) {
-            if (latest) {
-                updateStateText.setText(context.getString(R.string.universal_setting_ui_update_state_latest));
-            }
-            else {
-                updateStateText.setText(context.getString(R.string.universal_setting_ui_update_state_update));
-                updateStateText.setTextColor(Color.RED);
-            }
-        }
-    };
-
-    public UniversalSettingUI(Context context, MainActivity activity) {
-        super(context, activity);
+    @Override // android.text.TextWatcher
+    public void beforeTextChanged(CharSequence charSequence, int i, int i2, int i3) {
     }
 
-    @Override
+    @Override // android.widget.AdapterView.OnItemSelectedListener
+    public void onNothingSelected(AdapterView<?> adapterView) {
+    }
+
+    @Override // android.text.TextWatcher
+    public void onTextChanged(CharSequence charSequence, int i, int i2, int i3) {
+    }
+
+    public UniversalSettingUI(Context context, MainActivity mainActivity) {
+        super(context, mainActivity);
+        this.updateCallback = new UpdateChecker.UpdateCallback() { // from class: com.qcl.launcher.launcher.uis.universal.setting.right.launcher.UniversalSettingUI.1
+            @Override // com.qcl.launcher.update.UpdateChecker.UpdateCallback
+            public void onCheck() {
+                UniversalSettingUI.this.updateStateText.setText(UniversalSettingUI.this.context.getString(R.string.universal_setting_ui_update_state_checking));
+            }
+
+            @Override // com.qcl.launcher.update.UpdateChecker.UpdateCallback
+            public void onFinish(boolean z) {
+                if (z) {
+                    UniversalSettingUI.this.updateStateText.setText(UniversalSettingUI.this.context.getString(R.string.universal_setting_ui_update_state_latest));
+                } else {
+                    UniversalSettingUI.this.updateStateText.setText(UniversalSettingUI.this.context.getString(R.string.universal_setting_ui_update_state_update));
+                    UniversalSettingUI.this.updateStateText.setTextColor(-65536);
+                }
+            }
+        };
+    }
+
+    @Override // com.qcl.launcher.launcher.uis.tools.BaseUI, com.qcl.launcher.launcher.uis.tools.UILifecycleCallbacks
     public void onCreate() {
         super.onCreate();
-        universalSettingUI = activity.findViewById(R.id.ui_setting_universal);
-
-        showUpdateSetting = activity.findViewById(R.id.show_update_setting);
-        updateStateText = activity.findViewById(R.id.update_state_text);
-        showUpdate = activity.findViewById(R.id.show_update);
-        showCacheSetting = activity.findViewById(R.id.show_cache_setting);
-        cachePathText = activity.findViewById(R.id.cache_content_text);
-        showCache = activity.findViewById(R.id.show_cache);
-        clearCache = activity.findViewById(R.id.clear_cache);
-        switchLang = activity.findViewById(R.id.language_spinner);
-        exportLog = activity.findViewById(R.id.export_log);
-
-        showUpdateSetting.setOnClickListener(this);
-        showCacheSetting.setOnClickListener(this);
-        clearCache.setOnClickListener(this);
-        exportLog.setOnClickListener(this);
-
-        updateSetting = activity.findViewById(R.id.update_setting);
-        checkRelease = activity.findViewById(R.id.update_to_rec);
-        checkBeta = activity.findViewById(R.id.update_to_beta);
-
-        checkRelease.setOnCheckedChangeListener(this);
-        checkBeta.setOnCheckedChangeListener(this);
-
-        cacheSetting = activity.findViewById(R.id.cache_setting);
-        checkDefault = activity.findViewById(R.id.check_default_cache_path);
-        checkCustom = activity.findViewById(R.id.check_custom_cache_path);
-        editCacheContent = activity.findViewById(R.id.edit_cache_path);
-        selectCachePath = activity.findViewById(R.id.select_cache_path);
-
-        checkDefault.setOnCheckedChangeListener(this);
-        checkCustom.setOnCheckedChangeListener(this);
-        editCacheContent.addTextChangedListener(this);
-        selectCachePath.setOnClickListener(this);
-
-        ArrayList<String> languages = new ArrayList<>();
-        languages.add(context.getString(R.string.universal_setting_ui_lang_sys));
-        languages.add("English");
-        languages.add("简体中文");
-        languages.add("繁體中文");
-        ArrayAdapter<String> langAdapter = new ArrayAdapter<>(context, R.layout.item_spinner, languages);
-        switchLang.setAdapter(langAdapter);
-        SharedPreferences sharedPreferences = context.getSharedPreferences("lang", Context.MODE_PRIVATE);
-        switchLang.setSelection(sharedPreferences.getInt("lang", 0));
-        switchLang.setOnItemSelectedListener(this);
-
-        updateSetting.post(() -> {
-            updateSettingHeight = updateSetting.getHeight();
-            updateSetting.setVisibility(View.GONE);
+        this.universalSettingUI = (LinearLayout) this.activity.findViewById(R.id.ui_setting_universal);
+        this.showUpdateSetting = (LinearLayout) this.activity.findViewById(R.id.show_update_setting);
+        this.updateStateText = (TextView) this.activity.findViewById(R.id.update_state_text);
+        this.showUpdate = (ImageView) this.activity.findViewById(R.id.show_update);
+        this.showCacheSetting = (LinearLayout) this.activity.findViewById(R.id.show_cache_setting);
+        this.cachePathText = (TextView) this.activity.findViewById(R.id.cache_content_text);
+        this.showCache = (ImageView) this.activity.findViewById(R.id.show_cache);
+        this.clearCache = (Button) this.activity.findViewById(R.id.clear_cache);
+        this.switchLang = (Spinner) this.activity.findViewById(R.id.language_spinner);
+        this.exportLog = (Button) this.activity.findViewById(R.id.export_log);
+        this.showUpdateSetting.setOnClickListener(this);
+        this.showCacheSetting.setOnClickListener(this);
+        this.clearCache.setOnClickListener(this);
+        this.exportLog.setOnClickListener(this);
+        this.updateSetting = (LinearLayout) this.activity.findViewById(R.id.update_setting);
+        this.checkRelease = (RadioButton) this.activity.findViewById(R.id.update_to_rec);
+        this.checkBeta = (RadioButton) this.activity.findViewById(R.id.update_to_beta);
+        this.checkRelease.setOnCheckedChangeListener(this);
+        this.checkBeta.setOnCheckedChangeListener(this);
+        this.cacheSetting = (LinearLayout) this.activity.findViewById(R.id.cache_setting);
+        this.checkDefault = (RadioButton) this.activity.findViewById(R.id.check_default_cache_path);
+        this.checkCustom = (RadioButton) this.activity.findViewById(R.id.check_custom_cache_path);
+        this.editCacheContent = (EditText) this.activity.findViewById(R.id.edit_cache_path);
+        this.selectCachePath = (ImageButton) this.activity.findViewById(R.id.select_cache_path);
+        this.checkDefault.setOnCheckedChangeListener(this);
+        this.checkCustom.setOnCheckedChangeListener(this);
+        this.editCacheContent.addTextChangedListener(this);
+        this.selectCachePath.setOnClickListener(this);
+        ArrayList arrayList = new ArrayList();
+        arrayList.add(this.context.getString(R.string.universal_setting_ui_lang_sys));
+        arrayList.add("English");
+        arrayList.add("简体中文");
+        arrayList.add("繁體中文");
+        this.switchLang.setAdapter((SpinnerAdapter) new ArrayAdapter(this.context, R.layout.item_spinner, arrayList));
+        this.switchLang.setSelection(this.context.getSharedPreferences("lang", 0).getInt("lang", 0));
+        this.switchLang.setOnItemSelectedListener(this);
+        this.updateSetting.post(new Runnable() { // from class: com.qcl.launcher.launcher.uis.universal.setting.right.launcher.UniversalSettingUI$$ExternalSyntheticLambda0
+            @Override // java.lang.Runnable
+            public final void run() {
+                UniversalSettingUI.this.m583xce4888e9();
+            }
         });
-        cacheSetting.post(() -> {
-            cacheSettingHeight = cacheSetting.getHeight();
-            cacheSetting.setVisibility(View.GONE);
+        this.cacheSetting.post(new Runnable() { // from class: com.qcl.launcher.launcher.uis.universal.setting.right.launcher.UniversalSettingUI$$ExternalSyntheticLambda1
+            @Override // java.lang.Runnable
+            public final void run() {
+                UniversalSettingUI.this.m584x75c462aa();
+            }
         });
-
-        activity.updateChecker.check(activity.launcherSetting.getBetaVersion,updateCallback);
+        this.activity.updateChecker.check(this.activity.launcherSetting.getBetaVersion, this.updateCallback);
     }
 
-    @SuppressLint("UseCompatLoadingForDrawables")
-    @Override
+    /* JADX INFO: Access modifiers changed from: package-private */
+    /* renamed from: lambda$onCreate$0$com-qcl-launcher-launcher-uis-universal-setting-right-launcher-UniversalSettingUI, reason: not valid java name */
+    public /* synthetic */ void m583xce4888e9() {
+        this.updateSettingHeight = this.updateSetting.getHeight();
+        this.updateSetting.setVisibility(8);
+    }
+
+    /* JADX INFO: Access modifiers changed from: package-private */
+    /* renamed from: lambda$onCreate$1$com-qcl-launcher-launcher-uis-universal-setting-right-launcher-UniversalSettingUI, reason: not valid java name */
+    public /* synthetic */ void m584x75c462aa() {
+        this.cacheSettingHeight = this.cacheSetting.getHeight();
+        this.cacheSetting.setVisibility(8);
+    }
+
+    @Override // com.qcl.launcher.launcher.uis.tools.BaseUI, com.qcl.launcher.launcher.uis.tools.UILifecycleCallbacks
     public void onStart() {
         super.onStart();
-        CustomAnimationUtils.showViewFromLeft(universalSettingUI,activity,context,false);
-        if (activity.isLoaded){
-            activity.uiManager.settingUI.startUniversalSettingUI.setBackground(context.getResources().getDrawable(R.drawable.launcher_button_white));
+        CustomAnimationUtils.showViewFromLeft(this.universalSettingUI, this.activity, this.context, false);
+        if (this.activity.isLoaded) {
+            this.activity.uiManager.settingUI.startUniversalSettingUI.setBackground(this.context.getResources().getDrawable(R.drawable.launcher_button_white));
         }
-        if (activity.launcherSetting.getBetaVersion){
-            checkBeta.setChecked(true);
-            checkRelease.setChecked(false);
+        if (this.activity.launcherSetting.getBetaVersion) {
+            this.checkBeta.setChecked(true);
+            this.checkRelease.setChecked(false);
+        } else {
+            this.checkBeta.setChecked(false);
+            this.checkRelease.setChecked(true);
         }
-        else {
-            checkBeta.setChecked(false);
-            checkRelease.setChecked(true);
-        }
-        if (activity.launcherSetting.cachePath.equals(AppManifest.DEFAULT_CACHE_DIR)){
-            checkDefault.setChecked(true);
-        }
-        else {
-            checkCustom.setChecked(true);
+        if (this.activity.launcherSetting.cachePath.equals(AppManifest.DEFAULT_CACHE_DIR)) {
+            this.checkDefault.setChecked(true);
+        } else {
+            this.checkCustom.setChecked(true);
         }
     }
 
-    @SuppressLint("UseCompatLoadingForDrawables")
-    @Override
+    @Override // com.qcl.launcher.launcher.uis.tools.BaseUI, com.qcl.launcher.launcher.uis.tools.UILifecycleCallbacks
     public void onStop() {
         super.onStop();
-        CustomAnimationUtils.hideViewToLeft(universalSettingUI,activity,context,false);
-        if (activity.isLoaded){
-            activity.uiManager.settingUI.startUniversalSettingUI.setBackground(context.getResources().getDrawable(R.drawable.launcher_button_parent));
+        CustomAnimationUtils.hideViewToLeft(this.universalSettingUI, this.activity, this.context, false);
+        if (this.activity.isLoaded) {
+            this.activity.uiManager.settingUI.startUniversalSettingUI.setBackground(this.context.getResources().getDrawable(R.drawable.launcher_button_parent));
         }
     }
 
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == PICK_CACHE_FOLDER_REQUEST && data != null) {
-            if (resultCode == RESULT_OK) {
-                Uri uri = data.getData();
-                editCacheContent.setText(UriUtils.getRealPathFromUri_AboveApi19(context,uri));
-            }
+    @Override // com.qcl.launcher.launcher.uis.tools.BaseUI, com.qcl.launcher.launcher.uis.tools.UILifecycleCallbacks
+    public void onActivityResult(int i, int i2, Intent intent) {
+        super.onActivityResult(i, i2, intent);
+        if (i == 1002 && intent != null && i2 == -1) {
+            this.editCacheContent.setText(UriUtils.getRealPathFromUri_AboveApi19(this.context, intent.getData()));
         }
     }
 
-    @Override
-    public void onClick(View v) {
-        if (v == showUpdateSetting){
-            HiddenAnimationUtils.newInstance(context,updateSetting,showUpdate,updateSettingHeight).toggle();
+    @Override // android.view.View.OnClickListener
+    public void onClick(View view) {
+        if (view == this.showUpdateSetting) {
+            HiddenAnimationUtils.newInstance(this.context, this.updateSetting, this.showUpdate, this.updateSettingHeight).toggle();
         }
-        if (v == showCacheSetting){
-            HiddenAnimationUtils.newInstance(context,cacheSetting,showCache,cacheSettingHeight).toggle();
+        if (view == this.showCacheSetting) {
+            HiddenAnimationUtils.newInstance(this.context, this.cacheSetting, this.showCache, this.cacheSettingHeight).toggle();
         }
-        if (v == clearCache){
+        if (view == this.clearCache) {
             FileUtils.deleteDirectory(AppManifest.DEFAULT_CACHE_DIR);
         }
-        if (v == exportLog){
-
-        }
-        if (v == selectCachePath){
-            Intent intent = new Intent(context, FolderChooser.class);
-            intent.putExtra(Constants.SELECTION_MODE, Constants.SELECTION_MODES.SINGLE_SELECTION.ordinal());
-            intent.putExtra(Constants.INITIAL_DIRECTORY, new File(Environment.getExternalStorageDirectory().getAbsolutePath()).getAbsolutePath());
-            activity.startActivityForResult(intent, PICK_CACHE_FOLDER_REQUEST);
+        if (view == this.selectCachePath) {
+            Intent intent = new Intent(this.context, (Class<?>) FolderChooser.class);
+            intent.putExtra("SELECTION_MODE", Constants.SELECTION_MODES.SINGLE_SELECTION.ordinal());
+            intent.putExtra("INITIAL_DIRECTORY", new File(Environment.getExternalStorageDirectory().getAbsolutePath()).getAbsolutePath());
+            this.activity.startActivityForResult(intent, 1002);
         }
     }
 
-    @Override
-    public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-        if (parent == switchLang) {
-            LocaleUtils.changeLanguage(context, position);
+    @Override // android.widget.AdapterView.OnItemSelectedListener
+    public void onItemSelected(AdapterView<?> adapterView, View view, int i, long j) {
+        if (adapterView != this.switchLang || this.context.getSharedPreferences("lang", 0).getInt("lang", 0) == i) {
+            return;
+        }
+        LocaleUtils.changeLanguage(this.context, i);
+        this.activity.recreate();
+    }
+
+    @Override // android.widget.CompoundButton.OnCheckedChangeListener
+    public void onCheckedChanged(CompoundButton compoundButton, boolean z) {
+        if (compoundButton == this.checkRelease && z) {
+            this.checkBeta.setChecked(false);
+            this.activity.launcherSetting.getBetaVersion = false;
+            GsonUtils.saveLauncherSetting(this.activity.launcherSetting, AppManifest.SETTING_DIR + "/launcher_setting.json");
+            this.activity.updateChecker.check(false, this.updateCallback);
+        }
+        if (compoundButton == this.checkBeta && z) {
+            this.checkRelease.setChecked(false);
+            this.activity.launcherSetting.getBetaVersion = true;
+            GsonUtils.saveLauncherSetting(this.activity.launcherSetting, AppManifest.SETTING_DIR + "/launcher_setting.json");
+            this.activity.updateChecker.check(true, this.updateCallback);
+        }
+        if (compoundButton == this.checkDefault && z) {
+            this.checkCustom.setChecked(false);
+            this.editCacheContent.setEnabled(false);
+            this.selectCachePath.setEnabled(false);
+            this.activity.launcherSetting.cachePath = AppManifest.DEFAULT_CACHE_DIR;
+            GsonUtils.saveLauncherSetting(this.activity.launcherSetting, AppManifest.SETTING_DIR + "/launcher_setting.json");
+            this.cachePathText.setText(this.activity.launcherSetting.cachePath);
+            this.editCacheContent.setText(this.activity.launcherSetting.cachePath);
+        }
+        if (compoundButton == this.checkCustom && z) {
+            this.checkDefault.setChecked(false);
+            this.editCacheContent.setEnabled(true);
+            this.selectCachePath.setEnabled(true);
+            this.cachePathText.setText(this.activity.launcherSetting.cachePath);
+            this.editCacheContent.setText(this.activity.launcherSetting.cachePath);
         }
     }
 
-    @Override
-    public void onNothingSelected(AdapterView<?> parent) {
-
-    }
-
-    @Override
-    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-        if (buttonView == checkRelease){
-            if (isChecked){
-                checkBeta.setChecked(false);
-                activity.launcherSetting.getBetaVersion = false;
-                GsonUtils.saveLauncherSetting(activity.launcherSetting,AppManifest.SETTING_DIR + "/launcher_setting.json");
-                activity.updateChecker.check(false,updateCallback);
-            }
-        }
-        if (buttonView == checkBeta){
-            if (isChecked){
-                checkRelease.setChecked(false);
-                activity.launcherSetting.getBetaVersion = true;
-                GsonUtils.saveLauncherSetting(activity.launcherSetting,AppManifest.SETTING_DIR + "/launcher_setting.json");
-                activity.updateChecker.check(true,updateCallback);
-            }
-        }
-        if (buttonView == checkDefault){
-            if (isChecked){
-                checkCustom.setChecked(false);
-                editCacheContent.setEnabled(false);
-                selectCachePath.setEnabled(false);
-                activity.launcherSetting.cachePath = AppManifest.DEFAULT_CACHE_DIR;
-                GsonUtils.saveLauncherSetting(activity.launcherSetting,AppManifest.SETTING_DIR + "/launcher_setting.json");
-                cachePathText.setText(activity.launcherSetting.cachePath);
-                editCacheContent.setText(activity.launcherSetting.cachePath);
-            }
-        }
-        if (buttonView == checkCustom){
-            if (isChecked){
-                checkDefault.setChecked(false);
-                editCacheContent.setEnabled(true);
-                selectCachePath.setEnabled(true);
-                cachePathText.setText(activity.launcherSetting.cachePath);
-                editCacheContent.setText(activity.launcherSetting.cachePath);
-            }
-        }
-    }
-
-    @Override
-    public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-
-    }
-
-    @Override
-    public void onTextChanged(CharSequence s, int start, int before, int count) {
-
-    }
-
-    @Override
-    public void afterTextChanged(Editable s) {
-        activity.launcherSetting.cachePath = editCacheContent.getText().toString();
-        GsonUtils.saveLauncherSetting(activity.launcherSetting,AppManifest.SETTING_DIR + "/launcher_setting.json");
-        cachePathText.setText(activity.launcherSetting.cachePath);
+    @Override // android.text.TextWatcher
+    public void afterTextChanged(Editable editable) {
+        this.activity.launcherSetting.cachePath = this.editCacheContent.getText().toString();
+        GsonUtils.saveLauncherSetting(this.activity.launcherSetting, AppManifest.SETTING_DIR + "/launcher_setting.json");
+        this.cachePathText.setText(this.activity.launcherSetting.cachePath);
     }
 }

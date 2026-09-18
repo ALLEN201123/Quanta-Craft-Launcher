@@ -1,47 +1,39 @@
 package com.qcl.launcher.auth.yggdrasil;
 
-import androidx.annotation.Nullable;
-
 import com.google.gson.JsonParseException;
-
-import java.util.Map;
-
 import com.google.gson.annotations.JsonAdapter;
 import com.qcl.launcher.utils.gson.tools.Validation;
 import com.qcl.launcher.utils.string.StringUtils;
+import java.util.Map;
 
-/**
- *
- * @author huang
- */
+/* loaded from: classes2.dex */
 public final class User implements Validation {
-
     private final String id;
 
     @JsonAdapter(PropertyMapSerializer.class)
     private final Map<String, String> properties;
 
-    public User(String id) {
-        this(id, null);
+    public User(String str) {
+        this(str, null);
     }
 
-    public User(String id, @Nullable Map<String, String> properties) {
-        this.id = id;
-        this.properties = properties;
+    public User(String str, Map<String, String> map) {
+        this.id = str;
+        this.properties = map;
     }
 
     public String getId() {
-        return id;
+        return this.id;
     }
 
-    @Nullable
     public Map<String, String> getProperties() {
-        return properties;
+        return this.properties;
     }
 
-    @Override
+    @Override // com.qcl.launcher.utils.gson.tools.Validation
     public void validate() throws JsonParseException {
-        if (StringUtils.isBlank(id))
+        if (StringUtils.isBlank(this.id)) {
             throw new JsonParseException("User id cannot be empty.");
+        }
     }
 }

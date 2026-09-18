@@ -2,48 +2,45 @@ package com.qcl.launcher.launcher.mod.curse;
 
 import com.google.gson.annotations.SerializedName;
 
-/**
- * CurseMetaMod is JSON structure for
- * https://cursemeta.dries007.net/&lt;projectID&gt;/&lt;fileID&gt;.json
- * https://addons-ecs.forgesvc.net/api/v2/addon/&lt;projectID&gt;/file/&lt;fileID&gt;
- */
+/* loaded from: classes2.dex */
 public final class CurseMetaMod {
-    @SerializedName(value = "Id", alternate = "id")
-    private final int id;
 
-    @SerializedName(value = "FileName", alternate = "fileName")
+    @SerializedName(alternate = {"downloadUrl"}, value = "DownloadURL")
+    private final String downloadURL;
+
+    @SerializedName(alternate = {"fileName"}, value = "FileName")
     private final String fileName;
 
-    @SerializedName(value = "FileNameOnDisk")
+    @SerializedName("FileNameOnDisk")
     private final String fileNameOnDisk;
 
-    @SerializedName(value = "DownloadURL", alternate = "downloadUrl")
-    private final String downloadURL;
+    @SerializedName(alternate = {"id"}, value = "Id")
+    private final int id;
 
     public CurseMetaMod() {
         this(0, "", "", "");
     }
 
-    public CurseMetaMod(int id, String fileName, String fileNameOnDisk, String downloadURL) {
-        this.id = id;
-        this.fileName = fileName;
-        this.fileNameOnDisk = fileNameOnDisk;
-        this.downloadURL = downloadURL;
+    public CurseMetaMod(int i, String str, String str2, String str3) {
+        this.id = i;
+        this.fileName = str;
+        this.fileNameOnDisk = str2;
+        this.downloadURL = str3;
     }
 
     public int getId() {
-        return id;
+        return this.id;
     }
 
     public String getFileName() {
-        return fileName;
+        return this.fileName;
     }
 
     public String getFileNameOnDisk() {
-        return fileNameOnDisk;
+        return this.fileNameOnDisk;
     }
 
     public String getDownloadURL() {
-        return downloadURL;
+        return this.downloadURL;
     }
 }

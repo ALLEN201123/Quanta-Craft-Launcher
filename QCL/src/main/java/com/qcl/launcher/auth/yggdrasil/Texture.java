@@ -1,30 +1,26 @@
 package com.qcl.launcher.auth.yggdrasil;
 
-import androidx.annotation.Nullable;
-
 import java.util.Map;
 
+/* loaded from: classes2.dex */
 public final class Texture {
-
-    private final String url;
     private final Map<String, String> metadata;
+    private final String url;
 
     public Texture() {
         this(null, null);
     }
 
-    public Texture(String url, Map<String, String> metadata) {
-        this.url = url;
-        this.metadata = metadata;
+    public Texture(String str, Map<String, String> map) {
+        this.url = str;
+        this.metadata = map;
     }
 
-    @Nullable
     public String getUrl() {
-        return url;
+        return this.url;
     }
 
-    @Nullable
     public Map<String, String> getMetadata() {
-        return metadata;
+        return this.metadata;
     }
 }

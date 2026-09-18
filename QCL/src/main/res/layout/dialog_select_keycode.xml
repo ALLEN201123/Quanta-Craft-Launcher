@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    xmlns:hmclpe="http://schemas.android.com/apk/res-auto"
+    xmlns:qcl="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical"
     android:paddingTop="20dp"
     android:background="@color/colorPureWhite"
@@ -71,7 +71,7 @@
                     android:padding="0dp"
                     android:gravity="center"
                     android:textAllCaps="false"
-                    hmclpe:keyCode="0"/>
+                    qcl:keyCode="0"/>
 
                 <com.qcl.launcher.control.view.KeyCodeView
                     android:layout_marginStart="5dp"
@@ -85,7 +85,7 @@
                     android:padding="0dp"
                     android:gravity="center"
                     android:textAllCaps="false"
-                    hmclpe:keyCode="1"/>
+                    qcl:keyCode="1"/>
 
                 <com.qcl.launcher.control.view.KeyCodeView
                     android:layout_marginStart="5dp"
@@ -99,7 +99,7 @@
                     android:padding="0dp"
                     android:gravity="center"
                     android:textAllCaps="false"
-                    hmclpe:keyCode="2"/>
+                    qcl:keyCode="2"/>
 
                 <com.qcl.launcher.control.view.KeyCodeView
                     android:layout_marginStart="5dp"
@@ -113,7 +113,7 @@
                     android:padding="0dp"
                     android:gravity="center"
                     android:textAllCaps="false"
-                    hmclpe:keyCode="3"/>
+                    qcl:keyCode="3"/>
 
                 <com.qcl.launcher.control.view.KeyCodeView
                     android:layout_marginStart="5dp"
@@ -127,7 +127,7 @@
                     android:padding="0dp"
                     android:gravity="center"
                     android:textAllCaps="false"
-                    hmclpe:keyCode="4"/>
+                    qcl:keyCode="4"/>
 
             </LinearLayout>
 

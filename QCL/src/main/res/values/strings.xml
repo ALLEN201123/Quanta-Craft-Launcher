@@ -6,7 +6,7 @@
     <string name="app_bar_title" translatable="false">QCL · Quanta Craft Launcher v1.0.4</string>
 
     <string name="dialog_outdated_warning_title">Warning</string>
-    <string name="dialog_outdated_warning_msg">HMCL-PE has stopped maintenance. If you want to run Minecraft: Java Edition on Android devices and get a better experience, please download FoldCraftLauncher or PojavLauncher.\nNote: If you have any problems when using other launchers, HMCL-dev is not responsible. Please ask the developer of the launcher you are using for help.</string>
+    <string name="dialog_outdated_warning_msg">QCL (Quanta Craft Launcher) is an independent Minecraft Java Edition launcher and is still under active development. If you run into issues or have suggestions, please report them on the QCL GitHub repository.</string>
     <string name="dialog_outdated_warning_hide">Don\'t show again</string>
     <string name="dialog_outdated_warning_positive">Got it</string>
 
@@ -36,8 +36,8 @@
     <string name="game_setting_ui_pojav_renderer_gl4es_114" translatable="false">Holy GL4ES (OpenGL 2.1/3.2)</string>
     <string name="game_setting_ui_pojav_renderer_virgl" translatable="false">VirGLRenderer (OpenGL 4.3)</string>
     <string name="dialog_color_selector_arrow" translatable="false">→</string>
-    <string name="ui_about_hmclpe_main" translatable="false">QCL (Quanta Craft Launcher)</string>
-    <string name="ui_about_hmclpe_sub" translatable="false">1.0.0</string>
+    <string name="ui_about_qcl_main" translatable="false">QCL (Quanta Craft Launcher)</string>
+    <string name="ui_about_qcl_sub" translatable="false">1.0.0</string>
     <string name="ui_about_tungsten_main" translatable="false">Tungsten</string>
     <string name="ui_about_tungsten_sub" translatable="false">B 站 ID：@念小六</string>
     <string name="ui_about_shirosakimio_main" translatable="false">ShirosakiMio</string>
@@ -74,8 +74,35 @@
     <string name="loading_hint_java_17">Checking Java 17…</string>
     <string name="loading_hint_java_21">Checking Java 21…</string>
     <string name="loading_hint_java_25">Checking Java 25…</string>
+    <string name="loading_hint_java_patching">Optimizing runtime…</string>
     <string name="loading_hint_ready">Ready, about to enter the launcher…</string>
     <string name="loading_hint_failed">Core file install/update failed, please check your network, if invalid, please contact the developer</string>
+
+    <!--
+      运行环境安装/更新页（1.1.0 新增）
+
+      参照物 FCL：FCL/src/main/res/values/strings.xml
+        splash_title          = "Welcome to Fold Craft Launcher"
+        splash_runtime_title  = "Install or update app runtime"
+        splash_runtime_lwjgl / cacio / cacio17 / java8 / java17 / java21 / java25 / jna
+        splash_runtime_install = "Install / Update"
+      文案逐字对齐 FCL，仅把启动器名换成 QCL（app_name）。
+    -->
+    <string name="splash_title">Welcome to Quanta Craft Launcher</string>
+    <string name="splash_runtime_title">Install or update app runtime</string>
+    <string name="splash_runtime_lwjgl">LWJGL</string>
+    <string name="splash_runtime_cacio">Caciocavallo</string>
+    <string name="splash_runtime_cacio17">Caciocavallo 17</string>
+    <string name="splash_runtime_java8">JRE 8</string>
+    <string name="splash_runtime_java17">JRE 17</string>
+    <string name="splash_runtime_java21">JRE 21</string>
+    <string name="splash_runtime_java25">JRE 25</string>
+    <string name="splash_runtime_jna">JNA</string>
+    <string name="splash_runtime_install">Install / Update</string>
+    <string name="splash_runtime_patching">Optimizing runtime…</string>
+    <string name="splash_runtime_installing">Installing…</string>
+    <string name="splash_runtime_failed_title">Runtime installation failed</string>
+    <string name="splash_runtime_arch_unsupported">No Java runtime files were packaged for this device architecture (%1$s). Please use the all-architecture build of QCL.</string>
     <string name="launcher_scroll_text_account">ACCOUNTS</string>
     <string name="launcher_scroll_account_name">No Accounts</string>
     <string name="launcher_scroll_account_state">Click here to add one</string>
@@ -994,7 +1021,7 @@
 	<string name="feedback_ui_join_qq_channel">Join QQ Channel</string>
 
 
-    <string name="revival_future_plan">Development plan: QCL (Quanta Craft Launcher, proposed name), based on HMCL-PE. Stabilize compatibility and domestic downloads first, then redesign Home, Library, Downloads and all controls. Preserve upstream licenses and attribution. This is an independent derivative, not an official FCL release.</string>
+    <string name="revival_future_plan">QCL (Quanta Craft Launcher) is an independent Minecraft Java Edition launcher. Part of its code originates from HMCL-PE, and its rendering / launch pipeline was rebuilt with FCL (FoldCraftLauncher) as the reference. This is an independent derivative project; upstream licenses and attribution are preserved. It is not an official FCL release, nor an official HMCL-PE release.</string>
     <string name="revival_fcl_reference">Android Java 21/25 runtimes sourced from FCL-Team. FCL project: https://github.com/FCL-Team/FoldCraftLauncher</string>
     <string name="revival_manifest_failed">Unable to refresh the version list. The previous list has been retained; check your network and try again.</string>
     <string name="feedback_ui_join_qq">Join QQ group</string>
@@ -1002,8 +1029,8 @@
     <string name="revival_java_unavailable">The selected Java runtime is unavailable or incomplete on this architecture. Java 25 is not available for 32-bit x86.</string>
     <string name="revival_java_unavailable_32bit">Java 25 has no 32-bit x86 build, so it cannot run on this device. Please use a 64-bit runtime, launch a version that needs Java 21 or lower, or pick another Java runtime in the game settings.</string>
     <string name="revival_archive_install_unsupported">Archived build: this version must use the archive install path (historical archive, covering almost every ancient version).</string>
-    <string name="ui_about_upstream_main">HMCL-PE (upstream project)</string>
-    <string name="ui_about_upstream_sub">Original author: Tungs (bilibili 18115101)
+    <string name="ui_about_upstream_main">HMCL-PE (partial code source)</string>
+    <string name="ui_about_upstream_sub">QCL (Quanta Craft Launcher) partially uses code from HMCL-PE. Original HMCL-PE author: Tungs (bilibili 18115101).
 This project is licensed under GNU AGPL-3.0 (because it links the AGPL-3.0 Terracotta; the upstream HMCL-PE is GPL-3.0); the complete source code is provided with every release.</string>
     <string name="ui_about_author_main">Rod123456</string>
     <string name="ui_about_author_sub">bilibili UID: 550905358</string>
@@ -1031,4 +1058,6 @@ Multiplayer is powered by Terracotta (by BurningTNT, also AGPL-3.0). The multipl
     <string name="ui_about_libs_sub">Graphics, audio and Java runtime</string>
     <string name="drawer_custom_menu_create_pattern">New layout</string>
     <string name="drawer_custom_menu_create_button_style">New button style</string>
+    <string name="update_checking">Checking for updates…</string>
+    <string name="update_not_exist">Already up to date</string>
 </resources>

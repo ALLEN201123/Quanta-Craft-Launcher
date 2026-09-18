@@ -1,9 +1,5 @@
 package com.qcl.launcher.launcher.game;
 
-import android.os.Build;
-
-import androidx.annotation.RequiresApi;
-
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
@@ -12,115 +8,118 @@ import com.google.gson.JsonParseException;
 import com.google.gson.JsonPrimitive;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
-
 import java.lang.reflect.Type;
 import java.nio.file.Path;
 
+/* loaded from: classes2.dex */
 public class Artifact {
+    private final String classifier;
+    private final String descriptor;
+    private final String extension;
+    private final String fileName;
     private final String group;
     private final String name;
-    private final String version;
-    private final String classifier;
-    private final String extension;
-
-    private final String descriptor;
-    private final String fileName;
     private final String path;
+    private final String version;
 
-    public Artifact(String group, String name, String version) {
-        this(group, name, version, null);
+    public Artifact(String str, String str2, String str3) {
+        this(str, str2, str3, null);
     }
 
-    public Artifact(String group, String name, String version, String classifier) {
-        this(group, name, version, classifier, null);
+    public Artifact(String str, String str2, String str3, String str4) {
+        this(str, str2, str3, str4, null);
     }
 
-    public Artifact(String group, String name, String version, String classifier, String extension) {
-        this.group = group;
-        this.name = name;
-        this.version = version;
-        this.classifier = classifier;
-        this.extension = extension == null ? "jar" : extension;
-
-        String fileName = this.name + "-" + this.version;
-        if (classifier != null) fileName += "-" + this.classifier;
-        this.fileName = fileName + "." + this.extension;
-        this.path = String.format("%s/%s/%s/%s", this.group.replace(".", "/"), this.name, this.version, this.fileName);
-
-        // group:name:version:classifier@extension
-        String descriptor = String.format("%s:%s:%s", group, name, version);
-        if (classifier != null) descriptor += ":" + classifier;
-        if (!"jar".equals(this.extension)) descriptor += "@" + this.extension;
-        this.descriptor = descriptor;
+    public Artifact(String str, String str2, String str3, String str4, String str5) {
+        this.group = str;
+        this.name = str2;
+        this.version = str3;
+        this.classifier = str4;
+        str5 = str5 == null ? "jar" : str5;
+        this.extension = str5;
+        String str6 = str2 + "-" + str3;
+        String str7 = (str4 != null ? str6 + "-" + str4 : str6) + "." + str5;
+        this.fileName = str7;
+        this.path = String.format("%s/%s/%s/%s", str.replace(".", "/"), str2, str3, str7);
+        String format = String.format("%s:%s:%s", str, str2, str3);
+        format = str4 != null ? format + ":" + str4 : format;
+        this.descriptor = "jar".equals(str5) ? format : format + "@" + str5;
     }
 
-    public static Artifact fromDescriptor(String descriptor) {
-        String[] arr = descriptor.split(":", 4);
-        if (arr.length != 3 && arr.length != 4)
-            throw new IllegalArgumentException("Artifact name is malformed");
-
-        String ext = null;
-        int last = arr.length - 1;
-        String[] splitted = arr[last].split("@");
-        if (splitted.length == 2) {
-            arr[last] = splitted[0];
-            ext = splitted[1];
-        } else if (splitted.length > 2) {
+    public static Artifact fromDescriptor(String str) {
+        String str2;
+        String[] split = str.split(":", 4);
+        if (split.length != 3 && split.length != 4) {
             throw new IllegalArgumentException("Artifact name is malformed");
         }
-
-        return new Artifact(arr[0].replace("\\", "/"), arr[1], arr[2], arr.length >= 4 ? arr[3] : null, ext);
+        int length = split.length - 1;
+        String[] split2 = split[length].split("@");
+        if (split2.length == 2) {
+            split[length] = split2[0];
+            str2 = split2[1];
+        } else {
+            if (split2.length > 2) {
+                throw new IllegalArgumentException("Artifact name is malformed");
+            }
+            str2 = null;
+        }
+        return new Artifact(split[0].replace("\\", "/"), split[1], split[2], split.length >= 4 ? split[3] : null, str2);
     }
 
     public String getGroup() {
-        return group;
+        return this.group;
     }
 
     public String getName() {
-        return name;
+        return this.name;
     }
 
     public String getVersion() {
-        return version;
+        return this.version;
     }
 
     public String getClassifier() {
-        return classifier;
+        return this.classifier;
     }
 
-    public Artifact setClassifier(String classifier) {
-        return new Artifact(group, name, version, classifier, extension);
+    public Artifact setClassifier(String str) {
+        return new Artifact(this.group, this.name, this.version, str, this.extension);
     }
 
     public String getExtension() {
-        return extension;
+        return this.extension;
     }
 
     public String getFileName() {
-        return fileName;
+        return this.fileName;
     }
 
-    public String getPath() { return path; }
-
-    @RequiresApi(api = Build.VERSION_CODES.O)
-    public Path getPath(Path root) {
-        return root.resolve(path);
+    public String getPath() {
+        return this.path;
     }
 
-    @Override
+    public Path getPath(Path path) {
+        return path.resolve(this.path);
+    }
+
     public String toString() {
-        return descriptor;
+        return this.descriptor;
     }
 
+    /* loaded from: classes2.dex */
     public static class Serializer implements JsonDeserializer<Artifact>, JsonSerializer<Artifact> {
-        @Override
-        public JsonElement serialize(Artifact src, Type typeOfSrc, JsonSerializationContext context) {
-            return src == null ? JsonNull.INSTANCE : new JsonPrimitive(src.toString());
+        @Override // com.google.gson.JsonSerializer
+        public JsonElement serialize(Artifact artifact, Type type, JsonSerializationContext jsonSerializationContext) {
+            return artifact == null ? JsonNull.INSTANCE : new JsonPrimitive(artifact.toString());
         }
 
-        @Override
-        public Artifact deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
-            return json.isJsonPrimitive() ? fromDescriptor(json.getAsJsonPrimitive().getAsString()) : null;
+        /* JADX WARN: Can't rename method to resolve collision */
+        @Override // com.google.gson.JsonDeserializer
+        public Artifact deserialize(JsonElement jsonElement, Type type, JsonDeserializationContext jsonDeserializationContext) throws JsonParseException {
+            if (jsonElement.isJsonPrimitive()) {
+                return Artifact.fromDescriptor(jsonElement.getAsJsonPrimitive().getAsString());
+            }
+            return null;
         }
     }
 }

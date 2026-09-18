@@ -1,22 +1,22 @@
 package com.qcl.launcher.utils.io;
 
-import java.util.Timer;
-import java.util.TimerTask;
 import android.content.Context;
 import android.os.Handler;
 import android.os.Message;
+import java.util.Timer;
+import java.util.TimerTask;
 
+/* loaded from: classes2.dex */
 public class NetSpeedTimer {
+    private static final int ERROR_CODE = -101011010;
+    public static final int NET_SPEED_TIMER_DEFAULT = 101010;
+    private Context mContext;
+    private Handler mHandler;
+    private NetSpeed mNetSpeed;
+    private SpeedTimerTask mSpeedTimerTask;
     private long defaultDelay = 1000;
     private long defaultPeriod = 1000;
-    private static final int ERROR_CODE = -101011010;
-    private int mMsgWhat = ERROR_CODE;
-    private NetSpeed mNetSpeed;
-    private Handler mHandler;
-    private Context mContext;
-    private SpeedTimerTask mSpeedTimerTask;
-
-    public static final int NET_SPEED_TIMER_DEFAULT = 101010;
+    private int mMsgWhat = -101011010;
 
     public NetSpeedTimer(Context context, NetSpeed netSpeed, Handler handler) {
         this.mContext = context;
@@ -24,72 +24,64 @@ public class NetSpeedTimer {
         this.mHandler = handler;
     }
 
-    public NetSpeedTimer setDelayTime(long delay) {
-        this.defaultDelay = delay;
+    public NetSpeedTimer setDelayTime(long j) {
+        this.defaultDelay = j;
         return this;
     }
 
-    public NetSpeedTimer setPeriodTime(long period) {
-        this.defaultPeriod = period;
+    public NetSpeedTimer setPeriodTime(long j) {
+        this.defaultPeriod = j;
         return this;
     }
 
-    public NetSpeedTimer setHanderWhat(int what) {
-        this.mMsgWhat = what;
+    public NetSpeedTimer setHanderWhat(int i) {
+        this.mMsgWhat = i;
         return this;
     }
 
-    /**
-     * 开启获取网速定时器
-     */
     public void startSpeedTimer() {
         Timer timer = new Timer();
-        mSpeedTimerTask = new SpeedTimerTask(mContext, mNetSpeed, mHandler,
-                mMsgWhat);
-        timer.schedule(mSpeedTimerTask, defaultDelay, defaultPeriod);
+        SpeedTimerTask speedTimerTask = new SpeedTimerTask(this.mContext, this.mNetSpeed, this.mHandler, this.mMsgWhat);
+        this.mSpeedTimerTask = speedTimerTask;
+        timer.schedule(speedTimerTask, this.defaultDelay, this.defaultPeriod);
     }
 
-    /**
-     * 关闭定时器
-     */
     public void stopSpeedTimer() {
-        if (null != mSpeedTimerTask) {
-            mSpeedTimerTask.cancel();
+        SpeedTimerTask speedTimerTask = this.mSpeedTimerTask;
+        if (speedTimerTask != null) {
+            speedTimerTask.cancel();
         }
     }
 
-    /**
-     * @author
-     * 静态内部类
-     */
+    /* loaded from: classes2.dex */
     private static class SpeedTimerTask extends TimerTask {
+        private Context mContext;
+        private Handler mHandler;
         private int mMsgWhat;
         private NetSpeed mNetSpeed;
-        private Handler mHandler;
-        private Context mContext;
 
-        public SpeedTimerTask(Context context, NetSpeed netSpeed,
-                              Handler handler, int what) {
+        public SpeedTimerTask(Context context, NetSpeed netSpeed, Handler handler, int i) {
             this.mContext = context;
             this.mHandler = handler;
             this.mNetSpeed = netSpeed;
-            this.mMsgWhat = what;
+            this.mMsgWhat = i;
         }
 
-        @Override
+        @Override // java.util.TimerTask, java.lang.Runnable
         public void run() {
-            // TODO Auto-generated method stub
-            if (null != mNetSpeed && null != mHandler) {
-                Message obtainMessage = mHandler.obtainMessage();
-                if (mMsgWhat != ERROR_CODE) {
-                    obtainMessage.what = mMsgWhat;
-                } else {
-                    obtainMessage.what = NET_SPEED_TIMER_DEFAULT;
-                }
-                obtainMessage.obj = mNetSpeed.getNetSpeed(mContext
-                        .getApplicationInfo().uid);
-                mHandler.sendMessage(obtainMessage);
+            Handler handler;
+            if (this.mNetSpeed == null || (handler = this.mHandler) == null) {
+                return;
             }
+            Message obtainMessage = handler.obtainMessage();
+            int i = this.mMsgWhat;
+            if (i != -101011010) {
+                obtainMessage.what = i;
+            } else {
+                obtainMessage.what = 101010;
+            }
+            obtainMessage.obj = this.mNetSpeed.getNetSpeed(this.mContext.getApplicationInfo().uid);
+            this.mHandler.sendMessage(obtainMessage);
         }
     }
 }

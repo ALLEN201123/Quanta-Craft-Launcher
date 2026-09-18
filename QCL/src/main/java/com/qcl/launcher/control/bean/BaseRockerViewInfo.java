@@ -1,85 +1,74 @@
 package com.qcl.launcher.control.bean;
 
-import androidx.annotation.NonNull;
-
 import com.qcl.launcher.control.bean.rocker.RockerSize;
 import com.qcl.launcher.control.bean.rocker.RockerStyle;
 
-public class BaseRockerViewInfo implements Cloneable{
-
+/* loaded from: classes2.dex */
+public class BaseRockerViewInfo implements Cloneable {
+    public static final int FUNCTION_FOLLOW_ALL = 2;
+    public static final int FUNCTION_FOLLOW_CENTER = 1;
+    public static final int FUNCTION_FOLLOW_NONE = 0;
+    public static final int POSITION_TYPE_ABSOLUTE = 1;
+    public static final int POSITION_TYPE_PERCENT = 0;
     public static final int SHOW_TYPE_ALWAYS = 0;
     public static final int SHOW_TYPE_IN_GAME = 1;
     public static final int SHOW_TYPE_OUT_GAME = 2;
-
-    public static final int SIZE_TYPE_PERCENT = 0;
-    public static final int SIZE_TYPE_ABSOLUTE = 1;
-
-    public static final int SIZE_OBJECT_WIDTH = 0;
     public static final int SIZE_OBJECT_HEIGHT = 1;
-
-    public static final int POSITION_TYPE_PERCENT = 0;
-    public static final int POSITION_TYPE_ABSOLUTE = 1;
-
-    public static final int FUNCTION_FOLLOW_NONE = 0;
-    public static final int FUNCTION_FOLLOW_CENTER = 1;
-    public static final int FUNCTION_FOLLOW_ALL = 2;
-
-    public String uuid;
-    public String pattern;
+    public static final int SIZE_OBJECT_WIDTH = 0;
+    public static final int SIZE_TYPE_ABSOLUTE = 1;
+    public static final int SIZE_TYPE_PERCENT = 0;
     public String child;
-    public int showType;
-    public int sizeType;
-    public RockerSize size;
+    public int followType;
+    public String pattern;
     public int positionType;
+    public RockerStyle rockerStyle;
+    public boolean shift;
+    public int showType;
+    public RockerSize size;
+    public int sizeType;
+    public boolean usingExist;
+    public String uuid;
     public ViewPosition xPosition;
     public ViewPosition yPosition;
-    public int followType;
-    public boolean shift;
-    public boolean usingExist;
-    public RockerStyle rockerStyle;
 
-    public BaseRockerViewInfo (String uuid,String pattern,String child,int showType,int sizeType,RockerSize size,int positionType,ViewPosition xPosition,ViewPosition yPosition,int followType,boolean shift,boolean usingExist,RockerStyle rockerStyle) {
-        this.uuid = uuid;
-        this.pattern = pattern;
-        this.child = child;
-        this.showType = showType;
-        this.sizeType = sizeType;
-        this.size = size;
-        this.positionType = positionType;
-        this.xPosition = xPosition;
-        this.yPosition = yPosition;
-        this.followType = followType;
-        this.shift = shift;
-        this.usingExist = usingExist;
+    public BaseRockerViewInfo(String str, String str2, String str3, int i, int i2, RockerSize rockerSize, int i3, ViewPosition viewPosition, ViewPosition viewPosition2, int i4, boolean z, boolean z2, RockerStyle rockerStyle) {
+        this.uuid = str;
+        this.pattern = str2;
+        this.child = str3;
+        this.showType = i;
+        this.sizeType = i2;
+        this.size = rockerSize;
+        this.positionType = i3;
+        this.xPosition = viewPosition;
+        this.yPosition = viewPosition2;
+        this.followType = i4;
+        this.shift = z;
+        this.usingExist = z2;
         this.rockerStyle = rockerStyle;
     }
 
-    public void refresh(BaseRockerViewInfo info) {
-        this.uuid = info.uuid;
-        this.pattern = info.pattern;
-        this.child = info.child;
-        this.showType = info.showType;
-        this.sizeType = info.sizeType;
-        this.size = info.size;
-        this.positionType = info.positionType;
-        this.xPosition = info.xPosition;
-        this.yPosition = info.yPosition;
-        this.followType = info.followType;
-        this.shift = info.shift;
-        this.usingExist = info.usingExist;
-        this.rockerStyle = info.rockerStyle;
+    public void refresh(BaseRockerViewInfo baseRockerViewInfo) {
+        this.uuid = baseRockerViewInfo.uuid;
+        this.pattern = baseRockerViewInfo.pattern;
+        this.child = baseRockerViewInfo.child;
+        this.showType = baseRockerViewInfo.showType;
+        this.sizeType = baseRockerViewInfo.sizeType;
+        this.size = baseRockerViewInfo.size;
+        this.positionType = baseRockerViewInfo.positionType;
+        this.xPosition = baseRockerViewInfo.xPosition;
+        this.yPosition = baseRockerViewInfo.yPosition;
+        this.followType = baseRockerViewInfo.followType;
+        this.shift = baseRockerViewInfo.shift;
+        this.usingExist = baseRockerViewInfo.usingExist;
+        this.rockerStyle = baseRockerViewInfo.rockerStyle;
     }
 
-    @NonNull
-    @Override
     public Object clone() throws CloneNotSupportedException {
-        BaseRockerViewInfo baseRockerViewInfo;
-        baseRockerViewInfo = (BaseRockerViewInfo) super.clone();
-        baseRockerViewInfo.size = (RockerSize) size.clone();
-        baseRockerViewInfo.xPosition = (ViewPosition) xPosition.clone();
-        baseRockerViewInfo.yPosition = (ViewPosition) yPosition.clone();
-        baseRockerViewInfo.rockerStyle = (RockerStyle) rockerStyle.clone();
+        BaseRockerViewInfo baseRockerViewInfo = (BaseRockerViewInfo) super.clone();
+        baseRockerViewInfo.size = (RockerSize) this.size.clone();
+        baseRockerViewInfo.xPosition = (ViewPosition) this.xPosition.clone();
+        baseRockerViewInfo.yPosition = (ViewPosition) this.yPosition.clone();
+        baseRockerViewInfo.rockerStyle = (RockerStyle) this.rockerStyle.clone();
         return baseRockerViewInfo;
     }
-
 }

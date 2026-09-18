@@ -1,6 +1,5 @@
 package com.qcl.launcher.launcher.uis.game.download.right.game;
 
-import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
@@ -8,138 +7,147 @@ import android.os.Handler;
 import android.os.Message;
 import android.view.View;
 import android.widget.LinearLayout;
+import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-
-import androidx.annotation.NonNull;
-
 import com.google.gson.Gson;
-import com.qcl.launcher.R;
 import com.qcl.launcher.launcher.MainActivity;
 import com.qcl.launcher.launcher.download.forge.ForgeVersion;
 import com.qcl.launcher.launcher.list.download.minecraft.DownloadForgeListAdapter;
 import com.qcl.launcher.launcher.uis.tools.BaseUI;
 import com.qcl.launcher.utils.animation.CustomAnimationUtils;
 import com.qcl.launcher.utils.io.NetworkUtils;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 
+import com.qcl.launcher.R;
+/* loaded from: classes2.dex */
 public class DownloadForgeUI extends BaseUI implements View.OnClickListener {
-
-    public LinearLayout downloadForgeUI;
-
     public static final String FORGE_VERSION_MANIFEST = "https://bmclapi2.bangbang93.com/forge/minecraft/";
-
-    public String version;
-    public boolean install;
-
-    private LinearLayout hintLayout;
-
-    private ListView forgeListView;
-    private ProgressBar progressBar;
     private TextView back;
+    public LinearLayout downloadForgeUI;
+    private ListView forgeListView;
+    private LinearLayout hintLayout;
+    public boolean install;
+    private final Handler loadingHandler;
+    private ProgressBar progressBar;
+    public String version;
 
-    public DownloadForgeUI(Context context, MainActivity activity) {
-        super(context, activity);
+    public DownloadForgeUI(Context context, MainActivity mainActivity) {
+        super(context, mainActivity);
+        this.loadingHandler = new Handler() { // from class: com.qcl.launcher.launcher.uis.game.download.right.game.DownloadForgeUI.1
+            @Override // android.os.Handler
+            public void handleMessage(Message message) {
+                super.handleMessage(message);
+                if (message.what == 0) {
+                    DownloadForgeUI.this.forgeListView.setVisibility(8);
+                    DownloadForgeUI.this.progressBar.setVisibility(0);
+                    DownloadForgeUI.this.back.setVisibility(8);
+                }
+                if (message.what == 1) {
+                    DownloadForgeUI.this.forgeListView.setVisibility(0);
+                    DownloadForgeUI.this.progressBar.setVisibility(8);
+                    DownloadForgeUI.this.back.setVisibility(8);
+                }
+                if (message.what == 2) {
+                    DownloadForgeUI.this.forgeListView.setVisibility(8);
+                    DownloadForgeUI.this.progressBar.setVisibility(8);
+                    DownloadForgeUI.this.back.setVisibility(0);
+                }
+            }
+        };
     }
 
-    @Override
+    @Override // com.qcl.launcher.launcher.uis.tools.BaseUI, com.qcl.launcher.launcher.uis.tools.UILifecycleCallbacks
     public void onCreate() {
         super.onCreate();
-        downloadForgeUI = activity.findViewById(R.id.ui_install_forge_list);
-
-        hintLayout = activity.findViewById(R.id.download_forge_hint_layout);
-        hintLayout.setOnClickListener(this);
-
-        forgeListView = activity.findViewById(R.id.forge_version_list);
-        progressBar = activity.findViewById(R.id.loading_forge_list_progress);
-        back = activity.findViewById(R.id.back_to_install_ui_forge);
-
-        back.setOnClickListener(this);
+        this.downloadForgeUI = (LinearLayout) this.activity.findViewById(R.id.ui_install_forge_list);
+        LinearLayout linearLayout = (LinearLayout) this.activity.findViewById(R.id.download_forge_hint_layout);
+        this.hintLayout = linearLayout;
+        linearLayout.setOnClickListener(this);
+        this.forgeListView = (ListView) this.activity.findViewById(R.id.forge_version_list);
+        this.progressBar = (ProgressBar) this.activity.findViewById(R.id.loading_forge_list_progress);
+        TextView textView = (TextView) this.activity.findViewById(R.id.back_to_install_ui_forge);
+        this.back = textView;
+        textView.setOnClickListener(this);
     }
 
-    @Override
+    @Override // com.qcl.launcher.launcher.uis.tools.BaseUI, com.qcl.launcher.launcher.uis.tools.UILifecycleCallbacks
     public void onStart() {
         super.onStart();
-        activity.showBarTitle(context.getResources().getString(R.string.forge_list_ui_title),false,true);
-        CustomAnimationUtils.showViewFromLeft(downloadForgeUI,activity,context,true);
+        this.activity.showBarTitle(this.context.getResources().getString(R.string.forge_list_ui_title), false, true);
+        CustomAnimationUtils.showViewFromLeft(this.downloadForgeUI, this.activity, this.context, true);
         init();
     }
 
-    @Override
+    @Override // com.qcl.launcher.launcher.uis.tools.BaseUI, com.qcl.launcher.launcher.uis.tools.UILifecycleCallbacks
     public void onStop() {
         super.onStop();
-        CustomAnimationUtils.hideViewToLeft(downloadForgeUI,activity,context,true);
+        CustomAnimationUtils.hideViewToLeft(this.downloadForgeUI, this.activity, this.context, true);
     }
 
-    private void init(){
-        new Thread(() -> {
-            String manifestUrl = FORGE_VERSION_MANIFEST + version;
-            loadingHandler.sendEmptyMessage(0);
-            ArrayList<ForgeVersion> list = new ArrayList<>();
-            try {
-                String response = NetworkUtils.doGet(NetworkUtils.toURL(manifestUrl));
-                Gson gson = new Gson();
-                ForgeVersion[] forgeVersion = gson.fromJson(response, ForgeVersion[].class);
-                list.addAll(Arrays.asList(forgeVersion));
-                list.sort(new ForgeCompareTool());
-                DownloadForgeListAdapter downloadForgeListAdapter = new DownloadForgeListAdapter(context,activity,list,install);
-                activity.runOnUiThread(() -> forgeListView.setAdapter(downloadForgeListAdapter));
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            if (list.size() == 0){
-                loadingHandler.sendEmptyMessage(2);
-            }
-            else {
-                loadingHandler.sendEmptyMessage(1);
+    private void init() {
+        new Thread(new Runnable() { // from class: com.qcl.launcher.launcher.uis.game.download.right.game.DownloadForgeUI$$ExternalSyntheticLambda0
+            @Override // java.lang.Runnable
+            public final void run() {
+                DownloadForgeUI.this.m487x120bbc2a();
             }
         }).start();
     }
 
-    @Override
-    public void onClick(View view) {
-        if (view == hintLayout){
-            Uri uri = Uri.parse("https://afdian.net/@bangbang93");
-            Intent intent = new Intent(Intent.ACTION_VIEW, uri);
-            context.startActivity(intent);
+    /* JADX INFO: Access modifiers changed from: package-private */
+    /* renamed from: lambda$init$1$com-qcl-launcher-launcher-uis-game-download-right-game-DownloadForgeUI, reason: not valid java name */
+    public /* synthetic */ void m487x120bbc2a() {
+        String str = "https://bmclapi2.bangbang93.com/forge/minecraft/" + this.version;
+        this.loadingHandler.sendEmptyMessage(0);
+        ArrayList arrayList = new ArrayList();
+        try {
+            arrayList.addAll(Arrays.asList((ForgeVersion[]) new Gson().fromJson(NetworkUtils.doGet(NetworkUtils.toURL(str)), ForgeVersion[].class)));
+            arrayList.sort(new ForgeCompareTool());
+            final DownloadForgeListAdapter downloadForgeListAdapter = new DownloadForgeListAdapter(this.context, this.activity, arrayList, this.install);
+            this.activity.runOnUiThread(new Runnable() { // from class: com.qcl.launcher.launcher.uis.game.download.right.game.DownloadForgeUI$$ExternalSyntheticLambda1
+                @Override // java.lang.Runnable
+                public final void run() {
+                    DownloadForgeUI.this.m486x8fc1074b(downloadForgeListAdapter);
+                }
+            });
+        } catch (IOException e) {
+            e.printStackTrace();
         }
-        if (view == back){
-            activity.backToLastUI();
+        if (arrayList.size() == 0) {
+            this.loadingHandler.sendEmptyMessage(2);
+        } else {
+            this.loadingHandler.sendEmptyMessage(1);
         }
     }
 
-    @SuppressLint("HandlerLeak")
-    private final Handler loadingHandler = new Handler(){
-        @Override
-        public void handleMessage(@NonNull Message msg) {
-            super.handleMessage(msg);
-            if (msg.what == 0){
-                forgeListView.setVisibility(View.GONE);
-                progressBar.setVisibility(View.VISIBLE);
-                back.setVisibility(View.GONE);
-            }
-            if (msg.what == 1){
-                forgeListView.setVisibility(View.VISIBLE);
-                progressBar.setVisibility(View.GONE);
-                back.setVisibility(View.GONE);
-            }
-            if (msg.what == 2){
-                forgeListView.setVisibility(View.GONE);
-                progressBar.setVisibility(View.GONE);
-                back.setVisibility(View.VISIBLE);
-            }
-        }
-    };
+    /* JADX INFO: Access modifiers changed from: package-private */
+    /* renamed from: lambda$init$0$com-qcl-launcher-launcher-uis-game-download-right-game-DownloadForgeUI, reason: not valid java name */
+    public /* synthetic */ void m486x8fc1074b(DownloadForgeListAdapter downloadForgeListAdapter) {
+        this.forgeListView.setAdapter((ListAdapter) downloadForgeListAdapter);
+    }
 
+    @Override // android.view.View.OnClickListener
+    public void onClick(View view) {
+        if (view == this.hintLayout) {
+            this.context.startActivity(new Intent("android.intent.action.VIEW", Uri.parse("https://afdian.net/@bangbang93")));
+        }
+        if (view == this.back) {
+            this.activity.backToLastUI();
+        }
+    }
+
+    /* loaded from: classes2.dex */
     private static class ForgeCompareTool implements Comparator<ForgeVersion> {
-        @Override
-        public int compare(ForgeVersion versionPri, ForgeVersion versionSec) {
-            return Integer.compare(versionSec.getBuild(), versionPri.getBuild());
+        private ForgeCompareTool() {
+        }
+
+        @Override // java.util.Comparator
+        public int compare(ForgeVersion forgeVersion, ForgeVersion forgeVersion2) {
+            return Integer.compare(forgeVersion2.getBuild(), forgeVersion.getBuild());
         }
     }
 }

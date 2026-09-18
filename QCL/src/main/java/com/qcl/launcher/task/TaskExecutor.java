@@ -1,55 +1,49 @@
 package com.qcl.launcher.task;
 
-import org.jetbrains.annotations.Nullable;
-
-import java.util.*;
+import com.qcl.launcher.task.Task;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
+/* loaded from: classes2.dex */
 public abstract class TaskExecutor {
+    protected Exception exception;
     protected final Task<?> firstTask;
-    protected final List<TaskListener> taskListeners = new ArrayList<>();
+    private final List<String> stages;
+    protected final List<TaskListener> taskListeners = new ArrayList();
     protected final AtomicInteger totTask = new AtomicInteger(0);
     protected final AtomicBoolean cancelled = new AtomicBoolean(false);
-    protected Exception exception;
-    private final List<String> stages;
 
-    public TaskExecutor(Task<?> task) {
-        this.firstTask = task;
-        this.stages = task instanceof Task.StagesHintTask ? ((Task<?>.StagesHintTask) task).getStages() : Collections.emptyList();
-    }
-
-    public void addTaskListener(TaskListener taskListener) {
-        taskListeners.add(taskListener);
-    }
-
-    /**
-     * Reason why the task execution failed.
-     * If cancelled, null is returned.
-     */
-    @Nullable
-    public Exception getException() {
-        return exception;
-    }
+    public abstract void cancel();
 
     public abstract TaskExecutor start();
 
     public abstract boolean test();
 
-    /**
-     * Cancel the subscription ant interrupt all tasks.
-     */
-    public abstract void cancel();
+    public TaskExecutor(Task<?> task) {
+        this.firstTask = task;
+        this.stages = task instanceof Task.StagesHintTask ? ((Task.StagesHintTask) task).getStages() : Collections.emptyList();
+    }
+
+    public void addTaskListener(TaskListener taskListener) {
+        this.taskListeners.add(taskListener);
+    }
+
+    public Exception getException() {
+        return this.exception;
+    }
 
     public boolean isCancelled() {
-        return cancelled.get();
+        return this.cancelled.get();
     }
 
     public int getTaskCount() {
-        return totTask.get();
+        return this.totTask.get();
     }
 
     public List<String> getStages() {
-        return stages;
+        return this.stages;
     }
 }

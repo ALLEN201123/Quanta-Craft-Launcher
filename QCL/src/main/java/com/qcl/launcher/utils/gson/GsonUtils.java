@@ -9,84 +9,58 @@ import com.qcl.launcher.launcher.setting.game.PrivateGameSetting;
 import com.qcl.launcher.launcher.setting.game.PublicGameSetting;
 import com.qcl.launcher.launcher.setting.launcher.LauncherSetting;
 import com.qcl.launcher.utils.file.FileStringUtils;
-
-import java.lang.reflect.Type;
 import java.util.ArrayList;
 
+/* loaded from: classes2.dex */
 public class GsonUtils {
-
-    public static LauncherSetting getLauncherSettingFromFile(String path){
-        String string = FileStringUtils.getStringFromFile(path);
-        Gson gson = new Gson();
-        return gson.fromJson(string,LauncherSetting.class);
+    public static LauncherSetting getLauncherSettingFromFile(String str) {
+        return (LauncherSetting) new Gson().fromJson(FileStringUtils.getStringFromFile(str), LauncherSetting.class);
     }
 
-    public static PrivateGameSetting getPrivateGameSettingFromFile(String path){
-        String string = FileStringUtils.getStringFromFile(path);
-        Gson gson = new Gson();
-        return gson.fromJson(string,PrivateGameSetting.class);
+    public static PrivateGameSetting getPrivateGameSettingFromFile(String str) {
+        return (PrivateGameSetting) new Gson().fromJson(FileStringUtils.getStringFromFile(str), PrivateGameSetting.class);
     }
 
-    public static PublicGameSetting getPublicGameSettingFromFile(String path){
-        String string = FileStringUtils.getStringFromFile(path);
-        Gson gson = new Gson();
-        return gson.fromJson(string,PublicGameSetting.class);
+    public static PublicGameSetting getPublicGameSettingFromFile(String str) {
+        return (PublicGameSetting) new Gson().fromJson(FileStringUtils.getStringFromFile(str), PublicGameSetting.class);
     }
 
-    public static ArrayList<ContentListBean> getContentListFromFile(String path){
-        String string = FileStringUtils.getStringFromFile(path);
-        Gson gson = new Gson();
-        Type contentListType =new TypeToken<ArrayList<ContentListBean>>(){}.getType();
-        return gson.fromJson(string,contentListType);
+    public static ArrayList<ContentListBean> getContentListFromFile(String str) {
+        return (ArrayList) new Gson().fromJson(FileStringUtils.getStringFromFile(str), new TypeToken<ArrayList<ContentListBean>>() { // from class: com.qcl.launcher.utils.gson.GsonUtils.1
+        }.getType());
     }
 
-    public static ArrayList<Account> getAccountListFromFile(String path){
-        String string = FileStringUtils.getStringFromFile(path);
-        Gson gson = new Gson();
-        Type accountListType =new TypeToken<ArrayList<Account>>(){}.getType();
-        return gson.fromJson(string,accountListType);
+    public static ArrayList<Account> getAccountListFromFile(String str) {
+        return (ArrayList) new Gson().fromJson(FileStringUtils.getStringFromFile(str), new TypeToken<ArrayList<Account>>() { // from class: com.qcl.launcher.utils.gson.GsonUtils.2
+        }.getType());
     }
 
-    public static ArrayList<AuthlibInjectorServer> getServerListFromFile(String path){
-        String string = FileStringUtils.getStringFromFile(path);
-        Gson gson = JsonUtils.defaultGsonBuilder().registerTypeAdapter(AuthlibInjectorServer.class, new AuthlibInjectorServer.Deserializer()).create();
-        Type serverListType =new TypeToken<ArrayList<AuthlibInjectorServer>>(){}.getType();
-        return gson.fromJson(string,serverListType);
+    public static ArrayList<AuthlibInjectorServer> getServerListFromFile(String str) {
+        return (ArrayList) JsonUtils.defaultGsonBuilder().registerTypeAdapter(AuthlibInjectorServer.class, new AuthlibInjectorServer.Deserializer()).create().fromJson(FileStringUtils.getStringFromFile(str), new TypeToken<ArrayList<AuthlibInjectorServer>>() { // from class: com.qcl.launcher.utils.gson.GsonUtils.3
+        }.getType());
     }
 
-    public static void saveLauncherSetting(LauncherSetting launcherSetting,String path){
-        Gson gson = new Gson();
-        String string = gson.toJson(launcherSetting);
-        FileStringUtils.writeFile(path,string);
+    public static void saveLauncherSetting(LauncherSetting launcherSetting, String str) {
+        FileStringUtils.writeFile(str, new Gson().toJson(launcherSetting));
     }
 
-    public static void savePrivateGameSetting(PrivateGameSetting privateGameSetting,String path){
-        Gson gson = new Gson();
-        String string = gson.toJson(privateGameSetting);
-        FileStringUtils.writeFile(path,string);
+    public static void savePrivateGameSetting(PrivateGameSetting privateGameSetting, String str) {
+        FileStringUtils.writeFile(str, new Gson().toJson(privateGameSetting));
     }
 
-    public static void savePublicGameSetting(PublicGameSetting publicGameSetting,String path){
-        Gson gson = new Gson();
-        String string = gson.toJson(publicGameSetting);
-        FileStringUtils.writeFile(path,string);
+    public static void savePublicGameSetting(PublicGameSetting publicGameSetting, String str) {
+        FileStringUtils.writeFile(str, new Gson().toJson(publicGameSetting));
     }
 
-    public static void saveContents(ArrayList<ContentListBean> list,String path){
-        Gson gson = new Gson();
-        String string = gson.toJson(list);
-        FileStringUtils.writeFile(path,string);
+    public static void saveContents(ArrayList<ContentListBean> arrayList, String str) {
+        FileStringUtils.writeFile(str, new Gson().toJson(arrayList));
     }
 
-    public static void saveAccounts(ArrayList<Account> list,String path){
-        Gson gson = new Gson();
-        String string = gson.toJson(list);
-        FileStringUtils.writeFile(path,string);
+    public static void saveAccounts(ArrayList<Account> arrayList, String str) {
+        FileStringUtils.writeFile(str, new Gson().toJson(arrayList));
     }
 
-    public static void saveServer(ArrayList<AuthlibInjectorServer> list, String path){
-        Gson gson = JsonUtils.defaultGsonBuilder().registerTypeAdapter(AuthlibInjectorServer.class, new AuthlibInjectorServer.Deserializer()).create();
-        String string = gson.toJson(list);
-        FileStringUtils.writeFile(path,string);
+    public static void saveServer(ArrayList<AuthlibInjectorServer> arrayList, String str) {
+        FileStringUtils.writeFile(str, JsonUtils.defaultGsonBuilder().registerTypeAdapter(AuthlibInjectorServer.class, new AuthlibInjectorServer.Deserializer()).create().toJson(arrayList));
     }
 }

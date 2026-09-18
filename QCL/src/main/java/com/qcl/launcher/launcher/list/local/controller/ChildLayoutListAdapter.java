@@ -9,105 +9,105 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.ImageButton;
 import android.widget.TextView;
-
-import com.qcl.launcher.R;
 import com.qcl.launcher.launcher.dialogs.control.ChildManagerDialog;
 import com.qcl.launcher.launcher.dialogs.control.EditChildDialog;
 import com.qcl.launcher.manifest.AppManifest;
 import com.qcl.launcher.utils.file.FileUtils;
-
 import java.io.File;
 import java.util.ArrayList;
 
+import com.qcl.launcher.R;
+/* loaded from: classes2.dex */
 public class ChildLayoutListAdapter extends BaseAdapter {
-
-    private Context context;
-    private ArrayList<ChildLayout> list;
-    private ControlPattern controlPattern;
     private ChildManagerDialog childManagerDialog;
+    private Context context;
+    private ControlPattern controlPattern;
+    private ArrayList<ChildLayout> list;
 
-    public ChildLayoutListAdapter(Context context, ArrayList<ChildLayout> list,ControlPattern controlPattern,ChildManagerDialog childManagerDialog){
+    @Override // android.widget.Adapter
+    public long getItemId(int i) {
+        return 0L;
+    }
+
+    public ChildLayoutListAdapter(Context context, ArrayList<ChildLayout> arrayList, ControlPattern controlPattern, ChildManagerDialog childManagerDialog) {
         this.context = context;
-        this.list = list;
+        this.list = arrayList;
         this.controlPattern = controlPattern;
         this.childManagerDialog = childManagerDialog;
     }
 
-    private class ViewHolder{
-        TextView name;
-        ImageButton edit;
+    /* loaded from: classes2.dex */
+    private class ViewHolder {
         ImageButton delete;
-    }
+        ImageButton edit;
+        TextView name;
 
-    @Override
-    public int getCount() {
-        return list.size();
-    }
-
-    @Override
-    public Object getItem(int i) {
-        return list.get(i);
-    }
-
-    @Override
-    public long getItemId(int i) {
-        return 0;
-    }
-
-    @Override
-    public View getView(int i, View view, ViewGroup viewGroup) {
-        final ViewHolder viewHolder;
-        if (view == null){
-            viewHolder = new ViewHolder();
-            view = LayoutInflater.from(context).inflate(R.layout.item_child_layout,null);
-            viewHolder.name = view.findViewById(R.id.child_name);
-            viewHolder.edit = view.findViewById(R.id.edit_child);
-            viewHolder.delete = view.findViewById(R.id.delete_child);
-            view.setTag(viewHolder);
+        private ViewHolder() {
         }
-        else {
+    }
+
+    @Override // android.widget.Adapter
+    public int getCount() {
+        return this.list.size();
+    }
+
+    @Override // android.widget.Adapter
+    public Object getItem(int i) {
+        return this.list.get(i);
+    }
+
+    @Override // android.widget.Adapter
+    public View getView(int i, View view, ViewGroup viewGroup) {
+        View view2;
+        ViewHolder viewHolder;
+        if (view == null) {
+            viewHolder = new ViewHolder();
+            view2 = LayoutInflater.from(this.context).inflate(R.layout.item_child_layout, (ViewGroup) null);
+            viewHolder.name = (TextView) view2.findViewById(R.id.child_name);
+            viewHolder.edit = (ImageButton) view2.findViewById(R.id.edit_child);
+            viewHolder.delete = (ImageButton) view2.findViewById(R.id.delete_child);
+            view2.setTag(viewHolder);
+        } else {
+            view2 = view;
             viewHolder = (ViewHolder) view.getTag();
         }
-        ChildLayout childLayout = list.get(i);
+        final ChildLayout childLayout = this.list.get(i);
         viewHolder.name.setText(childLayout.name);
-        viewHolder.edit.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                EditChildDialog dialog = new EditChildDialog(context, controlPattern.name, new EditChildDialog.OnChildChangeListener() {
-                    @Override
-                    public void onChildChange(ChildLayout child) {
-                        FileUtils.rename(AppManifest.CONTROLLER_DIR + "/" + controlPattern.name + "/" + childLayout.name + ".json",child.name + ".json");
-                        ChildLayout.saveChildLayout(controlPattern.name,child);
-                        childManagerDialog.refreshListView();
+        viewHolder.edit.setOnClickListener(new View.OnClickListener() { // from class: com.qcl.launcher.launcher.list.local.controller.ChildLayoutListAdapter.1
+            @Override // android.view.View.OnClickListener
+            public void onClick(View view3) {
+                new EditChildDialog(ChildLayoutListAdapter.this.context, ChildLayoutListAdapter.this.controlPattern.name, new EditChildDialog.OnChildChangeListener() { // from class: com.qcl.launcher.launcher.list.local.controller.ChildLayoutListAdapter.1.1
+                    @Override // com.qcl.launcher.launcher.dialogs.control.EditChildDialog.OnChildChangeListener
+                    public void onChildChange(ChildLayout childLayout2) {
+                        FileUtils.rename(AppManifest.CONTROLLER_DIR + "/" + ChildLayoutListAdapter.this.controlPattern.name + "/" + childLayout.name + ".json", childLayout2.name + ".json");
+                        ChildLayout.saveChildLayout(ChildLayoutListAdapter.this.controlPattern.name, childLayout2);
+                        ChildLayoutListAdapter.this.childManagerDialog.refreshListView();
                     }
-                },childLayout);
-                dialog.show();
+                }, childLayout).show();
             }
         });
-        viewHolder.delete.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                AlertDialog.Builder builder = new AlertDialog.Builder(context);
-                builder.setTitle(context.getString(R.string.dialog_delete_child_title));
-                builder.setMessage(context.getString(R.string.dialog_delete_child_content));
-                builder.setPositiveButton(context.getString(R.string.dialog_delete_child_positive), new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialogInterface, int p) {
-                        if (new File(AppManifest.CONTROLLER_DIR + "/" + controlPattern.name + "/" + childLayout.name + ".json").delete()){
-                            childManagerDialog.refreshListView();
+        viewHolder.delete.setOnClickListener(new View.OnClickListener() { // from class: com.qcl.launcher.launcher.list.local.controller.ChildLayoutListAdapter.2
+            @Override // android.view.View.OnClickListener
+            public void onClick(View view3) {
+                AlertDialog.Builder builder = new AlertDialog.Builder(ChildLayoutListAdapter.this.context);
+                builder.setTitle(ChildLayoutListAdapter.this.context.getString(R.string.dialog_delete_child_title));
+                builder.setMessage(ChildLayoutListAdapter.this.context.getString(R.string.dialog_delete_child_content));
+                builder.setPositiveButton(ChildLayoutListAdapter.this.context.getString(R.string.dialog_delete_child_positive), new DialogInterface.OnClickListener() { // from class: com.qcl.launcher.launcher.list.local.controller.ChildLayoutListAdapter.2.1
+                    @Override // android.content.DialogInterface.OnClickListener
+                    public void onClick(DialogInterface dialogInterface, int i2) {
+                        if (new File(AppManifest.CONTROLLER_DIR + "/" + ChildLayoutListAdapter.this.controlPattern.name + "/" + childLayout.name + ".json").delete()) {
+                            ChildLayoutListAdapter.this.childManagerDialog.refreshListView();
                         }
                     }
                 });
-                builder.setNegativeButton(context.getString(R.string.dialog_delete_child_negative), new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialogInterface, int p) {
-
+                builder.setNegativeButton(ChildLayoutListAdapter.this.context.getString(R.string.dialog_delete_child_negative), new DialogInterface.OnClickListener() { // from class: com.qcl.launcher.launcher.list.local.controller.ChildLayoutListAdapter.2.2
+                    @Override // android.content.DialogInterface.OnClickListener
+                    public void onClick(DialogInterface dialogInterface, int i2) {
                     }
                 });
-                AlertDialog dialog = builder.create();
-                dialog.show();
+                builder.create().show();
             }
         });
-        return view;
+        return view2;
     }
 }

@@ -1,63 +1,56 @@
 package com.qcl.launcher.launcher.uis.universal.setting.right.help;
 
-import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-
-import com.qcl.launcher.R;
 import com.qcl.launcher.launcher.MainActivity;
 import com.qcl.launcher.launcher.uis.tools.BaseUI;
 import com.qcl.launcher.utils.animation.CustomAnimationUtils;
 
+import com.qcl.launcher.R;
+/* loaded from: classes2.dex */
 public class DonateUI extends BaseUI implements View.OnClickListener {
-
     public LinearLayout donateUI;
-
     private TextView textView;
 
-    public DonateUI(Context context, MainActivity activity) {
-        super(context, activity);
+    public DonateUI(Context context, MainActivity mainActivity) {
+        super(context, mainActivity);
     }
 
-    @Override
+    @Override // com.qcl.launcher.launcher.uis.tools.BaseUI, com.qcl.launcher.launcher.uis.tools.UILifecycleCallbacks
     public void onCreate() {
         super.onCreate();
-        donateUI = activity.findViewById(R.id.ui_donate);
-
-        textView = activity.findViewById(R.id.donate);
+        this.donateUI = (LinearLayout) this.activity.findViewById(R.id.ui_donate);
+        TextView textView = (TextView) this.activity.findViewById(R.id.donate);
+        this.textView = textView;
         textView.setOnClickListener(this);
     }
 
-    @SuppressLint("UseCompatLoadingForDrawables")
-    @Override
+    @Override // com.qcl.launcher.launcher.uis.tools.BaseUI, com.qcl.launcher.launcher.uis.tools.UILifecycleCallbacks
     public void onStart() {
         super.onStart();
-        CustomAnimationUtils.showViewFromLeft(donateUI,activity,context,false);
-        if (activity.isLoaded){
-            activity.uiManager.settingUI.startDonateUI.setBackground(context.getResources().getDrawable(R.drawable.launcher_button_white));
+        CustomAnimationUtils.showViewFromLeft(this.donateUI, this.activity, this.context, false);
+        if (this.activity.isLoaded) {
+            this.activity.uiManager.settingUI.startDonateUI.setBackground(this.context.getResources().getDrawable(R.drawable.launcher_button_white));
         }
     }
 
-    @SuppressLint("UseCompatLoadingForDrawables")
-    @Override
+    @Override // com.qcl.launcher.launcher.uis.tools.BaseUI, com.qcl.launcher.launcher.uis.tools.UILifecycleCallbacks
     public void onStop() {
         super.onStop();
-        CustomAnimationUtils.hideViewToLeft(donateUI,activity,context,false);
-        if (activity.isLoaded){
-            activity.uiManager.settingUI.startDonateUI.setBackground(context.getResources().getDrawable(R.drawable.launcher_button_parent));
+        CustomAnimationUtils.hideViewToLeft(this.donateUI, this.activity, this.context, false);
+        if (this.activity.isLoaded) {
+            this.activity.uiManager.settingUI.startDonateUI.setBackground(this.context.getResources().getDrawable(R.drawable.launcher_button_parent));
         }
     }
 
-    @Override
-    public void onClick(View v) {
-        if (v == textView){
-            Uri uri = Uri.parse("https://afdian.net/@tungs");
-            Intent intent = new Intent(Intent.ACTION_VIEW, uri);
-            context.startActivity(intent);
+    @Override // android.view.View.OnClickListener
+    public void onClick(View view) {
+        if (view == this.textView) {
+            this.context.startActivity(new Intent("android.intent.action.VIEW", Uri.parse("https://afdian.net/@tungs")));
         }
     }
 }

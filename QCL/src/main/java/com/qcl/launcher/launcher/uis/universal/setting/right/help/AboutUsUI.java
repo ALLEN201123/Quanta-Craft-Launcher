@@ -1,93 +1,74 @@
 package com.qcl.launcher.launcher.uis.universal.setting.right.help;
 
-import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
-
-import com.qcl.launcher.R;
 import com.qcl.launcher.launcher.MainActivity;
 import com.qcl.launcher.launcher.uis.tools.BaseUI;
 import com.qcl.launcher.utils.animation.CustomAnimationUtils;
 
-/**
- * About page, reduced to the two external services the launcher actually depends on:
- * the download mirror and the mod wiki. Everything else (author and contributor rows)
- * was removed on request.
- */
+import com.qcl.launcher.R;
+/* loaded from: classes2.dex */
 public class AboutUsUI extends BaseUI implements View.OnClickListener {
-
     public LinearLayout aboutUsUI;
-
+    private ImageButton author;
     private ImageButton downloadMirror;
     private ImageButton mcmod;
     private ImageButton upstream;
-    private ImageButton author;
 
-    public AboutUsUI(Context context, MainActivity activity) {
-        super(context, activity);
+    public AboutUsUI(Context context, MainActivity mainActivity) {
+        super(context, mainActivity);
     }
 
-    @Override
+    @Override // com.qcl.launcher.launcher.uis.tools.BaseUI, com.qcl.launcher.launcher.uis.tools.UILifecycleCallbacks
     public void onCreate() {
         super.onCreate();
-        aboutUsUI = activity.findViewById(R.id.ui_about);
-
-        downloadMirror = activity.findViewById(R.id.download_mirror_link);
-        mcmod = activity.findViewById(R.id.mcmod_link);
-        upstream = activity.findViewById(R.id.upstream_link);
-        author = activity.findViewById(R.id.author_link);
-
-        downloadMirror.setOnClickListener(this);
-        mcmod.setOnClickListener(this);
-        upstream.setOnClickListener(this);
-        author.setOnClickListener(this);
+        this.aboutUsUI = (LinearLayout) this.activity.findViewById(R.id.ui_about);
+        this.downloadMirror = (ImageButton) this.activity.findViewById(R.id.download_mirror_link);
+        this.mcmod = (ImageButton) this.activity.findViewById(R.id.mcmod_link);
+        this.upstream = (ImageButton) this.activity.findViewById(R.id.upstream_link);
+        this.author = (ImageButton) this.activity.findViewById(R.id.author_link);
+        this.downloadMirror.setOnClickListener(this);
+        this.mcmod.setOnClickListener(this);
+        this.upstream.setOnClickListener(this);
+        this.author.setOnClickListener(this);
     }
 
-    @SuppressLint("UseCompatLoadingForDrawables")
-    @Override
+    @Override // com.qcl.launcher.launcher.uis.tools.BaseUI, com.qcl.launcher.launcher.uis.tools.UILifecycleCallbacks
     public void onStart() {
         super.onStart();
-        CustomAnimationUtils.showViewFromLeft(aboutUsUI,activity,context,false);
-        if (activity.isLoaded){
-            activity.uiManager.settingUI.startAboutUsUI.setBackground(context.getResources().getDrawable(R.drawable.launcher_button_white));
+        CustomAnimationUtils.showViewFromLeft(this.aboutUsUI, this.activity, this.context, false);
+        if (this.activity.isLoaded) {
+            this.activity.uiManager.settingUI.startAboutUsUI.setBackground(this.context.getResources().getDrawable(R.drawable.launcher_button_white));
         }
     }
 
-    @SuppressLint("UseCompatLoadingForDrawables")
-    @Override
+    @Override // com.qcl.launcher.launcher.uis.tools.BaseUI, com.qcl.launcher.launcher.uis.tools.UILifecycleCallbacks
     public void onStop() {
         super.onStop();
-        CustomAnimationUtils.hideViewToLeft(aboutUsUI,activity,context,false);
-        if (activity.isLoaded){
-            activity.uiManager.settingUI.startAboutUsUI.setBackground(context.getResources().getDrawable(R.drawable.launcher_button_parent));
+        CustomAnimationUtils.hideViewToLeft(this.aboutUsUI, this.activity, this.context, false);
+        if (this.activity.isLoaded) {
+            this.activity.uiManager.settingUI.startAboutUsUI.setBackground(this.context.getResources().getDrawable(R.drawable.launcher_button_parent));
         }
     }
 
-    @Override
+    @Override // android.view.View.OnClickListener
     public void onClick(View view) {
-        Uri uri = null;
-
-        if (view == downloadMirror) {
-            uri = Uri.parse("https://bmclapidoc.bangbang93.com/");
+        Uri parse = view == this.downloadMirror ? Uri.parse("https://bmclapidoc.bangbang93.com/") : null;
+        if (view == this.mcmod) {
+            parse = Uri.parse("https://www.mcmod.cn/");
         }
-        if (view == mcmod) {
-            uri = Uri.parse("https://www.mcmod.cn/");
+        if (view == this.upstream) {
+            parse = Uri.parse("https://space.bilibili.com/18115101");
         }
-        if (view == upstream) {
-            // Original HMCL-PE author
-            uri = Uri.parse("https://space.bilibili.com/18115101");
+        if (view == this.author) {
+            parse = Uri.parse("https://space.bilibili.com/550905358");
         }
-        if (view == author) {
-            uri = Uri.parse("https://space.bilibili.com/550905358");
-        }
-
-        if (uri != null) {
-            Intent intent = new Intent(Intent.ACTION_VIEW, uri);
-            context.startActivity(intent);
+        if (parse != null) {
+            this.context.startActivity(new Intent("android.intent.action.VIEW", parse));
         }
     }
 }

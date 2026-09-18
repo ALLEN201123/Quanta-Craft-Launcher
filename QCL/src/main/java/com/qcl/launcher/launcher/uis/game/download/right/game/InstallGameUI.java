@@ -1,6 +1,5 @@
 package com.qcl.launcher.launcher.uis.game.download.right.game;
 
-import android.annotation.SuppressLint;
 import android.content.Context;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -12,8 +11,6 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
-
-import com.qcl.launcher.R;
 import com.qcl.launcher.launcher.MainActivity;
 import com.qcl.launcher.launcher.download.GameInstallDialog;
 import com.qcl.launcher.launcher.download.fabric.FabricLoaderVersion;
@@ -27,369 +24,338 @@ import com.qcl.launcher.launcher.setting.SettingUtils;
 import com.qcl.launcher.launcher.uis.tools.BaseUI;
 import com.qcl.launcher.utils.animation.CustomAnimationUtils;
 
+import com.qcl.launcher.R;
+/* loaded from: classes2.dex */
 public class InstallGameUI extends BaseUI implements View.OnClickListener, TextWatcher {
-
-    public LinearLayout installGameUI;
-
-    public String name;
-
-    public VersionManifest.Version version;
-    public ForgeVersion forgeVersion;
-    public OptifineVersion optifineVersion;
-    public LiteLoaderVersion liteLoaderVersion;
-    public FabricLoaderVersion fabricVersion;
-    public RemoteMod.Version fabricAPIVersion;
-    public QuiltLoaderVersion quiltVersion;
-    public RemoteMod.Version quiltAPIVersion;
-
-    private EditText editName;
-
-    private TextView gameVersionText;
-    private TextView forgeVersionText;
-    private TextView liteLoaderVersionText;
-    private TextView optiFineVersionText;
-    private TextView fabricVersionText;
-    private TextView fabricAPIVersionText;
-    private TextView quiltVersionText;
-    private TextView quiltAPIVersionText;
-
+    private ImageButton deleteFabricAPIVersion;
+    private ImageButton deleteFabricVersion;
     private ImageButton deleteForgeVersion;
     private ImageButton deleteLiteLoaderVersion;
     private ImageButton deleteOptiFineVersion;
-    private ImageButton deleteFabricVersion;
-    private ImageButton deleteFabricAPIVersion;
-    private ImageButton deleteQuiltVersion;
     private ImageButton deleteQuiltAPIVersion;
-
-    private LinearLayout selectForgeVersion;
-    private LinearLayout selectLiteLoaderVersion;
-    private LinearLayout selectOptiFineVersion;
-    private LinearLayout selectFabricVersion;
-    private LinearLayout selectFabricAPIVersion;
-    private LinearLayout selectQuiltVersion;
-    private LinearLayout selectQuiltAPIVersion;
-
-    private ImageView selectForge;
-    private ImageView selectLiteLoader;
-    private ImageView selectOptiFine;
+    private ImageButton deleteQuiltVersion;
+    private EditText editName;
+    public RemoteMod.Version fabricAPIVersion;
+    private TextView fabricAPIVersionText;
+    public FabricLoaderVersion fabricVersion;
+    private TextView fabricVersionText;
+    public ForgeVersion forgeVersion;
+    private TextView forgeVersionText;
+    private TextView gameVersionText;
+    private Button install;
+    public LinearLayout installGameUI;
+    public LiteLoaderVersion liteLoaderVersion;
+    private TextView liteLoaderVersionText;
+    public String name;
+    private TextView optiFineVersionText;
+    public OptifineVersion optifineVersion;
+    public RemoteMod.Version quiltAPIVersion;
+    private TextView quiltAPIVersionText;
+    public QuiltLoaderVersion quiltVersion;
+    private TextView quiltVersionText;
     private ImageView selectFabric;
     private ImageView selectFabricAPI;
+    private LinearLayout selectFabricAPIVersion;
+    private LinearLayout selectFabricVersion;
+    private ImageView selectForge;
+    private LinearLayout selectForgeVersion;
+    private ImageView selectLiteLoader;
+    private LinearLayout selectLiteLoaderVersion;
+    private ImageView selectOptiFine;
+    private LinearLayout selectOptiFineVersion;
     private ImageView selectQuilt;
     private ImageView selectQuiltAPI;
+    private LinearLayout selectQuiltAPIVersion;
+    private LinearLayout selectQuiltVersion;
+    public VersionManifest.Version version;
 
-    private Button install;
-
-    public InstallGameUI(Context context, MainActivity activity) {
-        super(context, activity);
+    @Override // android.text.TextWatcher
+    public void beforeTextChanged(CharSequence charSequence, int i, int i2, int i3) {
     }
 
-    @Override
+    @Override // android.text.TextWatcher
+    public void onTextChanged(CharSequence charSequence, int i, int i2, int i3) {
+    }
+
+    public InstallGameUI(Context context, MainActivity mainActivity) {
+        super(context, mainActivity);
+    }
+
+    @Override // com.qcl.launcher.launcher.uis.tools.BaseUI, com.qcl.launcher.launcher.uis.tools.UILifecycleCallbacks
     public void onCreate() {
         super.onCreate();
-        installGameUI = activity.findViewById(R.id.ui_install_game);
-
-        editName = activity.findViewById(R.id.edit_game_name);
-        editName.addTextChangedListener(this);
-
-        gameVersionText = activity.findViewById(R.id.minecraft_version_text);
-        forgeVersionText = activity.findViewById(R.id.forge_version_text);
-        liteLoaderVersionText = activity.findViewById(R.id.liteloader_version_text);
-        optiFineVersionText = activity.findViewById(R.id.optifine_version_text);
-        fabricVersionText = activity.findViewById(R.id.fabric_version_text);
-        fabricAPIVersionText = activity.findViewById(R.id.fabric_api_version_text);
-        quiltVersionText = activity.findViewById(R.id.quilt_version_text);
-        quiltAPIVersionText = activity.findViewById(R.id.quilt_api_version_text);
-
-        deleteForgeVersion = activity.findViewById(R.id.call_off_install_forge);
-        deleteLiteLoaderVersion = activity.findViewById(R.id.call_off_install_liteloader);
-        deleteOptiFineVersion = activity.findViewById(R.id.call_off_install_optifine);
-        deleteFabricVersion = activity.findViewById(R.id.call_off_install_fabric);
-        deleteFabricAPIVersion = activity.findViewById(R.id.call_off_install_fabric_api);
-        deleteQuiltVersion = activity.findViewById(R.id.call_off_install_quilt);
-        deleteQuiltAPIVersion = activity.findViewById(R.id.call_off_install_quilt_api);
-        deleteForgeVersion.setOnClickListener(this);
-        deleteLiteLoaderVersion.setOnClickListener(this);
-        deleteOptiFineVersion.setOnClickListener(this);
-        deleteFabricVersion.setOnClickListener(this);
-        deleteFabricAPIVersion.setOnClickListener(this);
-        deleteQuiltVersion.setOnClickListener(this);
-        deleteQuiltAPIVersion.setOnClickListener(this);
-
-        selectForgeVersion = activity.findViewById(R.id.select_forge_version);
-        selectLiteLoaderVersion = activity.findViewById(R.id.select_liteloader_version);
-        selectOptiFineVersion = activity.findViewById(R.id.select_optifine_version);
-        selectFabricVersion = activity.findViewById(R.id.select_fabric_version);
-        selectFabricAPIVersion = activity.findViewById(R.id.select_fabric_api_version);
-        selectQuiltVersion = activity.findViewById(R.id.select_quilt_version);
-        selectQuiltAPIVersion = activity.findViewById(R.id.select_quilt_api_version);
-        selectForgeVersion.setOnClickListener(this);
-        selectLiteLoaderVersion.setOnClickListener(this);
-        selectOptiFineVersion.setOnClickListener(this);
-        selectFabricVersion.setOnClickListener(this);
-        selectFabricAPIVersion.setOnClickListener(this);
-        selectQuiltVersion.setOnClickListener(this);
-        selectQuiltAPIVersion.setOnClickListener(this);
-
-        selectForge = activity.findViewById(R.id.select_forge);
-        selectLiteLoader = activity.findViewById(R.id.select_lite_loader);
-        selectOptiFine = activity.findViewById(R.id.select_optifine);
-        selectFabric = activity.findViewById(R.id.select_fabric);
-        selectFabricAPI = activity.findViewById(R.id.select_fabric_api);
-        selectQuilt = activity.findViewById(R.id.select_quilt);
-        selectQuiltAPI = activity.findViewById(R.id.select_quilt_api);
-
-        install = activity.findViewById(R.id.install_game);
-        install.setOnClickListener(this);
+        this.installGameUI = (LinearLayout) this.activity.findViewById(R.id.ui_install_game);
+        EditText editText = (EditText) this.activity.findViewById(R.id.edit_game_name);
+        this.editName = editText;
+        editText.addTextChangedListener(this);
+        this.gameVersionText = (TextView) this.activity.findViewById(R.id.minecraft_version_text);
+        this.forgeVersionText = (TextView) this.activity.findViewById(R.id.forge_version_text);
+        this.liteLoaderVersionText = (TextView) this.activity.findViewById(R.id.liteloader_version_text);
+        this.optiFineVersionText = (TextView) this.activity.findViewById(R.id.optifine_version_text);
+        this.fabricVersionText = (TextView) this.activity.findViewById(R.id.fabric_version_text);
+        this.fabricAPIVersionText = (TextView) this.activity.findViewById(R.id.fabric_api_version_text);
+        this.quiltVersionText = (TextView) this.activity.findViewById(R.id.quilt_version_text);
+        this.quiltAPIVersionText = (TextView) this.activity.findViewById(R.id.quilt_api_version_text);
+        this.deleteForgeVersion = (ImageButton) this.activity.findViewById(R.id.call_off_install_forge);
+        this.deleteLiteLoaderVersion = (ImageButton) this.activity.findViewById(R.id.call_off_install_liteloader);
+        this.deleteOptiFineVersion = (ImageButton) this.activity.findViewById(R.id.call_off_install_optifine);
+        this.deleteFabricVersion = (ImageButton) this.activity.findViewById(R.id.call_off_install_fabric);
+        this.deleteFabricAPIVersion = (ImageButton) this.activity.findViewById(R.id.call_off_install_fabric_api);
+        this.deleteQuiltVersion = (ImageButton) this.activity.findViewById(R.id.call_off_install_quilt);
+        this.deleteQuiltAPIVersion = (ImageButton) this.activity.findViewById(R.id.call_off_install_quilt_api);
+        this.deleteForgeVersion.setOnClickListener(this);
+        this.deleteLiteLoaderVersion.setOnClickListener(this);
+        this.deleteOptiFineVersion.setOnClickListener(this);
+        this.deleteFabricVersion.setOnClickListener(this);
+        this.deleteFabricAPIVersion.setOnClickListener(this);
+        this.deleteQuiltVersion.setOnClickListener(this);
+        this.deleteQuiltAPIVersion.setOnClickListener(this);
+        this.selectForgeVersion = (LinearLayout) this.activity.findViewById(R.id.select_forge_version);
+        this.selectLiteLoaderVersion = (LinearLayout) this.activity.findViewById(R.id.select_liteloader_version);
+        this.selectOptiFineVersion = (LinearLayout) this.activity.findViewById(R.id.select_optifine_version);
+        this.selectFabricVersion = (LinearLayout) this.activity.findViewById(R.id.select_fabric_version);
+        this.selectFabricAPIVersion = (LinearLayout) this.activity.findViewById(R.id.select_fabric_api_version);
+        this.selectQuiltVersion = (LinearLayout) this.activity.findViewById(R.id.select_quilt_version);
+        this.selectQuiltAPIVersion = (LinearLayout) this.activity.findViewById(R.id.select_quilt_api_version);
+        this.selectForgeVersion.setOnClickListener(this);
+        this.selectLiteLoaderVersion.setOnClickListener(this);
+        this.selectOptiFineVersion.setOnClickListener(this);
+        this.selectFabricVersion.setOnClickListener(this);
+        this.selectFabricAPIVersion.setOnClickListener(this);
+        this.selectQuiltVersion.setOnClickListener(this);
+        this.selectQuiltAPIVersion.setOnClickListener(this);
+        this.selectForge = (ImageView) this.activity.findViewById(R.id.select_forge);
+        this.selectLiteLoader = (ImageView) this.activity.findViewById(R.id.select_lite_loader);
+        this.selectOptiFine = (ImageView) this.activity.findViewById(R.id.select_optifine);
+        this.selectFabric = (ImageView) this.activity.findViewById(R.id.select_fabric);
+        this.selectFabricAPI = (ImageView) this.activity.findViewById(R.id.select_fabric_api);
+        this.selectQuilt = (ImageView) this.activity.findViewById(R.id.select_quilt);
+        this.selectQuiltAPI = (ImageView) this.activity.findViewById(R.id.select_quilt_api);
+        Button button = (Button) this.activity.findViewById(R.id.install_game);
+        this.install = button;
+        button.setOnClickListener(this);
     }
 
-    @Override
+    @Override // com.qcl.launcher.launcher.uis.tools.BaseUI, com.qcl.launcher.launcher.uis.tools.UILifecycleCallbacks
     public void onStart() {
         super.onStart();
-        activity.showBarTitle(context.getResources().getString(R.string.install_game_ui_title),false,true);
-        CustomAnimationUtils.showViewFromLeft(installGameUI,activity,context,true);
+        this.activity.showBarTitle(this.context.getResources().getString(R.string.install_game_ui_title), false, true);
+        CustomAnimationUtils.showViewFromLeft(this.installGameUI, this.activity, this.context, true);
         init();
     }
 
-    @Override
+    @Override // com.qcl.launcher.launcher.uis.tools.BaseUI, com.qcl.launcher.launcher.uis.tools.UILifecycleCallbacks
     public void onStop() {
         super.onStop();
-        CustomAnimationUtils.hideViewToLeft(installGameUI,activity,context,true);
+        CustomAnimationUtils.hideViewToLeft(this.installGameUI, this.activity, this.context, true);
     }
 
-    @Override
-    public void onClick(View v) {
-        if (v == deleteForgeVersion){
-            if (forgeVersion != null){
-                forgeVersion = null;
-                init();
+    @Override // android.view.View.OnClickListener
+    public void onClick(View view) {
+        if (view == this.deleteForgeVersion && this.forgeVersion != null) {
+            this.forgeVersion = null;
+            init();
+        }
+        if (view == this.deleteLiteLoaderVersion && this.liteLoaderVersion != null) {
+            this.liteLoaderVersion = null;
+            init();
+        }
+        if (view == this.deleteOptiFineVersion && this.optifineVersion != null) {
+            this.optifineVersion = null;
+            init();
+        }
+        if (view == this.deleteFabricVersion && this.fabricVersion != null) {
+            this.fabricVersion = null;
+            init();
+        }
+        if (view == this.deleteFabricAPIVersion && this.fabricAPIVersion != null) {
+            this.fabricAPIVersion = null;
+            init();
+        }
+        if (view == this.deleteQuiltVersion && this.quiltVersion != null) {
+            this.quiltVersion = null;
+            init();
+        }
+        if (view == this.deleteQuiltAPIVersion && this.quiltAPIVersion != null) {
+            this.quiltAPIVersion = null;
+            init();
+        }
+        if (view == this.selectForgeVersion && this.fabricVersion == null && this.quiltVersion == null) {
+            this.activity.uiManager.downloadForgeUI.version = this.version.id;
+            this.activity.uiManager.downloadForgeUI.install = false;
+            this.activity.uiManager.switchMainUI(this.activity.uiManager.downloadForgeUI);
+        }
+        if (view == this.selectLiteLoaderVersion && this.fabricVersion == null && this.quiltVersion == null) {
+            this.activity.uiManager.downloadLiteLoaderUI.version = this.version.id;
+            this.activity.uiManager.downloadLiteLoaderUI.install = false;
+            this.activity.uiManager.switchMainUI(this.activity.uiManager.downloadLiteLoaderUI);
+        }
+        if (view == this.selectOptiFineVersion && this.fabricVersion == null && this.quiltVersion == null) {
+            this.activity.uiManager.downloadOptifineUI.version = this.version.id;
+            this.activity.uiManager.downloadOptifineUI.install = false;
+            this.activity.uiManager.switchMainUI(this.activity.uiManager.downloadOptifineUI);
+        }
+        if (view == this.selectFabricVersion && this.forgeVersion == null && this.optifineVersion == null && this.quiltVersion == null) {
+            this.activity.uiManager.downloadFabricUI.version = this.version.id;
+            this.activity.uiManager.downloadFabricUI.install = false;
+            this.activity.uiManager.switchMainUI(this.activity.uiManager.downloadFabricUI);
+        }
+        if (view == this.selectFabricAPIVersion && this.forgeVersion == null && this.optifineVersion == null && this.quiltVersion == null) {
+            this.activity.uiManager.downloadFabricAPIUI.version = this.version.id;
+            this.activity.uiManager.downloadFabricAPIUI.install = false;
+            this.activity.uiManager.switchMainUI(this.activity.uiManager.downloadFabricAPIUI);
+        }
+        if (view == this.selectQuiltVersion && this.forgeVersion == null && this.optifineVersion == null && this.fabricVersion == null) {
+            this.activity.uiManager.downloadQuiltUI.version = this.version.id;
+            this.activity.uiManager.downloadQuiltUI.install = false;
+            this.activity.uiManager.switchMainUI(this.activity.uiManager.downloadQuiltUI);
+        }
+        if (view == this.selectQuiltAPIVersion && this.forgeVersion == null && this.optifineVersion == null && this.fabricVersion == null) {
+            this.activity.uiManager.downloadQuiltAPIUI.version = this.version.id;
+            this.activity.uiManager.downloadQuiltAPIUI.install = false;
+            this.activity.uiManager.switchMainUI(this.activity.uiManager.downloadQuiltAPIUI);
+        }
+        if (view == this.install) {
+            if (SettingUtils.getLocalVersionNames(this.activity.launcherSetting.gameFileDirectory).contains(this.editName.getText().toString())) {
+                Toast.makeText(this.context, this.context.getString(R.string.install_game_ui_exist), 0).show();
+                return;
             }
-        }
-        if (v == deleteLiteLoaderVersion){
-            if (liteLoaderVersion != null){
-                liteLoaderVersion = null;
-                init();
+            if (this.forgeVersion != null || this.optifineVersion != null) {
+                this.fabricAPIVersion = null;
+                this.quiltAPIVersion = null;
             }
-        }
-        if (v == deleteOptiFineVersion){
-            if (optifineVersion != null){
-                optifineVersion = null;
-                init();
-            }
-        }
-        if (v == deleteFabricVersion){
-            if (fabricVersion != null){
-                fabricVersion = null;
-                init();
-            }
-        }
-        if (v == deleteFabricAPIVersion){
-            if (fabricAPIVersion != null){
-                fabricAPIVersion = null;
-                init();
-            }
-        }
-        if (v == deleteQuiltVersion){
-            if (quiltVersion != null){
-                quiltVersion = null;
-                init();
-            }
-        }
-        if (v == deleteQuiltAPIVersion){
-            if (quiltAPIVersion != null){
-                quiltAPIVersion = null;
-                init();
-            }
-        }
-        if (v == selectForgeVersion && fabricVersion == null && quiltVersion == null){
-            activity.uiManager.downloadForgeUI.version = version.id;
-            activity.uiManager.downloadForgeUI.install = false;
-            activity.uiManager.switchMainUI(activity.uiManager.downloadForgeUI);
-        }
-        if (v == selectLiteLoaderVersion && fabricVersion == null && quiltVersion == null){
-            activity.uiManager.downloadLiteLoaderUI.version = version.id;
-            activity.uiManager.downloadLiteLoaderUI.install = false;
-            activity.uiManager.switchMainUI(activity.uiManager.downloadLiteLoaderUI);
-        }
-        if (v == selectOptiFineVersion && fabricVersion == null && quiltVersion == null){
-            activity.uiManager.downloadOptifineUI.version = version.id;
-            activity.uiManager.downloadOptifineUI.install = false;
-            activity.uiManager.switchMainUI(activity.uiManager.downloadOptifineUI);
-        }
-        if (v == selectFabricVersion && forgeVersion == null && optifineVersion == null && quiltVersion == null){
-            activity.uiManager.downloadFabricUI.version = version.id;
-            activity.uiManager.downloadFabricUI.install = false;
-            activity.uiManager.switchMainUI(activity.uiManager.downloadFabricUI);
-        }
-        if (v == selectFabricAPIVersion && forgeVersion == null && optifineVersion == null && quiltVersion == null){
-            activity.uiManager.downloadFabricAPIUI.version = version.id;
-            activity.uiManager.downloadFabricAPIUI.install = false;
-            activity.uiManager.switchMainUI(activity.uiManager.downloadFabricAPIUI);
-        }
-        if (v == selectQuiltVersion && forgeVersion == null && optifineVersion == null && fabricVersion == null){
-            activity.uiManager.downloadQuiltUI.version = version.id;
-            activity.uiManager.downloadQuiltUI.install = false;
-            activity.uiManager.switchMainUI(activity.uiManager.downloadQuiltUI);
-        }
-        if (v == selectQuiltAPIVersion && forgeVersion == null && optifineVersion == null && fabricVersion == null){
-            activity.uiManager.downloadQuiltAPIUI.version = version.id;
-            activity.uiManager.downloadQuiltAPIUI.install = false;
-            activity.uiManager.switchMainUI(activity.uiManager.downloadQuiltAPIUI);
-        }
-        if (v == install){
-            boolean exist = SettingUtils.getLocalVersionNames(activity.launcherSetting.gameFileDirectory).contains(editName.getText().toString());
-            if (exist){
-                Toast.makeText(context,context.getString(R.string.install_game_ui_exist),Toast.LENGTH_SHORT).show();
-            }
-            else {
-                if (forgeVersion != null || optifineVersion != null) {
-                    fabricAPIVersion = null;
-                    quiltAPIVersion = null;
-                }
-                GameInstallDialog gameInstallDialog = new GameInstallDialog(context,activity,editName.getText().toString(),version,forgeVersion,optifineVersion,liteLoaderVersion,fabricVersion,fabricAPIVersion,quiltVersion,quiltAPIVersion);
-                gameInstallDialog.show();
-            }
+            new GameInstallDialog(this.context, this.activity, this.editName.getText().toString(), this.version, this.forgeVersion, this.optifineVersion, this.liteLoaderVersion, this.fabricVersion, this.fabricAPIVersion, this.quiltVersion, this.quiltAPIVersion).show();
         }
     }
 
-    @SuppressLint("SetTextI18n")
-    private void init(){
-        editName.setText(name);
-        gameVersionText.setText(version.id);
-        if (forgeVersion != null || optifineVersion != null) {
-            forgeVersionText.setText(forgeVersion == null ? context.getString(R.string.install_game_ui_none) : forgeVersion.getVersion());
-            optiFineVersionText.setText(optifineVersion == null ? context.getString(R.string.install_game_ui_none) : optifineVersion.type + "_" + optifineVersion.patch);
-            fabricVersionText.setText(optifineVersion != null ? context.getString(R.string.install_game_ui_optifine_not_compatible) : context.getString(R.string.install_game_ui_forge_not_compatible));
-            fabricAPIVersionText.setText(optifineVersion != null ? context.getString(R.string.install_game_ui_optifine_not_compatible) : context.getString(R.string.install_game_ui_forge_not_compatible));
-            quiltVersionText.setText(optifineVersion != null ? context.getString(R.string.install_game_ui_optifine_not_compatible) : context.getString(R.string.install_game_ui_forge_not_compatible));
-            quiltAPIVersionText.setText(optifineVersion != null ? context.getString(R.string.install_game_ui_optifine_not_compatible) : context.getString(R.string.install_game_ui_forge_not_compatible));
-            deleteForgeVersion.setVisibility(forgeVersion != null ? View.VISIBLE : View.GONE);
-            deleteOptiFineVersion.setVisibility(optifineVersion != null ? View.VISIBLE : View.GONE);
-            selectFabric.setVisibility(View.GONE);
-            selectFabricAPI.setVisibility(View.GONE);
-            selectQuilt.setVisibility(View.GONE);
-            selectQuiltAPI.setVisibility(View.GONE);
+    private void init() {
+        this.editName.setText(this.name);
+        this.gameVersionText.setText(this.version.id);
+        ForgeVersion forgeVersion = this.forgeVersion;
+        if (forgeVersion != null || this.optifineVersion != null) {
+            this.forgeVersionText.setText(forgeVersion == null ? this.context.getString(R.string.install_game_ui_none) : forgeVersion.getVersion());
+            this.optiFineVersionText.setText(this.optifineVersion == null ? this.context.getString(R.string.install_game_ui_none) : this.optifineVersion.type + "_" + this.optifineVersion.patch);
+            this.fabricVersionText.setText(this.optifineVersion != null ? this.context.getString(R.string.install_game_ui_optifine_not_compatible) : this.context.getString(R.string.install_game_ui_forge_not_compatible));
+            this.fabricAPIVersionText.setText(this.optifineVersion != null ? this.context.getString(R.string.install_game_ui_optifine_not_compatible) : this.context.getString(R.string.install_game_ui_forge_not_compatible));
+            this.quiltVersionText.setText(this.optifineVersion != null ? this.context.getString(R.string.install_game_ui_optifine_not_compatible) : this.context.getString(R.string.install_game_ui_forge_not_compatible));
+            this.quiltAPIVersionText.setText(this.optifineVersion != null ? this.context.getString(R.string.install_game_ui_optifine_not_compatible) : this.context.getString(R.string.install_game_ui_forge_not_compatible));
+            this.deleteForgeVersion.setVisibility(this.forgeVersion != null ? 0 : 8);
+            this.deleteOptiFineVersion.setVisibility(this.optifineVersion != null ? 0 : 8);
+            this.selectFabric.setVisibility(8);
+            this.selectFabricAPI.setVisibility(8);
+            this.selectQuilt.setVisibility(8);
+            this.selectQuiltAPI.setVisibility(8);
+        } else {
+            this.forgeVersionText.setText(this.context.getString(R.string.install_game_ui_none));
+            this.optiFineVersionText.setText(this.context.getString(R.string.install_game_ui_none));
+            this.fabricVersionText.setText(this.context.getString(R.string.install_game_ui_none));
+            this.fabricAPIVersionText.setText(this.context.getString(R.string.install_game_ui_none));
+            this.quiltVersionText.setText(this.context.getString(R.string.install_game_ui_none));
+            this.quiltAPIVersionText.setText(this.context.getString(R.string.install_game_ui_none));
+            this.deleteForgeVersion.setVisibility(8);
+            this.deleteOptiFineVersion.setVisibility(8);
+            this.selectFabric.setVisibility(0);
+            this.selectFabricAPI.setVisibility(0);
+            this.selectQuilt.setVisibility(0);
+            this.selectQuiltAPI.setVisibility(0);
         }
-        else {
-            forgeVersionText.setText(context.getString(R.string.install_game_ui_none));
-            optiFineVersionText.setText(context.getString(R.string.install_game_ui_none));
-            fabricVersionText.setText(context.getString(R.string.install_game_ui_none));
-            fabricAPIVersionText.setText(context.getString(R.string.install_game_ui_none));
-            quiltVersionText.setText(context.getString(R.string.install_game_ui_none));
-            quiltAPIVersionText.setText(context.getString(R.string.install_game_ui_none));
-            deleteForgeVersion.setVisibility(View.GONE);
-            deleteOptiFineVersion.setVisibility(View.GONE);
-            selectFabric.setVisibility(View.VISIBLE);
-            selectFabricAPI.setVisibility(View.VISIBLE);
-            selectQuilt.setVisibility(View.VISIBLE);
-            selectQuiltAPI.setVisibility(View.VISIBLE);
-        }
-        if (fabricVersion != null) {
-            forgeVersionText.setText(context.getString(R.string.install_game_ui_fabric_not_compatible));
-            optiFineVersionText.setText(context.getString(R.string.install_game_ui_fabric_not_compatible));
-            liteLoaderVersionText.setText(context.getString(R.string.install_game_ui_fabric_not_compatible));
-            quiltVersionText.setText(context.getString(R.string.install_game_ui_fabric_not_compatible));
-            quiltAPIVersionText.setText(context.getString(R.string.install_game_ui_fabric_not_compatible));
-            fabricVersionText.setText(fabricVersion.version);
-            deleteFabricVersion.setVisibility(View.VISIBLE);
-            selectForge.setVisibility(View.GONE);
-            selectLiteLoader.setVisibility(View.GONE);
-            selectOptiFine.setVisibility(View.GONE);
-            selectQuilt.setVisibility(View.GONE);
-            selectQuiltAPI.setVisibility(View.GONE);
-        }
-        else {
-            if (quiltVersion != null) {
-                forgeVersionText.setText(context.getString(R.string.install_game_ui_quilt_not_compatible));
-                optiFineVersionText.setText(context.getString(R.string.install_game_ui_quilt_not_compatible));
-                liteLoaderVersionText.setText(context.getString(R.string.install_game_ui_quilt_not_compatible));
-                fabricVersionText.setText(context.getString(R.string.install_game_ui_quilt_not_compatible));
-                fabricAPIVersionText.setText(context.getString(R.string.install_game_ui_quilt_not_compatible));
-                quiltVersionText.setText(quiltVersion.version);
-                deleteQuiltVersion.setVisibility(View.VISIBLE);
-                selectForge.setVisibility(View.GONE);
-                selectLiteLoader.setVisibility(View.GONE);
-                selectOptiFine.setVisibility(View.GONE);
-                selectFabric.setVisibility(View.GONE);
-                selectFabricAPI.setVisibility(View.GONE);
-            }
-            else {
-                if (forgeVersion == null) {
-                    forgeVersionText.setText(context.getString(R.string.install_game_ui_none));
+        if (this.fabricVersion != null) {
+            this.forgeVersionText.setText(this.context.getString(R.string.install_game_ui_fabric_not_compatible));
+            this.optiFineVersionText.setText(this.context.getString(R.string.install_game_ui_fabric_not_compatible));
+            this.liteLoaderVersionText.setText(this.context.getString(R.string.install_game_ui_fabric_not_compatible));
+            this.quiltVersionText.setText(this.context.getString(R.string.install_game_ui_fabric_not_compatible));
+            this.quiltAPIVersionText.setText(this.context.getString(R.string.install_game_ui_fabric_not_compatible));
+            this.fabricVersionText.setText(this.fabricVersion.version);
+            this.deleteFabricVersion.setVisibility(0);
+            this.selectForge.setVisibility(8);
+            this.selectLiteLoader.setVisibility(8);
+            this.selectOptiFine.setVisibility(8);
+            this.selectQuilt.setVisibility(8);
+            this.selectQuiltAPI.setVisibility(8);
+        } else {
+            if (this.quiltVersion != null) {
+                this.forgeVersionText.setText(this.context.getString(R.string.install_game_ui_quilt_not_compatible));
+                this.optiFineVersionText.setText(this.context.getString(R.string.install_game_ui_quilt_not_compatible));
+                this.liteLoaderVersionText.setText(this.context.getString(R.string.install_game_ui_quilt_not_compatible));
+                this.fabricVersionText.setText(this.context.getString(R.string.install_game_ui_quilt_not_compatible));
+                this.fabricAPIVersionText.setText(this.context.getString(R.string.install_game_ui_quilt_not_compatible));
+                this.quiltVersionText.setText(this.quiltVersion.version);
+                this.deleteQuiltVersion.setVisibility(0);
+                this.selectForge.setVisibility(8);
+                this.selectLiteLoader.setVisibility(8);
+                this.selectOptiFine.setVisibility(8);
+                this.selectFabric.setVisibility(8);
+                this.selectFabricAPI.setVisibility(8);
+            } else {
+                if (this.forgeVersion == null) {
+                    this.forgeVersionText.setText(this.context.getString(R.string.install_game_ui_none));
                 }
-                if (optifineVersion == null) {
-                    optiFineVersionText.setText(context.getString(R.string.install_game_ui_none));
+                if (this.optifineVersion == null) {
+                    this.optiFineVersionText.setText(this.context.getString(R.string.install_game_ui_none));
                 }
-                if (liteLoaderVersion == null) {
-                    liteLoaderVersionText.setText(context.getString(R.string.install_game_ui_none));
+                if (this.liteLoaderVersion == null) {
+                    this.liteLoaderVersionText.setText(this.context.getString(R.string.install_game_ui_none));
                 }
-                deleteQuiltVersion.setVisibility(View.GONE);
-                selectForge.setVisibility(View.VISIBLE);
-                selectLiteLoader.setVisibility(View.VISIBLE);
-                selectOptiFine.setVisibility(View.VISIBLE);
-                if (forgeVersion == null && optifineVersion == null) {
-                    selectFabric.setVisibility(View.VISIBLE);
-                    selectFabricAPI.setVisibility(View.VISIBLE);
+                this.deleteQuiltVersion.setVisibility(8);
+                this.selectForge.setVisibility(0);
+                this.selectLiteLoader.setVisibility(0);
+                this.selectOptiFine.setVisibility(0);
+                if (this.forgeVersion == null && this.optifineVersion == null) {
+                    this.selectFabric.setVisibility(0);
+                    this.selectFabricAPI.setVisibility(0);
                 }
             }
-            if (quiltAPIVersion == null) {
-                quiltAPIVersionText.setText(context.getString(R.string.install_game_ui_none));
+            if (this.quiltAPIVersion == null) {
+                this.quiltAPIVersionText.setText(this.context.getString(R.string.install_game_ui_none));
             }
-            deleteFabricVersion.setVisibility(View.GONE);
+            this.deleteFabricVersion.setVisibility(8);
         }
+        LiteLoaderVersion liteLoaderVersion = this.liteLoaderVersion;
         if (liteLoaderVersion != null) {
-            liteLoaderVersionText.setText(liteLoaderVersion.getVersion());
-            deleteLiteLoaderVersion.setVisibility(View.VISIBLE);
-        }
-        else {
-            if (fabricVersion == null && quiltVersion == null) {
-                liteLoaderVersionText.setText(context.getString(R.string.install_game_ui_none));
+            this.liteLoaderVersionText.setText(liteLoaderVersion.getVersion());
+            this.deleteLiteLoaderVersion.setVisibility(0);
+        } else {
+            if (this.fabricVersion == null && this.quiltVersion == null) {
+                this.liteLoaderVersionText.setText(this.context.getString(R.string.install_game_ui_none));
             }
-            deleteLiteLoaderVersion.setVisibility(View.GONE);
+            this.deleteLiteLoaderVersion.setVisibility(8);
         }
-        if (forgeVersion != null || optifineVersion != null || quiltVersion != null) {
-            fabricAPIVersionText.setText(quiltVersion != null ? context.getString(R.string.install_game_ui_quilt_not_compatible) : (optifineVersion != null ? context.getString(R.string.install_game_ui_optifine_not_compatible) : context.getString(R.string.install_game_ui_forge_not_compatible)));
-            deleteFabricAPIVersion.setVisibility(View.GONE);
-            selectFabricAPI.setVisibility(View.GONE);
+        if (this.forgeVersion != null || this.optifineVersion != null || this.quiltVersion != null) {
+            this.fabricAPIVersionText.setText(this.quiltVersion != null ? this.context.getString(R.string.install_game_ui_quilt_not_compatible) : this.optifineVersion != null ? this.context.getString(R.string.install_game_ui_optifine_not_compatible) : this.context.getString(R.string.install_game_ui_forge_not_compatible));
+            this.deleteFabricAPIVersion.setVisibility(8);
+            this.selectFabricAPI.setVisibility(8);
+        } else {
+            RemoteMod.Version version = this.fabricAPIVersion;
+            if (version == null) {
+                this.fabricAPIVersionText.setText(this.context.getString(R.string.install_game_ui_none));
+                this.deleteFabricAPIVersion.setVisibility(8);
+                this.selectFabricAPI.setVisibility(0);
+            } else {
+                this.fabricAPIVersionText.setText(version.getVersion());
+                this.deleteFabricAPIVersion.setVisibility(0);
+                this.selectFabricAPI.setVisibility(0);
+            }
         }
-        else if (fabricAPIVersion == null) {
-            fabricAPIVersionText.setText(context.getString(R.string.install_game_ui_none));
-            deleteFabricAPIVersion.setVisibility(View.GONE);
-            selectFabricAPI.setVisibility(View.VISIBLE);
+        if (this.forgeVersion != null || this.optifineVersion != null || this.fabricVersion != null) {
+            this.quiltAPIVersionText.setText(this.fabricVersion != null ? this.context.getString(R.string.install_game_ui_fabric_not_compatible) : this.optifineVersion != null ? this.context.getString(R.string.install_game_ui_optifine_not_compatible) : this.context.getString(R.string.install_game_ui_forge_not_compatible));
+            this.deleteQuiltAPIVersion.setVisibility(8);
+            this.selectQuiltAPI.setVisibility(8);
+            return;
         }
-        else {
-            fabricAPIVersionText.setText(fabricAPIVersion.getVersion());
-            deleteFabricAPIVersion.setVisibility(View.VISIBLE);
-            selectFabricAPI.setVisibility(View.VISIBLE);
-        }
-        if (forgeVersion != null || optifineVersion != null || fabricVersion != null) {
-            quiltAPIVersionText.setText(fabricVersion != null ? context.getString(R.string.install_game_ui_fabric_not_compatible) : (optifineVersion != null ? context.getString(R.string.install_game_ui_optifine_not_compatible) : context.getString(R.string.install_game_ui_forge_not_compatible)));
-            deleteQuiltAPIVersion.setVisibility(View.GONE);
-            selectQuiltAPI.setVisibility(View.GONE);
-        }
-        else if (quiltAPIVersion == null) {
-            quiltAPIVersionText.setText(context.getString(R.string.install_game_ui_none));
-            deleteQuiltAPIVersion.setVisibility(View.GONE);
-            selectQuiltAPI.setVisibility(View.VISIBLE);
-        }
-        else {
-            quiltAPIVersionText.setText(quiltAPIVersion.getVersion());
-            deleteQuiltAPIVersion.setVisibility(View.VISIBLE);
-            selectQuiltAPI.setVisibility(View.VISIBLE);
+        RemoteMod.Version version2 = this.quiltAPIVersion;
+        if (version2 == null) {
+            this.quiltAPIVersionText.setText(this.context.getString(R.string.install_game_ui_none));
+            this.deleteQuiltAPIVersion.setVisibility(8);
+            this.selectQuiltAPI.setVisibility(0);
+        } else {
+            this.quiltAPIVersionText.setText(version2.getVersion());
+            this.deleteQuiltAPIVersion.setVisibility(0);
+            this.selectQuiltAPI.setVisibility(0);
         }
     }
 
-    @Override
-    public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-
-    }
-
-    @Override
-    public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-
-    }
-
-    @Override
+    @Override // android.text.TextWatcher
     public void afterTextChanged(Editable editable) {
-        name = editName.getText().toString();
+        this.name = this.editName.getText().toString();
     }
 }

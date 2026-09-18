@@ -8,35 +8,39 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Spinner;
+import android.widget.SpinnerAdapter;
 import android.widget.Toast;
-
-import androidx.annotation.NonNull;
-
-import com.qcl.launcher.R;
 import com.qcl.launcher.control.bean.BaseButtonInfo;
 import com.qcl.launcher.control.bean.BaseRockerViewInfo;
 import com.qcl.launcher.launcher.list.local.controller.ChildLayout;
 import com.qcl.launcher.launcher.setting.SettingUtils;
-
 import java.util.ArrayList;
+import java.util.Iterator;
 
-public class EditChildDialog extends Dialog implements View.OnClickListener , AdapterView.OnItemSelectedListener {
-
-    private String pattern;
-    private OnChildChangeListener onChildChangeListener;
+import com.qcl.launcher.R;
+/* loaded from: classes2.dex */
+public class EditChildDialog extends Dialog implements View.OnClickListener, AdapterView.OnItemSelectedListener {
     private ChildLayout childLayout;
-
     private EditText editName;
-    private Spinner spinner;
-
-    private Button positive;
     private Button negative;
-
+    private OnChildChangeListener onChildChangeListener;
+    private String pattern;
+    private Button positive;
+    private Spinner spinner;
     private int visibility;
 
-    public EditChildDialog(@NonNull Context context,String pattern,OnChildChangeListener onChildChangeListener,ChildLayout childLayout) {
+    /* loaded from: classes2.dex */
+    public interface OnChildChangeListener {
+        void onChildChange(ChildLayout childLayout);
+    }
+
+    @Override // android.widget.AdapterView.OnItemSelectedListener
+    public void onNothingSelected(AdapterView<?> adapterView) {
+    }
+
+    public EditChildDialog(Context context, String str, OnChildChangeListener onChildChangeListener, ChildLayout childLayout) {
         super(context);
-        this.pattern = pattern;
+        this.pattern = str;
         this.onChildChangeListener = onChildChangeListener;
         this.childLayout = childLayout;
         setContentView(R.layout.dialog_edit_child);
@@ -44,101 +48,93 @@ public class EditChildDialog extends Dialog implements View.OnClickListener , Ad
         init();
     }
 
-    private void init(){
-        editName = findViewById(R.id.edit_child_name);
-        spinner = findViewById(R.id.visibility_spinner);
-
-        positive = findViewById(R.id.create_current_child);
-        negative = findViewById(R.id.exit);
-        positive.setOnClickListener(this);
-        negative.setOnClickListener(this);
-
-        ArrayList<String> list = new ArrayList<>();
-        list.add(getContext().getString(R.string.dialog_create_child_visibility_visible));
-        list.add(getContext().getString(R.string.dialog_create_child_visibility_invisible));
-        ArrayAdapter<String> adapter = new ArrayAdapter<String>(getContext(), R.layout.item_spinner,list);
-        spinner.setAdapter(adapter);
-        spinner.setOnItemSelectedListener(this);
-
-        editName.setText(childLayout.name);
-        if (childLayout.visibility == View.VISIBLE){
-            spinner.setSelection(0);
-        }
-        else {
-            spinner.setSelection(1);
+    private void init() {
+        this.editName = (EditText) findViewById(R.id.edit_child_name);
+        this.spinner = (Spinner) findViewById(R.id.visibility_spinner);
+        this.positive = (Button) findViewById(R.id.create_current_child);
+        this.negative = (Button) findViewById(R.id.exit);
+        this.positive.setOnClickListener(this);
+        this.negative.setOnClickListener(this);
+        ArrayList arrayList = new ArrayList();
+        arrayList.add(getContext().getString(R.string.dialog_create_child_visibility_visible));
+        arrayList.add(getContext().getString(R.string.dialog_create_child_visibility_invisible));
+        this.spinner.setAdapter((SpinnerAdapter) new ArrayAdapter(getContext(), R.layout.item_spinner, arrayList));
+        this.spinner.setOnItemSelectedListener(this);
+        this.editName.setText(this.childLayout.name);
+        if (this.childLayout.visibility == 0) {
+            this.spinner.setSelection(0);
+        } else {
+            this.spinner.setSelection(1);
         }
     }
 
-    @Override
+    @Override // android.view.View.OnClickListener
     public void onClick(View view) {
-        ArrayList<ChildLayout> childLayouts = SettingUtils.getChildList(pattern);
-        ArrayList<String> list = new ArrayList<>();
-        for (ChildLayout childLayout : childLayouts){
-            if (!childLayout.name.equals(this.childLayout.name)){
-                list.add(childLayout.name);
+        ArrayList<ChildLayout> childList = SettingUtils.getChildList(this.pattern);
+        ArrayList arrayList = new ArrayList();
+        Iterator<ChildLayout> it = childList.iterator();
+        while (it.hasNext()) {
+            ChildLayout next = it.next();
+            if (!next.name.equals(this.childLayout.name)) {
+                arrayList.add(next.name);
             }
         }
-        boolean exist = list.contains(editName.getText().toString());
-        if (view == positive){
-            if (editName.getText().toString().equals("")){
-                Toast.makeText(getContext(),getContext().getString(R.string.dialog_create_child_warn),Toast.LENGTH_SHORT).show();
-            }
-            else if (editName.getText().toString().equals("info")){
-                Toast.makeText(getContext(),getContext().getString(R.string.dialog_create_child_warn_info),Toast.LENGTH_SHORT).show();
-            }
-            else if (exist){
-                Toast.makeText(getContext(),getContext().getString(R.string.dialog_create_child_warn_exist),Toast.LENGTH_SHORT).show();
-            }
-            else {
-                ArrayList<BaseButtonInfo> buttonList = new ArrayList<>();
-                ArrayList<BaseRockerViewInfo> rockerViewList = new ArrayList<>();
-                for (ChildLayout child : childLayouts) {
-                    for (BaseButtonInfo buttonInfo : child.baseButtonList) {
-                        if (buttonInfo.visibilityControl.contains(childLayout.name)) {
-                            buttonInfo.visibilityControl.remove(childLayout.name);
-                            buttonInfo.visibilityControl.add(editName.getText().toString());
-                            ChildLayout.saveChildLayout(pattern,child);
+        boolean contains = arrayList.contains(this.editName.getText().toString());
+        if (view == this.positive) {
+            if (this.editName.getText().toString().equals("")) {
+                Toast.makeText(getContext(), getContext().getString(R.string.dialog_create_child_warn), 0).show();
+            } else if (this.editName.getText().toString().equals("info")) {
+                Toast.makeText(getContext(), getContext().getString(R.string.dialog_create_child_warn_info), 0).show();
+            } else if (contains) {
+                Toast.makeText(getContext(), getContext().getString(R.string.dialog_create_child_warn_exist), 0).show();
+            } else {
+                ArrayList arrayList2 = new ArrayList();
+                ArrayList arrayList3 = new ArrayList();
+                Iterator<ChildLayout> it2 = childList.iterator();
+                while (it2.hasNext()) {
+                    ChildLayout next2 = it2.next();
+                    Iterator<BaseButtonInfo> it3 = next2.baseButtonList.iterator();
+                    while (it3.hasNext()) {
+                        BaseButtonInfo next3 = it3.next();
+                        if (next3.visibilityControl.contains(this.childLayout.name)) {
+                            next3.visibilityControl.remove(this.childLayout.name);
+                            next3.visibilityControl.add(this.editName.getText().toString());
+                            ChildLayout.saveChildLayout(this.pattern, next2);
                         }
                     }
                 }
-                for (BaseButtonInfo buttonInfo : childLayout.baseButtonList) {
-                    buttonInfo.child = editName.getText().toString();
-                    if (buttonInfo.visibilityControl.contains(childLayout.name)) {
-                        buttonInfo.visibilityControl.remove(childLayout.name);
-                        buttonInfo.visibilityControl.add(editName.getText().toString());
+                Iterator<BaseButtonInfo> it4 = this.childLayout.baseButtonList.iterator();
+                while (it4.hasNext()) {
+                    BaseButtonInfo next4 = it4.next();
+                    next4.child = this.editName.getText().toString();
+                    if (next4.visibilityControl.contains(this.childLayout.name)) {
+                        next4.visibilityControl.remove(this.childLayout.name);
+                        next4.visibilityControl.add(this.editName.getText().toString());
                     }
-                    buttonList.add(buttonInfo);
+                    arrayList2.add(next4);
                 }
-                for (BaseRockerViewInfo rockerViewInfo : childLayout.baseRockerViewList) {
-                    rockerViewInfo.child = editName.getText().toString();
-                    rockerViewList.add(rockerViewInfo);
+                Iterator<BaseRockerViewInfo> it5 = this.childLayout.baseRockerViewList.iterator();
+                while (it5.hasNext()) {
+                    BaseRockerViewInfo next5 = it5.next();
+                    next5.child = this.editName.getText().toString();
+                    arrayList3.add(next5);
                 }
-                onChildChangeListener.onChildChange(new ChildLayout(editName.getText().toString(),visibility, buttonList,rockerViewList));
+                this.onChildChangeListener.onChildChange(new ChildLayout(this.editName.getText().toString(), this.visibility, arrayList2, arrayList3));
                 dismiss();
             }
         }
-        if (view == negative){
+        if (view == this.negative) {
             dismiss();
         }
     }
 
-    @Override
-    public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
-        if (i == 0){
-            visibility = View.VISIBLE;
+    @Override // android.widget.AdapterView.OnItemSelectedListener
+    public void onItemSelected(AdapterView<?> adapterView, View view, int i, long j) {
+        if (i == 0) {
+            this.visibility = 0;
         }
-        if (i == 1){
-            visibility = View.INVISIBLE;
+        if (i == 1) {
+            this.visibility = 4;
         }
     }
-
-    @Override
-    public void onNothingSelected(AdapterView<?> adapterView) {
-
-    }
-
-    public interface OnChildChangeListener{
-        void onChildChange(ChildLayout childLayout);
-    }
-
 }

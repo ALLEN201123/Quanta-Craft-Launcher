@@ -1,50 +1,69 @@
 package com.qcl.launcher.launcher.download.game;
 
+import com.qcl.launcher.launcher.download.game.VersionManifest;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
+import java.util.List;
 
+/* loaded from: classes2.dex */
 public class VersionManifest {
-
     public LatestVersion latest;
     public Version[] versions;
 
-    public VersionManifest (LatestVersion latest, Version[] versions){
-        this.latest = latest;
-        this.versions = versions;
+    public VersionManifest(LatestVersion latestVersion, Version[] versionArr) {
+        this.latest = latestVersion;
+        this.versions = versionArr;
     }
 
-    public static void sortNewestFirst(java.util.List<Version> entries) {
-        java.util.Collections.sort(entries, (a, b) -> {
-            if (a.releaseTime == null && b.releaseTime == null) return 0;
-            if (a.releaseTime == null) return 1;
-            if (b.releaseTime == null) return -1;
-            return b.releaseTime.compareTo(a.releaseTime);
+    public static void sortNewestFirst(List<Version> list) {
+        Collections.sort(list, new Comparator() { // from class: com.qcl.launcher.launcher.download.game.VersionManifest$$ExternalSyntheticLambda0
+            @Override // java.util.Comparator
+            public final int compare(Object obj, Object obj2) {
+                return VersionManifest.lambda$sortNewestFirst$0((VersionManifest.Version) obj, (VersionManifest.Version) obj2);
+            }
         });
     }
 
-    public class LatestVersion{
+    /* JADX INFO: Access modifiers changed from: package-private */
+    public static /* synthetic */ int lambda$sortNewestFirst$0(Version version, Version version2) {
+        if (version.releaseTime == null && version2.releaseTime == null) {
+            return 0;
+        }
+        if (version.releaseTime == null) {
+            return 1;
+        }
+        if (version2.releaseTime == null) {
+            return -1;
+        }
+        return version2.releaseTime.compareTo(version.releaseTime);
+    }
+
+    /* loaded from: classes2.dex */
+    public class LatestVersion {
         public String release;
         public String snapshot;
 
-        public LatestVersion(String release,String snapshot){
-            this.release = release;
-            this.snapshot = snapshot;
+        public LatestVersion(String str, String str2) {
+            this.release = str;
+            this.snapshot = str2;
         }
     }
 
+    /* loaded from: classes2.dex */
     public class Version {
         public String id;
+        public Date releaseTime;
+        public Date time;
         public String type;
         public String url;
-        public Date time;
-        public Date releaseTime;
 
-        public Version(String id, String type, String url, Date time, Date releaseTime){
-            this.id = id;
-            this.type = type;
-            this.url = url;
-            this.time = time;
-            this.releaseTime = releaseTime;
+        public Version(String str, String str2, String str3, Date date, Date date2) {
+            this.id = str;
+            this.type = str2;
+            this.url = str3;
+            this.time = date;
+            this.releaseTime = date2;
         }
     }
-
 }

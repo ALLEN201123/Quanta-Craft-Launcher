@@ -2,7 +2,6 @@ package com.qcl.launcher.launcher.uis.game.download;
 
 import android.content.Context;
 import android.content.Intent;
-
 import com.qcl.launcher.launcher.MainActivity;
 import com.qcl.launcher.launcher.uis.game.download.right.DownloadMinecraftUI;
 import com.qcl.launcher.launcher.uis.game.download.right.DownloadModUI;
@@ -12,62 +11,65 @@ import com.qcl.launcher.launcher.uis.game.download.right.DownloadShaderUI;
 import com.qcl.launcher.launcher.uis.game.download.right.DownloadWorldUI;
 import com.qcl.launcher.launcher.uis.tools.BaseUI;
 
+/* loaded from: classes2.dex */
 public class DownloadUIManager {
-
+    public DownloadMinecraftUI downloadMinecraftUI;
     public DownloadModUI downloadModUI;
     public DownloadPackageUI downloadPackageUI;
     public DownloadResourcePackUI downloadResourcePackUI;
-    public DownloadWorldUI downloadWorldUI;
     public DownloadShaderUI downloadShaderUI;
-    public DownloadMinecraftUI downloadMinecraftUI;
-
     public BaseUI[] downloadUIs;
+    public DownloadWorldUI downloadWorldUI;
 
-    public DownloadUIManager (Context context, MainActivity activity){
-        downloadMinecraftUI = new DownloadMinecraftUI(context,activity);
-        downloadModUI = new DownloadModUI(context,activity);
-        downloadPackageUI = new DownloadPackageUI(context,activity);
-        downloadResourcePackUI = new DownloadResourcePackUI(context,activity);
-        downloadWorldUI = new DownloadWorldUI(context,activity);
-        downloadShaderUI = new DownloadShaderUI(context,activity);
-
-        downloadMinecraftUI.onCreate();
-        downloadModUI.onCreate();
-        downloadPackageUI.onCreate();
-        downloadResourcePackUI.onCreate();
-        downloadWorldUI.onCreate();
-        downloadShaderUI.onCreate();
-
-        downloadUIs = new BaseUI[]{downloadMinecraftUI,downloadModUI,downloadPackageUI,downloadResourcePackUI,downloadWorldUI,downloadShaderUI};
+    public DownloadUIManager(Context context, MainActivity mainActivity) {
+        this.downloadMinecraftUI = new DownloadMinecraftUI(context, mainActivity);
+        this.downloadModUI = new DownloadModUI(context, mainActivity);
+        this.downloadPackageUI = new DownloadPackageUI(context, mainActivity);
+        this.downloadResourcePackUI = new DownloadResourcePackUI(context, mainActivity);
+        this.downloadWorldUI = new DownloadWorldUI(context, mainActivity);
+        this.downloadShaderUI = new DownloadShaderUI(context, mainActivity);
+        this.downloadMinecraftUI.onCreate();
+        this.downloadModUI.onCreate();
+        this.downloadPackageUI.onCreate();
+        this.downloadResourcePackUI.onCreate();
+        this.downloadWorldUI.onCreate();
+        this.downloadShaderUI.onCreate();
+        DownloadMinecraftUI downloadMinecraftUI = this.downloadMinecraftUI;
+        this.downloadUIs = new BaseUI[]{downloadMinecraftUI, this.downloadModUI, this.downloadPackageUI, this.downloadResourcePackUI, this.downloadWorldUI, this.downloadShaderUI};
         switchDownloadUI(downloadMinecraftUI);
     }
 
-    public void switchDownloadUI(BaseUI ui){
-        for (int i = 0;i < downloadUIs.length;i++){
-            if (downloadUIs[i] == ui){
-                downloadUIs[i].onStart();
+    public void switchDownloadUI(BaseUI baseUI) {
+        int i = 0;
+        while (true) {
+            BaseUI[] baseUIArr = this.downloadUIs;
+            if (i >= baseUIArr.length) {
+                return;
             }
-            else {
-                downloadUIs[i].onStop();
+            if (baseUIArr[i] == baseUI) {
+                baseUIArr[i].onStart();
+            } else {
+                baseUIArr[i].onStop();
             }
+            i++;
         }
     }
 
-    public void onActivityResult(int requestCode, int resultCode, Intent data){
-        for (BaseUI ui : downloadUIs){
-            ui.onActivityResult(requestCode,resultCode,data);
+    public void onActivityResult(int i, int i2, Intent intent) {
+        for (BaseUI baseUI : this.downloadUIs) {
+            baseUI.onActivityResult(i, i2, intent);
         }
     }
 
-    public void onPause(){
-        for (BaseUI ui : downloadUIs){
-            ui.onPause();
+    public void onPause() {
+        for (BaseUI baseUI : this.downloadUIs) {
+            baseUI.onPause();
         }
     }
 
-    public void onResume(){
-        for (BaseUI ui : downloadUIs){
-            ui.onResume();
+    public void onResume() {
+        for (BaseUI baseUI : this.downloadUIs) {
+            baseUI.onResume();
         }
     }
 }

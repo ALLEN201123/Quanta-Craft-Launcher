@@ -1,241 +1,269 @@
 package com.qcl.launcher.launcher.mod;
 
+import com.qcl.launcher.launcher.mod.RemoteMod;
 import com.qcl.launcher.utils.Logging;
 import com.qcl.launcher.utils.io.FileUtils;
-
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.function.Predicate;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 
-/**
- *
- * @author huangyuhui
- */
+/* loaded from: classes2.dex */
 public final class LocalModFile implements Comparable<LocalModFile> {
-
-    private Path file;
-    private final ModManager modManager;
-    private final LocalMod mod;
-    private final String name;
-    private final Description description;
-    private final String authors;
-    private final String version;
-    private final String gameVersion;
-    private final String url;
-    private final String fileName;
-    private final String logoPath;
     private boolean active;
+    private final String authors;
+    private final Description description;
+    private Path file;
+    private final String fileName;
+    private final String gameVersion;
+    private final String logoPath;
+    private final LocalMod mod;
+    private final ModManager modManager;
+    private final String name;
+    private final String url;
+    private final String version;
 
-    public LocalModFile(ModManager modManager, LocalMod mod, Path file, String name, Description description) {
-        this(modManager, mod, file, name, description, "", "", "", "", "");
+    public LocalModFile(ModManager modManager, LocalMod localMod, Path path, String str, Description description) {
+        this(modManager, localMod, path, str, description, "", "", "", "", "");
     }
 
-    public LocalModFile(ModManager modManager, LocalMod mod, Path file, String name, Description description, String authors, String version, String gameVersion, String url, String logoPath) {
+    public LocalModFile(ModManager modManager, LocalMod localMod, Path path, String str, Description description, String str2, String str3, String str4, String str5, String str6) {
         this.modManager = modManager;
-        this.mod = mod;
-        this.file = file;
-        this.name = name;
+        this.mod = localMod;
+        this.file = path;
+        this.name = str;
         this.description = description;
-        this.authors = authors;
-        this.version = version;
-        this.gameVersion = gameVersion;
-        this.url = url;
-        this.logoPath = logoPath;
-
-        this.active = !modManager.isDisabled(file);
-
-        fileName = FileUtils.getNameWithoutExtension(ModManager.getModName(file));
-
+        this.authors = str2;
+        this.version = str3;
+        this.gameVersion = str4;
+        this.url = str5;
+        this.logoPath = str6;
+        this.active = !modManager.isDisabled(path);
+        this.fileName = FileUtils.getNameWithoutExtension(ModManager.getModName(path));
         if (isOld()) {
-            mod.getOldFiles().add(this);
+            localMod.getOldFiles().add(this);
         } else {
-            mod.getFiles().add(this);
+            localMod.getFiles().add(this);
         }
     }
 
     public ModManager getModManager() {
-        return modManager;
+        return this.modManager;
     }
 
     public LocalMod getMod() {
-        return mod;
+        return this.mod;
     }
 
     public Path getFile() {
-        return file;
+        return this.file;
     }
 
     public ModLoaderType getModLoaderType() {
-        return mod.getModLoaderType();
+        return this.mod.getModLoaderType();
     }
 
     public String getId() {
-        return mod.getId();
+        return this.mod.getId();
     }
 
     public String getName() {
-        return name;
+        return this.name;
     }
 
     public Description getDescription() {
-        return description;
+        return this.description;
     }
 
     public String getAuthors() {
-        return authors;
+        return this.authors;
     }
 
     public String getVersion() {
-        return version;
+        return this.version;
     }
 
     public String getGameVersion() {
-        return gameVersion;
+        return this.gameVersion;
     }
 
     public String getUrl() {
-        return url;
+        return this.url;
     }
 
     public String getLogoPath() {
-        return logoPath;
+        return this.logoPath;
     }
 
     public boolean isActive() {
-        return active;
+        return this.active;
     }
 
-    public void setActive(boolean active) throws IOException {
-        this.active = active;
-        Path path = LocalModFile.this.file.toAbsolutePath();
+    public void setActive(boolean z) throws IOException {
+        this.active = z;
+        Path absolutePath = this.file.toAbsolutePath();
         try {
-            if (active)
-                LocalModFile.this.file = modManager.enableMod(path);
-            else
-                LocalModFile.this.file = modManager.disableMod(path);
+            if (z) {
+                this.file = this.modManager.enableMod(absolutePath);
+            } else {
+                this.file = this.modManager.disableMod(absolutePath);
+            }
         } catch (IOException e) {
-            Logging.LOG.log(Level.SEVERE, "Unable to invert state of mod file " + path, e);
+            Logging.LOG.log(Level.SEVERE, "Unable to invert state of mod file " + absolutePath, (Throwable) e);
         }
     }
 
     public String getFileName() {
-        return fileName;
+        return this.fileName;
     }
 
     public boolean isOld() {
-        return modManager.isOld(file);
+        return this.modManager.isOld(this.file);
     }
 
-    public void setOld(boolean old) throws IOException {
-        file = modManager.setOld(this, old);
-
-        if (old) {
-            mod.getFiles().remove(this);
-            mod.getOldFiles().add(this);
+    public void setOld(boolean z) throws IOException {
+        this.file = this.modManager.setOld(this, z);
+        if (z) {
+            this.mod.getFiles().remove(this);
+            this.mod.getOldFiles().add(this);
         } else {
-            mod.getOldFiles().remove(this);
-            mod.getFiles().add(this);
+            this.mod.getOldFiles().remove(this);
+            this.mod.getFiles().add(this);
         }
     }
 
-    public ModUpdate checkUpdates(String gameVersion, RemoteModRepository repository) throws IOException {
-        Optional<RemoteMod.Version> currentVersion = repository.getRemoteVersionByLocalFile(this, file);
-        if (!currentVersion.isPresent()) return null;
-        List<RemoteMod.Version> remoteVersions = repository.getRemoteVersionsById(currentVersion.get().getModid())
-                .filter(version -> version.getGameVersions().contains(gameVersion))
-                .filter(version -> version.getLoaders().contains(getModLoaderType()))
-                .filter(version -> version.getDatePublished().compareTo(currentVersion.get().getDatePublished()) > 0)
-                .sorted(Comparator.comparing(RemoteMod.Version::getDatePublished).reversed())
-                .collect(Collectors.toList());
-        if (remoteVersions.isEmpty()) return null;
-        return new ModUpdate(this, currentVersion.get(), remoteVersions);
+    public ModUpdate checkUpdates(final String str, RemoteModRepository remoteModRepository) throws IOException {
+        final Optional<RemoteMod.Version> remoteVersionByLocalFile = remoteModRepository.getRemoteVersionByLocalFile(this, this.file);
+        if (!remoteVersionByLocalFile.isPresent()) {
+            return null;
+        }
+        List list = (List) remoteModRepository.getRemoteVersionsById(remoteVersionByLocalFile.get().getModid()).filter(new Predicate() { // from class: com.qcl.launcher.launcher.mod.LocalModFile$$ExternalSyntheticLambda2
+            @Override // java.util.function.Predicate
+            public final boolean test(Object obj) {
+                boolean contains;
+                contains = ((RemoteMod.Version) obj).getGameVersions().contains(str);
+                return contains;
+            }
+        }).filter(new Predicate() { // from class: com.qcl.launcher.launcher.mod.LocalModFile$$ExternalSyntheticLambda1
+            @Override // java.util.function.Predicate
+            public final boolean test(Object obj) {
+                return LocalModFile.this.m457lambda$checkUpdates$1$comqcllauncherlaunchermodLocalModFile((RemoteMod.Version) obj);
+            }
+        }).filter(new Predicate() { // from class: com.qcl.launcher.launcher.mod.LocalModFile$$ExternalSyntheticLambda3
+            @Override // java.util.function.Predicate
+            public final boolean test(Object obj) {
+                return LocalModFile.lambda$checkUpdates$2(remoteVersionByLocalFile, (RemoteMod.Version) obj);
+            }
+        }).sorted(Comparator.comparing(LocalModFile$$ExternalSyntheticLambda0.INSTANCE).reversed()).collect(Collectors.toList());
+        if (list.isEmpty()) {
+            return null;
+        }
+        return new ModUpdate(this, remoteVersionByLocalFile.get(), list);
     }
 
-    @Override
-    public int compareTo(LocalModFile o) {
-        return getFileName().compareTo(o.getFileName());
+    /* JADX INFO: Access modifiers changed from: package-private */
+    /* renamed from: lambda$checkUpdates$1$com-qcl-launcher-launcher-mod-LocalModFile, reason: not valid java name */
+    public /* synthetic */ boolean m457lambda$checkUpdates$1$comqcllauncherlaunchermodLocalModFile(RemoteMod.Version version) {
+        return version.getLoaders().contains(getModLoaderType());
     }
 
-    @Override
+    /* JADX INFO: Access modifiers changed from: package-private */
+    public static /* synthetic */ boolean lambda$checkUpdates$2(Optional optional, RemoteMod.Version version) {
+        return version.getDatePublished().compareTo(((RemoteMod.Version) optional.get()).getDatePublished()) > 0;
+    }
+
+    @Override // java.lang.Comparable
+    public int compareTo(LocalModFile localModFile) {
+        return getFileName().compareTo(localModFile.getFileName());
+    }
+
     public boolean equals(Object obj) {
-        return obj instanceof LocalModFile && Objects.equals(getFileName(), ((LocalModFile) obj).getFileName());
+        return (obj instanceof LocalModFile) && Objects.equals(getFileName(), ((LocalModFile) obj).getFileName());
     }
 
-    @Override
     public int hashCode() {
         return Objects.hash(getFileName());
     }
 
+    /* loaded from: classes2.dex */
     public static class ModUpdate {
-        private final LocalModFile localModFile;
-        private final RemoteMod.Version currentVersion;
         private final List<RemoteMod.Version> candidates;
+        private final RemoteMod.Version currentVersion;
+        private final LocalModFile localModFile;
 
-        public ModUpdate(LocalModFile localModFile, RemoteMod.Version currentVersion, List<RemoteMod.Version> candidates) {
+        public ModUpdate(LocalModFile localModFile, RemoteMod.Version version, List<RemoteMod.Version> list) {
             this.localModFile = localModFile;
-            this.currentVersion = currentVersion;
-            this.candidates = candidates;
+            this.currentVersion = version;
+            this.candidates = list;
         }
 
         public LocalModFile getLocalMod() {
-            return localModFile;
+            return this.localModFile;
         }
 
         public RemoteMod.Version getCurrentVersion() {
-            return currentVersion;
+            return this.currentVersion;
         }
 
         public List<RemoteMod.Version> getCandidates() {
-            return candidates;
+            return this.candidates;
         }
     }
 
+    /* loaded from: classes2.dex */
     public static class Description {
         private final List<Part> parts;
 
-        public Description(String text) {
-            this.parts = new ArrayList<>();
-            this.parts.add(new Part(text, "black"));
+        public Description(String str) {
+            ArrayList arrayList = new ArrayList();
+            this.parts = arrayList;
+            arrayList.add(new Part(str, "black"));
         }
 
-        public Description(List<Part> parts) {
-            this.parts = parts;
+        public Description(List<Part> list) {
+            this.parts = list;
         }
 
         public List<Part> getParts() {
-            return parts;
+            return this.parts;
         }
 
-        @Override
         public String toString() {
-            StringBuilder builder = new StringBuilder();
-            for (Part part : parts) {
-                builder.append(part.text);
+            StringBuilder sb = new StringBuilder();
+            Iterator<Part> it = this.parts.iterator();
+            while (it.hasNext()) {
+                sb.append(it.next().text);
             }
-            return builder.toString();
+            return sb.toString();
         }
 
+        /* loaded from: classes2.dex */
         public static class Part {
-            private final String text;
             private final String color;
+            private final String text;
 
-            public Part(String text) {
-                this(text, "");
+            public Part(String str) {
+                this(str, "");
             }
 
-            public Part(String text, String color) {
-                this.text = Objects.requireNonNull(text);
-                this.color = Objects.requireNonNull(color);
+            public Part(String str, String str2) {
+                this.text = (String) Objects.requireNonNull(str);
+                this.color = (String) Objects.requireNonNull(str2);
             }
 
             public String getText() {
-                return text;
+                return this.text;
             }
 
             public String getColor() {
-                return color;
+                return this.color;
             }
         }
     }

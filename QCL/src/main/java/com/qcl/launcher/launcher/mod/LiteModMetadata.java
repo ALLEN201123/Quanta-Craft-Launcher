@@ -1,104 +1,111 @@
 package com.qcl.launcher.launcher.mod;
 
 import com.google.gson.JsonParseException;
+import com.qcl.launcher.launcher.mod.LocalModFile;
 import com.qcl.launcher.utils.gson.JsonUtils;
 import com.qcl.launcher.utils.io.IOUtils;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
-/**
- *
- * @author huangyuhui
- */
+/* loaded from: classes2.dex */
 public final class LiteModMetadata {
-    private final String name;
-    private final String version;
-    private final String mcversion;
-    private final String revision;
     private final String author;
+    private final String checkUpdateUrl;
     private final String[] classTransformerClasses;
     private final String description;
+    private final String mcversion;
     private final String modpackName;
     private final String modpackVersion;
-    private final String checkUpdateUrl;
+    private final String name;
+    private final String revision;
     private final String updateURI;
+    private final String version;
 
     public LiteModMetadata() {
         this("", "", "", "", "", new String[]{""}, "", "", "", "", "");
     }
 
-    public LiteModMetadata(String name, String version, String mcversion, String revision, String author, String[] classTransformerClasses, String description, String modpackName, String modpackVersion, String checkUpdateUrl, String updateURI) {
-        this.name = name;
-        this.version = version;
-        this.mcversion = mcversion;
-        this.revision = revision;
-        this.author = author;
-        this.classTransformerClasses = classTransformerClasses;
-        this.description = description;
-        this.modpackName = modpackName;
-        this.modpackVersion = modpackVersion;
-        this.checkUpdateUrl = checkUpdateUrl;
-        this.updateURI = updateURI;
+    public LiteModMetadata(String str, String str2, String str3, String str4, String str5, String[] strArr, String str6, String str7, String str8, String str9, String str10) {
+        this.name = str;
+        this.version = str2;
+        this.mcversion = str3;
+        this.revision = str4;
+        this.author = str5;
+        this.classTransformerClasses = strArr;
+        this.description = str6;
+        this.modpackName = str7;
+        this.modpackVersion = str8;
+        this.checkUpdateUrl = str9;
+        this.updateURI = str10;
     }
 
     public String getName() {
-        return name;
+        return this.name;
     }
 
     public String getVersion() {
-        return version;
+        return this.version;
     }
 
     public String getGameVersion() {
-        return mcversion;
+        return this.mcversion;
     }
 
     public String getRevision() {
-        return revision;
+        return this.revision;
     }
 
     public String getAuthor() {
-        return author;
+        return this.author;
     }
 
     public String[] getClassTransformerClasses() {
-        return classTransformerClasses;
+        return this.classTransformerClasses;
     }
 
     public String getDescription() {
-        return description;
+        return this.description;
     }
 
     public String getModpackName() {
-        return modpackName;
+        return this.modpackName;
     }
 
     public String getModpackVersion() {
-        return modpackVersion;
+        return this.modpackVersion;
     }
 
     public String getCheckUpdateUrl() {
-        return checkUpdateUrl;
+        return this.checkUpdateUrl;
     }
 
     public String getUpdateURI() {
-        return updateURI;
+        return this.updateURI;
     }
-    
-    public static LocalModFile fromFile(ModManager modManager, Path modFile) throws IOException, JsonParseException {
-        try (ZipFile zipFile = new ZipFile(modFile.toFile())) {
+
+    public static LocalModFile fromFile(ModManager modManager, Path path) throws IOException, JsonParseException {
+        ZipFile zipFile = new ZipFile(path.toFile());
+        try {
             ZipEntry entry = zipFile.getEntry("litemod.json");
-            if (entry == null)
-                throw new IOException("File " + modFile + "is not a LiteLoader mod.");
-            LiteModMetadata metadata = JsonUtils.GSON.fromJson(IOUtils.readFullyAsString(zipFile.getInputStream(entry)), LiteModMetadata.class);
-            if (metadata == null)
-                throw new IOException("Mod " + modFile + " `litemod.json` is malformed.");
-            return new LocalModFile(modManager, modManager.getLocalMod(metadata.getName(), ModLoaderType.LITE_LOADER), modFile, metadata.getName(), new LocalModFile.Description(metadata.getDescription()), metadata.getAuthor(),
-                    metadata.getVersion(), metadata.getGameVersion(), metadata.getUpdateURI(), "");
+            if (entry == null) {
+                throw new IOException("File " + path + "is not a LiteLoader mod.");
+            }
+            LiteModMetadata liteModMetadata = (LiteModMetadata) JsonUtils.GSON.fromJson(IOUtils.readFullyAsString(zipFile.getInputStream(entry)), LiteModMetadata.class);
+            if (liteModMetadata == null) {
+                throw new IOException("Mod " + path + " `litemod.json` is malformed.");
+            }
+            LocalModFile localModFile = new LocalModFile(modManager, modManager.getLocalMod(liteModMetadata.getName(), ModLoaderType.LITE_LOADER), path, liteModMetadata.getName(), new LocalModFile.Description(liteModMetadata.getDescription()), liteModMetadata.getAuthor(), liteModMetadata.getVersion(), liteModMetadata.getGameVersion(), liteModMetadata.getUpdateURI(), "");
+            zipFile.close();
+            return localModFile;
+        } catch (Throwable th) {
+            try {
+                zipFile.close();
+            } catch (Throwable th2) {
+                th.addSuppressed(th2);
+            }
+            throw th;
         }
     }
-    
 }

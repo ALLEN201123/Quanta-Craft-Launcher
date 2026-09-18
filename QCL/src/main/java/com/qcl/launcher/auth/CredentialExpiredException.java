@@ -1,18 +1,19 @@
 package com.qcl.launcher.auth;
 
+/* loaded from: classes2.dex */
 public class CredentialExpiredException extends AuthenticationException {
-
-    public CredentialExpiredException() {}
-
-    public CredentialExpiredException(String message, Throwable cause) {
-        super(message, cause);
+    public CredentialExpiredException() {
     }
 
-    public CredentialExpiredException(String message) {
-        super(message);
+    public CredentialExpiredException(String str, Throwable th) {
+        super(str, th);
     }
 
-    public CredentialExpiredException(Throwable cause) {
-        super(cause);
+    public CredentialExpiredException(String str) {
+        super(str);
+    }
+
+    public CredentialExpiredException(Throwable th) {
+        super(th);
     }
 }

@@ -6,7 +6,22 @@ android {
     compileSdk 34
     ndkVersion "27.3.13750724"
 
+    // ★★★ 对齐 FCL：ABI 按 -Darch 属性切换，默认 all（全 ABI 正式包）。
+    //   调试单架构示例：./gradlew :PojavLauncher:assembleRelease -Darch=x86_64
+    //   （此前先后遗留过 armeabi-v7a / x86_64 两代 TEST-ONLY 配置，现统一为本机制）
+    def qclArch = System.getProperty("arch", "all")
+
     defaultConfig {
+        if (qclArch != "all") {
+            ndk {
+                switch (qclArch) {
+                    case "arm":    abiFilters 'armeabi-v7a'; break
+                    case "arm64":  abiFilters 'arm64-v8a';   break
+                    case "x86":    abiFilters 'x86';          break
+                    case "x86_64": abiFilters 'x86_64';       break
+                }
+            }
+        }
         minSdk 26
         targetSdk 34
 

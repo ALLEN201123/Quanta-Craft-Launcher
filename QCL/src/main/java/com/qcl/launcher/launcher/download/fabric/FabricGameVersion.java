@@ -1,13 +1,12 @@
 package com.qcl.launcher.launcher.download.fabric;
 
+/* loaded from: classes2.dex */
 public class FabricGameVersion {
-
-    public String version;
     public boolean stable;
+    public String version;
 
-    public FabricGameVersion(String version,boolean stable){
-        this.version = version;
-        this.stable = stable;
+    public FabricGameVersion(String str, boolean z) {
+        this.version = str;
+        this.stable = z;
     }
-
 }

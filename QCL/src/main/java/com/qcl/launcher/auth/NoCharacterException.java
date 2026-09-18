@@ -1,6 +1,5 @@
 package com.qcl.launcher.auth;
 
+/* loaded from: classes2.dex */
 public final class NoCharacterException extends AuthenticationException {
-    public NoCharacterException() {
-    }
 }

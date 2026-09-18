@@ -1,39 +1,35 @@
 package com.qcl.launcher.auth.yggdrasil;
 
-import java.util.Objects;
-import java.util.UUID;
-
 import com.google.gson.JsonParseException;
 import com.google.gson.annotations.JsonAdapter;
 import com.qcl.launcher.utils.gson.UUIDTypeAdapter;
 import com.qcl.launcher.utils.gson.tools.Validation;
+import java.util.Objects;
+import java.util.UUID;
 
-/**
- * @author huangyuhui
- */
+/* loaded from: classes2.dex */
 public class GameProfile implements Validation {
 
     @JsonAdapter(UUIDTypeAdapter.class)
     private final UUID id;
-
     private final String name;
 
-    public GameProfile(UUID id, String name) {
-        this.id = Objects.requireNonNull(id);
-        this.name = Objects.requireNonNull(name);
+    public GameProfile(UUID uuid, String str) {
+        this.id = (UUID) Objects.requireNonNull(uuid);
+        this.name = (String) Objects.requireNonNull(str);
     }
 
     public UUID getId() {
-        return id;
+        return this.id;
     }
 
     public String getName() {
-        return name;
+        return this.name;
     }
 
-    @Override
+    @Override // com.qcl.launcher.utils.gson.tools.Validation
     public void validate() throws JsonParseException {
-        Validation.requireNonNull(id, "Game profile id cannot be null");
-        Validation.requireNonNull(name, "Game profile name cannot be null");
+        Validation.requireNonNull(this.id, "Game profile id cannot be null");
+        Validation.requireNonNull(this.name, "Game profile name cannot be null");
     }
 }

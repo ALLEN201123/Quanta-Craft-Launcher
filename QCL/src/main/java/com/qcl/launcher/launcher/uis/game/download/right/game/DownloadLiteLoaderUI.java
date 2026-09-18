@@ -1,6 +1,5 @@
 package com.qcl.launcher.launcher.uis.game.download.right.game;
 
-import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
@@ -8,14 +7,10 @@ import android.os.Handler;
 import android.os.Message;
 import android.view.View;
 import android.widget.LinearLayout;
+import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-
-import androidx.annotation.NonNull;
-
-import com.google.gson.Gson;
-import com.qcl.launcher.R;
 import com.qcl.launcher.launcher.MainActivity;
 import com.qcl.launcher.launcher.download.liteloader.LiteLoaderGameVersions;
 import com.qcl.launcher.launcher.download.liteloader.LiteLoaderVersion;
@@ -26,138 +21,147 @@ import com.qcl.launcher.launcher.uis.tools.BaseUI;
 import com.qcl.launcher.utils.animation.CustomAnimationUtils;
 import com.qcl.launcher.utils.gson.JsonUtils;
 import com.qcl.launcher.utils.io.NetworkUtils;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.Map;
 
+import com.qcl.launcher.R;
+/* loaded from: classes2.dex */
 public class DownloadLiteLoaderUI extends BaseUI implements View.OnClickListener {
-
-    public LinearLayout downloadLiteLoaderUI;
-
-    public String version;
-    public boolean install;
-
-    private LinearLayout hintLayout;
-
-    private ListView liteLoaderListView;
-    private ProgressBar progressBar;
-    private TextView back;
-
     public static final String LITELOADER_LIST = "http://dl.liteloader.com/versions/versions.json";
+    private TextView back;
+    public LinearLayout downloadLiteLoaderUI;
+    private LinearLayout hintLayout;
+    public boolean install;
+    private ListView liteLoaderListView;
+    private final Handler loadingHandler;
+    private ProgressBar progressBar;
+    public String version;
 
-    public DownloadLiteLoaderUI(Context context, MainActivity activity) {
-        super(context, activity);
+    public DownloadLiteLoaderUI(Context context, MainActivity mainActivity) {
+        super(context, mainActivity);
+        this.loadingHandler = new Handler() { // from class: com.qcl.launcher.launcher.uis.game.download.right.game.DownloadLiteLoaderUI.1
+            @Override // android.os.Handler
+            public void handleMessage(Message message) {
+                super.handleMessage(message);
+                if (message.what == 0) {
+                    DownloadLiteLoaderUI.this.liteLoaderListView.setVisibility(8);
+                    DownloadLiteLoaderUI.this.progressBar.setVisibility(0);
+                    DownloadLiteLoaderUI.this.back.setVisibility(8);
+                }
+                if (message.what == 1) {
+                    DownloadLiteLoaderUI.this.liteLoaderListView.setVisibility(0);
+                    DownloadLiteLoaderUI.this.progressBar.setVisibility(8);
+                    DownloadLiteLoaderUI.this.back.setVisibility(8);
+                }
+                if (message.what == 2) {
+                    DownloadLiteLoaderUI.this.liteLoaderListView.setVisibility(8);
+                    DownloadLiteLoaderUI.this.progressBar.setVisibility(8);
+                    DownloadLiteLoaderUI.this.back.setVisibility(0);
+                }
+            }
+        };
     }
 
-    @Override
+    @Override // com.qcl.launcher.launcher.uis.tools.BaseUI, com.qcl.launcher.launcher.uis.tools.UILifecycleCallbacks
     public void onCreate() {
         super.onCreate();
-        downloadLiteLoaderUI = activity.findViewById(R.id.ui_install_lite_loader_list);
-
-        hintLayout = activity.findViewById(R.id.download_lite_loader_hint_layout);
-        hintLayout.setOnClickListener(this);
-
-        liteLoaderListView = activity.findViewById(R.id.lite_loader_version_list);
-        progressBar = activity.findViewById(R.id.loading_lite_loader_list_progress);
-        back = activity.findViewById(R.id.back_to_install_ui_lite_loader);
-
-        back.setOnClickListener(this);
+        this.downloadLiteLoaderUI = (LinearLayout) this.activity.findViewById(R.id.ui_install_lite_loader_list);
+        LinearLayout linearLayout = (LinearLayout) this.activity.findViewById(R.id.download_lite_loader_hint_layout);
+        this.hintLayout = linearLayout;
+        linearLayout.setOnClickListener(this);
+        this.liteLoaderListView = (ListView) this.activity.findViewById(R.id.lite_loader_version_list);
+        this.progressBar = (ProgressBar) this.activity.findViewById(R.id.loading_lite_loader_list_progress);
+        TextView textView = (TextView) this.activity.findViewById(R.id.back_to_install_ui_lite_loader);
+        this.back = textView;
+        textView.setOnClickListener(this);
     }
 
-    @Override
+    @Override // com.qcl.launcher.launcher.uis.tools.BaseUI, com.qcl.launcher.launcher.uis.tools.UILifecycleCallbacks
     public void onStart() {
         super.onStart();
-        activity.showBarTitle(context.getResources().getString(R.string.lite_loader_list_ui_title),false,true);
-        CustomAnimationUtils.showViewFromLeft(downloadLiteLoaderUI,activity,context,true);
+        this.activity.showBarTitle(this.context.getResources().getString(R.string.lite_loader_list_ui_title), false, true);
+        CustomAnimationUtils.showViewFromLeft(this.downloadLiteLoaderUI, this.activity, this.context, true);
         init();
     }
 
-    @Override
+    @Override // com.qcl.launcher.launcher.uis.tools.BaseUI, com.qcl.launcher.launcher.uis.tools.UILifecycleCallbacks
     public void onStop() {
         super.onStop();
-        CustomAnimationUtils.hideViewToLeft(downloadLiteLoaderUI,activity,context,true);
+        CustomAnimationUtils.hideViewToLeft(this.downloadLiteLoaderUI, this.activity, this.context, true);
     }
 
-    private void init(){
-        new Thread(() -> {
-            loadingHandler.sendEmptyMessage(0);
-            ArrayList<LiteLoaderVersion> list = new ArrayList<>();
-            try {
-                String response = NetworkUtils.doGet(NetworkUtils.toURL(LITELOADER_LIST));
-                Gson gson = JsonUtils.defaultGsonBuilder()
-                        .registerTypeAdapter(Artifact.class, new Artifact.Serializer())
-                        .create();
-                LiteLoaderVersionsRoot liteLoaderVersionsRoot = gson.fromJson(response, LiteLoaderVersionsRoot.class);
-                ArrayList<String> gameVersions = new ArrayList<>();
-                for (Map.Entry<String, LiteLoaderGameVersions> entry : liteLoaderVersionsRoot.getVersions().entrySet()) {
-                    String gameVersion = entry.getKey();
-                    gameVersions.add(gameVersion);
-                }
-                if (!gameVersions.contains(version)){
-                    loadingHandler.sendEmptyMessage(2);
-                }
-                else {
-                    LiteLoaderGameVersions liteLoaderGameVersions = liteLoaderVersionsRoot.getVersions().get(version);
-                    Map<String, LiteLoaderVersion> liteLoader = liteLoaderGameVersions.getArtifacts() == null ? liteLoaderGameVersions.getSnapshots().getLiteLoader() : liteLoaderGameVersions.getArtifacts().getLiteLoader();
-                    for (Map.Entry<String, LiteLoaderVersion> loaderVersionEntry : liteLoader.entrySet()) {
-                        if (!loaderVersionEntry.getKey().equals("latest")){
-                            list.add(loaderVersionEntry.getValue());
-                        }
-                    }
-                    list.sort(new LiteLoaderCompareTool());
-                    DownloadLiteLoaderListAdapter downloadLiteLoaderListAdapter = new DownloadLiteLoaderListAdapter(context,activity,version,list,install);
-                    activity.runOnUiThread(() -> liteLoaderListView.setAdapter(downloadLiteLoaderListAdapter));
-                    loadingHandler.sendEmptyMessage(1);
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
+    private void init() {
+        new Thread(new Runnable() { // from class: com.qcl.launcher.launcher.uis.game.download.right.game.DownloadLiteLoaderUI$$ExternalSyntheticLambda0
+            @Override // java.lang.Runnable
+            public final void run() {
+                DownloadLiteLoaderUI.this.m489x6d76c226();
             }
         }).start();
     }
 
-    @Override
-    public void onClick(View view) {
-        if (view == hintLayout){
-            Uri uri = Uri.parse("https://afdian.net/@bangbang93");
-            Intent intent = new Intent(Intent.ACTION_VIEW, uri);
-            context.startActivity(intent);
-        }
-        if (view == back){
-            activity.backToLastUI();
+    /* JADX INFO: Access modifiers changed from: package-private */
+    /* renamed from: lambda$init$1$com-qcl-launcher-launcher-uis-game-download-right-game-DownloadLiteLoaderUI, reason: not valid java name */
+    public /* synthetic */ void m489x6d76c226() {
+        this.loadingHandler.sendEmptyMessage(0);
+        ArrayList arrayList = new ArrayList();
+        try {
+            LiteLoaderVersionsRoot liteLoaderVersionsRoot = (LiteLoaderVersionsRoot) JsonUtils.defaultGsonBuilder().registerTypeAdapter(Artifact.class, new Artifact.Serializer()).create().fromJson(NetworkUtils.doGet(NetworkUtils.toURL("http://dl.liteloader.com/versions/versions.json")), LiteLoaderVersionsRoot.class);
+            ArrayList arrayList2 = new ArrayList();
+            Iterator<Map.Entry<String, LiteLoaderGameVersions>> it = liteLoaderVersionsRoot.getVersions().entrySet().iterator();
+            while (it.hasNext()) {
+                arrayList2.add(it.next().getKey());
+            }
+            if (!arrayList2.contains(this.version)) {
+                this.loadingHandler.sendEmptyMessage(2);
+                return;
+            }
+            LiteLoaderGameVersions liteLoaderGameVersions = liteLoaderVersionsRoot.getVersions().get(this.version);
+            for (Map.Entry<String, LiteLoaderVersion> entry : (liteLoaderGameVersions.getArtifacts() == null ? liteLoaderGameVersions.getSnapshots() : liteLoaderGameVersions.getArtifacts()).getLiteLoader().entrySet()) {
+                if (!entry.getKey().equals("latest")) {
+                    arrayList.add(entry.getValue());
+                }
+            }
+            arrayList.sort(new LiteLoaderCompareTool());
+            final DownloadLiteLoaderListAdapter downloadLiteLoaderListAdapter = new DownloadLiteLoaderListAdapter(this.context, this.activity, this.version, arrayList, this.install);
+            this.activity.runOnUiThread(new Runnable() { // from class: com.qcl.launcher.launcher.uis.game.download.right.game.DownloadLiteLoaderUI$$ExternalSyntheticLambda1
+                @Override // java.lang.Runnable
+                public final void run() {
+                    DownloadLiteLoaderUI.this.m488x6ca843a5(downloadLiteLoaderListAdapter);
+                }
+            });
+            this.loadingHandler.sendEmptyMessage(1);
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
-    @SuppressLint("HandlerLeak")
-    private final Handler loadingHandler = new Handler(){
-        @Override
-        public void handleMessage(@NonNull Message msg) {
-            super.handleMessage(msg);
-            if (msg.what == 0){
-                liteLoaderListView.setVisibility(View.GONE);
-                progressBar.setVisibility(View.VISIBLE);
-                back.setVisibility(View.GONE);
-            }
-            if (msg.what == 1){
-                liteLoaderListView.setVisibility(View.VISIBLE);
-                progressBar.setVisibility(View.GONE);
-                back.setVisibility(View.GONE);
-            }
-            if (msg.what == 2){
-                liteLoaderListView.setVisibility(View.GONE);
-                progressBar.setVisibility(View.GONE);
-                back.setVisibility(View.VISIBLE);
-            }
-        }
-    };
+    /* JADX INFO: Access modifiers changed from: package-private */
+    /* renamed from: lambda$init$0$com-qcl-launcher-launcher-uis-game-download-right-game-DownloadLiteLoaderUI, reason: not valid java name */
+    public /* synthetic */ void m488x6ca843a5(DownloadLiteLoaderListAdapter downloadLiteLoaderListAdapter) {
+        this.liteLoaderListView.setAdapter((ListAdapter) downloadLiteLoaderListAdapter);
+    }
 
+    @Override // android.view.View.OnClickListener
+    public void onClick(View view) {
+        if (view == this.hintLayout) {
+            this.context.startActivity(new Intent("android.intent.action.VIEW", Uri.parse("https://afdian.net/@bangbang93")));
+        }
+        if (view == this.back) {
+            this.activity.backToLastUI();
+        }
+    }
+
+    /* loaded from: classes2.dex */
     private static class LiteLoaderCompareTool implements Comparator<LiteLoaderVersion> {
-        @Override
-        public int compare(LiteLoaderVersion versionPri, LiteLoaderVersion versionSec) {
-            int timePri = Integer.parseInt(versionPri.getTimestamp());
-            int timeSec = Integer.parseInt(versionSec.getTimestamp());
-            return Integer.compare(timeSec, timePri);
+        private LiteLoaderCompareTool() {
+        }
+
+        @Override // java.util.Comparator
+        public int compare(LiteLoaderVersion liteLoaderVersion, LiteLoaderVersion liteLoaderVersion2) {
+            return Integer.compare(Integer.parseInt(liteLoaderVersion2.getTimestamp()), Integer.parseInt(liteLoaderVersion.getTimestamp()));
         }
     }
 }

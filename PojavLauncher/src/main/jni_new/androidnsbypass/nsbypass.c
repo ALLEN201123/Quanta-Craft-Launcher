@@ -538,11 +538,11 @@ bool test_namespace_funcs(private_namespace_funcs nsFuncs)
 __attribute__((constructor)) static void resolve_global_symbols()
 {
     // ★★★ 1.1.0 QCL 关键修复：默认**跳过** nsbypass 初始化。
-    // 原因：本函数是 __attribute__((constructor))，在 libpojavexec_new.so 被 dlopen 时自动执行；
+    // 原因：本函数是 __attribute__((constructor))，在 libpojavexec.so 被 dlopen 时自动执行；
     // get_private_namespace_functions() 需要解析 linker 私有结构，在 MuMu 等模拟器的
     // houdini/转译层上会直接触发 SIGILL（实测崩溃栈：
-    //   #01 libpojavexec_new.so (get_private_namespace_functions+60)
-    //   #02 libpojavexec_new.so (resolve_global_symbols+128)
+    //   #01 libpojavexec.so (get_private_namespace_functions+60)
+    //   #02 libpojavexec.so (resolve_global_symbols+128)
     //   #03 /system/lib64/arm64/nb/libtcb.so）。
     // 而 nsbypass 只用于「给 zink 加载自定义 Turnip 驱动」，是可选功能 —— 跳过它，
     // 渲染自动回退到系统 Vulkan，游戏照常启动。

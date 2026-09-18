@@ -96,7 +96,10 @@ gl_render_window_t *gl_init_context(gl_render_window_t *share) {
 
     {
         EGLBoolean bindResult;
-        if (strncmp(getenv("POJAV_RENDERER"), "opengles3_desktopgl", 19) == 0) {
+        // ★★★ 1.1.0 QCL：getenv 可能返回 NULL（ng_gl4es/zink 等路径下 LIBGL_* 未必设置），
+        // 原版 strncmp(NULL,...) 会 SIGSEGV。加空值兜底。
+        const char *glRenderer = getenv("POJAV_RENDERER");
+        if (glRenderer != NULL && strncmp(glRenderer, "opengles3_desktopgl", 19) == 0) {
             printf("EGLBridge: Binding to desktop OpenGL\n");
             bindResult = eglBindAPI_p(EGL_OPENGL_API);
         } else {
@@ -106,7 +109,8 @@ gl_render_window_t *gl_init_context(gl_render_window_t *share) {
         if (!bindResult) printf("EGLBridge: bind failed: %p\n", eglGetError_p());
     }
 
-    int libgl_es = strtol(getenv("LIBGL_ES"), NULL, 0);
+    const char *libglEsEnv = getenv("LIBGL_ES");
+    int libgl_es = libglEsEnv != NULL ? (int) strtol(libglEsEnv, NULL, 0) : 2; // ★ 1.1.0 QCL：NULL 兜底
     if (libgl_es < 0 || libgl_es > INT16_MAX) libgl_es = 2;
     const EGLint egl_context_attributes[] = {EGL_CONTEXT_CLIENT_VERSION, libgl_es, EGL_NONE};
     bundle->context = eglCreateContext_p(g_EglDisplay, bundle->config,
@@ -192,6 +196,10 @@ void gl_make_current(gl_render_window_t *bundle) {
     }
     if (eglMakeCurrent_p(g_EglDisplay, bundle->surface, bundle->surface, bundle->context)) {
         currentBundle = bundle;
+        // ★★★ 2026-09-17：swap interval 在这里设（EGL display/context 已就绪）。
+        // 不能放在 pojavInit 里：那时 g_EglDisplay 还是 NULL。
+        // 也不能不设：MuMu 无真实 vsync 信号，默认 interval=1 会让 eglSwapBuffers 长等。
+        gl_swap_interval(0);
     } else {
         if (hasSetMainWindow) {
             pojav_environ->mainWindowBundle->newNativeSurface = NULL;

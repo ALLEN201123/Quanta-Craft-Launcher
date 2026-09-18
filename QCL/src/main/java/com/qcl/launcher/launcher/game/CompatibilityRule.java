@@ -1,89 +1,89 @@
 package com.qcl.launcher.launcher.game;
 
-import android.os.Build;
-
-import androidx.annotation.RequiresApi;
-
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
+/* loaded from: classes2.dex */
 public final class CompatibilityRule {
-
     private final Action action;
-    private final OSRestriction os;
     private final Map<String, Boolean> features;
+    private final OSRestriction os;
+
+    /* loaded from: classes2.dex */
+    public enum Action {
+        ALLOW,
+        DISALLOW
+    }
 
     public CompatibilityRule() {
         this(Action.ALLOW, null);
     }
 
-    public CompatibilityRule(Action action, OSRestriction os) {
-        this(action, os, null);
+    public CompatibilityRule(Action action, OSRestriction oSRestriction) {
+        this(action, oSRestriction, null);
     }
 
-    public CompatibilityRule(Action action, OSRestriction os, Map<String, Boolean> features) {
+    public CompatibilityRule(Action action, OSRestriction oSRestriction, Map<String, Boolean> map) {
         this.action = action;
-        this.os = os;
-        this.features = features;
+        this.os = oSRestriction;
+        this.features = map;
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.O)
-    public Optional<Action> getAppliedAction(Map<String, Boolean> supportedFeatures) {
-        if (os != null && !os.allow())
+    public Optional<Action> getAppliedAction(Map<String, Boolean> map) {
+        OSRestriction oSRestriction = this.os;
+        if (oSRestriction != null && !oSRestriction.allow()) {
             return Optional.empty();
-
-        if (features != null)
-            for (Map.Entry<String, Boolean> entry : features.entrySet())
-                if (!Objects.equals(supportedFeatures.get(entry.getKey()), entry.getValue()))
-                    return Optional.empty();
-
-        return Optional.ofNullable(action);
-    }
-
-    @RequiresApi(api = Build.VERSION_CODES.O)
-    public static boolean appliesToCurrentEnvironment(Collection<CompatibilityRule> rules) {
-        return appliesToCurrentEnvironment(rules, Collections.emptyMap());
-    }
-
-    @RequiresApi(api = Build.VERSION_CODES.O)
-    public static boolean appliesToCurrentEnvironment(Collection<CompatibilityRule> rules, Map<String, Boolean> features) {
-        if (rules == null || rules.isEmpty())
-            return true;
-
-        Action action = Action.DISALLOW;
-        for (CompatibilityRule rule : rules) {
-            Optional<Action> thisAction = rule.getAppliedAction(features);
-            if (thisAction.isPresent())
-                action = thisAction.get();
         }
+        Map<String, Boolean> map2 = this.features;
+        if (map2 != null) {
+            for (Map.Entry<String, Boolean> entry : map2.entrySet()) {
+                if (!Objects.equals(map.get(entry.getKey()), entry.getValue())) {
+                    return Optional.empty();
+                }
+            }
+        }
+        return Optional.ofNullable(this.action);
+    }
 
+    public static boolean appliesToCurrentEnvironment(Collection<CompatibilityRule> collection) {
+        return appliesToCurrentEnvironment(collection, Collections.emptyMap());
+    }
+
+    public static boolean appliesToCurrentEnvironment(Collection<CompatibilityRule> collection, Map<String, Boolean> map) {
+        if (collection == null || collection.isEmpty()) {
+            return true;
+        }
+        Action action = Action.DISALLOW;
+        Iterator<CompatibilityRule> it = collection.iterator();
+        while (it.hasNext()) {
+            Optional<Action> appliedAction = it.next().getAppliedAction(map);
+            if (appliedAction.isPresent()) {
+                action = appliedAction.get();
+            }
+        }
         return action == Action.ALLOW;
     }
 
-    public static boolean equals(Collection<CompatibilityRule> rules1, Collection<CompatibilityRule> rules2) {
-        return Objects.hashCode(rules1) == Objects.hashCode(rules2);
+    public static boolean equals(Collection<CompatibilityRule> collection, Collection<CompatibilityRule> collection2) {
+        return Objects.hashCode(collection) == Objects.hashCode(collection2);
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        CompatibilityRule that = (CompatibilityRule) o;
-        return action == that.action &&
-                Objects.equals(os, that.os) &&
-                Objects.equals(features, that.features);
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null || getClass() != obj.getClass()) {
+            return false;
+        }
+        CompatibilityRule compatibilityRule = (CompatibilityRule) obj;
+        return this.action == compatibilityRule.action && Objects.equals(this.os, compatibilityRule.os) && Objects.equals(this.features, compatibilityRule.features);
     }
 
-    @Override
     public int hashCode() {
-        return Objects.hash(action, os, features);
-    }
-
-    public enum Action {
-        ALLOW,
-        DISALLOW
+        return Objects.hash(this.action, this.os, this.features);
     }
 }

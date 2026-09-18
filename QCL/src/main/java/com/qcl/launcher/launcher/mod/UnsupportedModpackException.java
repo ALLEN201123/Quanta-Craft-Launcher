@@ -1,18 +1,19 @@
 package com.qcl.launcher.launcher.mod;
 
+/* loaded from: classes2.dex */
 public class UnsupportedModpackException extends Exception {
     public UnsupportedModpackException() {
     }
 
-    public UnsupportedModpackException(String message) {
-        super(message);
+    public UnsupportedModpackException(String str) {
+        super(str);
     }
 
-    public UnsupportedModpackException(String message, Throwable cause) {
-        super(message, cause);
+    public UnsupportedModpackException(String str, Throwable th) {
+        super(str, th);
     }
 
-    public UnsupportedModpackException(Throwable cause) {
-        super(cause);
+    public UnsupportedModpackException(Throwable th) {
+        super(th);
     }
 }

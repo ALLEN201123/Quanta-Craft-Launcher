@@ -1,15 +1,15 @@
+/*
+ * Decompiled with CFR 0.152.
+ */
 package com.qcl.launcher.utils.function;
 
 import java.util.concurrent.Callable;
 
-/**
- *
- * @author huangyuhui
- */
 public interface ExceptionalSupplier<R, E extends Exception> {
-    R get() throws E;
+    public R get() throws E;
 
-    default Callable<R> toCallable() {
+    default public Callable<R> toCallable() {
         return this::get;
     }
 }
+

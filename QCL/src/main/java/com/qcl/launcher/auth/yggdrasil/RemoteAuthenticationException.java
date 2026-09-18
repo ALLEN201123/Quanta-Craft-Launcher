@@ -2,39 +2,39 @@ package com.qcl.launcher.auth.yggdrasil;
 
 import com.qcl.launcher.auth.AuthenticationException;
 
+/* loaded from: classes2.dex */
 public class RemoteAuthenticationException extends AuthenticationException {
-
-    private final String name;
-    private final String message;
     private final String cause;
+    private final String message;
+    private final String name;
 
-    public RemoteAuthenticationException(String name, String message, String cause) {
-        super(buildMessage(name, message, cause));
-        this.name = name;
-        this.message = message;
-        this.cause = cause;
+    public RemoteAuthenticationException(String str, String str2, String str3) {
+        super(buildMessage(str, str2, str3));
+        this.name = str;
+        this.message = str2;
+        this.cause = str3;
     }
 
     public String getRemoteName() {
-        return name;
+        return this.name;
     }
 
     public String getRemoteMessage() {
-        return message;
+        return this.message;
     }
 
     public String getRemoteCause() {
-        return cause;
+        return this.cause;
     }
 
-    private static String buildMessage(String name, String message, String cause) {
-        StringBuilder builder = new StringBuilder(name);
-        if (message != null)
-            builder.append(": ").append(message);
-
-        if (cause != null)
-            builder.append(": ").append(cause);
-
-        return builder.toString();
+    private static String buildMessage(String str, String str2, String str3) {
+        StringBuilder sb = new StringBuilder(str);
+        if (str2 != null) {
+            sb.append(": ").append(str2);
+        }
+        if (str3 != null) {
+            sb.append(": ").append(str3);
+        }
+        return sb.toString();
     }
 }

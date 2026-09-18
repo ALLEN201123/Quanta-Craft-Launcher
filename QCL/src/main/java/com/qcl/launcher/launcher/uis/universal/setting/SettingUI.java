@@ -4,118 +4,120 @@ import android.content.Context;
 import android.content.Intent;
 import android.view.View;
 import android.widget.LinearLayout;
-
-import com.qcl.launcher.R;
 import com.qcl.launcher.launcher.MainActivity;
 import com.qcl.launcher.launcher.uis.tools.BaseUI;
 import com.qcl.launcher.utils.animation.CustomAnimationUtils;
 
+import com.qcl.launcher.R;
+/* loaded from: classes2.dex */
 public class SettingUI extends BaseUI implements View.OnClickListener {
-
     public LinearLayout settingUI;
-
     public SettingUIManager settingUIManager;
-
-    public LinearLayout startGlobalGameSettingUI;
-    public LinearLayout startUniversalSettingUI;
-    public LinearLayout startExteriorSettingUI;
-    public LinearLayout startDownloadSettingUI;
-    public LinearLayout startHelpUI;
-    public LinearLayout startFeedbackUI;
-    public LinearLayout startDonateUI;
     public LinearLayout startAboutUsUI;
+    public LinearLayout startDonateUI;
+    public LinearLayout startDownloadSettingUI;
+    public LinearLayout startExteriorSettingUI;
+    public LinearLayout startFeedbackUI;
+    public LinearLayout startGlobalGameSettingUI;
+    public LinearLayout startHelpUI;
+    public LinearLayout startUniversalSettingUI;
 
-    public SettingUI(Context context, MainActivity activity) {
-        super(context, activity);
+    public SettingUI(Context context, MainActivity mainActivity) {
+        super(context, mainActivity);
     }
 
-    @Override
+    @Override // com.qcl.launcher.launcher.uis.tools.BaseUI, com.qcl.launcher.launcher.uis.tools.UILifecycleCallbacks
     public void onCreate() {
         super.onCreate();
-        settingUI = activity.findViewById(R.id.ui_setting);
-
-        startGlobalGameSettingUI = activity.findViewById(R.id.start_global_game_setting_ui);
-        startUniversalSettingUI = activity.findViewById(R.id.start_universal_setting_ui);
-        startExteriorSettingUI = activity.findViewById(R.id.start_exterior_setting_ui);
-        startDownloadSettingUI = activity.findViewById(R.id.start_download_setting_ui);
-        startHelpUI = activity.findViewById(R.id.start_help_ui);
-        startFeedbackUI = activity.findViewById(R.id.start_feedback_ui);
-        startDonateUI = activity.findViewById(R.id.start_donate_ui);
-        startAboutUsUI = activity.findViewById(R.id.start_about_ui);
-
-        startGlobalGameSettingUI.setOnClickListener(this);
-        startUniversalSettingUI.setOnClickListener(this);
-        startExteriorSettingUI.setOnClickListener(this);
-        startDownloadSettingUI.setOnClickListener(this);
-        startHelpUI.setOnClickListener(this);
-        startFeedbackUI.setOnClickListener(this);
-        startDonateUI.setOnClickListener(this);
-        startAboutUsUI.setOnClickListener(this);
-
-        settingUIManager = new SettingUIManager(context,activity);
+        this.settingUI = (LinearLayout) this.activity.findViewById(R.id.ui_setting);
+        this.startGlobalGameSettingUI = (LinearLayout) this.activity.findViewById(R.id.start_global_game_setting_ui);
+        this.startUniversalSettingUI = (LinearLayout) this.activity.findViewById(R.id.start_universal_setting_ui);
+        this.startExteriorSettingUI = (LinearLayout) this.activity.findViewById(R.id.start_exterior_setting_ui);
+        this.startDownloadSettingUI = (LinearLayout) this.activity.findViewById(R.id.start_download_setting_ui);
+        this.startHelpUI = (LinearLayout) this.activity.findViewById(R.id.start_help_ui);
+        this.startFeedbackUI = (LinearLayout) this.activity.findViewById(R.id.start_feedback_ui);
+        this.startDonateUI = (LinearLayout) this.activity.findViewById(R.id.start_donate_ui);
+        this.startAboutUsUI = (LinearLayout) this.activity.findViewById(R.id.start_about_ui);
+        this.startGlobalGameSettingUI.setOnClickListener(this);
+        this.startUniversalSettingUI.setOnClickListener(this);
+        this.startExteriorSettingUI.setOnClickListener(this);
+        this.startDownloadSettingUI.setOnClickListener(this);
+        this.startHelpUI.setOnClickListener(this);
+        this.startFeedbackUI.setOnClickListener(this);
+        this.startDonateUI.setOnClickListener(this);
+        this.startAboutUsUI.setOnClickListener(this);
+        this.settingUIManager = new SettingUIManager(this.context, this.activity);
     }
 
-    @Override
+    @Override // com.qcl.launcher.launcher.uis.tools.BaseUI, com.qcl.launcher.launcher.uis.tools.UILifecycleCallbacks
     public void onStart() {
         super.onStart();
-        activity.showBarTitle(context.getResources().getString(R.string.setting_ui_title),canGoBackToLast(),true);
-        CustomAnimationUtils.showViewFromLeft(settingUI,activity,context,true);
+        this.activity.showBarTitle(this.context.getResources().getString(R.string.setting_ui_title), canGoBackToLast(), true);
+        CustomAnimationUtils.showViewFromLeft(this.settingUI, this.activity, this.context, true);
         init();
     }
 
-    @Override
+    @Override // com.qcl.launcher.launcher.uis.tools.BaseUI, com.qcl.launcher.launcher.uis.tools.UILifecycleCallbacks
     public void onStop() {
         super.onStop();
-        CustomAnimationUtils.hideViewToLeft(settingUI,activity,context,true);
+        CustomAnimationUtils.hideViewToLeft(this.settingUI, this.activity, this.context, true);
     }
 
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        settingUIManager.onActivityResult(requestCode,resultCode,data);
+    @Override // com.qcl.launcher.launcher.uis.tools.BaseUI, com.qcl.launcher.launcher.uis.tools.UILifecycleCallbacks
+    public void onActivityResult(int i, int i2, Intent intent) {
+        super.onActivityResult(i, i2, intent);
+        this.settingUIManager.onActivityResult(i, i2, intent);
     }
 
-    @Override
+    @Override // com.qcl.launcher.launcher.uis.tools.BaseUI, com.qcl.launcher.launcher.uis.tools.UILifecycleCallbacks
     public void onPause() {
         super.onPause();
-        settingUIManager.onPause();
+        this.settingUIManager.onPause();
     }
 
-    @Override
+    @Override // com.qcl.launcher.launcher.uis.tools.BaseUI, com.qcl.launcher.launcher.uis.tools.UILifecycleCallbacks
     public void onResume() {
         super.onResume();
-        settingUIManager.onResume();
+        this.settingUIManager.onResume();
     }
 
-    @Override
-    public void onClick(View v) {
-        if (v == startGlobalGameSettingUI){
+    @Override // android.view.View.OnClickListener
+    public void onClick(View view) {
+        if (view == this.startGlobalGameSettingUI) {
+            SettingUIManager settingUIManager = this.settingUIManager;
             settingUIManager.switchSettingUIs(settingUIManager.universalGameSettingUI);
         }
-        if (v == startUniversalSettingUI){
-            settingUIManager.switchSettingUIs(settingUIManager.universalSettingUI);
+        if (view == this.startUniversalSettingUI) {
+            SettingUIManager settingUIManager2 = this.settingUIManager;
+            settingUIManager2.switchSettingUIs(settingUIManager2.universalSettingUI);
         }
-        if (v == startExteriorSettingUI){
-            settingUIManager.switchSettingUIs(settingUIManager.exteriorSettingUI);
+        if (view == this.startExteriorSettingUI) {
+            SettingUIManager settingUIManager3 = this.settingUIManager;
+            settingUIManager3.switchSettingUIs(settingUIManager3.exteriorSettingUI);
         }
-        if (v == startDownloadSettingUI){
-            settingUIManager.switchSettingUIs(settingUIManager.downloadSettingUI);
+        if (view == this.startDownloadSettingUI) {
+            SettingUIManager settingUIManager4 = this.settingUIManager;
+            settingUIManager4.switchSettingUIs(settingUIManager4.downloadSettingUI);
         }
-        if (v == startHelpUI){
-            settingUIManager.switchSettingUIs(settingUIManager.helpUI);
+        if (view == this.startHelpUI) {
+            SettingUIManager settingUIManager5 = this.settingUIManager;
+            settingUIManager5.switchSettingUIs(settingUIManager5.helpUI);
         }
-        if (v == startFeedbackUI){
-            settingUIManager.switchSettingUIs(settingUIManager.feedbackUI);
+        if (view == this.startFeedbackUI) {
+            SettingUIManager settingUIManager6 = this.settingUIManager;
+            settingUIManager6.switchSettingUIs(settingUIManager6.feedbackUI);
         }
-        if (v == startDonateUI){
-            settingUIManager.switchSettingUIs(settingUIManager.donateUI);
+        if (view == this.startDonateUI) {
+            SettingUIManager settingUIManager7 = this.settingUIManager;
+            settingUIManager7.switchSettingUIs(settingUIManager7.donateUI);
         }
-        if (v == startAboutUsUI){
-            settingUIManager.switchSettingUIs(settingUIManager.aboutUsUI);
+        if (view == this.startAboutUsUI) {
+            SettingUIManager settingUIManager8 = this.settingUIManager;
+            settingUIManager8.switchSettingUIs(settingUIManager8.aboutUsUI);
         }
     }
 
-    private void init(){
-        settingUIManager.universalGameSettingUI.refresh();
+    private void init() {
+        this.settingUIManager.universalGameSettingUI.refresh();
     }
 }

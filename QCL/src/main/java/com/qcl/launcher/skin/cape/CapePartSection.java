@@ -1,7 +1,7 @@
 package com.qcl.launcher.skin.cape;
 
+/* loaded from: classes2.dex */
 public class CapePartSection {
-
     String capePartName;
     int height;
     String sideName;
@@ -9,13 +9,13 @@ public class CapePartSection {
     int startY;
     int width;
 
-    public CapePartSection(final String capePartName, final String sideName, final int startX, final int startY, final int width, final int height) {
-        this.capePartName = capePartName;
-        this.sideName = sideName;
-        this.startX = startX;
-        this.startY = startY;
-        this.width = width;
-        this.height = height;
+    public CapePartSection(String str, String str2, int i, int i2, int i3, int i4) {
+        this.capePartName = str;
+        this.sideName = str2;
+        this.startX = i;
+        this.startY = i2;
+        this.width = i3;
+        this.height = i4;
     }
 
     public String getCapePartName() {
@@ -41,5 +41,4 @@ public class CapePartSection {
     public int getWidth() {
         return this.width;
     }
-
 }

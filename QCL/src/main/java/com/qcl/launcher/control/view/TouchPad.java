@@ -1,7 +1,25 @@
+/*
+ * Decompiled with CFR 0.152.
+ * 
+ * Could not load the following classes:
+ *  android.annotation.SuppressLint
+ *  android.content.Context
+ *  android.content.res.Resources
+ *  android.graphics.Bitmap
+ *  android.graphics.BitmapFactory
+ *  android.graphics.Canvas
+ *  android.graphics.Paint
+ *  android.graphics.Rect
+ *  android.os.Handler
+ *  android.util.Log
+ *  android.view.MotionEvent
+ *  android.view.View
+ */
 package com.qcl.launcher.control.view;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
@@ -11,155 +29,141 @@ import android.os.Handler;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
-
-import com.qcl.launcher.R;
 import com.qcl.launcher.control.InputBridge;
 import com.qcl.launcher.control.MenuHelper;
-import com.qcl.launcher.utils.convert.ConvertUtils;
-
-import net.kdt.pojavlaunch.keyboard.LwjglGlfwKeycode;
 import com.qcl.launcher.launcher.launch.MCOptionUtils;
+import com.qcl.launcher.utils.convert.ConvertUtils;
 import com.qcl.launcher.utils.io.SocketServer;
-
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetSocketAddress;
 import java.util.Objects;
 
-@SuppressLint("ViewConstructor")
-public class TouchPad extends View {
-
+import com.qcl.launcher.R;
+@SuppressLint(value={"ViewConstructor"})
+public class TouchPad
+extends View {
     private String rayTraceResultType;
-
     private static final String RAYTRACE_RESULT_TYPE_UNKNOWN = "UNKNOWN";
     private static final String RAYTRACE_RESULT_TYPE_MISS = "MISS";
     private static final String RAYTRACE_RESULT_TYPE_BLOCK = "BLOCK";
     private static final String RAYTRACE_RESULT_TYPE_ENTITY = "ENTITY";
-
     private final int launcher;
     private final int screenWidth;
     private final int screenHeight;
     private final MenuHelper menuHelper;
-
     private final Bitmap bitmap;
     private float startCursorX;
     private float startCursorY;
-
     private float downX;
     private float downY;
     private float initialX;
     private float initialY;
     private long downTime;
     private int pointerID;
-
     private final Handler handler = new Handler();
-    private final Runnable runnable = new Runnable() {
+    private final Runnable runnable = new Runnable(){
+
         @Override
         public void run() {
-            if (menuHelper.gameMenuSetting.enableTouch) {
-                if (Objects.equals(rayTraceResultType, RAYTRACE_RESULT_TYPE_BLOCK)) {
-                    InputBridge.sendMouseEvent(launcher,InputBridge.MOUSE_LEFT,true);
-                }
-                else if (Objects.equals(rayTraceResultType, RAYTRACE_RESULT_TYPE_ENTITY) || Objects.equals(rayTraceResultType, RAYTRACE_RESULT_TYPE_MISS)) {
-                    InputBridge.sendMouseEvent(launcher,InputBridge.MOUSE_RIGHT,true);
-                }
-                else {
-                    if (menuHelper.gameMenuSetting.touchMode == 0) {
-                        InputBridge.sendMouseEvent(launcher,InputBridge.MOUSE_LEFT,true);
+            if (((TouchPad)TouchPad.this).menuHelper.gameMenuSetting.enableTouch) {
+                if (Objects.equals(TouchPad.this.rayTraceResultType, TouchPad.RAYTRACE_RESULT_TYPE_BLOCK)) {
+                    InputBridge.sendMouseEvent(TouchPad.this.launcher, 0, true);
+                } else if (Objects.equals(TouchPad.this.rayTraceResultType, TouchPad.RAYTRACE_RESULT_TYPE_ENTITY) || Objects.equals(TouchPad.this.rayTraceResultType, TouchPad.RAYTRACE_RESULT_TYPE_MISS)) {
+                    InputBridge.sendMouseEvent(TouchPad.this.launcher, 1, true);
+                } else {
+                    if (((TouchPad)TouchPad.this).menuHelper.gameMenuSetting.touchMode == 0) {
+                        InputBridge.sendMouseEvent(TouchPad.this.launcher, 0, true);
                     }
-                    if (menuHelper.gameMenuSetting.touchMode == 1) {
-                        InputBridge.sendMouseEvent(launcher,InputBridge.MOUSE_RIGHT,true);
+                    if (((TouchPad)TouchPad.this).menuHelper.gameMenuSetting.touchMode == 1) {
+                        InputBridge.sendMouseEvent(TouchPad.this.launcher, 1, true);
                     }
                 }
             }
         }
     };
-
     private final Handler throwHandler = new Handler();
-    private final Runnable throwRunnable = new Runnable() {
+    private final Runnable throwRunnable = new Runnable(){
+
         @Override
         public void run() {
-            InputBridge.sendEvent(launcher, LwjglGlfwKeycode.GLFW_KEY_Q,true);
-            InputBridge.sendEvent(launcher, LwjglGlfwKeycode.GLFW_KEY_Q,false);
+            InputBridge.sendEvent(TouchPad.this.launcher, 81, true);
+            InputBridge.sendEvent(TouchPad.this.launcher, 81, false);
         }
     };
 
-    public TouchPad(Context context,int launcher, int screenWidth, int screenHeight, MenuHelper menuHelper) {
+    public TouchPad(Context context, int launcher, int screenWidth, int screenHeight, MenuHelper menuHelper) {
         super(context);
         this.launcher = launcher;
         this.screenWidth = screenWidth;
         this.screenHeight = screenHeight;
         this.menuHelper = menuHelper;
-
         SocketServer server = new SocketServer("127.0.0.1", 2332, (server1, msg) -> {
-            handleRayTraceResult(msg);
-            Log.i("ReceiveRaytraceResultType", Long.toString(System.currentTimeMillis()));
+            this.handleRayTraceResult(msg);
+            Log.i((String)"ReceiveRaytraceResultType", (String)Long.toString(System.currentTimeMillis()));
         });
         server.start();
-
-        bitmap = BitmapFactory.decodeResource(getContext().getResources(), R.drawable.ic_cursor);
+        this.bitmap = BitmapFactory.decodeResource((Resources)this.getContext().getResources(), (int)R.drawable.ic_cursor);
     }
 
     private void handleRayTraceResult(String msg) {
         switch (msg) {
-            case RAYTRACE_RESULT_TYPE_MISS:
-            case RAYTRACE_RESULT_TYPE_BLOCK:
-            case RAYTRACE_RESULT_TYPE_ENTITY:
-                rayTraceResultType = msg;
+            case "MISS": 
+            case "BLOCK": 
+            case "ENTITY": {
+                this.rayTraceResultType = msg;
                 break;
-            default:
-                rayTraceResultType = RAYTRACE_RESULT_TYPE_UNKNOWN;
-                break;
+            }
+            default: {
+                this.rayTraceResultType = RAYTRACE_RESULT_TYPE_UNKNOWN;
+            }
         }
     }
 
-    @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        setMeasuredDimension(screenWidth, screenHeight);
+        this.setMeasuredDimension(this.screenWidth, this.screenHeight);
     }
 
-    @Override
-    @SuppressLint("DrawAllocation")
+    @SuppressLint(value={"DrawAllocation"})
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-        if (menuHelper.gameCursorMode == 0) {
-            Rect src = new Rect(0, 0, bitmap.getWidth(), bitmap.getHeight());
-            Rect dst = new Rect((int) menuHelper.cursorX, (int) menuHelper.cursorY, (int) menuHelper.cursorX + ConvertUtils.dip2px(getContext(),menuHelper.gameMenuSetting.mouseSize), (int) menuHelper.cursorY + ConvertUtils.dip2px(getContext(),menuHelper.gameMenuSetting.mouseSize));
-            canvas.drawBitmap(bitmap, src, dst, new Paint(Paint.ANTI_ALIAS_FLAG));
+        if (this.menuHelper.gameCursorMode == 0) {
+            Rect src = new Rect(0, 0, this.bitmap.getWidth(), this.bitmap.getHeight());
+            Rect dst = new Rect((int)this.menuHelper.cursorX, (int)this.menuHelper.cursorY, (int)this.menuHelper.cursorX + ConvertUtils.dip2px(this.getContext(), this.menuHelper.gameMenuSetting.mouseSize), (int)this.menuHelper.cursorY + ConvertUtils.dip2px(this.getContext(), this.menuHelper.gameMenuSetting.mouseSize));
+            canvas.drawBitmap(this.bitmap, src, dst, new Paint(1));
         }
-        invalidate();
+        this.invalidate();
     }
 
-    @SuppressLint("ClickableViewAccessibility")
-    @SuppressWarnings("IntegerDivisionInFloatingPointContext")
-    @Override
+    @SuppressLint(value={"ClickableViewAccessibility"})
     public boolean onTouchEvent(MotionEvent event) {
-        if (menuHelper.gameCursorMode == 1 && event.getActionMasked() == MotionEvent.ACTION_DOWN) {
-            Log.i("StartGettingRaytraceResultType", Long.toString(System.currentTimeMillis()));
+        if (this.menuHelper.gameCursorMode == 1 && event.getActionMasked() == 0) {
+            Log.i((String)"StartGettingRaytraceResultType", (String)Long.toString(System.currentTimeMillis()));
             new Thread(() -> {
                 try {
                     DatagramSocket socket = new DatagramSocket();
                     socket.connect(new InetSocketAddress("127.0.0.1", 2333));
-                    byte[] data = ("refresh").getBytes();
+                    byte[] data = "refresh".getBytes();
                     DatagramPacket packet = new DatagramPacket(data, data.length);
                     socket.send(packet);
                     socket.close();
-                }catch (Exception e){
+                }
+                catch (Exception e) {
                     e.printStackTrace();
                 }
             }).start();
         }
-        if (event.getActionMasked() == MotionEvent.ACTION_DOWN) {
-            downX = event.getX();
-            downY = event.getY();
+        if (event.getActionMasked() == 0) {
+            this.downX = event.getX();
+            this.downY = event.getY();
         }
         int guiScale = -1;
-        if (menuHelper.gameDir != null) {
-            MCOptionUtils.load(menuHelper.gameDir);
+        if (this.menuHelper.gameDir != null) {
+            MCOptionUtils.load(this.menuHelper.gameDir);
             String str = MCOptionUtils.get("guiScale");
-            guiScale = (str == null ? 0 :Integer.parseInt(str));
-            int scale = (int) Math.max(Math.min((screenWidth * menuHelper.scaleFactor) / 320, (screenHeight * menuHelper.scaleFactor) / 240), 1);
-            if(scale < guiScale || guiScale == 0){
+            guiScale = str == null ? 0 : Integer.parseInt(str);
+            int scale = (int)Math.max(Math.min((float)this.screenWidth * this.menuHelper.scaleFactor / 320.0f, (float)this.screenHeight * this.menuHelper.scaleFactor / 240.0f), 1.0f);
+            if (scale < guiScale || guiScale == 0) {
                 guiScale = scale;
             }
         }
@@ -167,189 +171,160 @@ public class TouchPad extends View {
         int inventoryHeight = 0;
         int slotWidth = 0;
         if (guiScale != -1) {
-            // 关键：游戏窗口 = 屏幕 × scaleFactor，会按 1/scaleFactor 拉伸到屏幕，
-            // 所以 hotbar 在屏幕上的实际宽高 = 游戏内宽高 ÷ scaleFactor。之前漏了这步导致偏移。
-            inventoryWidth = (int) (182 * guiScale / menuHelper.scaleFactor);
-            inventoryHeight = (int) (22 * guiScale / menuHelper.scaleFactor);
-            slotWidth = (int) (20 * guiScale / menuHelper.scaleFactor);
+            inventoryWidth = (int)((float)(182 * guiScale) / this.menuHelper.scaleFactor);
+            inventoryHeight = (int)((float)(22 * guiScale) / this.menuHelper.scaleFactor);
+            slotWidth = (int)((float)(20 * guiScale) / this.menuHelper.scaleFactor);
         }
-        if (menuHelper.gameCursorMode == 1 && downX >= ((getWidth() / 2) - (inventoryWidth / 2)) && downX <= ((getWidth() / 2) + (inventoryWidth / 2)) && downY >= getHeight() - inventoryHeight) {
-            int start = ((getWidth() / 2) - (inventoryWidth / 2));
+        if (this.menuHelper.gameCursorMode == 1 && this.downX >= (float)(this.getWidth() / 2 - inventoryWidth / 2) && this.downX <= (float)(this.getWidth() / 2 + inventoryWidth / 2) && this.downY >= (float)(this.getHeight() - inventoryHeight)) {
+            int start = this.getWidth() / 2 - inventoryWidth / 2;
             switch (event.getActionMasked()) {
-                case MotionEvent.ACTION_DOWN:
-                    initialX = event.getX();
-                    initialY = event.getY();
-                    downTime = System.currentTimeMillis();
-                    if (event.getX() <= start + slotWidth) {
-                        InputBridge.sendEvent(launcher, LwjglGlfwKeycode.GLFW_KEY_1,true);
+                case 0: {
+                    this.initialX = event.getX();
+                    this.initialY = event.getY();
+                    this.downTime = System.currentTimeMillis();
+                    if (event.getX() <= (float)(start + slotWidth)) {
+                        InputBridge.sendEvent(this.launcher, 49, true);
                     }
-                    if (event.getX() > start + slotWidth && event.getX() <= start + (2 * slotWidth)) {
-                        InputBridge.sendEvent(launcher, LwjglGlfwKeycode.GLFW_KEY_2,true);
+                    if (event.getX() > (float)(start + slotWidth) && event.getX() <= (float)(start + 2 * slotWidth)) {
+                        InputBridge.sendEvent(this.launcher, 50, true);
                     }
-                    if (event.getX() > start + (2 * slotWidth) && event.getX() <= start + (3 * slotWidth)) {
-                        InputBridge.sendEvent(launcher, LwjglGlfwKeycode.GLFW_KEY_3,true);
+                    if (event.getX() > (float)(start + 2 * slotWidth) && event.getX() <= (float)(start + 3 * slotWidth)) {
+                        InputBridge.sendEvent(this.launcher, 51, true);
                     }
-                    if (event.getX() > start + (3 * slotWidth) && event.getX() <= start + (4 * slotWidth)) {
-                        InputBridge.sendEvent(launcher, LwjglGlfwKeycode.GLFW_KEY_4,true);
+                    if (event.getX() > (float)(start + 3 * slotWidth) && event.getX() <= (float)(start + 4 * slotWidth)) {
+                        InputBridge.sendEvent(this.launcher, 52, true);
                     }
-                    if (event.getX() > start + (4 * slotWidth) && event.getX() <= start + (5 * slotWidth)) {
-                        InputBridge.sendEvent(launcher, LwjglGlfwKeycode.GLFW_KEY_5,true);
+                    if (event.getX() > (float)(start + 4 * slotWidth) && event.getX() <= (float)(start + 5 * slotWidth)) {
+                        InputBridge.sendEvent(this.launcher, 53, true);
                     }
-                    if (event.getX() > start + (5 * slotWidth) && event.getX() <= start + (6 * slotWidth)) {
-                        InputBridge.sendEvent(launcher, LwjglGlfwKeycode.GLFW_KEY_6,true);
+                    if (event.getX() > (float)(start + 5 * slotWidth) && event.getX() <= (float)(start + 6 * slotWidth)) {
+                        InputBridge.sendEvent(this.launcher, 54, true);
                     }
-                    if (event.getX() > start + (6 * slotWidth) && event.getX() <= start + (7 * slotWidth)) {
-                        InputBridge.sendEvent(launcher, LwjglGlfwKeycode.GLFW_KEY_7,true);
+                    if (event.getX() > (float)(start + 6 * slotWidth) && event.getX() <= (float)(start + 7 * slotWidth)) {
+                        InputBridge.sendEvent(this.launcher, 55, true);
                     }
-                    if (event.getX() > start + (7 * slotWidth) && event.getX() <= start + (8 * slotWidth)) {
-                        InputBridge.sendEvent(launcher, LwjglGlfwKeycode.GLFW_KEY_8,true);
+                    if (event.getX() > (float)(start + 7 * slotWidth) && event.getX() <= (float)(start + 8 * slotWidth)) {
+                        InputBridge.sendEvent(this.launcher, 56, true);
                     }
-                    if (event.getX() > start + (8 * slotWidth)){
-                        InputBridge.sendEvent(launcher, LwjglGlfwKeycode.GLFW_KEY_9,true);
+                    if (event.getX() > (float)(start + 8 * slotWidth)) {
+                        InputBridge.sendEvent(this.launcher, 57, true);
                     }
-                    throwHandler.postDelayed(throwRunnable,800);
+                    this.throwHandler.postDelayed(this.throwRunnable, 800L);
                     break;
-                case MotionEvent.ACTION_MOVE:
-                    if ((Math.abs(event.getX() - initialX) > 1 || Math.abs(event.getY() - initialY) > 1) && System.currentTimeMillis() - downTime < 800) {
-                        throwHandler.removeCallbacks(throwRunnable);
-                    }
+                }
+                case 2: {
+                    if (!(Math.abs(event.getX() - this.initialX) > 1.0f) && !(Math.abs(event.getY() - this.initialY) > 1.0f) || System.currentTimeMillis() - this.downTime >= 800L) break;
+                    this.throwHandler.removeCallbacks(this.throwRunnable);
                     break;
-                case MotionEvent.ACTION_UP:
-                    throwHandler.removeCallbacks(throwRunnable);
-                    InputBridge.sendEvent(launcher, LwjglGlfwKeycode.GLFW_KEY_1,false);
-                    InputBridge.sendEvent(launcher, LwjglGlfwKeycode.GLFW_KEY_2,false);
-                    InputBridge.sendEvent(launcher, LwjglGlfwKeycode.GLFW_KEY_3,false);
-                    InputBridge.sendEvent(launcher, LwjglGlfwKeycode.GLFW_KEY_4,false);
-                    InputBridge.sendEvent(launcher, LwjglGlfwKeycode.GLFW_KEY_5,false);
-                    InputBridge.sendEvent(launcher, LwjglGlfwKeycode.GLFW_KEY_6,false);
-                    InputBridge.sendEvent(launcher, LwjglGlfwKeycode.GLFW_KEY_7,false);
-                    InputBridge.sendEvent(launcher, LwjglGlfwKeycode.GLFW_KEY_8,false);
-                    InputBridge.sendEvent(launcher, LwjglGlfwKeycode.GLFW_KEY_9,false);
-                    break;
+                }
+                case 1: {
+                    this.throwHandler.removeCallbacks(this.throwRunnable);
+                    InputBridge.sendEvent(this.launcher, 49, false);
+                    InputBridge.sendEvent(this.launcher, 50, false);
+                    InputBridge.sendEvent(this.launcher, 51, false);
+                    InputBridge.sendEvent(this.launcher, 52, false);
+                    InputBridge.sendEvent(this.launcher, 53, false);
+                    InputBridge.sendEvent(this.launcher, 54, false);
+                    InputBridge.sendEvent(this.launcher, 55, false);
+                    InputBridge.sendEvent(this.launcher, 56, false);
+                    InputBridge.sendEvent(this.launcher, 57, false);
+                }
             }
-        }
-        else {
-            if (menuHelper.gameMenuSetting.mouseMode == 0 && menuHelper.gameCursorMode == 0) {
-                menuHelper.cursorX = event.getX();
-                menuHelper.cursorY = event.getY();
-                menuHelper.pointerX = event.getX();
-                menuHelper.pointerY = event.getY();
-                InputBridge.setPointer(launcher,(int) (event.getX() * menuHelper.scaleFactor),(int) (event.getY() * menuHelper.scaleFactor));
+        } else {
+            if (this.menuHelper.gameMenuSetting.mouseMode == 0 && this.menuHelper.gameCursorMode == 0) {
+                this.menuHelper.cursorX = event.getX();
+                this.menuHelper.cursorY = event.getY();
+                this.menuHelper.pointerX = event.getX();
+                this.menuHelper.pointerY = event.getY();
+                InputBridge.setPointer(this.launcher, (int)(event.getX() * this.menuHelper.scaleFactor), (int)(event.getY() * this.menuHelper.scaleFactor));
             }
-            switch (event.getActionMasked()){
-                case MotionEvent.ACTION_DOWN:
-                    initialX = event.getX();
-                    initialY = event.getY();
-                    downTime = System.currentTimeMillis();
-                    pointerID = event.getPointerId(event.getActionIndex());
-                    if (menuHelper.gameMenuSetting.mouseMode == 1 && menuHelper.gameCursorMode == 0) {
-                        startCursorX = menuHelper.cursorX;
-                        startCursorY = menuHelper.cursorY;
+            switch (event.getActionMasked()) {
+                case 0: {
+                    this.initialX = event.getX();
+                    this.initialY = event.getY();
+                    this.downTime = System.currentTimeMillis();
+                    this.pointerID = event.getPointerId(event.getActionIndex());
+                    if (this.menuHelper.gameMenuSetting.mouseMode == 1 && this.menuHelper.gameCursorMode == 0) {
+                        this.startCursorX = this.menuHelper.cursorX;
+                        this.startCursorY = this.menuHelper.cursorY;
                     }
-                    if (menuHelper.gameCursorMode == 1 && (!menuHelper.gameMenuSetting.disableHalfScreen || initialX > (screenWidth >> 1))) {
-                        handler.postDelayed(runnable,400);
+                    if (this.menuHelper.gameCursorMode == 1 && (!this.menuHelper.gameMenuSetting.disableHalfScreen || this.initialX > (float)(this.screenWidth >> 1))) {
+                        this.handler.postDelayed(this.runnable, 400L);
                     }
-                    if (menuHelper.gameMenuSetting.mouseMode == 0 && menuHelper.gameCursorMode == 0) {
-                        if (launcher == 1) {
-                            InputBridge.sendMouseEvent(launcher,InputBridge.MOUSE_LEFT,true);
-                        }
-                        if (launcher == 2) {
-                            new Handler().postDelayed(() -> InputBridge.sendMouseEvent(launcher,InputBridge.MOUSE_LEFT,true),20);
-                        }
+                    if (this.menuHelper.gameMenuSetting.mouseMode != 0 || this.menuHelper.gameCursorMode != 0) break;
+                    if (this.launcher == 1) {
+                        InputBridge.sendMouseEvent(this.launcher, 0, true);
                     }
+                    if (this.launcher != 2) break;
+                    new Handler().postDelayed(() -> InputBridge.sendMouseEvent(this.launcher, 0, true), 20L);
                     break;
-                case MotionEvent.ACTION_MOVE:
-                    if (menuHelper.gameMenuSetting.mouseMode == 1 && menuHelper.gameCursorMode == 0) {
-                        float targetX;
-                        float targetY;
-                        if (startCursorX + ((event.getX() - initialX) * menuHelper.gameMenuSetting.mouseSpeed) < 0) {
-                            targetX = 0;
-                        }
-                        else if (startCursorX + ((event.getX() - initialX) * menuHelper.gameMenuSetting.mouseSpeed) > screenWidth) {
-                            targetX = screenWidth;
-                        }
-                        else {
-                            targetX = startCursorX + ((event.getX() - initialX) * menuHelper.gameMenuSetting.mouseSpeed);
-                        }
-                        if (startCursorY + ((event.getY() - initialY) * menuHelper.gameMenuSetting.mouseSpeed) < 0) {
-                            targetY = 0;
-                        }
-                        else if (startCursorY + ((event.getY() - initialY) * menuHelper.gameMenuSetting.mouseSpeed) > screenHeight) {
-                            targetY = screenHeight;
-                        }
-                        else {
-                            targetY = startCursorY + ((event.getY() - initialY) * menuHelper.gameMenuSetting.mouseSpeed);
-                        }
-                        menuHelper.cursorX = targetX;
-                        menuHelper.cursorY = targetY;
-                        menuHelper.pointerX = targetX;
-                        menuHelper.pointerY = targetY;
-                        InputBridge.setPointer(launcher,(int) (targetX * menuHelper.scaleFactor),(int) (targetY * menuHelper.scaleFactor));
+                }
+                case 2: {
+                    if (this.menuHelper.gameMenuSetting.mouseMode == 1 && this.menuHelper.gameCursorMode == 0) {
+                        float targetX = this.startCursorX + (event.getX() - this.initialX) * this.menuHelper.gameMenuSetting.mouseSpeed < 0.0f ? 0.0f : (this.startCursorX + (event.getX() - this.initialX) * this.menuHelper.gameMenuSetting.mouseSpeed > (float)this.screenWidth ? (float)this.screenWidth : this.startCursorX + (event.getX() - this.initialX) * this.menuHelper.gameMenuSetting.mouseSpeed);
+                        float targetY = this.startCursorY + (event.getY() - this.initialY) * this.menuHelper.gameMenuSetting.mouseSpeed < 0.0f ? 0.0f : (this.startCursorY + (event.getY() - this.initialY) * this.menuHelper.gameMenuSetting.mouseSpeed > (float)this.screenHeight ? (float)this.screenHeight : this.startCursorY + (event.getY() - this.initialY) * this.menuHelper.gameMenuSetting.mouseSpeed);
+                        this.menuHelper.cursorX = targetX;
+                        this.menuHelper.cursorY = targetY;
+                        this.menuHelper.pointerX = targetX;
+                        this.menuHelper.pointerY = targetY;
+                        InputBridge.setPointer(this.launcher, (int)(targetX * this.menuHelper.scaleFactor), (int)(targetY * this.menuHelper.scaleFactor));
                     }
-                    if (menuHelper.gameCursorMode == 1 && (!menuHelper.gameMenuSetting.disableHalfScreen || initialX > (screenWidth >> 1)) && event.getPointerId(event.getActionIndex()) == pointerID) {
-                        menuHelper.viewManager.setGamePointer("1",true,event.getX() - initialX,event.getY() - initialY);
-                        if ((Math.abs(event.getX() - initialX) > 1 || Math.abs(event.getY() - initialY) > 1) && System.currentTimeMillis() - downTime < 400) {
-                            handler.removeCallbacks(runnable);
-                        }
-                    }
+                    if (this.menuHelper.gameCursorMode != 1 || this.menuHelper.gameMenuSetting.disableHalfScreen && !(this.initialX > (float)(this.screenWidth >> 1)) || event.getPointerId(event.getActionIndex()) != this.pointerID) break;
+                    this.menuHelper.viewManager.setGamePointer("1", true, event.getX() - this.initialX, event.getY() - this.initialY);
+                    if (!(Math.abs(event.getX() - this.initialX) > 1.0f) && !(Math.abs(event.getY() - this.initialY) > 1.0f) || System.currentTimeMillis() - this.downTime >= 400L) break;
+                    this.handler.removeCallbacks(this.runnable);
                     break;
-                case MotionEvent.ACTION_POINTER_UP:
-                case MotionEvent.ACTION_UP:
-                case MotionEvent.ACTION_CANCEL:
-                    if (menuHelper.gameMenuSetting.mouseMode == 0 && menuHelper.gameCursorMode == 0) {
-                        InputBridge.sendMouseEvent(launcher,InputBridge.MOUSE_LEFT,false);
+                }
+                case 1: 
+                case 3: 
+                case 6: {
+                    if (this.menuHelper.gameMenuSetting.mouseMode == 0 && this.menuHelper.gameCursorMode == 0) {
+                        InputBridge.sendMouseEvent(this.launcher, 0, false);
                     }
-                    if (event.getPointerId(event.getActionIndex()) == pointerID) {
-                        if (menuHelper.gameCursorMode == 1 && event.getPointerId(event.getActionIndex()) == pointerID && (!menuHelper.gameMenuSetting.disableHalfScreen || initialX > (screenWidth >> 1))){
-                            menuHelper.viewManager.setGamePointer("1",false,event.getX() - initialX,event.getY() - initialY);
-                            handler.removeCallbacks(runnable);
-                            if (Objects.equals(rayTraceResultType, RAYTRACE_RESULT_TYPE_BLOCK)) {
-                                InputBridge.sendMouseEvent(launcher,InputBridge.MOUSE_LEFT,false);
+                    if (event.getPointerId(event.getActionIndex()) != this.pointerID) break;
+                    if (this.menuHelper.gameCursorMode == 1 && event.getPointerId(event.getActionIndex()) == this.pointerID && (!this.menuHelper.gameMenuSetting.disableHalfScreen || this.initialX > (float)(this.screenWidth >> 1))) {
+                        this.menuHelper.viewManager.setGamePointer("1", false, event.getX() - this.initialX, event.getY() - this.initialY);
+                        this.handler.removeCallbacks(this.runnable);
+                        if (Objects.equals(this.rayTraceResultType, RAYTRACE_RESULT_TYPE_BLOCK)) {
+                            InputBridge.sendMouseEvent(this.launcher, 0, false);
+                        } else if (Objects.equals(this.rayTraceResultType, RAYTRACE_RESULT_TYPE_ENTITY) || Objects.equals(this.rayTraceResultType, RAYTRACE_RESULT_TYPE_MISS)) {
+                            InputBridge.sendMouseEvent(this.launcher, 1, false);
+                        } else {
+                            if (this.menuHelper.gameMenuSetting.touchMode == 0) {
+                                InputBridge.sendMouseEvent(this.launcher, 0, false);
                             }
-                            else if (Objects.equals(rayTraceResultType, RAYTRACE_RESULT_TYPE_ENTITY) || Objects.equals(rayTraceResultType, RAYTRACE_RESULT_TYPE_MISS)) {
-                                InputBridge.sendMouseEvent(launcher,InputBridge.MOUSE_RIGHT,false);
-                            }
-                            else {
-                                if (menuHelper.gameMenuSetting.touchMode == 0) {
-                                    InputBridge.sendMouseEvent(launcher,InputBridge.MOUSE_LEFT,false);
-                                }
-                                if (menuHelper.gameMenuSetting.touchMode == 1) {
-                                    InputBridge.sendMouseEvent(launcher,InputBridge.MOUSE_RIGHT,false);
-                                }
-                            }
-                        }
-                        if (System.currentTimeMillis() - downTime <= 200 && Math.abs(event.getX() - initialX) <= 10 && Math.abs(event.getY() - initialY) <= 10) {
-                            if (menuHelper.gameMenuSetting.mouseMode == 1 && menuHelper.gameCursorMode == 0) {
-                                InputBridge.sendMouseEvent(launcher,InputBridge.MOUSE_LEFT,true);
-                                InputBridge.sendMouseEvent(launcher,InputBridge.MOUSE_LEFT,false);
-                            }
-                            if (menuHelper.gameCursorMode == 1 && event.getPointerId(event.getActionIndex()) == pointerID && (!menuHelper.gameMenuSetting.disableHalfScreen || initialX > (screenWidth >> 1))) {
-                                if (menuHelper.gameMenuSetting.enableTouch) {
-                                    if (Objects.equals(rayTraceResultType, RAYTRACE_RESULT_TYPE_BLOCK)) {
-                                        InputBridge.sendMouseEvent(launcher,InputBridge.MOUSE_RIGHT,true);
-                                        InputBridge.sendMouseEvent(launcher,InputBridge.MOUSE_RIGHT,false);
-                                    }
-                                    else if (Objects.equals(rayTraceResultType, RAYTRACE_RESULT_TYPE_ENTITY) || Objects.equals(rayTraceResultType, RAYTRACE_RESULT_TYPE_MISS)) {
-                                        InputBridge.sendMouseEvent(launcher,InputBridge.MOUSE_LEFT,true);
-                                        InputBridge.sendMouseEvent(launcher,InputBridge.MOUSE_LEFT,false);
-                                    }
-                                    else {
-                                        if (menuHelper.gameMenuSetting.touchMode == 0) {
-                                            InputBridge.sendMouseEvent(launcher,InputBridge.MOUSE_RIGHT,true);
-                                            InputBridge.sendMouseEvent(launcher,InputBridge.MOUSE_RIGHT,false);
-                                        }
-                                        if (menuHelper.gameMenuSetting.touchMode == 1) {
-                                            InputBridge.sendMouseEvent(launcher,InputBridge.MOUSE_LEFT,true);
-                                            InputBridge.sendMouseEvent(launcher,InputBridge.MOUSE_LEFT,false);
-                                        }
-                                    }
-                                }
+                            if (this.menuHelper.gameMenuSetting.touchMode == 1) {
+                                InputBridge.sendMouseEvent(this.launcher, 1, false);
                             }
                         }
                     }
-                    break;
+                    if (System.currentTimeMillis() - this.downTime > 200L || !(Math.abs(event.getX() - this.initialX) <= 10.0f) || !(Math.abs(event.getY() - this.initialY) <= 10.0f)) break;
+                    if (this.menuHelper.gameMenuSetting.mouseMode == 1 && this.menuHelper.gameCursorMode == 0) {
+                        InputBridge.sendMouseEvent(this.launcher, 0, true);
+                        InputBridge.sendMouseEvent(this.launcher, 0, false);
+                    }
+                    if (this.menuHelper.gameCursorMode != 1 || event.getPointerId(event.getActionIndex()) != this.pointerID || this.menuHelper.gameMenuSetting.disableHalfScreen && !(this.initialX > (float)(this.screenWidth >> 1)) || !this.menuHelper.gameMenuSetting.enableTouch) break;
+                    if (Objects.equals(this.rayTraceResultType, RAYTRACE_RESULT_TYPE_BLOCK)) {
+                        InputBridge.sendMouseEvent(this.launcher, 1, true);
+                        InputBridge.sendMouseEvent(this.launcher, 1, false);
+                        break;
+                    }
+                    if (Objects.equals(this.rayTraceResultType, RAYTRACE_RESULT_TYPE_ENTITY) || Objects.equals(this.rayTraceResultType, RAYTRACE_RESULT_TYPE_MISS)) {
+                        InputBridge.sendMouseEvent(this.launcher, 0, true);
+                        InputBridge.sendMouseEvent(this.launcher, 0, false);
+                        break;
+                    }
+                    if (this.menuHelper.gameMenuSetting.touchMode == 0) {
+                        InputBridge.sendMouseEvent(this.launcher, 1, true);
+                        InputBridge.sendMouseEvent(this.launcher, 1, false);
+                    }
+                    if (this.menuHelper.gameMenuSetting.touchMode != 1) break;
+                    InputBridge.sendMouseEvent(this.launcher, 0, true);
+                    InputBridge.sendMouseEvent(this.launcher, 0, false);
+                }
             }
         }
         return true;
     }
 }
+

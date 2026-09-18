@@ -1,14 +1,10 @@
 package com.qcl.launcher.control;
 
-/** Simple interface for sending chars through whatever bridge will be necessary */
+/* loaded from: classes2.dex */
 public interface CharacterSenderStrategy {
-    /** Called when there is a character to delete, may be called multiple times in a row */
-    void sendBackspace(int launcher);
+    void sendBackspace(int i);
 
-    /** Called when we want to send enter specifically */
-    void sendEnter(int launcher);
+    void sendChar(int i, char c);
 
-    /** Called when there is a character to send, may be called multiple times in a row */
-    void sendChar(int launcher, char character);
-
+    void sendEnter(int i);
 }

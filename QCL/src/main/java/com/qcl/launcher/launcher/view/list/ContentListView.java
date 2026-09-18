@@ -3,53 +3,53 @@ package com.qcl.launcher.launcher.view.list;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.util.AttributeSet;
+import android.view.View;
 import android.widget.ListView;
-
 import com.qcl.launcher.R;
 
+/* loaded from: classes2.dex */
 public class ContentListView extends ListView {
-
-    private float maxHeight = 10000;
+    private float maxHeight;
 
     public ContentListView(Context context) {
         super(context);
+        this.maxHeight = 10000.0f;
     }
 
-    public ContentListView(Context context, AttributeSet attrs) {
-        super(context, attrs);
+    public ContentListView(Context context, AttributeSet attributeSet) {
+        super(context, attributeSet);
+        this.maxHeight = 10000.0f;
     }
 
-    public ContentListView(Context context, AttributeSet attrs, int defStyleAttr) {
-        super(context, attrs, defStyleAttr);
-        TypedArray array = context.obtainStyledAttributes(attrs, R.styleable.ContentListView, 0, defStyleAttr);
-        int count = array.getIndexCount();
-        for (int i = 0; i < count; i++) {
-            int type = array.getIndex(i);
-            if (type == R.styleable.ContentListView_maxHeight) {
-                //获得布局中限制的最大高度
-                maxHeight = array.getDimension(type, -1);
+    public ContentListView(Context context, AttributeSet attributeSet, int i) {
+        super(context, attributeSet, i);
+        this.maxHeight = 10000.0f;
+        TypedArray obtainStyledAttributes = context.obtainStyledAttributes(attributeSet, R.styleable.ContentListView, 0, i);
+        int indexCount = obtainStyledAttributes.getIndexCount();
+        for (int i2 = 0; i2 < indexCount; i2++) {
+            int index = obtainStyledAttributes.getIndex(i2);
+            if (index == 0) {
+                this.maxHeight = obtainStyledAttributes.getDimension(index, -1.0f);
             }
         }
-        array.recycle();
+        obtainStyledAttributes.recycle();
     }
 
-    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        //获取lv本身高度
-        int specSize = MeasureSpec.getSize(heightMeasureSpec);
-        //限制高度小于lv高度,设置为限制高度
-        if (maxHeight <= specSize && maxHeight > -1) {
-            heightMeasureSpec = MeasureSpec.makeMeasureSpec(Float.valueOf(maxHeight).intValue(),
-                    MeasureSpec.AT_MOST);
+    @Override // android.widget.ListView, android.widget.AbsListView, android.view.View
+    protected void onMeasure(int i, int i2) {
+        int size = View.MeasureSpec.getSize(i2);
+        float f = this.maxHeight;
+        if (f <= size && f > -1.0f) {
+            i2 = View.MeasureSpec.makeMeasureSpec(Float.valueOf(f).intValue(), Integer.MIN_VALUE);
         }
-        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+        super.onMeasure(i, i2);
     }
 
-    public void setMaxHeight(float maxHeight){
-        this.maxHeight = maxHeight;
+    public void setMaxHeight(float f) {
+        this.maxHeight = f;
     }
 
-    public float getMaxHeight(){
-        return maxHeight;
+    public float getMaxHeight() {
+        return this.maxHeight;
     }
-
 }

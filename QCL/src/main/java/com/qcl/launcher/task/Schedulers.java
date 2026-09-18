@@ -1,61 +1,40 @@
 package com.qcl.launcher.task;
 
-import static com.qcl.launcher.utils.Lang.threadPool;
-
-import android.os.Build;
-
-import androidx.annotation.RequiresApi;
-
-import java.util.concurrent.*;
-
+import com.qcl.launcher.utils.Lang;
 import com.qcl.launcher.utils.Logging;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.TimeUnit;
 
-/**
- *
- * @author huangyuhui
- */
+/* loaded from: classes2.dex */
 public final class Schedulers {
+    private static volatile ExecutorService IO_EXECUTOR;
 
     private Schedulers() {
     }
 
-    private static volatile ExecutorService IO_EXECUTOR;
-
-    /**
-     * Get singleton instance of the thread pool for I/O operations,
-     * usually for reading files from disk, or Internet connections.
-     *
-     * This thread pool has no more than 4 threads, and number of threads will get
-     * reduced if concurrency is less than thread number.
-     *
-     * @return Thread pool for I/O operations.
-     */
     public static ExecutorService io() {
         if (IO_EXECUTOR == null) {
             synchronized (Schedulers.class) {
                 if (IO_EXECUTOR == null) {
-                    IO_EXECUTOR = threadPool("IO", true, 4, 10, TimeUnit.SECONDS);
+                    IO_EXECUTOR = Lang.threadPool("IO", true, 4, 10L, TimeUnit.SECONDS);
                 }
             }
         }
-
         return IO_EXECUTOR;
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.N)
     public static Executor defaultScheduler() {
         return ForkJoinPool.commonPool();
     }
 
     public static synchronized void shutdown() {
-        Logging.LOG.info("Shutting down executor services.");
-
-        // shutdownNow will interrupt all threads.
-        // So when we want to close the HMCLPE, no threads need to be waited for finish.
-        // Sometimes it resolves the problem that the HMCLPE does not exit.
-
-        if (IO_EXECUTOR != null)
-            IO_EXECUTOR.shutdownNow();
+        synchronized (Schedulers.class) {
+            Logging.LOG.info("Shutting down executor services.");
+            if (IO_EXECUTOR != null) {
+                IO_EXECUTOR.shutdownNow();
+            }
+        }
     }
-
 }

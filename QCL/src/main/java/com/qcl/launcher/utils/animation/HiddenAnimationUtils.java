@@ -6,101 +6,78 @@ import android.animation.ValueAnimator;
 import android.content.Context;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.animation.Animation;
 import android.view.animation.LinearInterpolator;
 import android.view.animation.RotateAnimation;
 
-/**
- * Created by debbytang.
- * Description:显示隐藏布局的属性动画(铺展)
- * Date:2017/3/30.
- */
+/* loaded from: classes2.dex */
 public class HiddenAnimationUtils {
+    private RotateAnimation animation;
+    private View down;
+    private View hideView;
+    private int mHeight;
 
-    private int mHeight;//伸展高度
-
-    private View hideView,down;//需要展开隐藏的布局，开关控件
-
-    private RotateAnimation animation;//旋转动画
-
-    /**
-     * 构造器(可根据自己需要修改传参)
-     * @param context 上下文
-     * @param hideView 需要隐藏或显示的布局view
-     * @param down 按钮开关的view
-     * @param height 布局展开的高度(根据实际需要传)
-     */
-    public static HiddenAnimationUtils newInstance(Context context, View hideView, View down, int height){
-        return new HiddenAnimationUtils(context,hideView,down,height);
+    public static HiddenAnimationUtils newInstance(Context context, View view, View view2, int i) {
+        return new HiddenAnimationUtils(context, view, view2, i);
     }
 
-    private HiddenAnimationUtils(Context context, View hideView, View down, int height){
-        this.hideView = hideView;
-        this.down = down;
-        mHeight = height;//伸展高度
+    private HiddenAnimationUtils(Context context, View view, View view2, int i) {
+        this.hideView = view;
+        this.down = view2;
+        this.mHeight = i;
     }
 
-    /**
-     * 开关
-     */
-    public void toggle(){
+    public void toggle() {
         startAnimation();
-        if (View.VISIBLE == hideView.getVisibility()) {
-            closeAnimate(hideView);//布局隐藏
+        if (this.hideView.getVisibility() == 0) {
+            closeAnimate(this.hideView);
         } else {
-            openAnim(hideView);//布局铺开
+            openAnim(this.hideView);
         }
     }
 
-    /**
-     * 开关旋转动画
-     */
     private void startAnimation() {
-        if (View.VISIBLE == hideView.getVisibility()) {
-            animation = new RotateAnimation(180, 0, Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f);
+        if (this.hideView.getVisibility() == 0) {
+            this.animation = new RotateAnimation(180.0f, 0.0f, 1, 0.5f, 1, 0.5f);
         } else {
-            animation = new RotateAnimation(0, 180, Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f);
+            this.animation = new RotateAnimation(0.0f, 180.0f, 1, 0.5f, 1, 0.5f);
         }
-        animation.setDuration(30);//设置动画持续时间
-        animation.setInterpolator(new LinearInterpolator());
-        animation.setRepeatMode(Animation.REVERSE);//设置反方向执行
-        animation.setFillAfter(true);//动画执行完后是否停留在执行完的状态
-        if (down != null){
-            down.startAnimation(animation);
+        this.animation.setDuration(30L);
+        this.animation.setInterpolator(new LinearInterpolator());
+        this.animation.setRepeatMode(2);
+        this.animation.setFillAfter(true);
+        View view = this.down;
+        if (view != null) {
+            view.startAnimation(this.animation);
         }
     }
 
-    private void openAnim(View v) {
-        v.setVisibility(View.VISIBLE);
-        ValueAnimator animator = createDropAnimator(v, 0, mHeight);
-        animator.start();
+    private void openAnim(View view) {
+        view.setVisibility(0);
+        createDropAnimator(view, 0, this.mHeight).start();
     }
 
     private void closeAnimate(final View view) {
-        int origHeight = view.getHeight();
-        ValueAnimator animator = createDropAnimator(view, origHeight, 0);
-        animator.addListener(new AnimatorListenerAdapter() {
-            @Override
-            public void onAnimationEnd(Animator animation) {
-                view.setVisibility(View.GONE);
+        ValueAnimator createDropAnimator = createDropAnimator(view, view.getHeight(), 0);
+        createDropAnimator.addListener(new AnimatorListenerAdapter() { // from class: com.qcl.launcher.utils.animation.HiddenAnimationUtils.1
+            @Override // android.animation.AnimatorListenerAdapter, android.animation.Animator.AnimatorListener
+            public void onAnimationEnd(Animator animator) {
+                view.setVisibility(8);
             }
         });
-        animator.start();
+        createDropAnimator.start();
     }
 
-    private ValueAnimator createDropAnimator(final View v, int start, int end) {
-        ValueAnimator animator = ValueAnimator.ofInt(start, end);
-        animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-
-            @Override
-            public void onAnimationUpdate(ValueAnimator arg0) {
-                int value = (int) arg0.getAnimatedValue();
-                ViewGroup.LayoutParams layoutParams = v.getLayoutParams();
-                layoutParams.height = value;
-                v.setLayoutParams(layoutParams);
+    private ValueAnimator createDropAnimator(final View view, int i, int i2) {
+        ValueAnimator ofInt = ValueAnimator.ofInt(i, i2);
+        ofInt.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() { // from class: com.qcl.launcher.utils.animation.HiddenAnimationUtils.2
+            @Override // android.animation.ValueAnimator.AnimatorUpdateListener
+            public void onAnimationUpdate(ValueAnimator valueAnimator) {
+                int intValue = ((Integer) valueAnimator.getAnimatedValue()).intValue();
+                ViewGroup.LayoutParams layoutParams = view.getLayoutParams();
+                layoutParams.height = intValue;
+                view.setLayoutParams(layoutParams);
             }
         });
-        return animator;
+        return ofInt;
     }
 }
-

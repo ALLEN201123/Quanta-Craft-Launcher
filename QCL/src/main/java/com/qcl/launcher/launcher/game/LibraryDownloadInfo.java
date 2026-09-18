@@ -2,6 +2,7 @@ package com.qcl.launcher.launcher.game;
 
 import com.google.gson.annotations.SerializedName;
 
+/* loaded from: classes2.dex */
 public class LibraryDownloadInfo extends DownloadInfo {
 
     @SerializedName("path")
@@ -11,24 +12,24 @@ public class LibraryDownloadInfo extends DownloadInfo {
         this(null);
     }
 
-    public LibraryDownloadInfo(String path) {
-        this(path, "");
+    public LibraryDownloadInfo(String str) {
+        this(str, "");
     }
 
-    public LibraryDownloadInfo(String path, String url) {
-        this(path, url, null);
+    public LibraryDownloadInfo(String str, String str2) {
+        this(str, str2, null);
     }
 
-    public LibraryDownloadInfo(String path, String url, String sha1) {
-        this(path, url, sha1, 0);
+    public LibraryDownloadInfo(String str, String str2, String str3) {
+        this(str, str2, str3, 0);
     }
 
-    public LibraryDownloadInfo(String path, String url, String sha1, int size) {
-        super(url, sha1, size);
-        this.path = path;
+    public LibraryDownloadInfo(String str, String str2, String str3, int i) {
+        super(str2, str3, i);
+        this.path = str;
     }
 
     public String getPath() {
-        return path;
+        return this.path;
     }
 }

@@ -1,84 +1,82 @@
 package com.qcl.launcher.utils.io;
 
+import android.os.Handler;
+import android.os.Message;
+import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
-import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 
-import android.annotation.SuppressLint;
-import android.os.Handler;
-import android.os.Message;
-
+/* loaded from: classes2.dex */
 public class SocketServer {
+    private final String ip;
+    private final Handler mHandler = new Handler() { // from class: com.qcl.launcher.utils.io.SocketServer.1
+        @Override // android.os.Handler
+        public void handleMessage(Message message) {
+            super.handleMessage(message);
+            SocketServer.this.mListener.onReceive(SocketServer.this, (String) message.obj);
+        }
+    };
+    private final Listener mListener;
+    private DatagramPacket packet;
+    private final int port;
+    private DatagramSocket socket;
 
-	private DatagramPacket packet;
-	private DatagramSocket socket;
-	private final Listener mListener;
-	private final String ip;
-	private final int port;
+    /* loaded from: classes2.dex */
+    public interface Listener {
+        void onReceive(SocketServer socketServer, String str);
+    }
 
-	public interface Listener{
-		void onReceive(SocketServer server,String msg);
-	}
+    public SocketServer(String str, int i, Listener listener) {
+        this.mListener = listener;
+        this.ip = str;
+        this.port = i;
+        try {
+            this.packet = new DatagramPacket(new byte[1024], 1024);
+            this.socket = new DatagramSocket(i, InetAddress.getByName(str));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 
-	@SuppressLint("HandlerLeak")
-	private final Handler mHandler = new Handler(){
-		@Override
-		public void handleMessage(Message msg) {
-			super.handleMessage(msg);
-			String s = (String)msg.obj;
-			mListener.onReceive(SocketServer.this,s);
-		}
-	};
-	
-	public SocketServer(String ip,int port,Listener mListener){
-		this.mListener = mListener;
-		this.ip = ip;
-		this.port = port;
-		try {
-			// 要接收的报文
-			byte[] bytes = new byte[1024];
-			packet = new DatagramPacket(bytes, bytes.length);
-			// 创建socket并指定端口
-			socket = new DatagramSocket(port, InetAddress.getByName(ip));
-		} catch (Exception e) {
-			// TODO: handle exception
-			e.printStackTrace();
-		}
-	}
+    public void start() {
+        if (this.packet == null || this.socket == null) {
+            return;
+        }
+        new Thread(new Runnable() { // from class: com.qcl.launcher.utils.io.SocketServer$$ExternalSyntheticLambda0
+            @Override // java.lang.Runnable
+            public final void run() {
+                SocketServer.this.m621lambda$start$0$comqcllauncherutilsioSocketServer();
+            }
+        }).start();
+    }
 
-	public void start() {
-		if(packet == null || socket == null)
-			return;
-		new Thread(() -> {
-			// 接收socket客户端发送的数据。如果未收到会一致阻塞
-			try {
-				while(true){
-					socket.receive(packet);
-					String receiveMsg = new String(packet.getData(), 0, packet.getLength());
-					//System.out.println(packet.getLength());
-					System.out.println(receiveMsg);
-					Message msg = new Message();
-					msg.obj = receiveMsg;
-					mHandler.sendMessage(msg);
-				}
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}).start();
-	}
+    /* JADX INFO: Access modifiers changed from: package-private */
+    /* renamed from: lambda$start$0$com-qcl-launcher-utils-io-SocketServer, reason: not valid java name */
+    public /* synthetic */ void m621lambda$start$0$comqcllauncherutilsioSocketServer() {
+        while (true) {
+            try {
+                this.socket.receive(this.packet);
+                String str = new String(this.packet.getData(), 0, this.packet.getLength());
+                System.out.println(str);
+                Message message = new Message();
+                message.obj = str;
+                this.mHandler.sendMessage(message);
+            } catch (IOException e) {
+                e.printStackTrace();
+                return;
+            }
+        }
+    }
 
-	public void send(String msg) throws IOException {
-		socket.connect(new InetSocketAddress(ip, port));
-		byte[] data = msg.getBytes();
-		DatagramPacket packet = new DatagramPacket(data, data.length);
-		socket.send(packet);
-	}
+    public void send(String str) throws IOException {
+        this.socket.connect(new InetSocketAddress(this.ip, this.port));
+        byte[] bytes = str.getBytes();
+        this.socket.send(new DatagramPacket(bytes, bytes.length));
+    }
 
-	public void stop(){
-		// 关闭socket
-		socket.close();
-	}
-
+    public void stop() {
+        this.socket.close();
+    }
 }

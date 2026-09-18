@@ -1,18 +1,19 @@
 package com.qcl.launcher.auth;
 
+/* loaded from: classes2.dex */
 public class AuthenticationException extends Exception {
     public AuthenticationException() {
     }
 
-    public AuthenticationException(String message) {
-        super(message);
+    public AuthenticationException(String str) {
+        super(str);
     }
 
-    public AuthenticationException(String message, Throwable cause) {
-        super(message, cause);
+    public AuthenticationException(String str, Throwable th) {
+        super(str, th);
     }
 
-    public AuthenticationException(Throwable cause) {
-        super(cause);
+    public AuthenticationException(Throwable th) {
+        super(th);
     }
 }

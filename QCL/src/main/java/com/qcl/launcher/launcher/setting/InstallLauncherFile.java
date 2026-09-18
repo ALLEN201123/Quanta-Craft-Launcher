@@ -1,298 +1,334 @@
+/*
+ * Decompiled with CFR 0.152.
+ * 
+ * Could not load the following classes:
+ *  android.annotation.SuppressLint
+ *  android.content.Context
+ *  android.content.Intent
+ *  android.os.Bundle
+ *  android.util.Log
+ *  net.kdt.pojavlaunch.utils.Architecture
+ *  org.apache.commons.io.FileUtils
+ *  org.apache.commons.io.IOUtils
+ */
 package com.qcl.launcher.launcher.setting;
-
-import static net.kdt.pojavlaunch.utils.Architecture.ARCH_ARM;
-import static net.kdt.pojavlaunch.utils.Architecture.ARCH_ARM64;
-import static net.kdt.pojavlaunch.utils.Architecture.ARCH_X86;
-import static net.kdt.pojavlaunch.utils.Architecture.ARCH_X86_64;
-import static org.apache.commons.io.FileUtils.listFiles;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
-
-import com.qcl.launcher.R;
 import com.qcl.launcher.launcher.MainActivity;
-import com.qcl.launcher.launcher.SplashActivity;
+import com.qcl.launcher.launcher.setting.RuntimeInstallActivity;
+import com.qcl.launcher.launcher.setting.RuntimeUtils;
+import com.qcl.launcher.launcher.setting.SettingUtils;
 import com.qcl.launcher.manifest.AppManifest;
-import com.qcl.launcher.utils.Architecture;
 import com.qcl.launcher.utils.file.AssetsUtils;
 import com.qcl.launcher.utils.file.FileStringUtils;
-import com.qcl.launcher.utils.file.FileUtils;
-
-import org.apache.commons.io.IOUtils;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.Collection;
 import java.util.Objects;
+import net.kdt.pojavlaunch.utils.Architecture;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 
+import com.qcl.launcher.R;
 public class InstallLauncherFile {
-
-    public static void checkLauncherFiles(SplashActivity activity){
-        /*
-         *初始化进度监听回调
-         */
-        @SuppressLint("SetTextI18n") AssetsUtils.ProgressCallback progressCallback = progress -> activity.runOnUiThread(() -> {
+    public static void checkLauncherFiles(RuntimeInstallActivity activity) {
+        AssetsUtils.ProgressCallback progressCallback = progress -> activity.runOnUiThread(() -> {
             activity.loadingProgress.setProgress(progress);
-            activity.loadingProgressText.setText(progress + " %");
+            activity.loadingProgressText.setText((CharSequence)(progress + " %"));
         });
-        /*
-         *检查forge-install-bootstrapper.jar
-         */
-        activity.runOnUiThread(() -> {
-            activity.loadingText.setText(activity.getString(R.string.loading_hint_plugin));
-        });
-        if (!new File(AppManifest.PLUGIN_DIR + "/installer").exists() || !new File(AppManifest.PLUGIN_DIR + "/installer/version").exists() || Integer.parseInt(Objects.requireNonNull(FileStringUtils.getStringFromFile(AppManifest.PLUGIN_DIR + "/installer/version"))) < Integer.parseInt(Objects.requireNonNull(AssetsUtils.readAssetsTxt(activity, "plugin/installer/version")))) {
-            FileUtils.deleteDirectory(AppManifest.PLUGIN_DIR + "/installer");
-            AssetsUtils.getInstance(activity).setProgressCallback(progressCallback).copyOnMainThread("plugin/installer",AppManifest.PLUGIN_DIR + "/installer");
+        activity.runOnUiThread(() -> activity.loadingText.setText((CharSequence)activity.getString(R.string.loading_hint_plugin)));
+        if (!new File(AppManifest.PLUGIN_DIR + "/installer").exists() || !new File(AppManifest.PLUGIN_DIR + "/installer/version").exists() || Integer.parseInt(Objects.requireNonNull(FileStringUtils.getStringFromFile(AppManifest.PLUGIN_DIR + "/installer/version"))) < Integer.parseInt(Objects.requireNonNull(AssetsUtils.readAssetsTxt((Context)activity, "plugin/installer/version")))) {
+            com.qcl.launcher.utils.file.FileUtils.deleteDirectory(AppManifest.PLUGIN_DIR + "/installer");
+            AssetsUtils.getInstance((Context)activity).setProgressCallback(progressCallback).copyOnMainThread("plugin/installer", AppManifest.PLUGIN_DIR + "/installer");
         }
-        /*
-         *检查TouchInjector.jar
-         */
-        if (!new File(AppManifest.PLUGIN_DIR + "/touch").exists() || !new File(AppManifest.PLUGIN_DIR + "/touch/version").exists() || Integer.parseInt(Objects.requireNonNull(FileStringUtils.getStringFromFile(AppManifest.PLUGIN_DIR + "/touch/version"))) < Integer.parseInt(Objects.requireNonNull(AssetsUtils.readAssetsTxt(activity, "plugin/touch/version")))) {
-            FileUtils.deleteDirectory(AppManifest.PLUGIN_DIR + "/touch");
-            AssetsUtils.getInstance(activity).setProgressCallback(progressCallback).copyOnMainThread("plugin/touch",AppManifest.PLUGIN_DIR + "/touch");
+        if (!new File(AppManifest.PLUGIN_DIR + "/touch").exists() || !new File(AppManifest.PLUGIN_DIR + "/touch/version").exists() || Integer.parseInt(Objects.requireNonNull(FileStringUtils.getStringFromFile(AppManifest.PLUGIN_DIR + "/touch/version"))) < Integer.parseInt(Objects.requireNonNull(AssetsUtils.readAssetsTxt((Context)activity, "plugin/touch/version")))) {
+            com.qcl.launcher.utils.file.FileUtils.deleteDirectory(AppManifest.PLUGIN_DIR + "/touch");
+            AssetsUtils.getInstance((Context)activity).setProgressCallback(progressCallback).copyOnMainThread("plugin/touch", AppManifest.PLUGIN_DIR + "/touch");
         }
-        /*
-         *检查authlib-injector.jar
-         */
-        if (!new File(AppManifest.PLUGIN_DIR + "/login/authlib-injector").exists() || !new File(AppManifest.PLUGIN_DIR + "/login/authlib-injector/version").exists() || Integer.parseInt(Objects.requireNonNull(FileStringUtils.getStringFromFile(AppManifest.PLUGIN_DIR + "/login/authlib-injector/version"))) < Integer.parseInt(Objects.requireNonNull(AssetsUtils.readAssetsTxt(activity, "plugin/login/authlib-injector/version")))) {
-            FileUtils.deleteDirectory(AppManifest.PLUGIN_DIR + "/login/authlib-injector");
-            AssetsUtils.getInstance(activity).setProgressCallback(progressCallback).copyOnMainThread("plugin/login/authlib-injector",AppManifest.PLUGIN_DIR + "/login/authlib-injector");
+        if (!new File(AppManifest.PLUGIN_DIR + "/login/authlib-injector").exists() || !new File(AppManifest.PLUGIN_DIR + "/login/authlib-injector/version").exists() || Integer.parseInt(Objects.requireNonNull(FileStringUtils.getStringFromFile(AppManifest.PLUGIN_DIR + "/login/authlib-injector/version"))) < Integer.parseInt(Objects.requireNonNull(AssetsUtils.readAssetsTxt((Context)activity, "plugin/login/authlib-injector/version")))) {
+            com.qcl.launcher.utils.file.FileUtils.deleteDirectory(AppManifest.PLUGIN_DIR + "/login/authlib-injector");
+            AssetsUtils.getInstance((Context)activity).setProgressCallback(progressCallback).copyOnMainThread("plugin/login/authlib-injector", AppManifest.PLUGIN_DIR + "/login/authlib-injector");
         }
-        /*
-         *检查nide8auth.jar
-         */
-        if (!new File(AppManifest.PLUGIN_DIR + "/login/nide8auth").exists() || !new File(AppManifest.PLUGIN_DIR + "/login/nide8auth/version").exists() || Integer.parseInt(Objects.requireNonNull(FileStringUtils.getStringFromFile(AppManifest.PLUGIN_DIR + "/login/nide8auth/version"))) < Integer.parseInt(Objects.requireNonNull(AssetsUtils.readAssetsTxt(activity, "plugin/login/nide8auth/version")))) {
-            FileUtils.deleteDirectory(AppManifest.PLUGIN_DIR + "/login/nide8auth");
-            AssetsUtils.getInstance(activity).setProgressCallback(progressCallback).copyOnMainThread("plugin/login/nide8auth",AppManifest.PLUGIN_DIR + "/login/nide8auth");
+        if (!new File(AppManifest.PLUGIN_DIR + "/login/nide8auth").exists() || !new File(AppManifest.PLUGIN_DIR + "/login/nide8auth/version").exists() || Integer.parseInt(Objects.requireNonNull(FileStringUtils.getStringFromFile(AppManifest.PLUGIN_DIR + "/login/nide8auth/version"))) < Integer.parseInt(Objects.requireNonNull(AssetsUtils.readAssetsTxt((Context)activity, "plugin/login/nide8auth/version")))) {
+            com.qcl.launcher.utils.file.FileUtils.deleteDirectory(AppManifest.PLUGIN_DIR + "/login/nide8auth");
+            AssetsUtils.getInstance((Context)activity).setProgressCallback(progressCallback).copyOnMainThread("plugin/login/nide8auth", AppManifest.PLUGIN_DIR + "/login/nide8auth");
         }
-        /*
-         *检查布局方案，如果没有，就生产一个默认布局
-         */
-        activity.runOnUiThread(() -> {
-            activity.loadingText.setText(activity.getString(R.string.loading_hint_control));
-        });
+        activity.runOnUiThread(() -> activity.loadingText.setText((CharSequence)activity.getString(R.string.loading_hint_control)));
         if (SettingUtils.getControlPatternList().size() == 0) {
             AssetsUtils.getInstance(activity.getApplicationContext()).setProgressCallback(progressCallback).copyOnMainThread("control", AppManifest.CONTROLLER_DIR);
         }
-        /*
-         *检查除Java外的运行环境，这些文件一定会被内置进启动器，所以进行统一处理
-         */
-        activity.runOnUiThread(() -> {
-            activity.loadingText.setText(activity.getString(R.string.loading_hint_lib));
-        });
-        if (!new File(AppManifest.DEFAULT_RUNTIME_DIR + "/version").exists() || Integer.parseInt(Objects.requireNonNull(FileStringUtils.getStringFromFile(AppManifest.DEFAULT_RUNTIME_DIR + "/version"))) < Integer.parseInt(Objects.requireNonNull(AssetsUtils.readAssetsTxt(activity, "app_runtime/version")))) {
-            FileUtils.deleteDirectory(AppManifest.BOAT_LIB_DIR);
-            FileUtils.deleteDirectory(AppManifest.POJAV_LIB_DIR);
-            FileUtils.deleteDirectory(AppManifest.CACIOCAVALLO_DIR);
-            // 1.1.0：caciocavallo17 也必须删干净再重拷 —— 否则旧版 jar（1.18）会和新版
-            // （1.19.1 + cacio-agent.jar）混在同一个目录里，而 -Xbootclasspath/a 会把
-            // 目录下**所有** jar 加进 bootstrap classpath → 新旧类冲突
-            // （实测报 IllegalAccessError: CTCJavaAgent → FontManagerUtil → -javaagent failed）。
-            FileUtils.deleteDirectory(AppManifest.CACIOCAVALLO17_DIR);
+        activity.runOnUiThread(() -> activity.loadingText.setText((CharSequence)activity.getString(R.string.loading_hint_lib)));
+        if (!new File(AppManifest.DEFAULT_RUNTIME_DIR + "/version").exists() || Integer.parseInt(Objects.requireNonNull(FileStringUtils.getStringFromFile(AppManifest.DEFAULT_RUNTIME_DIR + "/version"))) < Integer.parseInt(Objects.requireNonNull(AssetsUtils.readAssetsTxt((Context)activity, "app_runtime/version")))) {
+            com.qcl.launcher.utils.file.FileUtils.deleteDirectory(AppManifest.BOAT_LIB_DIR);
+            com.qcl.launcher.utils.file.FileUtils.deleteDirectory(AppManifest.POJAV_LIB_DIR);
+            com.qcl.launcher.utils.file.FileUtils.deleteDirectory(AppManifest.CACIOCAVALLO_DIR);
+            com.qcl.launcher.utils.file.FileUtils.deleteDirectory(AppManifest.CACIOCAVALLO17_DIR);
             if (new File(AppManifest.DEFAULT_RUNTIME_DIR + "/version").exists()) {
                 new File(AppManifest.DEFAULT_RUNTIME_DIR + "/version").delete();
             }
-            AssetsUtils.getInstance(activity).setProgressCallback(progressCallback).copyOnMainThread("app_runtime/boat",AppManifest.BOAT_LIB_DIR);
-            AssetsUtils.getInstance(activity).setProgressCallback(progressCallback).copyOnMainThread("app_runtime/pojav",AppManifest.POJAV_LIB_DIR);
-            AssetsUtils.getInstance(activity).setProgressCallback(progressCallback).copyOnMainThread("app_runtime/caciocavallo",AppManifest.CACIOCAVALLO_DIR);
-            AssetsUtils.getInstance(activity).setProgressCallback(progressCallback).copyOnMainThread("app_runtime/caciocavallo17",AppManifest.CACIOCAVALLO17_DIR);
-            AssetsUtils.getInstance(activity).setProgressCallback(progressCallback).copyOnMainThread("app_runtime/version",AppManifest.DEFAULT_RUNTIME_DIR + "/version");
+            AssetsUtils.getInstance((Context)activity).setProgressCallback(progressCallback).copyOnMainThread("app_runtime/boat", AppManifest.BOAT_LIB_DIR);
+            AssetsUtils.getInstance((Context)activity).setProgressCallback(progressCallback).copyOnMainThread("app_runtime/pojav", AppManifest.POJAV_LIB_DIR);
+            AssetsUtils.getInstance((Context)activity).setProgressCallback(progressCallback).copyOnMainThread("app_runtime/caciocavallo", AppManifest.CACIOCAVALLO_DIR);
+            AssetsUtils.getInstance((Context)activity).setProgressCallback(progressCallback).copyOnMainThread("app_runtime/caciocavallo17", AppManifest.CACIOCAVALLO17_DIR);
+            AssetsUtils.getInstance((Context)activity).setProgressCallback(progressCallback).copyOnMainThread("app_runtime/version", AppManifest.DEFAULT_RUNTIME_DIR + "/version");
         }
-        /*
-         *检查Java运行时，Java可能内置在启动器也可能需要下载，因此单独处理
-         */
-        checkJava8(activity, progressCallback);
-        checkJava17(activity, progressCallback);
-        checkJava21(activity, progressCallback);
-        checkJava25(activity, progressCallback);
-        activity.runOnUiThread(() -> {
-            enterLauncher(activity);
+        InstallLauncherFile.checkJava8(activity, progressCallback);
+        InstallLauncherFile.checkJava17(activity, progressCallback);
+        InstallLauncherFile.checkJava21(activity, progressCallback);
+        InstallLauncherFile.checkJava25(activity, progressCallback);
+        activity.runOnUiThread(() -> InstallLauncherFile.enterLauncher(activity));
+    }
+
+    public static void checkBaseFiles(RuntimeInstallActivity activity) {
+        AssetsUtils.ProgressCallback progressCallback = progress -> activity.runOnUiThread(() -> {
+            activity.loadingProgress.setProgress(progress);
+            activity.loadingProgressText.setText((CharSequence)(progress + " %"));
         });
-    }
-
-    @SuppressLint("SetTextI18n")
-    public static void checkJava8(SplashActivity activity, AssetsUtils.ProgressCallback callback){
-        activity.runOnUiThread(() -> {
-            activity.loadingText.setText(activity.getString(R.string.loading_hint_java_8));
-        });
-        if (!new File(AppManifest.JAVA_DIR + "/default").exists() || !new File(AppManifest.JAVA_DIR + "/default/version").exists() || Integer.parseInt(Objects.requireNonNull(FileStringUtils.getStringFromFile(AppManifest.JAVA_DIR + "/default/version").trim())) < Integer.parseInt(Objects.requireNonNull(AssetsUtils.readAssetsTxt(activity, "app_runtime/java/default/version")))) {
-            FileUtils.deleteDirectory(AppManifest.JAVA_DIR + "/default");
-            AssetsUtils.getInstance(activity).setProgressCallback(callback).copyOnMainThread("app_runtime/java/default",AppManifest.JAVA_DIR + "/default");
-            if (Architecture.getRuntimeArchitecture() == Architecture.ARCH_ARM) {
-                AssetsUtils.getInstance(activity).setProgressCallback(callback).copyOnMainThread("app_runtime/java/8-arm",AppManifest.JAVA_DIR + "/default");
+        activity.runOnUiThread(() -> activity.loadingText.setText((CharSequence)activity.getString(R.string.loading_hint_plugin)));
+        InstallLauncherFile.copyPluginIfNeeded(activity, progressCallback, "plugin/installer", AppManifest.PLUGIN_DIR + "/installer");
+        InstallLauncherFile.copyPluginIfNeeded(activity, progressCallback, "plugin/touch", AppManifest.PLUGIN_DIR + "/touch");
+        InstallLauncherFile.copyPluginIfNeeded(activity, progressCallback, "plugin/login/authlib-injector", AppManifest.PLUGIN_DIR + "/login/authlib-injector");
+        InstallLauncherFile.copyPluginIfNeeded(activity, progressCallback, "plugin/login/nide8auth", AppManifest.PLUGIN_DIR + "/login/nide8auth");
+        activity.runOnUiThread(() -> activity.loadingText.setText((CharSequence)activity.getString(R.string.loading_hint_control)));
+        if (SettingUtils.getControlPatternList().size() == 0) {
+            AssetsUtils.getInstance(activity.getApplicationContext()).setProgressCallback(progressCallback).copyOnMainThread("control", AppManifest.CONTROLLER_DIR);
+        }
+        activity.runOnUiThread(() -> activity.loadingText.setText((CharSequence)activity.getString(R.string.loading_hint_lib)));
+        if (!new File(AppManifest.DEFAULT_RUNTIME_DIR + "/version").exists() || Integer.parseInt(Objects.requireNonNull(FileStringUtils.getStringFromFile(AppManifest.DEFAULT_RUNTIME_DIR + "/version"))) < Integer.parseInt(Objects.requireNonNull(AssetsUtils.readAssetsTxt((Context)activity, "app_runtime/version")))) {
+            com.qcl.launcher.utils.file.FileUtils.deleteDirectory(AppManifest.BOAT_LIB_DIR);
+            com.qcl.launcher.utils.file.FileUtils.deleteDirectory(AppManifest.POJAV_LIB_DIR);
+            com.qcl.launcher.utils.file.FileUtils.deleteDirectory(AppManifest.CACIOCAVALLO_DIR);
+            com.qcl.launcher.utils.file.FileUtils.deleteDirectory(AppManifest.CACIOCAVALLO17_DIR);
+            if (new File(AppManifest.DEFAULT_RUNTIME_DIR + "/version").exists()) {
+                new File(AppManifest.DEFAULT_RUNTIME_DIR + "/version").delete();
             }
-            if (Architecture.getRuntimeArchitecture() == Architecture.ARCH_ARM64) {
-                AssetsUtils.getInstance(activity).setProgressCallback(callback).copyOnMainThread("app_runtime/java/8-arm64",AppManifest.JAVA_DIR + "/default");
-            }
-            if (Architecture.getRuntimeArchitecture() == Architecture.ARCH_X86) {
-                AssetsUtils.getInstance(activity).setProgressCallback(callback).copyOnMainThread("app_runtime/java/8-x86",AppManifest.JAVA_DIR + "/default");
-            }
-            if (Architecture.getRuntimeArchitecture() == Architecture.ARCH_X86_64) {
-                AssetsUtils.getInstance(activity).setProgressCallback(callback).copyOnMainThread("app_runtime/java/8-x86_64",AppManifest.JAVA_DIR + "/default");
-            }
-            unpack200(activity.getApplicationContext().getApplicationInfo().nativeLibraryDir, AppManifest.JAVA_DIR + "/default");
-            try {
-                postPrepare(activity, "default");
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            AssetsUtils.getInstance((Context)activity).setProgressCallback(progressCallback).copyOnMainThread("app_runtime/boat", AppManifest.BOAT_LIB_DIR);
+            AssetsUtils.getInstance((Context)activity).setProgressCallback(progressCallback).copyOnMainThread("app_runtime/version", AppManifest.DEFAULT_RUNTIME_DIR + "/version");
         }
     }
 
-    @SuppressLint("SetTextI18n")
-    public static void checkJava17(SplashActivity activity, AssetsUtils.ProgressCallback callback){
-        activity.runOnUiThread(() -> {
-            activity.loadingText.setText(activity.getString(R.string.loading_hint_java_17));
-        });
-        if (!new File(AppManifest.JAVA_DIR + "/JRE17").exists() || !new File(AppManifest.JAVA_DIR + "/JRE17/version").exists() || Integer.parseInt(Objects.requireNonNull(FileStringUtils.getStringFromFile(AppManifest.JAVA_DIR + "/JRE17/version").trim())) < Integer.parseInt(Objects.requireNonNull(AssetsUtils.readAssetsTxt(activity, "app_runtime/java/JRE17/version")))) {
-            FileUtils.deleteDirectory(AppManifest.JAVA_DIR + "/JRE17");
-            AssetsUtils.getInstance(activity).setProgressCallback(callback).copyOnMainThread("app_runtime/java/JRE17",AppManifest.JAVA_DIR + "/JRE17");
-            if (Architecture.getRuntimeArchitecture() == Architecture.ARCH_ARM) {
-                AssetsUtils.getInstance(activity).setProgressCallback(callback).copyOnMainThread("app_runtime/java/17-arm",AppManifest.JAVA_DIR + "/JRE17");
-            }
-            if (Architecture.getRuntimeArchitecture() == Architecture.ARCH_ARM64) {
-                AssetsUtils.getInstance(activity).setProgressCallback(callback).copyOnMainThread("app_runtime/java/17-arm64",AppManifest.JAVA_DIR + "/JRE17");
-            }
-            if (Architecture.getRuntimeArchitecture() == Architecture.ARCH_X86) {
-                AssetsUtils.getInstance(activity).setProgressCallback(callback).copyOnMainThread("app_runtime/java/17-x86",AppManifest.JAVA_DIR + "/JRE17");
-            }
-            if (Architecture.getRuntimeArchitecture() == Architecture.ARCH_X86_64) {
-                AssetsUtils.getInstance(activity).setProgressCallback(callback).copyOnMainThread("app_runtime/java/17-x86_64",AppManifest.JAVA_DIR + "/JRE17");
-            }
-            unpack200(activity.getApplicationContext().getApplicationInfo().nativeLibraryDir, AppManifest.JAVA_DIR + "/JRE17");
+    private static void copyPluginIfNeeded(RuntimeInstallActivity activity, AssetsUtils.ProgressCallback callback, String assetDir, String targetDir) {
+        File versionFile = new File(targetDir, "version");
+        if (versionFile.exists()) {
             try {
-                postPrepare(activity, "JRE17");
-            } catch (IOException e) {
-                e.printStackTrace();
+                int installed = Integer.parseInt(Objects.requireNonNull(FileStringUtils.getStringFromFile(versionFile.getAbsolutePath())).trim());
+                int expected = Integer.parseInt(Objects.requireNonNull(AssetsUtils.readAssetsTxt((Context)activity, assetDir + "/version")).trim());
+                if (installed >= expected) {
+                    return;
+                }
             }
+            catch (Throwable throwable) {}
+        } else if (new File(targetDir).isDirectory()) {
+            // empty if block
+        }
+        com.qcl.launcher.utils.file.FileUtils.deleteDirectory(targetDir);
+        AssetsUtils.getInstance((Context)activity).setProgressCallback(callback).copyOnMainThread(assetDir, targetDir);
+    }
+
+    @SuppressLint(value={"SetTextI18n"})
+    public static void checkJava8(RuntimeInstallActivity activity, AssetsUtils.ProgressCallback callback) {
+        activity.runOnUiThread(() -> activity.loadingText.setText((CharSequence)activity.getString(R.string.loading_hint_java_8)));
+        InstallLauncherFile.installJava8(activity, callback);
+    }
+
+    private static void installJava8(final RuntimeInstallActivity activity, AssetsUtils.ProgressCallback callback) {
+        String targetPath = AppManifest.JAVA_DIR + "/default";
+        String srcDir = "app_runtime/java/jre8";
+        try {
+            if (RuntimeUtils.isLatest((Context)activity, targetPath, srcDir) && new File(targetPath, "bin/java").exists()) {
+                return;
+            }
+        }
+        catch (IOException iOException) {
+            // empty catch block
+        }
+        try {
+            RuntimeUtils.installJava((Context)activity, targetPath, srcDir, InstallLauncherFile.deviceArchName(), new RuntimeUtils.InstallListener(){
+
+                @Override
+                public void onUpdate(String detail) {
+                }
+
+                @Override
+                public void onProgress(int percent) {
+                    activity.runOnUiThread(() -> {
+                        activity.loadingProgress.setProgress(percent);
+                        activity.loadingProgressText.setText((CharSequence)(percent + " %"));
+                    });
+                }
+
+                @Override
+                public void onStage(String stageKey) {
+                    if ("patching".equals(stageKey)) {
+                        activity.runOnUiThread(() -> activity.loadingText.setText((CharSequence)activity.getString(R.string.loading_hint_java_patching)));
+                    }
+                }
+            });
+            InstallLauncherFile.unpack200(activity.getApplicationContext().getApplicationInfo().nativeLibraryDir, targetPath);
+            InstallLauncherFile.postPrepare((Context)activity, "default");
+        }
+        catch (IOException e) {
+            Log.e((String)"MULTIRT", (String)"Unable to prepare default(Java 8)", (Throwable)e);
         }
     }
 
-    @SuppressLint("SetTextI18n")
-    public static void checkJava21(SplashActivity activity, AssetsUtils.ProgressCallback callback){
-        activity.runOnUiThread(() -> activity.loadingText.setText(activity.getString(R.string.loading_hint_java_21)));
-        prepareModernJava(activity, callback, "JRE21");
+    @SuppressLint(value={"SetTextI18n"})
+    public static void checkJava17(RuntimeInstallActivity activity, AssetsUtils.ProgressCallback callback) {
+        activity.runOnUiThread(() -> activity.loadingText.setText((CharSequence)activity.getString(R.string.loading_hint_java_17)));
+        InstallLauncherFile.installModernJava(activity, callback, "JRE17", "jre17");
     }
 
-    @SuppressLint("SetTextI18n")
-    public static void checkJava25(SplashActivity activity, AssetsUtils.ProgressCallback callback){
-        activity.runOnUiThread(() -> activity.loadingText.setText(activity.getString(R.string.loading_hint_java_25)));
-        prepareModernJava(activity, callback, "JRE25");
+    @SuppressLint(value={"SetTextI18n"})
+    public static void checkJava21(RuntimeInstallActivity activity, AssetsUtils.ProgressCallback callback) {
+        activity.runOnUiThread(() -> activity.loadingText.setText((CharSequence)activity.getString(R.string.loading_hint_java_21)));
+        InstallLauncherFile.installModernJava(activity, callback, "JRE21", "jre21");
     }
 
-    private static void prepareModernJava(SplashActivity activity, AssetsUtils.ProgressCallback callback, String name){
-        String arch = Architecture.getRuntimeArchitecture() == Architecture.ARCH_ARM ? "arm"
-                : Architecture.getRuntimeArchitecture() == Architecture.ARCH_ARM64 ? "arm64"
-                : Architecture.getRuntimeArchitecture() == Architecture.ARCH_X86 ? "x86" : "x86_64";
-        // FCL currently provides no 32-bit x86 Java 25 runtime. Never install another ABI.
-        if ("JRE25".equals(name) && "x86".equals(arch)) return;
-        String assetPath = "app_runtime/java/" + name;
-        String targetPath = AppManifest.JAVA_DIR + "/" + name;
-        String expected = AssetsUtils.readAssetsTxt(activity, assetPath + "/version");
-        String installed = FileStringUtils.getStringFromFile(targetPath + "/version");
-        File marker = new File(targetPath, "version");
-        if (expected == null) return;
-        expected = expected.trim() + "-verified-copy-3";
-        if (!marker.exists() || installed == null || !expected.trim().equals(installed.trim())
-                || !new File(targetPath, "lib/server/libjvm.so").isFile()
-                || !new File(targetPath, "release").isFile()
-                || !new File(targetPath, "lib/modules").isFile()) {
-            try {
-                if (marker.exists() && !marker.delete()) throw new IOException("Cannot invalidate runtime: " + marker);
-                FileUtils.deleteDirectory(targetPath);
-                AssetsUtils copier = AssetsUtils.getInstance(activity).setProgressCallback(callback);
-                copier.copyRuntimeOrThrow(assetPath, targetPath);
-                copier.copyRuntimeOrThrow("app_runtime/java/" + name.substring(3) + "-" + arch, targetPath);
-                if (!new File(targetPath, "lib/server/libjvm.so").isFile()
-                        || !new File(targetPath, "lib/modules").isFile()
-                        || !new File(targetPath, "release").isFile()) throw new IOException("Incomplete " + name);
-                postPrepare(activity, name);
-                FileStringUtils.writeFile(marker.getAbsolutePath(), expected.trim());
-            } catch (IOException e) {
-                marker.delete();
-                Log.e("MULTIRT", "Unable to prepare " + name, e);
+    @SuppressLint(value={"SetTextI18n"})
+    public static void checkJava25(RuntimeInstallActivity activity, AssetsUtils.ProgressCallback callback) {
+        activity.runOnUiThread(() -> activity.loadingText.setText((CharSequence)activity.getString(R.string.loading_hint_java_25)));
+        InstallLauncherFile.installModernJava(activity, callback, "JRE25", "jre25");
+    }
+
+    private static String deviceArchName() {
+        int arch = com.qcl.launcher.utils.Architecture.getRuntimeArchitecture();
+        if (arch == com.qcl.launcher.utils.Architecture.ARCH_ARM) {
+            return "arm";
+        }
+        if (arch == com.qcl.launcher.utils.Architecture.ARCH_ARM64) {
+            return "arm64";
+        }
+        if (arch == com.qcl.launcher.utils.Architecture.ARCH_X86) {
+            return "x86";
+        }
+        return "x86_64";
+    }
+
+    private static void installModernJava(final RuntimeInstallActivity activity, AssetsUtils.ProgressCallback callback, String targetName, String assetName) {
+        String arch = InstallLauncherFile.deviceArchName();
+        if ("jre25".equals(assetName) && "x86".equals(arch)) {
+            return;
+        }
+        String srcDir = "app_runtime/java/" + assetName;
+        String targetPath = AppManifest.JAVA_DIR + "/" + targetName;
+        try {
+            if (RuntimeUtils.isLatest((Context)activity, targetPath, srcDir) && new File(targetPath, "lib/modules").exists()) {
+                return;
             }
+        }
+        catch (IOException iOException) {
+            // empty catch block
+        }
+        try {
+            RuntimeUtils.installJava((Context)activity, targetPath, srcDir, arch, new RuntimeUtils.InstallListener(){
+
+                @Override
+                public void onUpdate(String detail) {
+                }
+
+                @Override
+                public void onProgress(int percent) {
+                    activity.runOnUiThread(() -> {
+                        activity.loadingProgress.setProgress(percent);
+                        activity.loadingProgressText.setText((CharSequence)(percent + " %"));
+                    });
+                }
+
+                @Override
+                public void onStage(String stageKey) {
+                    if ("patching".equals(stageKey)) {
+                        activity.runOnUiThread(() -> activity.loadingText.setText((CharSequence)activity.getString(R.string.loading_hint_java_patching)));
+                    }
+                }
+            });
+            InstallLauncherFile.unpack200(activity.getApplicationContext().getApplicationInfo().nativeLibraryDir, targetPath);
+            InstallLauncherFile.postPrepare((Context)activity, targetName);
+        }
+        catch (IOException e) {
+            Log.e((String)"MULTIRT", (String)("Unable to prepare " + targetName), (Throwable)e);
         }
     }
 
-    /**
-     * Unpacks all .pack files into .jar
-     * @param nativeLibraryDir The native lib path, required to execute the unpack200 binary
-     * @param runtimePath The path to the runtime to walk into
-     */
     private static void unpack200(String nativeLibraryDir, String runtimePath) {
-
         File basePath = new File(runtimePath);
-        Collection<File> files = listFiles(basePath, new String[]{"pack"}, true);
-
+        Collection<File> files = FileUtils.listFiles((File)basePath, (String[])new String[]{"pack"}, (boolean)true);
         File workdir = new File(nativeLibraryDir);
-
-        ProcessBuilder processBuilder = new ProcessBuilder().directory(workdir);
-        for(File jarFile : files){
-            try{
+        ProcessBuilder processBuilder = new ProcessBuilder(new String[0]).directory(workdir);
+        for (File jarFile : files) {
+            try {
                 Process process = processBuilder.command("./libunpack200.so", "-r", jarFile.getAbsolutePath(), jarFile.getAbsolutePath().replace(".pack", "")).start();
                 process.waitFor();
-            }catch (InterruptedException | IOException e) {
-                Log.e("MULTIRT", "Failed to unpack the runtime !");
+            }
+            catch (IOException | InterruptedException e) {
+                Log.e((String)"MULTIRT", (String)"Failed to unpack the runtime !");
             }
         }
     }
 
     public static void postPrepare(Context context, String name) throws IOException {
-        File dest = new File(AppManifest.JAVA_DIR,"/" + name);
-        if(!dest.exists()) return;
+        File dest = new File(AppManifest.JAVA_DIR, "/" + name);
+        if (!dest.exists()) {
+            return;
+        }
         String libFolder = "lib";
         String arch = "";
-        if (net.kdt.pojavlaunch.utils.Architecture.getRuntimeArchitecture() == ARCH_ARM) {
+        if (Architecture.getRuntimeArchitecture() == Architecture.ARCH_ARM) {
             arch = "aarch32";
         }
-        if (net.kdt.pojavlaunch.utils.Architecture.getRuntimeArchitecture() == ARCH_ARM64) {
+        if (Architecture.getRuntimeArchitecture() == Architecture.ARCH_ARM64) {
             arch = "aarch64";
         }
-        if (net.kdt.pojavlaunch.utils.Architecture.getRuntimeArchitecture() == ARCH_X86) {
+        if (Architecture.getRuntimeArchitecture() == Architecture.ARCH_X86) {
             arch = "i386";
         }
-        if (net.kdt.pojavlaunch.utils.Architecture.getRuntimeArchitecture() == ARCH_X86_64) {
+        if (Architecture.getRuntimeArchitecture() == Architecture.ARCH_X86_64) {
             arch = "amd64";
         }
-        if(new File(dest,libFolder + "/" + arch).exists()) libFolder = libFolder + "/" + arch;
+        if (new File(dest, libFolder + "/" + arch).exists()) {
+            libFolder = libFolder + "/" + arch;
+        }
         File ftIn = new File(dest, libFolder + "/libfreetype.so.6");
         File ftOut = new File(dest, libFolder + "/libfreetype.so");
         if (ftIn.exists() && (!ftOut.exists() || ftIn.length() != ftOut.length())) {
             ftIn.renameTo(ftOut);
         }
-
-        // Refresh libraries
-        copyDummyNativeLib(context,"libawt_xawt.so", dest, libFolder);
+        InstallLauncherFile.copyDummyNativeLib(context, "libawt_xawt.so", dest, libFolder);
     }
 
     private static void copyDummyNativeLib(Context ctx, String name, File dest, String libFolder) throws IOException {
-        File fileLib = new File(dest, "/"+libFolder + "/" + name);
+        File fileLib = new File(dest, "/" + libFolder + "/" + name);
         fileLib.delete();
         FileInputStream is = new FileInputStream(new File(ctx.getApplicationInfo().nativeLibraryDir, name));
         FileOutputStream os = new FileOutputStream(fileLib);
-        IOUtils.copy(is, os);
+        IOUtils.copy((InputStream)is, (OutputStream)os);
         is.close();
         os.close();
     }
 
-    @SuppressLint("SetTextI18n")
-    public static void enterLauncher (SplashActivity activity) {
-        activity.loadingText.setText(activity.getString(R.string.loading_hint_ready));
+    @SuppressLint(value={"SetTextI18n"})
+    public static void enterLauncher(RuntimeInstallActivity activity) {
+        activity.loadingText.setText((CharSequence)activity.getString(R.string.loading_hint_ready));
         activity.loadingProgress.setProgress(100);
-        activity.loadingProgressText.setText("100 %");
-        Intent intent = new Intent(activity,MainActivity.class);
+        activity.loadingProgressText.setText((CharSequence)"100 %");
+        Intent intent = new Intent((Context)activity, MainActivity.class);
         Bundle bundle = new Bundle();
-        bundle.putBoolean("fullscreen",activity.launcherSetting.fullscreen);
+        bundle.putBoolean("fullscreen", activity.launcherSetting.fullscreen);
         intent.putExtras(bundle);
         activity.startActivity(intent);
         activity.finish();
     }
 
+    public static void enterRuntimeInstall(RuntimeInstallActivity activity) {
+        activity.startActivity(new Intent((Context)activity, RuntimeInstallActivity.class));
+        activity.finish();
+    }
 }
+

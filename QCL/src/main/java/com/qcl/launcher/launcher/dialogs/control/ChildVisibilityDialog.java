@@ -4,62 +4,56 @@ import android.app.Dialog;
 import android.content.Context;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ListAdapter;
 import android.widget.ListView;
-
-import androidx.annotation.NonNull;
-
-import com.qcl.launcher.R;
 import com.qcl.launcher.launcher.list.local.controller.ChildVisibilityAdapter;
-
 import java.util.ArrayList;
 
+import com.qcl.launcher.R;
+/* loaded from: classes2.dex */
 public class ChildVisibilityDialog extends Dialog implements View.OnClickListener {
-
-    private String pattern;
     private ArrayList<String> list;
-    private OnChildVisibilityChangeListener onChildVisibilityChangeListener;
-
     private ListView listView;
+    private OnChildVisibilityChangeListener onChildVisibilityChangeListener;
+    private String pattern;
     private Button positive;
 
-    public ChildVisibilityDialog(@NonNull Context context,String pattern, ArrayList<String> list,OnChildVisibilityChangeListener onChildVisibilityChangeListener) {
+    /* loaded from: classes2.dex */
+    public interface OnChildVisibilityChangeListener {
+        void onChildVisibilityChange(ArrayList<String> arrayList);
+    }
+
+    public ChildVisibilityDialog(Context context, String str, ArrayList<String> arrayList, OnChildVisibilityChangeListener onChildVisibilityChangeListener) {
         super(context);
-        this.pattern = pattern;
-        this.list = list;
+        this.pattern = str;
+        this.list = arrayList;
         this.onChildVisibilityChangeListener = onChildVisibilityChangeListener;
         setContentView(R.layout.dialog_child_visibility);
         setCancelable(false);
         init();
     }
 
-    private void init(){
-        listView = findViewById(R.id.child_list);
-        positive = findViewById(R.id.exit);
-
-        positive.setOnClickListener(this);
-
-        ChildVisibilityAdapter adapter = new ChildVisibilityAdapter(getContext(),list,pattern,this);
-        listView.setAdapter(adapter);
+    private void init() {
+        this.listView = (ListView) findViewById(R.id.child_list);
+        Button button = (Button) findViewById(R.id.exit);
+        this.positive = button;
+        button.setOnClickListener(this);
+        this.listView.setAdapter((ListAdapter) new ChildVisibilityAdapter(getContext(), this.list, this.pattern, this));
     }
 
-    public void changeChildList(String name,boolean add){
-        if (add) {
-            list.add(name);
-        }
-        else {
-            list.remove(name);
+    public void changeChildList(String str, boolean z) {
+        if (z) {
+            this.list.add(str);
+        } else {
+            this.list.remove(str);
         }
     }
 
-    @Override
+    @Override // android.view.View.OnClickListener
     public void onClick(View view) {
-        if (view == positive) {
-            onChildVisibilityChangeListener.onChildVisibilityChange(list);
+        if (view == this.positive) {
+            this.onChildVisibilityChangeListener.onChildVisibilityChange(this.list);
             dismiss();
         }
-    }
-
-    public interface OnChildVisibilityChangeListener{
-        void onChildVisibilityChange(ArrayList<String> list);
     }
 }

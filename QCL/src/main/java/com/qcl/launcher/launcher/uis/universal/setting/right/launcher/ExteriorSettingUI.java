@@ -1,14 +1,50 @@
+/*
+ * Decompiled with CFR 0.152.
+ * 
+ * Could not load the following classes:
+ *  android.annotation.SuppressLint
+ *  android.app.Activity
+ *  android.content.Context
+ *  android.content.Intent
+ *  android.graphics.Bitmap
+ *  android.graphics.BitmapFactory
+ *  android.graphics.BitmapFactory$Options
+ *  android.graphics.Color
+ *  android.graphics.drawable.BitmapDrawable
+ *  android.graphics.drawable.Drawable
+ *  android.net.Uri
+ *  android.os.Build$VERSION
+ *  android.os.Environment
+ *  android.os.Handler
+ *  android.os.Message
+ *  android.text.Editable
+ *  android.text.TextWatcher
+ *  android.view.View
+ *  android.view.View$OnClickListener
+ *  android.view.ViewGroup
+ *  android.widget.CompoundButton
+ *  android.widget.CompoundButton$OnCheckedChangeListener
+ *  android.widget.EditText
+ *  android.widget.ImageButton
+ *  android.widget.LinearLayout
+ *  android.widget.RadioButton
+ *  android.widget.TextView
+ *  androidx.annotation.NonNull
+ *  androidx.appcompat.widget.SwitchCompat
+ *  com.tungsten.filepicker.Constants$SELECTION_MODES
+ *  com.tungsten.filepicker.FileChooser
+ */
 package com.qcl.launcher.launcher.uis.universal.setting.right.launcher;
 
-import static android.app.Activity.RESULT_OK;
-
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
@@ -17,41 +53,38 @@ import android.os.Message;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.View;
-import android.view.WindowManager;
+import android.view.ViewGroup;
 import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.RadioButton;
 import android.widget.TextView;
-
 import androidx.annotation.NonNull;
 import androidx.appcompat.widget.SwitchCompat;
-
-import com.tungsten.filepicker.Constants;
-import com.tungsten.filepicker.FileChooser;
-import com.qcl.launcher.R;
 import com.qcl.launcher.launcher.MainActivity;
 import com.qcl.launcher.launcher.dialogs.tools.ColorSelectorDialog;
-import com.qcl.launcher.manifest.AppManifest;
 import com.qcl.launcher.launcher.uis.tools.BaseUI;
 import com.qcl.launcher.launcher.uis.tools.QclThemeUtils;
+import com.qcl.launcher.manifest.AppManifest;
 import com.qcl.launcher.utils.animation.CustomAnimationUtils;
 import com.qcl.launcher.utils.file.UriUtils;
 import com.qcl.launcher.utils.gson.GsonUtils;
-
+import com.tungsten.filepicker.Constants;
+import com.tungsten.filepicker.FileChooser;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
-public class ExteriorSettingUI extends BaseUI implements View.OnClickListener, CompoundButton.OnCheckedChangeListener {
-
+import com.qcl.launcher.R;
+public class ExteriorSettingUI
+extends BaseUI
+implements View.OnClickListener,
+CompoundButton.OnCheckedChangeListener {
     private static final int PICK_BACKGROUND_REQUEST = 4000;
-
     public LinearLayout exteriorSettingUI;
-
     private LinearLayout selectTheme;
     private View colorView;
     private TextView colorText;
@@ -60,7 +93,6 @@ public class ExteriorSettingUI extends BaseUI implements View.OnClickListener, C
     private TextView panelColorText;
     private SwitchCompat transBarSwitch;
     private SwitchCompat fullscreenSwitch;
-    /** 1.0.5 新增：默认 UI ↔ 草方块 UI */
     private SwitchCompat grassUiSwitch;
     private LinearLayout fullscreenSetting;
     private RadioButton defaultRadio;
@@ -70,455 +102,437 @@ public class ExteriorSettingUI extends BaseUI implements View.OnClickListener, C
     private EditText editBgPath;
     private EditText editBgUrl;
     private ImageButton selectBgPath;
+    @SuppressLint(value={"HandlerLeak"})
+    public final Handler handler = new Handler(){
+
+        public void handleMessage(@NonNull Message msg) {
+            super.handleMessage(msg);
+        }
+    };
 
     public ExteriorSettingUI(Context context, MainActivity activity) {
         super(context, activity);
     }
 
-    @SuppressLint("UseCompatLoadingForDrawables")
     @Override
+    @SuppressLint(value={"UseCompatLoadingForDrawables"})
     public void onCreate() {
         super.onCreate();
-        exteriorSettingUI = activity.findViewById(R.id.ui_setting_exterior);
-
-        selectTheme = activity.findViewById(R.id.select_theme);
-        colorView = activity.findViewById(R.id.theme_color_view);
-        colorText = activity.findViewById(R.id.theme_color_text);
-        selectPanelColor = activity.findViewById(R.id.select_panel_color);
-        panelColorView = activity.findViewById(R.id.panel_color_view);
-        panelColorText = activity.findViewById(R.id.panel_color_text);
-        transBarSwitch = activity.findViewById(R.id.switch_trans_bar);
-        fullscreenSwitch = activity.findViewById(R.id.switch_full_screen);
-        grassUiSwitch = activity.findViewById(R.id.switch_grass_ui);
-        fullscreenSetting = activity.findViewById(R.id.fullscreen_layout);
-        defaultRadio = activity.findViewById(R.id.select_bg_default);
-        classicRadio = activity.findViewById(R.id.select_bg_classic);
-        customRadio = activity.findViewById(R.id.select_bg_custom);
-        onlineRadio = activity.findViewById(R.id.select_bg_online);
-        editBgPath = activity.findViewById(R.id.edit_bg_path);
-        editBgUrl = activity.findViewById(R.id.edit_bg_url);
-        selectBgPath = activity.findViewById(R.id.select_bg_path);
-
-        if (activity.launcherSetting.launcherBackground.type == 0){
-            defaultRadio.setChecked(true);
-            editBgPath.setEnabled(false);
-            editBgUrl.setEnabled(false);
-            selectBgPath.setEnabled(false);
-            // 动态背景由 MainActivity.startDynamicBackgroundIfNeeded() 启动，这里不覆盖
-        }
-        else if (activity.launcherSetting.launcherBackground.type == 1){
-            classicRadio.setChecked(true);
-            editBgPath.setEnabled(false);
-            editBgUrl.setEnabled(false);
-            selectBgPath.setEnabled(false);
-            activity.launcherLayout.setBackground(context.getDrawable(R.drawable.ic_background_classic));
-        }
-        else if (activity.launcherSetting.launcherBackground.type == 2){
-            customRadio.setChecked(true);
-            editBgPath.setEnabled(true);
-            editBgUrl.setEnabled(false);
-            selectBgPath.setEnabled(true);
-            if (new File(activity.launcherSetting.launcherBackground.path).exists() && isImageFile(activity.launcherSetting.launcherBackground.path)){
-                Bitmap bitmap = BitmapFactory.decodeFile(activity.launcherSetting.launcherBackground.path);
-                activity.launcherLayout.setBackground(new BitmapDrawable(bitmap));
+        this.exteriorSettingUI = (LinearLayout)this.activity.findViewById(R.id.ui_setting_exterior);
+        this.selectTheme = (LinearLayout)this.activity.findViewById(R.id.select_theme);
+        this.colorView = this.activity.findViewById(R.id.theme_color_view);
+        this.colorText = (TextView)this.activity.findViewById(R.id.theme_color_text);
+        this.selectPanelColor = (LinearLayout)this.activity.findViewById(R.id.select_panel_color);
+        this.panelColorView = this.activity.findViewById(R.id.panel_color_view);
+        this.panelColorText = (TextView)this.activity.findViewById(R.id.panel_color_text);
+        this.transBarSwitch = (SwitchCompat)this.activity.findViewById(R.id.switch_trans_bar);
+        this.fullscreenSwitch = (SwitchCompat)this.activity.findViewById(R.id.switch_full_screen);
+        this.grassUiSwitch = (SwitchCompat)this.activity.findViewById(R.id.switch_grass_ui);
+        this.fullscreenSetting = (LinearLayout)this.activity.findViewById(R.id.fullscreen_layout);
+        this.defaultRadio = (RadioButton)this.activity.findViewById(R.id.select_bg_default);
+        this.classicRadio = (RadioButton)this.activity.findViewById(R.id.select_bg_classic);
+        this.customRadio = (RadioButton)this.activity.findViewById(R.id.select_bg_custom);
+        this.onlineRadio = (RadioButton)this.activity.findViewById(R.id.select_bg_online);
+        this.editBgPath = (EditText)this.activity.findViewById(R.id.edit_bg_path);
+        this.editBgUrl = (EditText)this.activity.findViewById(R.id.edit_bg_url);
+        this.selectBgPath = (ImageButton)this.activity.findViewById(R.id.select_bg_path);
+        if (this.activity.launcherSetting.launcherBackground.type == 0) {
+            this.defaultRadio.setChecked(true);
+            this.editBgPath.setEnabled(false);
+            this.editBgUrl.setEnabled(false);
+            this.selectBgPath.setEnabled(false);
+        } else if (this.activity.launcherSetting.launcherBackground.type == 1) {
+            this.classicRadio.setChecked(true);
+            this.editBgPath.setEnabled(false);
+            this.editBgUrl.setEnabled(false);
+            this.selectBgPath.setEnabled(false);
+            this.activity.launcherLayout.setBackground(this.context.getDrawable(R.drawable.ic_background_classic));
+        } else if (this.activity.launcherSetting.launcherBackground.type == 2) {
+            this.customRadio.setChecked(true);
+            this.editBgPath.setEnabled(true);
+            this.editBgUrl.setEnabled(false);
+            this.selectBgPath.setEnabled(true);
+            if (new File(this.activity.launcherSetting.launcherBackground.path).exists() && ExteriorSettingUI.isImageFile(this.activity.launcherSetting.launcherBackground.path)) {
+                Bitmap bitmap = BitmapFactory.decodeFile((String)this.activity.launcherSetting.launcherBackground.path);
+                this.activity.launcherLayout.setBackground((Drawable)new BitmapDrawable(bitmap));
+            } else {
+                this.activity.launcherLayout.setBackground(this.context.getDrawable(R.drawable.qcl_bg_1));
             }
-            else {
-                activity.launcherLayout.setBackground(context.getDrawable(R.drawable.qcl_bg_1));
-            }
-        }
-        else{
-            onlineRadio.setChecked(true);
-            editBgPath.setEnabled(false);
-            editBgUrl.setEnabled(true);
-            selectBgPath.setEnabled(false);
+        } else {
+            this.onlineRadio.setChecked(true);
+            this.editBgPath.setEnabled(false);
+            this.editBgUrl.setEnabled(true);
+            this.selectBgPath.setEnabled(false);
             new Thread(() -> {
                 try {
-                    URL url = new URL(activity.launcherSetting.launcherBackground.url);
+                    URL url = new URL(this.activity.launcherSetting.launcherBackground.url);
                     HttpURLConnection httpURLConnection = (HttpURLConnection)url.openConnection();
                     httpURLConnection.setDoInput(true);
                     httpURLConnection.connect();
                     InputStream inputStream = httpURLConnection.getInputStream();
-                    Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
-                    handler.post(() -> activity.launcherLayout.setBackground(new BitmapDrawable(bitmap)));
-                } catch (IOException e) {
-                    handler.post(() -> activity.launcherLayout.setBackground(context.getDrawable(R.drawable.qcl_bg_1)));
+                    Bitmap bitmap = BitmapFactory.decodeStream((InputStream)inputStream);
+                    this.handler.post(() -> this.activity.launcherLayout.setBackground((Drawable)new BitmapDrawable(bitmap)));
+                }
+                catch (IOException e) {
+                    this.handler.post(() -> this.activity.launcherLayout.setBackground(this.context.getDrawable(R.drawable.qcl_bg_1)));
                     e.printStackTrace();
                 }
             }).start();
         }
-        editBgPath.setText(activity.launcherSetting.launcherBackground.path);
-        editBgUrl.setText(activity.launcherSetting.launcherBackground.url);
+        this.editBgPath.setText((CharSequence)this.activity.launcherSetting.launcherBackground.path);
+        this.editBgUrl.setText((CharSequence)this.activity.launcherSetting.launcherBackground.url);
+        this.selectTheme.setOnClickListener((View.OnClickListener)this);
+        this.selectPanelColor.setOnClickListener((View.OnClickListener)this);
+        this.transBarSwitch.setOnCheckedChangeListener((CompoundButton.OnCheckedChangeListener)this);
+        this.fullscreenSwitch.setOnCheckedChangeListener((CompoundButton.OnCheckedChangeListener)this);
+        if (this.grassUiSwitch != null) {
+            this.grassUiSwitch.setOnCheckedChangeListener((CompoundButton.OnCheckedChangeListener)this);
+        }
+        this.defaultRadio.setOnCheckedChangeListener((CompoundButton.OnCheckedChangeListener)this);
+        this.classicRadio.setOnCheckedChangeListener((CompoundButton.OnCheckedChangeListener)this);
+        this.customRadio.setOnCheckedChangeListener((CompoundButton.OnCheckedChangeListener)this);
+        this.onlineRadio.setOnCheckedChangeListener((CompoundButton.OnCheckedChangeListener)this);
+        this.selectBgPath.setOnClickListener((View.OnClickListener)this);
+        this.editBgPath.addTextChangedListener(new TextWatcher(){
 
-        selectTheme.setOnClickListener(this);
-        selectPanelColor.setOnClickListener(this);
-        transBarSwitch.setOnCheckedChangeListener(this);
-        fullscreenSwitch.setOnCheckedChangeListener(this);
-        if (grassUiSwitch != null) grassUiSwitch.setOnCheckedChangeListener(this);
-        defaultRadio.setOnCheckedChangeListener(this);
-        classicRadio.setOnCheckedChangeListener(this);
-        customRadio.setOnCheckedChangeListener(this);
-        onlineRadio.setOnCheckedChangeListener(this);
-        selectBgPath.setOnClickListener(this);
-
-        editBgPath.addTextChangedListener(new TextWatcher() {
-            @Override
             public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-
             }
 
-            @Override
             public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-
             }
 
-            @Override
             public void afterTextChanged(Editable editable) {
-                activity.launcherSetting.launcherBackground.path = editBgPath.getText().toString();
-                GsonUtils.saveLauncherSetting(activity.launcherSetting,AppManifest.SETTING_DIR + "/launcher_setting.json");
-                if (new File(editBgPath.getText().toString()).exists() && isImageFile(editBgPath.getText().toString())){
-                    Bitmap bitmap = BitmapFactory.decodeFile(editBgPath.getText().toString());
-                    activity.launcherLayout.setBackground(new BitmapDrawable(bitmap));
-                }
-                else {
-                    activity.launcherLayout.setBackground(context.getDrawable(R.drawable.qcl_bg_1));
+                ExteriorSettingUI.this.activity.launcherSetting.launcherBackground.path = ExteriorSettingUI.this.editBgPath.getText().toString();
+                GsonUtils.saveLauncherSetting(ExteriorSettingUI.this.activity.launcherSetting, AppManifest.SETTING_DIR + "/launcher_setting.json");
+                if (new File(ExteriorSettingUI.this.editBgPath.getText().toString()).exists() && ExteriorSettingUI.isImageFile(ExteriorSettingUI.this.editBgPath.getText().toString())) {
+                    Bitmap bitmap = BitmapFactory.decodeFile((String)ExteriorSettingUI.this.editBgPath.getText().toString());
+                    ExteriorSettingUI.this.activity.launcherLayout.setBackground((Drawable)new BitmapDrawable(bitmap));
+                } else {
+                    ExteriorSettingUI.this.activity.launcherLayout.setBackground(ExteriorSettingUI.this.context.getDrawable(R.drawable.qcl_bg_1));
                 }
             }
         });
-        editBgUrl.addTextChangedListener(new TextWatcher() {
-            @Override
+        this.editBgUrl.addTextChangedListener(new TextWatcher(){
+
             public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-
             }
 
-            @Override
             public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-
             }
 
-            @Override
             public void afterTextChanged(Editable editable) {
-                activity.launcherSetting.launcherBackground.url = editBgUrl.getText().toString();
-                GsonUtils.saveLauncherSetting(activity.launcherSetting,AppManifest.SETTING_DIR + "/launcher_setting.json");
+                ExteriorSettingUI.this.activity.launcherSetting.launcherBackground.url = ExteriorSettingUI.this.editBgUrl.getText().toString();
+                GsonUtils.saveLauncherSetting(ExteriorSettingUI.this.activity.launcherSetting, AppManifest.SETTING_DIR + "/launcher_setting.json");
                 new Thread(() -> {
                     try {
-                        URL url = new URL(editBgUrl.getText().toString());
+                        URL url = new URL(ExteriorSettingUI.this.editBgUrl.getText().toString());
                         HttpURLConnection httpURLConnection = (HttpURLConnection)url.openConnection();
                         httpURLConnection.setDoInput(true);
                         httpURLConnection.connect();
                         InputStream inputStream = httpURLConnection.getInputStream();
-                        Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
-                        handler.post(() -> activity.launcherLayout.setBackground(new BitmapDrawable(bitmap)));
-                    } catch (IOException e) {
-                        handler.post(() -> activity.launcherLayout.setBackground(context.getDrawable(R.drawable.qcl_bg_1)));
+                        Bitmap bitmap = BitmapFactory.decodeStream((InputStream)inputStream);
+                        ExteriorSettingUI.this.handler.post(() -> ExteriorSettingUI.this.activity.launcherLayout.setBackground((Drawable)new BitmapDrawable(bitmap)));
+                    }
+                    catch (IOException e) {
+                        ExteriorSettingUI.this.handler.post(() -> ExteriorSettingUI.this.activity.launcherLayout.setBackground(ExteriorSettingUI.this.context.getDrawable(R.drawable.qcl_bg_1)));
                         e.printStackTrace();
                     }
                 }).start();
             }
         });
-
-        transBarSwitch.setChecked(activity.launcherSetting.transBar);
-        fullscreenSwitch.setChecked(activity.launcherSetting.fullscreen);
-        if (grassUiSwitch != null) {
-            grassUiSwitch.setChecked(activity.launcherSetting.uiTheme == 1);
+        this.transBarSwitch.setChecked(this.activity.launcherSetting.transBar);
+        this.fullscreenSwitch.setChecked(this.activity.launcherSetting.fullscreen);
+        if (this.grassUiSwitch != null) {
+            this.grassUiSwitch.setChecked(this.activity.launcherSetting.uiTheme == 1);
         }
-        // 草方块 UI 下禁用颜色自定义（主题色 / 面板色都不可改）
-        refreshColorEditable();
-
-        if (!(Build.VERSION.SDK_INT >= Build.VERSION_CODES.P)){
-            fullscreenSetting.setVisibility(View.GONE);
+        this.refreshColorEditable();
+        if (Build.VERSION.SDK_INT < 28) {
+            this.fullscreenSetting.setVisibility(8);
         }
     }
 
-    /**
-     * 1.0.5：草方块 UI 下**禁用颜色自定义** —— 主题色与面板色选择器都置灰不可点。
-     * 用户明确要求：「草方块 UI 下禁用颜色自定义（默认色与自定义色都不可换）」。
-     */
     private void refreshColorEditable() {
-        boolean grass = activity.launcherSetting.uiTheme == 1;
-        setEnabledRecursive(selectTheme, !grass);
-        setEnabledRecursive(selectPanelColor, !grass);
-        if (colorView != null) colorView.setAlpha(grass ? 0.35f : 1f);
-        if (panelColorView != null) panelColorView.setAlpha(grass ? 0.35f : 1f);
-        if (colorText != null) colorText.setAlpha(grass ? 0.45f : 1f);
-        if (panelColorText != null) panelColorText.setAlpha(grass ? 0.45f : 1f);
+        boolean grass = this.activity.launcherSetting.uiTheme == 1;
+        this.setEnabledRecursive((View)this.selectTheme, !grass);
+        this.setEnabledRecursive((View)this.selectPanelColor, !grass);
+        if (this.colorView != null) {
+            this.colorView.setAlpha(grass ? 0.35f : 1.0f);
+        }
+        if (this.panelColorView != null) {
+            this.panelColorView.setAlpha(grass ? 0.35f : 1.0f);
+        }
+        if (this.colorText != null) {
+            this.colorText.setAlpha(grass ? 0.45f : 1.0f);
+        }
+        if (this.panelColorText != null) {
+            this.panelColorText.setAlpha(grass ? 0.45f : 1.0f);
+        }
     }
 
     private void setEnabledRecursive(View v, boolean enabled) {
-        if (v == null) return;
+        if (v == null) {
+            return;
+        }
         v.setEnabled(enabled);
         v.setClickable(enabled);
-        if (v instanceof android.view.ViewGroup) {
-            android.view.ViewGroup g = (android.view.ViewGroup) v;
-            for (int i = 0; i < g.getChildCount(); i++) {
+        if (v instanceof ViewGroup) {
+            ViewGroup g = (ViewGroup)v;
+            for (int i = 0; i < g.getChildCount(); ++i) {
                 g.getChildAt(i).setEnabled(enabled);
             }
         }
     }
 
-    @SuppressLint("UseCompatLoadingForDrawables")
     @Override
+    @SuppressLint(value={"UseCompatLoadingForDrawables"})
     public void onStart() {
         super.onStart();
-        CustomAnimationUtils.showViewFromLeft(exteriorSettingUI,activity,context,false);
-        if (activity.isLoaded){
-            activity.uiManager.settingUI.startExteriorSettingUI.setBackground(context.getResources().getDrawable(R.drawable.launcher_button_white));
+        CustomAnimationUtils.showViewFromLeft((View)this.exteriorSettingUI, this.activity, this.context, false);
+        if (this.activity.isLoaded) {
+            this.activity.uiManager.settingUI.startExteriorSettingUI.setBackground(this.context.getResources().getDrawable(R.drawable.launcher_button_white));
         }
-        colorView.setBackgroundColor(Color.parseColor(getThemeColor(context,activity.launcherSetting.launcherTheme)));
-        colorText.setText(getThemeColor(context,activity.launcherSetting.launcherTheme));
-        int pc = getPanelColor(context, activity.launcherSetting.panelColor);
-        panelColorView.setBackgroundColor(pc);
-        panelColorText.setText("#" + Integer.toHexString(pc));
+        this.colorView.setBackgroundColor(Color.parseColor((String)ExteriorSettingUI.getThemeColor(this.context, this.activity.launcherSetting.launcherTheme)));
+        this.colorText.setText((CharSequence)ExteriorSettingUI.getThemeColor(this.context, this.activity.launcherSetting.launcherTheme));
+        int pc = ExteriorSettingUI.getPanelColor(this.context, this.activity.launcherSetting.panelColor);
+        this.panelColorView.setBackgroundColor(pc);
+        this.panelColorText.setText((CharSequence)("#" + Integer.toHexString(pc)));
     }
 
-    @SuppressLint("UseCompatLoadingForDrawables")
     @Override
+    @SuppressLint(value={"UseCompatLoadingForDrawables"})
     public void onStop() {
         super.onStop();
-        CustomAnimationUtils.hideViewToLeft(exteriorSettingUI,activity,context,false);
-        if (activity.isLoaded){
-            activity.uiManager.settingUI.startExteriorSettingUI.setBackground(context.getResources().getDrawable(R.drawable.launcher_button_parent));
+        CustomAnimationUtils.hideViewToLeft((View)this.exteriorSettingUI, this.activity, this.context, false);
+        if (this.activity.isLoaded) {
+            this.activity.uiManager.settingUI.startExteriorSettingUI.setBackground(this.context.getResources().getDrawable(R.drawable.launcher_button_parent));
         }
     }
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == PICK_BACKGROUND_REQUEST && data != null) {
-            if (resultCode == RESULT_OK) {
-                Uri uri = data.getData();
-                editBgPath.setText(UriUtils.getRealPathFromUri_AboveApi19(context,uri));
-            }
+        if (requestCode == 4000 && data != null && resultCode == -1) {
+            Uri uri = data.getData();
+            this.editBgPath.setText((CharSequence)UriUtils.getRealPathFromUri_AboveApi19(this.context, uri));
         }
     }
 
-    /** 背景板颜色（默认灰色，null 安全） */
-    public static int getPanelColor(Context context, String color){
-        if (color == null || color.equals("DEFAULT") || color.isEmpty()){
+    public static int getPanelColor(Context context, String color2) {
+        if (color2 == null || color2.equals("DEFAULT") || color2.isEmpty()) {
             return context.getResources().getColor(R.color.qcl_panel_gray_alt);
         }
-        try { return Color.parseColor(color); } catch (Throwable t) { return context.getResources().getColor(R.color.qcl_panel_gray_alt); }
-    }
-
-    /** 递归给面板 drawable 着色（按 constantState 匹配 launcher_view_white / launcher_view_light_gray） */
-    public static void applyPanelTint(Context context, View root, int color){
-        if (root == null) return;
-        if (root instanceof android.view.ViewGroup){
-            android.view.ViewGroup g = (android.view.ViewGroup) root;
-            for (int i = 0; i < g.getChildCount(); i++){
-                applyPanelTint(context, g.getChildAt(i), color);
-            }
+        try {
+            return Color.parseColor((String)color2);
         }
-        android.graphics.drawable.Drawable bg = root.getBackground();
-        if (bg == null || bg.getConstantState() == null) return;
-        for (int id : new int[]{R.drawable.launcher_view_white, R.drawable.launcher_view_light_gray}){
-            android.graphics.drawable.Drawable ref = context.getResources().getDrawable(id);
-            if (ref != null && ref.getConstantState() != null && ref.getConstantState().equals(bg.getConstantState())){
-                bg.mutate().setTint(color);
-                break;
-            }
+        catch (Throwable t) {
+            return context.getResources().getColor(R.color.qcl_panel_gray_alt);
         }
     }
 
-    public static String getThemeColor(Context context,String color){
-        if (color.equals("DEFAULT")){
+    public static void applyPanelTint(Context context, View root, int color2) {
+        Drawable bg;
+        if (root == null) {
+            return;
+        }
+        if (root instanceof ViewGroup) {
+            ViewGroup g = (ViewGroup)root;
+            for (int i = 0; i < g.getChildCount(); ++i) {
+                ExteriorSettingUI.applyPanelTint(context, g.getChildAt(i), color2);
+            }
+        }
+        if ((bg = root.getBackground()) == null || bg.getConstantState() == null) {
+            return;
+        }
+        for (int id2 : new int[]{R.drawable.launcher_view_white, R.drawable.launcher_view_light_gray}) {
+            Drawable ref = context.getResources().getDrawable(id2);
+            if (ref == null || ref.getConstantState() == null || !ref.getConstantState().equals(bg.getConstantState())) continue;
+            bg.mutate().setTint(color2);
+            break;
+        }
+    }
+
+    public static String getThemeColor(Context context, String color2) {
+        if (color2.equals("DEFAULT")) {
             return "#" + Integer.toHexString(context.getColor(R.color.colorAccent));
-        }else {
-            return color;
         }
+        return color2;
     }
 
     public static boolean isImageFile(String filePath) {
         BitmapFactory.Options options = new BitmapFactory.Options();
         options.inJustDecodeBounds = true;
-        BitmapFactory.decodeFile(filePath, options);
-        if (options.outWidth == -1) {
-            return false;
-        }
-        return true;
+        BitmapFactory.decodeFile((String)filePath, (BitmapFactory.Options)options);
+        return options.outWidth != -1;
     }
 
-    @Override
     public void onClick(View v) {
-        if (v == selectTheme){
-            ColorSelectorDialog dialog = new ColorSelectorDialog(context,true,Color.parseColor(getThemeColor(context,activity.launcherSetting.launcherTheme)));
-            dialog.setColorSelectorDialogListener(new ColorSelectorDialog.ColorSelectorDialogListener() {
-                @SuppressLint("SetTextI18n")
+        ColorSelectorDialog dialog;
+        if (v == this.selectTheme) {
+            dialog = new ColorSelectorDialog(this.context, true, Color.parseColor((String)ExteriorSettingUI.getThemeColor(this.context, this.activity.launcherSetting.launcherTheme)));
+            dialog.setColorSelectorDialogListener(new ColorSelectorDialog.ColorSelectorDialogListener(){
+
                 @Override
-                public void onColorSelected(int color) {
-                    activity.exteriorConfig.primaryColor(color);
-                    activity.exteriorConfig.accentColor(color);
-                    activity.exteriorConfig.apply(activity);
-                    colorView.setBackgroundColor(color);
-                    colorText.setText("#" + Integer.toHexString(color));
+                @SuppressLint(value={"SetTextI18n"})
+                public void onColorSelected(int color2) {
+                    ExteriorSettingUI.this.activity.exteriorConfig.primaryColor(color2);
+                    ExteriorSettingUI.this.activity.exteriorConfig.accentColor(color2);
+                    ExteriorSettingUI.this.activity.exteriorConfig.apply((Activity)ExteriorSettingUI.this.activity);
+                    ExteriorSettingUI.this.colorView.setBackgroundColor(color2);
+                    ExteriorSettingUI.this.colorText.setText((CharSequence)("#" + Integer.toHexString(color2)));
                 }
 
-                @SuppressLint("SetTextI18n")
                 @Override
+                @SuppressLint(value={"SetTextI18n"})
                 public void onPositive(int destColor) {
-                    activity.launcherSetting.launcherTheme = "#" + Integer.toHexString(destColor);
-                    GsonUtils.saveLauncherSetting(activity.launcherSetting,AppManifest.SETTING_DIR + "/launcher_setting.json");
-                    activity.exteriorConfig.primaryColor(destColor);
-                    activity.exteriorConfig.accentColor(destColor);
-                    activity.exteriorConfig.apply(activity);
-                    colorView.setBackgroundColor(destColor);
-                    colorText.setText("#" + Integer.toHexString(destColor));
+                    ExteriorSettingUI.this.activity.launcherSetting.launcherTheme = "#" + Integer.toHexString(destColor);
+                    GsonUtils.saveLauncherSetting(ExteriorSettingUI.this.activity.launcherSetting, AppManifest.SETTING_DIR + "/launcher_setting.json");
+                    ExteriorSettingUI.this.activity.exteriorConfig.primaryColor(destColor);
+                    ExteriorSettingUI.this.activity.exteriorConfig.accentColor(destColor);
+                    ExteriorSettingUI.this.activity.exteriorConfig.apply((Activity)ExteriorSettingUI.this.activity);
+                    ExteriorSettingUI.this.colorView.setBackgroundColor(destColor);
+                    ExteriorSettingUI.this.colorText.setText((CharSequence)("#" + Integer.toHexString(destColor)));
                 }
 
-                @SuppressLint("SetTextI18n")
                 @Override
+                @SuppressLint(value={"SetTextI18n"})
                 public void onNegative(int initColor) {
-                    activity.exteriorConfig.primaryColor(initColor);
-                    activity.exteriorConfig.accentColor(initColor);
-                    activity.exteriorConfig.apply(activity);
-                    colorView.setBackgroundColor(initColor);
-                    colorText.setText("#" + Integer.toHexString(initColor));
+                    ExteriorSettingUI.this.activity.exteriorConfig.primaryColor(initColor);
+                    ExteriorSettingUI.this.activity.exteriorConfig.accentColor(initColor);
+                    ExteriorSettingUI.this.activity.exteriorConfig.apply((Activity)ExteriorSettingUI.this.activity);
+                    ExteriorSettingUI.this.colorView.setBackgroundColor(initColor);
+                    ExteriorSettingUI.this.colorText.setText((CharSequence)("#" + Integer.toHexString(initColor)));
                 }
             });
             dialog.show();
         }
-        if (v == selectPanelColor){
-            ColorSelectorDialog dialog = new ColorSelectorDialog(context,true,getPanelColor(context,activity.launcherSetting.panelColor));
-            dialog.setColorSelectorDialogListener(new ColorSelectorDialog.ColorSelectorDialogListener() {
-                @SuppressLint("SetTextI18n")
+        if (v == this.selectPanelColor) {
+            dialog = new ColorSelectorDialog(this.context, true, ExteriorSettingUI.getPanelColor(this.context, this.activity.launcherSetting.panelColor));
+            dialog.setColorSelectorDialogListener(new ColorSelectorDialog.ColorSelectorDialogListener(){
+
                 @Override
-                public void onColorSelected(int color) {
-                    panelColorView.setBackgroundColor(color);
-                    panelColorText.setText("#" + Integer.toHexString(color));
+                @SuppressLint(value={"SetTextI18n"})
+                public void onColorSelected(int color2) {
+                    ExteriorSettingUI.this.panelColorView.setBackgroundColor(color2);
+                    ExteriorSettingUI.this.panelColorText.setText((CharSequence)("#" + Integer.toHexString(color2)));
                 }
-                @SuppressLint("SetTextI18n")
+
                 @Override
+                @SuppressLint(value={"SetTextI18n"})
                 public void onPositive(int destColor) {
-                    activity.launcherSetting.panelColor = "#" + Integer.toHexString(destColor);
-                    GsonUtils.saveLauncherSetting(activity.launcherSetting,AppManifest.SETTING_DIR + "/launcher_setting.json");
-                    panelColorView.setBackgroundColor(destColor);
-                    panelColorText.setText("#" + Integer.toHexString(destColor));
-                    applyPanelTint(context, exteriorSettingUI, destColor);
-                    applyPanelTint(context, activity.getWindow().getDecorView(), destColor);
+                    ExteriorSettingUI.this.activity.launcherSetting.panelColor = "#" + Integer.toHexString(destColor);
+                    GsonUtils.saveLauncherSetting(ExteriorSettingUI.this.activity.launcherSetting, AppManifest.SETTING_DIR + "/launcher_setting.json");
+                    ExteriorSettingUI.this.panelColorView.setBackgroundColor(destColor);
+                    ExteriorSettingUI.this.panelColorText.setText((CharSequence)("#" + Integer.toHexString(destColor)));
+                    ExteriorSettingUI.applyPanelTint(ExteriorSettingUI.this.context, (View)ExteriorSettingUI.this.exteriorSettingUI, destColor);
+                    ExteriorSettingUI.applyPanelTint(ExteriorSettingUI.this.context, ExteriorSettingUI.this.activity.getWindow().getDecorView(), destColor);
                 }
-                @SuppressLint("SetTextI18n")
+
                 @Override
+                @SuppressLint(value={"SetTextI18n"})
                 public void onNegative(int initColor) {
-                    panelColorView.setBackgroundColor(initColor);
-                    panelColorText.setText("#" + Integer.toHexString(initColor));
+                    ExteriorSettingUI.this.panelColorView.setBackgroundColor(initColor);
+                    ExteriorSettingUI.this.panelColorText.setText((CharSequence)("#" + Integer.toHexString(initColor)));
                 }
             });
             dialog.show();
         }
-        if (v == selectBgPath){
-            Intent intent = new Intent(context, FileChooser.class);
-            intent.putExtra(Constants.SELECTION_MODE, Constants.SELECTION_MODES.SINGLE_SELECTION.ordinal());
-            intent.putExtra(Constants.ALLOWED_FILE_EXTENSIONS, "png;jpg");
-            intent.putExtra(Constants.INITIAL_DIRECTORY, new File(Environment.getExternalStorageDirectory().getAbsolutePath()).getAbsolutePath());
-            activity.startActivityForResult(intent, PICK_BACKGROUND_REQUEST);
+        if (v == this.selectBgPath) {
+            Intent intent = new Intent(this.context, FileChooser.class);
+            intent.putExtra("SELECTION_MODE", Constants.SELECTION_MODES.SINGLE_SELECTION.ordinal());
+            intent.putExtra("ALLOWED_FILE_EXTENSIONS", "png;jpg");
+            intent.putExtra("INITIAL_DIRECTORY", new File(Environment.getExternalStorageDirectory().getAbsolutePath()).getAbsolutePath());
+            this.activity.startActivityForResult(intent, 4000);
         }
     }
 
-    @SuppressLint("UseCompatLoadingForDrawables")
-    @Override
+    @SuppressLint(value={"UseCompatLoadingForDrawables"})
     public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-        if (buttonView == transBarSwitch){
-            activity.launcherSetting.transBar = isChecked;
-            GsonUtils.saveLauncherSetting(activity.launcherSetting,AppManifest.SETTING_DIR + "/launcher_setting.json");
-            if (isChecked){
-            }
-            else {
-            }
-        }
-        if (buttonView == fullscreenSwitch){
-            activity.launcherSetting.fullscreen = isChecked;
-            GsonUtils.saveLauncherSetting(activity.launcherSetting,AppManifest.SETTING_DIR + "/launcher_setting.json");
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                if (isChecked) {
-                    activity.getWindow().getAttributes().layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES;
-                } else {
-                    activity.getWindow().getAttributes().layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_NEVER;
-                }
-            }
-            activity.getWindow().setFlags(WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN, WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN);
-        }
-        if (grassUiSwitch != null && buttonView == grassUiSwitch){
-            // 1.0.5：UI 风格切换（默认 UI ↔ 草方块 UI）
-            activity.launcherSetting.uiTheme = isChecked ? 1 : 0;
-            GsonUtils.saveLauncherSetting(activity.launcherSetting,AppManifest.SETTING_DIR + "/launcher_setting.json");
-            // 1) 立即把主题刷到整棵视图树
-            QclThemeUtils.apply(activity, activity.launcherSetting.uiTheme);
-            // 2) 草方块 UI 下禁用颜色自定义
-            refreshColorEditable();
-            // 3) 1.0.6：顶部标题栏已移除，不再需要同步顶栏颜色。
-        }
-        if (buttonView == defaultRadio && isChecked){
-            classicRadio.setChecked(false);
-            customRadio.setChecked(false);
-            onlineRadio.setChecked(false);
-            editBgPath.setEnabled(false);
-            editBgUrl.setEnabled(false);
-            selectBgPath.setEnabled(false);
-            activity.launcherSetting.launcherBackground.type = 0;
-            // 默认背景 = 4 张远古图 10 秒轮换（1.0.5）
-            activity.refreshDynamicBackground();
-        }
-        if (buttonView == classicRadio && isChecked){
-            defaultRadio.setChecked(false);
-            customRadio.setChecked(false);
-            onlineRadio.setChecked(false);
-            editBgPath.setEnabled(false);
-            editBgUrl.setEnabled(false);
-            selectBgPath.setEnabled(false);
-            activity.launcherSetting.launcherBackground.type = 1;
-            activity.refreshDynamicBackground();
-            activity.launcherLayout.setBackground(context.getDrawable(R.drawable.ic_background_classic));
-        }
-        if (buttonView == customRadio && isChecked){
-            defaultRadio.setChecked(false);
-            classicRadio.setChecked(false);
-            onlineRadio.setChecked(false);
-            editBgPath.setEnabled(true);
-            editBgUrl.setEnabled(false);
-            selectBgPath.setEnabled(true);
-            activity.launcherSetting.launcherBackground.type = 2;
-            activity.refreshDynamicBackground();
-            activity.launcherSetting.launcherBackground.path = editBgPath.getText().toString();
-            if (new File(editBgPath.getText().toString()).exists() && isImageFile(editBgPath.getText().toString())){
-                Bitmap bitmap = BitmapFactory.decodeFile(editBgPath.getText().toString());
-                activity.launcherLayout.setBackground(new BitmapDrawable(bitmap));
-            }
-            else {
-                activity.launcherLayout.setBackground(context.getDrawable(R.drawable.qcl_bg_1));
+        if (buttonView == this.transBarSwitch) {
+            this.activity.launcherSetting.transBar = isChecked;
+            GsonUtils.saveLauncherSetting(this.activity.launcherSetting, AppManifest.SETTING_DIR + "/launcher_setting.json");
+            if (isChecked) {
+                // empty if block
             }
         }
-        if (buttonView == onlineRadio && isChecked){
-            defaultRadio.setChecked(false);
-            classicRadio.setChecked(false);
-            customRadio.setChecked(false);
-            editBgPath.setEnabled(false);
-            editBgUrl.setEnabled(true);
-            selectBgPath.setEnabled(false);
-            activity.launcherSetting.launcherBackground.type = 3;
-            activity.refreshDynamicBackground();
-            activity.launcherSetting.launcherBackground.path = editBgUrl.getText().toString();
+        if (buttonView == this.fullscreenSwitch) {
+            this.activity.launcherSetting.fullscreen = isChecked;
+            GsonUtils.saveLauncherSetting(this.activity.launcherSetting, AppManifest.SETTING_DIR + "/launcher_setting.json");
+            if (Build.VERSION.SDK_INT >= 28) {
+                this.activity.getWindow().getAttributes().layoutInDisplayCutoutMode = isChecked ? 1 : 2;
+            }
+            this.activity.getWindow().setFlags(256, 256);
+        }
+        if (this.grassUiSwitch != null && buttonView == this.grassUiSwitch) {
+            this.activity.launcherSetting.uiTheme = isChecked ? 1 : 0;
+            GsonUtils.saveLauncherSetting(this.activity.launcherSetting, AppManifest.SETTING_DIR + "/launcher_setting.json");
+            QclThemeUtils.apply((Activity)this.activity, this.activity.launcherSetting.uiTheme);
+            this.refreshColorEditable();
+        }
+        if (buttonView == this.defaultRadio && isChecked) {
+            this.classicRadio.setChecked(false);
+            this.customRadio.setChecked(false);
+            this.onlineRadio.setChecked(false);
+            this.editBgPath.setEnabled(false);
+            this.editBgUrl.setEnabled(false);
+            this.selectBgPath.setEnabled(false);
+            this.activity.launcherSetting.launcherBackground.type = 0;
+            this.activity.refreshDynamicBackground();
+        }
+        if (buttonView == this.classicRadio && isChecked) {
+            this.defaultRadio.setChecked(false);
+            this.customRadio.setChecked(false);
+            this.onlineRadio.setChecked(false);
+            this.editBgPath.setEnabled(false);
+            this.editBgUrl.setEnabled(false);
+            this.selectBgPath.setEnabled(false);
+            this.activity.launcherSetting.launcherBackground.type = 1;
+            this.activity.refreshDynamicBackground();
+            this.activity.launcherLayout.setBackground(this.context.getDrawable(R.drawable.ic_background_classic));
+        }
+        if (buttonView == this.customRadio && isChecked) {
+            this.defaultRadio.setChecked(false);
+            this.classicRadio.setChecked(false);
+            this.onlineRadio.setChecked(false);
+            this.editBgPath.setEnabled(true);
+            this.editBgUrl.setEnabled(false);
+            this.selectBgPath.setEnabled(true);
+            this.activity.launcherSetting.launcherBackground.type = 2;
+            this.activity.refreshDynamicBackground();
+            this.activity.launcherSetting.launcherBackground.path = this.editBgPath.getText().toString();
+            if (new File(this.editBgPath.getText().toString()).exists() && ExteriorSettingUI.isImageFile(this.editBgPath.getText().toString())) {
+                Bitmap bitmap = BitmapFactory.decodeFile((String)this.editBgPath.getText().toString());
+                this.activity.launcherLayout.setBackground((Drawable)new BitmapDrawable(bitmap));
+            } else {
+                this.activity.launcherLayout.setBackground(this.context.getDrawable(R.drawable.qcl_bg_1));
+            }
+        }
+        if (buttonView == this.onlineRadio && isChecked) {
+            this.defaultRadio.setChecked(false);
+            this.classicRadio.setChecked(false);
+            this.customRadio.setChecked(false);
+            this.editBgPath.setEnabled(false);
+            this.editBgUrl.setEnabled(true);
+            this.selectBgPath.setEnabled(false);
+            this.activity.launcherSetting.launcherBackground.type = 3;
+            this.activity.refreshDynamicBackground();
+            this.activity.launcherSetting.launcherBackground.path = this.editBgUrl.getText().toString();
             new Thread(() -> {
                 try {
-                    URL url = new URL(editBgUrl.getText().toString());
+                    URL url = new URL(this.editBgUrl.getText().toString());
                     HttpURLConnection httpURLConnection = (HttpURLConnection)url.openConnection();
                     httpURLConnection.setDoInput(true);
                     httpURLConnection.connect();
                     InputStream inputStream = httpURLConnection.getInputStream();
-                    Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
-                    handler.post(() -> activity.launcherLayout.setBackground(new BitmapDrawable(bitmap)));
-                } catch (IOException e) {
-                    handler.post(() -> activity.launcherLayout.setBackground(context.getDrawable(R.drawable.qcl_bg_1)));
+                    Bitmap bitmap = BitmapFactory.decodeStream((InputStream)inputStream);
+                    this.handler.post(() -> this.activity.launcherLayout.setBackground((Drawable)new BitmapDrawable(bitmap)));
+                }
+                catch (IOException e) {
+                    this.handler.post(() -> this.activity.launcherLayout.setBackground(this.context.getDrawable(R.drawable.qcl_bg_1)));
                     e.printStackTrace();
                 }
             }).start();
         }
-        GsonUtils.saveLauncherSetting(activity.launcherSetting,AppManifest.SETTING_DIR + "/launcher_setting.json");
+        GsonUtils.saveLauncherSetting(this.activity.launcherSetting, AppManifest.SETTING_DIR + "/launcher_setting.json");
     }
-
-    @SuppressLint("HandlerLeak")
-    public final Handler handler = new Handler() {
-        @Override
-        public void handleMessage(@NonNull Message msg) {
-            super.handleMessage(msg);
-        }
-    };
 }
+

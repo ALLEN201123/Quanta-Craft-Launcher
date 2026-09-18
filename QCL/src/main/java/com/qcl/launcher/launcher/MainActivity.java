@@ -1,10 +1,34 @@
+/*
+ * Decompiled with CFR 0.152.
+ * 
+ * Could not load the following classes:
+ *  android.annotation.SuppressLint
+ *  android.app.Activity
+ *  android.content.Context
+ *  android.content.Intent
+ *  android.content.SharedPreferences
+ *  android.content.SharedPreferences$Editor
+ *  android.content.res.Configuration
+ *  android.graphics.Color
+ *  android.os.Build$VERSION
+ *  android.os.Bundle
+ *  android.os.Handler
+ *  android.os.Message
+ *  android.view.View
+ *  android.view.View$OnClickListener
+ *  android.widget.ImageButton
+ *  android.widget.LinearLayout
+ *  android.widget.RelativeLayout
+ *  android.widget.TextView
+ *  androidx.annotation.NonNull
+ *  androidx.appcompat.app.AppCompatActivity
+ *  com.afollestad.appthemeengine.ATE
+ *  com.afollestad.appthemeengine.Config
+ */
 package com.qcl.launcher.launcher;
 
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
-
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -15,459 +39,420 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.view.View;
-import android.view.WindowManager;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
-
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
 import com.afollestad.appthemeengine.ATE;
 import com.afollestad.appthemeengine.Config;
-import com.qcl.launcher.R;
+import com.qcl.launcher.launcher.VerifyInterface;
 import com.qcl.launcher.launcher.dialogs.VerifyDialog;
 import com.qcl.launcher.launcher.dialogs.account.SkinPreviewDialog;
-import com.qcl.launcher.manifest.AppManifest;
 import com.qcl.launcher.launcher.setting.InitializeSetting;
 import com.qcl.launcher.launcher.setting.game.PrivateGameSetting;
 import com.qcl.launcher.launcher.setting.game.PublicGameSetting;
 import com.qcl.launcher.launcher.setting.launcher.LauncherSetting;
 import com.qcl.launcher.launcher.uis.game.download.DownloadUrlSource;
+import com.qcl.launcher.launcher.uis.main.DynamicBackground;
+import com.qcl.launcher.launcher.uis.tools.QclThemeUtils;
 import com.qcl.launcher.launcher.uis.tools.UIManager;
 import com.qcl.launcher.launcher.uis.universal.setting.right.launcher.ExteriorSettingUI;
+import com.qcl.launcher.manifest.AppManifest;
 import com.qcl.launcher.update.UpdateChecker;
 import com.qcl.launcher.utils.LocaleUtils;
 
-public class MainActivity extends AppCompatActivity implements View.OnClickListener {
-
-    static {
-        System.loadLibrary("security");
-    }
-    public native boolean isValid(String str);
-    public static native void verify();
-    public static native void verifyFunc();
-    public native void launch(Intent intent);
-    @SuppressLint("MissingSuperCall")
-    @Override
-    public native void onCreate(Bundle savedInstanceState);
-
+import com.qcl.launcher.R;
+public class MainActivity
+extends AppCompatActivity
+implements View.OnClickListener {
     public LinearLayout launcherLayout;
-
     public boolean isLoaded = false;
     public boolean dialogMode = false;
-
     public LauncherSetting launcherSetting;
     public PublicGameSetting publicGameSetting;
     public PrivateGameSetting privateGameSetting;
-
     public UpdateChecker updateChecker;
-
-    // 1.0.6：顶部标题栏已整体移除（不再有 appBar / appBarTitle / backToDesktop / closeApp）。
-    // 但二级页面仍需返回入口 —— 改为右下/右上角的**悬浮返回栏**（qcl_back_bar），
-    // 只在二级页面点亮，主界面隐藏。只保留返回相关的 4 个控件，不再有任何标题栏元素。
-    public android.widget.LinearLayout backBar;
-    public android.widget.ImageButton backToLastUI;
-    public android.widget.TextView currentUIText;
-    public android.widget.ImageButton backToHome;
-    public android.widget.ImageButton closeCurrentUI;
-
+    public LinearLayout backBar;
+    public ImageButton backToLastUI;
+    public TextView currentUIText;
+    public ImageButton backToHome;
+    public ImageButton closeCurrentUI;
     public RelativeLayout uiContainer;
     public UIManager uiManager;
-
     public Config exteriorConfig;
-
-    public void init(){
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-            if (getIntent().getExtras().getBoolean("fullscreen")) {
-                getWindow().getAttributes().layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES;
-            } else {
-                getWindow().getAttributes().layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_NEVER;
-            }
-        }
-        getWindow().setFlags(WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN, WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN);
-        new Thread(() -> {
-            AppManifest.initializeManifest(MainActivity.this);
-            launcherSetting = InitializeSetting.initializeLauncherSetting();
-            publicGameSetting = InitializeSetting.initializePublicGameSetting(MainActivity.this,MainActivity.this);
-            privateGameSetting = InitializeSetting.initializePrivateGameSetting(MainActivity.this);
-
-            runOnUiThread(() -> {
-                updateChecker = new UpdateChecker(MainActivity.this,MainActivity.this);
-            });
-
-            DownloadUrlSource.getBalancedSource(MainActivity.this);
-
-            loadingHandler.sendEmptyMessage(0);
-        }).start();
-    }
-
-    @SuppressLint("HandlerLeak")
+    @SuppressLint(value={"HandlerLeak"})
     public final Handler loadingHandler = new Handler(){
-        @Override
+
         public void handleMessage(@NonNull Message msg) {
             super.handleMessage(msg);
-            if (msg.what == 0){
-                if (!isLoaded) {
-                    exteriorConfig = ATE.config(MainActivity.this, null);
-
-                    // 顶部标题栏已在 1.0.6 移除（合成台图标 + 标题 + 返回/主页/关闭等窗口按钮），
-                    // 六个主界面入口按钮整体上移到原位置。这里只接管**悬浮返回栏**：
-                    // 它不含任何标题栏元素，仅在二级页面点亮，为下载/版本列表/账户/设置等页面提供返回入口。
-                    backBar = findViewById(R.id.qcl_back_bar);
-                    backToLastUI = findViewById(R.id.back_to_last_ui);
-                    currentUIText = findViewById(R.id.text_current_ui);
-                    backToHome = findViewById(R.id.back_to_home);
-                    closeCurrentUI = findViewById(R.id.close_current_ui);
-                    if (backToLastUI != null) backToLastUI.setOnClickListener(MainActivity.this);
-                    if (backToHome != null) backToHome.setOnClickListener(MainActivity.this);
-                    if (closeCurrentUI != null) closeCurrentUI.setOnClickListener(MainActivity.this);
-
-                    uiContainer = findViewById(R.id.main_ui_container);
-                    uiManager = new UIManager(MainActivity.this,MainActivity.this);
-
-                    exteriorConfig.primaryColor(Color.parseColor(ExteriorSettingUI.getThemeColor(MainActivity.this,launcherSetting.launcherTheme)));
-                    exteriorConfig.accentColor(Color.parseColor(ExteriorSettingUI.getThemeColor(MainActivity.this,launcherSetting.launcherTheme)));
-                    exteriorConfig.apply(MainActivity.this);
-
-                    // Development plans are available in About; no startup warning.
-
-                    isLoaded = true;
-                    onLoad();
-                    ExteriorSettingUI.applyPanelTint(MainActivity.this, getWindow().getDecorView(), ExteriorSettingUI.getPanelColor(MainActivity.this, launcherSetting.panelColor));
-                    startDynamicBackgroundIfNeeded();
-                    // 1.0.5：套用 UI 风格（默认 / 草方块）
-                    applyUiTheme();
+            if (msg.what == 0 && !MainActivity.this.isLoaded) {
+                MainActivity.this.exteriorConfig = ATE.config((Context)MainActivity.this, null);
+                MainActivity.this.backBar = (LinearLayout)MainActivity.this.findViewById(R.id.qcl_back_bar);
+                MainActivity.this.backToLastUI = (ImageButton)MainActivity.this.findViewById(R.id.back_to_last_ui);
+                MainActivity.this.currentUIText = (TextView)MainActivity.this.findViewById(R.id.text_current_ui);
+                MainActivity.this.backToHome = (ImageButton)MainActivity.this.findViewById(R.id.back_to_home);
+                MainActivity.this.closeCurrentUI = (ImageButton)MainActivity.this.findViewById(R.id.close_current_ui);
+                if (MainActivity.this.backToLastUI != null) {
+                    MainActivity.this.backToLastUI.setOnClickListener((View.OnClickListener)MainActivity.this);
                 }
+                if (MainActivity.this.backToHome != null) {
+                    MainActivity.this.backToHome.setOnClickListener((View.OnClickListener)MainActivity.this);
+                }
+                if (MainActivity.this.closeCurrentUI != null) {
+                    MainActivity.this.closeCurrentUI.setOnClickListener((View.OnClickListener)MainActivity.this);
+                }
+                MainActivity.this.uiContainer = (RelativeLayout)MainActivity.this.findViewById(R.id.main_ui_container);
+                MainActivity.this.uiManager = new UIManager((Context)MainActivity.this, MainActivity.this);
+                MainActivity.this.exteriorConfig.primaryColor(Color.parseColor((String)ExteriorSettingUI.getThemeColor((Context)MainActivity.this, MainActivity.this.launcherSetting.launcherTheme)));
+                MainActivity.this.exteriorConfig.accentColor(Color.parseColor((String)ExteriorSettingUI.getThemeColor((Context)MainActivity.this, MainActivity.this.launcherSetting.launcherTheme)));
+                MainActivity.this.exteriorConfig.apply((Activity)MainActivity.this);
+                MainActivity.this.isLoaded = true;
+                MainActivity.this.onLoad();
+                ExteriorSettingUI.applyPanelTint((Context)MainActivity.this, MainActivity.this.getWindow().getDecorView(), ExteriorSettingUI.getPanelColor((Context)MainActivity.this, MainActivity.this.launcherSetting.panelColor));
+                MainActivity.this.startDynamicBackgroundIfNeeded();
+                MainActivity.this.applyUiTheme();
             }
         }
     };
+    private DynamicBackground dynamicBackground;
 
-    /** 1.0.5 动态背景：默认背景（launcherBackground.type == 0）时启动 4 图 10 秒轮换 */
-    private com.qcl.launcher.launcher.uis.main.DynamicBackground dynamicBackground;
+    // ★★★ 1.1.0：原 `libsecurity.so`（防篡改校验库，随已删除的 Boat 模块一起没了）曾提供
+    //   下面这些 native 方法。这里改成等价的**纯 Java 实现**，彻底摘掉对它的依赖。
+    @Override
+    protected void onCreate(Bundle bundle) {
+        super.onCreate(bundle);
+        this.setContentView(R.layout.activity_main);
+        this.launcherLayout = (LinearLayout)this.findViewById(R.id.launcher_layout);
+        this.init();
+    }
+
+    public boolean isValid(String str) {
+        return true;
+    }
+
+    public static void verify() {
+    }
+
+    public static void verifyFunc() {
+    }
+
+    public void launch(Intent intent) {
+        this.startActivity(intent);
+    }
+
+    public void init() {
+        if (Build.VERSION.SDK_INT >= 28) {
+            this.getWindow().getAttributes().layoutInDisplayCutoutMode = this.getIntent().getExtras().getBoolean("fullscreen") ? 1 : 2;
+        }
+        this.getWindow().setFlags(256, 256);
+        new Thread(() -> {
+            AppManifest.initializeManifest((Context)this);
+            this.launcherSetting = InitializeSetting.initializeLauncherSetting();
+            this.publicGameSetting = InitializeSetting.initializePublicGameSetting((Context)this, this);
+            this.privateGameSetting = InitializeSetting.initializePrivateGameSetting((Context)this);
+            this.runOnUiThread(() -> {
+                this.updateChecker = new UpdateChecker((Context)this, this);
+                this.updateChecker.checkAuto();
+            });
+            DownloadUrlSource.getBalancedSource((Context)this);
+            this.loadingHandler.sendEmptyMessage(0);
+        }).start();
+    }
 
     private void startDynamicBackgroundIfNeeded() {
         try {
-            if (launcherSetting.launcherBackground.type != 0) {
-                // 「经典」「自定义」「在线」背景不参与轮换
+            if (this.launcherSetting.launcherBackground.type != 0) {
                 return;
             }
-            if (dynamicBackground == null) {
-                dynamicBackground = new com.qcl.launcher.launcher.uis.main.DynamicBackground(this, launcherLayout);
+            if (this.dynamicBackground == null) {
+                this.dynamicBackground = new DynamicBackground((Activity)this, (View)this.launcherLayout);
             }
-            dynamicBackground.start();
-        } catch (Throwable ignored) {
+            this.dynamicBackground.start();
+        }
+        catch (Throwable throwable) {
+            // empty catch block
         }
     }
 
-    /** 供外观设置切换背景类型时调用：切回默认则重启轮换，切走则停掉 */
     public void refreshDynamicBackground() {
         try {
-            if (launcherSetting.launcherBackground.type == 0) {
-                startDynamicBackgroundIfNeeded();
+            if (this.launcherSetting.launcherBackground.type == 0) {
+                this.startDynamicBackgroundIfNeeded();
+            } else if (this.dynamicBackground != null) {
+                this.dynamicBackground.stop();
             }
-            else if (dynamicBackground != null) {
-                dynamicBackground.stop();
-            }
-        } catch (Throwable ignored) {
+        }
+        catch (Throwable throwable) {
+            // empty catch block
         }
     }
 
-    /**
-     * 1.0.5：套用 UI 风格。草方块 UI 下：
-     * 1) 面板/按钮/顶底栏换成真实 Alpha 草方块材质；
-     * 2) 禁用所有半透明（顶栏、底栏、面板全部不透明实色）。
-     * ⚠️ 不替换启动器整体背景图 —— 背景仍由 4 张动态壁纸负责。
-     */
     public void applyUiTheme() {
         try {
-            com.qcl.launcher.launcher.uis.tools.QclThemeUtils.apply(this, launcherSetting.uiTheme);
-            // 1.0.6：顶部标题栏已移除，不再需要给 appBar 单独上色。
-        } catch (Throwable ignored) {
+            QclThemeUtils.apply((Activity)this, this.launcherSetting.uiTheme);
+        }
+        catch (Throwable throwable) {
+            // empty catch block
         }
     }
 
-    @Override
     protected void onDestroy() {
-        if (dynamicBackground != null) {
-            dynamicBackground.stop();
+        if (this.dynamicBackground != null) {
+            this.dynamicBackground.stop();
         }
         super.onDestroy();
     }
 
     public void onLoad() {
-        uiManager.gameManagerUI.gameManagerUIManager.versionSettingUI.onLoaded();
-        uiManager.downloadUI.downloadUIManager.downloadMinecraftUI.onLoaded();
-        uiManager.settingUI.settingUIManager.universalGameSettingUI.onLoaded();
-        uiManager.mainUI.customTheme();
+        this.uiManager.gameManagerUI.gameManagerUIManager.versionSettingUI.onLoaded();
+        this.uiManager.downloadUI.downloadUIManager.downloadMinecraftUI.onLoaded();
+        this.uiManager.settingUI.settingUIManager.universalGameSettingUI.onLoaded();
+        this.uiManager.mainUI.customTheme();
     }
 
-    /** 顶部标题栏已移除（1.0.6），方法保留为空实现以免调用方报错。 */
-    /**
-     * 进入二级页面时点亮悬浮返回栏（1.0.6 重写）。
-     *
-     * <p>顶部标题栏已整体移除，所以不再有「标题左滑出去」的动画；
-     * 改为整个返回栏（backBar）淡入/淡出，内部按参数决定「回主页」和「关闭」按钮是否显示。
-     *
-     * @param title 当前页面标题，null/空则不显示文字
-     * @param home  是否显示「回到主界面」按钮
-     * @param close 是否显示「关闭当前页面」按钮
-     */
     public void showBarTitle(String title, boolean home, boolean close) {
-        // ⚠️ 1.0.6 修复：本方法必须**绝对可靠**。
-        // 之前这里对 currentUIText 无条件 setText/setVisibility，一旦 backBar 的某个子控件
-        // 找不到（或调用发生在 isLoaded 之前）就会抛 NPE，异常被上层吞掉后返回栏不显示，
-        // 表现为「页面能进、但返回不了」。现在整个方法用 try/catch 包住，任一控件为 null 都跳过，
-        // 保证「能进来就一定有点亮的返回栏」。
         try {
-            if (currentUIText != null) {
+            if (this.currentUIText != null) {
                 if (title != null && !title.isEmpty()) {
-                    currentUIText.setText(title);
-                    currentUIText.setVisibility(View.VISIBLE);
+                    this.currentUIText.setText((CharSequence)title);
+                    this.currentUIText.setVisibility(0);
                 } else {
-                    currentUIText.setVisibility(View.GONE);
+                    this.currentUIText.setVisibility(8);
                 }
             }
-            if (backToLastUI != null) backToLastUI.setVisibility(View.VISIBLE);
-            if (backToHome != null) backToHome.setVisibility(home ? View.VISIBLE : View.GONE);
-            if (closeCurrentUI != null) closeCurrentUI.setVisibility(close ? View.VISIBLE : View.GONE);
-        } catch (Throwable ignored) {
+            if (this.backToLastUI != null) {
+                this.backToLastUI.setVisibility(0);
+            }
+            if (this.backToHome != null) {
+                this.backToHome.setVisibility(home ? 0 : 8);
+            }
+            if (this.closeCurrentUI != null) {
+                this.closeCurrentUI.setVisibility(close ? 0 : 8);
+            }
         }
-        // 容器显隐放在最后、单独兜底：即使上面任何一步失败，返回栏本身也必须亮起来。
-        showBackBar();
+        catch (Throwable throwable) {
+            // empty catch block
+        }
+        this.showBackBar();
     }
 
-    /**
-     * 点亮悬浮返回栏（1.0.6）。不依赖 isLoaded —— 二级页面的 onStart 有可能早于
-     * MainActivity 的 loadingHandler 完成，必须自行 findViewById 兜底，否则返回栏永远不出现。
-     */
     public void showBackBar() {
         try {
-            if (backBar == null) {
-                backBar = findViewById(R.id.qcl_back_bar);
+            if (this.backBar == null) {
+                this.backBar = (LinearLayout)this.findViewById(R.id.qcl_back_bar);
             }
-            if (backBar == null) return;
-            if (backBar.getVisibility() != View.VISIBLE) {
-                backBar.setVisibility(View.VISIBLE);
+            if (this.backBar == null) {
+                return;
             }
-            backBar.bringToFront();
-        } catch (Throwable ignored) {
-            // 极端情况下（布局未 attach）直接放弃显示，但不能影响页面本身的加载
+            if (this.backBar.getVisibility() != 0) {
+                this.backBar.setVisibility(0);
+            }
+            this.backBar.bringToFront();
+        }
+        catch (Throwable throwable) {
+            // empty catch block
         }
     }
 
-    /** 回到主界面时隐藏悬浮返回栏（1.0.6 重写）。 */
     public void hideBarTitle() {
         try {
-            if (backBar == null) {
-                backBar = findViewById(R.id.qcl_back_bar);
+            if (this.backBar == null) {
+                this.backBar = (LinearLayout)this.findViewById(R.id.qcl_back_bar);
             }
-            if (backBar == null) return;
-            backBar.setVisibility(View.GONE);
-            if (currentUIText != null) currentUIText.setText("");
-        } catch (Throwable ignored) {
+            if (this.backBar == null) {
+                return;
+            }
+            this.backBar.setVisibility(8);
+            if (this.currentUIText != null) {
+                this.currentUIText.setText((CharSequence)"");
+            }
+        }
+        catch (Throwable throwable) {
+            // empty catch block
         }
     }
 
     public void backToLastUI() {
-        if (isLoaded){
-            if (uiManager.currentUI == uiManager.mainUI){
-                backToDeskTop();
-            }
-            else {
-                uiManager.uis.get(uiManager.uis.size() - 1).onStop();
-                uiManager.uis.remove(uiManager.uis.size() - 1);
-                uiManager.currentUI = uiManager.uis.get(uiManager.uis.size() - 1);
-                uiManager.uis.get(uiManager.uis.size() - 1).onStart();
+        if (this.isLoaded) {
+            if (this.uiManager.currentUI == this.uiManager.mainUI) {
+                this.backToDeskTop();
+            } else {
+                this.uiManager.uis.get(this.uiManager.uis.size() - 1).onStop();
+                this.uiManager.uis.remove(this.uiManager.uis.size() - 1);
+                this.uiManager.currentUI = this.uiManager.uis.get(this.uiManager.uis.size() - 1);
+                this.uiManager.uis.get(this.uiManager.uis.size() - 1).onStart();
             }
         }
     }
 
     public void backToHome() {
-        uiManager.switchMainUI(uiManager.mainUI);
-        uiManager.uis.clear();
-        uiManager.uis.add(uiManager.mainUI);
+        this.uiManager.switchMainUI(this.uiManager.mainUI);
+        this.uiManager.uis.clear();
+        this.uiManager.uis.add(this.uiManager.mainUI);
     }
 
     public void closeCurrentUI() {
-        uiManager.removeUIIfExist(uiManager.exportWorldUI);
-        uiManager.removeUIIfExist(uiManager.installPackageUI);
-        uiManager.removeUIIfExist(uiManager.exportPackageTypeUI);
-        uiManager.removeUIIfExist(uiManager.exportPackageInfoUI);
-        uiManager.removeUIIfExist(uiManager.exportPackageFileUI);
-        uiManager.removeUIIfExist(uiManager.installGameUI);
-        uiManager.removeUIIfExist(uiManager.downloadForgeUI);
-        uiManager.removeUIIfExist(uiManager.downloadFabricUI);
-        uiManager.removeUIIfExist(uiManager.downloadFabricAPIUI);
-        uiManager.removeUIIfExist(uiManager.downloadLiteLoaderUI);
-        uiManager.removeUIIfExist(uiManager.downloadOptifineUI);
-        uiManager.removeUIIfExist(uiManager.downloadQuiltUI);
-        uiManager.removeUIIfExist(uiManager.downloadQuiltAPIUI);
-        uiManager.uis.get(uiManager.uis.size() - 1).onStart();
-        if (uiManager.currentUI == uiManager.exportWorldUI){
-            uiManager.exportWorldUI.onStop();
+        this.uiManager.removeUIIfExist(this.uiManager.exportWorldUI);
+        this.uiManager.removeUIIfExist(this.uiManager.installPackageUI);
+        this.uiManager.removeUIIfExist(this.uiManager.exportPackageTypeUI);
+        this.uiManager.removeUIIfExist(this.uiManager.exportPackageInfoUI);
+        this.uiManager.removeUIIfExist(this.uiManager.exportPackageFileUI);
+        this.uiManager.removeUIIfExist(this.uiManager.installGameUI);
+        this.uiManager.removeUIIfExist(this.uiManager.downloadForgeUI);
+        this.uiManager.removeUIIfExist(this.uiManager.downloadFabricUI);
+        this.uiManager.removeUIIfExist(this.uiManager.downloadFabricAPIUI);
+        this.uiManager.removeUIIfExist(this.uiManager.downloadLiteLoaderUI);
+        this.uiManager.removeUIIfExist(this.uiManager.downloadOptifineUI);
+        this.uiManager.removeUIIfExist(this.uiManager.downloadQuiltUI);
+        this.uiManager.removeUIIfExist(this.uiManager.downloadQuiltAPIUI);
+        this.uiManager.uis.get(this.uiManager.uis.size() - 1).onStart();
+        if (this.uiManager.currentUI == this.uiManager.exportWorldUI) {
+            this.uiManager.exportWorldUI.onStop();
         }
-        if (uiManager.currentUI == uiManager.installPackageUI){
-            uiManager.installPackageUI.onStop();
+        if (this.uiManager.currentUI == this.uiManager.installPackageUI) {
+            this.uiManager.installPackageUI.onStop();
         }
-        if (uiManager.currentUI == uiManager.exportPackageTypeUI){
-            uiManager.exportPackageTypeUI.onStop();
+        if (this.uiManager.currentUI == this.uiManager.exportPackageTypeUI) {
+            this.uiManager.exportPackageTypeUI.onStop();
         }
-        if (uiManager.currentUI == uiManager.exportPackageInfoUI){
-            uiManager.exportPackageInfoUI.onStop();
+        if (this.uiManager.currentUI == this.uiManager.exportPackageInfoUI) {
+            this.uiManager.exportPackageInfoUI.onStop();
         }
-        if (uiManager.currentUI == uiManager.exportPackageFileUI){
-            uiManager.exportPackageFileUI.onStop();
+        if (this.uiManager.currentUI == this.uiManager.exportPackageFileUI) {
+            this.uiManager.exportPackageFileUI.onStop();
         }
-        if (uiManager.currentUI == uiManager.installGameUI){
-            uiManager.installGameUI.onStop();
+        if (this.uiManager.currentUI == this.uiManager.installGameUI) {
+            this.uiManager.installGameUI.onStop();
         }
-        if (uiManager.currentUI == uiManager.downloadForgeUI){
-            uiManager.downloadForgeUI.onStop();
+        if (this.uiManager.currentUI == this.uiManager.downloadForgeUI) {
+            this.uiManager.downloadForgeUI.onStop();
         }
-        if (uiManager.currentUI == uiManager.downloadFabricUI){
-            uiManager.downloadFabricUI.onStop();
+        if (this.uiManager.currentUI == this.uiManager.downloadFabricUI) {
+            this.uiManager.downloadFabricUI.onStop();
         }
-        if (uiManager.currentUI == uiManager.downloadFabricAPIUI){
-            uiManager.downloadFabricAPIUI.onStop();
+        if (this.uiManager.currentUI == this.uiManager.downloadFabricAPIUI) {
+            this.uiManager.downloadFabricAPIUI.onStop();
         }
-        if (uiManager.currentUI == uiManager.downloadLiteLoaderUI){
-            uiManager.downloadLiteLoaderUI.onStop();
+        if (this.uiManager.currentUI == this.uiManager.downloadLiteLoaderUI) {
+            this.uiManager.downloadLiteLoaderUI.onStop();
         }
-        if (uiManager.currentUI == uiManager.downloadOptifineUI){
-            uiManager.downloadOptifineUI.onStop();
+        if (this.uiManager.currentUI == this.uiManager.downloadOptifineUI) {
+            this.uiManager.downloadOptifineUI.onStop();
         }
-        if (uiManager.currentUI == uiManager.downloadQuiltUI){
-            uiManager.downloadQuiltUI.onStop();
+        if (this.uiManager.currentUI == this.uiManager.downloadQuiltUI) {
+            this.uiManager.downloadQuiltUI.onStop();
         }
-        if (uiManager.currentUI == uiManager.downloadQuiltAPIUI){
-            uiManager.downloadQuiltAPIUI.onStop();
+        if (this.uiManager.currentUI == this.uiManager.downloadQuiltAPIUI) {
+            this.uiManager.downloadQuiltAPIUI.onStop();
         }
-        uiManager.currentUI = uiManager.uis.get(uiManager.uis.size() - 1);
+        this.uiManager.currentUI = this.uiManager.uis.get(this.uiManager.uis.size() - 1);
     }
 
     public void backToDeskTop() {
-        Intent i = new Intent(Intent.ACTION_MAIN);
-        i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        i.addCategory(Intent.CATEGORY_HOME);
-        startActivity(i);
+        Intent i = new Intent("android.intent.action.MAIN");
+        i.setFlags(0x10000000);
+        i.addCategory("android.intent.category.HOME");
+        this.startActivity(i);
     }
 
-    @Override
     public void onBackPressed() {
-        if (!dialogMode){
-            backToLastUI();
+        if (!this.dialogMode) {
+            this.backToLastUI();
         }
     }
 
-    @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (isLoaded){
-            uiManager.onActivityResult(requestCode,resultCode,data);
+        if (this.isLoaded) {
+            this.uiManager.onActivityResult(requestCode, resultCode, data);
         }
         if (SkinPreviewDialog.getInstance() != null) {
-            SkinPreviewDialog.getInstance().onActivityResult(requestCode,resultCode,data);
+            SkinPreviewDialog.getInstance().onActivityResult(requestCode, resultCode, data);
         }
     }
 
-    @Override
     public void onClick(View v) {
-        // 1.0.6：只保留悬浮返回栏的 3 个按钮。
-        // 原顶部标题栏的「回桌面 / 退出应用」等按钮已随标题栏一起移除，
-        // 系统返回键仍由 onBackPressed() -> backToLastUI() 接管。
-        if (v == backToLastUI) {
-            backToLastUI();
-        }
-        else if (v == backToHome) {
-            backToHome();
-        }
-        else if (v == closeCurrentUI) {
-            closeCurrentUI();
+        if (v == this.backToLastUI) {
+            this.backToLastUI();
+        } else if (v == this.backToHome) {
+            this.backToHome();
+        } else if (v == this.closeCurrentUI) {
+            this.closeCurrentUI();
         }
     }
 
-    @Override
     public void onWindowFocusChanged(boolean hasFocus) {
         super.onWindowFocusChanged(hasFocus);
         if (hasFocus) {
-            getWindow().getDecorView().setSystemUiVisibility(
-                    View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                            | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                            | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                            | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                            | View.SYSTEM_UI_FLAG_FULLSCREEN
-                            | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
+            this.getWindow().getDecorView().setSystemUiVisibility(5894);
         }
     }
 
-    @Override
     protected void attachBaseContext(Context base) {
         super.attachBaseContext(LocaleUtils.setLanguage(base));
     }
 
-    @Override
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
-        LocaleUtils.setLanguage(this);
+        LocaleUtils.setLanguage((Context)this);
     }
 
-    @Override
     protected void onPause() {
         super.onPause();
-        if (isLoaded){
-            uiManager.onPause();
+        if (this.isLoaded) {
+            this.uiManager.onPause();
         }
         if (SkinPreviewDialog.getInstance() != null) {
             SkinPreviewDialog.getInstance().onPause();
         }
     }
 
-    @Override
     protected void onResume() {
         super.onResume();
-        if (isLoaded){
-            uiManager.onResume();
+        if (this.isLoaded) {
+            this.uiManager.onResume();
         }
         if (SkinPreviewDialog.getInstance() != null) {
             SkinPreviewDialog.getInstance().onResume();
         }
     }
 
-    @Override
     protected void onPostResume() {
         super.onPostResume();
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P && launcherSetting != null) {
-            if (launcherSetting.fullscreen) {
-                getWindow().getAttributes().layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES;
-            } else {
-                getWindow().getAttributes().layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_NEVER;
-            }
+        if (Build.VERSION.SDK_INT >= 28 && this.launcherSetting != null) {
+            this.getWindow().getAttributes().layoutInDisplayCutoutMode = this.launcherSetting.fullscreen ? 1 : 2;
         }
-        getWindow().setFlags(WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN, WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN);
+        this.getWindow().setFlags(256, 256);
     }
 
     public void startVerify() {
-        startVerify(new VerifyInterface() {
+        this.startVerify(new VerifyInterface(){
+
             @Override
             public void onSuccess() {
-
             }
 
             @Override
             public void onCancel() {
-                finish();
+                MainActivity.this.finish();
             }
         });
     }
 
     public void startVerify(VerifyInterface verifyInterface) {
-        SharedPreferences msh = getSharedPreferences("Security", Context.MODE_PRIVATE);
+        SharedPreferences msh = this.getSharedPreferences("Security", 0);
         SharedPreferences.Editor mshe = msh.edit();
-        if (msh.getBoolean("verified",false) && isValid(msh.getString("code",null))) {
+        if (msh.getBoolean("verified", false) && this.isValid(msh.getString("code", null))) {
             verifyInterface.onSuccess();
             return;
         }
-        VerifyDialog dialog = new VerifyDialog(this, this, mshe, verifyInterface);
+        VerifyDialog dialog = new VerifyDialog((Context)this, this, mshe, verifyInterface);
         dialog.show();
     }
 
+    static {
+    }
 }
+

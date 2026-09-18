@@ -1,9 +1,6 @@
 package com.qcl.launcher.launcher.list.download.minecraft;
 
-import android.annotation.SuppressLint;
 import android.content.Context;
-import android.content.Intent;
-import android.net.Uri;
 import android.graphics.drawable.Drawable;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -12,112 +9,117 @@ import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.widget.Toast;
-
-import com.qcl.launcher.R;
 import com.qcl.launcher.launcher.MainActivity;
-import com.qcl.launcher.launcher.download.game.LegacyVersionArchive;
 import com.qcl.launcher.launcher.download.game.VersionManifest;
-
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 
+import com.qcl.launcher.R;
+/* loaded from: classes2.dex */
 public class DownloadGameListAdapter extends BaseAdapter {
-
-    private Context context;
     private MainActivity activity;
+    private Context context;
     private ArrayList<VersionManifest.Version> versions;
 
-    private class ViewHolder{
-        LinearLayout item;
+    @Override // android.widget.Adapter
+    public long getItemId(int i) {
+        return 0L;
+    }
+
+    /* loaded from: classes2.dex */
+    private class ViewHolder {
         ImageView icon;
+        LinearLayout item;
         TextView mcId;
-        TextView type;
         TextView releaseTime;
-    }
+        TextView type;
 
-    private String getType(String type){
-        if (type.equals("release")){
-            return context.getString(R.string.download_minecraft_ui_release);
-        }
-        else if (type.equals("snapshot")){
-            return context.getString(R.string.download_minecraft_ui_snapshot);
-        }
-        else if (LegacyVersionArchive.TYPE_ARCHIVE.equals(type)){
-            return context.getString(R.string.download_minecraft_ui_archive);
-        }
-        else {
-            return context.getString(R.string.download_minecraft_ui_old);
+        private ViewHolder() {
         }
     }
 
-    @SuppressLint("UseCompatLoadingForDrawables")
-    private Drawable getIcon(String type){
-        if (type.equals("release")){
-            return context.getDrawable(R.drawable.ic_grass);
+    private String getType(String str) {
+        if (str.equals("release")) {
+            return this.context.getString(R.string.download_minecraft_ui_release);
         }
-        else if (type.equals("snapshot")){
-            return context.getDrawable(R.drawable.ic_command);
+        if (str.equals("snapshot")) {
+            return this.context.getString(R.string.download_minecraft_ui_snapshot);
         }
-        else {
-            return context.getDrawable(R.drawable.ic_craft_table);
+        if ("archive".equals(str)) {
+            return this.context.getString(R.string.download_minecraft_ui_archive);
         }
+        return this.context.getString(R.string.download_minecraft_ui_old);
     }
 
-    public DownloadGameListAdapter(Context context, MainActivity activity, ArrayList<VersionManifest.Version> versions){
+    private Drawable getIcon(String str) {
+        if (str.equals("release")) {
+            return this.context.getDrawable(R.drawable.ic_grass);
+        }
+        if (str.equals("snapshot")) {
+            return this.context.getDrawable(R.drawable.ic_command);
+        }
+        return this.context.getDrawable(R.drawable.ic_craft_table);
+    }
+
+    public DownloadGameListAdapter(Context context, MainActivity mainActivity, ArrayList<VersionManifest.Version> arrayList) {
         this.context = context;
-        this.activity = activity;
-        this.versions = versions;
+        this.activity = mainActivity;
+        this.versions = arrayList;
     }
 
-    @Override
+    @Override // android.widget.Adapter
     public int getCount() {
-        return versions.size();
+        return this.versions.size();
     }
 
-    @Override
-    public Object getItem(int position) {
-        return versions.get(position);
+    @Override // android.widget.Adapter
+    public Object getItem(int i) {
+        return this.versions.get(i);
     }
 
-    @Override
-    public long getItemId(int position) {
-        return 0;
-    }
-
-    @Override
-    public View getView(int position, View convertView, ViewGroup parent) {
-        final ViewHolder viewHolder;
-        if (convertView == null){
+    @Override // android.widget.Adapter
+    public View getView(int i, View view, ViewGroup viewGroup) {
+        View view2;
+        ViewHolder viewHolder;
+        if (view == null) {
             viewHolder = new ViewHolder();
-            convertView = LayoutInflater.from(context).inflate(R.layout.item_download_game_list,null);
-            viewHolder.item = convertView.findViewById(R.id.item);
-            viewHolder.icon = convertView.findViewById(R.id.icon);
-            viewHolder.mcId = convertView.findViewById(R.id.id);
-            viewHolder.type = convertView.findViewById(R.id.type);
-            viewHolder.releaseTime = convertView.findViewById(R.id.release_time);
-            activity.exteriorConfig.apply(viewHolder.type);
-            convertView.setTag(viewHolder);
+            view2 = LayoutInflater.from(this.context).inflate(R.layout.item_download_game_list, (ViewGroup) null);
+            viewHolder.item = (LinearLayout) view2.findViewById(R.id.item);
+            viewHolder.icon = (ImageView) view2.findViewById(R.id.icon);
+            viewHolder.mcId = (TextView) view2.findViewById(R.id.id);
+            viewHolder.type = (TextView) view2.findViewById(R.id.type);
+            viewHolder.releaseTime = (TextView) view2.findViewById(R.id.release_time);
+            this.activity.exteriorConfig.apply(viewHolder.type);
+            view2.setTag(viewHolder);
+        } else {
+            view2 = view;
+            viewHolder = (ViewHolder) view.getTag();
         }
-        else {
-            viewHolder = (ViewHolder)convertView.getTag();
-        }
-        VersionManifest.Version version = versions.get(position);
+        final VersionManifest.Version version = this.versions.get(i);
         viewHolder.icon.setImageDrawable(getIcon(version.type));
         viewHolder.mcId.setText(version.id);
         viewHolder.type.setText(getType(version.type));
-        viewHolder.releaseTime.setText(version.releaseTime == null ? "" : DateTimeFormatter.ofPattern(context.getString(R.string.time_pattern)).withZone(ZoneId.systemDefault()).format(version.releaseTime.toInstant()));
-        viewHolder.item.setOnClickListener(v -> {
-            activity.uiManager.installGameUI.name = version.id;
-            activity.uiManager.installGameUI.fabricVersion = null;
-            activity.uiManager.installGameUI.fabricAPIVersion = null;
-            activity.uiManager.installGameUI.forgeVersion = null;
-            activity.uiManager.installGameUI.optifineVersion = null;
-            activity.uiManager.installGameUI.liteLoaderVersion = null;
-            activity.uiManager.installGameUI.version = version;
-            activity.uiManager.switchMainUI(activity.uiManager.installGameUI);
+        viewHolder.releaseTime.setText(version.releaseTime == null ? "" : DateTimeFormatter.ofPattern(this.context.getString(R.string.time_pattern)).withZone(ZoneId.systemDefault()).format(version.releaseTime.toInstant()));
+        viewHolder.item.setOnClickListener(new View.OnClickListener() { // from class: com.qcl.launcher.launcher.list.download.minecraft.DownloadGameListAdapter$$ExternalSyntheticLambda0
+            @Override // android.view.View.OnClickListener
+            public final void onClick(View view3) {
+                DownloadGameListAdapter.this.m414x716a5e8(version, view3);
+            }
         });
-        return convertView;
+        return view2;
+    }
+
+    /* JADX INFO: Access modifiers changed from: package-private */
+    /* renamed from: lambda$getView$0$com-qcl-launcher-launcher-list-download-minecraft-DownloadGameListAdapter, reason: not valid java name */
+    public /* synthetic */ void m414x716a5e8(VersionManifest.Version version, View view) {
+        this.activity.uiManager.installGameUI.name = version.id;
+        this.activity.uiManager.installGameUI.fabricVersion = null;
+        this.activity.uiManager.installGameUI.fabricAPIVersion = null;
+        this.activity.uiManager.installGameUI.forgeVersion = null;
+        this.activity.uiManager.installGameUI.optifineVersion = null;
+        this.activity.uiManager.installGameUI.liteLoaderVersion = null;
+        this.activity.uiManager.installGameUI.version = version;
+        this.activity.uiManager.switchMainUI(this.activity.uiManager.installGameUI);
     }
 }

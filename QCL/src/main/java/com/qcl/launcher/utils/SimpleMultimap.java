@@ -1,24 +1,20 @@
 package com.qcl.launcher.utils;
 
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
-/**
- * A simple implementation of Multimap.
- * Just a combination of map and set.
- *
- * @author huangyuhui
- */
+/* loaded from: classes2.dex */
 public final class SimpleMultimap<K, V> {
-
     private final Map<K, Collection<V>> map;
     private final Supplier<Collection<V>> valuer;
 
-    public SimpleMultimap(Supplier<Map<K, Collection<V>>> mapper, Supplier<Collection<V>> valuer) {
-        this.map = mapper.get();
-        this.valuer = valuer;
+    public SimpleMultimap(Supplier<Map<K, Collection<V>>> supplier, Supplier<Collection<V>> supplier2) {
+        this.map = supplier.get();
+        this.valuer = supplier2;
     }
 
     public int size() {
@@ -26,61 +22,75 @@ public final class SimpleMultimap<K, V> {
     }
 
     public Set<K> keys() {
-        return map.keySet();
+        return this.map.keySet();
     }
 
     public Collection<V> values() {
-        Collection<V> res = valuer.get();
-        for (Map.Entry<K, Collection<V>> entry : map.entrySet())
-            res.addAll(entry.getValue());
-        return res;
+        Collection<V> collection = this.valuer.get();
+        Iterator<Map.Entry<K, Collection<V>>> it = this.map.entrySet().iterator();
+        while (it.hasNext()) {
+            collection.addAll(it.next().getValue());
+        }
+        return collection;
     }
 
     public boolean isEmpty() {
         return size() == 0;
     }
 
-    public boolean containsKey(K key) {
-        return map.containsKey(key) && !map.get(key).isEmpty();
+    public boolean containsKey(K k) {
+        return this.map.containsKey(k) && !this.map.get(k).isEmpty();
     }
 
-    public Collection<V> get(K key) {
-        return map.computeIfAbsent(key, any -> valuer.get());
+    public Collection<V> get(K k) {
+        return this.map.computeIfAbsent(k, new Function() { // from class: com.qcl.launcher.utils.SimpleMultimap$$ExternalSyntheticLambda0
+            @Override // java.util.function.Function
+            public final Object apply(Object obj) {
+                return SimpleMultimap.this.m617lambda$get$0$comqcllauncherutilsSimpleMultimap(obj);
+            }
+        });
     }
 
-    public void put(K key, V value) {
-        Collection<V> set = get(key);
-        set.add(value);
+    /* JADX INFO: Access modifiers changed from: package-private */
+    /* renamed from: lambda$get$0$com-qcl-launcher-utils-SimpleMultimap, reason: not valid java name */
+    public /* synthetic */ Collection m617lambda$get$0$comqcllauncherutilsSimpleMultimap(Object obj) {
+        return this.valuer.get();
     }
 
-    public void putAll(K key, Collection<? extends V> value) {
-        Collection<V> set = get(key);
-        set.addAll(value);
+    public void put(K k, V v) {
+        get(k).add(v);
     }
 
-    public Collection<V> removeKey(K key) {
-        return map.remove(key);
+    public void putAll(K k, Collection<? extends V> collection) {
+        get(k).addAll(collection);
     }
 
-    public boolean removeValue(V value) {
-        boolean flag = false;
-        for (Collection<V> c : map.values())
-            flag |= c.remove(value);
-        return flag;
+    public Collection<V> removeKey(K k) {
+        return this.map.remove(k);
     }
 
-    public boolean removeValue(K key, V value) {
-        return get(key).remove(value);
+    public boolean removeValue(V v) {
+        Iterator<Collection<V>> it = this.map.values().iterator();
+        boolean z = false;
+        while (it.hasNext()) {
+            z |= it.next().remove(v);
+        }
+        return z;
+    }
+
+    public boolean removeValue(K k, V v) {
+        return get(k).remove(v);
     }
 
     public void clear() {
-        map.clear();
+        this.map.clear();
     }
 
-    public void clear(K key) {
-        if (map.containsKey(key))
-            map.get(key).clear();
-        else
-            map.put(key, valuer.get());
+    public void clear(K k) {
+        if (this.map.containsKey(k)) {
+            this.map.get(k).clear();
+        } else {
+            this.map.put(k, this.valuer.get());
+        }
     }
 }

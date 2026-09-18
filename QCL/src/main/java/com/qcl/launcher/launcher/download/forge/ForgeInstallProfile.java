@@ -5,10 +5,7 @@ import com.google.gson.annotations.SerializedName;
 import com.qcl.launcher.launcher.game.Version;
 import com.qcl.launcher.utils.gson.tools.Validation;
 
-/**
- *
- * @author huangyuhui
- */
+/* loaded from: classes2.dex */
 public final class ForgeInstallProfile implements Validation {
 
     @SerializedName("install")
@@ -17,25 +14,26 @@ public final class ForgeInstallProfile implements Validation {
     @SerializedName("versionInfo")
     private final Version versionInfo;
 
-    public ForgeInstallProfile(ForgeInstall install, Version versionInfo) {
-        this.install = install;
-        this.versionInfo = versionInfo;
+    public ForgeInstallProfile(ForgeInstall forgeInstall, Version version) {
+        this.install = forgeInstall;
+        this.versionInfo = version;
     }
 
     public ForgeInstall getInstall() {
-        return install;
+        return this.install;
     }
 
     public Version getVersionInfo() {
-        return versionInfo;
+        return this.versionInfo;
     }
 
-    @Override
+    @Override // com.qcl.launcher.utils.gson.tools.Validation
     public void validate() throws JsonParseException {
-        if (install == null)
+        if (this.install == null) {
             throw new JsonParseException("InstallProfile install cannot be null");
-
-        if (versionInfo == null)
+        }
+        if (this.versionInfo == null) {
             throw new JsonParseException("InstallProfile versionInfo cannot be null");
+        }
     }
 }

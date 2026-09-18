@@ -1,183 +1,191 @@
 package com.qcl.launcher.launcher.mod;
 
+import com.qcl.launcher.launcher.mod.RemoteModRepository;
 import java.io.IOException;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
+/* loaded from: classes2.dex */
 public class RemoteMod {
-    private final String slug;
     private final String author;
-    private final String title;
-    private final String description;
     private final List<String> categories;
-    private final String pageUrl;
-    private final String iconUrl;
     private final IMod data;
+    private final String description;
+    private final String iconUrl;
+    private final String pageUrl;
+    private final String slug;
+    private final String title;
 
-    public RemoteMod(String slug, String author, String title, String description, List<String> categories, String pageUrl, String iconUrl, IMod data) {
-        this.slug = slug;
-        this.author = author;
-        this.title = title;
-        this.description = description;
-        this.categories = categories;
-        this.pageUrl = pageUrl;
-        this.iconUrl = iconUrl;
-        this.data = data;
+    /* loaded from: classes2.dex */
+    public interface IMod {
+        List<RemoteMod> loadDependencies(RemoteModRepository remoteModRepository) throws IOException;
+
+        Stream<Version> loadVersions(RemoteModRepository remoteModRepository) throws IOException;
     }
 
-    public String getSlug() {
-        return slug;
+    /* loaded from: classes2.dex */
+    public interface IVersion {
+        Type getType();
     }
 
-    public String getAuthor() {
-        return author;
+    /* loaded from: classes2.dex */
+    public enum Type {
+        CURSEFORGE,
+        MODRINTH
     }
 
-    public String getTitle() {
-        return title;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public List<String> getCategories() {
-        return categories;
-    }
-
-    public String getPageUrl() {
-        return pageUrl;
-    }
-
-    public String getIconUrl() {
-        return iconUrl;
-    }
-
-    public IMod getData() {
-        return data;
-    }
-
+    /* loaded from: classes2.dex */
     public enum VersionType {
         Release,
         Beta,
         Alpha
     }
 
-    public enum Type {
-        CURSEFORGE,
-        MODRINTH
+    public RemoteMod(String str, String str2, String str3, String str4, List<String> list, String str5, String str6, IMod iMod) {
+        this.slug = str;
+        this.author = str2;
+        this.title = str3;
+        this.description = str4;
+        this.categories = list;
+        this.pageUrl = str5;
+        this.iconUrl = str6;
+        this.data = iMod;
     }
 
-    public interface IMod {
-        List<RemoteMod> loadDependencies(RemoteModRepository modRepository) throws IOException;
-
-        Stream<Version> loadVersions(RemoteModRepository modRepository) throws IOException;
+    public String getSlug() {
+        return this.slug;
     }
 
-    public interface IVersion {
-        Type getType();
+    public String getAuthor() {
+        return this.author;
     }
 
+    public String getTitle() {
+        return this.title;
+    }
+
+    public String getDescription() {
+        return this.description;
+    }
+
+    public List<String> getCategories() {
+        return this.categories;
+    }
+
+    public String getPageUrl() {
+        return this.pageUrl;
+    }
+
+    public String getIconUrl() {
+        return this.iconUrl;
+    }
+
+    public IMod getData() {
+        return this.data;
+    }
+
+    /* loaded from: classes2.dex */
     public static class Version {
-        private final IVersion self;
-        private final String modid;
-        private final String name;
-        private final String version;
         private final String changelog;
         private final Date datePublished;
-        private final VersionType versionType;
-        private final File file;
         private final List<String> dependencies;
+        private final File file;
         private final List<String> gameVersions;
         private final List<ModLoaderType> loaders;
+        private final String modid;
+        private final String name;
+        private final IVersion self;
+        private final String version;
+        private final VersionType versionType;
 
-        public Version(IVersion self, String modid, String name, String version, String changelog, Date datePublished, VersionType versionType, File file, List<String> dependencies, List<String> gameVersions, List<ModLoaderType> loaders) {
-            this.self = self;
-            this.modid = modid;
-            this.name = name;
-            this.version = version;
-            this.changelog = changelog;
-            this.datePublished = datePublished;
+        public Version(IVersion iVersion, String str, String str2, String str3, String str4, Date date, VersionType versionType, File file, List<String> list, List<String> list2, List<ModLoaderType> list3) {
+            this.self = iVersion;
+            this.modid = str;
+            this.name = str2;
+            this.version = str3;
+            this.changelog = str4;
+            this.datePublished = date;
             this.versionType = versionType;
             this.file = file;
-            this.dependencies = dependencies;
-            this.gameVersions = gameVersions;
-            this.loaders = loaders;
+            this.dependencies = list;
+            this.gameVersions = list2;
+            this.loaders = list3;
         }
 
         public IVersion getSelf() {
-            return self;
+            return this.self;
         }
 
         public String getModid() {
-            return modid;
+            return this.modid;
         }
 
         public String getName() {
-            return name;
+            return this.name;
         }
 
         public String getVersion() {
-            return version;
+            return this.version;
         }
 
         public String getChangelog() {
-            return changelog;
+            return this.changelog;
         }
 
         public Date getDatePublished() {
-            return datePublished;
+            return this.datePublished;
         }
 
         public VersionType getVersionType() {
-            return versionType;
+            return this.versionType;
         }
 
         public File getFile() {
-            return file;
+            return this.file;
         }
 
         public List<String> getDependencies() {
-            return dependencies;
+            return this.dependencies;
         }
 
         public List<String> getGameVersions() {
-            return gameVersions;
+            return this.gameVersions;
         }
 
         public List<ModLoaderType> getLoaders() {
-            return loaders;
+            return this.loaders;
         }
     }
 
+    /* loaded from: classes2.dex */
     public static class File {
+        private final String filename;
         private final Map<String, String> hashes;
         private final String url;
-        private final String filename;
 
-        public File(Map<String, String> hashes, String url, String filename) {
-            this.hashes = hashes;
-            this.url = url;
-            this.filename = filename;
+        public File(Map<String, String> map, String str, String str2) {
+            this.hashes = map;
+            this.url = str;
+            this.filename = str2;
         }
 
         public Map<String, String> getHashes() {
-            return hashes;
+            return this.hashes;
         }
 
         public String getUrl() {
-            return url;
+            return this.url;
         }
 
         public String getFilename() {
-            return filename;
+            return this.filename;
         }
     }
 
-    public static RemoteModRepository.SortType getSortTypeByPosition(int position) {
-        switch (position) {
+    public static RemoteModRepository.SortType getSortTypeByPosition(int i) {
+        switch (i) {
             case 1:
                 return RemoteModRepository.SortType.POPULARITY;
             case 2:

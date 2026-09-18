@@ -9,138 +9,136 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-
-import androidx.annotation.NonNull;
-
 import com.jaredrummler.android.colorpicker.ColorPickerView;
+
 import com.qcl.launcher.R;
-
-public class ColorSelectorDialog extends Dialog implements ColorPickerView.OnColorChangedListener , View.OnClickListener, TextView.OnEditorActionListener {
-
-    public Context context;
+/* loaded from: classes2.dex */
+public class ColorSelectorDialog extends Dialog implements ColorPickerView.OnColorChangedListener, View.OnClickListener, TextView.OnEditorActionListener {
+    public Button colorFif;
+    public Button colorFor;
     public ColorPickerView colorPickerView;
-    public boolean showRecommendBar;
-    public int initColor;
-    public int currentColor;
-    public ColorSelectorDialogListener colorSelectorDialogListener;
-    public LinearLayout recommendColorBar;
     public Button colorPri;
     public Button colorSec;
-    public Button colorThi;
-    public Button colorFor;
-    public Button colorFif;
+    public ColorSelectorDialogListener colorSelectorDialogListener;
     public Button colorSix;
-
-    public View initColorBar;
+    public Button colorThi;
+    public Context context;
+    public int currentColor;
     public View destColorBar;
     public EditText editColor;
-    public Button positive;
+    public int initColor;
+    public View initColorBar;
     public Button negative;
+    public Button positive;
+    public LinearLayout recommendColorBar;
+    public boolean showRecommendBar;
 
-    public ColorSelectorDialog(@NonNull Context context,boolean showRecommendBar,int initColor) {
+    /* loaded from: classes2.dex */
+    public interface ColorSelectorDialogListener {
+        void onColorSelected(int i);
+
+        void onNegative(int i);
+
+        void onPositive(int i);
+    }
+
+    public ColorSelectorDialog(Context context, boolean z, int i) {
         super(context);
         setContentView(R.layout.dialog_color_selector);
         setCancelable(false);
         this.context = context;
-        this.showRecommendBar = showRecommendBar;
-        this.initColor = initColor;
+        this.showRecommendBar = z;
+        this.initColor = i;
         init();
     }
 
-    private void init(){
-        colorPickerView = findViewById(R.id.color_picker);
+    private void init() {
+        ColorPickerView colorPickerView = (ColorPickerView) findViewById(R.id.color_picker);
+        this.colorPickerView = colorPickerView;
         colorPickerView.setOnColorChangedListener(this);
-        colorPickerView.setColor(initColor);
-        currentColor = initColor;
-
-        recommendColorBar = findViewById(R.id.recommend_color_bar);
-        if (showRecommendBar){
-            recommendColorBar.setVisibility(View.VISIBLE);
+        this.colorPickerView.setColor(this.initColor);
+        this.currentColor = this.initColor;
+        LinearLayout linearLayout = (LinearLayout) findViewById(R.id.recommend_color_bar);
+        this.recommendColorBar = linearLayout;
+        if (this.showRecommendBar) {
+            linearLayout.setVisibility(0);
         }
-        colorPri = findViewById(R.id.recommend_color_pri);
-        colorSec = findViewById(R.id.recommend_color_sec);
-        colorThi = findViewById(R.id.recommend_color_thi);
-        colorFor = findViewById(R.id.recommend_color_for);
-        colorFif = findViewById(R.id.recommend_color_fif);
-        colorSix = findViewById(R.id.recommend_color_six);
-        colorPri.setOnClickListener(this);
-        colorSec.setOnClickListener(this);
-        colorThi.setOnClickListener(this);
-        colorFor.setOnClickListener(this);
-        colorFif.setOnClickListener(this);
-        colorSix.setOnClickListener(this);
-
-        initColorBar = findViewById(R.id.init_color);
-        destColorBar = findViewById(R.id.dest_color);
-        initColorBar.setBackgroundColor(initColor);
-        destColorBar.setBackgroundColor(initColor);
-        editColor = findViewById(R.id.color_text);
-        editColor.setOnEditorActionListener(this);
-        editColor.setText("#" + Integer.toHexString(initColor));
-
-        positive = findViewById(R.id.color_picker_positive);
-        negative = findViewById(R.id.color_picker_negative);
-        positive.setOnClickListener(this);
-        negative.setOnClickListener(this);
+        this.colorPri = (Button) findViewById(R.id.recommend_color_pri);
+        this.colorSec = (Button) findViewById(R.id.recommend_color_sec);
+        this.colorThi = (Button) findViewById(R.id.recommend_color_thi);
+        this.colorFor = (Button) findViewById(R.id.recommend_color_for);
+        this.colorFif = (Button) findViewById(R.id.recommend_color_fif);
+        this.colorSix = (Button) findViewById(R.id.recommend_color_six);
+        this.colorPri.setOnClickListener(this);
+        this.colorSec.setOnClickListener(this);
+        this.colorThi.setOnClickListener(this);
+        this.colorFor.setOnClickListener(this);
+        this.colorFif.setOnClickListener(this);
+        this.colorSix.setOnClickListener(this);
+        this.initColorBar = findViewById(R.id.init_color);
+        this.destColorBar = findViewById(R.id.dest_color);
+        this.initColorBar.setBackgroundColor(this.initColor);
+        this.destColorBar.setBackgroundColor(this.initColor);
+        EditText editText = (EditText) findViewById(R.id.color_text);
+        this.editColor = editText;
+        editText.setOnEditorActionListener(this);
+        this.editColor.setText("#" + Integer.toHexString(this.initColor));
+        this.positive = (Button) findViewById(R.id.color_picker_positive);
+        this.negative = (Button) findViewById(R.id.color_picker_negative);
+        this.positive.setOnClickListener(this);
+        this.negative.setOnClickListener(this);
     }
 
-    private void setColor(int color){
-        currentColor = color;
-        colorPickerView.setColor(color);
-        editColor.setText("#" + Integer.toHexString(color));
-        destColorBar.setBackgroundColor(color);
-        colorSelectorDialogListener.onColorSelected(color);
+    private void setColor(int i) {
+        this.currentColor = i;
+        this.colorPickerView.setColor(i);
+        this.editColor.setText("#" + Integer.toHexString(i));
+        this.destColorBar.setBackgroundColor(i);
+        this.colorSelectorDialogListener.onColorSelected(i);
     }
 
-    @Override
-    public void onColorChanged(int newColor) {
-        setColor(newColor);
+    @Override // com.jaredrummler.android.colorpicker.ColorPickerView.OnColorChangedListener
+    public void onColorChanged(int i) {
+        setColor(i);
     }
 
-    @Override
-    public void onClick(View v) {
-        if (v == colorPri){
-            setColor(context.getResources().getColor(R.color.colorPrimary));
+    @Override // android.view.View.OnClickListener
+    public void onClick(View view) {
+        if (view == this.colorPri) {
+            setColor(this.context.getResources().getColor(R.color.colorPrimary));
         }
-        if (v == colorSec){
-            setColor(context.getResources().getColor(R.color.colorSecondary));
+        if (view == this.colorSec) {
+            setColor(this.context.getResources().getColor(R.color.colorSecondary));
         }
-        if (v == colorThi){
-            setColor(context.getResources().getColor(R.color.colorThird));
+        if (view == this.colorThi) {
+            setColor(this.context.getResources().getColor(R.color.colorThird));
         }
-        if (v == colorFor){
-            setColor(context.getResources().getColor(R.color.colorForth));
+        if (view == this.colorFor) {
+            setColor(this.context.getResources().getColor(R.color.colorForth));
         }
-        if (v == colorFif){
-            setColor(context.getResources().getColor(R.color.colorFifth));
+        if (view == this.colorFif) {
+            setColor(this.context.getResources().getColor(R.color.colorFifth));
         }
-        if (v == colorSix){
-            setColor(context.getResources().getColor(R.color.colorSixth));
+        if (view == this.colorSix) {
+            setColor(this.context.getResources().getColor(R.color.colorSixth));
         }
-        if (v == positive){
-            colorSelectorDialogListener.onPositive(currentColor);
-            this.dismiss();
+        if (view == this.positive) {
+            this.colorSelectorDialogListener.onPositive(this.currentColor);
+            dismiss();
         }
-        if (v == negative){
-            colorSelectorDialogListener.onNegative(initColor);
-            this.dismiss();
+        if (view == this.negative) {
+            this.colorSelectorDialogListener.onNegative(this.initColor);
+            dismiss();
         }
     }
 
-    @Override
-    public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
-        setColor(Color.parseColor(v.getText().toString()));
+    @Override // android.widget.TextView.OnEditorActionListener
+    public boolean onEditorAction(TextView textView, int i, KeyEvent keyEvent) {
+        setColor(Color.parseColor(textView.getText().toString()));
         return false;
     }
 
-    public interface ColorSelectorDialogListener{
-        void onColorSelected(int color);
-        void onPositive(int destColor);
-        void onNegative(int initColor);
-    }
-
-    public void setColorSelectorDialogListener(ColorSelectorDialogListener colorSelectorDialogListener){
+    public void setColorSelectorDialogListener(ColorSelectorDialogListener colorSelectorDialogListener) {
         this.colorSelectorDialogListener = colorSelectorDialogListener;
     }
 }
-

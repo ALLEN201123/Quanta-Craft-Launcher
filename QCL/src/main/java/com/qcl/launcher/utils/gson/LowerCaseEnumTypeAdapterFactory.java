@@ -7,51 +7,47 @@ import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
 import com.google.gson.stream.JsonWriter;
-
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Locale;
 
-/**
- *
- * @author huangyuhui
- */
+/* loaded from: classes2.dex */
 public final class LowerCaseEnumTypeAdapterFactory implements TypeAdapterFactory {
-
     public static final LowerCaseEnumTypeAdapterFactory INSTANCE = new LowerCaseEnumTypeAdapterFactory();
 
-    @Override
-    @SuppressWarnings("unchecked")
-    public <T> TypeAdapter<T> create(Gson gson, TypeToken<T> tt) {
-        Class<? super T> rawType = tt.getRawType();
-        if (!rawType.isEnum())
+    @Override // com.google.gson.TypeAdapterFactory
+    public <T> TypeAdapter<T> create(Gson gson, TypeToken<T> typeToken) {
+        Class<? super T> rawType = typeToken.getRawType();
+        if (!rawType.isEnum()) {
             return null;
-
-        HashMap<String, T> lowercaseToConstant = new HashMap<>();
-        for (Object constant : rawType.getEnumConstants())
-            lowercaseToConstant.put(toLowercase(constant), (T) constant);
-
-        return new TypeAdapter<T>() {
-            @Override
-            public void write(JsonWriter writer, T t) throws IOException {
-                if (t == null)
-                    writer.nullValue();
-                else
-                    writer.value(toLowercase(t));
+        }
+        final HashMap hashMap = new HashMap();
+        for (Object obj : rawType.getEnumConstants()) {
+            hashMap.put(toLowercase(obj), obj);
+        }
+        return new TypeAdapter<T>() { // from class: com.qcl.launcher.utils.gson.LowerCaseEnumTypeAdapterFactory.1
+            @Override // com.google.gson.TypeAdapter
+            public void write(JsonWriter jsonWriter, T t) throws IOException {
+                if (t != null) {
+                    jsonWriter.value(LowerCaseEnumTypeAdapterFactory.toLowercase(t));
+                } else {
+                    jsonWriter.nullValue();
+                }
             }
 
-            @Override
-            public T read(JsonReader reader) throws IOException {
-                if (reader.peek() == JsonToken.NULL) {
-                    reader.nextNull();
+            @Override // com.google.gson.TypeAdapter
+            public T read(JsonReader jsonReader) throws IOException {
+                if (jsonReader.peek() == JsonToken.NULL) {
+                    jsonReader.nextNull();
                     return null;
                 }
-                return lowercaseToConstant.get(reader.nextString().toLowerCase());
+                return (T) hashMap.get(jsonReader.nextString().toLowerCase());
             }
         };
     }
 
-    private static String toLowercase(Object o) {
-        return o.toString().toLowerCase(Locale.US);
+    /* JADX INFO: Access modifiers changed from: private */
+    public static String toLowercase(Object obj) {
+        return obj.toString().toLowerCase(Locale.US);
     }
 }

@@ -5,10 +5,7 @@ import com.google.gson.annotations.SerializedName;
 import com.qcl.launcher.utils.gson.tools.Validation;
 import com.qcl.launcher.utils.string.StringUtils;
 
-/**
- *
- * @author huangyuhui
- */
+/* loaded from: classes2.dex */
 public final class CurseManifestModLoader implements Validation {
 
     @SerializedName("id")
@@ -21,23 +18,23 @@ public final class CurseManifestModLoader implements Validation {
         this("", false);
     }
 
-    public CurseManifestModLoader(String id, boolean primary) {
-        this.id = id;
-        this.primary = primary;
+    public CurseManifestModLoader(String str, boolean z) {
+        this.id = str;
+        this.primary = z;
     }
 
     public String getId() {
-        return id;
+        return this.id;
     }
 
     public boolean isPrimary() {
-        return primary;
+        return this.primary;
     }
 
-    @Override
+    @Override // com.qcl.launcher.utils.gson.tools.Validation
     public void validate() throws JsonParseException {
-        if (StringUtils.isBlank(id))
+        if (StringUtils.isBlank(this.id)) {
             throw new JsonParseException("Curse Forge modpack manifest Mod loader id cannot be blank.");
+        }
     }
-
 }

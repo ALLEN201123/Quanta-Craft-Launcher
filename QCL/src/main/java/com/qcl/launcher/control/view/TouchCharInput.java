@@ -1,175 +1,140 @@
 package com.qcl.launcher.control.view;
 
-import static android.content.Context.INPUT_METHOD_SERVICE;
-
-import android.annotation.SuppressLint;
 import android.content.Context;
-import android.content.res.Configuration;
 import android.util.AttributeSet;
 import android.view.KeyEvent;
 import android.view.inputmethod.InputMethodManager;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-
+import android.widget.TextView;
+import androidx.appcompat.widget.AppCompatEditText;
 import com.qcl.launcher.control.CharacterSenderStrategy;
 import com.qcl.launcher.control.MenuHelper;
 
-import net.kdt.pojavlaunch.R;
+import com.qcl.launcher.R;
+/* loaded from: classes2.dex */
+public class TouchCharInput extends AppCompatEditText {
+    private CharacterSenderStrategy mCharacterSender;
+    private boolean mIsDoingInternalChanges;
+    private MenuHelper menuHelper;
 
-/**
- * This class is intended for sending characters used in chat via the virtual keyboard
- */
-public class TouchCharInput extends androidx.appcompat.widget.AppCompatEditText {
-
-    public TouchCharInput(@NonNull Context context) {
+    public TouchCharInput(Context context) {
         this(context, null);
     }
 
-    public TouchCharInput(@NonNull Context context, @Nullable AttributeSet attrs) {
-        this(context, attrs, R.attr.editTextStyle);
+    public TouchCharInput(Context context, AttributeSet attributeSet) {
+        this(context, attributeSet, R.attr.editTextStyle);
     }
 
-    public TouchCharInput(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
-        super(context, attrs, defStyleAttr);
+    public TouchCharInput(Context context, AttributeSet attributeSet, int i) {
+        super(context, attributeSet, i);
+        this.mIsDoingInternalChanges = false;
         setup();
     }
 
-    private boolean mIsDoingInternalChanges = false;
-    private MenuHelper menuHelper;
-    private CharacterSenderStrategy mCharacterSender;
-
-    /**
-     * We take the new chars, and send them to the game.
-     * If less chars are present, remove some.
-     * The text is always cleaned up.
-     */
-    @Override
-    protected void onTextChanged(CharSequence text, int start, int lengthBefore, int lengthAfter) {
-        super.onTextChanged(text, start, lengthBefore, lengthAfter);
-        if(mIsDoingInternalChanges)return;
-        if(mCharacterSender != null){
-            for(int i = 0; i < lengthBefore; ++i){
-                mCharacterSender.sendBackspace(menuHelper.launcher);
+    @Override // android.widget.TextView
+    protected void onTextChanged(CharSequence charSequence, int i, int i2, int i3) {
+        super.onTextChanged(charSequence, i, i2, i3);
+        if (this.mIsDoingInternalChanges) {
+            return;
+        }
+        if (this.mCharacterSender != null) {
+            int i4 = 0;
+            for (int i5 = 0; i5 < i2; i5++) {
+                this.mCharacterSender.sendBackspace(this.menuHelper.launcher);
             }
-
-            for(int i = start, count = 0; count < lengthAfter; ++i){
-                mCharacterSender.sendChar(menuHelper.launcher, text.charAt(i));
-                ++count;
+            while (i4 < i3) {
+                this.mCharacterSender.sendChar(this.menuHelper.launcher, charSequence.charAt(i));
+                i4++;
+                i++;
             }
         }
-
-        //Reset the keyboard state
-        if(text.length() < 1) clear();
+        if (charSequence.length() < 1) {
+            clear();
+        }
     }
 
-
-    /**
-     * When we change from app to app, the keyboard gets disabled.
-     * So, we disable the object
-     */
-    @Override
-    public void onWindowFocusChanged(boolean hasWindowFocus) {
-        super.onWindowFocusChanged(hasWindowFocus);
+    @Override // android.widget.TextView, android.view.View
+    public void onWindowFocusChanged(boolean z) {
+        super.onWindowFocusChanged(z);
         disable();
     }
 
-    /**
-     * Intercepts the back key to disable focus
-     * Does not affect the rest of the activity.
-     */
-    @Override
-    public boolean onKeyPreIme(final int keyCode, final KeyEvent event) {
-        if (event.getKeyCode() == KeyEvent.KEYCODE_BACK && event.getAction() == KeyEvent.ACTION_UP) {
+    @Override // android.widget.TextView, android.view.View
+    public boolean onKeyPreIme(int i, KeyEvent keyEvent) {
+        if (keyEvent.getKeyCode() == 4 && keyEvent.getAction() == 1) {
             disable();
         }
-        return super.onKeyPreIme(keyCode, event);
+        return super.onKeyPreIme(i, keyEvent);
     }
 
-
-    /**
-     * Toggle on and off the soft keyboard, depending of the state
-     *
-     * @return if the keyboard is set to be shown.
-     */
     public boolean switchKeyboardState() {
-        InputMethodManager imm = (InputMethodManager) getContext().getSystemService(INPUT_METHOD_SERVICE);
-        //If an hard keyboard is present, never trigger the soft one
-        if(hasFocus() || (getResources().getConfiguration().keyboard == Configuration.KEYBOARD_QWERTY && getResources().getConfiguration().hardKeyboardHidden == Configuration.HARDKEYBOARDHIDDEN_YES)) {
-            imm.hideSoftInputFromWindow(getWindowToken(), 0);
+        InputMethodManager inputMethodManager = (InputMethodManager) getContext().getSystemService("input_method");
+        if (hasFocus() || (getResources().getConfiguration().keyboard == 2 && getResources().getConfiguration().hardKeyboardHidden == 2)) {
+            inputMethodManager.hideSoftInputFromWindow(getWindowToken(), 0);
             clear();
             disable();
-            menuHelper.baseLayout.requestFocus();
-            menuHelper.baseLayout.requestPointerCapture();
+            this.menuHelper.baseLayout.requestFocus();
+            this.menuHelper.baseLayout.requestPointerCapture();
             return false;
         }
-        else{
-            menuHelper.baseLayout.releasePointerCapture();
-            menuHelper.baseLayout.clearFocus();
-            enable();
-            imm.showSoftInput(this, InputMethodManager.SHOW_IMPLICIT);
-            return true;
-        }
+        this.menuHelper.baseLayout.releasePointerCapture();
+        this.menuHelper.baseLayout.clearFocus();
+        enable();
+        inputMethodManager.showSoftInput(this, 1);
+        return true;
     }
 
-
-    /**
-     * Clear the EditText from any leftover inputs
-     * It does not affect the in-game input
-     */
-    @SuppressLint("SetTextI18n")
     public void clear() {
-        mIsDoingInternalChanges = true;
-        //Braille space, doesn't trigger keyboard auto-complete
-        //replacing directly the text without though setText avoids notifying changes
+        this.mIsDoingInternalChanges = true;
         setText("                              ");
         setSelection(getText().length());
-        mIsDoingInternalChanges = false;
+        this.mIsDoingInternalChanges = false;
     }
 
-    /** Regain ability to exist, take focus and have some text being input */
     public void enable() {
         setEnabled(true);
         setFocusable(true);
-        setVisibility(VISIBLE);
+        setVisibility(0);
         requestFocus();
     }
 
-    /** Lose ability to exist, take focus and have some text being input */
     public void disable() {
         clear();
-        setVisibility(GONE);
+        setVisibility(8);
         clearFocus();
         setEnabled(false);
     }
 
-    /** Send the enter key. */
     private void sendEnter() {
-        mCharacterSender.sendEnter(menuHelper.launcher);
+        this.mCharacterSender.sendEnter(this.menuHelper.launcher);
         clear();
     }
 
-    /** Just sets the char sender that should be used. */
-    public void setCharacterSender(MenuHelper menuHelper, CharacterSenderStrategy characterSender) {
+    public void setCharacterSender(MenuHelper menuHelper, CharacterSenderStrategy characterSenderStrategy) {
         this.menuHelper = menuHelper;
-        this.mCharacterSender = characterSender;
+        this.mCharacterSender = characterSenderStrategy;
     }
 
-    /** This function deals with anything that has to be executed when the constructor is called */
     private void setup() {
-        setOnEditorActionListener((textView, i, keyEvent) -> {
-            menuHelper.enterLock = true;
-            InputMethodManager imm = (InputMethodManager) getContext().getSystemService(INPUT_METHOD_SERVICE);
-            imm.hideSoftInputFromWindow(getWindowToken(), 0);
-            sendEnter();
-            clear();
-            disable();
-            menuHelper.baseLayout.requestFocus();
-            menuHelper.baseLayout.requestPointerCapture();
-            return false;
+        setOnEditorActionListener(new TextView.OnEditorActionListener() { // from class: com.qcl.launcher.control.view.TouchCharInput$$ExternalSyntheticLambda0
+            @Override // android.widget.TextView.OnEditorActionListener
+            public final boolean onEditorAction(TextView textView, int i, KeyEvent keyEvent) {
+                return TouchCharInput.this.m202lambda$setup$0$comqcllaunchercontrolviewTouchCharInput(textView, i, keyEvent);
+            }
         });
         clear();
         disable();
     }
 
+    /* JADX INFO: Access modifiers changed from: package-private */
+    /* renamed from: lambda$setup$0$com-qcl-launcher-control-view-TouchCharInput, reason: not valid java name */
+    public /* synthetic */ boolean m202lambda$setup$0$comqcllaunchercontrolviewTouchCharInput(TextView textView, int i, KeyEvent keyEvent) {
+        this.menuHelper.enterLock = true;
+        ((InputMethodManager) getContext().getSystemService("input_method")).hideSoftInputFromWindow(getWindowToken(), 0);
+        sendEnter();
+        clear();
+        disable();
+        this.menuHelper.baseLayout.requestFocus();
+        this.menuHelper.baseLayout.requestPointerCapture();
+        return false;
+    }
 }

@@ -1,179 +1,160 @@
 package com.qcl.launcher.launcher.download.forge;
 
 import com.google.gson.JsonParseException;
+import com.qcl.launcher.auth.yggdrasil.YggdrasilSession$$ExternalSyntheticLambda3;
+import com.qcl.launcher.launcher.download.forge.ForgeNewInstallProfile;
 import com.qcl.launcher.launcher.game.Artifact;
 import com.qcl.launcher.launcher.game.Library;
 import com.qcl.launcher.utils.gson.tools.TolerableValidationException;
 import com.qcl.launcher.utils.gson.tools.Validation;
-
-import java.util.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+/* loaded from: classes2.dex */
 public class ForgeNewInstallProfile implements Validation {
-
-    private final int spec;
-    private final String minecraft;
-    private final String json;
-    private final String version;
-    private final Artifact path;
-    private final List<Library> libraries;
-    private final List<Processor> processors;
     private final Map<String, Datum> data;
+    private final String json;
+    private final List<Library> libraries;
+    private final String minecraft;
+    private final Artifact path;
+    private final List<Processor> processors;
+    private final int spec;
+    private final String version;
 
-    public ForgeNewInstallProfile(int spec, String minecraft, String json, String version, Artifact path, List<Library> libraries, List<Processor> processors, Map<String, Datum> data) {
-        this.spec = spec;
-        this.minecraft = minecraft;
-        this.json = json;
-        this.version = version;
-        this.path = path;
-        this.libraries = libraries;
-        this.processors = processors;
-        this.data = data;
+    public ForgeNewInstallProfile(int i, String str, String str2, String str3, Artifact artifact, List<Library> list, List<Processor> list2, Map<String, Datum> map) {
+        this.spec = i;
+        this.minecraft = str;
+        this.json = str2;
+        this.version = str3;
+        this.path = artifact;
+        this.libraries = list;
+        this.processors = list2;
+        this.data = map;
     }
 
-    /**
-     * Specification for install_profile.json.
-     */
     public int getSpec() {
-        return spec;
+        return this.spec;
     }
 
-    /**
-     * Vanilla game version that this installer supports.
-     */
     public String getMinecraft() {
-        return minecraft;
+        return this.minecraft;
     }
 
-    /**
-     * Version json to be installed.
-     * @return path of the version json relative to the installer JAR file.
-     */
     public String getJson() {
-        return json;
+        return this.json;
     }
 
-    /**
-     *
-     * @return forge version.
-     */
     public String getVersion() {
-        return version;
+        return this.version;
     }
 
-    /**
-     * Maven artifact path for the main jar to install.
-     * @return artifact path of the main jar.
-     */
     public Optional<Artifact> getPath() {
-        return Optional.ofNullable(path);
+        return Optional.ofNullable(this.path);
     }
 
-    /**
-     * Libraries that processors depend on.
-     * @return the required dependencies.
-     */
     public List<Library> getLibraries() {
-        return libraries == null ? Collections.emptyList() : libraries;
+        List<Library> list = this.libraries;
+        return list == null ? Collections.emptyList() : list;
     }
 
-    /**
-     * Tasks to be executed to setup modded environment.
-     */
     public List<Processor> getProcessors() {
-        if (processors == null) return Collections.emptyList();
-        return processors.stream().filter(p -> p.isSide("client")).collect(Collectors.toList());
+        List<Processor> list = this.processors;
+        return list == null ? Collections.emptyList() : (List) list.stream().filter(new Predicate() { // from class: com.qcl.launcher.launcher.download.forge.ForgeNewInstallProfile$$ExternalSyntheticLambda1
+            @Override // java.util.function.Predicate
+            public final boolean test(Object obj) {
+                boolean isSide;
+                isSide = ((ForgeNewInstallProfile.Processor) obj).isSide("client");
+                return isSide;
+            }
+        }).collect(Collectors.toList());
     }
 
-    /**
-     * Data for processors.
-     *
-     * @return a mutable data map for processors.
-     */
     public Map<String, String> getData() {
-        if (data == null)
-            return new HashMap<>();
-
-        return data.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().getClient()));
+        Map<String, Datum> map = this.data;
+        if (map == null) {
+            return new HashMap();
+        }
+        return (Map) map.entrySet().stream().collect(Collectors.toMap(YggdrasilSession$$ExternalSyntheticLambda3.INSTANCE, new Function() { // from class: com.qcl.launcher.launcher.download.forge.ForgeNewInstallProfile$$ExternalSyntheticLambda0
+            @Override // java.util.function.Function
+            public final Object apply(Object obj) {
+                String client;
+                client = ((ForgeNewInstallProfile.Datum) ((Map.Entry) obj).getValue()).getClient();
+                return client;
+            }
+        }));
     }
 
-    @Override
+    @Override // com.qcl.launcher.utils.gson.tools.Validation
     public void validate() throws JsonParseException, TolerableValidationException {
-        if (minecraft == null || json == null || version == null)
+        if (this.minecraft == null || this.json == null || this.version == null) {
             throw new JsonParseException("ForgeNewInstallProfile is malformed");
+        }
     }
 
+    /* loaded from: classes2.dex */
     public static class Processor implements Validation {
-        private final List<String> sides;
-        private final Artifact jar;
-        private final List<Artifact> classpath;
         private final List<String> args;
+        private final List<Artifact> classpath;
+        private final Artifact jar;
         private final Map<String, String> outputs;
+        private final List<String> sides;
 
-        public Processor(List<String> sides, Artifact jar, List<Artifact> classpath, List<String> args, Map<String, String> outputs) {
-            this.sides = sides;
-            this.jar = jar;
-            this.classpath = classpath;
-            this.args = args;
-            this.outputs = outputs;
+        public Processor(List<String> list, Artifact artifact, List<Artifact> list2, List<String> list3, Map<String, String> map) {
+            this.sides = list;
+            this.jar = artifact;
+            this.classpath = list2;
+            this.args = list3;
+            this.outputs = map;
         }
 
-        /**
-         * Check which side this processor should be run on. We only support client install currently.
-         * @param side can be one of "client", "server", "extract".
-         * @return true if the processor can run on the side.
-         */
-        public boolean isSide(String side) {
-            return sides == null || sides.contains(side);
+        public boolean isSide(String str) {
+            List<String> list = this.sides;
+            return list == null || list.contains(str);
         }
 
-        /**
-         * The executable jar of this processor task. Will be executed in installation process.
-         * @return the artifact path of executable jar.
-         */
         public Artifact getJar() {
-            return jar;
+            return this.jar;
         }
 
-        /**
-         * The dependencies of this processor task.
-         * @return the artifact path of dependencies.
-         */
         public List<Artifact> getClasspath() {
-            return classpath == null ? Collections.emptyList() : classpath;
+            List<Artifact> list = this.classpath;
+            return list == null ? Collections.emptyList() : list;
         }
 
         public List<String> getArgs() {
-            return args == null ? Collections.emptyList() : args;
+            List<String> list = this.args;
+            return list == null ? Collections.emptyList() : list;
         }
 
         public Map<String, String> getOutputs() {
-            return outputs == null ? Collections.emptyMap() : outputs;
+            Map<String, String> map = this.outputs;
+            return map == null ? Collections.emptyMap() : map;
         }
 
-        @Override
+        @Override // com.qcl.launcher.utils.gson.tools.Validation
         public void validate() throws JsonParseException, TolerableValidationException {
-            if (jar == null)
+            if (this.jar == null) {
                 throw new JsonParseException("Processor::jar cannot be null");
+            }
         }
     }
 
+    /* loaded from: classes2.dex */
     public static class Datum {
         private final String client;
 
-        public Datum(String client) {
-            this.client = client;
+        public Datum(String str) {
+            this.client = str;
         }
 
-        /**
-         * Can be in the following formats:
-         * [value]: An artifact path.
-         * 'value': A string literal.
-         * value: A file in the installer package, to be extracted to a temp folder, and then have the absolute path in replacements.
-         * @return Value to use for the client install
-         */
         public String getClient() {
-            return client;
+            return this.client;
         }
     }
 }

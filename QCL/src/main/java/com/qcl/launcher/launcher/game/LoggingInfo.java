@@ -2,12 +2,15 @@ package com.qcl.launcher.launcher.game;
 
 import com.google.gson.annotations.SerializedName;
 
+/* loaded from: classes2.dex */
 public class LoggingInfo {
+
+    @SerializedName("argument")
+    public String argument;
 
     @SerializedName("file")
     public IdDownloadInfo file;
-    @SerializedName("argument")
-    public String argument;
+
     @SerializedName("type")
     public String type;
 
@@ -15,18 +18,17 @@ public class LoggingInfo {
         this(new IdDownloadInfo());
     }
 
-    public LoggingInfo(IdDownloadInfo file) {
-        this(file, "");
+    public LoggingInfo(IdDownloadInfo idDownloadInfo) {
+        this(idDownloadInfo, "");
     }
 
-    public LoggingInfo(IdDownloadInfo file, String argument) {
-        this(file, argument, "");
+    public LoggingInfo(IdDownloadInfo idDownloadInfo, String str) {
+        this(idDownloadInfo, str, "");
     }
 
-    public LoggingInfo(IdDownloadInfo file, String argument, String type) {
-        this.file = file;
-        this.argument = argument;
-        this.type = type;
+    public LoggingInfo(IdDownloadInfo idDownloadInfo, String str, String str2) {
+        this.file = idDownloadInfo;
+        this.argument = str;
+        this.type = str2;
     }
-
 }

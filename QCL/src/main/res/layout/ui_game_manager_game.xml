@@ -16,44 +16,24 @@
             android:padding="10dp"
             android:orientation="vertical">
 
+            <!-- ★★★ 2026-09-17 用户指令：**移除「需要开版本隔离」的提示块**。
+                 版本隔离已默认开启（InitializeSetting 里 GameDirSetting.type 改 1），
+                 再挂一句"请开启各版本独立"就是自相矛盾的噪音。
+                 原来这块（isolate_alert_layout：图标 + 提示标题 + 说明正文）
+                 其实早就在 UniversalGameSettingUI.refresh() 里 setVisibility(GONE) 了，
+                 但布局里仍占着一格且文案写死 —— 这里直接从布局删掉，彻底不留。
+                 保留一个 GONE 的占位 id，让旧代码里的 findViewById 不至于拿到 null。 -->
             <LinearLayout
-                android:padding="10dp"
-                android:layout_marginBottom="10dp"
-                android:background="@drawable/launcher_view_blue"
+                android:id="@+id/isolate_alert_layout"
+                android:visibility="gone"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="0dp"
                 android:orientation="vertical">
-
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal">
-
-                    <ImageView
-                        android:layout_width="20dp"
-                        android:layout_height="20dp"
-                        android:layout_gravity="center"
-                        android:background="@drawable/ic_outline_about_black"/>
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="center"
-                        android:layout_marginStart="5dp"
-                        android:text="@string/game_setting_ui_game_dir_alert"
-                        android:textSize="@dimen/text_size_middle"
-                        android:textColor="@color/colorLinkBlueDark"/>
-
-                </LinearLayout>
-
                 <TextView
-                    android:layout_marginTop="5dp"
+                    android:id="@+id/isolate_alert_text"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/game_setting_ui_game_dir_alert_text"
-                    android:textSize="@dimen/text_size_middle"
-                    android:textColor="@color/colorLinkBlueDark"/>
-
+                    android:text="" />
             </LinearLayout>
 
             <LinearLayout

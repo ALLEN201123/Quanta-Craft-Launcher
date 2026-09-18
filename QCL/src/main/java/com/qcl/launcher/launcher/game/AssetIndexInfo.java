@@ -1,35 +1,31 @@
 package com.qcl.launcher.launcher.game;
 
-/**
- *
- * @author huangyuhui
- */
+/* loaded from: classes2.dex */
 public class AssetIndexInfo extends IdDownloadInfo {
-
     private final long totalSize;
 
     public AssetIndexInfo() {
         this("", "");
     }
 
-    public AssetIndexInfo(String id, String url) {
-        this(id, url, null);
+    public AssetIndexInfo(String str, String str2) {
+        this(str, str2, null);
     }
 
-    public AssetIndexInfo(String id, String url, String sha1) {
-        this(id, url, sha1, 0);
+    public AssetIndexInfo(String str, String str2, String str3) {
+        this(str, str2, str3, 0);
     }
 
-    public AssetIndexInfo(String id, String url, String sha1, int size) {
-        this(id, url, sha1, size, 0);
+    public AssetIndexInfo(String str, String str2, String str3, int i) {
+        this(str, str2, str3, i, 0L);
     }
 
-    public AssetIndexInfo(String id, String url, String sha1, int size, long totalSize) {
-        super(id, url, sha1, size);
-        this.totalSize = totalSize;
+    public AssetIndexInfo(String str, String str2, String str3, int i, long j) {
+        super(str, str2, str3, i);
+        this.totalSize = j;
     }
 
     public long getTotalSize() {
-        return totalSize;
+        return this.totalSize;
     }
 }

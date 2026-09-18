@@ -2,12 +2,9 @@ package com.qcl.launcher.launcher.dialogs.account;
 
 import android.app.Dialog;
 import android.content.Context;
-import android.content.res.AssetManager;
-import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.text.method.LinkMovementMethod;
 import android.view.View;
-import android.view.animation.Animation;
 import android.view.animation.LinearInterpolator;
 import android.view.animation.RotateAnimation;
 import android.widget.Button;
@@ -16,137 +13,115 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
-
-import androidx.annotation.NonNull;
-
-import com.qcl.launcher.R;
 import com.qcl.launcher.auth.Account;
 import com.qcl.launcher.skin.utils.Avatar;
 import com.qcl.launcher.utils.gson.UUIDTypeAdapter;
-
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.UUID;
 
+import com.qcl.launcher.R;
+/* loaded from: classes2.dex */
 public class AddOfflineAccountDialog extends Dialog implements View.OnClickListener {
-
-    private Context context;
     private ArrayList<Account> accounts;
-    private OnOfflineAccountAddListener onOfflineAccountAddListener;
-
+    private Button cancel;
+    private Context context;
     private EditText editName;
     private EditText editUUID;
-
-    private TextView purchaseLink;
-
-    private LinearLayout showAdvanceSetting;
-    private ImageView spinView;
     private LinearLayout editUUIDLayout;
     private LinearLayout hintLayout;
-
     private Button login;
-    private Button cancel;
-    
-    public AddOfflineAccountDialog(@NonNull Context context,ArrayList<Account> accounts,OnOfflineAccountAddListener onOfflineAccountAddListener) {
+    private OnOfflineAccountAddListener onOfflineAccountAddListener;
+    private TextView purchaseLink;
+    private LinearLayout showAdvanceSetting;
+    private ImageView spinView;
+
+    /* loaded from: classes2.dex */
+    public interface OnOfflineAccountAddListener {
+        void onPositive(Account account);
+    }
+
+    public AddOfflineAccountDialog(Context context, ArrayList<Account> arrayList, OnOfflineAccountAddListener onOfflineAccountAddListener) {
         super(context);
         this.context = context;
-        this.accounts = accounts;
+        this.accounts = arrayList;
         this.onOfflineAccountAddListener = onOfflineAccountAddListener;
         setContentView(R.layout.dialog_add_offline_account);
         setCancelable(false);
         init();
     }
-    
-    private void init(){
-        editName = findViewById(R.id.edit_user_name);
-        editUUID = findViewById(R.id.edit_uuid);
 
-        purchaseLink = findViewById(R.id.purchase_link);
-        purchaseLink.setMovementMethod(LinkMovementMethod.getInstance());
-        showAdvanceSetting = findViewById(R.id.show_advance_setting);
-        showAdvanceSetting.setOnClickListener(this);
-        spinView = findViewById(R.id.spin_view);
-        editUUIDLayout = findViewById(R.id.edit_uuid_layout);
-        hintLayout = findViewById(R.id.hint_layout);
-
-        login = findViewById(R.id.login_offline);
-        cancel = findViewById(R.id.cancel_login_offline);
-        login.setOnClickListener(this);
-        cancel.setOnClickListener(this);
+    private void init() {
+        this.editName = (EditText) findViewById(R.id.edit_user_name);
+        this.editUUID = (EditText) findViewById(R.id.edit_uuid);
+        TextView textView = (TextView) findViewById(R.id.purchase_link);
+        this.purchaseLink = textView;
+        textView.setMovementMethod(LinkMovementMethod.getInstance());
+        LinearLayout linearLayout = (LinearLayout) findViewById(R.id.show_advance_setting);
+        this.showAdvanceSetting = linearLayout;
+        linearLayout.setOnClickListener(this);
+        this.spinView = (ImageView) findViewById(R.id.spin_view);
+        this.editUUIDLayout = (LinearLayout) findViewById(R.id.edit_uuid_layout);
+        this.hintLayout = (LinearLayout) findViewById(R.id.hint_layout);
+        this.login = (Button) findViewById(R.id.login_offline);
+        this.cancel = (Button) findViewById(R.id.cancel_login_offline);
+        this.login.setOnClickListener(this);
+        this.cancel.setOnClickListener(this);
     }
 
-    @Override
-    public void onClick(View v) {
-        if (v == showAdvanceSetting){
-            if (editUUIDLayout.getVisibility() == View.GONE){
-                editUUIDLayout.setVisibility(View.VISIBLE);
-                hintLayout.setVisibility(View.VISIBLE);
-                Animation animation = new RotateAnimation(0, 180, Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f);
-                animation.setDuration(30);//设置动画持续时间
-                animation.setInterpolator(new LinearInterpolator());
-                animation.setRepeatMode(Animation.REVERSE);//设置反方向执行
-                animation.setFillAfter(true);//动画执行完后是否停留在执行完的状态
-                spinView.startAnimation(animation);
-            }
-            else {
-                editUUIDLayout.setVisibility(View.GONE);
-                hintLayout.setVisibility(View.GONE);
-                Animation animation = new RotateAnimation(180, 0, Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f);
-                animation.setDuration(30);//设置动画持续时间
-                animation.setInterpolator(new LinearInterpolator());
-                animation.setRepeatMode(Animation.REVERSE);//设置反方向执行
-                animation.setFillAfter(true);//动画执行完后是否停留在执行完的状态
-                spinView.startAnimation(animation);
+    @Override // android.view.View.OnClickListener
+    public void onClick(View view) {
+        String str;
+        if (view == this.showAdvanceSetting) {
+            if (this.editUUIDLayout.getVisibility() == 8) {
+                this.editUUIDLayout.setVisibility(0);
+                this.hintLayout.setVisibility(0);
+                RotateAnimation rotateAnimation = new RotateAnimation(0.0f, 180.0f, 1, 0.5f, 1, 0.5f);
+                rotateAnimation.setDuration(30L);
+                rotateAnimation.setInterpolator(new LinearInterpolator());
+                rotateAnimation.setRepeatMode(2);
+                rotateAnimation.setFillAfter(true);
+                this.spinView.startAnimation(rotateAnimation);
+            } else {
+                this.editUUIDLayout.setVisibility(8);
+                this.hintLayout.setVisibility(8);
+                RotateAnimation rotateAnimation2 = new RotateAnimation(180.0f, 0.0f, 1, 0.5f, 1, 0.5f);
+                rotateAnimation2.setDuration(30L);
+                rotateAnimation2.setInterpolator(new LinearInterpolator());
+                rotateAnimation2.setRepeatMode(2);
+                rotateAnimation2.setFillAfter(true);
+                this.spinView.startAnimation(rotateAnimation2);
             }
         }
-        if (v == login){
-            ArrayList<String> names = new ArrayList<>();
-            for (Account account : accounts){
-                if (account.loginType == 1){
-                    names.add(account.auth_player_name);
+        if (view == this.login) {
+            ArrayList arrayList = new ArrayList();
+            Iterator<Account> it = this.accounts.iterator();
+            while (it.hasNext()) {
+                Account next = it.next();
+                if (next.loginType == 1) {
+                    arrayList.add(next.auth_player_name);
                 }
             }
-            if (editName.getText().toString().equals("")){
-                Toast.makeText(context,context.getString(R.string.dialog_add_offline_account_empty_warn),Toast.LENGTH_SHORT).show();
-            }
-            else if (names.contains(editName.getText().toString())){
-                Toast.makeText(context,context.getString(R.string.dialog_add_offline_account_exist_warn),Toast.LENGTH_SHORT).show();
-            }
-            else {
-                AssetManager manager = context.getAssets();
-                InputStream inputStream;
-                Bitmap bitmap;
-                String skinTexture = "";
+            if (this.editName.getText().toString().equals("")) {
+                Context context = this.context;
+                Toast.makeText(context, context.getString(R.string.dialog_add_offline_account_empty_warn), 0).show();
+            } else if (arrayList.contains(this.editName.getText().toString())) {
+                Context context2 = this.context;
+                Toast.makeText(context2, context2.getString(R.string.dialog_add_offline_account_exist_warn), 0).show();
+            } else {
                 try {
-                    inputStream = manager.open("img/alex.png");
-                    bitmap = BitmapFactory.decodeStream(inputStream);
-                    skinTexture = Avatar.bitmapToString(bitmap);
+                    str = Avatar.bitmapToString(BitmapFactory.decodeStream(this.context.getAssets().open("img/alex.png")));
                 } catch (IOException e) {
                     e.printStackTrace();
+                    str = "";
                 }
-                Account account = new Account(1,
-                        "",
-                        "",
-                        "mojang",
-                        "0",
-                        editName.getText().toString(),
-                        editUUID.getText().toString().equals("") ? UUID.randomUUID().toString() : editUUID.getText().toString(),
-                        UUIDTypeAdapter.fromUUID(UUID.randomUUID()),
-                        "",
-                        "",
-                        "",
-                        skinTexture);
-                onOfflineAccountAddListener.onPositive(account);
-                this.dismiss();
+                this.onOfflineAccountAddListener.onPositive(new Account(1, "", "", "mojang", "0", this.editName.getText().toString(), this.editUUID.getText().toString().equals("") ? UUID.randomUUID().toString() : this.editUUID.getText().toString(), UUIDTypeAdapter.fromUUID(UUID.randomUUID()), "", "", "", str));
+                dismiss();
             }
         }
-        if (v == cancel){
-            this.dismiss();
+        if (view == this.cancel) {
+            dismiss();
         }
-    }
-
-    public interface OnOfflineAccountAddListener{
-        void onPositive(Account account);
     }
 }

@@ -1,7 +1,12 @@
 package com.qcl.launcher.utils.gson;
 
-import com.google.gson.*;
-
+import com.google.gson.JsonDeserializationContext;
+import com.google.gson.JsonDeserializer;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParseException;
+import com.google.gson.JsonPrimitive;
+import com.google.gson.JsonSerializationContext;
+import com.google.gson.JsonSerializer;
 import java.lang.reflect.Type;
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -15,75 +20,65 @@ import java.time.format.DateTimeParseException;
 import java.util.Date;
 import java.util.Locale;
 
-import static java.time.format.DateTimeFormatter.ISO_LOCAL_DATE_TIME;
-
-/**
- *
- * @author huangyuhui
- */
+/* loaded from: classes2.dex */
 public final class DateTypeAdapter implements JsonSerializer<Date>, JsonDeserializer<Date> {
-
     public static final DateTypeAdapter INSTANCE = new DateTypeAdapter();
+    public static final DateFormat EN_US_FORMAT = DateFormat.getDateTimeInstance(2, 2, Locale.US);
+    public static final DateFormat ISO_8601_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ");
+    public static final DateTimeFormatter ISO_DATE_TIME = new DateTimeFormatterBuilder().append(DateTimeFormatter.ISO_LOCAL_DATE_TIME).optionalStart().appendOffset("+HH:MM", "+00:00").optionalEnd().optionalStart().appendOffset("+HHMM", "+0000").optionalEnd().optionalStart().appendOffset("+HH", "Z").optionalEnd().optionalStart().appendOffsetId().optionalEnd().toFormatter();
 
     private DateTypeAdapter() {
     }
 
-    @Override
-    public JsonElement serialize(Date t, Type type, JsonSerializationContext jsc) {
+    @Override // com.google.gson.JsonSerializer
+    public JsonElement serialize(Date date, Type type, JsonSerializationContext jsonSerializationContext) {
+        JsonPrimitive jsonPrimitive;
         synchronized (EN_US_FORMAT) {
-            return new JsonPrimitive(serializeToString(t));
+            jsonPrimitive = new JsonPrimitive(serializeToString(date));
         }
+        return jsonPrimitive;
     }
 
-    @Override
-    public Date deserialize(JsonElement json, Type type, JsonDeserializationContext context) throws JsonParseException {
-        if (!(json instanceof JsonPrimitive))
+    @Override // com.google.gson.JsonDeserializer
+    public Date deserialize(JsonElement jsonElement, Type type, JsonDeserializationContext jsonDeserializationContext) throws JsonParseException {
+        if (!(jsonElement instanceof JsonPrimitive)) {
             throw new JsonParseException("The date should be a string value");
-        else {
-            Date date = deserializeToDate(json.getAsString());
-            if (type == Date.class)
-                return date;
-            else
-                throw new IllegalArgumentException(this.getClass().toString() + " cannot be deserialized to " + type);
         }
+        Date deserializeToDate = deserializeToDate(jsonElement.getAsString());
+        if (type == Date.class) {
+            return deserializeToDate;
+        }
+        throw new IllegalArgumentException(getClass().toString() + " cannot be deserialized to " + type);
     }
 
-    public static final DateFormat EN_US_FORMAT = DateFormat.getDateTimeInstance(2, 2, Locale.US);
-    public static final DateFormat ISO_8601_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ");
-
-    public static final DateTimeFormatter ISO_DATE_TIME = new DateTimeFormatterBuilder()
-            .append(ISO_LOCAL_DATE_TIME)
-            .optionalStart().appendOffset("+HH:MM", "+00:00").optionalEnd()
-            .optionalStart().appendOffset("+HHMM", "+0000").optionalEnd()
-            .optionalStart().appendOffset("+HH", "Z").optionalEnd()
-            .optionalStart().appendOffsetId().optionalEnd()
-            .toFormatter();
-
-    public static Date deserializeToDate(String string) {
-        synchronized (EN_US_FORMAT) {
+    /* JADX WARN: Type inference failed for: r2v3, types: [java.time.ZonedDateTime] */
+    public static Date deserializeToDate(String str) {
+        Date parse;
+        DateFormat dateFormat = EN_US_FORMAT;
+        synchronized (dateFormat) {
             try {
-                return EN_US_FORMAT.parse(string);
-            } catch (ParseException ex1) {
                 try {
-                    ZonedDateTime zonedDateTime = ZonedDateTime.parse(string, ISO_DATE_TIME);
-                    return Date.from(zonedDateTime.toInstant());
+                    parse = dateFormat.parse(str);
                 } catch (DateTimeParseException e) {
                     try {
-                        LocalDateTime localDateTime = LocalDateTime.parse(string, ISO_LOCAL_DATE_TIME);
-                        return Date.from(localDateTime.atZone(ZoneId.systemDefault()).toInstant());
-                    } catch (DateTimeParseException e2) {
-                        throw new JsonParseException("Invalid date: " + string, e);
+                        return Date.from(LocalDateTime.parse(str, DateTimeFormatter.ISO_LOCAL_DATE_TIME).atZone(ZoneId.systemDefault()).toInstant());
+                    } catch (DateTimeParseException unused) {
+                        throw new JsonParseException("Invalid date: " + str, e);
                     }
                 }
+            } catch (ParseException unused2) {
+                return Date.from(ZonedDateTime.parse(str, ISO_DATE_TIME).toInstant());
             }
         }
+        return parse;
     }
 
     public static String serializeToString(Date date) {
+        String str;
         synchronized (EN_US_FORMAT) {
-            String result = ISO_8601_FORMAT.format(date);
-            return result.substring(0, 22) + ":" + result.substring(22);
+            String format = ISO_8601_FORMAT.format(date);
+            str = format.substring(0, 22) + ":" + format.substring(22);
         }
+        return str;
     }
-
 }

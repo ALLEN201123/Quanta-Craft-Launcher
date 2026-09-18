@@ -1,11 +1,5 @@
 package net.kdt.pojavlaunch.utils;
 
-import static net.kdt.pojavlaunch.utils.Architecture.ARCH_ARM;
-import static net.kdt.pojavlaunch.utils.Architecture.ARCH_ARM64;
-import static net.kdt.pojavlaunch.utils.Architecture.ARCH_X86;
-import static net.kdt.pojavlaunch.utils.Architecture.ARCH_X86_64;
-import static net.kdt.pojavlaunch.utils.Architecture.is64BitsDevice;
-
 import android.app.Activity;
 import android.content.Context;
 import android.system.ErrnoException;
@@ -13,347 +7,294 @@ import android.system.Os;
 import android.util.ArrayMap;
 import android.util.Log;
 import android.view.Surface;
-
 import com.oracle.dalvik.VMLauncher;
-
-import net.kdt.pojavlaunch.Logger;
-
-import org.lwjgl.glfw.CallbackBridge;
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Vector;
+import net.kdt.pojavlaunch.Logger;
+import org.lwjgl.glfw.CallbackBridge;
 
-import javax.microedition.khronos.egl.EGL10;
-import javax.microedition.khronos.egl.EGLConfig;
-import javax.microedition.khronos.egl.EGLContext;
-import javax.microedition.khronos.egl.EGLDisplay;
-
+/* loaded from: classes2.dex */
 public class JREUtils {
-    private JREUtils() {}
-
-    public static String LD_LIBRARY_PATH;
-    private static String nativeLibDir;
+    public static String LD_LIBRARY_PATH = null;
+    public static final boolean QCL_DEBUG_INPUT = true;
     public static Map<String, String> jreReleaseList;
+    public static String jvmLibraryPath;
+    private static String nativeLibDir;
 
-    public static ArrayList<File> locateLibs(File path) {
-        ArrayList<File> ret = new ArrayList<>();
-        File[] list = path.listFiles();
-        if(list != null) {for(File f : list) {
-            if(f.isFile() && f.getName().endsWith(".so")) {
-                ret.add(f);
-            }else if(f.isDirectory()) {
-                ret.addAll(locateLibs(f));
+    public static native int chdir(String str);
+
+    public static native boolean dlopen(String str);
+
+    public static native void logToLogger(Logger logger);
+
+    public static native int[] renderAWTScreenFrame();
+
+    public static native void setLdLibraryPath(String str);
+
+    public static native void setupBridgeWindowNew(Surface surface);
+
+    public static native void setupExitTrap(Context context);
+
+    private JREUtils() {
+    }
+
+    public static ArrayList<File> locateLibs(File file) {
+        ArrayList<File> arrayList = new ArrayList<>();
+        File[] listFiles = file.listFiles();
+        if (listFiles != null) {
+            for (File file2 : listFiles) {
+                if (file2.isFile() && file2.getName().endsWith(".so")) {
+                    arrayList.add(file2);
+                } else if (file2.isDirectory()) {
+                    arrayList.addAll(locateLibs(file2));
+                }
             }
-        }}
-        return ret;
+        }
+        return arrayList;
     }
 
     public static String getJavaArchName() {
-        // ⚠️ 必须用「应用实际安装的 ABI」，不能用设备 CPU。
-        // MuMu 这类模拟器设备是 x86_64，但 APK 以 armeabi-v7a 转译运行；
-        // 按设备选会得到 amd64 → lib/amd64 不存在 → dlopen 顺序全乱 → JVM 起不来（白屏）。
-        if (Architecture.getRuntimeArchitecture() == ARCH_ARM) return "aarch32";
-        if (Architecture.getRuntimeArchitecture() == ARCH_ARM64) return "aarch64";
-        if (Architecture.getRuntimeArchitecture() == ARCH_X86) return "i386";
-        return "amd64";
+        return Architecture.getRuntimeArchitecture() == Architecture.ARCH_ARM ? "aarch32" : Architecture.getRuntimeArchitecture() == Architecture.ARCH_ARM64 ? "aarch64" : Architecture.getRuntimeArchitecture() == Architecture.ARCH_X86 ? "i386" : "amd64";
     }
 
-    public static String getJavaLibDir(String javaPath) {
-        File archDir = new File(javaPath + "/lib/" + getJavaArchName());
-        return javaPath.endsWith("default") || archDir.exists()
-                ? archDir.getAbsolutePath()
-                : new File(javaPath, "lib").getAbsolutePath();
-    }
-
-    public static String getJvmLibDir(String javaPath) {
-        File server = new File(javaPath + "/lib/server/libjvm.so");
-        File archServer = new File(getJavaLibDir(javaPath) + "/server/libjvm.so");
-        if (server.exists()) return server.getParent();
-        if (archServer.exists()) return archServer.getParent();
-        return getJavaLibDir(javaPath) + "/client";
-    }
-
-    public static void initJavaRuntime(String javaPath) {
-        String path = getJavaLibDir(javaPath);
-        String jliPath = new File(path + "/jli/libjli.so").exists()
-                ? path + "/jli/libjli.so"
-                : path + "/libjli.so";
-        dlopen(nativeLibDir + "/libc++_shared.so");
-        dlopen(jliPath);
-        dlopen(getJvmLibDir(javaPath) + "/libjvm.so");
-        dlopen(path + "/libverify.so");
-        dlopen(path + "/libjava.so");
-        dlopen(path + "/libnet.so");
-        dlopen(path + "/libnio.so");
-        dlopen(path + "/libawt.so");
-        dlopen(path + "/libawt_headless.so");
-        dlopen(path + "/libfreetype.so");
-        dlopen(path + "/libfontmanager.so");
-        dlopen(path + "/libtinyiconv.so");
-        for(File f : locateLibs(new File(javaPath))) {
-            dlopen(f.getAbsolutePath());
+    public static String getJavaLibDir(String str) {
+        File file = new File(str + "/lib/" + getJavaArchName());
+        if (str.endsWith("default") || file.exists()) {
+            return file.getAbsolutePath();
         }
-        dlopen( nativeLibDir + "/libopenal.so");
+        return new File(str, "lib").getAbsolutePath();
     }
 
-    public static Map<String, String> readJREReleaseProperties(String javaPath) throws IOException {
-        Map<String, String> jreReleaseMap = new ArrayMap<>();
-        BufferedReader jreReleaseReader = new BufferedReader(new FileReader(javaPath + "/release"));
-        String currLine;
-        while ((currLine = jreReleaseReader.readLine()) != null) {
-            if (!currLine.isEmpty() || currLine.contains("=")) {
-                String[] keyValue = currLine.split("=");
-                jreReleaseMap.put(keyValue[0], keyValue[1].replace("\"", ""));
+    public static String getJvmLibDir(String str) {
+        File file = new File(str + "/lib/server/libjvm.so");
+        File file2 = new File(getJavaLibDir(str) + "/server/libjvm.so");
+        return file.exists() ? file.getParent() : file2.exists() ? file2.getParent() : getJavaLibDir(str) + "/client";
+    }
+
+    public static void initJavaRuntime(String str) {
+        String str2;
+        String javaLibDir = getJavaLibDir(str);
+        if (new File(javaLibDir + "/jli/libjli.so").exists()) {
+            str2 = javaLibDir + "/jli/libjli.so";
+        } else {
+            str2 = javaLibDir + "/libjli.so";
+        }
+        dlopen(nativeLibDir + "/libc++_shared.so");
+        dlopen(str2);
+        dlopen(getJvmLibDir(str) + "/libjvm.so");
+        dlopen(javaLibDir + "/libverify.so");
+        dlopen(javaLibDir + "/libjava.so");
+        dlopen(javaLibDir + "/libnet.so");
+        dlopen(javaLibDir + "/libnio.so");
+        dlopen(javaLibDir + "/libawt.so");
+        dlopen(javaLibDir + "/libawt_headless.so");
+        dlopen(javaLibDir + "/libfreetype.so");
+        dlopen(javaLibDir + "/libfontmanager.so");
+        dlopen(javaLibDir + "/libtinyiconv.so");
+        Iterator<File> it = locateLibs(new File(str)).iterator();
+        while (it.hasNext()) {
+            dlopen(it.next().getAbsolutePath());
+        }
+        dlopen(nativeLibDir + "/libopenal.so");
+    }
+
+    public static Map<String, String> readJREReleaseProperties(String str) throws IOException {
+        ArrayMap arrayMap = new ArrayMap();
+        BufferedReader bufferedReader = new BufferedReader(new FileReader(str + "/release"));
+        while (true) {
+            String readLine = bufferedReader.readLine();
+            if (readLine != null) {
+                if (!readLine.isEmpty() || readLine.contains("=")) {
+                    String[] split = readLine.split("=");
+                    arrayMap.put(split[0], split[1].replace("\"", ""));
+                }
+            } else {
+                bufferedReader.close();
+                return arrayMap;
             }
         }
-        jreReleaseReader.close();
-        return jreReleaseMap;
     }
 
-    public static String jvmLibraryPath;
-    public static void redirectAndPrintJRELog(Context context) {
-        Log.v("jrelog","Log starts here");
-        JREUtils.logToLogger(Logger.getInstance(context));
-        Thread t = new Thread(new Runnable(){
+    public static void redirectAndPrintJRELog(final Context context) {
+        Log.v("jrelog", "Log starts here");
+        callLogToLoggerSafely(Logger.getInstance(context));
+        new Thread(new Runnable() { // from class: net.kdt.pojavlaunch.utils.JREUtils.1
             int failTime = 0;
             ProcessBuilder logcatPb;
-            @Override
+
+            @Override // java.lang.Runnable
             public void run() {
                 try {
-                    if (logcatPb == null) {
-                        logcatPb = new ProcessBuilder().command("logcat", /* "-G", "1mb", */ "-v", "brief", "-s", "jrelog:I", "LIBGL:I").redirectErrorStream(true);
+                    if (this.logcatPb == null) {
+                        this.logcatPb = new ProcessBuilder(new String[0]).command("logcat", "-v", "brief", "-s", "jrelog:I", "LIBGL:I").redirectErrorStream(true);
                     }
-                    
-                    Log.i("jrelog-logcat","Clearing logcat");
-                    new ProcessBuilder().command("logcat", "-c").redirectErrorStream(true).start();
-                    Log.i("jrelog-logcat","Starting logcat");
-                    Process p = logcatPb.start();
-
-                    byte[] buf = new byte[1024];
-                    int len;
-                    while ((len = p.getInputStream().read(buf)) != -1) {
-                        String currStr = new String(buf, 0, len);
-                        Logger.getInstance(context).appendToLog(currStr);
+                    Log.i("jrelog-logcat", "Clearing logcat");
+                    new ProcessBuilder(new String[0]).command("logcat", "-c").redirectErrorStream(true).start();
+                    Log.i("jrelog-logcat", "Starting logcat");
+                    Process start = this.logcatPb.start();
+                    byte[] bArr = new byte[1024];
+                    while (true) {
+                        int read = start.getInputStream().read(bArr);
+                        if (read == -1) {
+                            break;
+                        } else {
+                            Logger.getInstance(context).appendToLog(new String(bArr, 0, read));
+                        }
                     }
-                    
-                    if (p.waitFor() != 0) {
-                        Log.e("jrelog-logcat", "Logcat exited with code " + p.exitValue());
-                        failTime++;
-                        Log.i("jrelog-logcat", (failTime <= 10 ? "Restarting logcat" : "Too many restart fails") + " (attempt " + failTime + "/10");
-                        if (failTime <= 10) {
+                    if (start.waitFor() != 0) {
+                        Log.e("jrelog-logcat", "Logcat exited with code " + start.exitValue());
+                        this.failTime++;
+                        Log.i("jrelog-logcat", (this.failTime <= 10 ? "Restarting logcat" : "Too many restart fails") + " (attempt " + this.failTime + "/10");
+                        if (this.failTime <= 10) {
                             run();
                         } else {
                             Logger.getInstance(context).appendToLog("ERROR: Unable to get more log.");
                         }
-                        return;
                     }
-                } catch (Throwable e) {
-                    Log.e("jrelog-logcat", "Exception on logging thread", e);
-                    Logger.getInstance(context).appendToLog("Exception on logging thread:\n" + Log.getStackTraceString(e));
+                } catch (Throwable th) {
+                    Log.e("jrelog-logcat", "Exception on logging thread", th);
+                    Logger.getInstance(context).appendToLog("Exception on logging thread:\n" + Log.getStackTraceString(th));
                 }
             }
-        });
-        t.start();
-        Log.i("jrelog-logcat","Logcat thread started");
+        }).start();
+        Log.i("jrelog-logcat", "Logcat thread started");
     }
 
-    public static void relocateLibPath(final Context ctx , String javaPath) throws IOException {
-
-        String javaLibDir = getJavaLibDir(javaPath);
-
-        nativeLibDir = ctx.getApplicationInfo().nativeLibraryDir;
-
-        String libName = is64BitsDevice() ? "lib64" : "lib";
-        StringBuilder ldLibraryPath = new StringBuilder();
-        ldLibraryPath.append(
-                javaLibDir + "/jli:" +
-                        javaLibDir + ":"
-        );
-        // ★★★ 全面对齐 FCL：appendCommonPaths() 的系统库列表含 /system_ext/<lib>
-        //（Android 10+ 部分系统库被移到 system_ext 分区；旧 Pojav 列表没有它）。
-        ldLibraryPath.append(
-                "/system/" + libName + ":" +
-                        "/vendor/" + libName + ":" +
-                        "/vendor/" + libName + "/hw:" +
-                        "/system_ext/" + libName + ":" +
-                        nativeLibDir
-        );
-        LD_LIBRARY_PATH = ldLibraryPath.toString();
+    public static void relocateLibPath(Context context, String str) throws IOException {
+        String javaLibDir = getJavaLibDir(str);
+        nativeLibDir = context.getApplicationInfo().nativeLibraryDir;
+        String str2 = Architecture.is64BitsDevice() ? "lib64" : "lib";
+        StringBuilder sb = new StringBuilder();
+        sb.append(javaLibDir + "/jli:" + javaLibDir + ":");
+        sb.append("/system/" + str2 + ":/vendor/" + str2 + ":/vendor/" + str2 + "/hw:/system_ext/" + str2 + ":" + nativeLibDir);
+        LD_LIBRARY_PATH = sb.toString();
     }
 
-    /**
-     * 设备系统库目录名（lib64 / lib）—— 对齐 FCL FCLauncher.appendCommonPaths 的 libDirName；
-     * 供 PojavLauncher.buildFclLibraryPath() 构建 java.library.path 时复用同一判断。
-     */
     public static String getAndroidLibDirName() {
-        return is64BitsDevice() ? "lib64" : "lib";
+        return Architecture.is64BitsDevice() ? "lib64" : "lib";
     }
 
-    public static void setJavaEnvironment(Activity activity,String javaPath,String home,String renderer,String glesVersion) throws Throwable {
-        Map<String, String> envMap = new ArrayMap<>();
-        envMap.put("POJAV_NATIVEDIR", activity.getApplicationInfo().nativeLibraryDir);
-        envMap.put("JAVA_HOME", javaPath);
-        envMap.put("HOME", home);
-        envMap.put("TMPDIR", activity.getCacheDir().getAbsolutePath());
-        envMap.put("LIBGL_MIPMAP", "3");
-
-        // 1.1.0：新渲染桥（FCL 版 egl_bridge）的 pojavInitOpenGL 会读 FORCE_VSYNC。
-        // 缺这个 env 时 getenv 返回 NULL，随后的 strcmp(NULL,"true") 直接 SIGSEGV
-        //（真机实测 fault addr 0x45，崩溃于 JVM Main thread）。FCL 恒定设置该值。
-        envMap.put("FORCE_VSYNC", "false");
-        // ★★★ 1.1.0 修复（模拟器实测崩溃点）：
-        // 新渲染桥 pojavInit 末尾会调用 setNativeWindowSwapInterval(pojavWindow, 0)，
-        // 但该调用在部分设备/模拟器上会崩进系统库：
-        //   Fatal signal 11 (SEGV_ACCERR) /system/lib/libgui.so
-        //   android::Surface::hook_setSwapInterval(ANativeWindow*, int)+42
-        // 新桥用 POJAV_VSYNC_IN_ZINK 作为该调用的开关（非空即跳过）。设上它即可规避，
-        // 代价是不强制异步垂直同步（对帧率影响很小，远好过崩溃）。
-        envMap.put("POJAV_VSYNC_IN_ZINK", "1");
-
-        // On certain GLES drivers, overloading default functions shader hack fails, so disable it
-        envMap.put("LIBGL_NOINTOVLHACK", "1");
-
-        //envMap.put("LIBGL_GL", "21");
-
-        //envMap.put("LIBGL_SHRINK","0");
-
-        //envMap.put("LIBGL_USEVBO","0");
-
-        // Fix white color on banner and sheep, since GL4ES 1.1.5
-        envMap.put("LIBGL_NORMALIZE", "1");
-
-        envMap.put("LIBGL_ES",glesVersion);
-   
-        envMap.put("MESA_GLSL_CACHE_DIR", activity.getCacheDir().getAbsolutePath());
-        if (renderer != null) {
-            envMap.put("MESA_GL_VERSION_OVERRIDE", renderer.equals("opengles3_virgl")?"4.3":"4.6");
-            envMap.put("MESA_GLSL_VERSION_OVERRIDE", renderer.equals("opengles3_virgl")?"430":"460");
+    public static void setJavaEnvironment(Activity activity, String str, String str2, String str3, String str4) throws Throwable {
+        String str5;
+        String str6 = str3;
+        ArrayMap arrayMap = new ArrayMap();
+        arrayMap.put("POJAV_NATIVEDIR", activity.getApplicationInfo().nativeLibraryDir);
+        arrayMap.put("JAVA_HOME", str);
+        arrayMap.put("HOME", str2);
+        arrayMap.put("TMPDIR", activity.getCacheDir().getAbsolutePath());
+        arrayMap.put("LIBGL_MIPMAP", "3");
+        arrayMap.put("FORCE_VSYNC", "false");
+        arrayMap.put("POJAV_VSYNC_IN_ZINK", "1");
+        arrayMap.put("LIBGL_NOINTOVLHACK", "1");
+        arrayMap.put("LIBGL_NORMALIZE", "1");
+        arrayMap.put("LIBGL_ES", str4);
+        arrayMap.put("MESA_GLSL_CACHE_DIR", activity.getCacheDir().getAbsolutePath());
+        if (str6 != null) {
+            arrayMap.put("MESA_GL_VERSION_OVERRIDE", str6.equals("opengles3_virgl") ? "4.3" : "4.6");
+            arrayMap.put("MESA_GLSL_VERSION_OVERRIDE", str6.equals("opengles3_virgl") ? "430" : "460");
         }
-        envMap.put("force_glsl_extensions_warn", "true");
-        envMap.put("allow_higher_compat_version", "true");
-        envMap.put("allow_glsl_extension_directive_midshader", "true");
-        envMap.put("MESA_LOADER_DRIVER_OVERRIDE", "zink");
-        envMap.put("VTEST_SOCKET_NAME", activity.getCacheDir().getAbsolutePath() + "/.virgl_test");
-
-        envMap.put("LD_LIBRARY_PATH", LD_LIBRARY_PATH);
-        envMap.put("PATH", javaPath + "/bin:" + Os.getenv("PATH"));
-        
-        envMap.put("REGAL_GL_VENDOR", "Android");
-        envMap.put("REGAL_GL_RENDERER", "Regal");
-        envMap.put("REGAL_GL_VERSION", "4.5");
-        if(renderer != null) {
-            if (renderer.equals("opengles2_5") || renderer.equals("opengles3") || renderer.equals("opengles3_vgpu")) {
-                renderer = "opengles2";
+        arrayMap.put("force_glsl_extensions_warn", "true");
+        arrayMap.put("allow_higher_compat_version", "true");
+        arrayMap.put("allow_glsl_extension_directive_midshader", "true");
+        arrayMap.put("MESA_LOADER_DRIVER_OVERRIDE", "zink");
+        arrayMap.put("VTEST_SOCKET_NAME", activity.getCacheDir().getAbsolutePath() + "/.virgl_test");
+        arrayMap.put("LD_LIBRARY_PATH", LD_LIBRARY_PATH);
+        arrayMap.put("PATH", str + "/bin:" + Os.getenv("PATH"));
+        arrayMap.put("REGAL_GL_VENDOR", "Android");
+        arrayMap.put("REGAL_GL_RENDERER", "Regal");
+        arrayMap.put("REGAL_GL_VERSION", "4.5");
+        arrayMap.put("QCL_DBG_INPUT", "1");
+        if (str6 != null) {
+            if (str6.equals("opengles2_5") || str6.equals("opengles3") || str6.equals("opengles3_vgpu")) {
+                str6 = "opengles2";
             }
-            // 1.1.0：zink 渲染器（Mesa zink-on-Vulkan → 桌面 GL 4.6）。
-            // 1.20.5+/26.x 需要 OpenGL 3.2+，GL4ES 只到 2.1 跑不了；zink 提供完整桌面 GL，
-            // 且向下兼容 —— 高版本与低版本通吃。
-            // 走新版 ctxbridges 的 gl_bridge（eglBindAPI(EGL_OPENGL_API) 桌面 GL 模式）
-            // + kopper-zink 的 Mesa EGL（libEGL_mesa.so）与 zink driver（libzink_dri.so），
-            // 两个库已随 APK 的 native 目录打包，egl_loader 经 loader_dlopen 加载。
-            // ★★★ 1.1.0：渲染器按版本分流（同 PojavLauncher.getMcArgs）。
-            // qcl.highver 由 getMcArgs 设置：1=高版本(1.20.5+)，0=老版本。
-            // 老版本用 zink 会因 libEGL_mesa.so 加载问题黑屏（模拟器尤其明显），
-            // 所以老版本一律降级到 gl4es（GL4ES 到 ES 2.1，老版本够用）。
-            // ★★★ 渲染器：读 getMcArgs 传过来的玩家选择（可能是 mg / gl4es / zink / virgl…），
-            // 不做强制替换；不兼容的提醒在选择对话框里做。
-            String qclPicked = System.getProperty("qcl.renderer.picked", null);
-            if (qclPicked != null) {
-                renderer = qclPicked;
+            String property = System.getProperty("qcl.renderer.picked", null);
+            if (property != null) {
+                str6 = property;
             }
-            // ★★★ Krypton Wrapper（NG-GL4ES）—— 完整环境变量照抄 FCL 的 FCLauncher.addRendererEnvInner
-            // （FCL 源码：FCL/src/main/java/com/tungsten/fclauncher/FCLauncher.java 的 ID_NGGL4ES 分支）。
-            // 缺了这些（特别是 DLOPEN / LIBGL_GL / LIBGL_ES=3 / POJAV_RENDERER=opengles3），
-            // Krypton 会挂在 "Unable to initialize GLFW" / 渲染链起不来。
-            if ("ng_gl4es".equals(renderer)) {
-                // ★★★ 清掉前面无条件设置的 zink/virgl 残留变量！
-                // 实测真机日志：ng_gl4es 时仍带着 MESA_LOADER_DRIVER_OVERRIDE=zink /
-                // MESA_GL_VERSION_OVERRIDE=4.6 / VTEST_SOCKET_NAME 等 —— 会污染 Krypton 的初始化。
-                envMap.remove("MESA_LOADER_DRIVER_OVERRIDE");
-                envMap.remove("MESA_GL_VERSION_OVERRIDE");
-                envMap.remove("MESA_GLSL_VERSION_OVERRIDE");
-                envMap.remove("VTEST_SOCKET_NAME");
-                envMap.remove("GALLIUM_DRIVER");
-                envMap.put("LIBGL_USE_MC_COLOR", "1");
-                envMap.put("DLOPEN", "libspirv-cross-c-shared.so");
-                envMap.put("LIBGL_GL", "31");
-                envMap.put("LIBGL_ES", "3");
-                envMap.put("LIBGL_NORMALIZE", "1");
-                envMap.put("LIBGL_NOINTOVLHACK", "1");
-                envMap.put("LIBGL_NOERROR", "1");
-                envMap.put("POJAV_RENDERER", "opengles3");
-                envMap.put("POJAVEXEC_EGL", "libEGL.so");
+            if ("ng_gl4es".equals(str6)) {
+                arrayMap.remove("MESA_LOADER_DRIVER_OVERRIDE");
+                arrayMap.remove("MESA_GL_VERSION_OVERRIDE");
+                arrayMap.remove("MESA_GLSL_VERSION_OVERRIDE");
+                arrayMap.remove("VTEST_SOCKET_NAME");
+                arrayMap.remove("GALLIUM_DRIVER");
+                arrayMap.put("LIBGL_USE_MC_COLOR", "1");
+                arrayMap.put("DLOPEN", "libspirv-cross-c-shared.so");
+                arrayMap.put("LIBGL_GL", "31");
+                arrayMap.put("LIBGL_ES", "3");
+                arrayMap.put("LIBGL_NORMALIZE", "1");
+                arrayMap.put("LIBGL_NOINTOVLHACK", "1");
+                arrayMap.put("LIBGL_NOERROR", "1");
+                arrayMap.put("POJAV_RENDERER", "opengles3");
+                arrayMap.put("POJAVEXEC_EGL", "libEGL.so");
             }
-            if (renderer.equals("zink") || renderer.equals("opengles3_desktopgl_zink_kopper")) {
-                envMap.put("LIBGL_ES", "3");
-                envMap.put("POJAVEXEC_EGL", "libEGL_mesa.so");
-                renderer = "opengles3_desktopgl_zink_kopper";
+            if (str6.equals("zink") || str6.equals("opengles3_desktopgl_zink_kopper")) {
+                arrayMap.put("LIBGL_ES", "3");
+                arrayMap.put("POJAVEXEC_EGL", "libEGL_mesa.so");
+                str5 = "ng_gl4es";
+                str6 = "opengles3_desktopgl_zink_kopper";
+            } else {
+                str5 = "ng_gl4es";
             }
-            envMap.put("POJAV_RENDERER", renderer);
+            if (!str5.equals(str6)) {
+                arrayMap.put("POJAV_RENDERER", str6);
+            }
         }
-        envMap.put("AWTSTUB_WIDTH", Integer.toString(CallbackBridge.windowWidth > 0 ? CallbackBridge.windowWidth : CallbackBridge.physicalWidth));
-        envMap.put("AWTSTUB_HEIGHT", Integer.toString(CallbackBridge.windowHeight > 0 ? CallbackBridge.windowHeight : CallbackBridge.physicalHeight));
-
-        for (Map.Entry<String, String> env : envMap.entrySet()) {
-            Logger.getInstance(activity).appendToLog("Added custom env: " + env.getKey() + "=" + env.getValue());
-            Os.setenv(env.getKey(), env.getValue(), true);
+        arrayMap.put("AWTSTUB_WIDTH", Integer.toString(CallbackBridge.windowWidth > 0 ? CallbackBridge.windowWidth : CallbackBridge.physicalWidth));
+        arrayMap.put("AWTSTUB_HEIGHT", Integer.toString(CallbackBridge.windowHeight > 0 ? CallbackBridge.windowHeight : CallbackBridge.physicalHeight));
+        Iterator it = arrayMap.entrySet().iterator();
+        while (it.hasNext()) {
+            Map.Entry entry = (Map.Entry) it.next();
+            Logger.getInstance(activity).appendToLog("Added custom env: " + ((String) entry.getKey()) + "=" + ((String) entry.getValue()));
+            Os.setenv((String) entry.getKey(), (String) entry.getValue(), true);
         }
-
-        jvmLibraryPath = getJvmLibDir(javaPath);
-        Log.d("DynamicLoader","Base LD_LIBRARY_PATH: " + LD_LIBRARY_PATH);
-        Log.d("DynamicLoader","Internal LD_LIBRARY_PATH: " + jvmLibraryPath + ":" + LD_LIBRARY_PATH);
+        jvmLibraryPath = getJvmLibDir(str);
+        Log.d("DynamicLoader", "Base LD_LIBRARY_PATH: " + LD_LIBRARY_PATH);
+        Log.d("DynamicLoader", "Internal LD_LIBRARY_PATH: " + jvmLibraryPath + ":" + LD_LIBRARY_PATH);
         setLdLibraryPath(jvmLibraryPath + ":" + LD_LIBRARY_PATH);
-
-        // return ldLibraryPath;
     }
-    
-    public static int launchJavaVM(final Activity activity,String javaPath,String home,String renderer,final List<String> JVMArgs,String gameDir,String glesVersion) throws Throwable {
-        relocateLibPath(activity,javaPath);
 
-        setJavaEnvironment(activity,javaPath,home,renderer,glesVersion);
-
-        loadGraphicsLibrary(renderer);
-
-        List<String> userArgs = new ArrayList<>();
-
-        userArgs.addAll(JVMArgs);
-        
-        initJavaRuntime(javaPath);
+    public static int launchJavaVM(Activity activity, String str, String str2, String str3, List<String> list, String str4, String str5) throws Throwable {
+        relocateLibPath(activity, str);
+        setJavaEnvironment(activity, str, str2, str3, str5);
+        loadGraphicsLibrary(str3);
+        ArrayList arrayList = new ArrayList();
+        arrayList.addAll(list);
+        initJavaRuntime(str);
         setupExitTrap(activity);
-        chdir(gameDir);
-        userArgs.add(0,"java");
-
-        final int exitCode = VMLauncher.launchJVM((String[]) userArgs.toArray(new String[0]));
-        Logger.getInstance(activity).appendToLog("Java Exit code: " + exitCode);
-        return exitCode;
+        chdir(str4);
+        arrayList.add(0, "java");
+        int launchJVM = VMLauncher.launchJVM((String[]) arrayList.toArray(new String[0]));
+        Logger.getInstance(activity).appendToLog("Java Exit code: " + launchJVM);
+        return launchJVM;
     }
 
-    public static int launchAPIInstaller(Context context,String javaPath, ArrayList<String> args, String home) {
+    public static int launchAPIInstaller(Context context, String str, ArrayList<String> arrayList, String str2) {
         try {
-            args.remove(0);
+            arrayList.remove(0);
             redirectAndPrintJRELog(context);
-            relocateLibPath(context,javaPath);
-            Os.setenv("HOME", home, true);
-            Os.setenv("JAVA_HOME" , javaPath, true);
-            jvmLibraryPath = getJvmLibDir(javaPath);
-            Log.d("DynamicLoader","Base LD_LIBRARY_PATH: " + LD_LIBRARY_PATH);
-            Log.d("DynamicLoader","Internal LD_LIBRARY_PATH: " + jvmLibraryPath + ":" + LD_LIBRARY_PATH);
+            relocateLibPath(context, str);
+            Os.setenv("HOME", str2, true);
+            Os.setenv("JAVA_HOME", str, true);
+            jvmLibraryPath = getJvmLibDir(str);
+            Log.d("DynamicLoader", "Base LD_LIBRARY_PATH: " + LD_LIBRARY_PATH);
+            Log.d("DynamicLoader", "Internal LD_LIBRARY_PATH: " + jvmLibraryPath + ":" + LD_LIBRARY_PATH);
             setLdLibraryPath(jvmLibraryPath + ":" + LD_LIBRARY_PATH);
-            List<String> userArgs = new ArrayList<>(args);
-            initJavaRuntime(javaPath);
+            ArrayList arrayList2 = new ArrayList(arrayList);
+            initJavaRuntime(str);
             setupExitTrap(context);
-            chdir(home);
-            userArgs.add(0,"java");
-            final int exitCode = VMLauncher.launchJVM((String[]) userArgs.toArray(new String[0]));
-            Logger.getInstance(context).appendToLog("Java Exit code: " + exitCode);
-            return exitCode;
+            chdir(str2);
+            arrayList2.add(0, "java");
+            int launchJVM = VMLauncher.launchJVM((String[]) arrayList2.toArray(new String[0]));
+            Logger.getInstance(context).appendToLog("Java Exit code: " + launchJVM);
+            return launchJVM;
         } catch (ErrnoException | IOException e) {
             e.printStackTrace();
             return -1;
@@ -361,147 +302,236 @@ public class JREUtils {
     }
 
     public static List<String> getJavaArgs(Context context) {
-        String[] overridableArguments = new String[]{
-                "-Dglfwstub.windowWidth=" + CallbackBridge.windowWidth,
-                "-Dglfwstub.windowHeight=" + CallbackBridge.windowHeight,
-                "-Dglfwstub.initEgl=false",
-                "-Dext.net.resolvPath=" + new File(context.getFilesDir().getParent(),"resolv.conf").getAbsolutePath(),
-                "-Dlog4j2.formatMsgNoLookups=true"
-        };
-
-        List<String> userArguments = new ArrayList<>();
-
-        //Add all the arguments
-        userArguments.addAll(Arrays.asList(overridableArguments));
-        return userArguments;
+        String[] strArr = {"-Dglfwstub.windowWidth=" + CallbackBridge.windowWidth, "-Dglfwstub.windowHeight=" + CallbackBridge.windowHeight, "-Dglfwstub.initEgl=false", "-Dext.net.resolvPath=" + new File(context.getFilesDir().getParent(), "resolv.conf").getAbsolutePath(), "-Dlog4j2.formatMsgNoLookups=true"};
+        ArrayList arrayList = new ArrayList();
+        arrayList.addAll(Arrays.asList(strArr));
+        return arrayList;
     }
 
-    public static String getGraphicsLibrary(String renderer) {
-        String renderLibrary;
-        switch (renderer){
-            case "opengles2":
-            case "opengles2_5":
-            case "opengles3_vgpu" :
-            case "opengles3":
-                renderLibrary = "libgl4es_114.so";
-                break;
-            case "opengles3_virgl":
-            case "vulkan_zink":
-                renderLibrary = "libOSMesa_8.so";
-                break;
-            // 1.1.0：zink（Mesa zink-on-Vulkan，桌面 GL）。LWJGL 3.3.5 之前的版本
-            // （QCL 用 3.2.3）只认 glXGetProcAddress —— kopper-zink 提供的 libglxshim.so
-            // 会把 glXGetProcAddress 转发到 Mesa EGL 的 eglGetProcAddress，
-            // 从而把 GL 调用链引到 libglapi/libzink_dri（Vulkan）。缺了这个就是
-            // 「native 走 zink、LWJGL 却加载 GL4ES」的冲突（真机实测 GL Caps: ERR）。
-            case "zink":
-            case "opengles3_desktopgl_zink_kopper":
-                renderLibrary = "libglxshim.so";
-                break;
-            case "ng_gl4es":
-                // ★★★ 1.1.0：Krypton Wrapper（NG-GL4ES，OpenGL 3.1+，全版本通吃）
-                renderLibrary = "libng_gl4es.so";
-                break;
-            case "mg":
-                renderLibrary = "libMobileGlues.so";
-                break;
-            default:
-                Log.w("RENDER_LIBRARY", "No renderer selected, defaulting to opengles2");
-                renderLibrary = "libgl4es_114.so";
-                break;
-        }
-        return renderLibrary;
-    }
-
-    /**
-     * Open the render library in accordance to the settings.
-     * It will fallback if it fails to load the library.
-     * @return The name of the loaded library
-     */
-    public static String loadGraphicsLibrary(String renderer) {
-        if(renderer == null) return null;
-        String renderLibrary;
-        switch (renderer){
-            case "opengles2":
-            case "opengles2_5":
-            case "opengles3_vgpu" :
-            case "opengles3":
-                renderLibrary = "libgl4es_114.so";
-                break;
-            case "opengles3_virgl":
-            case "vulkan_zink":
-                renderLibrary = "libOSMesa_8.so";
-                break;
-            // 1.1.0：zink 用 glxshim（→ Mesa EGL → libglapi/libzink_dri）
-            case "zink":
-            case "opengles3_desktopgl_zink_kopper":
-                renderLibrary = "libglxshim.so";
-                break;
-            case "ng_gl4es":
-                // ★★★ 1.1.0：Krypton Wrapper（NG-GL4ES，OpenGL 3.1+，全版本通吃）
-                renderLibrary = "libng_gl4es.so";
-                break;
-            case "mg":
-                renderLibrary = "libMobileGlues.so";
-                break;
-            default:
-                Log.w("RENDER_LIBRARY", "No renderer selected, defaulting to opengles2");
-                renderLibrary = "libgl4es_114.so";
-                break;
-        }
-
-        if (!dlopen(renderLibrary) && !dlopen(findInLdLibPath(renderLibrary))) {
-            Log.e("RENDER_LIBRARY","Failed to load renderer " + renderLibrary + ". Falling back to GL4ES 1.1.4");
-            renderer = "opengles2";
-            renderLibrary = "libgl4es_114.so";
-            dlopen(nativeLibDir + "/libgl4es_114.so");
-        }
-        return renderLibrary;
-    }
-
-    public static String findInLdLibPath(String libName) {
-        if(Os.getenv("LD_LIBRARY_PATH") == null) {
-            try {
-                if (LD_LIBRARY_PATH != null) {
-                    Os.setenv("LD_LIBRARY_PATH", LD_LIBRARY_PATH, true);
-                }else{
-                    return libName;
+    public static String getGraphicsLibrary(String str) {
+        str.hashCode();
+        char c = 65535;
+        switch (str.hashCode()) {
+            case -2113734149:
+                if (str.equals("opengles3_virgl")) {
+                    c = 0;
+                    break;
                 }
-            }catch (ErrnoException e) {
-                e.printStackTrace();
-                return libName;
-            }
+                break;
+            case -1877202435:
+                if (str.equals("opengles3_desktopgl_zink_kopper")) {
+                    c = 1;
+                    break;
+                }
+                break;
+            case -1822630185:
+                if (str.equals("ng_gl4es")) {
+                    c = 2;
+                    break;
+                }
+                break;
+            case -1749180245:
+                if (str.equals("opengles2_5")) {
+                    c = 3;
+                    break;
+                }
+                break;
+            case 3482:
+                if (str.equals("mg")) {
+                    c = 4;
+                    break;
+                }
+                break;
+            case 3738924:
+                if (str.equals("zink")) {
+                    c = 5;
+                    break;
+                }
+                break;
+            case 190643136:
+                if (str.equals("vulkan_zink")) {
+                    c = 6;
+                    break;
+                }
+                break;
+            case 1040191711:
+                if (str.equals("opengles3_vgpu")) {
+                    c = 7;
+                    break;
+                }
+                break;
+            case 1553485365:
+                if (str.equals("opengles2")) {
+                    c = '\b';
+                    break;
+                }
+                break;
+            case 1553485366:
+                if (str.equals("opengles3")) {
+                    c = '\t';
+                    break;
+                }
+                break;
         }
-        for (String libPath : Os.getenv("LD_LIBRARY_PATH").split(":")) {
-            File f = new File(libPath, libName);
-            if (f.exists() && f.isFile()) {
-                return f.getAbsolutePath();
-            }
+        switch (c) {
+            case 0:
+            case 6:
+                return "libOSMesa_8.so";
+            case 1:
+            case 5:
+                return "libglxshim.so";
+            case 2:
+                return "libng_gl4es.so";
+            case 3:
+            case 7:
+            case '\b':
+            case '\t':
+                return "libgl4es_114.so";
+            case 4:
+                return "libMobileGlues.so";
+            default:
+                Log.w("RENDER_LIBRARY", "No renderer selected, defaulting to opengles2");
+                return "libgl4es_114.so";
         }
-        return libName;
     }
 
-    public static native int chdir(String path);
-    public static native void logToLogger(final Logger logger);
-    public static native boolean dlopen(String libPath);
-    public static native void setLdLibraryPath(String ldLibraryPath);
-    public static native void setupBridgeWindow(Surface surface);
-    /** 1.1.0：新渲染桥（libpojavexec_new.so）的对应实现，高版本用 */
-    public static native void setupBridgeWindowNew(Surface surface);
-    public static native void setupExitTrap(Context context);
-    // Obtain AWT screen pixels to render on Android SurfaceView
-    public static native int[] renderAWTScreenFrame(/* Object canvas, int width, int height */);
-    static {
-        // ★★★ 1.1.0 双栈隔离（最终方案）：
-        // 两套渲染桥**都加载**（so 名不同，符号不冲突），Java 侧按 MC 版本显式调用
-        // 对应的 JNI 方法（setupBridgeWindow / setupBridgeWindowNew）。
-        // 这样彻底避免"进程级属性 + 静态块只执行一次"导致的串味
-        //（先跑高版本再跑老版本时，老版本会错误地用上新桥 → 黑屏）。
-        System.loadLibrary("pojavexec");        // v1.0.9 旧桥（老版本用）
-        try {
-            System.loadLibrary("pojavexec_new"); // FCL 新桥（1.20.5+ 用）
-        } catch (Throwable ignored) {
+    /* JADX WARN: Can't fix incorrect switch cases order, some code will duplicate */
+    public static String loadGraphicsLibrary(String str) {
+        String str2;
+        if (str == null) {
+            return null;
         }
+        str.hashCode();
+        char c = 65535;
+        switch (str.hashCode()) {
+            case -2113734149:
+                if (str.equals("opengles3_virgl")) {
+                    c = 0;
+                    break;
+                }
+                break;
+            case -1877202435:
+                if (str.equals("opengles3_desktopgl_zink_kopper")) {
+                    c = 1;
+                    break;
+                }
+                break;
+            case -1822630185:
+                if (str.equals("ng_gl4es")) {
+                    c = 2;
+                    break;
+                }
+                break;
+            case -1749180245:
+                if (str.equals("opengles2_5")) {
+                    c = 3;
+                    break;
+                }
+                break;
+            case 3482:
+                if (str.equals("mg")) {
+                    c = 4;
+                    break;
+                }
+                break;
+            case 3738924:
+                if (str.equals("zink")) {
+                    c = 5;
+                    break;
+                }
+                break;
+            case 190643136:
+                if (str.equals("vulkan_zink")) {
+                    c = 6;
+                    break;
+                }
+                break;
+            case 1040191711:
+                if (str.equals("opengles3_vgpu")) {
+                    c = 7;
+                    break;
+                }
+                break;
+            case 1553485365:
+                if (str.equals("opengles2")) {
+                    c = '\b';
+                    break;
+                }
+                break;
+            case 1553485366:
+                if (str.equals("opengles3")) {
+                    c = '\t';
+                    break;
+                }
+                break;
+        }
+        switch (c) {
+            case 0:
+            case 6:
+                str2 = "libOSMesa_8.so";
+                break;
+            case 1:
+            case 5:
+                str2 = "libglxshim.so";
+                break;
+            case 2:
+                str2 = "libng_gl4es.so";
+                break;
+            case 3:
+            case 7:
+            case '\b':
+            case '\t':
+                str2 = "libgl4es_114.so";
+                break;
+            case 4:
+                str2 = "libMobileGlues.so";
+                break;
+            default:
+                Log.w("RENDER_LIBRARY", "No renderer selected, defaulting to opengles2");
+                str2 = "libgl4es_114.so";
+                break;
+        }
+        if (dlopen(str2) || dlopen(findInLdLibPath(str2))) {
+            return str2;
+        }
+        Log.e("RENDER_LIBRARY", "Failed to load renderer " + str2 + ". Falling back to GL4ES 1.1.4");
+        dlopen(nativeLibDir + "/libgl4es_114.so");
+        return "libgl4es_114.so";
+    }
+
+    public static String findInLdLibPath(String str) {
+        if (Os.getenv("LD_LIBRARY_PATH") == null) {
+            try {
+                String str2 = LD_LIBRARY_PATH;
+                if (str2 == null) {
+                    return str;
+                }
+                Os.setenv("LD_LIBRARY_PATH", str2, true);
+            } catch (ErrnoException e) {
+                e.printStackTrace();
+                return str;
+            }
+        }
+        for (String str3 : Os.getenv("LD_LIBRARY_PATH").split(":")) {
+            File file = new File(str3, str);
+            if (file.exists() && file.isFile()) {
+                return file.getAbsolutePath();
+            }
+        }
+        return str;
+    }
+
+    private static void callLogToLoggerSafely(Logger logger) {
+        try {
+            logToLogger(logger);
+        } catch (Throwable th) {
+            Log.i("jrelog-logcat", "logToLogger unavailable (" + th.getClass().getSimpleName() + "), falling back to Java stream capture");
+            Logger.setStreamCapture(true);
+        }
+    }
+
+    static {
+        System.loadLibrary("pojavexec");
         System.loadLibrary("pojavexec_awt");
         dlopen("libxhook.so");
         System.loadLibrary("istdio");

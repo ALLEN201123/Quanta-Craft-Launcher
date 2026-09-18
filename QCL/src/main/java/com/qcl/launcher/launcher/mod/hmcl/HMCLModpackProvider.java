@@ -1,7 +1,6 @@
 package com.qcl.launcher.launcher.mod.hmcl;
 
 import android.os.AsyncTask;
-
 import com.google.gson.JsonParseException;
 import com.qcl.launcher.launcher.game.Version;
 import com.qcl.launcher.launcher.mod.Modpack;
@@ -9,43 +8,41 @@ import com.qcl.launcher.launcher.mod.ModpackProvider;
 import com.qcl.launcher.utils.gson.JsonUtils;
 import com.qcl.launcher.utils.io.ZipTools;
 import com.qcl.launcher.utils.string.StringUtils;
-
-import org.apache.commons.compress.archivers.zip.ZipFile;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Path;
+import org.apache.commons.compress.archivers.zip.ZipFile;
 
+/* loaded from: classes2.dex */
 public final class HMCLModpackProvider implements ModpackProvider {
     public static final HMCLModpackProvider INSTANCE = new HMCLModpackProvider();
 
-    @Override
+    @Override // com.qcl.launcher.launcher.mod.ModpackProvider
     public String getName() {
         return "HMCL";
     }
 
-    @Override
-    public Modpack readManifest(ZipFile file, Path path, Charset encoding) throws IOException, JsonParseException {
-        String manifestJson = ZipTools.readTextZipEntry(file, "modpack.json");
-        Modpack manifest = JsonUtils.fromNonNullJson(manifestJson, HMCLModpack.class).setEncoding(encoding);
-        String gameJson = ZipTools.readTextZipEntry(file, "minecraft/pack.json");
-        Version game = JsonUtils.fromNonNullJson(gameJson, Version.class);
-        if (game.getJar() == null)
-            if (StringUtils.isBlank(manifest.getVersion()))
-                throw new JsonParseException("Cannot recognize the game version of modpack " + file + ".");
-            else
-                manifest.setManifest(HMCLModpackManifest.INSTANCE);
-        else
-            manifest.setManifest(HMCLModpackManifest.INSTANCE).setGameVersion(game.getJar());
-        return manifest;
+    @Override // com.qcl.launcher.launcher.mod.ModpackProvider
+    public Modpack readManifest(ZipFile zipFile, Path path, Charset charset) throws IOException, JsonParseException {
+        Modpack encoding = ((HMCLModpack) JsonUtils.fromNonNullJson(ZipTools.readTextZipEntry(zipFile, "modpack.json"), HMCLModpack.class)).setEncoding(charset);
+        Version version = (Version) JsonUtils.fromNonNullJson(ZipTools.readTextZipEntry(zipFile, "minecraft/pack.json"), Version.class);
+        if (version.getJar() == null) {
+            if (StringUtils.isBlank(encoding.getVersion())) {
+                throw new JsonParseException("Cannot recognize the game version of modpack " + zipFile + ".");
+            }
+            encoding.setManifest(HMCLModpackManifest.INSTANCE);
+        } else {
+            encoding.setManifest(HMCLModpackManifest.INSTANCE).setGameVersion(version.getJar());
+        }
+        return encoding;
     }
 
+    /* loaded from: classes2.dex */
     public static class HMCLModpack extends Modpack {
-        @Override
-        public AsyncTask getInstallTask(File zipFile, String name) {
-            return new HMCLModpackInstallTask(zipFile, this, name);
+        @Override // com.qcl.launcher.launcher.mod.Modpack
+        public AsyncTask getInstallTask(File file, String str) {
+            return new HMCLModpackInstallTask(file, this, str);
         }
     }
-
 }

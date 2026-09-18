@@ -2,45 +2,37 @@ package com.qcl.launcher.launcher.download.liteloader;
 
 import com.google.gson.annotations.SerializedName;
 
-/**
- *
- * @author huangyuhui
- */
+/* loaded from: classes2.dex */
 public final class LiteLoaderGameVersions {
-
-    @SerializedName("repo")
-    private final LiteLoaderRepository repoitory;
 
     @SerializedName("artefacts")
     private final LiteLoaderBranch artifacts;
 
+    @SerializedName("repo")
+    private final LiteLoaderRepository repoitory;
+
     @SerializedName("snapshots")
     private final LiteLoaderBranch snapshots;
 
-    /**
-     * No-arg constructor for Gson.
-     */
-    @SuppressWarnings("unused")
     public LiteLoaderGameVersions() {
         this(null, null, null);
     }
 
-    public LiteLoaderGameVersions(LiteLoaderRepository repoitory, LiteLoaderBranch artifacts, LiteLoaderBranch snapshots) {
-        this.repoitory = repoitory;
-        this.artifacts = artifacts;
-        this.snapshots = snapshots;
+    public LiteLoaderGameVersions(LiteLoaderRepository liteLoaderRepository, LiteLoaderBranch liteLoaderBranch, LiteLoaderBranch liteLoaderBranch2) {
+        this.repoitory = liteLoaderRepository;
+        this.artifacts = liteLoaderBranch;
+        this.snapshots = liteLoaderBranch2;
     }
 
     public LiteLoaderRepository getRepoitory() {
-        return repoitory;
+        return this.repoitory;
     }
 
     public LiteLoaderBranch getArtifacts() {
-        return artifacts;
+        return this.artifacts;
     }
 
     public LiteLoaderBranch getSnapshots() {
-        return snapshots;
+        return this.snapshots;
     }
-
 }

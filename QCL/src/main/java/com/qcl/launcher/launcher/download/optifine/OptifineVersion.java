@@ -1,10 +1,16 @@
 package com.qcl.launcher.launcher.download.optifine;
 
 import com.google.gson.annotations.SerializedName;
-
 import java.io.Serializable;
 
+/* loaded from: classes2.dex */
 public class OptifineVersion implements Serializable {
+
+    @SerializedName("__v")
+    public int __v;
+
+    @SerializedName("filename")
+    public String fileName;
 
     @SerializedName("_id")
     public String id;
@@ -18,19 +24,12 @@ public class OptifineVersion implements Serializable {
     @SerializedName("type")
     public String type;
 
-    @SerializedName("__v")
-    public int __v;
-
-    @SerializedName("filename")
-    public String fileName;
-
-    public OptifineVersion(String id,String mcVersion,String patch,String type,int __v,String fileName){
-        this.id = id;
-        this.mcVersion = mcVersion;
-        this.patch = patch;
-        this.type = type;
-        this.__v = __v;
-        this.fileName = fileName;
+    public OptifineVersion(String str, String str2, String str3, String str4, int i, String str5) {
+        this.id = str;
+        this.mcVersion = str2;
+        this.patch = str3;
+        this.type = str4;
+        this.__v = i;
+        this.fileName = str5;
     }
-
 }

@@ -4,23 +4,19 @@ import android.app.Dialog;
 import android.content.Context;
 import android.widget.TextView;
 
-import androidx.annotation.NonNull;
-
 import com.qcl.launcher.R;
-
+/* loaded from: classes2.dex */
 public class LoadingDialog extends Dialog {
-
     private final TextView loadingText;
 
-    public LoadingDialog(@NonNull Context context) {
+    public LoadingDialog(Context context) {
         super(context);
         setContentView(R.layout.dialog_loading);
         setCancelable(false);
-        loadingText = findViewById(R.id.loading_text);
+        this.loadingText = (TextView) findViewById(R.id.loading_text);
     }
 
-    public void setLoadingText(String string) {
-        loadingText.setText(string);
+    public void setLoadingText(String str) {
+        this.loadingText.setText(str);
     }
-
 }

@@ -1,6 +1,5 @@
 package com.qcl.launcher.launcher.uis.game.download.right;
 
-import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
@@ -8,12 +7,11 @@ import android.view.View;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.LinearLayout;
+import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.Toast;
-
 import com.google.gson.Gson;
-import com.qcl.launcher.R;
 import com.qcl.launcher.launcher.MainActivity;
 import com.qcl.launcher.launcher.download.game.LegacyVersionArchive;
 import com.qcl.launcher.launcher.download.game.VersionManifest;
@@ -22,126 +20,189 @@ import com.qcl.launcher.launcher.uis.game.download.DownloadUrlSource;
 import com.qcl.launcher.launcher.uis.tools.BaseUI;
 import com.qcl.launcher.utils.animation.CustomAnimationUtils;
 import com.qcl.launcher.utils.io.NetworkUtils;
-
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import com.qcl.launcher.R;
+/* loaded from: classes2.dex */
 public class DownloadMinecraftUI extends BaseUI implements View.OnClickListener, CompoundButton.OnCheckedChangeListener {
+    private ArrayList<VersionManifest.Version> allList;
+    private CheckBox checkOld;
+    private CheckBox checkRelease;
+    private CheckBox checkSnapshot;
     public LinearLayout downloadMinecraftUI;
-    private LinearLayout hintLayout;
     private LinearLayout gameListLayout;
-    private CheckBox checkRelease, checkSnapshot, checkOld;
-    private LinearLayout refresh;
+    private LinearLayout hintLayout;
+    private boolean loading;
     private ProgressBar loadingProgress;
     private ListView mcList;
-    // Accessed only on the UI thread. A failed refresh never discards a working list.
-    private ArrayList<VersionManifest.Version> allList = new ArrayList<>();
-    private boolean loading;
+    private LinearLayout refresh;
 
-    public DownloadMinecraftUI(Context context, MainActivity activity) { super(context, activity); }
+    public DownloadMinecraftUI(Context context, MainActivity mainActivity) {
+        super(context, mainActivity);
+        this.allList = new ArrayList<>();
+    }
 
-    @Override public void onCreate() {
+    @Override // com.qcl.launcher.launcher.uis.tools.BaseUI, com.qcl.launcher.launcher.uis.tools.UILifecycleCallbacks
+    public void onCreate() {
         super.onCreate();
-        downloadMinecraftUI = activity.findViewById(R.id.ui_download_minecraft);
-        hintLayout = activity.findViewById(R.id.download_minecraft_hint_layout);
-        hintLayout.setOnClickListener(this);
-        gameListLayout = activity.findViewById(R.id.game_list_layout);
-        checkRelease = activity.findViewById(R.id.checkbox_release);
-        checkSnapshot = activity.findViewById(R.id.checkbox_snapshot);
-        checkOld = activity.findViewById(R.id.checkbox_old);
-        refresh = activity.findViewById(R.id.refresh_game_list);
-        loadingProgress = activity.findViewById(R.id.loading_minecraft_list_progress);
-        mcList = activity.findViewById(R.id.download_minecraft_version_list);
-        // 默认只勾选正式版，快照/远古版需要玩家自己勾选
-        checkRelease.setChecked(true);
-        checkSnapshot.setChecked(false);
-        checkOld.setChecked(false);
-        checkRelease.setOnCheckedChangeListener(this);
-        checkSnapshot.setOnCheckedChangeListener(this);
-        checkOld.setOnCheckedChangeListener(this);
-        refresh.setOnClickListener(this);
+        this.downloadMinecraftUI = (LinearLayout) this.activity.findViewById(R.id.ui_download_minecraft);
+        LinearLayout linearLayout = (LinearLayout) this.activity.findViewById(R.id.download_minecraft_hint_layout);
+        this.hintLayout = linearLayout;
+        linearLayout.setOnClickListener(this);
+        this.gameListLayout = (LinearLayout) this.activity.findViewById(R.id.game_list_layout);
+        this.checkRelease = (CheckBox) this.activity.findViewById(R.id.checkbox_release);
+        this.checkSnapshot = (CheckBox) this.activity.findViewById(R.id.checkbox_snapshot);
+        this.checkOld = (CheckBox) this.activity.findViewById(R.id.checkbox_old);
+        this.refresh = (LinearLayout) this.activity.findViewById(R.id.refresh_game_list);
+        this.loadingProgress = (ProgressBar) this.activity.findViewById(R.id.loading_minecraft_list_progress);
+        this.mcList = (ListView) this.activity.findViewById(R.id.download_minecraft_version_list);
+        this.checkRelease.setChecked(true);
+        this.checkSnapshot.setChecked(false);
+        this.checkOld.setChecked(false);
+        this.checkRelease.setOnCheckedChangeListener(this);
+        this.checkSnapshot.setOnCheckedChangeListener(this);
+        this.checkOld.setOnCheckedChangeListener(this);
+        this.refresh.setOnClickListener(this);
     }
 
-    @SuppressLint("UseCompatLoadingForDrawables")
-    @Override public void onStart() {
+    @Override // com.qcl.launcher.launcher.uis.tools.BaseUI, com.qcl.launcher.launcher.uis.tools.UILifecycleCallbacks
+    public void onStart() {
         super.onStart();
-        CustomAnimationUtils.showViewFromLeft(downloadMinecraftUI, activity, context, false);
-        if (activity.isLoaded) activity.uiManager.downloadUI.startDownloadGameUI.setBackground(context.getResources().getDrawable(R.drawable.launcher_button_white));
-        if (allList.isEmpty()) init(); else refresh();
+        CustomAnimationUtils.showViewFromLeft(this.downloadMinecraftUI, this.activity, this.context, false);
+        if (this.activity.isLoaded) {
+            this.activity.uiManager.downloadUI.startDownloadGameUI.setBackground(this.context.getResources().getDrawable(R.drawable.launcher_button_white));
+        }
+        if (this.allList.isEmpty()) {
+            init();
+        } else {
+            refresh();
+        }
     }
 
-    @SuppressLint("UseCompatLoadingForDrawables")
-    @Override public void onStop() {
+    @Override // com.qcl.launcher.launcher.uis.tools.BaseUI, com.qcl.launcher.launcher.uis.tools.UILifecycleCallbacks
+    public void onStop() {
         super.onStop();
-        CustomAnimationUtils.hideViewToLeft(downloadMinecraftUI, activity, context, false);
-        if (activity.isLoaded) activity.uiManager.downloadUI.startDownloadGameUI.setBackground(context.getResources().getDrawable(R.drawable.launcher_button_parent));
+        CustomAnimationUtils.hideViewToLeft(this.downloadMinecraftUI, this.activity, this.context, false);
+        if (this.activity.isLoaded) {
+            this.activity.uiManager.downloadUI.startDownloadGameUI.setBackground(this.context.getResources().getDrawable(R.drawable.launcher_button_parent));
+        }
     }
 
-    private void readManifest(String url, Map<String, VersionManifest.Version> merged) throws IOException {
-        VersionManifest manifest = new Gson().fromJson(NetworkUtils.doGet(NetworkUtils.toURL(url)), VersionManifest.class);
-        if (manifest == null || manifest.versions == null) throw new IOException("Empty version manifest");
-        for (VersionManifest.Version version : manifest.versions) {
-            if (version == null || version.id == null || version.type == null || version.url == null) continue;
-            if (!version.url.startsWith("https://")) continue;
-            // Keep real URLs and dates from upstream instead of inventing historical entries.
-            if (!merged.containsKey(version.id)) merged.put(version.id, version);
+    private void readManifest(String str, Map<String, VersionManifest.Version> map) throws IOException {
+        VersionManifest versionManifest = (VersionManifest) new Gson().fromJson(NetworkUtils.doGet(NetworkUtils.toURL(str)), VersionManifest.class);
+        if (versionManifest == null || versionManifest.versions == null) {
+            throw new IOException("Empty version manifest");
+        }
+        for (VersionManifest.Version version : versionManifest.versions) {
+            if (version != null && version.id != null && version.type != null && version.url != null && version.url.startsWith("https://") && !map.containsKey(version.id)) {
+                map.put(version.id, version);
+            }
         }
     }
 
     private void init() {
-        if (loading) return;
-        loading = true;
-        loadingProgress.setVisibility(View.VISIBLE);
-        refresh.setEnabled(false);
-        final String selected = DownloadUrlSource.getSubUrl(DownloadUrlSource.getSource(activity.launcherSetting.downloadUrlSource), DownloadUrlSource.VERSION_MANIFEST);
-        new Thread(() -> {
-            Map<String, VersionManifest.Version> merged = new LinkedHashMap<>();
-            String official = DownloadUrlSource.getSubUrl(DownloadUrlSource.DOWNLOAD_URL_SOURCE_OFFICIAL, DownloadUrlSource.VERSION_MANIFEST);
-            String mirror = DownloadUrlSource.getSubUrl(DownloadUrlSource.DOWNLOAD_URL_SOURCE_BMCLAPI, DownloadUrlSource.VERSION_MANIFEST);
-            try { readManifest(selected, merged); } catch (Exception e) { e.printStackTrace(); }
-            // Merge the other authoritative manifest to recover omissions or a stale mirror.
-            try { readManifest(selected.equals(official) ? mirror : official, merged); } catch (Exception e) { e.printStackTrace(); }
-            // Neither Mojang nor BMCLAPI lists the earliest builds; add the archive entries so the
-            // history is complete instead of silently missing.
-            for (VersionManifest.Version archive : LegacyVersionArchive.entries(context)) {
-                if (!merged.containsKey(archive.id)) merged.put(archive.id, archive);
+        if (this.loading) {
+            return;
+        }
+        this.loading = true;
+        this.loadingProgress.setVisibility(0);
+        this.refresh.setEnabled(false);
+        final String subUrl = DownloadUrlSource.getSubUrl(DownloadUrlSource.getSource(this.activity.launcherSetting.downloadUrlSource), 0);
+        new Thread(new Runnable() { // from class: com.qcl.launcher.launcher.uis.game.download.right.DownloadMinecraftUI$$ExternalSyntheticLambda0
+            @Override // java.lang.Runnable
+            public final void run() {
+                DownloadMinecraftUI.this.m476x1832f767(subUrl);
             }
-            ArrayList<VersionManifest.Version> result = new ArrayList<>(merged.values());
-            VersionManifest.sortNewestFirst(result);
-            activity.runOnUiThread(() -> {
-                loading = false;
-                refresh.setEnabled(true);
-                loadingProgress.setVisibility(View.GONE);
-                gameListLayout.setVisibility(View.VISIBLE);
-                if (!result.isEmpty()) allList = result;
-                else Toast.makeText(context, R.string.revival_manifest_failed, Toast.LENGTH_LONG).show();
-                refresh();
-            });
         }, "minecraft-manifest").start();
     }
 
-    private void refresh() {
-        if (mcList == null) return;
-        ArrayList<VersionManifest.Version> list = new ArrayList<>();
-        for (VersionManifest.Version v : allList) {
-            boolean release = "release".equals(v.type), snapshot = "snapshot".equals(v.type);
-            if ((release && checkRelease.isChecked()) || (snapshot && checkSnapshot.isChecked()) || (!release && !snapshot && checkOld.isChecked())) list.add(v);
+    /* JADX INFO: Access modifiers changed from: package-private */
+    /* renamed from: lambda$init$1$com-qcl-launcher-launcher-uis-game-download-right-DownloadMinecraftUI, reason: not valid java name */
+    public /* synthetic */ void m476x1832f767(String str) {
+        LinkedHashMap linkedHashMap = new LinkedHashMap();
+        String subUrl = DownloadUrlSource.getSubUrl(0, 0);
+        String subUrl2 = DownloadUrlSource.getSubUrl(1, 0);
+        try {
+            readManifest(str, linkedHashMap);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-        mcList.setAdapter(new DownloadGameListAdapter(context, activity, list));
+        try {
+            if (str.equals(subUrl)) {
+                subUrl = subUrl2;
+            }
+            readManifest(subUrl, linkedHashMap);
+        } catch (Exception e2) {
+            e2.printStackTrace();
+        }
+        for (VersionManifest.Version version : LegacyVersionArchive.entries(this.context)) {
+            if (!linkedHashMap.containsKey(version.id)) {
+                linkedHashMap.put(version.id, version);
+            }
+        }
+        final ArrayList arrayList = new ArrayList(linkedHashMap.values());
+        VersionManifest.sortNewestFirst(arrayList);
+        this.activity.runOnUiThread(new Runnable() { // from class: com.qcl.launcher.launcher.uis.game.download.right.DownloadMinecraftUI$$ExternalSyntheticLambda1
+            @Override // java.lang.Runnable
+            public final void run() {
+                DownloadMinecraftUI.this.m475x35074426(arrayList);
+            }
+        });
     }
 
-    @Override public void onClick(View v) {
-        if (v == hintLayout) context.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://bmclapidoc.bangbang93.com/")));
-        if (v == refresh) init();
+    /* JADX INFO: Access modifiers changed from: package-private */
+    /* renamed from: lambda$init$0$com-qcl-launcher-launcher-uis-game-download-right-DownloadMinecraftUI, reason: not valid java name */
+    public /* synthetic */ void m475x35074426(ArrayList arrayList) {
+        this.loading = false;
+        this.refresh.setEnabled(true);
+        this.loadingProgress.setVisibility(8);
+        this.gameListLayout.setVisibility(0);
+        if (arrayList.isEmpty()) {
+            Toast.makeText(this.context, R.string.revival_manifest_failed, 1).show();
+        } else {
+            this.allList = arrayList;
+        }
+        refresh();
     }
 
-    @SuppressLint("UseCompatLoadingForDrawables")
-    @Override public void onLoaded() {
-        activity.uiManager.downloadUI.startDownloadGameUI.setBackground(context.getResources().getDrawable(R.drawable.launcher_button_white));
+    private void refresh() {
+        if (this.mcList == null) {
+            return;
+        }
+        ArrayList arrayList = new ArrayList();
+        Iterator<VersionManifest.Version> it = this.allList.iterator();
+        while (it.hasNext()) {
+            VersionManifest.Version next = it.next();
+            boolean equals = "release".equals(next.type);
+            boolean equals2 = "snapshot".equals(next.type);
+            if ((equals && this.checkRelease.isChecked()) || ((equals2 && this.checkSnapshot.isChecked()) || (!equals && !equals2 && this.checkOld.isChecked()))) {
+                arrayList.add(next);
+            }
+        }
+        this.mcList.setAdapter((ListAdapter) new DownloadGameListAdapter(this.context, this.activity, arrayList));
     }
 
-    @Override public void onCheckedChanged(CompoundButton button, boolean checked) { refresh(); }
+    @Override // android.view.View.OnClickListener
+    public void onClick(View view) {
+        if (view == this.hintLayout) {
+            this.context.startActivity(new Intent("android.intent.action.VIEW", Uri.parse("https://bmclapidoc.bangbang93.com/")));
+        }
+        if (view == this.refresh) {
+            init();
+        }
+    }
+
+    @Override // com.qcl.launcher.launcher.uis.tools.BaseUI, com.qcl.launcher.launcher.uis.tools.UILifecycleCallbacks
+    public void onLoaded() {
+        this.activity.uiManager.downloadUI.startDownloadGameUI.setBackground(this.context.getResources().getDrawable(R.drawable.launcher_button_white));
+    }
+
+    @Override // android.widget.CompoundButton.OnCheckedChangeListener
+    public void onCheckedChanged(CompoundButton compoundButton, boolean z) {
+        refresh();
+    }
 }

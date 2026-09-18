@@ -1,3 +1,26 @@
+/*
+ * Decompiled with CFR 0.152.
+ * 
+ * Could not load the following classes:
+ *  android.app.AlertDialog$Builder
+ *  android.app.Dialog
+ *  android.content.Context
+ *  android.os.AsyncTask$Status
+ *  android.os.Handler
+ *  android.os.Handler$Callback
+ *  android.os.Message
+ *  android.view.View
+ *  android.view.View$OnClickListener
+ *  android.widget.Button
+ *  android.widget.TextView
+ *  androidx.annotation.NonNull
+ *  androidx.recyclerview.widget.LinearLayoutManager
+ *  androidx.recyclerview.widget.RecyclerView
+ *  androidx.recyclerview.widget.RecyclerView$Adapter
+ *  androidx.recyclerview.widget.RecyclerView$LayoutManager
+ *  androidx.recyclerview.widget.SimpleItemAnimator
+ *  com.google.gson.Gson
+ */
 package com.qcl.launcher.launcher.download;
 
 import android.app.AlertDialog;
@@ -9,15 +32,13 @@ import android.os.Message;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
-
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.SimpleItemAnimator;
-
 import com.google.gson.Gson;
-import com.qcl.launcher.R;
 import com.qcl.launcher.launcher.MainActivity;
+import com.qcl.launcher.launcher.download.PatchMerger;
 import com.qcl.launcher.launcher.download.fabric.FabricAPIInstallTask;
 import com.qcl.launcher.launcher.download.fabric.FabricInstallTask;
 import com.qcl.launcher.launcher.download.fabric.FabricLoaderVersion;
@@ -25,7 +46,6 @@ import com.qcl.launcher.launcher.download.forge.ForgeDownloadTask;
 import com.qcl.launcher.launcher.download.forge.ForgeInstallTask;
 import com.qcl.launcher.launcher.download.forge.ForgeVersion;
 import com.qcl.launcher.launcher.download.game.LegacyArchiveInstallTask;
-import com.qcl.launcher.launcher.download.game.LegacyVersionArchive;
 import com.qcl.launcher.launcher.download.game.MinecraftInstallTask;
 import com.qcl.launcher.launcher.download.game.VersionManifest;
 import com.qcl.launcher.launcher.download.liteloader.LiteLoaderInstallTask;
@@ -49,15 +69,16 @@ import com.qcl.launcher.utils.gson.JsonUtils;
 import com.qcl.launcher.utils.io.NetSpeed;
 import com.qcl.launcher.utils.io.NetSpeedTimer;
 import com.qcl.launcher.utils.platform.Bits;
-
 import java.io.File;
 import java.util.Objects;
 
-public class GameInstallDialog extends Dialog implements View.OnClickListener, Handler.Callback {
-
+import com.qcl.launcher.R;
+public class GameInstallDialog
+extends Dialog
+implements View.OnClickListener,
+Handler.Callback {
     private final Context context;
     private final MainActivity activity;
-
     private final String name;
     private final VersionManifest.Version version;
     private final ForgeVersion forgeVersion;
@@ -67,9 +88,7 @@ public class GameInstallDialog extends Dialog implements View.OnClickListener, H
     private final RemoteMod.Version fabricAPIVersion;
     private final QuiltLoaderVersion quiltVersion;
     private final RemoteMod.Version quiltAPIVersion;
-    
     private LegacyArchiveInstallTask legacyArchiveInstallTask;
-
     private MinecraftInstallTask minecraftInstallTask;
     private LiteLoaderInstallTask liteLoaderInstallTask;
     private ForgeDownloadTask forgeDownloadTask;
@@ -80,12 +99,9 @@ public class GameInstallDialog extends Dialog implements View.OnClickListener, H
     private FabricAPIInstallTask fabricAPIInstallTask;
     private QuiltInstallTask quiltInstallTask;
     private QuiltAPIInstallTask quiltAPIInstallTask;
-
     private Version gameVersionJson;
-
     private RecyclerView taskListView;
     private DownloadTaskListAdapter downloadTaskListAdapter;
-
     private NetSpeedTimer netSpeedTimer;
     private TextView speedText;
     private Button cancelButton;
@@ -103,421 +119,390 @@ public class GameInstallDialog extends Dialog implements View.OnClickListener, H
         this.fabricAPIVersion = fabricAPIVersion;
         this.quiltVersion = quiltVersion;
         this.quiltAPIVersion = quiltAPIVersion;
-        setContentView(R.layout.dialog_install_game);
-        setCancelable(false);
-        init();
+        this.setContentView(R.layout.dialog_install_game);
+        this.setCancelable(false);
+        this.init();
     }
 
-    @Override
     public void onClick(View v) {
-        if (v == cancelButton){
-            exit();
-            activity.backToLastUI();
-            new Thread(() -> {
-                activity.uiManager.versionListUI.refreshVersionList();
-            }).start();
+        if (v == this.cancelButton) {
+            this.exit();
+            this.activity.backToLastUI();
+            new Thread(() -> this.activity.uiManager.versionListUI.refreshVersionList()).start();
         }
     }
 
-    private void init(){
-        taskListView = findViewById(R.id.download_task_list);
-
-        taskListView.setLayoutManager(new LinearLayoutManager(context));
-        downloadTaskListAdapter = new DownloadTaskListAdapter(context);
-        taskListView.setAdapter(downloadTaskListAdapter);
-        Objects.requireNonNull(taskListView.getItemAnimator()).setAddDuration(0L);
-        taskListView.getItemAnimator().setChangeDuration(0L);
-        taskListView.getItemAnimator().setMoveDuration(0L);
-        taskListView.getItemAnimator().setRemoveDuration(0L);
-        ((SimpleItemAnimator)taskListView.getItemAnimator()).setSupportsChangeAnimations(false);
-
-        speedText = findViewById(R.id.download_speed_text);
-        cancelButton = findViewById(R.id.cancel_install_game);
-        cancelButton.setOnClickListener(this);
-
-        Handler handler = new Handler(this);
-        netSpeedTimer = new NetSpeedTimer(context, new NetSpeed(), handler).setDelayTime(0).setPeriodTime(1000);
-        netSpeedTimer.startSpeedTimer();
-
-        startDownloadTasks();
+    private void init() {
+        this.taskListView = (RecyclerView)this.findViewById(R.id.download_task_list);
+        this.taskListView.setLayoutManager((RecyclerView.LayoutManager)new LinearLayoutManager(this.context));
+        this.downloadTaskListAdapter = new DownloadTaskListAdapter(this.context);
+        this.taskListView.setAdapter((RecyclerView.Adapter)this.downloadTaskListAdapter);
+        Objects.requireNonNull(this.taskListView.getItemAnimator()).setAddDuration(0L);
+        this.taskListView.getItemAnimator().setChangeDuration(0L);
+        this.taskListView.getItemAnimator().setMoveDuration(0L);
+        this.taskListView.getItemAnimator().setRemoveDuration(0L);
+        ((SimpleItemAnimator)this.taskListView.getItemAnimator()).setSupportsChangeAnimations(false);
+        this.speedText = (TextView)this.findViewById(R.id.download_speed_text);
+        this.cancelButton = (Button)this.findViewById(R.id.cancel_install_game);
+        this.cancelButton.setOnClickListener((View.OnClickListener)this);
+        Handler handler = new Handler((Handler.Callback)this);
+        this.netSpeedTimer = new NetSpeedTimer(this.context, new NetSpeed(), handler).setDelayTime(0L).setPeriodTime(1000L);
+        this.netSpeedTimer.startSpeedTimer();
+        this.startDownloadTasks();
     }
 
-    private void startDownloadTasks(){
-        System.out.println("---------------------------------------------------------------source:" + DownloadUrlSource.getSource(activity.launcherSetting.downloadUrlSource));
-        if (!new File(activity.launcherSetting.gameFileDirectory + "/launcher_profiles.json").exists()) {
-            AssetsUtils.getInstance(activity.getApplicationContext()).copyAssetsToSD("launcher_profiles.json", activity.launcherSetting.gameFileDirectory + "/launcher_profiles.json");
+    private void startDownloadTasks() {
+        System.out.println("---------------------------------------------------------------source:" + DownloadUrlSource.getSource(this.activity.launcherSetting.downloadUrlSource));
+        if (!new File(this.activity.launcherSetting.gameFileDirectory + "/launcher_profiles.json").exists()) {
+            AssetsUtils.getInstance(this.activity.getApplicationContext()).copyAssetsToSD("launcher_profiles.json", this.activity.launcherSetting.gameFileDirectory + "/launcher_profiles.json");
         }
-        downloadMinecraft();
+        this.downloadMinecraft();
     }
 
-    public void downloadMinecraft(){
-        if (LegacyVersionArchive.TYPE_ARCHIVE.equals(version.type)) {
-            downloadArchivedBuild();
+    public void downloadMinecraft() {
+        if ("archive".equals(this.version.type)) {
+            this.downloadArchivedBuild();
             return;
         }
-        minecraftInstallTask = new MinecraftInstallTask(activity, name, downloadTaskListAdapter, new MinecraftInstallTask.InstallMinecraftCallback() {
+        this.minecraftInstallTask = new MinecraftInstallTask(this.activity, this.name, this.downloadTaskListAdapter, new MinecraftInstallTask.InstallMinecraftCallback(){
+
             @Override
             public void onStart() {
-                
             }
 
             @Override
             public void onFailed(Exception e) {
-                throwException(e);
+                GameInstallDialog.this.throwException(e);
             }
 
             @Override
             public void onFinish(Version version) {
-                gameVersionJson = version;
-                downloadLiteLoader();
+                GameInstallDialog.this.gameVersionJson = version;
+                GameInstallDialog.this.downloadLiteLoader();
             }
         });
-        minecraftInstallTask.execute(version);
+        this.minecraftInstallTask.execute(new VersionManifest.Version[]{this.version});
     }
 
-    /**
-     * Historical builds from the Betacraft archive have no Mojang metadata, so they are fetched
-     * through the archive's own metadata instead of the normal installer.
-     */
-    public void downloadArchivedBuild(){
-        legacyArchiveInstallTask = new LegacyArchiveInstallTask(activity, downloadTaskListAdapter,
-                new LegacyArchiveInstallTask.Callback() {
+    public void downloadArchivedBuild() {
+        this.legacyArchiveInstallTask = new LegacyArchiveInstallTask(this.activity, this.downloadTaskListAdapter, new LegacyArchiveInstallTask.Callback(){
+
             @Override
             public void onStart() {
             }
 
             @Override
             public void onFailed(Exception e) {
-                throwException(e);
+                GameInstallDialog.this.throwException(e);
             }
 
             @Override
             public void onFinish(String versionId) {
-                // jar / json / 依赖 / 资源都已经下完：和普通安装一样提示"安装成功"并返回主界面
-                if (liteLoaderVersion != null) {
-                    downloadLiteLoader();
+                if (GameInstallDialog.this.liteLoaderVersion != null) {
+                    GameInstallDialog.this.downloadLiteLoader();
                     return;
                 }
-                activity.runOnUiThread(() -> {
-                    AlertDialog.Builder builder = new AlertDialog.Builder(context);
-                    builder.setTitle(context.getString(R.string.dialog_install_success_title));
-                    builder.setMessage(context.getString(R.string.dialog_install_success_text));
+                GameInstallDialog.this.activity.runOnUiThread(() -> {
+                    AlertDialog.Builder builder = new AlertDialog.Builder(GameInstallDialog.this.context);
+                    builder.setTitle((CharSequence)GameInstallDialog.this.context.getString(R.string.dialog_install_success_title));
+                    builder.setMessage((CharSequence)GameInstallDialog.this.context.getString(R.string.dialog_install_success_text));
                     builder.setCancelable(false);
-                    builder.setPositiveButton(context.getString(R.string.dialog_install_success_positive), (dialogInterface, i) -> {
-                        activity.backToLastUI();
-                        new Thread(() -> activity.uiManager.versionListUI.refreshVersionList()).start();
+                    builder.setPositiveButton((CharSequence)GameInstallDialog.this.context.getString(R.string.dialog_install_success_positive), (dialogInterface, i) -> {
+                        GameInstallDialog.this.activity.backToLastUI();
+                        new Thread(() -> ((GameInstallDialog)GameInstallDialog.this).activity.uiManager.versionListUI.refreshVersionList()).start();
                     });
-                    exit();
+                    GameInstallDialog.this.exit();
                     builder.create().show();
                 });
             }
         });
-        legacyArchiveInstallTask.execute(version);
+        this.legacyArchiveInstallTask.execute(new VersionManifest.Version[]{this.version});
     }
 
-    public void downloadLiteLoader(){
-        if (liteLoaderVersion != null) {
-            liteLoaderInstallTask = new LiteLoaderInstallTask(activity, downloadTaskListAdapter, new LiteLoaderInstallTask.InstallLiteLoaderCallback() {
+    public void downloadLiteLoader() {
+        if (this.liteLoaderVersion != null) {
+            this.liteLoaderInstallTask = new LiteLoaderInstallTask(this.activity, this.downloadTaskListAdapter, new LiteLoaderInstallTask.InstallLiteLoaderCallback(){
+
                 @Override
                 public void onStart() {
-
                 }
 
                 @Override
                 public void onFailed(Exception e) {
-                    throwException(e);
+                    GameInstallDialog.this.throwException(e);
                 }
 
                 @Override
                 public void onFinish(Version version) {
-                    gameVersionJson = PatchMerger.mergePatch(gameVersionJson,version);
-                    downloadForge();
+                    GameInstallDialog.this.gameVersionJson = PatchMerger.mergePatch(GameInstallDialog.this.gameVersionJson, version);
+                    GameInstallDialog.this.downloadForge();
                 }
             });
-            liteLoaderInstallTask.execute(liteLoaderVersion);
-        }
-        else {
-            downloadForge();
+            this.liteLoaderInstallTask.execute(new LiteLoaderVersion[]{this.liteLoaderVersion});
+        } else {
+            this.downloadForge();
         }
     }
 
-    public void downloadForge(){
-        if (forgeVersion != null) {
-            forgeDownloadTask = new ForgeDownloadTask(activity, downloadTaskListAdapter, new ForgeDownloadTask.DownloadForgeCallback() {
+    public void downloadForge() {
+        if (this.forgeVersion != null) {
+            this.forgeDownloadTask = new ForgeDownloadTask(this.activity, this.downloadTaskListAdapter, new ForgeDownloadTask.DownloadForgeCallback(){
+
                 @Override
                 public void onStart() {
-
                 }
 
                 @Override
                 public void onFinish(Exception e) {
                     if (e == null) {
-                        installForge();
-                    }
-                    else {
-                        throwException(e);
+                        GameInstallDialog.this.installForge();
+                    } else {
+                        GameInstallDialog.this.throwException(e);
                     }
                 }
             });
-            forgeDownloadTask.execute(forgeVersion);
-        }
-        else {
-            downloadOptifine();
+            this.forgeDownloadTask.execute(new ForgeVersion[]{this.forgeVersion});
+        } else {
+            this.downloadOptifine();
         }
     }
 
     public void installForge() {
-        forgeInstallTask = new ForgeInstallTask(activity, name, downloadTaskListAdapter, new ForgeInstallTask.InstallForgeCallback() {
+        this.forgeInstallTask = new ForgeInstallTask(this.activity, this.name, this.downloadTaskListAdapter, new ForgeInstallTask.InstallForgeCallback(){
+
             @Override
             public void onStart() {
-
             }
 
             @Override
             public void onFailed(Exception e) {
-                throwException(e);
+                GameInstallDialog.this.throwException(e);
             }
 
             @Override
             public void onFinish(Version version) {
-                gameVersionJson = PatchMerger.mergePatch(gameVersionJson,version);
-                downloadOptifine();
+                GameInstallDialog.this.gameVersionJson = PatchMerger.mergePatch(GameInstallDialog.this.gameVersionJson, version);
+                GameInstallDialog.this.downloadOptifine();
             }
         });
-        forgeInstallTask.execute(forgeVersion);
+        this.forgeInstallTask.execute(new ForgeVersion[]{this.forgeVersion});
     }
 
     public void downloadOptifine() {
-        if (optifineVersion != null) {
-            optifineDownloadTask = new OptifineDownloadTask(activity, downloadTaskListAdapter, new OptifineDownloadTask.DownloadOptifineCallback() {
+        if (this.optifineVersion != null) {
+            this.optifineDownloadTask = new OptifineDownloadTask(this.activity, this.downloadTaskListAdapter, new OptifineDownloadTask.DownloadOptifineCallback(){
+
                 @Override
                 public void onStart() {
-
                 }
 
                 @Override
                 public void onFinish(Exception e) {
                     if (e == null) {
-                        installOptifine();
-                    }
-                    else {
-                        throwException(e);
+                        GameInstallDialog.this.installOptifine();
+                    } else {
+                        GameInstallDialog.this.throwException(e);
                     }
                 }
             });
-            optifineDownloadTask.execute(optifineVersion);
-        }
-        else {
-            downloadFabric();
+            this.optifineDownloadTask.execute(new OptifineVersion[]{this.optifineVersion});
+        } else {
+            this.downloadFabric();
         }
     }
 
     public void installOptifine() {
-        optifineInstallTask = new OptifineInstallTask(activity, name, downloadTaskListAdapter, new OptifineInstallTask.InstallOptifineCallback() {
+        this.optifineInstallTask = new OptifineInstallTask(this.activity, this.name, this.downloadTaskListAdapter, new OptifineInstallTask.InstallOptifineCallback(){
+
             @Override
             public void onStart() {
-
             }
 
             @Override
             public void onFailed(Exception e) {
-                throwException(e);
+                GameInstallDialog.this.throwException(e);
             }
 
             @Override
             public void onFinish(Version version) {
-                gameVersionJson = PatchMerger.mergeOptifinePatch(gameVersionJson,version);
-                downloadFabric();
+                GameInstallDialog.this.gameVersionJson = PatchMerger.mergeOptifinePatch(GameInstallDialog.this.gameVersionJson, version);
+                GameInstallDialog.this.downloadFabric();
             }
         });
-        optifineInstallTask.execute(optifineVersion);
+        this.optifineInstallTask.execute(new OptifineVersion[]{this.optifineVersion});
     }
 
-    public void downloadFabric(){
-        if (fabricVersion != null) {
-            fabricInstallTask = new FabricInstallTask(activity, downloadTaskListAdapter, version.id, new FabricInstallTask.InstallFabricCallback() {
+    public void downloadFabric() {
+        if (this.fabricVersion != null) {
+            this.fabricInstallTask = new FabricInstallTask(this.activity, this.downloadTaskListAdapter, this.version.id, new FabricInstallTask.InstallFabricCallback(){
+
                 @Override
                 public void onStart() {
-
                 }
 
                 @Override
                 public void onFailed(Exception e) {
-                    throwException(e);
+                    GameInstallDialog.this.throwException(e);
                 }
 
                 @Override
                 public void onFinish(Version version) {
-                    gameVersionJson = PatchMerger.mergePatch(gameVersionJson,version);
-                    downloadFabricAPI();
+                    GameInstallDialog.this.gameVersionJson = PatchMerger.mergePatch(GameInstallDialog.this.gameVersionJson, version);
+                    GameInstallDialog.this.downloadFabricAPI();
                 }
             });
-            fabricInstallTask.execute(fabricVersion);
-        }
-        else {
-            downloadFabricAPI();
+            this.fabricInstallTask.execute(new FabricLoaderVersion[]{this.fabricVersion});
+        } else {
+            this.downloadFabricAPI();
         }
     }
 
-    public void downloadFabricAPI(){
-        if (fabricAPIVersion != null) {
-            fabricAPIInstallTask = new FabricAPIInstallTask(activity, name, downloadTaskListAdapter, new FabricAPIInstallTask.InstallFabricAPICallback() {
+    public void downloadFabricAPI() {
+        if (this.fabricAPIVersion != null) {
+            this.fabricAPIInstallTask = new FabricAPIInstallTask(this.activity, this.name, this.downloadTaskListAdapter, new FabricAPIInstallTask.InstallFabricAPICallback(){
+
                 @Override
                 public void onStart() {
-
                 }
 
                 @Override
                 public void onFinish(Exception e) {
                     if (e == null) {
-                        downloadQuilt();
-                    }
-                    else {
-                        throwException(e);
+                        GameInstallDialog.this.downloadQuilt();
+                    } else {
+                        GameInstallDialog.this.throwException(e);
                     }
                 }
             });
-            fabricAPIInstallTask.execute(fabricAPIVersion);
-        }
-        else {
-            downloadQuilt();
+            this.fabricAPIInstallTask.execute(new RemoteMod.Version[]{this.fabricAPIVersion});
+        } else {
+            this.downloadQuilt();
         }
     }
 
-    public void downloadQuilt(){
-        if (quiltVersion != null) {
-            quiltInstallTask = new QuiltInstallTask(activity, downloadTaskListAdapter, version.id, new QuiltInstallTask.InstallQuiltCallback() {
+    public void downloadQuilt() {
+        if (this.quiltVersion != null) {
+            this.quiltInstallTask = new QuiltInstallTask(this.activity, this.downloadTaskListAdapter, this.version.id, new QuiltInstallTask.InstallQuiltCallback(){
+
                 @Override
                 public void onStart() {
-
                 }
 
                 @Override
                 public void onFailed(Exception e) {
-                    throwException(e);
+                    GameInstallDialog.this.throwException(e);
                 }
 
                 @Override
                 public void onFinish(Version version) {
-                    gameVersionJson = PatchMerger.mergePatch(gameVersionJson,version);
-                    downloadQuiltAPI();
+                    GameInstallDialog.this.gameVersionJson = PatchMerger.mergePatch(GameInstallDialog.this.gameVersionJson, version);
+                    GameInstallDialog.this.downloadQuiltAPI();
                 }
             });
-            quiltInstallTask.execute(quiltVersion);
-        }
-        else {
-            downloadQuiltAPI();
+            this.quiltInstallTask.execute(new QuiltLoaderVersion[]{this.quiltVersion});
+        } else {
+            this.downloadQuiltAPI();
         }
     }
 
-    public void downloadQuiltAPI(){
-        if (quiltAPIVersion != null) {
-            quiltAPIInstallTask = new QuiltAPIInstallTask(activity, name, downloadTaskListAdapter, new QuiltAPIInstallTask.InstallQuiltAPICallback() {
+    public void downloadQuiltAPI() {
+        if (this.quiltAPIVersion != null) {
+            this.quiltAPIInstallTask = new QuiltAPIInstallTask(this.activity, this.name, this.downloadTaskListAdapter, new QuiltAPIInstallTask.InstallQuiltAPICallback(){
+
                 @Override
                 public void onStart() {
-
                 }
 
                 @Override
                 public void onFinish(Exception e) {
                     if (e == null) {
-                        installJson();
-                    }
-                    else {
-                        throwException(e);
+                        GameInstallDialog.this.installJson();
+                    } else {
+                        GameInstallDialog.this.throwException(e);
                     }
                 }
             });
-            quiltAPIInstallTask.execute(quiltAPIVersion);
-        }
-        else {
-            installJson();
+            this.quiltAPIInstallTask.execute(new RemoteMod.Version[]{this.quiltAPIVersion});
+        } else {
+            this.installJson();
         }
     }
 
-    public void installJson(){
-        String gameFilePath = activity.launcherSetting.gameFileDirectory;
-        Gson gson = JsonUtils.defaultGsonBuilder()
-                .registerTypeAdapter(Artifact.class, new Artifact.Serializer())
-                .registerTypeAdapter(Bits.class, new Bits.Serializer())
-                .registerTypeAdapter(RuledArgument.class, new RuledArgument.Serializer())
-                .registerTypeAdapter(Argument.class, new Argument.Deserializer())
-                .create();
-        String string = gson.toJson(gameVersionJson);
-        FileStringUtils.writeFile(gameFilePath + "/versions/" + name + "/" + name + ".json",string);
-        AlertDialog.Builder builder = new AlertDialog.Builder(context);
-        builder.setTitle(context.getString(R.string.dialog_install_success_title));
-        builder.setMessage(context.getString(R.string.dialog_install_success_text));
+    public void installJson() {
+        String gameFilePath = this.activity.launcherSetting.gameFileDirectory;
+        Gson gson = JsonUtils.defaultGsonBuilder().registerTypeAdapter(Artifact.class, (Object)new Artifact.Serializer()).registerTypeAdapter(Bits.class, (Object)new Bits.Serializer()).registerTypeAdapter(RuledArgument.class, (Object)new RuledArgument.Serializer()).registerTypeAdapter(Argument.class, (Object)new Argument.Deserializer()).create();
+        String string2 = gson.toJson((Object)this.gameVersionJson);
+        FileStringUtils.writeFile(gameFilePath + "/versions/" + this.name + "/" + this.name + ".json", string2);
+        AlertDialog.Builder builder = new AlertDialog.Builder(this.context);
+        builder.setTitle((CharSequence)this.context.getString(R.string.dialog_install_success_title));
+        builder.setMessage((CharSequence)this.context.getString(R.string.dialog_install_success_text));
         builder.setCancelable(false);
-        builder.setPositiveButton(context.getString(R.string.dialog_install_success_positive), (dialogInterface, i) -> {
-            activity.backToLastUI();
-            new Thread(() -> {
-                activity.uiManager.versionListUI.refreshVersionList();
-            }).start();
+        builder.setPositiveButton((CharSequence)this.context.getString(R.string.dialog_install_success_positive), (dialogInterface, i) -> {
+            this.activity.backToLastUI();
+            new Thread(() -> this.activity.uiManager.versionListUI.refreshVersionList()).start();
         });
-        exit();
+        this.exit();
         builder.create().show();
     }
-    
+
     public void throwException(Exception e) {
-        activity.runOnUiThread(() -> {
-            exit();
-            AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
-            builder.setTitle(getContext().getString(R.string.dialog_install_fail_title));
-            builder.setMessage(e.toString());
-            builder.setPositiveButton(getContext().getString(R.string.dialog_install_fail_positive), (dialogInterface, i) -> {});
+        this.activity.runOnUiThread(() -> {
+            this.exit();
+            AlertDialog.Builder builder = new AlertDialog.Builder(this.getContext());
+            builder.setTitle((CharSequence)this.getContext().getString(R.string.dialog_install_fail_title));
+            builder.setMessage((CharSequence)e.toString());
+            builder.setPositiveButton((CharSequence)this.getContext().getString(R.string.dialog_install_fail_positive), (dialogInterface, i) -> {});
             builder.create().show();
         });
     }
 
-    private void exit(){
-        if (minecraftInstallTask != null && minecraftInstallTask.getStatus() != null && minecraftInstallTask.getStatus() == AsyncTask.Status.RUNNING) {
-            minecraftInstallTask.cancel(true);
+    private void exit() {
+        if (this.minecraftInstallTask != null && this.minecraftInstallTask.getStatus() != null && this.minecraftInstallTask.getStatus() == AsyncTask.Status.RUNNING) {
+            this.minecraftInstallTask.cancel(true);
         }
-        if (liteLoaderInstallTask != null && liteLoaderInstallTask.getStatus() != null && liteLoaderInstallTask.getStatus() == AsyncTask.Status.RUNNING) {
-            liteLoaderInstallTask.cancel(true);
+        if (this.liteLoaderInstallTask != null && this.liteLoaderInstallTask.getStatus() != null && this.liteLoaderInstallTask.getStatus() == AsyncTask.Status.RUNNING) {
+            this.liteLoaderInstallTask.cancel(true);
         }
-        if (forgeDownloadTask != null && forgeDownloadTask.getStatus() != null && forgeDownloadTask.getStatus() == AsyncTask.Status.RUNNING) {
-            forgeDownloadTask.cancel(true);
+        if (this.forgeDownloadTask != null && this.forgeDownloadTask.getStatus() != null && this.forgeDownloadTask.getStatus() == AsyncTask.Status.RUNNING) {
+            this.forgeDownloadTask.cancel(true);
         }
-        if (forgeInstallTask != null && forgeInstallTask.getStatus() != null && forgeInstallTask.getStatus() == AsyncTask.Status.RUNNING) {
-            forgeInstallTask.cancel(true);
+        if (this.forgeInstallTask != null && this.forgeInstallTask.getStatus() != null && this.forgeInstallTask.getStatus() == AsyncTask.Status.RUNNING) {
+            this.forgeInstallTask.cancel(true);
         }
-        if (optifineDownloadTask != null && optifineDownloadTask.getStatus() != null && optifineDownloadTask.getStatus() == AsyncTask.Status.RUNNING) {
-            optifineDownloadTask.cancel(true);
+        if (this.optifineDownloadTask != null && this.optifineDownloadTask.getStatus() != null && this.optifineDownloadTask.getStatus() == AsyncTask.Status.RUNNING) {
+            this.optifineDownloadTask.cancel(true);
         }
-        if (optifineInstallTask != null && optifineInstallTask.getStatus() != null && optifineInstallTask.getStatus() == AsyncTask.Status.RUNNING) {
-            optifineInstallTask.cancel(true);
+        if (this.optifineInstallTask != null && this.optifineInstallTask.getStatus() != null && this.optifineInstallTask.getStatus() == AsyncTask.Status.RUNNING) {
+            this.optifineInstallTask.cancel(true);
         }
-        if (fabricInstallTask != null && fabricInstallTask.getStatus() != null && fabricInstallTask.getStatus() == AsyncTask.Status.RUNNING) {
-            fabricInstallTask.cancel(true);
+        if (this.fabricInstallTask != null && this.fabricInstallTask.getStatus() != null && this.fabricInstallTask.getStatus() == AsyncTask.Status.RUNNING) {
+            this.fabricInstallTask.cancel(true);
         }
-        if (fabricAPIInstallTask != null && fabricAPIInstallTask.getStatus() != null && fabricAPIInstallTask.getStatus() == AsyncTask.Status.RUNNING) {
-            fabricAPIInstallTask.cancel(true);
+        if (this.fabricAPIInstallTask != null && this.fabricAPIInstallTask.getStatus() != null && this.fabricAPIInstallTask.getStatus() == AsyncTask.Status.RUNNING) {
+            this.fabricAPIInstallTask.cancel(true);
         }
-        if (quiltInstallTask != null && quiltInstallTask.getStatus() != null && quiltInstallTask.getStatus() == AsyncTask.Status.RUNNING) {
-            quiltInstallTask.cancel(true);
+        if (this.quiltInstallTask != null && this.quiltInstallTask.getStatus() != null && this.quiltInstallTask.getStatus() == AsyncTask.Status.RUNNING) {
+            this.quiltInstallTask.cancel(true);
         }
-        if (quiltAPIInstallTask != null && quiltAPIInstallTask.getStatus() != null && quiltAPIInstallTask.getStatus() == AsyncTask.Status.RUNNING) {
-            quiltAPIInstallTask.cancel(true);
+        if (this.quiltAPIInstallTask != null && this.quiltAPIInstallTask.getStatus() != null && this.quiltAPIInstallTask.getStatus() == AsyncTask.Status.RUNNING) {
+            this.quiltAPIInstallTask.cancel(true);
         }
-        if (forgeInstallTask != null) {
-            forgeInstallTask.cancelBuild();
+        if (this.forgeInstallTask != null) {
+            this.forgeInstallTask.cancelBuild();
         }
-        if (optifineInstallTask != null) {
-            optifineInstallTask.cancelBuild();
+        if (this.optifineInstallTask != null) {
+            this.optifineInstallTask.cancelBuild();
         }
-        netSpeedTimer.stopSpeedTimer();
-        dismiss();
+        this.netSpeedTimer.stopSpeedTimer();
+        this.dismiss();
     }
 
-    @Override
     public boolean handleMessage(@NonNull Message msg) {
-        if (msg.what == NetSpeedTimer.NET_SPEED_TIMER_DEFAULT) {
-            String speed = (String) msg.obj;
-            speedText.setText(speed);
+        if (msg.what == 101010) {
+            String speed = (String)msg.obj;
+            this.speedText.setText((CharSequence)speed);
         }
         return false;
     }
-
 }
+

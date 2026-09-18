@@ -2,114 +2,94 @@ package com.qcl.launcher.skin.utils;
 
 import android.graphics.Bitmap;
 
-/**
- * Describes a Minecraft 1.8+ skin (64x64).
- * Old format skins are converted to the new format.
- *
- * @author yushijinhun
- */
+/* loaded from: classes2.dex */
 public class NormalizedSkin {
+    private final Bitmap normalizedTexture;
+    private final boolean oldFormat;
+    private final int scale;
+    private final Bitmap texture;
 
-    private static void copyImage(Bitmap src, Bitmap dst, int sx, int sy, int dx, int dy, int w, int h, boolean flipHorizontal) {
-        for (int y = 0; y < h; y++) {
-            for (int x = 0; x < w; x++) {
-                int pixel = src.getPixel(sx + x, sy + y);
-                dst.setPixel(dx + (flipHorizontal ? w - x - 1 : x), dy + y, pixel);
+    private static void copyImage(Bitmap bitmap, Bitmap bitmap2, int i, int i2, int i3, int i4, int i5, int i6, boolean z) {
+        for (int i7 = 0; i7 < i6; i7++) {
+            for (int i8 = 0; i8 < i5; i8++) {
+                bitmap2.setPixel((z ? (i5 - i8) - 1 : i8) + i3, i4 + i7, bitmap.getPixel(i + i8, i2 + i7));
             }
         }
     }
 
-    private final Bitmap texture;
-    private final Bitmap normalizedTexture;
-    private final int scale;
-    private final boolean oldFormat;
-
-    public NormalizedSkin(Bitmap texture) throws InvalidSkinException {
-        this.texture = texture;
-
-        // check format
-        int w = texture.getWidth();
-        int h = texture.getHeight();
-        if (w % 64 != 0) {
-            throw new InvalidSkinException("Invalid size " + w + "x" + h);
+    public NormalizedSkin(Bitmap bitmap) throws InvalidSkinException {
+        this.texture = bitmap;
+        int width = bitmap.getWidth();
+        int height = bitmap.getHeight();
+        if (width % 64 != 0) {
+            throw new InvalidSkinException("Invalid size " + width + "x" + height);
         }
-        if (w == h) {
-            oldFormat = false;
-        } else if (w == h * 2) {
-            oldFormat = true;
+        if (width == height) {
+            this.oldFormat = false;
+        } else if (width == height * 2) {
+            this.oldFormat = true;
         } else {
-            throw new InvalidSkinException("Invalid size " + w + "x" + h);
+            throw new InvalidSkinException("Invalid size " + width + "x" + height);
         }
-
-        // compute scale
-        scale = w / 64;
-
-        normalizedTexture = Bitmap.createBitmap(w,w, Bitmap.Config.ARGB_8888);
-        copyImage(texture, normalizedTexture, 0, 0, 0, 0, w, h, false);
-        if (oldFormat) {
+        this.scale = width / 64;
+        Bitmap createBitmap = Bitmap.createBitmap(width, width, Bitmap.Config.ARGB_8888);
+        this.normalizedTexture = createBitmap;
+        copyImage(bitmap, createBitmap, 0, 0, 0, 0, width, height, false);
+        if (this.oldFormat) {
             convertOldSkin();
         }
     }
 
     private void convertOldSkin() {
-        copyImageRelative(4, 16, 20, 48, 4, 4, true); // Top Leg
-        copyImageRelative(8, 16, 24, 48, 4, 4, true); // Bottom Leg
-        copyImageRelative(0, 20, 24, 52, 4, 12, true); // Outer Leg
-        copyImageRelative(4, 20, 20, 52, 4, 12, true); // Front Leg
-        copyImageRelative(8, 20, 16, 52, 4, 12, true); // Inner Leg
-        copyImageRelative(12, 20, 28, 52, 4, 12, true); // Back Leg
-        copyImageRelative(44, 16, 36, 48, 4, 4, true); // Top Arm
-        copyImageRelative(48, 16, 40, 48, 4, 4, true); // Bottom Arm
-        copyImageRelative(40, 20, 40, 52, 4, 12, true); // Outer Arm
-        copyImageRelative(44, 20, 36, 52, 4, 12, true); // Front Arm
-        copyImageRelative(48, 20, 32, 52, 4, 12, true); // Inner Arm
-        copyImageRelative(52, 20, 44, 52, 4, 12, true); // Back Arm
+        copyImageRelative(4, 16, 20, 48, 4, 4, true);
+        copyImageRelative(8, 16, 24, 48, 4, 4, true);
+        copyImageRelative(0, 20, 24, 52, 4, 12, true);
+        copyImageRelative(4, 20, 20, 52, 4, 12, true);
+        copyImageRelative(8, 20, 16, 52, 4, 12, true);
+        copyImageRelative(12, 20, 28, 52, 4, 12, true);
+        copyImageRelative(44, 16, 36, 48, 4, 4, true);
+        copyImageRelative(48, 16, 40, 48, 4, 4, true);
+        copyImageRelative(40, 20, 40, 52, 4, 12, true);
+        copyImageRelative(44, 20, 36, 52, 4, 12, true);
+        copyImageRelative(48, 20, 32, 52, 4, 12, true);
+        copyImageRelative(52, 20, 44, 52, 4, 12, true);
     }
 
-    private void copyImageRelative(int sx, int sy, int dx, int dy, int w, int h, boolean flipHorizontal) {
-        copyImage(normalizedTexture, normalizedTexture, sx * scale, sy * scale, dx * scale, dy * scale, w * scale, h * scale, flipHorizontal);
+    private void copyImageRelative(int i, int i2, int i3, int i4, int i5, int i6, boolean z) {
+        Bitmap bitmap = this.normalizedTexture;
+        int i7 = this.scale;
+        copyImage(bitmap, bitmap, i * i7, i2 * i7, i3 * i7, i4 * i7, i5 * i7, i6 * i7, z);
     }
 
     public Bitmap getOriginalTexture() {
-        return texture;
+        return this.texture;
     }
 
     public Bitmap getNormalizedTexture() {
-        return normalizedTexture;
+        return this.normalizedTexture;
     }
 
     public int getScale() {
-        return scale;
+        return this.scale;
     }
 
     public boolean isOldFormat() {
-        return oldFormat;
+        return this.oldFormat;
     }
 
-    /**
-     * Tests whether the skin is slim.
-     * Note that this method doesn't guarantee the result is correct.
-     */
     public boolean isSlim() {
-        return (hasTransparencyRelative(50, 16, 2, 4) ||
-                hasTransparencyRelative(54, 20, 2, 12) ||
-                hasTransparencyRelative(42, 48, 2, 4) ||
-                hasTransparencyRelative(46, 52, 2, 12)) ||
-                (isAreaBlackRelative(50, 16, 2, 4) &&
-                        isAreaBlackRelative(54, 20, 2, 12) &&
-                        isAreaBlackRelative(42, 48, 2, 4) &&
-                        isAreaBlackRelative(46, 52, 2, 12));
+        return hasTransparencyRelative(50, 16, 2, 4) || hasTransparencyRelative(54, 20, 2, 12) || hasTransparencyRelative(42, 48, 2, 4) || hasTransparencyRelative(46, 52, 2, 12) || (isAreaBlackRelative(50, 16, 2, 4) && isAreaBlackRelative(54, 20, 2, 12) && isAreaBlackRelative(42, 48, 2, 4) && isAreaBlackRelative(46, 52, 2, 12));
     }
 
-    private boolean hasTransparencyRelative(int x0, int y0, int w, int h) {
-        x0 *= scale;
-        y0 *= scale;
-        w *= scale;
-        h *= scale;
-        for (int y = 0; y < h; y++) {
-            for (int x = 0; x < w; x++) {
-                int pixel = normalizedTexture.getPixel(x0 + x, y0 + y);
-                if (pixel >>> 24 != 0xff) {
+    private boolean hasTransparencyRelative(int i, int i2, int i3, int i4) {
+        int i5 = this.scale;
+        int i6 = i * i5;
+        int i7 = i2 * i5;
+        int i8 = i3 * i5;
+        int i9 = i4 * i5;
+        for (int i10 = 0; i10 < i9; i10++) {
+            for (int i11 = 0; i11 < i8; i11++) {
+                if ((this.normalizedTexture.getPixel(i6 + i11, i7 + i10) >>> 24) != 255) {
                     return true;
                 }
             }
@@ -117,15 +97,15 @@ public class NormalizedSkin {
         return false;
     }
 
-    private boolean isAreaBlackRelative(int x0, int y0, int w, int h) {
-        x0 *= scale;
-        y0 *= scale;
-        w *= scale;
-        h *= scale;
-        for (int y = 0; y < h; y++) {
-            for (int x = 0; x < w; x++) {
-                int pixel = normalizedTexture.getPixel(x0 + x, y0 + y);
-                if (pixel != 0xff000000) {
+    private boolean isAreaBlackRelative(int i, int i2, int i3, int i4) {
+        int i5 = this.scale;
+        int i6 = i * i5;
+        int i7 = i2 * i5;
+        int i8 = i3 * i5;
+        int i9 = i4 * i5;
+        for (int i10 = 0; i10 < i9; i10++) {
+            for (int i11 = 0; i11 < i8; i11++) {
+                if (this.normalizedTexture.getPixel(i6 + i11, i7 + i10) != -16777216) {
                     return false;
                 }
             }

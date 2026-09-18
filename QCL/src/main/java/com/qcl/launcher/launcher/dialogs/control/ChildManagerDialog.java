@@ -4,30 +4,25 @@ import android.app.Dialog;
 import android.content.Context;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ListAdapter;
 import android.widget.ListView;
-
-import androidx.annotation.NonNull;
-
-import com.qcl.launcher.R;
 import com.qcl.launcher.control.MenuHelper;
+import com.qcl.launcher.launcher.dialogs.control.CreateChildDialog;
 import com.qcl.launcher.launcher.list.local.controller.ChildLayout;
 import com.qcl.launcher.launcher.list.local.controller.ChildLayoutListAdapter;
 import com.qcl.launcher.launcher.list.local.controller.ControlPattern;
 import com.qcl.launcher.launcher.setting.SettingUtils;
 
-import java.util.ArrayList;
-
+import com.qcl.launcher.R;
+/* loaded from: classes2.dex */
 public class ChildManagerDialog extends Dialog implements View.OnClickListener {
-
-    private MenuHelper menuHelper;
-    private ControlPattern controlPattern;
-
     private ListView childListView;
-
+    private ControlPattern controlPattern;
     private Button create;
     private Button exit;
+    private MenuHelper menuHelper;
 
-    public ChildManagerDialog(@NonNull Context context, MenuHelper menuHelper, ControlPattern controlPattern) {
+    public ChildManagerDialog(Context context, MenuHelper menuHelper, ControlPattern controlPattern) {
         super(context);
         this.menuHelper = menuHelper;
         this.controlPattern = controlPattern;
@@ -36,38 +31,32 @@ public class ChildManagerDialog extends Dialog implements View.OnClickListener {
         init();
     }
 
-    private void init(){
-        childListView = findViewById(R.id.child_list);
-
-        create = findViewById(R.id.create_child);
-        exit = findViewById(R.id.exit);
-
-        create.setOnClickListener(this);
-        exit.setOnClickListener(this);
-
+    private void init() {
+        this.childListView = (ListView) findViewById(R.id.child_list);
+        this.create = (Button) findViewById(R.id.create_child);
+        this.exit = (Button) findViewById(R.id.exit);
+        this.create.setOnClickListener(this);
+        this.exit.setOnClickListener(this);
         refreshListView();
     }
 
-    public void refreshListView(){
-        ArrayList<ChildLayout> list = SettingUtils.getChildList(controlPattern.name);
-        ChildLayoutListAdapter adapter = new ChildLayoutListAdapter(getContext(),list,controlPattern,this);
-        childListView.setAdapter(adapter);
-        menuHelper.refreshChildSpinner();
+    public void refreshListView() {
+        this.childListView.setAdapter((ListAdapter) new ChildLayoutListAdapter(getContext(), SettingUtils.getChildList(this.controlPattern.name), this.controlPattern, this));
+        this.menuHelper.refreshChildSpinner();
     }
 
-    @Override
+    @Override // android.view.View.OnClickListener
     public void onClick(View view) {
-        if (view == create) {
-            CreateChildDialog dialog = new CreateChildDialog(getContext(),controlPattern.name, new CreateChildDialog.OnChildAddListener() {
-                @Override
+        if (view == this.create) {
+            new CreateChildDialog(getContext(), this.controlPattern.name, new CreateChildDialog.OnChildAddListener() { // from class: com.qcl.launcher.launcher.dialogs.control.ChildManagerDialog.1
+                @Override // com.qcl.launcher.launcher.dialogs.control.CreateChildDialog.OnChildAddListener
                 public void onChildAdd(ChildLayout childLayout) {
-                    ChildLayout.saveChildLayout(controlPattern.name,childLayout);
-                    refreshListView();
+                    ChildLayout.saveChildLayout(ChildManagerDialog.this.controlPattern.name, childLayout);
+                    ChildManagerDialog.this.refreshListView();
                 }
-            });
-            dialog.show();
+            }).show();
         }
-        if (view == exit) {
+        if (view == this.exit) {
             dismiss();
         }
     }

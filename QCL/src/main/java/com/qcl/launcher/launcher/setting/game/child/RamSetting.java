@@ -1,21 +1,17 @@
 package com.qcl.launcher.launcher.setting.game.child;
 
-import androidx.annotation.NonNull;
-
+/* loaded from: classes2.dex */
 public class RamSetting implements Cloneable {
-
-    public int minRam;
-    public int maxRam;
     public boolean autoRam;
+    public int maxRam;
+    public int minRam;
 
-    public RamSetting(int minRam,int maxRam,boolean autoRam){
-        this.minRam = minRam;
-        this.maxRam = maxRam;
-        this.autoRam = autoRam;
+    public RamSetting(int i, int i2, boolean z) {
+        this.minRam = i;
+        this.maxRam = i2;
+        this.autoRam = z;
     }
 
-    @NonNull
-    @Override
     public Object clone() throws CloneNotSupportedException {
         return super.clone();
     }

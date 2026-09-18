@@ -1,209 +1,171 @@
 package com.qcl.launcher.launcher.setting.game;
 
-import com.google.gson.Gson;
 import com.qcl.launcher.auth.Account;
 import com.qcl.launcher.launcher.game.Argument;
 import com.qcl.launcher.launcher.game.Artifact;
+import com.qcl.launcher.launcher.game.Library;
 import com.qcl.launcher.launcher.game.RuledArgument;
 import com.qcl.launcher.launcher.game.Version;
 import com.qcl.launcher.launcher.launch.LaunchVersion;
-import com.qcl.launcher.manifest.AppManifest;
 import com.qcl.launcher.launcher.setting.launcher.LauncherSetting;
+import com.qcl.launcher.manifest.AppManifest;
 import com.qcl.launcher.utils.file.FileStringUtils;
 import com.qcl.launcher.utils.gson.GsonUtils;
 import com.qcl.launcher.utils.gson.JsonUtils;
 import com.qcl.launcher.utils.platform.Bits;
-
 import java.io.File;
+import java.util.Iterator;
+import net.kdt.pojavlaunch.utils.Architecture;
 
+/* loaded from: classes2.dex */
 public class GameLaunchSetting {
-
     public Account account;
-    public String home;
+    public String boatRenderer;
+    public String controlLayout;
     public String currentVersion;
-
-    public String javaPath;
     public String extraJavaFlags;
     public String extraMinecraftFlags;
-    public String game_directory;
-    public String boatRenderer;
-    public String pojavRenderer;
-    public boolean touchInjector;
-    public float scaleFactor;
-    public int minRam;
-    public int maxRam;
-    public String server;
-    public String controlLayout;
     public boolean fullscreen;
-    public boolean log;
-
     public String gameFileDirectory;
+    public String game_directory;
+    public String home;
+    public String javaPath;
+    public boolean log;
+    public int maxRam;
+    public int minRam;
+    public String pojavRenderer;
+    public float scaleFactor;
+    public String server;
+    public boolean touchInjector;
 
-    public GameLaunchSetting(Account account,String home,String currentVersion,String javaPath,String extraJavaFlags,String extraMinecraftFlags,String game_directory,String boatRenderer,String pojavRenderer,boolean touchInjector,float scaleFactor,String gameFileDirectory,int minRam,int maxRam,String controlLayout,String server,boolean fullscreen,boolean log){
+    public GameLaunchSetting(Account account, String str, String str2, String str3, String str4, String str5, String str6, String str7, String str8, boolean z, float f, String str9, int i, int i2, String str10, String str11, boolean z2, boolean z3) {
         this.account = account;
-        this.home = home;
-        this.currentVersion = currentVersion;
-
-        this.javaPath = javaPath;
-        this.extraJavaFlags = extraJavaFlags;
-        this.extraMinecraftFlags = extraMinecraftFlags;
-        this.game_directory = game_directory;
-        this.boatRenderer = boatRenderer;
-        this.pojavRenderer = pojavRenderer;
-        this.touchInjector = touchInjector;
-        this.scaleFactor = scaleFactor;
-        this.minRam = minRam;
-        this.maxRam = maxRam;
-        this.server = server;
-        this.controlLayout = controlLayout;
-        this.fullscreen = fullscreen;
-        this.log = log;
-
-        this.gameFileDirectory = gameFileDirectory;
+        this.home = str;
+        this.currentVersion = str2;
+        this.javaPath = str3;
+        this.extraJavaFlags = str4;
+        this.extraMinecraftFlags = str5;
+        this.game_directory = str6;
+        this.boatRenderer = str7;
+        this.pojavRenderer = str8;
+        this.touchInjector = z;
+        this.scaleFactor = f;
+        this.minRam = i;
+        this.maxRam = i2;
+        this.server = str11;
+        this.controlLayout = str10;
+        this.fullscreen = z2;
+        this.log = z3;
+        this.gameFileDirectory = str9;
     }
 
-    public static boolean isHighVersion(GameLaunchSetting gameLaunchSetting){
-        LaunchVersion version = LaunchVersion.fromDirectory(new File(gameLaunchSetting.currentVersion));
-        return version.minimumLauncherVersion >= 21;
+    public static boolean isHighVersion(GameLaunchSetting gameLaunchSetting) {
+        return LaunchVersion.fromDirectory(new File(gameLaunchSetting.currentVersion)).minimumLauncherVersion >= 21;
     }
 
     public static boolean requiresSdl(Version version) {
-        // SDL used alongside GLFW may provide controllers only, not the window.
-        boolean sdl = hasLibrary(version, "lwjgl-sdl");
-        boolean glfw = hasLibrary(version, "lwjgl-glfw");
-        return sdl && !glfw;
+        return hasLibrary(version, "lwjgl-sdl") && !hasLibrary(version, "lwjgl-glfw");
     }
 
-    private static boolean hasLibrary(Version version, String artifact) {
-        for (com.qcl.launcher.launcher.game.Library library : version.getLibraries()) {
-            if (library != null && library.is("org.lwjgl", artifact)) return true;
+    private static boolean hasLibrary(Version version, String str) {
+        for (Library library : version.getLibraries()) {
+            if (library != null && library.is("org.lwjgl", str)) {
+                return true;
+            }
         }
-        for (Version patch : version.getPatches()) {
-            if (hasLibrary(patch, artifact)) return true;
+        Iterator<Version> it = version.getPatches().iterator();
+        while (it.hasNext()) {
+            if (hasLibrary(it.next(), str)) {
+                return true;
+            }
         }
         return false;
     }
 
-    private static boolean isMinecraft26(String id) {
-        return id != null && id.matches("26\\.\\d+(?:\\.\\d+)?(?:-(?:snapshot|pre|rc)-?\\d+)?");
+    private static boolean isMinecraft26(String str) {
+        return str != null && str.matches("26\\.\\d+(?:\\.\\d+)?(?:-(?:snapshot|pre|rc)-?\\d+)?");
     }
 
     public static int requiredJava(Version version) {
-        // Explicit metadata wins. The fallback recognizes only Minecraft IDs,
-        // never arbitrary loader version numbers or a date-like display name.
-        int required = version.getJavaVersion() == null ? 8
-                : version.getJavaVersion().getMajorVersion();
-        if (version.getJavaVersion() == null && (isMinecraft26(version.getId())
-                || isMinecraft26(version.getInheritsFrom())
-                || isMinecraft26(version.getJar())
-                || ("game".equals(version.getId()) && isMinecraft26(version.getVersion())))) {
-            required = 25;
+        int majorVersion = version.getJavaVersion() == null ? 8 : version.getJavaVersion().getMajorVersion();
+        if (version.getJavaVersion() == null && (isMinecraft26(version.getId()) || isMinecraft26(version.getInheritsFrom()) || isMinecraft26(version.getJar()) || ("game".equals(version.getId()) && isMinecraft26(version.getVersion())))) {
+            majorVersion = 25;
         }
-        for (Version patch : version.getPatches()) {
-            required = Math.max(required, requiredJava(patch));
+        Iterator<Version> it = version.getPatches().iterator();
+        while (it.hasNext()) {
+            majorVersion = Math.max(majorVersion, requiredJava(it.next()));
         }
-        return required;
+        return majorVersion;
     }
 
-    public static String selectJavaRuntime(int required) {
-        // Java 8 走内置的 `default`（8-arm/8-arm64/8-x86/8-x86_64），老版本必须用它。
-        // 注意：不能映射到 JRE21 —— 那是我搞错了，已改回。
-        // 26.x（2026 官方命名）用 Java 25；万一元数据声明了 >25，也兜底到 JRE25，别抛异常崩启动器。
-        if (required > 25) required = 25;
-        // ⚠️ 1.0.8 曾在这里对"所有 32 位运行时"把 required>17 降级为 17 —— **那是错的**。
-        // QCL 内置的运行时按架构分目录（`assets/app_runtime/java/21-arm`、`21-x86` …），
-        // 32 位设备本来就有能用的 Java 21（`InstallLauncherFile.prepareModernJava` 会按
-        // getRuntimeArchitecture() 拷对应架构的那份）。降级会让 1.20.6 被换成 JRE17 → 起不来。
-        // 目前**唯一**真的缺构建的组合是「Java 25 + 32 位 x86」（没有 `25-x86` 目录），
-        // 那个情况由启动前的 CheckJavaTask 给出明确提示，这里照样返回 JRE25 即可。
-        if (required <= 8) return "default";
-        if (required <= 17) return "JRE17";
-        if (required <= 21) return "JRE21";
-        if (required <= 25) return "JRE25";
-        throw new IllegalArgumentException("No bundled Java runtime for Java " + required);
+    public static String selectJavaRuntime(int i) {
+        if (i > 25) {
+            i = 25;
+        }
+        if (i <= 8) {
+            return "default";
+        }
+        if (i <= 17) {
+            return "JRE17";
+        }
+        if (i <= 21) {
+            return "JRE21";
+        }
+        if (i <= 25) {
+            return "JRE25";
+        }
+        throw new IllegalArgumentException("No bundled Java runtime for Java " + i);
     }
 
-    public static int runtimeMajor(String name) {
-        if ("default".equals(name)) return 8;
-        if ("JRE17".equals(name)) return 17;
-        if ("JRE21".equals(name)) return 21;
-        if ("JRE25".equals(name)) return 25;
-        return -1;
+    public static int runtimeMajor(String str) {
+        if ("default".equals(str)) {
+            return 8;
+        }
+        if ("JRE17".equals(str)) {
+            return 17;
+        }
+        if ("JRE21".equals(str)) {
+            return 21;
+        }
+        return "JRE25".equals(str) ? 25 : -1;
     }
 
-    public static GameLaunchSetting getGameLaunchSetting(String privatePath,String v){
-        LauncherSetting launcherSetting = GsonUtils.getLauncherSettingFromFile(AppManifest.SETTING_DIR + "/launcher_setting.json");
-        PublicGameSetting publicGameSetting = GsonUtils.getPublicGameSettingFromFile(AppManifest.SETTING_DIR + "/public_game_setting.json");
-        PrivateGameSetting privateGameSetting = GsonUtils.getPrivateGameSettingFromFile(privatePath);
-
-        String gameDir;
-        if (privateGameSetting.gameDirSetting.type == 0){
-            gameDir = launcherSetting.gameFileDirectory;
+    public static GameLaunchSetting getGameLaunchSetting(String str, String str2) {
+        String str3;
+        String str4;
+        String str5 = str2;
+        LauncherSetting launcherSettingFromFile = GsonUtils.getLauncherSettingFromFile(AppManifest.SETTING_DIR + "/launcher_setting.json");
+        PublicGameSetting publicGameSettingFromFile = GsonUtils.getPublicGameSettingFromFile(AppManifest.SETTING_DIR + "/public_game_setting.json");
+        PrivateGameSetting privateGameSettingFromFile = GsonUtils.getPrivateGameSettingFromFile(str);
+        if (privateGameSettingFromFile.gameDirSetting.type == 0) {
+            str3 = launcherSettingFromFile.gameFileDirectory;
+        } else if (privateGameSettingFromFile.gameDirSetting.type == 1) {
+            str3 = (str5 == null || str5.equals("")) ? publicGameSettingFromFile.currentVersion : str5;
+        } else {
+            str3 = privateGameSettingFromFile.gameDirSetting.path;
         }
-        else if (privateGameSetting.gameDirSetting.type == 1){
-            gameDir = (v == null || v.equals("")) ? publicGameSetting.currentVersion : v;
-        }
-        else {
-            gameDir = privateGameSetting.gameDirSetting.path;
-        }
-
-        String javaPath;
-        if (privateGameSetting.javaSetting.autoSelect){
-            String versionJson = FileStringUtils.getStringFromFile(((v == null || v.equals("")) ? publicGameSetting.currentVersion : v) + "/" + (new File(((v == null || v.equals("")) ? publicGameSetting.currentVersion : v))).getName() + ".json");
-            Gson gson = JsonUtils.defaultGsonBuilder()
-                    .registerTypeAdapter(Artifact.class, new Artifact.Serializer())
-                    .registerTypeAdapter(Bits.class, new Bits.Serializer())
-                    .registerTypeAdapter(RuledArgument.class, new RuledArgument.Serializer())
-                    .registerTypeAdapter(Argument.class, new Argument.Deserializer())
-                    .create();
-            Version version = gson.fromJson(versionJson, Version.class);
+        String str6 = str3;
+        if (privateGameSettingFromFile.javaSetting.autoSelect) {
+            Version version = (Version) JsonUtils.defaultGsonBuilder().registerTypeAdapter(Artifact.class, new Artifact.Serializer()).registerTypeAdapter(Bits.class, new Bits.Serializer()).registerTypeAdapter(RuledArgument.class, new RuledArgument.Serializer()).registerTypeAdapter(Argument.class, new Argument.Deserializer()).create().fromJson(FileStringUtils.getStringFromFile(((str5 == null || str5.equals("")) ? publicGameSettingFromFile.currentVersion : str5) + "/" + new File((str5 == null || str5.equals("")) ? publicGameSettingFromFile.currentVersion : str5).getName() + ".json"), Version.class);
             if (version == null) {
-                // Broken or empty version json (interrupted install). Fall back to the runtime the
-                // player picked by hand instead of dereferencing a null Version.
-                javaPath = AppManifest.JAVA_DIR + "/" + privateGameSetting.javaSetting.name;
+                str4 = AppManifest.JAVA_DIR + "/" + privateGameSettingFromFile.javaSetting.name;
+            } else {
+                str4 = AppManifest.JAVA_DIR + "/" + selectJavaRuntime(requiredJava(version));
             }
-            else {
-                // ⚠️ 运行时目录名就是 `JRE21` / `JRE25`，**不要**在这里拼架构后缀。
-                // InstallLauncherFile.prepareModernJava() 会把
-                //   app_runtime/java/JRE21  +  app_runtime/java/21-<arch>
-                // 两层**合并**拷进设备上的 JAVA_DIR/JRE21。
-                // 早期版本运行时装在独立的 `21-arm` / `21-x86_64` 目录，这里曾据此拼后缀；
-                // 改成合并安装后这段拼接就变成了错的 —— 会指向设备上不存在的目录，
-                // 导致 `JRE21/release` 读不到（FileNotFoundException）→ mcArgs 为 null
-                // → Tools.launchMinecraft() 抛 NPE 直接崩掉（1.20.6 起不来的真凶）。
-                String runtimeName = selectJavaRuntime(requiredJava(version));
-                javaPath = AppManifest.JAVA_DIR + "/" + runtimeName;
-            }
+        } else {
+            str4 = AppManifest.JAVA_DIR + "/" + privateGameSettingFromFile.javaSetting.name;
         }
-        else {
-            javaPath = AppManifest.JAVA_DIR + "/" + privateGameSetting.javaSetting.name;
-        }
-
-        // 把"运行时位数"设置交给底层：0=自动跟随设备（64 位设备自动用 64 位），1=强制 64，2=强制 32
+        String str7 = str4;
         try {
-            net.kdt.pojavlaunch.utils.Architecture.setBitMode(privateGameSetting.javaSetting.bitMode);
-            com.qcl.launcher.utils.Architecture.setBitMode(privateGameSetting.javaSetting.bitMode);
-        } catch (Throwable ignored) {
+            Architecture.setBitMode(privateGameSettingFromFile.javaSetting.bitMode);
+            com.qcl.launcher.utils.Architecture.setBitMode(privateGameSettingFromFile.javaSetting.bitMode);
+        } catch (Throwable unused) {
         }
-
-        return new GameLaunchSetting(publicGameSetting.account,
-                publicGameSetting.home,
-                (v == null || v.equals("")) ? publicGameSetting.currentVersion : v,
-                javaPath,
-                privateGameSetting.extraJavaFlags,
-                privateGameSetting.extraMinecraftFlags,
-                gameDir,
-                privateGameSetting.boatLauncherSetting.renderer,
-                privateGameSetting.pojavLauncherSetting.renderer,
-                privateGameSetting.touchInjector,
-                privateGameSetting.scaleFactor,
-                launcherSetting.gameFileDirectory,
-                privateGameSetting.ramSetting.minRam,
-                privateGameSetting.ramSetting.maxRam,
-                privateGameSetting.controlLayout,
-                privateGameSetting.server,
-                launcherSetting.fullscreen,
-                privateGameSetting.log);
+        Account account = publicGameSettingFromFile.account;
+        String str8 = publicGameSettingFromFile.home;
+        if (str5 == null || str5.equals("")) {
+            str5 = publicGameSettingFromFile.currentVersion;
+        }
+        return new GameLaunchSetting(account, str8, str5, str7, privateGameSettingFromFile.extraJavaFlags, privateGameSettingFromFile.extraMinecraftFlags, str6, privateGameSettingFromFile.boatLauncherSetting.renderer, privateGameSettingFromFile.pojavLauncherSetting.renderer, privateGameSettingFromFile.touchInjector, privateGameSettingFromFile.scaleFactor, launcherSettingFromFile.gameFileDirectory, privateGameSettingFromFile.ramSetting.minRam, privateGameSettingFromFile.ramSetting.maxRam, privateGameSettingFromFile.controlLayout, privateGameSettingFromFile.server, launcherSettingFromFile.fullscreen, privateGameSettingFromFile.log);
     }
-
 }

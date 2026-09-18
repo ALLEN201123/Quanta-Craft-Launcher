@@ -1,76 +1,62 @@
 package com.qcl.launcher.launcher.setting.game;
 
-import androidx.annotation.NonNull;
-
 import com.qcl.launcher.launcher.setting.game.child.BoatLauncherSetting;
 import com.qcl.launcher.launcher.setting.game.child.GameDirSetting;
 import com.qcl.launcher.launcher.setting.game.child.JavaSetting;
 import com.qcl.launcher.launcher.setting.game.child.PojavLauncherSetting;
 import com.qcl.launcher.launcher.setting.game.child.RamSetting;
 
-import java.util.ArrayList;
-
-public class PrivateGameSetting implements Cloneable{
-
-    public boolean forceEnable;
+/* loaded from: classes2.dex */
+public class PrivateGameSetting implements Cloneable {
+    public BoatLauncherSetting boatLauncherSetting;
+    public String controlLayout;
     public boolean enable;
-    public boolean log;
-    public boolean notCheckJvm;
-    public boolean notCheckMinecraft;
-    public boolean notCheckForge;
-    public boolean touchInjector;
-    public JavaSetting javaSetting;
     public String extraJavaFlags;
     public String extraMinecraftFlags;
-    public String server;
+    public boolean forceEnable;
     public GameDirSetting gameDirSetting;
-    public BoatLauncherSetting boatLauncherSetting;
+    public JavaSetting javaSetting;
+    public boolean log;
+    public boolean notCheckForge;
+    public boolean notCheckJvm;
+    public boolean notCheckMinecraft;
     public PojavLauncherSetting pojavLauncherSetting;
     public RamSetting ramSetting;
-    public String controlLayout;
     public float scaleFactor;
+    public String server;
+    public boolean touchInjector;
 
-    public PrivateGameSetting (boolean forceEnable,boolean enable,boolean log,boolean notCheckJvm,boolean notCheckMinecraft,boolean notCheckForge,boolean touchInjector,JavaSetting javaSetting,String extraJavaFlags,String extraMinecraftFlags,String server,GameDirSetting gameDirSetting,BoatLauncherSetting boatLauncherSetting,PojavLauncherSetting pojavLauncherSetting,RamSetting ramSetting,String controlLayout,float scaleFactor){
-        this.forceEnable = forceEnable;
-        this.enable = enable;
-        this.log = log;
-        this.notCheckJvm = notCheckJvm;
-        this.notCheckMinecraft = notCheckMinecraft;
-        this.notCheckForge = notCheckForge;
-        this.touchInjector = touchInjector;
+    public PrivateGameSetting(boolean z, boolean z2, boolean z3, boolean z4, boolean z5, boolean z6, boolean z7, JavaSetting javaSetting, String str, String str2, String str3, GameDirSetting gameDirSetting, BoatLauncherSetting boatLauncherSetting, PojavLauncherSetting pojavLauncherSetting, RamSetting ramSetting, String str4, float f) {
+        this.forceEnable = z;
+        this.enable = z2;
+        this.log = z3;
+        this.notCheckJvm = z4;
+        this.notCheckMinecraft = z5;
+        this.notCheckForge = z6;
+        this.touchInjector = z7;
         this.javaSetting = javaSetting;
-        this.extraJavaFlags = extraJavaFlags;
-        this.extraMinecraftFlags = extraMinecraftFlags;
-        this.server = server;
+        this.extraJavaFlags = str;
+        this.extraMinecraftFlags = str2;
+        this.server = str3;
         this.gameDirSetting = gameDirSetting;
         this.boatLauncherSetting = boatLauncherSetting;
         this.pojavLauncherSetting = pojavLauncherSetting;
         this.ramSetting = ramSetting;
-        this.controlLayout = controlLayout;
-        this.scaleFactor = scaleFactor;
+        this.controlLayout = str4;
+        this.scaleFactor = f;
     }
 
-    public static String getGameDir(String gameFileDir,String currentVersion,GameDirSetting gameDirSetting) {
-        if (gameDirSetting.type == 0) {
-            return gameFileDir;
-        }
-        else if (gameDirSetting.type == 1) {
-            return currentVersion;
-        }
-        else {
-            return gameDirSetting.path;
-        }
+    public static String getGameDir(String str, String str2, GameDirSetting gameDirSetting) {
+        return gameDirSetting.type == 0 ? str : gameDirSetting.type == 1 ? str2 : gameDirSetting.path;
     }
 
-    @NonNull
-    @Override
     public Object clone() throws CloneNotSupportedException {
         PrivateGameSetting privateGameSetting = (PrivateGameSetting) super.clone();
-        privateGameSetting.javaSetting = (JavaSetting) javaSetting.clone();
-        privateGameSetting.gameDirSetting = (GameDirSetting) gameDirSetting.clone();
-        privateGameSetting.boatLauncherSetting = (BoatLauncherSetting) boatLauncherSetting.clone();
-        privateGameSetting.pojavLauncherSetting = (PojavLauncherSetting) pojavLauncherSetting.clone();
-        privateGameSetting.ramSetting = (RamSetting) ramSetting.clone();
+        privateGameSetting.javaSetting = (JavaSetting) this.javaSetting.clone();
+        privateGameSetting.gameDirSetting = (GameDirSetting) this.gameDirSetting.clone();
+        privateGameSetting.boatLauncherSetting = (BoatLauncherSetting) this.boatLauncherSetting.clone();
+        privateGameSetting.pojavLauncherSetting = (PojavLauncherSetting) this.pojavLauncherSetting.clone();
+        privateGameSetting.ramSetting = (RamSetting) this.ramSetting.clone();
         return privateGameSetting;
     }
 }

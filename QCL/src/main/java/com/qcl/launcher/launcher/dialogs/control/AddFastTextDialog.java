@@ -6,23 +6,23 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
-
-import androidx.annotation.NonNull;
-
-import com.qcl.launcher.R;
 import com.qcl.launcher.launcher.setting.SettingUtils;
-
 import java.util.ArrayList;
 
+import com.qcl.launcher.R;
+/* loaded from: classes2.dex */
 public class AddFastTextDialog extends Dialog implements View.OnClickListener {
-
-    private OnFastTextAddListener onFastTextAddListener;
-
     private EditText editText;
-    private Button positive;
     private Button negative;
+    private OnFastTextAddListener onFastTextAddListener;
+    private Button positive;
 
-    public AddFastTextDialog(@NonNull Context context,OnFastTextAddListener onFastTextAddListener) {
+    /* loaded from: classes2.dex */
+    public interface OnFastTextAddListener {
+        void onFastTextAdd(String str);
+    }
+
+    public AddFastTextDialog(Context context, OnFastTextAddListener onFastTextAddListener) {
         super(context);
         this.onFastTextAddListener = onFastTextAddListener;
         setContentView(R.layout.dialog_add_fast_text);
@@ -31,35 +31,28 @@ public class AddFastTextDialog extends Dialog implements View.OnClickListener {
     }
 
     private void init() {
-        editText = findViewById(R.id.edit_fast_text);
-        positive = findViewById(R.id.add_fast_text);
-        negative = findViewById(R.id.exit);
-
-        positive.setOnClickListener(this);
-        negative.setOnClickListener(this);
+        this.editText = (EditText) findViewById(R.id.edit_fast_text);
+        this.positive = (Button) findViewById(R.id.add_fast_text);
+        this.negative = (Button) findViewById(R.id.exit);
+        this.positive.setOnClickListener(this);
+        this.negative.setOnClickListener(this);
     }
 
-    @Override
+    @Override // android.view.View.OnClickListener
     public void onClick(View view) {
-        if (view == positive) {
-            ArrayList<String> fastTexts = SettingUtils.getFastList();
-            if (editText.getText().toString().equals("")) {
-                Toast.makeText(getContext(),getContext().getString(R.string.dialog_add_fast_text_empty),Toast.LENGTH_SHORT).show();
-            }
-            else if (fastTexts.contains(editText.getText().toString())) {
-                Toast.makeText(getContext(),getContext().getString(R.string.dialog_add_fast_text_exist),Toast.LENGTH_SHORT).show();
-            }
-            else {
-                onFastTextAddListener.onFastTextAdd(editText.getText().toString());
+        if (view == this.positive) {
+            ArrayList<String> fastList = SettingUtils.getFastList();
+            if (this.editText.getText().toString().equals("")) {
+                Toast.makeText(getContext(), getContext().getString(R.string.dialog_add_fast_text_empty), 0).show();
+            } else if (fastList.contains(this.editText.getText().toString())) {
+                Toast.makeText(getContext(), getContext().getString(R.string.dialog_add_fast_text_exist), 0).show();
+            } else {
+                this.onFastTextAddListener.onFastTextAdd(this.editText.getText().toString());
                 dismiss();
             }
         }
-        if (view == negative) {
+        if (view == this.negative) {
             dismiss();
         }
-    }
-
-    public interface OnFastTextAddListener{
-        void onFastTextAdd(String fastText);
     }
 }

@@ -1,114 +1,119 @@
 package com.qcl.launcher.launcher.mod;
 
 import android.os.AsyncTask;
-
 import java.io.File;
 import java.nio.charset.Charset;
+import java.util.Iterator;
 import java.util.List;
 
-/**
- *
- * @author huangyuhui
- */
+/* loaded from: classes2.dex */
 public abstract class Modpack {
-    private String name;
     private String author;
-    private String version;
-    private String gameVersion;
     private String description;
     private transient Charset encoding;
+    private String gameVersion;
     private ModpackManifest manifest;
+    private String name;
+    private String version;
+
+    public abstract AsyncTask getInstallTask(File file, String str);
 
     public Modpack() {
         this("", null, null, null, null, null, null);
     }
 
-    public Modpack(String name, String author, String version, String gameVersion, String description, Charset encoding, ModpackManifest manifest) {
-        this.name = name;
-        this.author = author;
-        this.version = version;
-        this.gameVersion = gameVersion;
-        this.description = description;
-        this.encoding = encoding;
-        this.manifest = manifest;
+    public Modpack(String str, String str2, String str3, String str4, String str5, Charset charset, ModpackManifest modpackManifest) {
+        this.name = str;
+        this.author = str2;
+        this.version = str3;
+        this.gameVersion = str4;
+        this.description = str5;
+        this.encoding = charset;
+        this.manifest = modpackManifest;
     }
 
     public String getName() {
-        return name;
+        return this.name;
     }
 
-    public Modpack setName(String name) {
-        this.name = name;
+    public Modpack setName(String str) {
+        this.name = str;
         return this;
     }
 
     public String getAuthor() {
-        return author;
+        return this.author;
     }
 
-    public Modpack setAuthor(String author) {
-        this.author = author;
+    public Modpack setAuthor(String str) {
+        this.author = str;
         return this;
     }
 
     public String getVersion() {
-        return version;
+        return this.version;
     }
 
-    public Modpack setVersion(String version) {
-        this.version = version;
+    public Modpack setVersion(String str) {
+        this.version = str;
         return this;
     }
 
     public String getGameVersion() {
-        return gameVersion;
+        return this.gameVersion;
     }
 
-    public Modpack setGameVersion(String gameVersion) {
-        this.gameVersion = gameVersion;
+    public Modpack setGameVersion(String str) {
+        this.gameVersion = str;
         return this;
     }
 
     public String getDescription() {
-        return description;
+        return this.description;
     }
 
-    public Modpack setDescription(String description) {
-        this.description = description;
+    public Modpack setDescription(String str) {
+        this.description = str;
         return this;
     }
 
     public Charset getEncoding() {
-        return encoding;
+        return this.encoding;
     }
 
-    public Modpack setEncoding(Charset encoding) {
-        this.encoding = encoding;
+    public Modpack setEncoding(Charset charset) {
+        this.encoding = charset;
         return this;
     }
 
     public ModpackManifest getManifest() {
-        return manifest;
+        return this.manifest;
     }
 
-    public Modpack setManifest(ModpackManifest manifest) {
-        this.manifest = manifest;
+    public Modpack setManifest(ModpackManifest modpackManifest) {
+        this.manifest = modpackManifest;
         return this;
     }
 
-    public abstract AsyncTask getInstallTask(File zipFile, String name);
-
-    public static boolean acceptFile(String path, List<String> blackList, List<String> whiteList) {
-        if (path.isEmpty())
+    public static boolean acceptFile(String str, List<String> list, List<String> list2) {
+        if (str.isEmpty()) {
             return true;
-        for (String s : blackList)
-            if (path.equals(s))
+        }
+        Iterator<String> it = list.iterator();
+        while (it.hasNext()) {
+            if (str.equals(it.next())) {
                 return false;
-        if (whiteList == null || whiteList.isEmpty())
+            }
+        }
+        if (list2 == null || list2.isEmpty()) {
             return true;
-        for (String s : whiteList)
-            if (path.equals(s))
+        }
+        Iterator<String> it2 = list2.iterator();
+        while (it2.hasNext()) {
+            if (str.equals(it2.next())) {
                 return true;
+            }
+        }
         return false;
     }
 }

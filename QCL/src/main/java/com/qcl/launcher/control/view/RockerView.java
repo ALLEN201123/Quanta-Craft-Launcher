@@ -1,3 +1,18 @@
+/*
+ * Decompiled with CFR 0.152.
+ * 
+ * Could not load the following classes:
+ *  android.annotation.SuppressLint
+ *  android.content.Context
+ *  android.graphics.Canvas
+ *  android.graphics.Color
+ *  android.graphics.Paint
+ *  android.graphics.Paint$Style
+ *  android.graphics.Path
+ *  android.view.MotionEvent
+ *  android.view.View
+ *  android.view.ViewGroup$LayoutParams
+ */
 package com.qcl.launcher.control.view;
 
 import android.annotation.SuppressLint;
@@ -10,16 +25,13 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 
-public class RockerView extends View {
-
+public class RockerView
+extends View {
     private String pointerColor = "#f6f6f6";
     private String pointerColorPress = "#40ffffff";
-
     private int followType = 0;
     private boolean doubleClick = true;
-
     private OnShakeListener onShakeListener;
-
     private State center = State.NORMAL;
     private State up = State.NORMAL;
     private State down = State.NORMAL;
@@ -29,10 +41,8 @@ public class RockerView extends View {
     private State downLeft = State.HIDE;
     private State upRight = State.HIDE;
     private State downRight = State.HIDE;
-
-    private static final double ANGLE_0 = 0;
-    private static final double ANGLE_360 = 360;
-
+    private static final double ANGLE_0 = 0.0;
+    private static final double ANGLE_360 = 360.0;
     private static final double ANGLE_8D_OF_0P = 22.5;
     private static final double ANGLE_8D_OF_1P = 67.5;
     private static final double ANGLE_8D_OF_2P = 112.5;
@@ -41,14 +51,10 @@ public class RockerView extends View {
     private static final double ANGLE_8D_OF_5P = 247.5;
     private static final double ANGLE_8D_OF_6P = 292.5;
     private static final double ANGLE_8D_OF_7P = 337.5;
-
     private Direction tempDirection = Direction.DIRECTION_CENTER;
-
     private boolean touching = false;
-
     private int clickCount = 0;
     private long firstClickTime;
-
     private float initialPositionX;
     private float initialPositionY;
 
@@ -56,17 +62,13 @@ public class RockerView extends View {
         super(context);
     }
 
-    @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        setMeasuredDimension(widthMeasureSpec,heightMeasureSpec);
+        this.setMeasuredDimension(widthMeasureSpec, heightMeasureSpec);
     }
 
-    @SuppressWarnings("IntegerDivisionInFloatingPointContext")
-    @SuppressLint("DrawAllocation")
-    @Override
+    @SuppressLint(value={"DrawAllocation"})
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-
         Path centerPointerPath = new Path();
         Path upPointerPath = new Path();
         Path downPointerPath = new Path();
@@ -76,210 +78,190 @@ public class RockerView extends View {
         Path upRightPointerPath = new Path();
         Path downLeftPointerPath = new Path();
         Path downRightPointerPath = new Path();
-
-        //中
-        centerPointerPath.moveTo((4 * getWidth()) / 10,getHeight() / 2);
-        centerPointerPath.lineTo(getWidth() / 2,(4 * getHeight()) / 10);
-        centerPointerPath.lineTo((6 * getWidth()) / 10,getHeight() / 2);
-        centerPointerPath.lineTo(getWidth() / 2,(6 * getHeight()) / 10);
-        centerPointerPath.lineTo((4 * getWidth()) / 10,getHeight() / 2);
-        //上
-        upPointerPath.moveTo(getWidth() / 2,getHeight() / 10);
-        upPointerPath.lineTo((getWidth() / 2) - (getWidth() / 10),(2 * getHeight()) / 10);
-        upPointerPath.lineTo((getWidth() / 2) + (getWidth() / 10),(2 * getHeight()) / 10);
-        //下
-        downPointerPath.moveTo(getWidth() / 2,(9 * getHeight()) / 10);
-        downPointerPath.lineTo((getWidth() / 2) - (getWidth() / 10),(8 * getHeight()) / 10);
-        downPointerPath.lineTo((getWidth() / 2) + (getWidth() / 10),(8 * getHeight()) / 10);
-        //左
-        leftPointerPath.moveTo(getWidth() / 10,getHeight() / 2);
-        leftPointerPath.lineTo(2 * (getWidth() / 10),(getHeight() / 2) - (getHeight() / 10));
-        leftPointerPath.lineTo(2 * (getWidth() / 10),(getHeight() / 2) + (getHeight() / 10));
-        //右
-        rightPointerPath.moveTo(9 * (getWidth() / 10),getHeight() / 2);
-        rightPointerPath.lineTo(8 * (getWidth() / 10),(getHeight() / 2) - (getHeight() / 10));
-        rightPointerPath.lineTo(8 * (getWidth() / 10),(getHeight() / 2) + (getHeight() / 10));
-        //左上
-        upLeftPointerPath.moveTo(2 * (getWidth() / 10),2 * (getHeight() / 10));
-        upLeftPointerPath.lineTo(3 * (getWidth() / 10),2 * (getHeight() / 10));
-        upLeftPointerPath.lineTo(2 * (getWidth() / 10),3 * (getHeight() / 10));
-        //左下
-        downLeftPointerPath.moveTo(2 * (getWidth() / 10),8 * (getHeight() / 10));
-        downLeftPointerPath.lineTo(3 * (getWidth() / 10),8 * (getHeight() / 10));
-        downLeftPointerPath.lineTo(2 * (getWidth() / 10),7 * (getHeight() / 10));
-        //右上
-        upRightPointerPath.moveTo(8 * (getWidth() / 10),2 * (getHeight() / 10));
-        upRightPointerPath.lineTo(7 * (getWidth() / 10),2 * (getHeight() / 10));
-        upRightPointerPath.lineTo(8 * (getWidth() / 10),3 * (getHeight() / 10));
-        //右下
-        downRightPointerPath.moveTo(8 * (getWidth() / 10),8 * (getHeight() / 10));
-        downRightPointerPath.lineTo(7 * (getWidth() / 10),8 * (getHeight() / 10));
-        downRightPointerPath.lineTo(8 * (getWidth() / 10),7 * (getHeight() / 10));
-
+        centerPointerPath.moveTo((float)(4 * this.getWidth() / 10), (float)(this.getHeight() / 2));
+        centerPointerPath.lineTo((float)(this.getWidth() / 2), (float)(4 * this.getHeight() / 10));
+        centerPointerPath.lineTo((float)(6 * this.getWidth() / 10), (float)(this.getHeight() / 2));
+        centerPointerPath.lineTo((float)(this.getWidth() / 2), (float)(6 * this.getHeight() / 10));
+        centerPointerPath.lineTo((float)(4 * this.getWidth() / 10), (float)(this.getHeight() / 2));
+        upPointerPath.moveTo((float)(this.getWidth() / 2), (float)(this.getHeight() / 10));
+        upPointerPath.lineTo((float)(this.getWidth() / 2 - this.getWidth() / 10), (float)(2 * this.getHeight() / 10));
+        upPointerPath.lineTo((float)(this.getWidth() / 2 + this.getWidth() / 10), (float)(2 * this.getHeight() / 10));
+        downPointerPath.moveTo((float)(this.getWidth() / 2), (float)(9 * this.getHeight() / 10));
+        downPointerPath.lineTo((float)(this.getWidth() / 2 - this.getWidth() / 10), (float)(8 * this.getHeight() / 10));
+        downPointerPath.lineTo((float)(this.getWidth() / 2 + this.getWidth() / 10), (float)(8 * this.getHeight() / 10));
+        leftPointerPath.moveTo((float)(this.getWidth() / 10), (float)(this.getHeight() / 2));
+        leftPointerPath.lineTo((float)(2 * (this.getWidth() / 10)), (float)(this.getHeight() / 2 - this.getHeight() / 10));
+        leftPointerPath.lineTo((float)(2 * (this.getWidth() / 10)), (float)(this.getHeight() / 2 + this.getHeight() / 10));
+        rightPointerPath.moveTo((float)(9 * (this.getWidth() / 10)), (float)(this.getHeight() / 2));
+        rightPointerPath.lineTo((float)(8 * (this.getWidth() / 10)), (float)(this.getHeight() / 2 - this.getHeight() / 10));
+        rightPointerPath.lineTo((float)(8 * (this.getWidth() / 10)), (float)(this.getHeight() / 2 + this.getHeight() / 10));
+        upLeftPointerPath.moveTo((float)(2 * (this.getWidth() / 10)), (float)(2 * (this.getHeight() / 10)));
+        upLeftPointerPath.lineTo((float)(3 * (this.getWidth() / 10)), (float)(2 * (this.getHeight() / 10)));
+        upLeftPointerPath.lineTo((float)(2 * (this.getWidth() / 10)), (float)(3 * (this.getHeight() / 10)));
+        downLeftPointerPath.moveTo((float)(2 * (this.getWidth() / 10)), (float)(8 * (this.getHeight() / 10)));
+        downLeftPointerPath.lineTo((float)(3 * (this.getWidth() / 10)), (float)(8 * (this.getHeight() / 10)));
+        downLeftPointerPath.lineTo((float)(2 * (this.getWidth() / 10)), (float)(7 * (this.getHeight() / 10)));
+        upRightPointerPath.moveTo((float)(8 * (this.getWidth() / 10)), (float)(2 * (this.getHeight() / 10)));
+        upRightPointerPath.lineTo((float)(7 * (this.getWidth() / 10)), (float)(2 * (this.getHeight() / 10)));
+        upRightPointerPath.lineTo((float)(8 * (this.getWidth() / 10)), (float)(3 * (this.getHeight() / 10)));
+        downRightPointerPath.moveTo((float)(8 * (this.getWidth() / 10)), (float)(8 * (this.getHeight() / 10)));
+        downRightPointerPath.lineTo((float)(7 * (this.getWidth() / 10)), (float)(8 * (this.getHeight() / 10)));
+        downRightPointerPath.lineTo((float)(8 * (this.getWidth() / 10)), (float)(7 * (this.getHeight() / 10)));
         Paint pointerPaint = new Paint();
         pointerPaint.setAntiAlias(true);
-        pointerPaint.setColor(Color.parseColor(pointerColor));
+        pointerPaint.setColor(Color.parseColor((String)this.pointerColor));
         pointerPaint.setStyle(Paint.Style.FILL);
-
         Paint pointerPaintPress = new Paint();
         pointerPaintPress.setAntiAlias(true);
-        pointerPaintPress.setColor(Color.parseColor(pointerColorPress));
+        pointerPaintPress.setColor(Color.parseColor((String)this.pointerColorPress));
         pointerPaintPress.setStyle(Paint.Style.FILL);
-
-        if (center == State.NORMAL) {
-            canvas.drawPath(centerPointerPath,pointerPaint);
+        if (this.center == State.NORMAL) {
+            canvas.drawPath(centerPointerPath, pointerPaint);
         }
-        if (up == State.NORMAL) {
-            canvas.drawPath(upPointerPath,pointerPaint);
+        if (this.up == State.NORMAL) {
+            canvas.drawPath(upPointerPath, pointerPaint);
         }
-        if (down == State.NORMAL) {
-            canvas.drawPath(downPointerPath,pointerPaint);
+        if (this.down == State.NORMAL) {
+            canvas.drawPath(downPointerPath, pointerPaint);
         }
-        if (left == State.NORMAL) {
-            canvas.drawPath(leftPointerPath,pointerPaint);
+        if (this.left == State.NORMAL) {
+            canvas.drawPath(leftPointerPath, pointerPaint);
         }
-        if (right == State.NORMAL) {
-            canvas.drawPath(rightPointerPath,pointerPaint);
+        if (this.right == State.NORMAL) {
+            canvas.drawPath(rightPointerPath, pointerPaint);
         }
-        if (upLeft == State.NORMAL) {
-            canvas.drawPath(upLeftPointerPath,pointerPaint);
+        if (this.upLeft == State.NORMAL) {
+            canvas.drawPath(upLeftPointerPath, pointerPaint);
         }
-        if (upRight == State.NORMAL) {
-            canvas.drawPath(upRightPointerPath,pointerPaint);
+        if (this.upRight == State.NORMAL) {
+            canvas.drawPath(upRightPointerPath, pointerPaint);
         }
-        if (downLeft == State.NORMAL) {
-            canvas.drawPath(downLeftPointerPath,pointerPaint);
+        if (this.downLeft == State.NORMAL) {
+            canvas.drawPath(downLeftPointerPath, pointerPaint);
         }
-        if (downRight == State.NORMAL) {
-            canvas.drawPath(downRightPointerPath,pointerPaint);
+        if (this.downRight == State.NORMAL) {
+            canvas.drawPath(downRightPointerPath, pointerPaint);
         }
-        if (center == State.PRESS) {
-            canvas.drawPath(centerPointerPath,pointerPaintPress);
+        if (this.center == State.PRESS) {
+            canvas.drawPath(centerPointerPath, pointerPaintPress);
         }
-        if (up == State.PRESS) {
-            canvas.drawPath(upPointerPath,pointerPaintPress);
+        if (this.up == State.PRESS) {
+            canvas.drawPath(upPointerPath, pointerPaintPress);
         }
-        if (down == State.PRESS) {
-            canvas.drawPath(downPointerPath,pointerPaintPress);
+        if (this.down == State.PRESS) {
+            canvas.drawPath(downPointerPath, pointerPaintPress);
         }
-        if (left == State.PRESS) {
-            canvas.drawPath(leftPointerPath,pointerPaintPress);
+        if (this.left == State.PRESS) {
+            canvas.drawPath(leftPointerPath, pointerPaintPress);
         }
-        if (right == State.PRESS) {
-            canvas.drawPath(rightPointerPath,pointerPaintPress);
+        if (this.right == State.PRESS) {
+            canvas.drawPath(rightPointerPath, pointerPaintPress);
         }
-        if (upLeft == State.PRESS) {
-            canvas.drawPath(upLeftPointerPath,pointerPaintPress);
+        if (this.upLeft == State.PRESS) {
+            canvas.drawPath(upLeftPointerPath, pointerPaintPress);
         }
-        if (upRight == State.PRESS) {
-            canvas.drawPath(upRightPointerPath,pointerPaintPress);
+        if (this.upRight == State.PRESS) {
+            canvas.drawPath(upRightPointerPath, pointerPaintPress);
         }
-        if (downLeft == State.PRESS) {
-            canvas.drawPath(downLeftPointerPath,pointerPaintPress);
+        if (this.downLeft == State.PRESS) {
+            canvas.drawPath(downLeftPointerPath, pointerPaintPress);
         }
-        if (downRight == State.PRESS) {
-            canvas.drawPath(downRightPointerPath,pointerPaintPress);
+        if (this.downRight == State.PRESS) {
+            canvas.drawPath(downRightPointerPath, pointerPaintPress);
         }
-
-        invalidate();
+        this.invalidate();
     }
 
-    @SuppressWarnings("IntegerDivisionInFloatingPointContext")
-    @Override
     public boolean onTouchEvent(MotionEvent event) {
         switch (event.getActionMasked()) {
-            case MotionEvent.ACTION_DOWN:
-                float centerX = getWidth() / 2;
-                float centerY = getHeight() / 2;
-                if (calculateDistance(event.getX(),event.getY(),centerX,centerY) <= getWidth() / 2) {
-                    touching = true;
-                    if (onShakeListener != null) {
-                        onShakeListener.onTouch(this);
-                    }
-                    initialPositionX = getX();
-                    initialPositionY = getY();
-                    if ((followType == 1 && calculateDistance(event.getX(),event.getY(),centerX,centerY) <= getWidth() / 6) || followType == 2) {
-                        setX(initialPositionX + event.getX() - centerX);
-                        setY(initialPositionY + event.getY() - centerY);
-                    }
-                    if (calculateDistance(event.getX(),event.getY(),centerX,centerY) <= getWidth() / 6) {
-                        tempDirection = Direction.DIRECTION_CENTER;
-                        center = State.PRESS;
-                        up = State.NORMAL;
-                        down = State.NORMAL;
-                        left = State.NORMAL;
-                        right = State.NORMAL;
-                        upLeft = State.HIDE;
-                        downLeft = State.HIDE;
-                        upRight = State.HIDE;
-                        downRight = State.HIDE;
-                        if (onShakeListener != null) {
-                            onShakeListener.onShake(this,tempDirection);
-                        }
-                    }
-                    refreshView(event);
-                    if ((calculateDistance(event.getX(),event.getY(),centerX,centerY) <= getWidth() / 6 || followType == 2) && doubleClick) {
-                        clickCount++;
-                        if (clickCount == 1) {
-                            firstClickTime = System.currentTimeMillis();
-                        }
-                        if (clickCount == 2) {
-                            if (System.currentTimeMillis() - firstClickTime <= 500) {
-                                if (onShakeListener != null) {
-                                    onShakeListener.onCenterDoubleClick(this);
-                                }
-                                clickCount = 0;
-                            }
-                            else {
-                                firstClickTime = System.currentTimeMillis();
-                                clickCount = 1;
-                            }
-                        }
+            case 0: {
+                float centerX = this.getWidth() / 2;
+                float centerY = this.getHeight() / 2;
+                if (!(this.calculateDistance(event.getX(), event.getY(), centerX, centerY) <= (double)(this.getWidth() / 2))) break;
+                this.touching = true;
+                if (this.onShakeListener != null) {
+                    this.onShakeListener.onTouch(this);
+                }
+                this.initialPositionX = this.getX();
+                this.initialPositionY = this.getY();
+                if (this.followType == 1 && this.calculateDistance(event.getX(), event.getY(), centerX, centerY) <= (double)(this.getWidth() / 6) || this.followType == 2) {
+                    this.setX(this.initialPositionX + event.getX() - centerX);
+                    this.setY(this.initialPositionY + event.getY() - centerY);
+                }
+                if (this.calculateDistance(event.getX(), event.getY(), centerX, centerY) <= (double)(this.getWidth() / 6)) {
+                    this.tempDirection = Direction.DIRECTION_CENTER;
+                    this.center = State.PRESS;
+                    this.up = State.NORMAL;
+                    this.down = State.NORMAL;
+                    this.left = State.NORMAL;
+                    this.right = State.NORMAL;
+                    this.upLeft = State.HIDE;
+                    this.downLeft = State.HIDE;
+                    this.upRight = State.HIDE;
+                    this.downRight = State.HIDE;
+                    if (this.onShakeListener != null) {
+                        this.onShakeListener.onShake(this, this.tempDirection);
                     }
                 }
-                break;
-            case MotionEvent.ACTION_MOVE:
-                if (touching) {
-                    refreshView(event);
+                this.refreshView(event);
+                if (!(this.calculateDistance(event.getX(), event.getY(), centerX, centerY) <= (double)(this.getWidth() / 6)) && this.followType != 2 || !this.doubleClick) break;
+                ++this.clickCount;
+                if (this.clickCount == 1) {
+                    this.firstClickTime = System.currentTimeMillis();
                 }
-                break;
-            case MotionEvent.ACTION_UP:
-            case MotionEvent.ACTION_CANCEL:
-                if (touching) {
-                    center = State.NORMAL;
-                    up = State.NORMAL;
-                    down = State.NORMAL;
-                    left = State.NORMAL;
-                    right = State.NORMAL;
-                    upLeft = State.HIDE;
-                    downLeft = State.HIDE;
-                    upRight = State.HIDE;
-                    downRight = State.HIDE;
-                    if (tempDirection != Direction.DIRECTION_CENTER) {
-                        tempDirection = Direction.DIRECTION_CENTER;
-                        if (onShakeListener != null) {
-                            onShakeListener.onShake(this,tempDirection);
-                        }
+                if (this.clickCount != 2) break;
+                if (System.currentTimeMillis() - this.firstClickTime <= 500L) {
+                    if (this.onShakeListener != null) {
+                        this.onShakeListener.onCenterDoubleClick(this);
                     }
-                    if (followType != 0) {
-                        setX(initialPositionX);
-                        setY(initialPositionY);
-                    }
-                    if (onShakeListener != null) {
-                        onShakeListener.onFinish(this);
-                    }
-                    touching = false;
+                    this.clickCount = 0;
+                    break;
                 }
+                this.firstClickTime = System.currentTimeMillis();
+                this.clickCount = 1;
                 break;
+            }
+            case 2: {
+                if (!this.touching) break;
+                this.refreshView(event);
+                break;
+            }
+            case 1: 
+            case 3: {
+                if (!this.touching) break;
+                this.center = State.NORMAL;
+                this.up = State.NORMAL;
+                this.down = State.NORMAL;
+                this.left = State.NORMAL;
+                this.right = State.NORMAL;
+                this.upLeft = State.HIDE;
+                this.downLeft = State.HIDE;
+                this.upRight = State.HIDE;
+                this.downRight = State.HIDE;
+                if (this.tempDirection != Direction.DIRECTION_CENTER) {
+                    this.tempDirection = Direction.DIRECTION_CENTER;
+                    if (this.onShakeListener != null) {
+                        this.onShakeListener.onShake(this, this.tempDirection);
+                    }
+                }
+                if (this.followType != 0) {
+                    this.setX(this.initialPositionX);
+                    this.setY(this.initialPositionY);
+                }
+                if (this.onShakeListener != null) {
+                    this.onShakeListener.onFinish(this);
+                }
+                this.touching = false;
+            }
         }
         return true;
     }
 
-    public void setSize(int size){
-        ViewGroup.LayoutParams params = getLayoutParams();
+    public void setSize(int size) {
+        ViewGroup.LayoutParams params = this.getLayoutParams();
         params.width = size;
         params.height = size;
-        setLayoutParams(params);
+        this.setLayoutParams(params);
     }
 
     public void setPointerColor(String pointerColor) {
@@ -302,163 +284,158 @@ public class RockerView extends View {
         this.onShakeListener = onShakeListener;
     }
 
-    @SuppressWarnings("IntegerDivisionInFloatingPointContext")
     private void refreshView(MotionEvent event) {
-        float centerX = getWidth() / 2;
-        float centerY = getHeight() / 2;
-        if (calculateDistance(event.getX(),event.getY(),centerX,centerY) <= getWidth() / 6) {
-            if (tempDirection != Direction.DIRECTION_CENTER) {
-                tempDirection = Direction.DIRECTION_CENTER;
-                center = State.PRESS;
-                up = State.NORMAL;
-                down = State.NORMAL;
-                left = State.NORMAL;
-                right = State.NORMAL;
-                upLeft = State.HIDE;
-                downLeft = State.HIDE;
-                upRight = State.HIDE;
-                downRight = State.HIDE;
-                if (onShakeListener != null) {
-                    onShakeListener.onShake(this,tempDirection);
+        float centerX = this.getWidth() / 2;
+        float centerY = this.getHeight() / 2;
+        if (this.calculateDistance(event.getX(), event.getY(), centerX, centerY) <= (double)(this.getWidth() / 6)) {
+            if (this.tempDirection != Direction.DIRECTION_CENTER) {
+                this.tempDirection = Direction.DIRECTION_CENTER;
+                this.center = State.PRESS;
+                this.up = State.NORMAL;
+                this.down = State.NORMAL;
+                this.left = State.NORMAL;
+                this.right = State.NORMAL;
+                this.upLeft = State.HIDE;
+                this.downLeft = State.HIDE;
+                this.upRight = State.HIDE;
+                this.downRight = State.HIDE;
+                if (this.onShakeListener != null) {
+                    this.onShakeListener.onShake(this, this.tempDirection);
                 }
             }
-        }
-        else {
-            setDirection(event);
+        } else {
+            this.setDirection(event);
         }
     }
 
-    private double calculateDistance (float xPri,float yPri,float xSec,float ySec) {
-        float d = ((xPri - xSec) * (xPri - xSec)) + ((yPri - ySec) * (yPri - ySec));
+    private double calculateDistance(float xPri, float yPri, float xSec, float ySec) {
+        float d = (xPri - xSec) * (xPri - xSec) + (yPri - ySec) * (yPri - ySec);
         return Math.sqrt(d);
     }
 
     private double radian2Angle(double radian) {
-        double tmp = Math.round(radian / Math.PI * 180);
-        return tmp >= 0 ? tmp : 360 + tmp;
+        double tmp = Math.round(radian / Math.PI * 180.0);
+        return tmp >= 0.0 ? tmp : 360.0 + tmp;
     }
 
-    @SuppressWarnings("IntegerDivisionInFloatingPointContext")
     private void setDirection(MotionEvent event) {
-        float centerX = getWidth() / 2;
-        float centerY = getHeight() / 2;
-        float lenX = (float) (event.getX() - centerX);
-        float lenY = (float) (event.getY() - centerY);
-        float lenXY = (float) Math.sqrt((double) (lenX * lenX + lenY * lenY));
-        double radian = Math.acos(lenX / lenXY) * (event.getY() < centerY ? -1 : 1);
-        double angle = radian2Angle(radian);
-        if ((ANGLE_0 <= angle && ANGLE_8D_OF_0P > angle || ANGLE_8D_OF_7P <= angle && ANGLE_360 > angle) && tempDirection != Direction.DIRECTION_RIGHT) {
-            // 右
-            tempDirection = Direction.DIRECTION_RIGHT;
-            center = State.NORMAL;
-            up = State.NORMAL;
-            down = State.NORMAL;
-            left = State.NORMAL;
-            right = State.PRESS;
-            upLeft = State.HIDE;
-            downLeft = State.HIDE;
-            upRight = State.NORMAL;
-            downRight = State.NORMAL;
-        } else if (ANGLE_8D_OF_0P <= angle && ANGLE_8D_OF_1P > angle && tempDirection != Direction.DIRECTION_DOWN_RIGHT) {
-            // 右下
-            tempDirection = Direction.DIRECTION_DOWN_RIGHT;
-            center = State.NORMAL;
-            up = State.NORMAL;
-            down = State.NORMAL;
-            left = State.NORMAL;
-            right = State.NORMAL;
-            downRight = State.PRESS;
-        } else if (ANGLE_8D_OF_1P <= angle && ANGLE_8D_OF_2P > angle && tempDirection != Direction.DIRECTION_DOWN) {
-            // 下
-            tempDirection = Direction.DIRECTION_DOWN;
-            center = State.NORMAL;
-            up = State.NORMAL;
-            down = State.PRESS;
-            left = State.NORMAL;
-            right = State.NORMAL;
-            upLeft = State.HIDE;
-            downLeft = State.NORMAL;
-            upRight = State.HIDE;
-            downRight = State.NORMAL;
-        } else if (ANGLE_8D_OF_2P <= angle && ANGLE_8D_OF_3P > angle && tempDirection != Direction.DIRECTION_DOWN_LEFT) {
-            // 左下
-            tempDirection = Direction.DIRECTION_DOWN_LEFT;
-            center = State.NORMAL;
-            up = State.NORMAL;
-            down = State.NORMAL;
-            left = State.NORMAL;
-            right = State.NORMAL;
-            downLeft = State.PRESS;
-        } else if (ANGLE_8D_OF_3P <= angle && ANGLE_8D_OF_4P > angle && tempDirection != Direction.DIRECTION_LEFT) {
-            // 左
-            tempDirection = Direction.DIRECTION_LEFT;
-            center = State.NORMAL;
-            up = State.NORMAL;
-            down = State.NORMAL;
-            left = State.PRESS;
-            right = State.NORMAL;
-            upLeft = State.NORMAL;
-            downLeft = State.NORMAL;
-            upRight = State.HIDE;
-            downRight = State.HIDE;
-        } else if (ANGLE_8D_OF_4P <= angle && ANGLE_8D_OF_5P > angle && tempDirection != Direction.DIRECTION_UP_LEFT) {
-            // 左上
-            tempDirection = Direction.DIRECTION_UP_LEFT;
-            center = State.NORMAL;
-            up = State.NORMAL;
-            down = State.NORMAL;
-            left = State.NORMAL;
-            right = State.NORMAL;
-            upLeft = State.PRESS;
-        } else if (ANGLE_8D_OF_5P <= angle && ANGLE_8D_OF_6P > angle && tempDirection != Direction.DIRECTION_UP) {
-            // 上
-            tempDirection = Direction.DIRECTION_UP;
-            center = State.NORMAL;
-            up = State.PRESS;
-            down = State.NORMAL;
-            left = State.NORMAL;
-            right = State.NORMAL;
-            upLeft = State.NORMAL;
-            downLeft = State.HIDE;
-            upRight = State.NORMAL;
-            downRight = State.HIDE;
-        } else if (ANGLE_8D_OF_6P <= angle && ANGLE_8D_OF_7P > angle && tempDirection != Direction.DIRECTION_UP_RIGHT) {
-            // 右上
-            tempDirection = Direction.DIRECTION_UP_RIGHT;
-            center = State.NORMAL;
-            up = State.NORMAL;
-            down = State.NORMAL;
-            left = State.NORMAL;
-            right = State.NORMAL;
-            upRight = State.PRESS;
+        float lenY;
+        float lenXY;
+        float centerX = this.getWidth() / 2;
+        float centerY = this.getHeight() / 2;
+        float lenX = event.getX() - centerX;
+        double radian = Math.acos(lenX / (lenXY = (float)Math.sqrt(lenX * lenX + (lenY = event.getY() - centerY) * lenY))) * (double)(event.getY() < centerY ? -1 : 1);
+        double angle = this.radian2Angle(radian);
+        if ((0.0 <= angle && 22.5 > angle || 337.5 <= angle && 360.0 > angle) && this.tempDirection != Direction.DIRECTION_RIGHT) {
+            this.tempDirection = Direction.DIRECTION_RIGHT;
+            this.center = State.NORMAL;
+            this.up = State.NORMAL;
+            this.down = State.NORMAL;
+            this.left = State.NORMAL;
+            this.right = State.PRESS;
+            this.upLeft = State.HIDE;
+            this.downLeft = State.HIDE;
+            this.upRight = State.NORMAL;
+            this.downRight = State.NORMAL;
+        } else if (22.5 <= angle && 67.5 > angle && this.tempDirection != Direction.DIRECTION_DOWN_RIGHT) {
+            this.tempDirection = Direction.DIRECTION_DOWN_RIGHT;
+            this.center = State.NORMAL;
+            this.up = State.NORMAL;
+            this.down = State.NORMAL;
+            this.left = State.NORMAL;
+            this.right = State.NORMAL;
+            this.downRight = State.PRESS;
+        } else if (67.5 <= angle && 112.5 > angle && this.tempDirection != Direction.DIRECTION_DOWN) {
+            this.tempDirection = Direction.DIRECTION_DOWN;
+            this.center = State.NORMAL;
+            this.up = State.NORMAL;
+            this.down = State.PRESS;
+            this.left = State.NORMAL;
+            this.right = State.NORMAL;
+            this.upLeft = State.HIDE;
+            this.downLeft = State.NORMAL;
+            this.upRight = State.HIDE;
+            this.downRight = State.NORMAL;
+        } else if (112.5 <= angle && 157.5 > angle && this.tempDirection != Direction.DIRECTION_DOWN_LEFT) {
+            this.tempDirection = Direction.DIRECTION_DOWN_LEFT;
+            this.center = State.NORMAL;
+            this.up = State.NORMAL;
+            this.down = State.NORMAL;
+            this.left = State.NORMAL;
+            this.right = State.NORMAL;
+            this.downLeft = State.PRESS;
+        } else if (157.5 <= angle && 202.5 > angle && this.tempDirection != Direction.DIRECTION_LEFT) {
+            this.tempDirection = Direction.DIRECTION_LEFT;
+            this.center = State.NORMAL;
+            this.up = State.NORMAL;
+            this.down = State.NORMAL;
+            this.left = State.PRESS;
+            this.right = State.NORMAL;
+            this.upLeft = State.NORMAL;
+            this.downLeft = State.NORMAL;
+            this.upRight = State.HIDE;
+            this.downRight = State.HIDE;
+        } else if (202.5 <= angle && 247.5 > angle && this.tempDirection != Direction.DIRECTION_UP_LEFT) {
+            this.tempDirection = Direction.DIRECTION_UP_LEFT;
+            this.center = State.NORMAL;
+            this.up = State.NORMAL;
+            this.down = State.NORMAL;
+            this.left = State.NORMAL;
+            this.right = State.NORMAL;
+            this.upLeft = State.PRESS;
+        } else if (247.5 <= angle && 292.5 > angle && this.tempDirection != Direction.DIRECTION_UP) {
+            this.tempDirection = Direction.DIRECTION_UP;
+            this.center = State.NORMAL;
+            this.up = State.PRESS;
+            this.down = State.NORMAL;
+            this.left = State.NORMAL;
+            this.right = State.NORMAL;
+            this.upLeft = State.NORMAL;
+            this.downLeft = State.HIDE;
+            this.upRight = State.NORMAL;
+            this.downRight = State.HIDE;
+        } else if (292.5 <= angle && 337.5 > angle && this.tempDirection != Direction.DIRECTION_UP_RIGHT) {
+            this.tempDirection = Direction.DIRECTION_UP_RIGHT;
+            this.center = State.NORMAL;
+            this.up = State.NORMAL;
+            this.down = State.NORMAL;
+            this.left = State.NORMAL;
+            this.right = State.NORMAL;
+            this.upRight = State.PRESS;
         }
-        if (onShakeListener != null) {
-            onShakeListener.onShake(this,tempDirection);
+        if (this.onShakeListener != null) {
+            this.onShakeListener.onShake(this, this.tempDirection);
         }
     }
 
-    public enum State {
+    public static enum State {
         NORMAL,
         PRESS,
-        HIDE
+        HIDE;
+
     }
 
-    public enum Direction {
-        DIRECTION_LEFT, // 左
-        DIRECTION_RIGHT, // 右
-        DIRECTION_UP, // 上
-        DIRECTION_DOWN, // 下
-        DIRECTION_UP_LEFT, // 左上
-        DIRECTION_UP_RIGHT, // 右上
-        DIRECTION_DOWN_LEFT, // 左下
-        DIRECTION_DOWN_RIGHT, // 右下
-        DIRECTION_CENTER // 中间
+    public static enum Direction {
+        DIRECTION_LEFT,
+        DIRECTION_RIGHT,
+        DIRECTION_UP,
+        DIRECTION_DOWN,
+        DIRECTION_UP_LEFT,
+        DIRECTION_UP_RIGHT,
+        DIRECTION_DOWN_LEFT,
+        DIRECTION_DOWN_RIGHT,
+        DIRECTION_CENTER;
+
     }
 
-    public interface OnShakeListener{
-        void onTouch(RockerView view);
-        void onShake(RockerView view,Direction direction);
-        void onCenterDoubleClick(RockerView view);
-        void onFinish(RockerView view);
+    public static interface OnShakeListener {
+        public void onTouch(RockerView var1);
+
+        public void onShake(RockerView var1, Direction var2);
+
+        public void onCenterDoubleClick(RockerView var1);
+
+        public void onFinish(RockerView var1);
     }
 }
+

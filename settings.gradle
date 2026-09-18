@@ -13,7 +13,6 @@ dependencyResolutionManagement {
 rootProject.name = "Quanta Craft Launcher"
 include ':QCL'
 include ':FilePicker'
-include ':Boat'
 include ':PojavLauncher'
 include ':ZipTools'
 include ':Terracotta'

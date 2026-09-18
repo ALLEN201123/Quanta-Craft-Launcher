@@ -2,7 +2,6 @@ package com.qcl.launcher.utils.file;
 
 import android.app.Activity;
 import android.net.Uri;
-
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -10,177 +9,166 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.security.MessageDigest;
 import java.util.ArrayList;
 
+/* loaded from: classes2.dex */
 public class FileUtils {
-    public static void createDirectory(String path){
-        if (!new File(path).exists()){
-            new File(path).mkdirs();
+    public static void createDirectory(String str) {
+        if (new File(str).exists()) {
+            return;
         }
+        new File(str).mkdirs();
     }
 
-    public static void createFile(String path) throws IOException {
-        if (!new File(path).exists()){
-            new File(path).createNewFile();
+    public static void createFile(String str) throws IOException {
+        if (new File(str).exists()) {
+            return;
         }
+        new File(str).createNewFile();
     }
 
-    public static boolean rename(String path,String newName){
-        File file = new File(path);
-        String newPath = path.substring(0,path.lastIndexOf("/") + 1) + newName;
-        File newFile = new File(newPath);
-        return file.renameTo(newFile);
+    public static boolean rename(String str, String str2) {
+        return new File(str).renameTo(new File(str.substring(0, str.lastIndexOf("/") + 1) + str2));
     }
 
-    public static boolean copyDirectory(String srcPath, String destPath) {
-        File src = new File(srcPath);
-        File dest = new File(destPath);
-        if (!src.isDirectory()) {
+    public static boolean copyDirectory(String str, String str2) {
+        File file = new File(str);
+        File file2 = new File(str2);
+        if (!file.isDirectory()) {
             return false;
         }
-        if (!dest.isDirectory() && !dest.mkdirs()) {
+        if (!file2.isDirectory() && !file2.mkdirs()) {
             return false;
         }
-        File[] files = src.listFiles();
-        for (File file : files) {
-            File destFile = new File(dest, file.getName());
-            if (file.isFile()) {
-                if (!copyFile(file.getAbsolutePath(), destFile.getAbsolutePath())) {
+        for (File file3 : file.listFiles()) {
+            File file4 = new File(file2, file3.getName());
+            if (file3.isFile()) {
+                if (!copyFile(file3.getAbsolutePath(), file4.getAbsolutePath())) {
                     return false;
                 }
-            } else if (file.isDirectory()) {
-                if (!copyDirectory(file.getAbsolutePath(), destFile.getAbsolutePath())) {
-                    return false;
-                }
+            } else if (file3.isDirectory() && !copyDirectory(file3.getAbsolutePath(), file4.getAbsolutePath())) {
+                return false;
             }
         }
         return true;
     }
 
-    public static boolean copyFile(String srcPath,String destPath){
-        File src = new File(srcPath);
-        File dest = new File(destPath);
+    public static boolean copyFile(String str, String str2) {
+        File file = new File(str);
+        File file2 = new File(str2);
         try {
-            InputStream inputStream = new BufferedInputStream(new FileInputStream(src));
-            OutputStream outputStream = new BufferedOutputStream(new FileOutputStream(dest));
-            byte[] flush = new byte[1024];
-            int len = -1;
-            while ((len = inputStream.read(flush)) != -1){
-                outputStream.write(flush,0,len);
+            BufferedInputStream bufferedInputStream = new BufferedInputStream(new FileInputStream(file));
+            BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(new FileOutputStream(file2));
+            byte[] bArr = new byte[1024];
+            while (true) {
+                int read = bufferedInputStream.read(bArr);
+                if (read != -1) {
+                    bufferedOutputStream.write(bArr, 0, read);
+                } else {
+                    bufferedOutputStream.flush();
+                    bufferedOutputStream.close();
+                    bufferedInputStream.close();
+                    return true;
+                }
             }
-            outputStream.flush();
-            outputStream.close();
-            inputStream.close();
-            return true;
-        }
-        catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
             return false;
         }
     }
 
-    public static void copyFileWithUri(Uri uri, String destPath, Activity activity) throws IOException {
-        InputStream inputStream = activity.getContentResolver().openInputStream(uri);
-        OutputStream outputStream = new FileOutputStream(new File(destPath));
-        byte[] flush = new byte[1024];
-        int len = -1;
-        while ((len = inputStream.read(flush)) != -1) {
-            outputStream.write(flush, 0, len);
+    public static void copyFileWithUri(Uri uri, String str, Activity activity) throws IOException {
+        InputStream openInputStream = activity.getContentResolver().openInputStream(uri);
+        FileOutputStream fileOutputStream = new FileOutputStream(new File(str));
+        byte[] bArr = new byte[1024];
+        while (true) {
+            int read = openInputStream.read(bArr);
+            if (read == -1) {
+                return;
+            } else {
+                fileOutputStream.write(bArr, 0, read);
+            }
         }
     }
 
-    public static boolean deleteDirectory(String path){
-        try{
-            File dirFile = new File(path);
-            if (!dirFile.exists()) {
+    public static boolean deleteDirectory(String str) {
+        try {
+            File file = new File(str);
+            if (!file.exists()) {
                 return true;
             }
-            if (dirFile.isFile()) {
-                dirFile.delete();
+            if (file.isFile()) {
+                file.delete();
                 return true;
             }
-            File[] files = dirFile.listFiles();
-            if(files == null){
+            File[] listFiles = file.listFiles();
+            if (listFiles == null) {
                 return false;
             }
-            for (File file : files) {
-                deleteDirectory(file.toString());
+            for (File file2 : listFiles) {
+                deleteDirectory(file2.toString());
             }
-            dirFile.delete();
+            file.delete();
             return true;
-        }
-        catch(Exception e){
+        } catch (Exception unused) {
             return false;
         }
     }
 
-    public static ArrayList<File> getAllFiles(String path) {
-        ArrayList<File> list = new ArrayList<>();
-        File dirFile = new File(path);
-        if (!dirFile.exists()) {
-            return list;
+    public static ArrayList<File> getAllFiles(String str) {
+        ArrayList<File> arrayList = new ArrayList<>();
+        File file = new File(str);
+        if (!file.exists()) {
+            return arrayList;
         }
-        if (dirFile.isFile()) {
-            list.add(dirFile);
-            return list;
+        if (file.isFile()) {
+            arrayList.add(file);
+            return arrayList;
         }
-        File[] files = dirFile.listFiles();
-        if(files == null){
-            return list;
+        File[] listFiles = file.listFiles();
+        if (listFiles == null) {
+            return arrayList;
         }
-        for (File file : files) {
-            list.addAll(getAllFiles(file.toString()));
+        for (File file2 : listFiles) {
+            arrayList.addAll(getAllFiles(file2.toString()));
         }
-        return list;
+        return arrayList;
     }
 
-    public static String getFileSha1(String path) {
+    public static String getFileSha1(String str) {
         try {
-            File file = new File(path);
-            FileInputStream in = new FileInputStream(file);
-            MessageDigest messagedigest;
-            messagedigest = MessageDigest.getInstance("SHA-1");
-            byte[] buffer = new byte[1024];
-            int len = 0;
-            while ((len = in.read(buffer)) >0) {
-                //该对象通过使用 update()方法处理数据
-                messagedigest.update(buffer, 0, len);
+            FileInputStream fileInputStream = new FileInputStream(new File(str));
+            MessageDigest messageDigest = MessageDigest.getInstance("SHA-1");
+            byte[] bArr = new byte[1024];
+            while (true) {
+                int read = fileInputStream.read(bArr);
+                if (read > 0) {
+                    messageDigest.update(bArr, 0, read);
+                } else {
+                    return bytesToHex(messageDigest.digest()).toLowerCase();
+                }
             }
-            //对于给定数量的更新数据，digest 方法只能被调用一次。在调用 digest 之后，MessageDigest 对象被重新设置成其初始状态。
-            return bytesToHex(messagedigest.digest()).toLowerCase();
-        }catch(Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
+            return null;
         }
-        return null;
     }
-    /**
-     * 字节数组转Hex
-     * @param bytes 字节数组
-     * @return Hex
-     */
-    private static String bytesToHex(byte[] bytes) {
-        StringBuffer sb = new StringBuffer();
-        if (bytes != null && bytes.length > 0) {
-            for (int i = 0; i < bytes.length; i++) {
-                String hex = byteToHex(bytes[i]);
-                sb.append(hex);
+
+    private static String bytesToHex(byte[] bArr) {
+        StringBuffer stringBuffer = new StringBuffer();
+        if (bArr != null && bArr.length > 0) {
+            for (byte b : bArr) {
+                stringBuffer.append(byteToHex(b));
             }
         }
-        return sb.toString();
+        return stringBuffer.toString();
     }
-    /**
-     * Byte字节转Hex
-     * @param b 字节
-     * @return Hex
-     */
+
     private static String byteToHex(byte b) {
-        String hexString = Integer.toHexString(b & 0xFF);
-        //由于十六进制是由0~9、A~F来表示1~16，所以如果Byte转换成Hex后如果是<16,就会是一个字符（比如A=10），通常是使用两个字符来表示16进制位的,
-        //假如一个字符的话，遇到字符串11，这到底是1个字节，还是1和1两个字节，容易混淆，如果是补0，那么1和1补充后就是0101，11就表示纯粹的11
+        String hexString = Integer.toHexString(b & 255);
         if (hexString.length() < 2) {
-            hexString = new StringBuilder(String.valueOf(0)).append(hexString).toString();
+            hexString = String.valueOf(0) + hexString;
         }
         return hexString.toUpperCase();
     }

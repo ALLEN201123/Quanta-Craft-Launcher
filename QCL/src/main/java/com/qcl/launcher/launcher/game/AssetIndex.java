@@ -2,19 +2,12 @@ package com.qcl.launcher.launcher.game;
 
 import com.google.gson.annotations.SerializedName;
 import com.qcl.launcher.utils.string.ToStringBuilder;
-
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- *
- * @author huangyuhui
- */
+/* loaded from: classes2.dex */
 public final class AssetIndex {
-
-    @SerializedName("virtual")
-    private final boolean virtual;
 
     @SerializedName("map_to_resources")
     private final boolean mapToResources;
@@ -22,25 +15,28 @@ public final class AssetIndex {
     @SerializedName("objects")
     private final Map<String, AssetObject> objects;
 
+    @SerializedName("virtual")
+    private final boolean virtual;
+
     public AssetIndex() {
         this(false, Collections.emptyMap());
     }
 
-    public AssetIndex(boolean virtual, Map<String, AssetObject> objects) {
-        this.virtual = this.mapToResources = virtual;
-        this.objects = new HashMap<>(objects);
+    public AssetIndex(boolean z, Map<String, AssetObject> map) {
+        this.mapToResources = z;
+        this.virtual = z;
+        this.objects = new HashMap(map);
     }
 
     public boolean isVirtual() {
-        return virtual || mapToResources;
+        return this.virtual || this.mapToResources;
     }
 
     public Map<String, AssetObject> getObjects() {
-        return Collections.unmodifiableMap(objects);
+        return Collections.unmodifiableMap(this.objects);
     }
 
-    @Override
     public String toString() {
-        return new ToStringBuilder(this).append("virtual", virtual).append("objects", objects).toString();
+        return new ToStringBuilder(this).append("virtual", Boolean.valueOf(this.virtual)).append("objects", this.objects).toString();
     }
 }

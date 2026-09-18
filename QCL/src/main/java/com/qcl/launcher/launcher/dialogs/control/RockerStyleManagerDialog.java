@@ -4,27 +4,28 @@ import android.app.Dialog;
 import android.content.Context;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ListAdapter;
 import android.widget.ListView;
-
-import androidx.annotation.NonNull;
-
-import com.qcl.launcher.R;
 import com.qcl.launcher.control.bean.rocker.RockerStyle;
+import com.qcl.launcher.launcher.dialogs.control.CreateRockerStyleDialog;
 import com.qcl.launcher.launcher.list.local.controller.RockerStyleAdapter;
 import com.qcl.launcher.launcher.setting.SettingUtils;
-
 import java.util.ArrayList;
 
+import com.qcl.launcher.R;
+/* loaded from: classes2.dex */
 public class RockerStyleManagerDialog extends Dialog implements View.OnClickListener {
-
-    private OnStyleListChangeListener onStyleListChangeListener;
-
-    private ListView listView;
-
     private Button create;
+    private ListView listView;
+    private OnStyleListChangeListener onStyleListChangeListener;
     private Button positive;
 
-    public RockerStyleManagerDialog(@NonNull Context context, OnStyleListChangeListener onStyleListChangeListener) {
+    /* loaded from: classes2.dex */
+    public interface OnStyleListChangeListener {
+        void onStyleListChange();
+    }
+
+    public RockerStyleManagerDialog(Context context, OnStyleListChangeListener onStyleListChangeListener) {
         super(context);
         this.onStyleListChangeListener = onStyleListChangeListener;
         setContentView(R.layout.dialog_manage_rocker_style);
@@ -32,45 +33,35 @@ public class RockerStyleManagerDialog extends Dialog implements View.OnClickList
         init();
     }
 
-    private void init(){
-        listView = findViewById(R.id.rocker_style_list);
-
-        create = findViewById(R.id.create_rocker_style);
-        positive = findViewById(R.id.exit);
-        create.setOnClickListener(this);
-        positive.setOnClickListener(this);
-
+    private void init() {
+        this.listView = (ListView) findViewById(R.id.rocker_style_list);
+        this.create = (Button) findViewById(R.id.create_rocker_style);
+        this.positive = (Button) findViewById(R.id.exit);
+        this.create.setOnClickListener(this);
+        this.positive.setOnClickListener(this);
         refreshStyleList();
     }
 
-    public void refreshStyleList(){
-        ArrayList<RockerStyle> styles = SettingUtils.getRockerStyleList();
-        RockerStyleAdapter adapter = new RockerStyleAdapter(getContext(),styles,this);
-        listView.setAdapter(adapter);
-        onStyleListChangeListener.onStyleListChange();
+    public void refreshStyleList() {
+        this.listView.setAdapter((ListAdapter) new RockerStyleAdapter(getContext(), SettingUtils.getRockerStyleList(), this));
+        this.onStyleListChangeListener.onStyleListChange();
     }
 
-    @Override
+    @Override // android.view.View.OnClickListener
     public void onClick(View view) {
-        if (view == create){
-            CreateRockerStyleDialog dialog = new CreateRockerStyleDialog(getContext(), SettingUtils.getRockerStyleList(), new CreateRockerStyleDialog.OnRockerStyleCreateListener() {
-                @Override
+        if (view == this.create) {
+            new CreateRockerStyleDialog(getContext(), SettingUtils.getRockerStyleList(), new CreateRockerStyleDialog.OnRockerStyleCreateListener() { // from class: com.qcl.launcher.launcher.dialogs.control.RockerStyleManagerDialog.1
+                @Override // com.qcl.launcher.launcher.dialogs.control.CreateRockerStyleDialog.OnRockerStyleCreateListener
                 public void onRockerStyleCreate(RockerStyle rockerStyle) {
-                    ArrayList<RockerStyle> styles = SettingUtils.getRockerStyleList();
-                    styles.add(rockerStyle);
-                    SettingUtils.saveRockerStyle(styles);
-                    refreshStyleList();
+                    ArrayList<RockerStyle> rockerStyleList = SettingUtils.getRockerStyleList();
+                    rockerStyleList.add(rockerStyle);
+                    SettingUtils.saveRockerStyle(rockerStyleList);
+                    RockerStyleManagerDialog.this.refreshStyleList();
                 }
-            });
-            dialog.show();
+            }).show();
         }
-        if (view == positive){
+        if (view == this.positive) {
             dismiss();
         }
     }
-
-    public interface OnStyleListChangeListener{
-        void onStyleListChange();
-    }
-
 }

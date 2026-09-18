@@ -7,54 +7,50 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
-import androidx.annotation.NonNull;
-
 import com.qcl.launcher.R;
-
+/* loaded from: classes2.dex */
 public class RenameVersionDialog extends Dialog implements View.OnClickListener {
-
+    private Button cancel;
+    private Button confirm;
     private String currentVersion;
+    private EditText editText;
     private OnVersionRenameListener onVersionRenameListener;
 
-    private EditText editText;
-    private Button confirm;
-    private Button cancel;
+    /* loaded from: classes2.dex */
+    public interface OnVersionRenameListener {
+        void onRename(String str);
+    }
 
-    public RenameVersionDialog(@NonNull Context context,String currentVersion,OnVersionRenameListener onVersionRenameListener) {
+    public RenameVersionDialog(Context context, String str, OnVersionRenameListener onVersionRenameListener) {
         super(context);
-        this.currentVersion = currentVersion;
+        this.currentVersion = str;
         this.onVersionRenameListener = onVersionRenameListener;
         setContentView(R.layout.dialog_rename_version);
         setCancelable(false);
         init();
     }
 
-    private void init(){
-        editText = findViewById(R.id.rename_version);
-        confirm = findViewById(R.id.rename);
-        cancel = findViewById(R.id.cancel);
-        editText.setText(currentVersion);
-        confirm.setOnClickListener(this);
-        cancel.setOnClickListener(this);
+    private void init() {
+        this.editText = (EditText) findViewById(R.id.rename_version);
+        this.confirm = (Button) findViewById(R.id.rename);
+        this.cancel = (Button) findViewById(R.id.cancel);
+        this.editText.setText(this.currentVersion);
+        this.confirm.setOnClickListener(this);
+        this.cancel.setOnClickListener(this);
     }
 
-    @Override
-    public void onClick(View v) {
-        if (v == confirm){
-            if (editText.getText().toString().equals("") || editText.getText().toString().contains("/")) {
-                Toast.makeText(getContext(), getContext().getString(R.string.dialog_rename_version_alert), Toast.LENGTH_SHORT).show();
-            }
-            else {
-                onVersionRenameListener.onRename(editText.getText().toString());
-                this.dismiss();
+    @Override // android.view.View.OnClickListener
+    public void onClick(View view) {
+        if (view == this.confirm) {
+            if (this.editText.getText().toString().equals("") || this.editText.getText().toString().contains("/")) {
+                Toast.makeText(getContext(), getContext().getString(R.string.dialog_rename_version_alert), 0).show();
+            } else {
+                this.onVersionRenameListener.onRename(this.editText.getText().toString());
+                dismiss();
             }
         }
-        if (v == cancel){
-            this.dismiss();
+        if (view == this.cancel) {
+            dismiss();
         }
-    }
-
-    public interface OnVersionRenameListener{
-        void onRename(String name);
     }
 }

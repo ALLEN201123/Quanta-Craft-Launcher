@@ -1,9 +1,6 @@
 package com.qcl.launcher.event;
 
-/**
- *
- * @author huangyuhui
- */
+/* loaded from: classes2.dex */
 public enum EventPriority {
     HIGHEST,
     HIGH,

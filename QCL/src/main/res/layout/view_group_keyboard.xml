@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:hmclpe="http://schemas.android.com/apk/res-auto"
+    xmlns:qcl="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/keyboard"
     android:layout_width="600dp"
@@ -25,7 +25,7 @@
             android:padding="0dp"
             android:gravity="center"
             android:textAllCaps="false"
-            hmclpe:keyCode="256"/>
+            qcl:keyCode="256"/>
 
         <View
             android:layout_width="0dp"
@@ -44,7 +44,7 @@
             android:padding="0dp"
             android:gravity="center"
             android:textAllCaps="false"
-            hmclpe:keyCode="290"/>
+            qcl:keyCode="290"/>
 
         <com.qcl.launcher.control.view.KeyCodeView
             android:background="@drawable/launcher_button_normal"
@@ -58,7 +58,7 @@
             android:padding="0dp"
             android:gravity="center"
             android:textAllCaps="false"
-            hmclpe:keyCode="291"/>
+            qcl:keyCode="291"/>
 
         <com.qcl.launcher.control.view.KeyCodeView
             android:background="@drawable/launcher_button_normal"
@@ -72,7 +72,7 @@
             android:padding="0dp"
             android:gravity="center"
             android:textAllCaps="false"
-            hmclpe:keyCode="292"/>
+            qcl:keyCode="292"/>
 
         <com.qcl.launcher.control.view.KeyCodeView
             android:background="@drawable/launcher_button_normal"
@@ -86,7 +86,7 @@
             android:padding="0dp"
             android:gravity="center"
             android:textAllCaps="false"
-            hmclpe:keyCode="293"/>
+            qcl:keyCode="293"/>
 
         <View
             android:layout_width="0dp"
@@ -105,7 +105,7 @@
             android:padding="0dp"
             android:gravity="center"
             android:textAllCaps="false"
-            hmclpe:keyCode="294"/>
+            qcl:keyCode="294"/>
 
         <com.qcl.launcher.control.view.KeyCodeView
             android:background="@drawable/launcher_button_normal"
@@ -119,7 +119,7 @@
             android:padding="0dp"
             android:gravity="center"
             android:textAllCaps="false"
-            hmclpe:keyCode="295"/>
+            qcl:keyCode="295"/>
 
         <com.qcl.launcher.control.view.KeyCodeView
             android:background="@drawable/launcher_button_normal"
@@ -133,7 +133,7 @@
             android:padding="0dp"
             android:gravity="center"
             android:textAllCaps="false"
-            hmclpe:keyCode="296"/>
+            qcl:keyCode="296"/>
 
         <com.qcl.launcher.control.view.KeyCodeView
             android:background="@drawable/launcher_button_normal"
@@ -147,7 +147,7 @@
             android:padding="0dp"
             android:gravity="center"
             android:textAllCaps="false"
-            hmclpe:keyCode="297"/>
+            qcl:keyCode="297"/>
 
         <View
             android:layout_width="0dp"
@@ -166,7 +166,7 @@
             android:padding="0dp"
             android:gravity="center"
             android:textAllCaps="false"
-            hmclpe:keyCode="298"/>
+            qcl:keyCode="298"/>
 
         <com.qcl.launcher.control.view.KeyCodeView
             android:background="@drawable/launcher_button_normal"
@@ -180,7 +180,7 @@
             android:padding="0dp"
             android:gravity="center"
             android:textAllCaps="false"
-            hmclpe:keyCode="299"/>
+            qcl:keyCode="299"/>
 
         <com.qcl.launcher.control.view.KeyCodeView
             android:background="@drawable/launcher_button_normal"
@@ -194,7 +194,7 @@
             android:padding="0dp"
             android:gravity="center"
             android:textAllCaps="false"
-            hmclpe:keyCode="300"/>
+            qcl:keyCode="300"/>
 
         <com.qcl.launcher.control.view.KeyCodeView
             android:background="@drawable/launcher_button_normal"
@@ -208,7 +208,7 @@
             android:padding="0dp"
             android:gravity="center"
             android:textAllCaps="false"
-            hmclpe:keyCode="301"/>
+            qcl:keyCode="301"/>
 
         <View
             android:layout_width="0dp"
@@ -227,7 +227,7 @@
             android:padding="0dp"
             android:gravity="center"
             android:textAllCaps="false"
-            hmclpe:keyCode="283"/>
+            qcl:keyCode="283"/>
 
         <com.qcl.launcher.control.view.KeyCodeView
             android:background="@drawable/launcher_button_normal"
@@ -241,7 +241,7 @@
             android:padding="0dp"
             android:gravity="center"
             android:textAllCaps="false"
-            hmclpe:keyCode="281"/>
+            qcl:keyCode="281"/>
 
         <com.qcl.launcher.control.view.KeyCodeView
             android:background="@drawable/launcher_button_normal"
@@ -255,7 +255,7 @@
             android:padding="0dp"
             android:gravity="center"
             android:textAllCaps="false"
-            hmclpe:keyCode="284"/>
+            qcl:keyCode="284"/>
 
         <View
             android:layout_width="0dp"
@@ -292,7 +292,7 @@
             android:padding="0dp"
             android:gravity="center"
             android:textAllCaps="false"
-            hmclpe:keyCode="96"/>
+            qcl:keyCode="96"/>
 
         <com.qcl.launcher.control.view.KeyCodeView
             android:background="@drawable/launcher_button_normal"
@@ -306,7 +306,7 @@
             android:padding="0dp"
             android:gravity="center"
             android:textAllCaps="false"
-            hmclpe:keyCode="49"/>
+            qcl:keyCode="49"/>
 
         <com.qcl.launcher.control.view.KeyCodeView
             android:background="@drawable/launcher_button_normal"
@@ -320,7 +320,7 @@
             android:padding="0dp"
             android:gravity="center"
             android:textAllCaps="false"
-            hmclpe:keyCode="50"/>
+            qcl:keyCode="50"/>
 
         <com.qcl.launcher.control.view.KeyCodeView
             android:background="@drawable/launcher_button_normal"
@@ -334,7 +334,7 @@
             android:padding="0dp"
             android:gravity="center"
             android:textAllCaps="false"
-            hmclpe:keyCode="51"/>
+            qcl:keyCode="51"/>
 
         <com.qcl.launcher.control.view.KeyCodeView
             android:background="@drawable/launcher_button_normal"
@@ -348,7 +348,7 @@
             android:padding="0dp"
             android:gravity="center"
             android:textAllCaps="false"
-            hmclpe:keyCode="52"/>
+            qcl:keyCode="52"/>
 
         <com.qcl.launcher.control.view.KeyCodeView
             android:background="@drawable/launcher_button_normal"
@@ -362,7 +362,7 @@
             android:padding="0dp"
             android:gravity="center"
             android:textAllCaps="false"
-            hmclpe:keyCode="53"/>
+            qcl:keyCode="53"/>
 
         <com.qcl.launcher.control.view.KeyCodeView
             android:background="@drawable/launcher_button_normal"
@@ -376,7 +376,7 @@
             android:padding="0dp"
             android:gravity="center"
             android:textAllCaps="false"
-            hmclpe:keyCode="54"/>
+            qcl:keyCode="54"/>
 
         <com.qcl.launcher.control.view.KeyCodeView
             android:background="@drawable/launcher_button_normal"
@@ -390,7 +390,7 @@
             android:padding="0dp"
             android:gravity="center"
             android:textAllCaps="false"
-            hmclpe:keyCode="55"/>
+            qcl:keyCode="55"/>
 
         <com.qcl.launcher.control.view.KeyCodeView
             android:background="@drawable/launcher_button_normal"
@@ -404,7 +404,7 @@
             android:padding="0dp"
             android:gravity="center"
             android:textAllCaps="false"
-            hmclpe:keyCode="56"/>
+            qcl:keyCode="56"/>
 
         <com.qcl.launcher.control.view.KeyCodeView
             android:background="@drawable/launcher_button_normal"
@@ -418,7 +418,7 @@
             android:padding="0dp"
             android:gravity="center"
             android:textAllCaps="false"
-            hmclpe:keyCode="57"/>
+            qcl:keyCode="57"/>
 
         <com.qcl.launcher.control.view.KeyCodeView
             android:background="@drawable/launcher_button_normal"
@@ -432,7 +432,7 @@
             android:padding="0dp"
             android:gravity="center"
             android:textAllCaps="false"
-            hmclpe:keyCode="48"/>
+            qcl:keyCode="48"/>
 
         <com.qcl.launcher.control.view.KeyCodeView
             android:background="@drawable/launcher_button_normal"
@@ -446,7 +446,7 @@
             android:padding="0dp"
             android:gravity="center"
             android:textAllCaps="false"
-            hmclpe:keyCode="45"/>
+            qcl:keyCode="45"/>
 
         <com.qcl.launcher.control.view.KeyCodeView
             android:background="@drawable/launcher_button_normal"
@@ -460,7 +460,7 @@
             android:padding="0dp"
             android:gravity="center"
             android:textAllCaps="false"
-            hmclpe:keyCode="61"/>
+            qcl:keyCode="61"/>
 
         <com.qcl.launcher.control.view.KeyCodeView
             android:background="@drawable/launcher_button_normal"
@@ -474,7 +474,7 @@
             android:padding="0dp"
             android:gravity="center"
             android:textAllCaps="false"
-            hmclpe:keyCode="259"/>
+            qcl:keyCode="259"/>
 
         <View
             android:layout_width="0dp"
@@ -493,7 +493,7 @@
             android:padding="0dp"
             android:gravity="center"
             android:textAllCaps="false"
-            hmclpe:keyCode="260"/>
+            qcl:keyCode="260"/>
 
         <com.qcl.launcher.control.view.KeyCodeView
             android:background="@drawable/launcher_button_normal"
@@ -507,7 +507,7 @@
             android:padding="0dp"
             android:gravity="center"
             android:textAllCaps="false"
-            hmclpe:keyCode="268"/>
+            qcl:keyCode="268"/>
 
         <com.qcl.launcher.control.view.KeyCodeView
             android:background="@drawable/launcher_button_normal"
@@ -521,7 +521,7 @@
             android:padding="0dp"
             android:gravity="center"
             android:textAllCaps="false"
-            hmclpe:keyCode="266"/>
+            qcl:keyCode="266"/>
 
         <View
             android:layout_width="0dp"
@@ -540,7 +540,7 @@
             android:padding="0dp"
             android:gravity="center"
             android:textAllCaps="false"
-            hmclpe:keyCode="282"/>
+            qcl:keyCode="282"/>
 
         <com.qcl.launcher.control.view.KeyCodeView
             android:background="@drawable/launcher_button_normal"
@@ -554,7 +554,7 @@
             android:padding="0dp"
             android:gravity="center"
             android:textAllCaps="false"
-            hmclpe:keyCode="331"/>
+            qcl:keyCode="331"/>
 
         <com.qcl.launcher.control.view.KeyCodeView
             android:background="@drawable/launcher_button_normal"
@@ -568,7 +568,7 @@
             android:padding="0dp"
             android:gravity="center"
             android:textAllCaps="false"
-            hmclpe:keyCode="332"/>
+            qcl:keyCode="332"/>
 
         <com.qcl.launcher.control.view.KeyCodeView
             android:background="@drawable/launcher_button_normal"
@@ -582,7 +582,7 @@
             android:padding="0dp"
             android:gravity="center"
             android:textAllCaps="false"
-            hmclpe:keyCode="333"/>
+            qcl:keyCode="333"/>
 
     </LinearLayout>
 
@@ -604,7 +604,7 @@
             android:padding="0dp"
             android:gravity="center"
             android:textAllCaps="false"
-            hmclpe:keyCode="258"/>
+            qcl:keyCode="258"/>
 
         <com.qcl.launcher.control.view.KeyCodeView
             android:background="@drawable/launcher_button_normal"
@@ -618,7 +618,7 @@
             android:padding="0dp"
             android:gravity="center"
             android:textAllCaps="false"
-            hmclpe:keyCode="81"/>
+            qcl:keyCode="81"/>
 
         <com.qcl.launcher.control.view.KeyCodeView
             android:background="@drawable/launcher_button_normal"
@@ -632,7 +632,7 @@
             android:padding="0dp"
             android:gravity="center"
             android:textAllCaps="false"
-            hmclpe:keyCode="87"/>
+            qcl:keyCode="87"/>
 
         <com.qcl.launcher.control.view.KeyCodeView
             android:background="@drawable/launcher_button_normal"
@@ -646,7 +646,7 @@
             android:padding="0dp"
             android:gravity="center"
             android:textAllCaps="false"
-            hmclpe:keyCode="69"/>
+            qcl:keyCode="69"/>
 
         <com.qcl.launcher.control.view.KeyCodeView
             android:background="@drawable/launcher_button_normal"
@@ -660,7 +660,7 @@
             android:padding="0dp"
             android:gravity="center"
             android:textAllCaps="false"
-            hmclpe:keyCode="82"/>
+            qcl:keyCode="82"/>
 
         <com.qcl.launcher.control.view.KeyCodeView
             android:background="@drawable/launcher_button_normal"
@@ -674,7 +674,7 @@
             android:padding="0dp"
             android:gravity="center"
             android:textAllCaps="false"
-            hmclpe:keyCode="84"/>
+            qcl:keyCode="84"/>
 
         <com.qcl.launcher.control.view.KeyCodeView
             android:background="@drawable/launcher_button_normal"
@@ -688,7 +688,7 @@
             android:padding="0dp"
             android:gravity="center"
             android:textAllCaps="false"
-            hmclpe:keyCode="89"/>
+            qcl:keyCode="89"/>
 
         <com.qcl.launcher.control.view.KeyCodeView
             android:background="@drawable/launcher_button_normal"
@@ -702,7 +702,7 @@
             android:padding="0dp"
             android:gravity="center"
             android:textAllCaps="false"
-            hmclpe:keyCode="85"/>
+            qcl:keyCode="85"/>
 
         <com.qcl.launcher.control.view.KeyCodeView
             android:background="@drawable/launcher_button_normal"
@@ -716,7 +716,7 @@
             android:padding="0dp"
             android:gravity="center"
             android:textAllCaps="false"
-            hmclpe:keyCode="73"/>
+            qcl:keyCode="73"/>
 
         <com.qcl.launcher.control.view.KeyCodeView
             android:background="@drawable/launcher_button_normal"
@@ -730,7 +730,7 @@
             android:padding="0dp"
             android:gravity="center"
             android:textAllCaps="false"
-            hmclpe:keyCode="79"/>
+            qcl:keyCode="79"/>
 
         <com.qcl.launcher.control.view.KeyCodeView
             android:background="@drawable/launcher_button_normal"
@@ -744,7 +744,7 @@
             android:padding="0dp"
             android:gravity="center"
             android:textAllCaps="false"
-            hmclpe:keyCode="80"/>
+            qcl:keyCode="80"/>
 
         <com.qcl.launcher.control.view.KeyCodeView
             android:background="@drawable/launcher_button_normal"
@@ -758,7 +758,7 @@
             android:padding="0dp"
             android:gravity="center"
             android:textAllCaps="false"
-            hmclpe:keyCode="91"/>
+            qcl:keyCode="91"/>
 
         <com.qcl.launcher.control.view.KeyCodeView
             android:background="@drawable/launcher_button_normal"
@@ -772,7 +772,7 @@
             android:padding="0dp"
             android:gravity="center"
             android:textAllCaps="false"
-            hmclpe:keyCode="93"/>
+            qcl:keyCode="93"/>
 
         <com.qcl.launcher.control.view.KeyCodeView
             android:background="@drawable/launcher_button_normal"
@@ -786,7 +786,7 @@
             android:padding="0dp"
             android:gravity="center"
             android:textAllCaps="false"
-            hmclpe:keyCode="92"/>
+            qcl:keyCode="92"/>
 
         <View
             android:layout_width="0dp"
@@ -805,7 +805,7 @@
             android:padding="0dp"
             android:gravity="center"
             android:textAllCaps="false"
-            hmclpe:keyCode="261"/>
+            qcl:keyCode="261"/>
 
         <com.qcl.launcher.control.view.KeyCodeView
             android:background="@drawable/launcher_button_normal"
@@ -819,7 +819,7 @@
             android:padding="0dp"
             android:gravity="center"
             android:textAllCaps="false"
-            hmclpe:keyCode="269"/>
+            qcl:keyCode="269"/>
 
         <com.qcl.launcher.control.view.KeyCodeView
             android:background="@drawable/launcher_button_normal"
@@ -833,7 +833,7 @@
             android:padding="0dp"
             android:gravity="center"
             android:textAllCaps="false"
-            hmclpe:keyCode="267"/>
+            qcl:keyCode="267"/>
 
         <View
             android:layout_width="0dp"
@@ -852,7 +852,7 @@
             android:padding="0dp"
             android:gravity="center"
             android:textAllCaps="false"
-            hmclpe:keyCode="327"/>
+            qcl:keyCode="327"/>
 
         <com.qcl.launcher.control.view.KeyCodeView
             android:background="@drawable/launcher_button_normal"
@@ -866,7 +866,7 @@
             android:padding="0dp"
             android:gravity="center"
             android:textAllCaps="false"
-            hmclpe:keyCode="328"/>
+            qcl:keyCode="328"/>
 
         <com.qcl.launcher.control.view.KeyCodeView
             android:background="@drawable/launcher_button_normal"
@@ -880,7 +880,7 @@
             android:padding="0dp"
             android:gravity="center"
             android:textAllCaps="false"
-            hmclpe:keyCode="329"/>
+            qcl:keyCode="329"/>
 
         <com.qcl.launcher.control.view.KeyCodeView
             android:background="@drawable/launcher_button_normal"
@@ -894,7 +894,7 @@
             android:padding="0dp"
             android:gravity="center"
             android:textAllCaps="false"
-            hmclpe:keyCode="334"/>
+            qcl:keyCode="334"/>
 
     </LinearLayout>
 
@@ -917,7 +917,7 @@
             android:padding="0dp"
             android:gravity="center"
             android:textAllCaps="false"
-            hmclpe:keyCode="280"/>
+            qcl:keyCode="280"/>
 
         <com.qcl.launcher.control.view.KeyCodeView
             android:background="@drawable/launcher_button_normal"
@@ -931,7 +931,7 @@
             android:padding="0dp"
             android:gravity="center"
             android:textAllCaps="false"
-            hmclpe:keyCode="65"/>
+            qcl:keyCode="65"/>
 
         <com.qcl.launcher.control.view.KeyCodeView
             android:background="@drawable/launcher_button_normal"
@@ -945,7 +945,7 @@
             android:padding="0dp"
             android:gravity="center"
             android:textAllCaps="false"
-            hmclpe:keyCode="83"/>
+            qcl:keyCode="83"/>
 
         <com.qcl.launcher.control.view.KeyCodeView
             android:background="@drawable/launcher_button_normal"
@@ -959,7 +959,7 @@
             android:padding="0dp"
             android:gravity="center"
             android:textAllCaps="false"
-            hmclpe:keyCode="68"/>
+            qcl:keyCode="68"/>
 
         <com.qcl.launcher.control.view.KeyCodeView
             android:background="@drawable/launcher_button_normal"
@@ -973,7 +973,7 @@
             android:padding="0dp"
             android:gravity="center"
             android:textAllCaps="false"
-            hmclpe:keyCode="70"/>
+            qcl:keyCode="70"/>
 
         <com.qcl.launcher.control.view.KeyCodeView
             android:background="@drawable/launcher_button_normal"
@@ -987,7 +987,7 @@
             android:padding="0dp"
             android:gravity="center"
             android:textAllCaps="false"
-            hmclpe:keyCode="71"/>
+            qcl:keyCode="71"/>
 
         <com.qcl.launcher.control.view.KeyCodeView
             android:background="@drawable/launcher_button_normal"
@@ -1001,7 +1001,7 @@
             android:padding="0dp"
             android:gravity="center"
             android:textAllCaps="false"
-            hmclpe:keyCode="72"/>
+            qcl:keyCode="72"/>
 
         <com.qcl.launcher.control.view.KeyCodeView
             android:background="@drawable/launcher_button_normal"
@@ -1015,7 +1015,7 @@
             android:padding="0dp"
             android:gravity="center"
             android:textAllCaps="false"
-            hmclpe:keyCode="74"/>
+            qcl:keyCode="74"/>
 
         <com.qcl.launcher.control.view.KeyCodeView
             android:background="@drawable/launcher_button_normal"
@@ -1029,7 +1029,7 @@
             android:padding="0dp"
             android:gravity="center"
             android:textAllCaps="false"
-            hmclpe:keyCode="75"/>
+            qcl:keyCode="75"/>
 
         <com.qcl.launcher.control.view.KeyCodeView
             android:background="@drawable/launcher_button_normal"
@@ -1043,7 +1043,7 @@
             android:padding="0dp"
             android:gravity="center"
             android:textAllCaps="false"
-            hmclpe:keyCode="76"/>
+            qcl:keyCode="76"/>
 
         <com.qcl.launcher.control.view.KeyCodeView
             android:background="@drawable/launcher_button_normal"
@@ -1057,7 +1057,7 @@
             android:padding="0dp"
             android:gravity="center"
             android:textAllCaps="false"
-            hmclpe:keyCode="59"/>
+            qcl:keyCode="59"/>
 
         <com.qcl.launcher.control.view.KeyCodeView
             android:background="@drawable/launcher_button_normal"
@@ -1071,7 +1071,7 @@
             android:padding="0dp"
             android:gravity="center"
             android:textAllCaps="false"
-            hmclpe:keyCode="39"/>
+            qcl:keyCode="39"/>
 
         <com.qcl.launcher.control.view.KeyCodeView
             android:background="@drawable/launcher_button_normal"
@@ -1085,7 +1085,7 @@
             android:padding="0dp"
             android:gravity="center"
             android:textAllCaps="false"
-            hmclpe:keyCode="257"/>
+            qcl:keyCode="257"/>
 
         <View
             android:layout_width="0dp"
@@ -1104,7 +1104,7 @@
             android:padding="0dp"
             android:gravity="center"
             android:textAllCaps="false"
-            hmclpe:keyCode="324"/>
+            qcl:keyCode="324"/>
 
         <com.qcl.launcher.control.view.KeyCodeView
             android:background="@drawable/launcher_button_normal"
@@ -1118,7 +1118,7 @@
             android:padding="0dp"
             android:gravity="center"
             android:textAllCaps="false"
-            hmclpe:keyCode="325"/>
+            qcl:keyCode="325"/>
 
         <com.qcl.launcher.control.view.KeyCodeView
             android:background="@drawable/launcher_button_normal"
@@ -1132,7 +1132,7 @@
             android:padding="0dp"
             android:gravity="center"
             android:textAllCaps="false"
-            hmclpe:keyCode="326"/>
+            qcl:keyCode="326"/>
 
         <View
             android:layout_width="0dp"
@@ -1160,7 +1160,7 @@
             android:padding="0dp"
             android:gravity="center"
             android:textAllCaps="false"
-            hmclpe:keyCode="340"/>
+            qcl:keyCode="340"/>
 
         <com.qcl.launcher.control.view.KeyCodeView
             android:background="@drawable/launcher_button_normal"
@@ -1174,7 +1174,7 @@
             android:padding="0dp"
             android:gravity="center"
             android:textAllCaps="false"
-            hmclpe:keyCode="90"/>
+            qcl:keyCode="90"/>
 
         <com.qcl.launcher.control.view.KeyCodeView
             android:background="@drawable/launcher_button_normal"
@@ -1188,7 +1188,7 @@
             android:padding="0dp"
             android:gravity="center"
             android:textAllCaps="false"
-            hmclpe:keyCode="88"/>
+            qcl:keyCode="88"/>
 
         <com.qcl.launcher.control.view.KeyCodeView
             android:background="@drawable/launcher_button_normal"
@@ -1202,7 +1202,7 @@
             android:padding="0dp"
             android:gravity="center"
             android:textAllCaps="false"
-            hmclpe:keyCode="67"/>
+            qcl:keyCode="67"/>
 
         <com.qcl.launcher.control.view.KeyCodeView
             android:background="@drawable/launcher_button_normal"
@@ -1216,7 +1216,7 @@
             android:padding="0dp"
             android:gravity="center"
             android:textAllCaps="false"
-            hmclpe:keyCode="86"/>
+            qcl:keyCode="86"/>
 
         <com.qcl.launcher.control.view.KeyCodeView
             android:background="@drawable/launcher_button_normal"
@@ -1230,7 +1230,7 @@
             android:padding="0dp"
             android:gravity="center"
             android:textAllCaps="false"
-            hmclpe:keyCode="66"/>
+            qcl:keyCode="66"/>
 
         <com.qcl.launcher.control.view.KeyCodeView
             android:background="@drawable/launcher_button_normal"
@@ -1244,7 +1244,7 @@
             android:padding="0dp"
             android:gravity="center"
             android:textAllCaps="false"
-            hmclpe:keyCode="78"/>
+            qcl:keyCode="78"/>
 
         <com.qcl.launcher.control.view.KeyCodeView
             android:background="@drawable/launcher_button_normal"
@@ -1258,7 +1258,7 @@
             android:padding="0dp"
             android:gravity="center"
             android:textAllCaps="false"
-            hmclpe:keyCode="77"/>
+            qcl:keyCode="77"/>
 
         <com.qcl.launcher.control.view.KeyCodeView
             android:background="@drawable/launcher_button_normal"
@@ -1272,7 +1272,7 @@
             android:padding="0dp"
             android:gravity="center"
             android:textAllCaps="false"
-            hmclpe:keyCode="44"/>
+            qcl:keyCode="44"/>
 
         <com.qcl.launcher.control.view.KeyCodeView
             android:background="@drawable/launcher_button_normal"
@@ -1286,7 +1286,7 @@
             android:padding="0dp"
             android:gravity="center"
             android:textAllCaps="false"
-            hmclpe:keyCode="46"/>
+            qcl:keyCode="46"/>
 
         <com.qcl.launcher.control.view.KeyCodeView
             android:background="@drawable/launcher_button_normal"
@@ -1300,7 +1300,7 @@
             android:padding="0dp"
             android:gravity="center"
             android:textAllCaps="false"
-            hmclpe:keyCode="47"/>
+            qcl:keyCode="47"/>
 
         <com.qcl.launcher.control.view.KeyCodeView
             android:id="@+id/virtual_keyboard_button_Rshift"
@@ -1315,7 +1315,7 @@
             android:padding="0dp"
             android:gravity="center"
             android:textAllCaps="false"
-            hmclpe:keyCode="344"/>
+            qcl:keyCode="344"/>
 
         <View
             android:layout_width="0dp"
@@ -1334,7 +1334,7 @@
             android:padding="0dp"
             android:gravity="center"
             android:textAllCaps="false"
-            hmclpe:keyCode="265"/>
+            qcl:keyCode="265"/>
 
         <View
             android:layout_width="0dp"
@@ -1353,7 +1353,7 @@
             android:padding="0dp"
             android:gravity="center"
             android:textAllCaps="false"
-            hmclpe:keyCode="321"/>
+            qcl:keyCode="321"/>
 
         <com.qcl.launcher.control.view.KeyCodeView
             android:background="@drawable/launcher_button_normal"
@@ -1367,7 +1367,7 @@
             android:padding="0dp"
             android:gravity="center"
             android:textAllCaps="false"
-            hmclpe:keyCode="322"/>
+            qcl:keyCode="322"/>
 
         <com.qcl.launcher.control.view.KeyCodeView
             android:background="@drawable/launcher_button_normal"
@@ -1381,7 +1381,7 @@
             android:padding="0dp"
             android:gravity="center"
             android:textAllCaps="false"
-            hmclpe:keyCode="323"/>
+            qcl:keyCode="323"/>
 
         <com.qcl.launcher.control.view.KeyCodeView
             android:background="@drawable/launcher_button_normal"
@@ -1395,7 +1395,7 @@
             android:padding="0dp"
             android:gravity="center"
             android:textAllCaps="false"
-            hmclpe:keyCode="335"/>
+            qcl:keyCode="335"/>
 
     </LinearLayout>
 
@@ -1417,7 +1417,7 @@
             android:padding="0dp"
             android:gravity="center"
             android:textAllCaps="false"
-            hmclpe:keyCode="341"/>
+            qcl:keyCode="341"/>
 
         <com.qcl.launcher.control.view.KeyCodeView
             android:background="@drawable/launcher_button_normal"
@@ -1431,7 +1431,7 @@
             android:padding="0dp"
             android:gravity="center"
             android:textAllCaps="false"
-            hmclpe:keyCode="343"/>
+            qcl:keyCode="343"/>
 
         <com.qcl.launcher.control.view.KeyCodeView
             android:background="@drawable/launcher_button_normal"
@@ -1445,7 +1445,7 @@
             android:padding="0dp"
             android:gravity="center"
             android:textAllCaps="false"
-            hmclpe:keyCode="342"/>
+            qcl:keyCode="342"/>
 
         <com.qcl.launcher.control.view.KeyCodeView
             android:background="@drawable/launcher_button_normal"
@@ -1459,7 +1459,7 @@
             android:padding="0dp"
             android:gravity="center"
             android:textAllCaps="false"
-            hmclpe:keyCode="32"/>
+            qcl:keyCode="32"/>
 
         <com.qcl.launcher.control.view.KeyCodeView
             android:background="@drawable/launcher_button_normal"
@@ -1473,7 +1473,7 @@
             android:padding="0dp"
             android:gravity="center"
             android:textAllCaps="false"
-            hmclpe:keyCode="346"/>
+            qcl:keyCode="346"/>
 
         <com.qcl.launcher.control.view.KeyCodeView
             android:background="@drawable/launcher_button_normal"
@@ -1487,7 +1487,7 @@
             android:padding="0dp"
             android:gravity="center"
             android:textAllCaps="false"
-            hmclpe:keyCode="347"/>
+            qcl:keyCode="347"/>
 
         <com.qcl.launcher.control.view.KeyCodeView
             android:background="@drawable/launcher_button_normal"
@@ -1501,7 +1501,7 @@
             android:padding="0dp"
             android:gravity="center"
             android:textAllCaps="false"
-            hmclpe:keyCode="348"/>
+            qcl:keyCode="348"/>
 
         <com.qcl.launcher.control.view.KeyCodeView
             android:background="@drawable/launcher_button_normal"
@@ -1515,7 +1515,7 @@
             android:padding="0dp"
             android:gravity="center"
             android:textAllCaps="false"
-            hmclpe:keyCode="345"/>
+            qcl:keyCode="345"/>
 
         <View
             android:layout_width="0dp"
@@ -1534,7 +1534,7 @@
             android:padding="0dp"
             android:gravity="center"
             android:textAllCaps="false"
-            hmclpe:keyCode="263"/>
+            qcl:keyCode="263"/>
 
         <com.qcl.launcher.control.view.KeyCodeView
             android:background="@drawable/launcher_button_normal"
@@ -1548,7 +1548,7 @@
             android:padding="0dp"
             android:gravity="center"
             android:textAllCaps="false"
-            hmclpe:keyCode="264"/>
+            qcl:keyCode="264"/>
 
         <com.qcl.launcher.control.view.KeyCodeView
             android:background="@drawable/launcher_button_normal"
@@ -1562,7 +1562,7 @@
             android:padding="0dp"
             android:gravity="center"
             android:textAllCaps="false"
-            hmclpe:keyCode="262"/>
+            qcl:keyCode="262"/>
 
         <View
             android:layout_width="0dp"
@@ -1581,7 +1581,7 @@
             android:padding="0dp"
             android:gravity="center"
             android:textAllCaps="false"
-            hmclpe:keyCode="320"/>
+            qcl:keyCode="320"/>
 
         <com.qcl.launcher.control.view.KeyCodeView
             android:background="@drawable/launcher_button_normal"
@@ -1595,7 +1595,7 @@
             android:padding="0dp"
             android:gravity="center"
             android:textAllCaps="false"
-            hmclpe:keyCode="336"/>
+            qcl:keyCode="336"/>
 
         <View
             android:layout_width="0dp"

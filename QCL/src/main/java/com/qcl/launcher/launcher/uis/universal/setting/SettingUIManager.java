@@ -2,7 +2,6 @@ package com.qcl.launcher.launcher.uis.universal.setting;
 
 import android.content.Context;
 import android.content.Intent;
-
 import com.qcl.launcher.launcher.MainActivity;
 import com.qcl.launcher.launcher.uis.tools.BaseUI;
 import com.qcl.launcher.launcher.uis.universal.setting.right.UniversalGameSettingUI;
@@ -14,68 +13,71 @@ import com.qcl.launcher.launcher.uis.universal.setting.right.launcher.DownloadSe
 import com.qcl.launcher.launcher.uis.universal.setting.right.launcher.ExteriorSettingUI;
 import com.qcl.launcher.launcher.uis.universal.setting.right.launcher.UniversalSettingUI;
 
+/* loaded from: classes2.dex */
 public class SettingUIManager {
-
-    public UniversalGameSettingUI universalGameSettingUI;
+    public AboutUsUI aboutUsUI;
+    public DonateUI donateUI;
     public DownloadSettingUI downloadSettingUI;
     public ExteriorSettingUI exteriorSettingUI;
-    public UniversalSettingUI universalSettingUI;
-    public HelpUI helpUI;
     public FeedbackUI feedbackUI;
-    public DonateUI donateUI;
-    public AboutUsUI aboutUsUI;
-
+    public HelpUI helpUI;
     public BaseUI[] settingUIs;
+    public UniversalGameSettingUI universalGameSettingUI;
+    public UniversalSettingUI universalSettingUI;
 
-    public SettingUIManager (Context context, MainActivity activity){
-        universalGameSettingUI = new UniversalGameSettingUI(context,activity);
-        downloadSettingUI = new DownloadSettingUI(context,activity);
-        exteriorSettingUI = new ExteriorSettingUI(context,activity);
-        universalSettingUI = new UniversalSettingUI(context,activity);
-        helpUI = new HelpUI(context,activity);
-        feedbackUI = new FeedbackUI(context,activity);
-        donateUI = new DonateUI(context,activity);
-        aboutUsUI = new AboutUsUI(context,activity);
-
-        universalGameSettingUI.onCreate();
-        downloadSettingUI.onCreate();
-        exteriorSettingUI.onCreate();
-        universalSettingUI.onCreate();
-        helpUI.onCreate();
-        feedbackUI.onCreate();
-        donateUI.onCreate();
-        aboutUsUI.onCreate();
-
-        settingUIs = new BaseUI[]{universalGameSettingUI,universalSettingUI,downloadSettingUI,exteriorSettingUI,helpUI,feedbackUI,donateUI,aboutUsUI};
+    public SettingUIManager(Context context, MainActivity mainActivity) {
+        this.universalGameSettingUI = new UniversalGameSettingUI(context, mainActivity);
+        this.downloadSettingUI = new DownloadSettingUI(context, mainActivity);
+        this.exteriorSettingUI = new ExteriorSettingUI(context, mainActivity);
+        this.universalSettingUI = new UniversalSettingUI(context, mainActivity);
+        this.helpUI = new HelpUI(context, mainActivity);
+        this.feedbackUI = new FeedbackUI(context, mainActivity);
+        this.donateUI = new DonateUI(context, mainActivity);
+        this.aboutUsUI = new AboutUsUI(context, mainActivity);
+        this.universalGameSettingUI.onCreate();
+        this.downloadSettingUI.onCreate();
+        this.exteriorSettingUI.onCreate();
+        this.universalSettingUI.onCreate();
+        this.helpUI.onCreate();
+        this.feedbackUI.onCreate();
+        this.donateUI.onCreate();
+        this.aboutUsUI.onCreate();
+        UniversalGameSettingUI universalGameSettingUI = this.universalGameSettingUI;
+        this.settingUIs = new BaseUI[]{universalGameSettingUI, this.universalSettingUI, this.downloadSettingUI, this.exteriorSettingUI, this.helpUI, this.feedbackUI, this.donateUI, this.aboutUsUI};
         switchSettingUIs(universalGameSettingUI);
     }
 
-    public void switchSettingUIs(BaseUI ui){
-        for (int i = 0;i < settingUIs.length;i++){
-            if (settingUIs[i] == ui){
-                settingUIs[i].onStart();
+    public void switchSettingUIs(BaseUI baseUI) {
+        int i = 0;
+        while (true) {
+            BaseUI[] baseUIArr = this.settingUIs;
+            if (i >= baseUIArr.length) {
+                return;
             }
-            else {
-                settingUIs[i].onStop();
+            if (baseUIArr[i] == baseUI) {
+                baseUIArr[i].onStart();
+            } else {
+                baseUIArr[i].onStop();
             }
+            i++;
         }
     }
 
-    public void onActivityResult(int requestCode, int resultCode, Intent data){
-        for (BaseUI ui : settingUIs){
-            ui.onActivityResult(requestCode,resultCode,data);
+    public void onActivityResult(int i, int i2, Intent intent) {
+        for (BaseUI baseUI : this.settingUIs) {
+            baseUI.onActivityResult(i, i2, intent);
         }
     }
 
-    public void onPause(){
-        for (BaseUI ui : settingUIs){
-            ui.onPause();
+    public void onPause() {
+        for (BaseUI baseUI : this.settingUIs) {
+            baseUI.onPause();
         }
     }
 
-    public void onResume(){
-        for (BaseUI ui : settingUIs){
-            ui.onResume();
+    public void onResume() {
+        for (BaseUI baseUI : this.settingUIs) {
+            baseUI.onResume();
         }
     }
 }

@@ -1,45 +1,41 @@
 package com.qcl.launcher.launcher.setting.game.child;
 
-import androidx.annotation.NonNull;
-
+/* loaded from: classes2.dex */
 public class BoatLauncherSetting implements Cloneable {
-
     public boolean enable;
-    public String renderer;
     public String java;
+    public String renderer;
 
-    public BoatLauncherSetting(boolean enable,String renderer,String java){
-        this.enable = enable;
-        this.renderer = renderer;
-        this.java = java;
+    public BoatLauncherSetting(boolean z, String str, String str2) {
+        this.enable = z;
+        this.renderer = str;
+        this.java = str2;
     }
 
-    public void setEnable(boolean enable) {
-        this.enable = enable;
+    public void setEnable(boolean z) {
+        this.enable = z;
     }
 
     public boolean isEnable() {
-        return enable;
+        return this.enable;
     }
 
-    public void setRenderer(String renderer) {
-        this.renderer = renderer;
+    public void setRenderer(String str) {
+        this.renderer = str;
     }
 
     public String getRenderer() {
-        return renderer;
+        return this.renderer;
     }
 
-    public void setJava(String java) {
-        this.java = java;
+    public void setJava(String str) {
+        this.java = str;
     }
 
     public String getJava() {
-        return java;
+        return this.java;
     }
 
-    @NonNull
-    @Override
     public Object clone() throws CloneNotSupportedException {
         return super.clone();
     }

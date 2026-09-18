@@ -1,208 +1,190 @@
 package com.qcl.launcher.launcher.game;
 
-import androidx.annotation.Nullable;
-
-import com.google.gson.*;
+import com.google.gson.JsonParseException;
 import com.google.gson.annotations.SerializedName;
 import com.qcl.launcher.utils.gson.tools.TolerableValidationException;
 import com.qcl.launcher.utils.gson.tools.Validation;
 import com.qcl.launcher.utils.platform.Architecture;
 import com.qcl.launcher.utils.platform.OperatingSystem;
 import com.qcl.launcher.utils.string.ToStringBuilder;
-
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Function;
 
-/**
- * A class that describes a Minecraft dependency.
- *
- * @author huangyuhui
- */
+/* loaded from: classes2.dex */
 public class Library implements Comparable<Library>, Validation {
 
     @SerializedName("name")
     private final Artifact artifact;
-    private final String url;
+    private final List<String> checksums;
     private final LibrariesDownloadInfo downloads;
     private final ExtractRules extract;
+
+    @SerializedName(alternate = {"MMC-filename"}, value = "filename")
+    private final String fileName;
+
+    @SerializedName(alternate = {"MMC-hint"}, value = "hint")
+    private final String hint;
     private final Map<OperatingSystem, String> natives;
     private final List<CompatibilityRule> rules;
-    private final List<String> checksums;
-
-    @SerializedName(value = "hint", alternate = {"MMC-hint"})
-    private final String hint;
-
-    @SerializedName(value = "filename", alternate = {"MMC-filename"})
-    private final String fileName;
+    private final String url;
 
     public Library(Artifact artifact) {
         this(artifact, null, null);
     }
 
-    public Library(Artifact artifact, String url) {
-        this(artifact,url,null);
+    public Library(Artifact artifact, String str) {
+        this(artifact, str, null);
     }
 
-    public Library(Artifact artifact, String url, LibrariesDownloadInfo downloads) {
-        this(artifact, url, downloads, null, null, null, null, null, null);
+    public Library(Artifact artifact, String str, LibrariesDownloadInfo librariesDownloadInfo) {
+        this(artifact, str, librariesDownloadInfo, null, null, null, null, null, null);
     }
 
-    public Library(Artifact artifact, String url, LibrariesDownloadInfo downloads, List<String> checksums, ExtractRules extract, Map<OperatingSystem, String> natives, List<CompatibilityRule> rules, String hint, String filename) {
+    public Library(Artifact artifact, String str, LibrariesDownloadInfo librariesDownloadInfo, List<String> list, ExtractRules extractRules, Map<OperatingSystem, String> map, List<CompatibilityRule> list2, String str2, String str3) {
         this.artifact = artifact;
-        this.url = url;
-        this.downloads = downloads;
-        this.extract = extract;
-        this.natives = natives;
-        this.rules = rules;
-        this.checksums = checksums;
-        this.hint = hint;
-        this.fileName = filename;
+        this.url = str;
+        this.downloads = librariesDownloadInfo;
+        this.extract = extractRules;
+        this.natives = map;
+        this.rules = list2;
+        this.checksums = list;
+        this.hint = str2;
+        this.fileName = str3;
     }
 
     public String getGroupId() {
-        return artifact.getGroup();
+        return this.artifact.getGroup();
     }
 
     public String getArtifactId() {
-        return artifact.getName();
+        return this.artifact.getName();
     }
 
     public String getArtifactFileName() {
-        return artifact.getFileName();
+        return this.artifact.getFileName();
     }
 
     public String getName() {
-        return artifact.toString();
+        return this.artifact.toString();
     }
 
     public String getVersion() {
-        return artifact.getVersion();
+        return this.artifact.getVersion();
     }
 
     public String getClassifier() {
-        if (artifact.getClassifier() == null)
-            if (natives != null && natives.containsKey(OperatingSystem.CURRENT_OS))
-                return natives.get(OperatingSystem.CURRENT_OS).replace("${arch}", Architecture.SYSTEM_ARCH.getBits().getBit());
-            else
+        if (this.artifact.getClassifier() == null) {
+            Map<OperatingSystem, String> map = this.natives;
+            if (map == null || !map.containsKey(OperatingSystem.CURRENT_OS)) {
                 return null;
-        else
-            return artifact.getClassifier();
+            }
+            return this.natives.get(OperatingSystem.CURRENT_OS).replace("${arch}", Architecture.SYSTEM_ARCH.getBits().getBit());
+        }
+        return this.artifact.getClassifier();
     }
 
     public ExtractRules getExtract() {
-        return extract == null ? ExtractRules.EMPTY : extract;
+        ExtractRules extractRules = this.extract;
+        return extractRules == null ? ExtractRules.EMPTY : extractRules;
     }
 
     public boolean appliesToCurrentEnvironment() {
-        return CompatibilityRule.appliesToCurrentEnvironment(rules);
+        return CompatibilityRule.appliesToCurrentEnvironment(this.rules);
     }
 
     public boolean isNative() {
-        return natives != null && appliesToCurrentEnvironment();
+        return this.natives != null && appliesToCurrentEnvironment();
     }
 
     protected LibraryDownloadInfo getRawDownloadInfo() {
-        if (downloads != null) {
-            if (isNative())
-                return downloads.getClassifiers().get(getClassifier());
-            else
-                return downloads.getArtifact();
-        } else {
+        if (this.downloads == null) {
             return null;
         }
+        if (isNative()) {
+            return this.downloads.getClassifiers().get(getClassifier());
+        }
+        return this.downloads.getArtifact();
     }
 
     public String getPath() {
-        LibraryDownloadInfo temp = getRawDownloadInfo();
-        if (temp != null && temp.getPath() != null)
-            return temp.getPath();
-        else
-            return artifact.setClassifier(getClassifier()).getPath();
+        LibraryDownloadInfo rawDownloadInfo = getRawDownloadInfo();
+        if (rawDownloadInfo != null && rawDownloadInfo.getPath() != null) {
+            return rawDownloadInfo.getPath();
+        }
+        return this.artifact.setClassifier(getClassifier()).getPath();
     }
 
     public LibraryDownloadInfo getDownload() {
-        LibraryDownloadInfo temp = getRawDownloadInfo();
+        LibraryDownloadInfo rawDownloadInfo = getRawDownloadInfo();
         String path = getPath();
-        return new LibraryDownloadInfo(path,
-                Optional.ofNullable(temp).map(LibraryDownloadInfo::getUrl).orElse(
-                        Optional.ofNullable(url).orElse("https://libraries.minecraft.net").replaceAll("/+$", "") + "/" + path),
-                temp != null ? temp.getSha1() : null,
-                temp != null ? temp.getSize() : 0
-        );
+        return new LibraryDownloadInfo(path, (String) Optional.ofNullable(rawDownloadInfo).map(new Function() { // from class: com.qcl.launcher.launcher.game.Library$$ExternalSyntheticLambda0
+            @Override // java.util.function.Function
+            public final Object apply(Object obj) {
+                return ((LibraryDownloadInfo) obj).getUrl();
+            }
+        }).orElse(((String) Optional.ofNullable(this.url).orElse("https://libraries.minecraft.net")).replaceAll("/+$", "") + "/" + path), rawDownloadInfo != null ? rawDownloadInfo.getSha1() : null, rawDownloadInfo != null ? rawDownloadInfo.getSize() : 0);
     }
 
     public boolean hasDownloadURL() {
-        LibraryDownloadInfo temp = getRawDownloadInfo();
-        if (temp != null) return temp.getUrl() != null;
-        else return url != null;
+        LibraryDownloadInfo rawDownloadInfo = getRawDownloadInfo();
+        return rawDownloadInfo != null ? rawDownloadInfo.getUrl() != null : this.url != null;
     }
 
     public List<String> getChecksums() {
-        return checksums;
+        return this.checksums;
     }
 
     public List<CompatibilityRule> getRules() {
-        return rules;
+        return this.rules;
     }
 
-    /**
-     * Hint for how to locate the library file.
-     * @return null for default, "local" for location in version/&lt;version&gt;/libraries/filename
-     */
-    @Nullable
     public String getHint() {
-        return hint;
+        return this.hint;
     }
 
-    /**
-     * Available when hint is "local"
-     * @return the filename of the local library in version/&lt;version&gt;/libraries/$filename
-     */
-    @Nullable
     public String getFileName() {
-        return fileName;
+        return this.fileName;
     }
 
-    public boolean is(String groupId, String artifactId) {
-        return getGroupId().equals(groupId) && getArtifactId().equals(artifactId);
+    public boolean is(String str, String str2) {
+        return getGroupId().equals(str) && getArtifactId().equals(str2);
     }
 
-    @Override
     public String toString() {
         return new ToStringBuilder(this).append("name", getName()).toString();
     }
 
-    @Override
-    public int compareTo(Library o) {
-        if (getName().compareTo(o.getName()) == 0)
-            return Boolean.compare(isNative(), o.isNative());
-        else
-            return getName().compareTo(o.getName());
+    @Override // java.lang.Comparable
+    public int compareTo(Library library) {
+        if (getName().compareTo(library.getName()) == 0) {
+            return Boolean.compare(isNative(), library.isNative());
+        }
+        return getName().compareTo(library.getName());
     }
 
-    @Override
     public boolean equals(Object obj) {
-        if (!(obj instanceof Library))
+        if (!(obj instanceof Library)) {
             return false;
-
-        Library other = (Library) obj;
-        return getName().equals(other.getName()) && (isNative() == other.isNative());
+        }
+        Library library = (Library) obj;
+        return getName().equals(library.getName()) && isNative() == library.isNative();
     }
 
-    @Override
     public int hashCode() {
-        return Objects.hash(getName(), isNative());
+        return Objects.hash(getName(), Boolean.valueOf(isNative()));
     }
 
-    public Library setClassifier(String classifier) {
-        return new Library(artifact.setClassifier(classifier), url, downloads, checksums, extract, natives, rules, hint, fileName);
+    public Library setClassifier(String str) {
+        return new Library(this.artifact.setClassifier(str), this.url, this.downloads, this.checksums, this.extract, this.natives, this.rules, this.hint, this.fileName);
     }
 
-    @Override
+    @Override // com.qcl.launcher.utils.gson.tools.Validation
     public void validate() throws JsonParseException, TolerableValidationException {
-        if (artifact == null)
+        if (this.artifact == null) {
             throw new JsonParseException("Library.name cannot be null");
+        }
     }
 }

@@ -2,116 +2,112 @@ package com.qcl.launcher.launcher.mod;
 
 import com.google.gson.JsonParseException;
 import com.qcl.launcher.utils.gson.tools.Validation;
-
-import org.jetbrains.annotations.Nullable;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+/* loaded from: classes2.dex */
 public final class ModpackConfiguration<T> implements Validation {
-
     private final T manifest;
-    private final String type;
     private final String name;
-    private final String version;
     private final List<FileInformation> overrides;
+    private final String type;
+    private final String version;
 
     public ModpackConfiguration() {
         this(null, null, "", null, Collections.emptyList());
     }
 
-    public ModpackConfiguration(T manifest, String type, String name, String version, List<FileInformation> overrides) {
-        this.manifest = manifest;
-        this.type = type;
-        this.name = name;
-        this.version = version;
-        this.overrides = new ArrayList<>(overrides);
+    public ModpackConfiguration(T t, String str, String str2, String str3, List<FileInformation> list) {
+        this.manifest = t;
+        this.type = str;
+        this.name = str2;
+        this.version = str3;
+        this.overrides = new ArrayList(list);
     }
 
     public T getManifest() {
-        return manifest;
+        return this.manifest;
     }
 
     public String getType() {
-        return type;
+        return this.type;
     }
 
     public String getName() {
-        return name;
+        return this.name;
     }
 
-    @Nullable
     public String getVersion() {
-        return version;
+        return this.version;
     }
 
-    public ModpackConfiguration<T> setManifest(T manifest) {
-        return new ModpackConfiguration<>(manifest, type, name, version, overrides);
+    public ModpackConfiguration<T> setManifest(T t) {
+        return new ModpackConfiguration<>(t, this.type, this.name, this.version, this.overrides);
     }
 
-    public ModpackConfiguration<T> setOverrides(List<FileInformation> overrides) {
-        return new ModpackConfiguration<>(manifest, type, name, version, overrides);
+    public ModpackConfiguration<T> setOverrides(List<FileInformation> list) {
+        return new ModpackConfiguration<>(this.manifest, this.type, this.name, this.version, list);
     }
 
-    public ModpackConfiguration<T> setVersion(String version) {
-        return new ModpackConfiguration<>(manifest, type, name, version, overrides);
+    public ModpackConfiguration<T> setVersion(String str) {
+        return new ModpackConfiguration<>(this.manifest, this.type, this.name, str, this.overrides);
     }
 
     public List<FileInformation> getOverrides() {
-        return Collections.unmodifiableList(overrides);
+        return Collections.unmodifiableList(this.overrides);
     }
 
-    @Override
+    @Override // com.qcl.launcher.utils.gson.tools.Validation
     public void validate() throws JsonParseException {
-        if (manifest == null)
+        if (this.manifest == null) {
             throw new JsonParseException("MinecraftInstanceConfiguration missing `manifest`");
-        if (type == null)
+        }
+        if (this.type == null) {
             throw new JsonParseException("MinecraftInstanceConfiguration missing `type`");
+        }
     }
 
+    /* loaded from: classes2.dex */
     public static class FileInformation implements Validation {
-        private final String path; // relative
-        private final String hash;
         private final String downloadURL;
+        private final String hash;
+        private final String path;
 
         public FileInformation() {
             this(null, null);
         }
 
-        public FileInformation(String path, String hash) {
-            this(path, hash, null);
+        public FileInformation(String str, String str2) {
+            this(str, str2, null);
         }
 
-        public FileInformation(String path, String hash, String downloadURL) {
-            this.path = path;
-            this.hash = hash;
-            this.downloadURL = downloadURL;
+        public FileInformation(String str, String str2, String str3) {
+            this.path = str;
+            this.hash = str2;
+            this.downloadURL = str3;
         }
 
-        /**
-         * The relative path to Minecraft run directory
-         *
-         * @return the relative path to Minecraft run directory.
-         */
         public String getPath() {
-            return path;
+            return this.path;
         }
 
         public String getDownloadURL() {
-            return downloadURL;
+            return this.downloadURL;
         }
 
         public String getHash() {
-            return hash;
+            return this.hash;
         }
 
-        @Override
+        @Override // com.qcl.launcher.utils.gson.tools.Validation
         public void validate() throws JsonParseException {
-            if (path == null)
+            if (this.path == null) {
                 throw new JsonParseException("FileInformation missing `path`.");
-            if (hash == null)
+            }
+            if (this.hash == null) {
                 throw new JsonParseException("FileInformation missing file hash code.");
+            }
         }
     }
 }

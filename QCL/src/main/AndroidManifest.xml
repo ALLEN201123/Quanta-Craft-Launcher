@@ -37,7 +37,7 @@
         android:name="android.permission.CHANGE_WIFI_STATE" />
 
     <application
-        android:name=".launcher.HMCLPEApplication"
+        android:name=".launcher.QCLApplication"
         android:allowBackup="true"
         android:requestLegacyExternalStorage="true"
         android:preserveLegacyExternalStorage="true"
@@ -54,8 +54,17 @@
         android:isGame="true"
         android:theme="@style/Theme.HelloMinecraftLauncherPocketEdition"
         tools:targetApi="32">
+        <!--
+          ★★★ 2026-09-17：应用启动入口由旧的 SplashActivity 改为「安装或更新运行环境」页。
+          旧的 SplashActivity（三行标题 + 一条进度条、玩家看不见在装什么）已删除，
+          它原本的「申请权限 → 初始化 → 解压基础文件」职责全部并入本页。
+          现在打开 QCL 第一个看到的就是这个列表页：
+            八项运行环境全部就绪 → 自动跳主界面（玩家看不到这一页）；
+            有任何缺项        → 停在这一页，玩家点「安装 / 更新」。
+          与 FCL 一致（FCL 是在主界面里挂 RuntimeFragment 做同样的事）。
+        -->
         <activity
-            android:name=".launcher.SplashActivity"
+            android:name=".launcher.setting.RuntimeInstallActivity"
             android:screenOrientation="sensorLandscape"
             android:exported="true">
             <intent-filter>

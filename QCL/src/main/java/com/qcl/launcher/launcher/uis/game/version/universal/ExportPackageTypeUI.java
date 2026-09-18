@@ -3,60 +3,48 @@ package com.qcl.launcher.launcher.uis.game.version.universal;
 import android.content.Context;
 import android.view.View;
 import android.widget.LinearLayout;
-
-import com.qcl.launcher.R;
 import com.qcl.launcher.launcher.MainActivity;
 import com.qcl.launcher.launcher.uis.tools.BaseUI;
 import com.qcl.launcher.utils.animation.CustomAnimationUtils;
 
+import com.qcl.launcher.R;
+/* loaded from: classes2.dex */
 public class ExportPackageTypeUI extends BaseUI implements View.OnClickListener {
-
     public LinearLayout exportPackageTypeUI;
-
     private LinearLayout hmclPackage;
     private LinearLayout multimc;
     private LinearLayout server;
 
-    public ExportPackageTypeUI(Context context, MainActivity activity) {
-        super(context, activity);
+    @Override // android.view.View.OnClickListener
+    public void onClick(View view) {
     }
 
-    @Override
+    public ExportPackageTypeUI(Context context, MainActivity mainActivity) {
+        super(context, mainActivity);
+    }
+
+    @Override // com.qcl.launcher.launcher.uis.tools.BaseUI, com.qcl.launcher.launcher.uis.tools.UILifecycleCallbacks
     public void onCreate() {
         super.onCreate();
-        exportPackageTypeUI = activity.findViewById(R.id.ui_export_package_type);
-
-        hmclPackage = activity.findViewById(R.id.export_package_hmcl);
-        multimc = activity.findViewById(R.id.export_package_multimc);
-        server = activity.findViewById(R.id.export_package_server);
-        hmclPackage.setOnClickListener(this);
-        multimc.setOnClickListener(this);
-        server.setOnClickListener(this);
+        this.exportPackageTypeUI = (LinearLayout) this.activity.findViewById(R.id.ui_export_package_type);
+        this.hmclPackage = (LinearLayout) this.activity.findViewById(R.id.export_package_hmcl);
+        this.multimc = (LinearLayout) this.activity.findViewById(R.id.export_package_multimc);
+        this.server = (LinearLayout) this.activity.findViewById(R.id.export_package_server);
+        this.hmclPackage.setOnClickListener(this);
+        this.multimc.setOnClickListener(this);
+        this.server.setOnClickListener(this);
     }
 
-    @Override
+    @Override // com.qcl.launcher.launcher.uis.tools.BaseUI, com.qcl.launcher.launcher.uis.tools.UILifecycleCallbacks
     public void onStart() {
         super.onStart();
-        activity.showBarTitle(context.getResources().getString(R.string.export_package_type_ui_title),false,true);
-        CustomAnimationUtils.showViewFromLeft(exportPackageTypeUI,activity,context,true);
+        this.activity.showBarTitle(this.context.getResources().getString(R.string.export_package_type_ui_title), false, true);
+        CustomAnimationUtils.showViewFromLeft(this.exportPackageTypeUI, this.activity, this.context, true);
     }
 
-    @Override
+    @Override // com.qcl.launcher.launcher.uis.tools.BaseUI, com.qcl.launcher.launcher.uis.tools.UILifecycleCallbacks
     public void onStop() {
         super.onStop();
-        CustomAnimationUtils.hideViewToLeft(exportPackageTypeUI,activity,context,true);
-    }
-
-    @Override
-    public void onClick(View view) {
-        if (view == hmclPackage) {
-
-        }
-        if (view == multimc) {
-
-        }
-        if (view == server) {
-
-        }
+        CustomAnimationUtils.hideViewToLeft(this.exportPackageTypeUI, this.activity, this.context, true);
     }
 }

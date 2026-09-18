@@ -1,6 +1,5 @@
 package com.qcl.launcher.launcher.uis.game.download.right.game;
 
-import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
@@ -10,256 +9,241 @@ import android.view.View;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.LinearLayout;
+import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-
-import androidx.annotation.NonNull;
-
 import com.google.gson.Gson;
-import com.qcl.launcher.R;
 import com.qcl.launcher.launcher.MainActivity;
 import com.qcl.launcher.launcher.download.optifine.OptifineVersion;
 import com.qcl.launcher.launcher.list.download.minecraft.DownloadOptifineListAdapter;
 import com.qcl.launcher.launcher.uis.tools.BaseUI;
 import com.qcl.launcher.utils.animation.CustomAnimationUtils;
 import com.qcl.launcher.utils.io.NetworkUtils;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Iterator;
 
+import com.qcl.launcher.R;
+/* loaded from: classes2.dex */
 public class DownloadOptifineUI extends BaseUI implements View.OnClickListener, CompoundButton.OnCheckedChangeListener {
-
-    public LinearLayout downloadOptifineUI;
-
     public static final String OPTIFINE_VERSION_MANIFEST = "https://bmclapi2.bangbang93.com/optifine/versionlist";
-
-    public String version;
-    public boolean install;
-
-    private LinearLayout hintLayout;
-
-    private LinearLayout listLayout;
-
+    private ArrayList<OptifineVersion> allList;
+    private TextView back;
+    private CheckBox checkOld;
     private CheckBox checkRelease;
     private CheckBox checkSnapshot;
-    private CheckBox checkOld;
-
-    private LinearLayout refresh;
-
+    public LinearLayout downloadOptifineUI;
+    private LinearLayout hintLayout;
+    public boolean install;
+    private LinearLayout listLayout;
+    private final Handler loadingHandler;
     private ListView optifineListView;
     private ProgressBar progressBar;
-    private TextView back;
+    private LinearLayout refresh;
+    public String version;
 
-    private ArrayList<OptifineVersion> allList;
-
-    public DownloadOptifineUI(Context context, MainActivity activity) {
-        super(context, activity);
+    public DownloadOptifineUI(Context context, MainActivity mainActivity) {
+        super(context, mainActivity);
+        this.loadingHandler = new Handler() { // from class: com.qcl.launcher.launcher.uis.game.download.right.game.DownloadOptifineUI.1
+            @Override // android.os.Handler
+            public void handleMessage(Message message) {
+                super.handleMessage(message);
+                if (message.what == 0) {
+                    DownloadOptifineUI.this.listLayout.setVisibility(8);
+                    DownloadOptifineUI.this.progressBar.setVisibility(0);
+                    DownloadOptifineUI.this.back.setVisibility(8);
+                }
+                if (message.what == 1) {
+                    DownloadOptifineUI.this.listLayout.setVisibility(0);
+                    DownloadOptifineUI.this.progressBar.setVisibility(8);
+                    DownloadOptifineUI.this.back.setVisibility(8);
+                }
+                if (message.what == 2) {
+                    DownloadOptifineUI.this.listLayout.setVisibility(8);
+                    DownloadOptifineUI.this.progressBar.setVisibility(8);
+                    DownloadOptifineUI.this.back.setVisibility(0);
+                }
+            }
+        };
     }
 
-    @Override
+    @Override // com.qcl.launcher.launcher.uis.tools.BaseUI, com.qcl.launcher.launcher.uis.tools.UILifecycleCallbacks
     public void onCreate() {
         super.onCreate();
-        downloadOptifineUI = activity.findViewById(R.id.ui_install_optifine_list);
-
-        hintLayout = activity.findViewById(R.id.download_forge_hint_layout);
-        hintLayout.setOnClickListener(this);
-
-        listLayout = activity.findViewById(R.id.optifine_list_layout);
-
-        checkRelease = activity.findViewById(R.id.optifine_checkbox_release);
-        checkSnapshot = activity.findViewById(R.id.optifine_checkbox_snapshot);
-        checkOld = activity.findViewById(R.id.optifine_checkbox_old);
-
-        refresh = activity.findViewById(R.id.refresh_optifine_list);
-
-        checkRelease.setChecked(true);
-
-        checkRelease.setOnCheckedChangeListener(this);
-        checkSnapshot.setOnCheckedChangeListener(this);
-        checkOld.setOnCheckedChangeListener(this);
-
-        refresh.setOnClickListener(this);
-
-        optifineListView = activity.findViewById(R.id.optifine_version_list);
-        progressBar = activity.findViewById(R.id.loading_optifine_list_progress);
-        back = activity.findViewById(R.id.back_to_install_ui_optifine);
-
-        back.setOnClickListener(this);
+        this.downloadOptifineUI = (LinearLayout) this.activity.findViewById(R.id.ui_install_optifine_list);
+        LinearLayout linearLayout = (LinearLayout) this.activity.findViewById(R.id.download_forge_hint_layout);
+        this.hintLayout = linearLayout;
+        linearLayout.setOnClickListener(this);
+        this.listLayout = (LinearLayout) this.activity.findViewById(R.id.optifine_list_layout);
+        this.checkRelease = (CheckBox) this.activity.findViewById(R.id.optifine_checkbox_release);
+        this.checkSnapshot = (CheckBox) this.activity.findViewById(R.id.optifine_checkbox_snapshot);
+        this.checkOld = (CheckBox) this.activity.findViewById(R.id.optifine_checkbox_old);
+        this.refresh = (LinearLayout) this.activity.findViewById(R.id.refresh_optifine_list);
+        this.checkRelease.setChecked(true);
+        this.checkRelease.setOnCheckedChangeListener(this);
+        this.checkSnapshot.setOnCheckedChangeListener(this);
+        this.checkOld.setOnCheckedChangeListener(this);
+        this.refresh.setOnClickListener(this);
+        this.optifineListView = (ListView) this.activity.findViewById(R.id.optifine_version_list);
+        this.progressBar = (ProgressBar) this.activity.findViewById(R.id.loading_optifine_list_progress);
+        TextView textView = (TextView) this.activity.findViewById(R.id.back_to_install_ui_optifine);
+        this.back = textView;
+        textView.setOnClickListener(this);
     }
 
-    @Override
+    @Override // com.qcl.launcher.launcher.uis.tools.BaseUI, com.qcl.launcher.launcher.uis.tools.UILifecycleCallbacks
     public void onStart() {
         super.onStart();
-        activity.showBarTitle(context.getResources().getString(R.string.optifine_list_ui_title),false,true);
-        CustomAnimationUtils.showViewFromLeft(downloadOptifineUI,activity,context,true);
+        this.activity.showBarTitle(this.context.getResources().getString(R.string.optifine_list_ui_title), false, true);
+        CustomAnimationUtils.showViewFromLeft(this.downloadOptifineUI, this.activity, this.context, true);
         init();
     }
 
-    @Override
+    @Override // com.qcl.launcher.launcher.uis.tools.BaseUI, com.qcl.launcher.launcher.uis.tools.UILifecycleCallbacks
     public void onStop() {
         super.onStop();
-        CustomAnimationUtils.hideViewToLeft(downloadOptifineUI,activity,context,true);
+        CustomAnimationUtils.hideViewToLeft(this.downloadOptifineUI, this.activity, this.context, true);
     }
 
-    private void init(){
-        ArrayList<OptifineVersion> list = new ArrayList<>();
-        allList = new ArrayList<>();
-        new Thread(() -> {
-            loadingHandler.sendEmptyMessage(0);
-            try {
-                String response = NetworkUtils.doGet(NetworkUtils.toURL(OPTIFINE_VERSION_MANIFEST));
-                Gson gson = new Gson();
-                OptifineVersion[] optifineVersions = gson.fromJson(response,OptifineVersion[].class);
-                for (OptifineVersion versions : optifineVersions){
-                    if (versions.mcVersion.equals(version) && checkRelease.isChecked() && !(versions.patch.startsWith("pre") || versions.patch.startsWith("alpha"))){
-                        list.add(versions);
-                    }
-                    if (versions.mcVersion.equals(version) && checkSnapshot.isChecked() && (versions.patch.startsWith("pre") || versions.patch.startsWith("alpha"))){
-                        list.add(versions);
-                    }
-                    if (versions.mcVersion.equals(version)){
-                        allList.add(versions);
-                    }
-                }
-                list.sort(new OptifineCompareTool());
-                DownloadOptifineListAdapter downloadOptifineListAdapter = new DownloadOptifineListAdapter(context,activity,list,install);
-                activity.runOnUiThread(() -> optifineListView.setAdapter(downloadOptifineListAdapter));
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            if (allList.size() == 0){
-                loadingHandler.sendEmptyMessage(2);
-            }
-            else {
-                loadingHandler.sendEmptyMessage(1);
+    private void init() {
+        final ArrayList arrayList = new ArrayList();
+        this.allList = new ArrayList<>();
+        new Thread(new Runnable() { // from class: com.qcl.launcher.launcher.uis.game.download.right.game.DownloadOptifineUI$$ExternalSyntheticLambda1
+            @Override // java.lang.Runnable
+            public final void run() {
+                DownloadOptifineUI.this.m491x6ae71b15(arrayList);
             }
         }).start();
     }
 
-    private void refresh(){
-        ArrayList<OptifineVersion> list = new ArrayList<>();
-        for (OptifineVersion versions : allList){
-            if (versions.mcVersion.equals(version) && checkRelease.isChecked() && !(versions.patch.startsWith("pre") || versions.patch.startsWith("alpha"))){
-                list.add(versions);
+    /* JADX INFO: Access modifiers changed from: package-private */
+    /* renamed from: lambda$init$1$com-qcl-launcher-launcher-uis-game-download-right-game-DownloadOptifineUI, reason: not valid java name */
+    public /* synthetic */ void m491x6ae71b15(ArrayList arrayList) {
+        this.loadingHandler.sendEmptyMessage(0);
+        try {
+            for (OptifineVersion optifineVersion : (OptifineVersion[]) new Gson().fromJson(NetworkUtils.doGet(NetworkUtils.toURL("https://bmclapi2.bangbang93.com/optifine/versionlist")), OptifineVersion[].class)) {
+                if (optifineVersion.mcVersion.equals(this.version) && this.checkRelease.isChecked() && !optifineVersion.patch.startsWith("pre") && !optifineVersion.patch.startsWith("alpha")) {
+                    arrayList.add(optifineVersion);
+                }
+                if (optifineVersion.mcVersion.equals(this.version) && this.checkSnapshot.isChecked() && (optifineVersion.patch.startsWith("pre") || optifineVersion.patch.startsWith("alpha"))) {
+                    arrayList.add(optifineVersion);
+                }
+                if (optifineVersion.mcVersion.equals(this.version)) {
+                    this.allList.add(optifineVersion);
+                }
             }
-            if (versions.mcVersion.equals(version) && checkSnapshot.isChecked() && (versions.patch.startsWith("pre") || versions.patch.startsWith("alpha"))){
-                list.add(versions);
-            }
+            arrayList.sort(new OptifineCompareTool());
+            final DownloadOptifineListAdapter downloadOptifineListAdapter = new DownloadOptifineListAdapter(this.context, this.activity, arrayList, this.install);
+            this.activity.runOnUiThread(new Runnable() { // from class: com.qcl.launcher.launcher.uis.game.download.right.game.DownloadOptifineUI$$ExternalSyntheticLambda0
+                @Override // java.lang.Runnable
+                public final void run() {
+                    DownloadOptifineUI.this.m490x3738f054(downloadOptifineListAdapter);
+                }
+            });
+        } catch (IOException e) {
+            e.printStackTrace();
         }
-        list.sort(new OptifineCompareTool());
-        DownloadOptifineListAdapter downloadOptifineListAdapter = new DownloadOptifineListAdapter(context,activity,list,install);
-        optifineListView.setAdapter(downloadOptifineListAdapter);
+        if (this.allList.size() == 0) {
+            this.loadingHandler.sendEmptyMessage(2);
+        } else {
+            this.loadingHandler.sendEmptyMessage(1);
+        }
     }
 
-    @Override
+    /* JADX INFO: Access modifiers changed from: package-private */
+    /* renamed from: lambda$init$0$com-qcl-launcher-launcher-uis-game-download-right-game-DownloadOptifineUI, reason: not valid java name */
+    public /* synthetic */ void m490x3738f054(DownloadOptifineListAdapter downloadOptifineListAdapter) {
+        this.optifineListView.setAdapter((ListAdapter) downloadOptifineListAdapter);
+    }
+
+    private void refresh() {
+        ArrayList arrayList = new ArrayList();
+        Iterator<OptifineVersion> it = this.allList.iterator();
+        while (it.hasNext()) {
+            OptifineVersion next = it.next();
+            if (next.mcVersion.equals(this.version) && this.checkRelease.isChecked() && !next.patch.startsWith("pre") && !next.patch.startsWith("alpha")) {
+                arrayList.add(next);
+            }
+            if (next.mcVersion.equals(this.version) && this.checkSnapshot.isChecked() && (next.patch.startsWith("pre") || next.patch.startsWith("alpha"))) {
+                arrayList.add(next);
+            }
+        }
+        arrayList.sort(new OptifineCompareTool());
+        this.optifineListView.setAdapter((ListAdapter) new DownloadOptifineListAdapter(this.context, this.activity, arrayList, this.install));
+    }
+
+    @Override // android.view.View.OnClickListener
     public void onClick(View view) {
-        if (view == hintLayout){
-            Uri uri = Uri.parse("https://afdian.net/@bangbang93");
-            Intent intent = new Intent(Intent.ACTION_VIEW, uri);
-            context.startActivity(intent);
+        if (view == this.hintLayout) {
+            this.context.startActivity(new Intent("android.intent.action.VIEW", Uri.parse("https://afdian.net/@bangbang93")));
         }
-        if (view == back){
-            activity.backToLastUI();
+        if (view == this.back) {
+            this.activity.backToLastUI();
         }
-        if (view == refresh){
+        if (view == this.refresh) {
             init();
         }
     }
 
-    @SuppressLint("HandlerLeak")
-    private final Handler loadingHandler = new Handler(){
-        @Override
-        public void handleMessage(@NonNull Message msg) {
-            super.handleMessage(msg);
-            if (msg.what == 0){
-                listLayout.setVisibility(View.GONE);
-                progressBar.setVisibility(View.VISIBLE);
-                back.setVisibility(View.GONE);
-            }
-            if (msg.what == 1){
-                listLayout.setVisibility(View.VISIBLE);
-                progressBar.setVisibility(View.GONE);
-                back.setVisibility(View.GONE);
-            }
-            if (msg.what == 2){
-                listLayout.setVisibility(View.GONE);
-                progressBar.setVisibility(View.GONE);
-                back.setVisibility(View.VISIBLE);
-            }
-        }
-    };
-
-    @Override
-    public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+    @Override // android.widget.CompoundButton.OnCheckedChangeListener
+    public void onCheckedChanged(CompoundButton compoundButton, boolean z) {
         refresh();
     }
 
-    private static class OptifineCompareTool implements Comparator<OptifineVersion> {
-        @Override
-        public int compare(OptifineVersion versionPri, OptifineVersion versionSec) {
-            if ((versionPri.patch.length() == versionSec.patch.length()) || (versionPri.patch.startsWith("pre") && versionSec.patch.startsWith("pre"))) {
-                if (versionPri.patch.length() == 2) {
-                    if(versionPri.patch.charAt(0) > versionSec.patch.charAt(0)) {
+    /* JADX INFO: Access modifiers changed from: private */
+    /* loaded from: classes2.dex */
+    public static class OptifineCompareTool implements Comparator<OptifineVersion> {
+        private OptifineCompareTool() {
+        }
+
+        @Override // java.util.Comparator
+        public int compare(OptifineVersion optifineVersion, OptifineVersion optifineVersion2) {
+            String str;
+            String substring;
+            if (optifineVersion.patch.length() == optifineVersion2.patch.length() || (optifineVersion.patch.startsWith("pre") && optifineVersion2.patch.startsWith("pre"))) {
+                if (optifineVersion.patch.length() == 2) {
+                    if (optifineVersion.patch.charAt(0) > optifineVersion2.patch.charAt(0)) {
                         return -1;
                     }
-                    else if(versionPri.patch.charAt(0) == versionSec.patch.charAt(0)) {
-                        return Character.compare(versionSec.patch.charAt(1), versionPri.patch.charAt(1));
+                    if (optifineVersion.patch.charAt(0) == optifineVersion2.patch.charAt(0)) {
+                        return Character.compare(optifineVersion2.patch.charAt(1), optifineVersion.patch.charAt(1));
                     }
-                    else {
-                        return 1;
-                    }
-                }
-                else {
-                    if(versionPri.type.substring(versionPri.type.length() - 2).charAt(0) > versionSec.type.substring(versionSec.type.length() - 2).charAt(0)) {
-                        return -1;
-                    }
-                    else if(versionPri.type.substring(versionPri.type.length() - 2).charAt(0) == versionSec.type.substring(versionSec.type.length() - 2).charAt(0)) {
-                        if(versionPri.type.substring(versionPri.type.length() - 2).charAt(1) > versionSec.type.substring(versionSec.type.length() - 2).charAt(1)) {
-                            return -1;
-                        }
-                        else if(versionPri.type.substring(versionPri.type.length() - 2).charAt(1) == versionSec.type.substring(versionSec.type.length() - 2).charAt(1)) {
-                            return Integer.compare(Integer.parseInt(versionSec.patch.replace("pre", "")), Integer.parseInt(versionPri.patch.replace("pre", "")));
-                        }
-                        else {
-                            return 1;
-                        }
-                    }
-                    else {
-                        return 1;
-                    }
-                }
-            }
-            else {
-                String priPatch;
-                String secPatch;
-                if (versionPri.patch.startsWith("pre")) {
-                    priPatch = versionPri.type.substring(versionPri.type.length() - 2);
-                    secPatch = versionSec.patch;
-                }
-                else {
-                    priPatch = versionPri.patch;
-                    secPatch = versionSec.type.substring(versionSec.type.length() - 2);
-                }
-                if(priPatch.charAt(0) > secPatch.charAt(0)) {
-                    return -1;
-                }
-                else if(priPatch.charAt(0) == secPatch.charAt(0)) {
-                    if(priPatch.charAt(1) > secPatch.charAt(1)) {
-                        return -1;
-                    }
-                    else if(priPatch.charAt(1) == secPatch.charAt(1)) {
-                        return Integer.compare(versionPri.patch.length(),versionSec.patch.length());
-                    }
-                    else {
-                        return 1;
-                    }
-                }
-                else {
                     return 1;
                 }
+                if (optifineVersion.type.substring(optifineVersion.type.length() - 2).charAt(0) > optifineVersion2.type.substring(optifineVersion2.type.length() - 2).charAt(0)) {
+                    return -1;
+                }
+                if (optifineVersion.type.substring(optifineVersion.type.length() - 2).charAt(0) == optifineVersion2.type.substring(optifineVersion2.type.length() - 2).charAt(0)) {
+                    if (optifineVersion.type.substring(optifineVersion.type.length() - 2).charAt(1) > optifineVersion2.type.substring(optifineVersion2.type.length() - 2).charAt(1)) {
+                        return -1;
+                    }
+                    if (optifineVersion.type.substring(optifineVersion.type.length() - 2).charAt(1) == optifineVersion2.type.substring(optifineVersion2.type.length() - 2).charAt(1)) {
+                        return Integer.compare(Integer.parseInt(optifineVersion2.patch.replace("pre", "")), Integer.parseInt(optifineVersion.patch.replace("pre", "")));
+                    }
+                }
+                return 1;
             }
+            if (optifineVersion.patch.startsWith("pre")) {
+                str = optifineVersion.type.substring(optifineVersion.type.length() - 2);
+                substring = optifineVersion2.patch;
+            } else {
+                str = optifineVersion.patch;
+                substring = optifineVersion2.type.substring(optifineVersion2.type.length() - 2);
+            }
+            if (str.charAt(0) > substring.charAt(0)) {
+                return -1;
+            }
+            if (str.charAt(0) == substring.charAt(0)) {
+                if (str.charAt(1) > substring.charAt(1)) {
+                    return -1;
+                }
+                if (str.charAt(1) == substring.charAt(1)) {
+                    return Integer.compare(optifineVersion.patch.length(), optifineVersion2.patch.length());
+                }
+            }
+            return 1;
         }
     }
 }

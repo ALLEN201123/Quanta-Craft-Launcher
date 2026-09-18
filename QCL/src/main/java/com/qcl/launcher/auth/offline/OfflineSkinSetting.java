@@ -1,35 +1,28 @@
 package com.qcl.launcher.auth.offline;
 
 import android.content.Context;
-
-import androidx.annotation.NonNull;
-
-import com.qcl.launcher.R;
 import com.qcl.launcher.auth.yggdrasil.TextureModel;
-import com.qcl.launcher.skin.utils.Avatar;
 
-public class OfflineSkinSetting implements Cloneable{
-
-    public int type;
-    public TextureModel model;
-    public String skinPath;
+/* loaded from: classes2.dex */
+public class OfflineSkinSetting implements Cloneable {
     public String capePath;
+    public TextureModel model;
     public String server;
+    public String skinPath;
+    public int type;
 
-    public OfflineSkinSetting(Context context){
-        this(0,TextureModel.STEVE,"","","");
+    public OfflineSkinSetting(Context context) {
+        this(0, TextureModel.STEVE, "", "", "");
     }
 
-    public OfflineSkinSetting(int type,TextureModel model,String skinPath,String capePath,String server) {
-        this.type = type;
-        this.model = model;
-        this.skinPath = skinPath;
-        this.capePath = capePath;
-        this.server = server;
+    public OfflineSkinSetting(int i, TextureModel textureModel, String str, String str2, String str3) {
+        this.type = i;
+        this.model = textureModel;
+        this.skinPath = str;
+        this.capePath = str2;
+        this.server = str3;
     }
 
-    @NonNull
-    @Override
     public Object clone() throws CloneNotSupportedException {
         return super.clone();
     }

@@ -4,118 +4,117 @@ import android.content.Context;
 import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
-import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
-
-import com.qcl.launcher.R;
 import com.qcl.launcher.control.bean.rocker.RockerStyle;
 import com.qcl.launcher.control.view.RockerView;
 import com.qcl.launcher.launcher.dialogs.control.RockerStyleManagerDialog;
 import com.qcl.launcher.launcher.setting.SettingUtils;
 import com.qcl.launcher.utils.convert.ConvertUtils;
-
 import java.util.ArrayList;
 
+import com.qcl.launcher.R;
+/* loaded from: classes2.dex */
 public class RockerStyleAdapter extends BaseAdapter {
-
     private Context context;
-    private ArrayList<RockerStyle> list;
     RockerStyleManagerDialog dialog;
+    private ArrayList<RockerStyle> list;
 
-    public RockerStyleAdapter (Context context, ArrayList<RockerStyle> list, RockerStyleManagerDialog dialog) {
-        this.context = context;
-        this.list = list;
-        this.dialog = dialog;
+    @Override // android.widget.Adapter
+    public long getItemId(int i) {
+        return 0L;
     }
 
+    public RockerStyleAdapter(Context context, ArrayList<RockerStyle> arrayList, RockerStyleManagerDialog rockerStyleManagerDialog) {
+        this.context = context;
+        this.list = arrayList;
+        this.dialog = rockerStyleManagerDialog;
+    }
+
+    /* loaded from: classes2.dex */
     private class ViewHolder {
         RelativeLayout container;
-        TextView styleName;
         ImageButton delete;
-    }
+        TextView styleName;
 
-    @Override
-    public int getCount() {
-        return list.size();
-    }
-
-    @Override
-    public Object getItem(int i) {
-        return list.get(i);
-    }
-
-    @Override
-    public long getItemId(int i) {
-        return 0;
-    }
-
-    @Override
-    public View getView(int i, View view, ViewGroup viewGroup) {
-        final ViewHolder viewHolder;
-        if (view == null){
-            viewHolder = new ViewHolder();
-            view = LayoutInflater.from(context).inflate(R.layout.item_rocker_style,null);
-            viewHolder.container = view.findViewById(R.id.rocker_style);
-            viewHolder.styleName = view.findViewById(R.id.rocker_style_name);
-            viewHolder.delete = view.findViewById(R.id.delete_rocker_style);
-            view.setTag(viewHolder);
+        private ViewHolder() {
         }
-        else {
+    }
+
+    @Override // android.widget.Adapter
+    public int getCount() {
+        return this.list.size();
+    }
+
+    @Override // android.widget.Adapter
+    public Object getItem(int i) {
+        return this.list.get(i);
+    }
+
+    @Override // android.widget.Adapter
+    public View getView(final int i, View view, ViewGroup viewGroup) {
+        View view2;
+        ViewHolder viewHolder;
+        if (view == null) {
+            viewHolder = new ViewHolder();
+            view2 = LayoutInflater.from(this.context).inflate(R.layout.item_rocker_style, (ViewGroup) null);
+            viewHolder.container = (RelativeLayout) view2.findViewById(R.id.rocker_style);
+            viewHolder.styleName = (TextView) view2.findViewById(R.id.rocker_style_name);
+            viewHolder.delete = (ImageButton) view2.findViewById(R.id.delete_rocker_style);
+            view2.setTag(viewHolder);
+        } else {
+            view2 = view;
             viewHolder = (ViewHolder) view.getTag();
         }
-        RockerStyle rockerStyle = list.get(i);
-        GradientDrawable drawableNormal = new GradientDrawable();
-        drawableNormal.setCornerRadius(ConvertUtils.dip2px(context,rockerStyle.cornerRadius));
-        drawableNormal.setStroke(ConvertUtils.dip2px(context,rockerStyle.strokeWidth), Color.parseColor(rockerStyle.strokeColor));
-        drawableNormal.setColor(Color.parseColor(rockerStyle.fillColor));
-        GradientDrawable drawablePress = new GradientDrawable();
-        drawablePress.setCornerRadius(ConvertUtils.dip2px(context,rockerStyle.cornerRadiusPress));
-        drawablePress.setStroke(ConvertUtils.dip2px(context,rockerStyle.strokeWidthPress), Color.parseColor(rockerStyle.strokeColorPress));
-        drawablePress.setColor(Color.parseColor(rockerStyle.fillColorPress));
-        RockerView rockerView = new RockerView(context);
+        RockerStyle rockerStyle = this.list.get(i);
+        final GradientDrawable gradientDrawable = new GradientDrawable();
+        gradientDrawable.setCornerRadius(ConvertUtils.dip2px(this.context, rockerStyle.cornerRadius));
+        gradientDrawable.setStroke(ConvertUtils.dip2px(this.context, rockerStyle.strokeWidth), Color.parseColor(rockerStyle.strokeColor));
+        gradientDrawable.setColor(Color.parseColor(rockerStyle.fillColor));
+        final GradientDrawable gradientDrawable2 = new GradientDrawable();
+        gradientDrawable2.setCornerRadius(ConvertUtils.dip2px(this.context, rockerStyle.cornerRadiusPress));
+        gradientDrawable2.setStroke(ConvertUtils.dip2px(this.context, rockerStyle.strokeWidthPress), Color.parseColor(rockerStyle.strokeColorPress));
+        gradientDrawable2.setColor(Color.parseColor(rockerStyle.fillColorPress));
+        RockerView rockerView = new RockerView(this.context);
         rockerView.setPointerColor(rockerStyle.pointerColor);
         rockerView.setPointerColorPress(rockerStyle.pointerColorPress);
         rockerView.setFollowType(0);
         rockerView.setDoubleClick(false);
-        rockerView.setOnShakeListener(new RockerView.OnShakeListener() {
-            @Override
-            public void onTouch(RockerView view) {
-                view.setBackground(drawablePress);
+        rockerView.setOnShakeListener(new RockerView.OnShakeListener() { // from class: com.qcl.launcher.launcher.list.local.controller.RockerStyleAdapter.1
+            @Override // com.qcl.launcher.control.view.RockerView.OnShakeListener
+            public void onCenterDoubleClick(RockerView rockerView2) {
             }
 
-            @Override
-            public void onShake(RockerView view, RockerView.Direction direction) {
-
+            @Override // com.qcl.launcher.control.view.RockerView.OnShakeListener
+            public void onShake(RockerView rockerView2, RockerView.Direction direction) {
             }
 
-            @Override
-            public void onCenterDoubleClick(RockerView view) {
-
+            @Override // com.qcl.launcher.control.view.RockerView.OnShakeListener
+            public void onTouch(RockerView rockerView2) {
+                rockerView2.setBackground(gradientDrawable2);
             }
 
-            @Override
-            public void onFinish(RockerView view) {
-                view.setBackground(drawableNormal);
+            @Override // com.qcl.launcher.control.view.RockerView.OnShakeListener
+            public void onFinish(RockerView rockerView2) {
+                rockerView2.setBackground(gradientDrawable);
             }
         });
-        rockerView.setBackground(drawableNormal);
+        rockerView.setBackground(gradientDrawable);
         viewHolder.container.addView(rockerView);
-        rockerView.setSize(ConvertUtils.dip2px(context,30));
+        rockerView.setSize(ConvertUtils.dip2px(this.context, 30.0f));
         viewHolder.styleName.setText(rockerStyle.name);
-        viewHolder.delete.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                list.remove(i);
-                SettingUtils.saveRockerStyle(list);
-                dialog.refreshStyleList();
+        viewHolder.delete.setOnClickListener(new View.OnClickListener() { // from class: com.qcl.launcher.launcher.list.local.controller.RockerStyleAdapter.2
+            @Override // android.view.View.OnClickListener
+            public void onClick(View view3) {
+                RockerStyleAdapter.this.list.remove(i);
+                SettingUtils.saveRockerStyle(RockerStyleAdapter.this.list);
+                RockerStyleAdapter.this.dialog.refreshStyleList();
             }
         });
-        return view;
+        return view2;
     }
 }

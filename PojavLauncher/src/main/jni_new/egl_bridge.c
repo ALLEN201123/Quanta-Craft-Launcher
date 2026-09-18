@@ -88,29 +88,13 @@ EXTERNAL_API void pojavTerminate() {
     }
 }
 
-// ★★★ 1.1.0 双栈隔离（关键）：新桥的 setupBridgeWindow 用**独立 JNI 名**。
-// 原因：旧 so（libpojavexec.so）也有同名的 Java_..._setupBridgeWindow 符号。
-// JREUtils 的静态块在**同一个 App 进程**里只执行一次，若两个 so 注册了同名 JNI 函数，
-// 后加载的会被忽略 —— 导致"先跑高版本、再跑老版本"时老版本错误地用了新桥（黑屏）。
-// 用独立名字后，Java 侧可按版本显式调用对应实现，互不干扰。
+// ★★★ 2026-09-18 用户指令「彻底删除旧栈，把旧桥的名字给新桥」：本桥已成**唯一**渲染桥，
+// 旧的 libpojavexec.so 已删除，历史上"两个 so 注册同名 JNI → 后加载者被忽略"的隐患
+// 不复存在。原 `..._setupBridgeWindow` 与 `..._setupBridgeWindowNew` 两份重复实现已合并为
+// 一个（保留 Java 侧现在调用的 `setupBridgeWindowNew` 名），避免同函数两份副本漂移。
 JNIEXPORT void JNICALL
 Java_net_kdt_pojavlaunch_utils_JREUtils_setupBridgeWindowNew(JNIEnv *env, ABI_COMPAT jclass clazz,
                                                              jobject surface) {
-    bool windowRecreated = pojav_environ->pojavWindow != NULL;
-    pojav_environ->pojavWindow = ANativeWindow_fromSurface(env, surface);
-    if (windowRecreated && pojav_environ->config_renderer != RENDERER_VULKAN) {
-        if (lastSwapInterval >= 0) setNativeWindowSwapInterval(pojav_environ->pojavWindow, lastSwapInterval);
-        else if (!getenv("POJAV_VSYNC_IN_ZINK")) setNativeWindowSwapInterval(pojav_environ->pojavWindow, 0);
-    }
-    if (br_setup_window != NULL) br_setup_window();
-}
-
-JNIEXPORT void JNICALL
-Java_net_kdt_pojavlaunch_utils_JREUtils_setupBridgeWindow(JNIEnv *env, ABI_COMPAT jclass clazz,
-                                                          jobject surface) {
-    // 1.1.0 移植适配：原 FCL 方法名是 Java_org_lwjgl_glfw_CallbackBridge_setupBridgeWindow，
-    // QCL 的 Java 侧（PojavMinecraftActivity / BoatMinecraftActivity）调用的是
-    // JREUtils.setupBridgeWindow(Surface)，这里改用 QCL 的 JNI 名以保持 Java 侧零改动。
     // 首个窗口由 pojavInit 应用交换间隔；此处处理窗口重建（旋转、分屏等）：
     // 生产者状态会随新窗口重置，若不重新应用，MC 不会再次发起交换间隔调用，帧率会退回锁定在屏幕刷新率
     bool windowRecreated = pojav_environ->pojavWindow != NULL;
@@ -261,6 +245,14 @@ int pojavInitOpenGL() {
     // NOTE: Override for now.
     const char *renderer = getenv("POJAV_RENDERER");
     if (renderer == NULL) renderer = "opengles2"; // 1.1.0 QCL：env 缺失时兜底，避免 strncmp(NULL)
+    // ★★★ 2026-09-17 修复（1.20.6 黑屏 / Render thread 忙循环的根因）：
+    // "ng_gl4es" 是 QCL Java 侧的渲染器内部名（Krypton Wrapper），**不是** native 认识的协议值。
+    // native 侧只认 opengles2 / opengles3 / opengles3_desktopgl_zink_kopper / vulkan_zink /
+    // gallium_virgl / gallium_freedreno / custom_gallium。
+    // 若把 "ng_gl4es" 直接喂进来，下面所有分支都不匹配 → set_*_bridge_tbl() 从未被调用
+    //   → br_init == NULL → 调 NULL 函数指针（实测表现为忙循环烧 CPU 不返回）。
+    // Java 侧已修（JREUtils 不再覆盖成 ng_gl4es），这里再兜一层，防止将来别的入口漏改。
+    if (!strcmp(renderer, "ng_gl4es")) renderer = "opengles3";
     if (!strncmp("opengles", renderer, 8)) {
         pojav_environ->config_renderer = RENDERER_GL4ES;
         if (!strcmp(renderer, "opengles3_desktopgl_zink_kopper")) {
@@ -302,6 +294,13 @@ int pojavInitOpenGL() {
     }
 
     __android_log_print(ANDROID_LOG_ERROR, "QCL_DBG", "pojavInitOpenGL: calling br_init (renderer=%s)", renderer);
+    // ★★★ 2026-09-17 兜底：br_init 为 NULL 说明上面没有任何分支匹配（渲染器名写错/新增渲染器漏配），
+    // 直接调用会跳 NULL 指针。此处直接报错返回，让上层给出可读的错误而不是黑屏忙循环。
+    if (br_init == NULL) {
+        __android_log_print(ANDROID_LOG_ERROR, "QCL_DBG",
+                            "pojavInitOpenGL: br_init is NULL (renderer='%s' matched no bridge!)", renderer);
+        return -1;
+    }
     if (br_init()) {
         __android_log_print(ANDROID_LOG_ERROR, "QCL_DBG", "pojavInitOpenGL: br_init OK, setup_window");
         br_setup_window();
@@ -345,9 +344,21 @@ EXTERNAL_API int pojavInit() {
     pojavInitOpenGL();
     __android_log_print(ANDROID_LOG_ERROR, "QCL_DBG", "pojavInit: pojavInitOpenGL returned");
     // 垂直同步开关关闭时主动切入异步模式，解除帧率对屏幕刷新率的锁定；开启时交由 MC 的交换间隔调用决定
-    if (pojav_environ->config_renderer != RENDERER_VULKAN && !getenv("POJAV_VSYNC_IN_ZINK")) {
-        setNativeWindowSwapInterval(pojav_environ->pojavWindow, 0);
-    }
+    //
+    // ★★★ 2026-09-17（画面冻结根因）—— 此处**刻意不设置** swap interval。
+    // 设置 swap interval 需要合法的 EGLDisplay，而 g_EglDisplay 要 eglInitialize /
+    // eglMakeCurrent 之后才有效，此刻（pojavInitOpenGL 刚返回、还没建 surface）仍是 NULL。
+    // 拿 NULL display 调 eglSwapInterval 属未定义行为：实测在 MuMu 上会让 GLThread
+    // 永久阻塞在内核态（utime 不涨、只涨 stime，多次采样数字完全不变）。
+    //
+    // 正确位置已挪到 ctxbridges/gl_bridge.c 的 gl_make_current() 里 ——
+    // 在 eglMakeCurrent_p 成功之后的第一时间调 gl_swap_interval(0)。
+    // 那里 display/context 都真实可用，且同样不碰 ANativeWindow 结构（避免
+    // MuMu 上 android::Surface::hook_setSwapInterval 崩溃）。
+    //
+    // 为什么不设成 1 也行不通：MuMu 模拟器没有真实显示同步信号，
+    // eg 拿默认的 interval=1 会让 eglSwapBuffers 永远等不到 vsync。
+    (void) 0;
     return 1;
 }
 
@@ -362,6 +373,9 @@ EXTERNAL_API void pojavSetWindowHint(int hint, int value) {
         case GLFW_OPENGL_API: {
             const char *renderer = getenv("POJAV_RENDERER");
             if (renderer == NULL) break; // 1.1.0 QCL：env 缺失时直接跳过，避免 strncmp(NULL)
+            // ★★★ 2026-09-17：与 pojavInitOpenGL 同一处修复 —— ng_gl4es 需归一到 opengles3，
+            // 否则 config_renderer 不会被置为 RENDERER_GL4ES，后续 swap/uiThread 分支全部走空。
+            if (!strcmp(renderer, "ng_gl4es")) renderer = "opengles3";
             if (strncmp(renderer, "opengles", 8) == 0) {
                 pojav_environ->config_renderer = RENDERER_GL4ES;
             } else if (!strcmp(renderer, "vulkan_zink")) {
@@ -431,6 +445,8 @@ Java_org_lwjgl_vulkan_VK_getVulkanDriverHandle(ABI_COMPAT JNIEnv *env, ABI_COMPA
 EXTERNAL_API void pojavSwapInterval(int interval) {
     lastSwapInterval = interval;
 
+    // 注意：渲染器字符串 "opengles2"/"opengles3_*" 在 pojavInitOpenGL 里统一映射为
+    // RENDERER_GL4ES（!strncmp("opengles", renderer, 8)），所以下面这个分支就是 opengles2 的路径。
     if (pojav_environ->config_renderer == RENDERER_VK_ZINK
      || pojav_environ->config_renderer == RENDERER_GL4ES) {
         br_swap_interval(interval);

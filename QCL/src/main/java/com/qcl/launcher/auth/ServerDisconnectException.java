@@ -1,18 +1,19 @@
 package com.qcl.launcher.auth;
 
+/* loaded from: classes2.dex */
 public class ServerDisconnectException extends AuthenticationException {
     public ServerDisconnectException() {
     }
 
-    public ServerDisconnectException(String message) {
-        super(message);
+    public ServerDisconnectException(String str) {
+        super(str);
     }
 
-    public ServerDisconnectException(String message, Throwable cause) {
-        super(message, cause);
+    public ServerDisconnectException(String str, Throwable th) {
+        super(str, th);
     }
 
-    public ServerDisconnectException(Throwable cause) {
-        super(cause);
+    public ServerDisconnectException(Throwable th) {
+        super(th);
     }
 }

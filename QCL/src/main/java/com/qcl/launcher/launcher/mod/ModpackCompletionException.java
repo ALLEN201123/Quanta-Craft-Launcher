@@ -1,18 +1,19 @@
 package com.qcl.launcher.launcher.mod;
 
+/* loaded from: classes2.dex */
 public class ModpackCompletionException extends Exception {
     public ModpackCompletionException() {
     }
 
-    public ModpackCompletionException(String message) {
-        super(message);
+    public ModpackCompletionException(String str) {
+        super(str);
     }
 
-    public ModpackCompletionException(String message, Throwable cause) {
-        super(message, cause);
+    public ModpackCompletionException(String str, Throwable th) {
+        super(str, th);
     }
 
-    public ModpackCompletionException(Throwable cause) {
-        super(cause);
+    public ModpackCompletionException(Throwable th) {
+        super(th);
     }
 }

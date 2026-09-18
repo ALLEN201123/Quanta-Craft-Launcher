@@ -1,66 +1,104 @@
+/*
+ * Decompiled with CFR 0.152.
+ * 
+ * Could not load the following classes:
+ *  android.annotation.SuppressLint
+ *  android.app.Activity
+ *  android.app.Dialog
+ *  android.content.Context
+ *  android.content.Intent
+ *  android.os.Process
+ *  android.view.View
+ *  android.view.View$OnClickListener
+ *  android.view.ViewGroup
+ *  android.widget.AdapterView
+ *  android.widget.AdapterView$OnItemSelectedListener
+ *  android.widget.ArrayAdapter
+ *  android.widget.Button
+ *  android.widget.CompoundButton
+ *  android.widget.CompoundButton$OnCheckedChangeListener
+ *  android.widget.FrameLayout
+ *  android.widget.SeekBar
+ *  android.widget.SeekBar$OnSeekBarChangeListener
+ *  android.widget.Spinner
+ *  android.widget.SpinnerAdapter
+ *  android.widget.TextView
+ *  android.widget.Toast
+ *  androidx.appcompat.app.AlertDialog
+ *  androidx.appcompat.app.AlertDialog$Builder
+ *  androidx.appcompat.app.AppCompatActivity
+ *  androidx.appcompat.widget.SwitchCompat
+ *  com.google.gson.Gson
+ */
 package com.qcl.launcher.control;
 
 import android.annotation.SuppressLint;
+import android.app.Activity;
+import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Process;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CompoundButton;
+import android.widget.FrameLayout;
 import android.widget.SeekBar;
 import android.widget.Spinner;
+import android.widget.SpinnerAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SwitchCompat;
-import androidx.drawerlayout.widget.DrawerLayout;
-
 import com.google.gson.Gson;
-import com.qcl.launcher.R;
+import com.qcl.launcher.control.LwjglCharSender;
+import com.qcl.launcher.control.MKManager;
+import com.qcl.launcher.control.ViewManager;
 import com.qcl.launcher.control.bean.BaseButtonInfo;
 import com.qcl.launcher.control.bean.BaseRockerViewInfo;
+import com.qcl.launcher.control.bean.button.ButtonStyle;
 import com.qcl.launcher.control.view.LayoutPanel;
 import com.qcl.launcher.control.view.TouchCharInput;
 import com.qcl.launcher.launcher.dialogs.control.AddViewDialog;
 import com.qcl.launcher.launcher.dialogs.control.ChildManagerDialog;
-import com.qcl.launcher.launcher.dialogs.control.EditControlPatternDialog;
 import com.qcl.launcher.launcher.dialogs.control.CreateButtonStyleDialog;
 import com.qcl.launcher.launcher.dialogs.control.CreateControlPatternDialog;
-import com.qcl.launcher.control.bean.button.ButtonStyle;
+import com.qcl.launcher.launcher.dialogs.control.EditControlPatternDialog;
+import com.qcl.launcher.launcher.launch.LaunchLogWindow;
 import com.qcl.launcher.launcher.list.local.controller.ChildLayout;
 import com.qcl.launcher.launcher.list.local.controller.ControlPattern;
-import com.qcl.launcher.manifest.AppManifest;
 import com.qcl.launcher.launcher.setting.InitializeSetting;
 import com.qcl.launcher.launcher.setting.SettingUtils;
 import com.qcl.launcher.launcher.setting.game.GameMenuSetting;
+import com.qcl.launcher.launcher.terracotta.MultiplayerDialogHelper;
+import com.qcl.launcher.manifest.AppManifest;
 import com.qcl.launcher.utils.file.AssetsUtils;
 import com.qcl.launcher.utils.file.FileStringUtils;
 import com.qcl.launcher.utils.file.FileUtils;
-
 import java.util.ArrayList;
 
-public class MenuHelper implements CompoundButton.OnCheckedChangeListener, View.OnClickListener, AdapterView.OnItemSelectedListener, SeekBar.OnSeekBarChangeListener {
-
+import com.qcl.launcher.R;
+public class MenuHelper
+implements CompoundButton.OnCheckedChangeListener,
+View.OnClickListener,
+AdapterView.OnItemSelectedListener,
+SeekBar.OnSeekBarChangeListener {
     public Context context;
     public AppCompatActivity activity;
     public boolean fullscreen;
     public String gameDir;
-    public android.widget.FrameLayout drawerLayout;
-    public android.view.View gameMenuContainer;
+    public FrameLayout drawerLayout;
+    public View gameMenuContainer;
     public LayoutPanel baseLayout;
     public int launcher;
     public float scaleFactor;
-
     public int screenWidth;
     public int screenHeight;
-
     public GameMenuSetting gameMenuSetting;
-
     public TouchCharInput touchCharInput;
-
     public SwitchCompat switchMenuFloat;
     public SwitchCompat switchMenuView;
     public SwitchCompat switchMenuSlide;
@@ -82,7 +120,6 @@ public class MenuHelper implements CompoundButton.OnCheckedChangeListener, View.
     public SwitchCompat switchHideUI;
     public Button openHin2nMenu;
     public Button forceExit;
-
     public Spinner patternSpinner;
     public SwitchCompat editModeSwitch;
     public SwitchCompat showOutlineSwitch;
@@ -92,7 +129,6 @@ public class MenuHelper implements CompoundButton.OnCheckedChangeListener, View.
     public Button addView;
     public Button createPattern;
     public Button createButtonStyle;
-
     public ArrayList<ControlPattern> patternList;
     public ControlPattern currentPattern;
     public String initialPattern;
@@ -102,14 +138,10 @@ public class MenuHelper implements CompoundButton.OnCheckedChangeListener, View.
     public boolean enableNameEditor;
     public ArrayList<String> childLayoutList;
     public ArrayAdapter<String> childAdapter;
-
     public int gameCursorMode = 0;
-
     public ViewManager viewManager;
     public MKManager mkManager;
-
     public boolean enterLock;
-
     public float cursorX;
     public float cursorY;
     public float pointerX;
@@ -117,7 +149,7 @@ public class MenuHelper implements CompoundButton.OnCheckedChangeListener, View.
     public float currentX;
     public float currentY;
 
-    public MenuHelper(Context context, AppCompatActivity activity,boolean fullscreen,String gameDir, android.widget.FrameLayout drawerLayout, LayoutPanel baseLayout,boolean editMode,String currentPattern,int launcher,float scaleFactor){
+    public MenuHelper(Context context, AppCompatActivity activity, boolean fullscreen, String gameDir, FrameLayout drawerLayout, final LayoutPanel baseLayout, final boolean editMode, final String currentPattern, int launcher, float scaleFactor) {
         this.context = context;
         this.activity = activity;
         this.fullscreen = fullscreen;
@@ -129,460 +161,423 @@ public class MenuHelper implements CompoundButton.OnCheckedChangeListener, View.
         this.enableNameEditor = editMode;
         this.launcher = launcher;
         this.scaleFactor = scaleFactor;
-        patternList = SettingUtils.getControlPatternList();
-        if (patternList.size() == 0) {
-            InitializeSetting.initializeControlPattern(activity, new AssetsUtils.FileOperateCallback() {
+        this.patternList = SettingUtils.getControlPatternList();
+        if (this.patternList.size() == 0) {
+            InitializeSetting.initializeControlPattern((Activity)activity, new AssetsUtils.FileOperateCallback(){
+
                 @Override
                 public void onSuccess() {
-                    patternList = SettingUtils.getControlPatternList();
-                    preInit(baseLayout,editMode,currentPattern);
+                    MenuHelper.this.patternList = SettingUtils.getControlPatternList();
+                    MenuHelper.this.preInit(baseLayout, editMode, currentPattern);
                 }
 
                 @Override
                 public void onFailed(String error) {
-
                 }
             });
-        }
-        else {
-            preInit(baseLayout,editMode,currentPattern);
+        } else {
+            this.preInit(baseLayout, editMode, currentPattern);
         }
     }
 
     public void enableCursor() {
-        gameCursorMode = 0;
-        if (viewManager != null) {
-            viewManager.enableCursor();
+        this.gameCursorMode = 0;
+        if (this.viewManager != null) {
+            this.viewManager.enableCursor();
         }
-        if (mkManager != null) {
-            mkManager.enableCursor();
-        }
-    }
-
-    public void disableCursor(){
-        gameCursorMode = 1;
-        if (viewManager != null) {
-            viewManager.disableCursor();
-        }
-        if (mkManager != null) {
-            mkManager.disableCursor();
+        if (this.mkManager != null) {
+            this.mkManager.enableCursor();
         }
     }
 
-    public void preInit (LayoutPanel baseLayout,boolean editMode,String currentPattern) {
-        for (ControlPattern controlPattern : patternList){
-            if (controlPattern.name.equals(currentPattern)){
-                this.currentPattern = controlPattern;
-            }
+    public void disableCursor() {
+        this.gameCursorMode = 1;
+        if (this.viewManager != null) {
+            this.viewManager.disableCursor();
         }
-        // ⚠️ 这里判的必须是"找到的方案"，不是传入的名字字符串。
-        //    名字对不上（方案被改名/删除/换了机器）时，上面循环不会赋值，
-        //    this.currentPattern 就是 null，往下走到 currentPattern.name 直接 NPE 崩掉启动。
-        //    正确做法：退回第一个可用方案。
-        if (this.currentPattern == null && !patternList.isEmpty()){
-            this.currentPattern = patternList.get(0);
+        if (this.mkManager != null) {
+            this.mkManager.disableCursor();
+        }
+    }
+
+    public void preInit(LayoutPanel baseLayout, boolean editMode, String currentPattern) {
+        for (ControlPattern controlPattern : this.patternList) {
+            if (!controlPattern.name.equals(currentPattern)) continue;
+            this.currentPattern = controlPattern;
+        }
+        if (this.currentPattern == null && !this.patternList.isEmpty()) {
+            this.currentPattern = this.patternList.get(0);
             currentPattern = this.currentPattern.name;
         }
         if (this.currentPattern == null) {
-            this.currentPattern = new ControlPattern(
-                    currentPattern == null ? "Default" : currentPattern,
-                    "Rod123456 (bilibili UID 550905358)", "1.1",
-                    "QCL 默认控键布局 · Quanta Craft Launcher", 1);
+            this.currentPattern = new ControlPattern(currentPattern == null ? "Default" : currentPattern, "Rod123456 (bilibili UID 550905358)", "1.1", "QCL \u9ed8\u8ba4\u63a7\u952e\u5e03\u5c40 \u00b7 Quanta Craft Launcher", 1);
         }
-        currentChild = SettingUtils.getChildList(currentPattern).size() > 0 ? SettingUtils.getChildList(currentPattern).get(0).name : null;
-        if (launcher == 0){
+        String string2 = this.currentChild = SettingUtils.getChildList(currentPattern).size() > 0 ? SettingUtils.getChildList((String)currentPattern).get((int)0).name : null;
+        if (this.launcher == 0) {
             baseLayout.showBackground();
         }
-
-        gameMenuSetting = GameMenuSetting.getGameMenuSetting();
-        init();
+        this.gameMenuSetting = GameMenuSetting.getGameMenuSetting();
+        this.init();
     }
 
-    @SuppressLint("SetTextI18n")
-    public void init(){
-        touchCharInput = activity.findViewById(R.id.input_scanner);
-        touchCharInput.setCharacterSender(this, new LwjglCharSender());
-
-        gameMenuContainer = activity.findViewById(R.id.game_menu_container);
-        switchMenuFloat = activity.findViewById(R.id.switch_float_button);
-        switchMenuView = activity.findViewById(R.id.switch_bar);
-        switchMenuSlide = activity.findViewById(R.id.switch_gesture);
-        switchFloatMovable = activity.findViewById(R.id.switch_float_movable);
-        switchLaunchLog = activity.findViewById(R.id.switch_launch_log);
-        switchAdvanceInput = activity.findViewById(R.id.switch_advance_input);
-        switchTouch = activity.findViewById(R.id.switch_touch);
-        switchMousePatch = activity.findViewById(R.id.switch_mouse_patch);
-        switchSensor = activity.findViewById(R.id.switch_control_sensor);
-        switchHalfScreen = activity.findViewById(R.id.switch_half_screen);
-        spinnerTouchMode = activity.findViewById(R.id.spinner_touch_mode);
-        spinnerMouseMode = activity.findViewById(R.id.spinner_mouse_mode);
-        sensitivityText = activity.findViewById(R.id.sensitivity_text);
-        sensitivitySeekbar = activity.findViewById(R.id.sensor_sensitivity);
-        mouseSpeedText = activity.findViewById(R.id.mouse_speed_text);
-        mouseSpeedSeekbar = activity.findViewById(R.id.mouse_speed);
-        mouseSizeText = activity.findViewById(R.id.mouse_size_text);
-        mouseSizeSeekbar = activity.findViewById(R.id.mouse_size);
-        switchHideUI = activity.findViewById(R.id.switch_hide_ui);
-        openHin2nMenu = activity.findViewById(R.id.open_hin2n_menu);
-        forceExit = activity.findViewById(R.id.force_exit);
-
-        switchMenuFloat.setChecked(gameMenuSetting.menuFloatSetting.enable);
-        switchMenuView.setChecked(gameMenuSetting.menuViewSetting.enable);
-        switchMenuSlide.setChecked(gameMenuSetting.menuSlideSetting);
-        switchFloatMovable.setChecked(gameMenuSetting.menuFloatSetting.movable);
-        switchLaunchLog.setChecked(!gameMenuSetting.hideLaunchLog);
-        switchLaunchLog.setOnCheckedChangeListener(this);
-        switchAdvanceInput.setChecked(gameMenuSetting.advanceInput);
-        switchTouch.setChecked(gameMenuSetting.enableTouch);
-        switchMousePatch.setChecked(gameMenuSetting.mousePatch);
-        switchSensor.setChecked(gameMenuSetting.enableSensor);
-        switchHalfScreen.setChecked(gameMenuSetting.disableHalfScreen);
-        switchHideUI.setChecked(gameMenuSetting.hideUI);
-
-        switchMenuFloat.setOnCheckedChangeListener(this);
-        switchMenuView.setOnCheckedChangeListener(this);
-        switchMenuSlide.setOnCheckedChangeListener(this);
-        switchFloatMovable.setOnCheckedChangeListener(this);
-        switchAdvanceInput.setOnCheckedChangeListener(this);
-        switchTouch.setOnCheckedChangeListener(this);
-        switchMousePatch.setOnCheckedChangeListener(this);
-        switchSensor.setOnCheckedChangeListener(this);
-        switchHalfScreen.setOnCheckedChangeListener(this);
-        switchHideUI.setOnCheckedChangeListener(this);
-        openHin2nMenu.setOnClickListener(this);
-        forceExit.setOnClickListener(this);
-
-        ArrayList<String> touchModes = new ArrayList<>();
-        touchModes.add(context.getString(R.string.drawer_game_menu_control_touch_mode_create));
-        touchModes.add(context.getString(R.string.drawer_game_menu_control_touch_mode_attack));
-        ArrayAdapter<String> touchModeAdapter = new ArrayAdapter<>(context,R.layout.item_spinner_drop_down_small,touchModes);
-        spinnerTouchMode.setAdapter(touchModeAdapter);
-        spinnerTouchMode.setSelection(gameMenuSetting.touchMode);
-        spinnerTouchMode.setOnItemSelectedListener(this);
-
-        ArrayList<String> mouseModes = new ArrayList<>();
-        mouseModes.add(context.getString(R.string.drawer_game_menu_control_mouse_mode_click));
-        mouseModes.add(context.getString(R.string.drawer_game_menu_control_mouse_mode_slide));
-        ArrayAdapter<String> mouseModeAdapter = new ArrayAdapter<>(context,R.layout.item_spinner_drop_down_small,mouseModes);
-        spinnerMouseMode.setAdapter(mouseModeAdapter);
-        spinnerMouseMode.setSelection(gameMenuSetting.mouseMode);
-        spinnerMouseMode.setOnItemSelectedListener(this);
-
-        patternSpinner = activity.findViewById(R.id.current_pattern_spinner);
-        editModeSwitch = activity.findViewById(R.id.switch_edit_mode);
-        showOutlineSwitch = activity.findViewById(R.id.switch_show_outline);
-        editInfo = activity.findViewById(R.id.edit_pattern_info);
-        manageChild = activity.findViewById(R.id.manage_child_layout);
-        childSpinner = activity.findViewById(R.id.current_child_spinner);
-        addView = activity.findViewById(R.id.add_view);
-        createPattern = activity.findViewById(R.id.create_pattern);
-        createButtonStyle = activity.findViewById(R.id.create_button_style);
-
-        sensitivityText.setText(Integer.toString(gameMenuSetting.sensitivity));
-        sensitivitySeekbar.setProgress(gameMenuSetting.sensitivity);
-        sensitivitySeekbar.setOnSeekBarChangeListener(this);
-
-        mouseSpeedText.setText(Float.toString(gameMenuSetting.mouseSpeed * 100));
-        mouseSpeedSeekbar.setProgress((int) (gameMenuSetting.mouseSpeed * 100));
-        mouseSpeedSeekbar.setOnSeekBarChangeListener(this);
-
-        mouseSizeText.setText(Integer.toString(gameMenuSetting.mouseSize));
-        mouseSizeSeekbar.setProgress(gameMenuSetting.mouseSize);
-        mouseSizeSeekbar.setOnSeekBarChangeListener(this);
-
-        ArrayList<String> patterns = new ArrayList<>();
-        for (ControlPattern controlPattern : patternList){
+    @SuppressLint(value={"SetTextI18n"})
+    public void init() {
+        this.touchCharInput = (TouchCharInput)this.activity.findViewById(R.id.input_scanner);
+        this.touchCharInput.setCharacterSender(this, new LwjglCharSender());
+        this.gameMenuContainer = this.activity.findViewById(R.id.game_menu_container);
+        this.switchMenuFloat = (SwitchCompat)this.activity.findViewById(R.id.switch_float_button);
+        this.switchMenuView = (SwitchCompat)this.activity.findViewById(R.id.switch_bar);
+        this.switchMenuSlide = (SwitchCompat)this.activity.findViewById(R.id.switch_gesture);
+        this.switchFloatMovable = (SwitchCompat)this.activity.findViewById(R.id.switch_float_movable);
+        this.switchLaunchLog = (SwitchCompat)this.activity.findViewById(R.id.switch_launch_log);
+        this.switchAdvanceInput = (SwitchCompat)this.activity.findViewById(R.id.switch_advance_input);
+        this.switchTouch = (SwitchCompat)this.activity.findViewById(R.id.switch_touch);
+        this.switchMousePatch = (SwitchCompat)this.activity.findViewById(R.id.switch_mouse_patch);
+        this.switchSensor = (SwitchCompat)this.activity.findViewById(R.id.switch_control_sensor);
+        this.switchHalfScreen = (SwitchCompat)this.activity.findViewById(R.id.switch_half_screen);
+        this.spinnerTouchMode = (Spinner)this.activity.findViewById(R.id.spinner_touch_mode);
+        this.spinnerMouseMode = (Spinner)this.activity.findViewById(R.id.spinner_mouse_mode);
+        this.sensitivityText = (TextView)this.activity.findViewById(R.id.sensitivity_text);
+        this.sensitivitySeekbar = (SeekBar)this.activity.findViewById(R.id.sensor_sensitivity);
+        this.mouseSpeedText = (TextView)this.activity.findViewById(R.id.mouse_speed_text);
+        this.mouseSpeedSeekbar = (SeekBar)this.activity.findViewById(R.id.mouse_speed);
+        this.mouseSizeText = (TextView)this.activity.findViewById(R.id.mouse_size_text);
+        this.mouseSizeSeekbar = (SeekBar)this.activity.findViewById(R.id.mouse_size);
+        this.switchHideUI = (SwitchCompat)this.activity.findViewById(R.id.switch_hide_ui);
+        this.openHin2nMenu = (Button)this.activity.findViewById(R.id.open_hin2n_menu);
+        this.forceExit = (Button)this.activity.findViewById(R.id.force_exit);
+        this.switchMenuFloat.setChecked(this.gameMenuSetting.menuFloatSetting.enable);
+        this.switchMenuView.setChecked(this.gameMenuSetting.menuViewSetting.enable);
+        this.switchMenuSlide.setChecked(this.gameMenuSetting.menuSlideSetting);
+        this.switchFloatMovable.setChecked(this.gameMenuSetting.menuFloatSetting.movable);
+        this.switchLaunchLog.setChecked(!this.gameMenuSetting.hideLaunchLog);
+        this.switchLaunchLog.setOnCheckedChangeListener((CompoundButton.OnCheckedChangeListener)this);
+        this.switchAdvanceInput.setChecked(this.gameMenuSetting.advanceInput);
+        this.switchTouch.setChecked(this.gameMenuSetting.enableTouch);
+        this.switchMousePatch.setChecked(this.gameMenuSetting.mousePatch);
+        this.switchSensor.setChecked(this.gameMenuSetting.enableSensor);
+        this.switchHalfScreen.setChecked(this.gameMenuSetting.disableHalfScreen);
+        this.switchHideUI.setChecked(this.gameMenuSetting.hideUI);
+        this.switchMenuFloat.setOnCheckedChangeListener((CompoundButton.OnCheckedChangeListener)this);
+        this.switchMenuView.setOnCheckedChangeListener((CompoundButton.OnCheckedChangeListener)this);
+        this.switchMenuSlide.setOnCheckedChangeListener((CompoundButton.OnCheckedChangeListener)this);
+        this.switchFloatMovable.setOnCheckedChangeListener((CompoundButton.OnCheckedChangeListener)this);
+        this.switchAdvanceInput.setOnCheckedChangeListener((CompoundButton.OnCheckedChangeListener)this);
+        this.switchTouch.setOnCheckedChangeListener((CompoundButton.OnCheckedChangeListener)this);
+        this.switchMousePatch.setOnCheckedChangeListener((CompoundButton.OnCheckedChangeListener)this);
+        this.switchSensor.setOnCheckedChangeListener((CompoundButton.OnCheckedChangeListener)this);
+        this.switchHalfScreen.setOnCheckedChangeListener((CompoundButton.OnCheckedChangeListener)this);
+        this.switchHideUI.setOnCheckedChangeListener((CompoundButton.OnCheckedChangeListener)this);
+        this.openHin2nMenu.setOnClickListener((View.OnClickListener)this);
+        this.forceExit.setOnClickListener((View.OnClickListener)this);
+        ArrayList<String> touchModes = new ArrayList<String>();
+        touchModes.add(this.context.getString(R.string.drawer_game_menu_control_touch_mode_create));
+        touchModes.add(this.context.getString(R.string.drawer_game_menu_control_touch_mode_attack));
+        ArrayAdapter touchModeAdapter = new ArrayAdapter(this.context, R.layout.item_spinner_drop_down_small, touchModes);
+        this.spinnerTouchMode.setAdapter((SpinnerAdapter)touchModeAdapter);
+        this.spinnerTouchMode.setSelection(this.gameMenuSetting.touchMode);
+        this.spinnerTouchMode.setOnItemSelectedListener((AdapterView.OnItemSelectedListener)this);
+        ArrayList<String> mouseModes = new ArrayList<String>();
+        mouseModes.add(this.context.getString(R.string.drawer_game_menu_control_mouse_mode_click));
+        mouseModes.add(this.context.getString(R.string.drawer_game_menu_control_mouse_mode_slide));
+        ArrayAdapter mouseModeAdapter = new ArrayAdapter(this.context, R.layout.item_spinner_drop_down_small, mouseModes);
+        this.spinnerMouseMode.setAdapter((SpinnerAdapter)mouseModeAdapter);
+        this.spinnerMouseMode.setSelection(this.gameMenuSetting.mouseMode);
+        this.spinnerMouseMode.setOnItemSelectedListener((AdapterView.OnItemSelectedListener)this);
+        this.patternSpinner = (Spinner)this.activity.findViewById(R.id.current_pattern_spinner);
+        this.editModeSwitch = (SwitchCompat)this.activity.findViewById(R.id.switch_edit_mode);
+        this.showOutlineSwitch = (SwitchCompat)this.activity.findViewById(R.id.switch_show_outline);
+        this.editInfo = (Button)this.activity.findViewById(R.id.edit_pattern_info);
+        this.manageChild = (Button)this.activity.findViewById(R.id.manage_child_layout);
+        this.childSpinner = (Spinner)this.activity.findViewById(R.id.current_child_spinner);
+        this.addView = (Button)this.activity.findViewById(R.id.add_view);
+        this.createPattern = (Button)this.activity.findViewById(R.id.create_pattern);
+        this.createButtonStyle = (Button)this.activity.findViewById(R.id.create_button_style);
+        this.sensitivityText.setText((CharSequence)Integer.toString(this.gameMenuSetting.sensitivity));
+        this.sensitivitySeekbar.setProgress(this.gameMenuSetting.sensitivity);
+        this.sensitivitySeekbar.setOnSeekBarChangeListener((SeekBar.OnSeekBarChangeListener)this);
+        this.mouseSpeedText.setText((CharSequence)Float.toString(this.gameMenuSetting.mouseSpeed * 100.0f));
+        this.mouseSpeedSeekbar.setProgress((int)(this.gameMenuSetting.mouseSpeed * 100.0f));
+        this.mouseSpeedSeekbar.setOnSeekBarChangeListener((SeekBar.OnSeekBarChangeListener)this);
+        this.mouseSizeText.setText((CharSequence)Integer.toString(this.gameMenuSetting.mouseSize));
+        this.mouseSizeSeekbar.setProgress(this.gameMenuSetting.mouseSize);
+        this.mouseSizeSeekbar.setOnSeekBarChangeListener((SeekBar.OnSeekBarChangeListener)this);
+        ArrayList<String> patterns = new ArrayList<String>();
+        for (ControlPattern controlPattern : this.patternList) {
             patterns.add(controlPattern.name);
         }
-        ArrayAdapter<String> patternAdapter = new ArrayAdapter<>(context, R.layout.item_spinner_drop_down_small,patterns);
-        patternSpinner.setAdapter(patternAdapter);
-        patternSpinner.setSelection(patternAdapter.getPosition(currentPattern.name));
-
-        ArrayList<ChildLayout> list = SettingUtils.getChildList(currentPattern.name);
-        childLayoutList = new ArrayList<>();
-        for (ChildLayout childLayout : list){
-            childLayoutList.add(childLayout.name);
+        ArrayAdapter patternAdapter = new ArrayAdapter(this.context, R.layout.item_spinner_drop_down_small, patterns);
+        this.patternSpinner.setAdapter((SpinnerAdapter)patternAdapter);
+        this.patternSpinner.setSelection(patternAdapter.getPosition((Object)this.currentPattern.name));
+        ArrayList<ChildLayout> list = SettingUtils.getChildList(this.currentPattern.name);
+        this.childLayoutList = new ArrayList();
+        for (ChildLayout childLayout : list) {
+            this.childLayoutList.add(childLayout.name);
         }
-        childAdapter = new ArrayAdapter<>(context, R.layout.item_spinner_drop_down_small,childLayoutList);
-        childSpinner.setAdapter(childAdapter);
-
-        if (editMode) {
-            editInfo.setEnabled(true);
-            manageChild.setEnabled(true);
-            childSpinner.setEnabled(true);
-            addView.setEnabled(true);
-            createPattern.setEnabled(true);
-            createButtonStyle.setEnabled(true);
+        this.childAdapter = new ArrayAdapter<String>(this.context, R.layout.item_spinner_drop_down_small, this.childLayoutList);
+        this.childSpinner.setAdapter(this.childAdapter);
+        if (this.editMode) {
+            this.editInfo.setEnabled(true);
+            this.manageChild.setEnabled(true);
+            this.childSpinner.setEnabled(true);
+            this.addView.setEnabled(true);
+            this.createPattern.setEnabled(true);
+            this.createButtonStyle.setEnabled(true);
+        } else {
+            this.editInfo.setEnabled(false);
+            this.manageChild.setEnabled(false);
+            this.childSpinner.setEnabled(false);
+            this.addView.setEnabled(false);
+            this.createPattern.setEnabled(false);
+            this.createButtonStyle.setEnabled(false);
         }
-        else {
-            editInfo.setEnabled(false);
-            manageChild.setEnabled(false);
-            childSpinner.setEnabled(false);
-            addView.setEnabled(false);
-            createPattern.setEnabled(false);
-            createButtonStyle.setEnabled(false);
-        }
-        editModeSwitch.setChecked(editMode);
-
-        childSpinner.setSelection(0);
-
-        patternSpinner.setOnItemSelectedListener(this);
-        editModeSwitch.setOnCheckedChangeListener(this);
-        showOutlineSwitch.setOnCheckedChangeListener(this);
-        editInfo.setOnClickListener(this);
-        manageChild.setOnClickListener(this);
-        childSpinner.setOnItemSelectedListener(this);
-        addView.setOnClickListener(this);
-        createPattern.setOnClickListener(this);
-        createButtonStyle.setOnClickListener(this);
-
-        baseLayout.post(() -> {
-            screenWidth = baseLayout.getWidth();
-            screenHeight = baseLayout.getHeight();
-            viewManager = new ViewManager(context,activity,this,baseLayout,launcher);
-            mkManager = new MKManager(this);
-            checkOpenMenuSetting();
+        this.editModeSwitch.setChecked(this.editMode);
+        this.childSpinner.setSelection(0);
+        this.patternSpinner.setOnItemSelectedListener((AdapterView.OnItemSelectedListener)this);
+        this.editModeSwitch.setOnCheckedChangeListener((CompoundButton.OnCheckedChangeListener)this);
+        this.showOutlineSwitch.setOnCheckedChangeListener((CompoundButton.OnCheckedChangeListener)this);
+        this.editInfo.setOnClickListener((View.OnClickListener)this);
+        this.manageChild.setOnClickListener((View.OnClickListener)this);
+        this.childSpinner.setOnItemSelectedListener((AdapterView.OnItemSelectedListener)this);
+        this.addView.setOnClickListener((View.OnClickListener)this);
+        this.createPattern.setOnClickListener((View.OnClickListener)this);
+        this.createButtonStyle.setOnClickListener((View.OnClickListener)this);
+        this.baseLayout.post(() -> {
+            this.screenWidth = this.baseLayout.getWidth();
+            this.screenHeight = this.baseLayout.getHeight();
+            this.viewManager = new ViewManager(this.context, (Activity)this.activity, this, this.baseLayout, this.launcher);
+            this.mkManager = new MKManager(this);
+            this.checkOpenMenuSetting();
         });
-
     }
-
-    /** 开/关居中的游戏菜单（合并后单窗口） */
-    /**
-     * ★★★ 1.1.0 新增：菜单打开期间，在控件层监听「点击菜单外的空白处」并自动收起。
-     * 触摸能走到 baseLayout 的空白处的，说明没被任何子控件消费 —— 那就算是点在空白上了。
-     */
-    private final android.view.View.OnTouchListener qclMenuOutsideCloser = (v, event) -> {
-        if (event.getAction() == android.view.MotionEvent.ACTION_DOWN
-                && gameMenuContainer != null
-                && gameMenuContainer.getVisibility() == View.VISIBLE) {
-            int[] loc = new int[2];
-            gameMenuContainer.getLocationOnScreen(loc);
-            float rx = event.getRawX();
-            float ry = event.getRawY();
-            boolean inside = rx >= loc[0] && rx <= loc[0] + gameMenuContainer.getWidth()
-                    && ry >= loc[1] && ry <= loc[1] + gameMenuContainer.getHeight();
-            if (!inside) {
-                toggleGameMenu();
-                return true;
-            }
-        }
-        return false;
-    };
 
     public void toggleGameMenu() {
-        if (gameMenuContainer == null) return;
-        boolean show = gameMenuContainer.getVisibility() != View.VISIBLE;
-        gameMenuContainer.setVisibility(show ? View.VISIBLE : View.GONE);
-        // ★ 菜单显示 → 挂上"点空白关闭"；收起 → 摘掉
-        if (baseLayout != null) {
-            baseLayout.setOnTouchListener(show ? qclMenuOutsideCloser : null);
+        if (this.gameMenuContainer == null) {
+            return;
+        }
+        boolean show = this.gameMenuContainer.getVisibility() != 0;
+        this.gameMenuContainer.setVisibility(show ? 0 : 8);
+        this.setGameMenuOutsideCloseEnabled(show);
+    }
+
+    public void setGameMenuOutsideCloseEnabled(boolean enabled) {
+        if (this.baseLayout == null) {
+            return;
+        }
+        if (enabled) {
+            this.baseLayout.setMenuPanel(this.gameMenuContainer);
+            this.baseLayout.setOutsideCloseListener(this::hideGameMenu);
+            this.baseLayout.setMenuOutsideCloseEnabled(true);
+        } else {
+            this.baseLayout.setMenuOutsideCloseEnabled(false);
         }
     }
 
-    private void checkOpenMenuSetting(){
-        if (!gameMenuSetting.menuFloatSetting.enable && !gameMenuSetting.menuViewSetting.enable && !gameMenuSetting.menuSlideSetting){
-            switchMenuFloat.setChecked(true);
+    public void hideGameMenu() {
+        if (this.gameMenuContainer == null) {
+            return;
+        }
+        if (this.gameMenuContainer.getVisibility() != 0) {
+            return;
+        }
+        this.gameMenuContainer.setVisibility(8);
+        this.setGameMenuOutsideCloseEnabled(false);
+    }
+
+    private void checkOpenMenuSetting() {
+        if (!(this.gameMenuSetting.menuFloatSetting.enable || this.gameMenuSetting.menuViewSetting.enable || this.gameMenuSetting.menuSlideSetting)) {
+            this.switchMenuFloat.setChecked(true);
         }
     }
 
-    public void refreshChildSpinner(){
-        ArrayList<ChildLayout> list = SettingUtils.getChildList(currentPattern.name);
-        childLayoutList = new ArrayList<>();
-        for (ChildLayout childLayout : list){
-            childLayoutList.add(childLayout.name);
+    public void refreshChildSpinner() {
+        ArrayList<ChildLayout> list = SettingUtils.getChildList(this.currentPattern.name);
+        this.childLayoutList = new ArrayList();
+        for (ChildLayout childLayout : list) {
+            this.childLayoutList.add(childLayout.name);
         }
-        childAdapter = new ArrayAdapter<>(context, R.layout.item_spinner_drop_down_small,childLayoutList);
-        childSpinner.setAdapter(childAdapter);
-        if (childLayoutList.size() == 0){
-            currentChild = null;
+        this.childAdapter = new ArrayAdapter<String>(this.context, R.layout.item_spinner_drop_down_small, this.childLayoutList);
+        this.childSpinner.setAdapter(this.childAdapter);
+        if (this.childLayoutList.size() == 0) {
+            this.currentChild = null;
+        } else if (this.childLayoutList.contains(this.currentChild)) {
+            this.childSpinner.setSelection(this.childAdapter.getPosition(this.currentChild));
+        } else {
+            this.childSpinner.setSelection(0);
+            this.currentChild = this.childLayoutList.get(0);
         }
-        else {
-            if (childLayoutList.contains(currentChild)){
-                childSpinner.setSelection(childAdapter.getPosition(currentChild));
-            }
-            else {
-                childSpinner.setSelection(0);
-                currentChild = childLayoutList.get(0);
-            }
-        }
-        viewManager.refreshLayout(currentPattern.name,currentChild,editMode);
+        this.viewManager.refreshLayout(this.currentPattern.name, this.currentChild, this.editMode);
     }
 
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
-
     }
 
-    @Override
     public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
-        if (compoundButton == switchMenuFloat) {
-            gameMenuSetting.menuFloatSetting.enable = b;
-            if (b){
-                baseLayout.addView(viewManager.menuFloat);
-            }
-            else {
-                baseLayout.removeView(viewManager.menuFloat);
-            }
-            checkOpenMenuSetting();
-            GameMenuSetting.saveGameMenuSetting(gameMenuSetting);
-        }
-        if (compoundButton == switchMenuView) {
-            gameMenuSetting.menuViewSetting.enable = b;
-            if (b){
-                baseLayout.addView(viewManager.menuView);
-            }
-            else {
-                baseLayout.removeView(viewManager.menuView);
-            }
-            checkOpenMenuSetting();
-            GameMenuSetting.saveGameMenuSetting(gameMenuSetting);
-        }
-        if (compoundButton == switchMenuSlide) {
-            gameMenuSetting.menuSlideSetting = b;
-            checkOpenMenuSetting();
-            GameMenuSetting.saveGameMenuSetting(gameMenuSetting);
-        }
-        if (compoundButton == switchLaunchLog) {
-            gameMenuSetting.hideLaunchLog = !b;
-            GameMenuSetting.saveGameMenuSetting(gameMenuSetting);
+        if (compoundButton == this.switchMenuFloat) {
+            this.gameMenuSetting.menuFloatSetting.enable = b;
             if (b) {
-                com.qcl.launcher.launcher.launch.LaunchLogWindow.showFor(activity, drawerLayout);
+                this.baseLayout.addView(this.viewManager.menuFloat);
             } else {
-                com.qcl.launcher.launcher.launch.LaunchLogWindow.closeCurrentIfAny();
+                this.baseLayout.removeView(this.viewManager.menuFloat);
             }
+            this.checkOpenMenuSetting();
+            GameMenuSetting.saveGameMenuSetting(this.gameMenuSetting);
         }
-        if (compoundButton == switchFloatMovable) {
-            gameMenuSetting.menuFloatSetting.movable = b;
-            GameMenuSetting.saveGameMenuSetting(gameMenuSetting);
-        }
-        if (compoundButton == switchAdvanceInput) {
-            gameMenuSetting.advanceInput = b;
-            GameMenuSetting.saveGameMenuSetting(gameMenuSetting);
-        }
-        if (compoundButton == switchTouch) {
-            gameMenuSetting.enableTouch = b;
-            GameMenuSetting.saveGameMenuSetting(gameMenuSetting);
-        }
-        if (compoundButton == switchMousePatch) {
-            gameMenuSetting.mousePatch = b;
-            GameMenuSetting.saveGameMenuSetting(gameMenuSetting);
-        }
-        if (compoundButton == switchSensor) {
-            gameMenuSetting.enableSensor = b;
-            GameMenuSetting.saveGameMenuSetting(gameMenuSetting);
-            if (viewManager != null){
-                viewManager.setSensorEnable(b);
-            }
-        }
-        if (compoundButton == switchHalfScreen) {
-            gameMenuSetting.disableHalfScreen = b;
-            GameMenuSetting.saveGameMenuSetting(gameMenuSetting);
-        }
-        if (compoundButton == switchHideUI) {
-            gameMenuSetting.hideUI = b;
-            GameMenuSetting.saveGameMenuSetting(gameMenuSetting);
-            viewManager.hideUI(b);
-        }
-        if (compoundButton == editModeSwitch) {
-            editMode = b;
+        if (compoundButton == this.switchMenuView) {
+            this.gameMenuSetting.menuViewSetting.enable = b;
             if (b) {
-                editInfo.setEnabled(true);
-                manageChild.setEnabled(true);
-                childSpinner.setEnabled(true);
-                addView.setEnabled(true);
-            createPattern.setEnabled(true);
-            createButtonStyle.setEnabled(true);
+                this.baseLayout.addView(this.viewManager.menuView);
+            } else {
+                this.baseLayout.removeView(this.viewManager.menuView);
             }
-            else {
-                editInfo.setEnabled(false);
-                manageChild.setEnabled(false);
-                childSpinner.setEnabled(false);
-                addView.setEnabled(false);
-            createPattern.setEnabled(false);
-            createButtonStyle.setEnabled(false);
-            }
-            viewManager.refreshLayout(currentPattern.name,currentChild,b);
+            this.checkOpenMenuSetting();
+            GameMenuSetting.saveGameMenuSetting(this.gameMenuSetting);
         }
-        if (compoundButton == showOutlineSwitch) {
-            showOutline = b;
-            if (viewManager != null) {
-                viewManager.refreshViews();
+        if (compoundButton == this.switchMenuSlide) {
+            this.gameMenuSetting.menuSlideSetting = b;
+            this.checkOpenMenuSetting();
+            GameMenuSetting.saveGameMenuSetting(this.gameMenuSetting);
+        }
+        if (compoundButton == this.switchLaunchLog) {
+            this.gameMenuSetting.hideLaunchLog = !b;
+            GameMenuSetting.saveGameMenuSetting(this.gameMenuSetting);
+            if (b) {
+                LaunchLogWindow.showFor((Activity)this.activity, (ViewGroup)this.drawerLayout);
+            } else {
+                LaunchLogWindow.closeCurrentIfAny();
+            }
+        }
+        if (compoundButton == this.switchFloatMovable) {
+            this.gameMenuSetting.menuFloatSetting.movable = b;
+            GameMenuSetting.saveGameMenuSetting(this.gameMenuSetting);
+        }
+        if (compoundButton == this.switchAdvanceInput) {
+            this.gameMenuSetting.advanceInput = b;
+            GameMenuSetting.saveGameMenuSetting(this.gameMenuSetting);
+        }
+        if (compoundButton == this.switchTouch) {
+            this.gameMenuSetting.enableTouch = b;
+            GameMenuSetting.saveGameMenuSetting(this.gameMenuSetting);
+        }
+        if (compoundButton == this.switchMousePatch) {
+            this.gameMenuSetting.mousePatch = b;
+            GameMenuSetting.saveGameMenuSetting(this.gameMenuSetting);
+        }
+        if (compoundButton == this.switchSensor) {
+            this.gameMenuSetting.enableSensor = b;
+            GameMenuSetting.saveGameMenuSetting(this.gameMenuSetting);
+            if (this.viewManager != null) {
+                this.viewManager.setSensorEnable(b);
+            }
+        }
+        if (compoundButton == this.switchHalfScreen) {
+            this.gameMenuSetting.disableHalfScreen = b;
+            GameMenuSetting.saveGameMenuSetting(this.gameMenuSetting);
+        }
+        if (compoundButton == this.switchHideUI) {
+            this.gameMenuSetting.hideUI = b;
+            GameMenuSetting.saveGameMenuSetting(this.gameMenuSetting);
+            this.viewManager.hideUI(b);
+        }
+        if (compoundButton == this.editModeSwitch) {
+            this.editMode = b;
+            if (b) {
+                this.editInfo.setEnabled(true);
+                this.manageChild.setEnabled(true);
+                this.childSpinner.setEnabled(true);
+                this.addView.setEnabled(true);
+                this.createPattern.setEnabled(true);
+                this.createButtonStyle.setEnabled(true);
+            } else {
+                this.editInfo.setEnabled(false);
+                this.manageChild.setEnabled(false);
+                this.childSpinner.setEnabled(false);
+                this.addView.setEnabled(false);
+                this.createPattern.setEnabled(false);
+                this.createButtonStyle.setEnabled(false);
+            }
+            this.viewManager.refreshLayout(this.currentPattern.name, this.currentChild, b);
+        }
+        if (compoundButton == this.showOutlineSwitch) {
+            this.showOutline = b;
+            if (this.viewManager != null) {
+                this.viewManager.refreshViews();
             }
         }
     }
 
-    /** 联机模块：主界面同一套弹窗（免责声明 → 创建/加入/信息/帮助） */
     private void showMultiplayerMenu() {
-        com.qcl.launcher.launcher.terracotta.MultiplayerDialogHelper.showInGame(activity, context);
+        MultiplayerDialogHelper.showInGame((Activity)this.activity, this.context);
     }
 
-
-    @Override
     public void onClick(View view) {
-        if (view == openHin2nMenu) {
-            showMultiplayerMenu();
+        Dialog dialog;
+        if (view == this.openHin2nMenu) {
+            this.showMultiplayerMenu();
         }
-        if (view == forceExit) {
-            AlertDialog.Builder builder = new AlertDialog.Builder(context);
-            builder.setTitle(context.getString(R.string.dialog_force_exit_title));
-            builder.setMessage(context.getString(R.string.dialog_force_exit_message));
-            builder.setPositiveButton(context.getString(R.string.dialog_force_exit_positive), (dialogInterface, i) -> {
-                android.os.Process.killProcess(android.os.Process.myPid());
-            });
-            builder.setNegativeButton(context.getString(R.string.dialog_force_exit_negative), (dialogInterface, i) -> {});
-            AlertDialog dialog = builder.create();
-            dialog.show();
+        if (view == this.forceExit) {
+            AlertDialog.Builder builder = new AlertDialog.Builder(this.context);
+            builder.setTitle((CharSequence)this.context.getString(R.string.dialog_force_exit_title));
+            builder.setMessage((CharSequence)this.context.getString(R.string.dialog_force_exit_message));
+            builder.setPositiveButton((CharSequence)this.context.getString(R.string.dialog_force_exit_positive), (dialogInterface, i) -> Process.killProcess((int)Process.myPid()));
+            builder.setNegativeButton((CharSequence)this.context.getString(R.string.dialog_force_exit_negative), (dialogInterface, i) -> {});
+            AlertDialog dialog2 = builder.create();
+            dialog2.show();
         }
-        if (view == editInfo){
-            EditControlPatternDialog dialog = new EditControlPatternDialog(context,activity,enableNameEditor, new EditControlPatternDialog.OnPatternInfoChangeListener() {
+        if (view == this.editInfo) {
+            dialog = new EditControlPatternDialog(this.context, (Activity)this.activity, this.enableNameEditor, new EditControlPatternDialog.OnPatternInfoChangeListener(){
+
                 @Override
                 public void OnInfoChange(ControlPattern controlPattern) {
-                    if (currentPattern.name.equals(initialPattern)){
-                        initialPattern = controlPattern.name;
+                    if (MenuHelper.this.currentPattern.name.equals(MenuHelper.this.initialPattern)) {
+                        MenuHelper.this.initialPattern = controlPattern.name;
                     }
-                    FileUtils.rename(AppManifest.CONTROLLER_DIR + "/" + currentPattern.name,controlPattern.name);
+                    FileUtils.rename(AppManifest.CONTROLLER_DIR + "/" + MenuHelper.this.currentPattern.name, controlPattern.name);
                     Gson gson = new Gson();
-                    String string = gson.toJson(controlPattern);
-                    FileStringUtils.writeFile(AppManifest.CONTROLLER_DIR + "/" + controlPattern.name + "/info.json",string);
-                    for (ChildLayout child : SettingUtils.getChildList(controlPattern.name)) {
-                        for (BaseButtonInfo info : child.baseButtonList) {
-                            info.pattern = controlPattern.name;
+                    String string2 = gson.toJson((Object)controlPattern);
+                    FileStringUtils.writeFile(AppManifest.CONTROLLER_DIR + "/" + controlPattern.name + "/info.json", string2);
+                    for (ChildLayout childLayout : SettingUtils.getChildList(controlPattern.name)) {
+                        for (BaseButtonInfo baseButtonInfo : childLayout.baseButtonList) {
+                            baseButtonInfo.pattern = controlPattern.name;
                         }
-                        for (BaseRockerViewInfo info : child.baseRockerViewList) {
-                            info.pattern = controlPattern.name;
+                        for (BaseRockerViewInfo baseRockerViewInfo : childLayout.baseRockerViewList) {
+                            baseRockerViewInfo.pattern = controlPattern.name;
                         }
-                        ChildLayout.saveChildLayout(controlPattern.name,child);
+                        ChildLayout.saveChildLayout(controlPattern.name, childLayout);
                     }
-                    patternList = SettingUtils.getControlPatternList();
-                    currentPattern = controlPattern;
-                    ArrayList<String> patterns = new ArrayList<>();
-                    for (ControlPattern pattern : patternList){
+                    MenuHelper.this.patternList = SettingUtils.getControlPatternList();
+                    MenuHelper.this.currentPattern = controlPattern;
+                    ArrayList<String> patterns = new ArrayList<String>();
+                    for (ControlPattern pattern : MenuHelper.this.patternList) {
                         patterns.add(pattern.name);
                     }
-                    ArrayAdapter<String> patternAdapter = new ArrayAdapter<>(context, R.layout.item_spinner_drop_down_small,patterns);
-                    patternSpinner.setAdapter(patternAdapter);
-                    patternSpinner.setSelection(patternAdapter.getPosition(currentPattern.name));
+                    ArrayAdapter arrayAdapter = new ArrayAdapter(MenuHelper.this.context, R.layout.item_spinner_drop_down_small, patterns);
+                    MenuHelper.this.patternSpinner.setAdapter((SpinnerAdapter)arrayAdapter);
+                    MenuHelper.this.patternSpinner.setSelection(arrayAdapter.getPosition((Object)MenuHelper.this.currentPattern.name));
                 }
-            },currentPattern);
+            }, this.currentPattern);
             dialog.show();
         }
-        if (view == manageChild){
-            ChildManagerDialog dialog = new ChildManagerDialog(context,this,currentPattern);
+        if (view == this.manageChild) {
+            dialog = new ChildManagerDialog(this.context, this, this.currentPattern);
             dialog.show();
         }
-        if (view == createPattern){
-            CreateControlPatternDialog dialog = new CreateControlPatternDialog(context, activity, new CreateControlPatternDialog.OnPatternCreateListener() {
+        if (view == this.createPattern) {
+            dialog = new CreateControlPatternDialog(this.context, (Activity)this.activity, new CreateControlPatternDialog.OnPatternCreateListener(){
+
                 @Override
                 public void OnPatternCreate(ControlPattern controlPattern) {
                     FileUtils.createDirectory(AppManifest.CONTROLLER_DIR + "/" + controlPattern.name);
                     Gson gson = new Gson();
-                    String string = gson.toJson(controlPattern);
-                    FileStringUtils.writeFile(AppManifest.CONTROLLER_DIR + "/" + controlPattern.name + "/info.json", string);
+                    String string2 = gson.toJson((Object)controlPattern);
+                    FileStringUtils.writeFile(AppManifest.CONTROLLER_DIR + "/" + controlPattern.name + "/info.json", string2);
                 }
             });
             dialog.show();
         }
-        if (view == createButtonStyle){
-            CreateButtonStyleDialog dialog = new CreateButtonStyleDialog(context, SettingUtils.getButtonStyleList(), new CreateButtonStyleDialog.OnButtonStyleCreateListener() {
+        if (view == this.createButtonStyle) {
+            dialog = new CreateButtonStyleDialog(this.context, SettingUtils.getButtonStyleList(), new CreateButtonStyleDialog.OnButtonStyleCreateListener(){
+
                 @Override
                 public void onButtonStyleCreate(ButtonStyle buttonStyle) {
                     ArrayList<ButtonStyle> styles = SettingUtils.getButtonStyleList();
@@ -592,85 +587,77 @@ public class MenuHelper implements CompoundButton.OnCheckedChangeListener, View.
             });
             dialog.show();
         }
-        if (view == addView){
-            if (currentChild == null){
-                Toast.makeText(context,context.getString(R.string.drawer_custom_menu_warn),Toast.LENGTH_SHORT).show();
-            }
-            else {
-                AddViewDialog dialog = new AddViewDialog(context, currentPattern.name,currentChild, screenWidth, screenHeight, new AddViewDialog.OnViewCreateListener() {
+        if (view == this.addView) {
+            if (this.currentChild == null) {
+                Toast.makeText((Context)this.context, (CharSequence)this.context.getString(R.string.drawer_custom_menu_warn), (int)0).show();
+            } else {
+                dialog = new AddViewDialog(this.context, this.currentPattern.name, this.currentChild, this.screenWidth, this.screenHeight, new AddViewDialog.OnViewCreateListener(){
+
                     @Override
                     public void onButtonCreate(BaseButtonInfo baseButtonInfo) {
-                        viewManager.addButton(baseButtonInfo,View.VISIBLE);
+                        MenuHelper.this.viewManager.addButton(baseButtonInfo, 0);
                     }
 
                     @Override
                     public void onRockerCreate(BaseRockerViewInfo baseRockerViewInfo) {
-                        viewManager.addRocker(baseRockerViewInfo,View.VISIBLE);
+                        MenuHelper.this.viewManager.addRocker(baseRockerViewInfo, 0);
                     }
-                },fullscreen);
+                }, this.fullscreen);
                 dialog.show();
             }
         }
     }
 
-    @Override
     public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
-        if (adapterView == spinnerTouchMode){
-            gameMenuSetting.touchMode = i;
-            GameMenuSetting.saveGameMenuSetting(gameMenuSetting);
+        if (adapterView == this.spinnerTouchMode) {
+            this.gameMenuSetting.touchMode = i;
+            GameMenuSetting.saveGameMenuSetting(this.gameMenuSetting);
         }
-        if (adapterView == spinnerMouseMode){
-            gameMenuSetting.mouseMode = i;
-            GameMenuSetting.saveGameMenuSetting(gameMenuSetting);
+        if (adapterView == this.spinnerMouseMode) {
+            this.gameMenuSetting.mouseMode = i;
+            GameMenuSetting.saveGameMenuSetting(this.gameMenuSetting);
         }
-        if (adapterView == patternSpinner){
-            String str = (String) patternSpinner.getItemAtPosition(i);
-            for (ControlPattern controlPattern : patternList){
-                if (controlPattern.name.equals(str)){
-                    currentPattern = controlPattern;
-                    break;
-                }
+        if (adapterView == this.patternSpinner) {
+            String str = (String)this.patternSpinner.getItemAtPosition(i);
+            for (ControlPattern controlPattern : this.patternList) {
+                if (!controlPattern.name.equals(str)) continue;
+                this.currentPattern = controlPattern;
+                break;
             }
-            refreshChildSpinner();
+            this.refreshChildSpinner();
         }
-        if (adapterView == childSpinner){
-            currentChild = (String) childSpinner.getItemAtPosition(i);
-            if (editMode) {
-                viewManager.refreshLayout(currentPattern.name,(String) childSpinner.getItemAtPosition(i), true);
+        if (adapterView == this.childSpinner) {
+            this.currentChild = (String)this.childSpinner.getItemAtPosition(i);
+            if (this.editMode) {
+                this.viewManager.refreshLayout(this.currentPattern.name, (String)this.childSpinner.getItemAtPosition(i), true);
             }
         }
     }
 
-    @Override
     public void onNothingSelected(AdapterView<?> adapterView) {
-
     }
 
-    @SuppressLint("SetTextI18n")
-    @Override
+    @SuppressLint(value={"SetTextI18n"})
     public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
-        if (seekBar == sensitivitySeekbar){
-            gameMenuSetting.sensitivity = i;
-            sensitivityText.setText(Integer.toString(i));
+        if (seekBar == this.sensitivitySeekbar) {
+            this.gameMenuSetting.sensitivity = i;
+            this.sensitivityText.setText((CharSequence)Integer.toString(i));
         }
-        if (seekBar == mouseSpeedSeekbar){
-            gameMenuSetting.mouseSpeed = (float) i / 100f;
-            mouseSpeedText.setText(Integer.toString(i));
+        if (seekBar == this.mouseSpeedSeekbar) {
+            this.gameMenuSetting.mouseSpeed = (float)i / 100.0f;
+            this.mouseSpeedText.setText((CharSequence)Integer.toString(i));
         }
-        if (seekBar == mouseSizeSeekbar){
-            gameMenuSetting.mouseSize = i;
-            mouseSizeText.setText(Integer.toString(i));
+        if (seekBar == this.mouseSizeSeekbar) {
+            this.gameMenuSetting.mouseSize = i;
+            this.mouseSizeText.setText((CharSequence)Integer.toString(i));
         }
-        GameMenuSetting.saveGameMenuSetting(gameMenuSetting);
+        GameMenuSetting.saveGameMenuSetting(this.gameMenuSetting);
     }
 
-    @Override
     public void onStartTrackingTouch(SeekBar seekBar) {
-
     }
 
-    @Override
     public void onStopTrackingTouch(SeekBar seekBar) {
-
     }
 }
+

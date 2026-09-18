@@ -1,23 +1,19 @@
 package com.qcl.launcher.utils.file;
 
-import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
-
 import androidx.core.graphics.drawable.DrawableCompat;
 
+/* loaded from: classes2.dex */
 public class DrawableUtils {
-
-    public static Drawable getDrawableFromFile(String path){
-        Bitmap bitmap = BitmapFactory.decodeFile(path);
-        BitmapDrawable drawable = new BitmapDrawable(bitmap);
-        return drawable;
+    public static Drawable getDrawableFromFile(String str) {
+        return new BitmapDrawable(BitmapFactory.decodeFile(str));
     }
 
-    public static Drawable getDrawableForView(Drawable rawDrawable, int color){
-        Drawable drawable = DrawableCompat.wrap(rawDrawable);
-        DrawableCompat.setTint(drawable, color);
-        return drawable;
+    public static Drawable getDrawableForView(Drawable drawable, int i) {
+        Drawable wrap = DrawableCompat.wrap(drawable);
+        DrawableCompat.setTint(wrap, i);
+        return wrap;
     }
 }

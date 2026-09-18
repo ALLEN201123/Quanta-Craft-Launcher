@@ -1,9 +1,8 @@
 package com.qcl.launcher.manifest.info;
 
+/* loaded from: classes2.dex */
 public class AppInfo {
-
-    public final static String APP_NAME = "Hello Minecraft! Launcher Pocket Edition";
-    public final static String APP_VERSION_NAME = "v1.0.0";
-    public final static int CONTROL_VERSION_CODE = 1;
-
+    public static final String APP_NAME = "Hello Minecraft! Launcher Pocket Edition";
+    public static final String APP_VERSION_NAME = "v1.0.0";
+    public static final int CONTROL_VERSION_CODE = 1;
 }

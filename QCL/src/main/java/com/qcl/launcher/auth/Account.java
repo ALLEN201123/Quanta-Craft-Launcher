@@ -2,34 +2,35 @@ package com.qcl.launcher.auth;
 
 import com.qcl.launcher.auth.offline.OfflineSkinSetting;
 
+/* loaded from: classes2.dex */
 public class Account {
-    public int loginType;
-    public String email;
-    public String password;
-    public String user_type;
-    public String auth_session;
-    public String auth_player_name;
-    public String auth_uuid;
     public String auth_access_token;
     public String auth_client_token;
-    public String refresh_token;
+    public String auth_player_name;
+    public String auth_session;
+    public String auth_uuid;
+    public String email;
     public String loginServer;
-    public String texture;
+    public int loginType;
     public OfflineSkinSetting offlineSkinSetting;
+    public String password;
+    public String refresh_token;
+    public String texture;
+    public String user_type;
 
-    public Account (int loginType,String email,String password,String user_type,String auth_session,String auth_player_name,String auth_uuid,String auth_access_token,String auth_client_token,String refresh_token,String loginServer,String texture){
-        this.loginType = loginType;
-        this.email = email;
-        this.password = password;
-        this.user_type = user_type;
-        this.auth_session = auth_session;
-        this.auth_player_name = auth_player_name;
-        this.auth_uuid = auth_uuid;
-        this.auth_access_token = auth_access_token;
-        this.auth_client_token = auth_client_token;
-        this.refresh_token = refresh_token;
-        this.loginServer = loginServer;
-        this.texture = texture;
+    public Account(int i, String str, String str2, String str3, String str4, String str5, String str6, String str7, String str8, String str9, String str10, String str11) {
+        this.loginType = i;
+        this.email = str;
+        this.password = str2;
+        this.user_type = str3;
+        this.auth_session = str4;
+        this.auth_player_name = str5;
+        this.auth_uuid = str6;
+        this.auth_access_token = str7;
+        this.auth_client_token = str8;
+        this.refresh_token = str9;
+        this.loginServer = str10;
+        this.texture = str11;
     }
 
     public void refresh(Account account) {

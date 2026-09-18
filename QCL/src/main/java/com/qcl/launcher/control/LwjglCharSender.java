@@ -1,43 +1,22 @@
 package com.qcl.launcher.control;
 
-import net.kdt.pojavlaunch.keyboard.LwjglGlfwKeycode;
-
 import org.lwjgl.glfw.CallbackBridge;
 
-import cosine.boat.BoatInput;
-import cosine.boat.keyboard.BoatKeycodes;
-
+/* loaded from: classes2.dex */
 public class LwjglCharSender implements CharacterSenderStrategy {
-    @Override
-    public void sendBackspace(int launcher) {
-        if (launcher == 1) {
-            BoatInput.setKey(BoatKeycodes.KEY_BACKSPACE, '\u0008',true);
-        }
-        else if (launcher == 2) {
-            CallbackBridge.sendKeycode(LwjglGlfwKeycode.GLFW_KEY_BACKSPACE, '\u0008', 0, 0, true);
-            CallbackBridge.sendKeycode(LwjglGlfwKeycode.GLFW_KEY_BACKSPACE, '\u0008', 0, 0, false);
-        }
+    @Override // com.qcl.launcher.control.CharacterSenderStrategy
+    public void sendBackspace(int i) {
+        CallbackBridge.sendKeycode(259, '\b', 0, 0, true);
+        CallbackBridge.sendKeycode(259, '\b', 0, 0, false);
     }
 
-    @Override
-    public void sendEnter(int launcher) {
-        if (launcher == 1) {
-            BoatInput.setKey(BoatKeycodes.KEY_ENTER,0,true);
-            BoatInput.setKey(BoatKeycodes.KEY_ENTER,0,false);
-        }
-        else if (launcher == 2) {
-            CallbackBridge.sendKeyPress(LwjglGlfwKeycode.GLFW_KEY_ENTER);
-        }
+    @Override // com.qcl.launcher.control.CharacterSenderStrategy
+    public void sendEnter(int i) {
+        CallbackBridge.sendKeyPress(257);
     }
 
-    @Override
-    public void sendChar(int launcher, char character) {
-        if (launcher == 1) {
-            BoatInput.setKey(0,character,true);
-            BoatInput.setKey(0,character,false);
-        }
-        else if (launcher == 2) {
-            CallbackBridge.sendChar(character, 0);
-        }
+    @Override // com.qcl.launcher.control.CharacterSenderStrategy
+    public void sendChar(int i, char c) {
+        CallbackBridge.sendChar(c, 0);
     }
 }

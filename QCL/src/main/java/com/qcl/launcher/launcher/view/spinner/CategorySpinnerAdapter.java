@@ -1,84 +1,81 @@
 package com.qcl.launcher.launcher.view.spinner;
 
-import android.annotation.SuppressLint;
 import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.CheckedTextView;
-
-import com.qcl.launcher.R;
 import com.qcl.launcher.launcher.mod.RemoteModRepository;
 import com.qcl.launcher.launcher.mod.curse.CurseAddon;
-
 import java.util.ArrayList;
 
+import com.qcl.launcher.R;
+/* loaded from: classes2.dex */
 public class CategorySpinnerAdapter extends BaseAdapter {
-
     private Context context;
     private ArrayList<RemoteModRepository.Category> list;
     private int rootId;
 
-    public CategorySpinnerAdapter(Context context, ArrayList<RemoteModRepository.Category> list, int rootId){
+    @Override // android.widget.Adapter
+    public long getItemId(int i) {
+        return 0L;
+    }
+
+    public CategorySpinnerAdapter(Context context, ArrayList<RemoteModRepository.Category> arrayList, int i) {
         this.context = context;
-        this.list = list;
-        this.rootId = rootId;
+        this.list = arrayList;
+        this.rootId = i;
     }
 
-    private static class ViewHolder{
+    /* loaded from: classes2.dex */
+    private static class ViewHolder {
         CheckedTextView checkedTextView;
+
+        private ViewHolder() {
+        }
     }
 
-    @Override
+    @Override // android.widget.Adapter
     public int getCount() {
-        return list.size();
+        return this.list.size();
     }
 
-    @Override
-    public Object getItem(int position) {
-        return list.get(position);
+    @Override // android.widget.Adapter
+    public Object getItem(int i) {
+        return this.list.get(i);
     }
 
-    @Override
-    public long getItemId(int position) {
-        return 0;
-    }
-
-    @SuppressLint("SetTextI18n")
-    @Override
-    public View getView(int position, View convertView, ViewGroup parent) {
-        final ViewHolder viewHolder;
-        if (convertView == null){
+    @Override // android.widget.Adapter
+    public View getView(int i, View view, ViewGroup viewGroup) {
+        View view2;
+        ViewHolder viewHolder;
+        String id;
+        if (view == null) {
             viewHolder = new ViewHolder();
-            convertView = LayoutInflater.from(context).inflate(R.layout.item_spinner_drop_down,null);
-            viewHolder.checkedTextView = convertView.findViewById(R.id.checkedTextViewCustom);
-            convertView.setTag(viewHolder);
+            view2 = LayoutInflater.from(this.context).inflate(R.layout.item_spinner_drop_down, (ViewGroup) null);
+            viewHolder.checkedTextView = (CheckedTextView) view2.findViewById(R.id.checkedTextViewCustom);
+            view2.setTag(viewHolder);
+        } else {
+            view2 = view;
+            viewHolder = (ViewHolder) view.getTag();
         }
-        else {
-            viewHolder = (ViewHolder) convertView.getTag();
-        }
-        RemoteModRepository.Category category = list.get(position);
-        boolean isCurse = category.getSelf() instanceof CurseAddon.Category;
-        String c;
-        int resId = context.getResources().getIdentifier((isCurse ? "curse_category_" : "modrinth_category_") + category.getId().replace("-","_"),"string",context.getPackageName());
-        if (resId != 0 && context.getString(resId) != null) {
-            c = context.getString(resId);
-        }
-        else {
-            c = category.getId();
+        RemoteModRepository.Category category = this.list.get(i);
+        int identifier = this.context.getResources().getIdentifier((category.getSelf() instanceof CurseAddon.Category ? "curse_category_" : "modrinth_category_") + category.getId().replace("-", "_"), "string", this.context.getPackageName());
+        if (identifier != 0 && this.context.getString(identifier) != null) {
+            id = this.context.getString(identifier);
+        } else {
+            id = category.getId();
         }
         if (category.getSelf() instanceof CurseAddon.Category) {
-            if (((CurseAddon.Category) category.getSelf()).getParentCategoryId() == rootId || ((CurseAddon.Category) category.getSelf()).getParentCategoryId() == 0) {
-                viewHolder.checkedTextView.setText(c);
+            if (((CurseAddon.Category) category.getSelf()).getParentCategoryId() == this.rootId || ((CurseAddon.Category) category.getSelf()).getParentCategoryId() == 0) {
+                viewHolder.checkedTextView.setText(id);
+            } else {
+                viewHolder.checkedTextView.setText("    " + id);
             }
-            else {
-                viewHolder.checkedTextView.setText("    " + c);
-            }
+        } else {
+            viewHolder.checkedTextView.setText(id);
         }
-        else {
-            viewHolder.checkedTextView.setText(c);
-        }
-        return convertView;
+        return view2;
     }
 }

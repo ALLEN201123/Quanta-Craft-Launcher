@@ -949,4 +949,25 @@
     <string name="revival_manifest_failed">版本清單重新整理失敗，已保留原清單。請檢查網路後重試。</string>
     <string name="revival_sdl_unavailable">此版本需要 SDL3。目前的 Boat/Pojav 視窗後端尚未適配 SDL3，選擇 Java 25 不能取代視窗適配。</string>
     <string name="revival_java_unavailable">目前架構的 Java 執行環境不可用或安裝不完整。Java 25 暫不支援 x86 32位。</string>
+
+    <!-- ★ 2026-09-17：「安裝或更新執行環境」頁（照 FCL RuntimeFragment 補齊）。
+         原本只寫在預設 values/strings.xml（英文），繁中系統下會整頁顯示英文，
+         現補齊繁中翻譯。 -->
+    <string name="splash_title">歡迎使用 Quanta Craft Launcher</string>
+    <string name="splash_runtime_title">安裝或更新執行環境</string>
+    <string name="splash_runtime_lwjgl">LWJGL</string>
+    <string name="splash_runtime_cacio">Caciocavallo</string>
+    <string name="splash_runtime_cacio17">Caciocavallo 17</string>
+    <string name="splash_runtime_java8">JRE 8</string>
+    <string name="splash_runtime_java17">JRE 17</string>
+    <string name="splash_runtime_java21">JRE 21</string>
+    <string name="splash_runtime_java25">JRE 25</string>
+    <string name="splash_runtime_jna">JNA</string>
+    <string name="splash_runtime_install">安裝 / 更新</string>
+    <string name="splash_runtime_patching">正在最佳化執行環境…</string>
+    <string name="splash_runtime_installing">正在安裝…</string>
+    <string name="splash_runtime_failed_title">執行環境安裝失敗</string>
+    <string name="splash_runtime_arch_unsupported">目前裝置架構（%1$s）沒有打包可用的 Java 執行環境檔案，請改用全架構版本的 QCL。</string>
+    <string name="update_checking">正在檢查更新…</string>
+    <string name="update_not_exist">目前已是最新版本</string>
 </resources>

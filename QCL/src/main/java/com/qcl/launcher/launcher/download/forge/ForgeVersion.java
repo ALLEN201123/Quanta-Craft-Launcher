@@ -1,104 +1,95 @@
 package com.qcl.launcher.launcher.download.forge;
 
-import androidx.annotation.Nullable;
-
 import com.google.gson.JsonParseException;
 import com.qcl.launcher.utils.gson.tools.Validation;
-
 import java.util.Collections;
 import java.util.List;
 
-/**
- *
- * @author huangyuhui
- */
+/* loaded from: classes2.dex */
 public class ForgeVersion implements Validation {
-
     private final String branch;
     private final int build;
+    private final List<File> files;
     private final String mcversion;
     private final String modified;
     private final String version;
-    private final List<File> files;
 
-    /**
-     * No-arg constructor for Gson.
-     */
-    @SuppressWarnings("unused")
     public ForgeVersion() {
         this(null, 0, "", null, "", Collections.emptyList());
     }
 
-    public ForgeVersion(String branch, int build, String mcversion, String modified, String version, List<File> files) {
-        this.branch = branch;
-        this.build = build;
-        this.mcversion = mcversion;
-        this.modified = modified;
-        this.version = version;
-        this.files = files;
+    public ForgeVersion(String str, int i, String str2, String str3, String str4, List<File> list) {
+        this.branch = str;
+        this.build = i;
+        this.mcversion = str2;
+        this.modified = str3;
+        this.version = str4;
+        this.files = list;
     }
 
-    @Nullable
     public String getBranch() {
-        return branch;
+        return this.branch;
     }
 
     public int getBuild() {
-        return build;
+        return this.build;
     }
 
     public String getGameVersion() {
-        return mcversion;
+        return this.mcversion;
     }
 
-    @Nullable
     public String getModified() {
-        return modified;
+        return this.modified;
     }
 
     public String getVersion() {
-        return version;
+        return this.version;
     }
 
     public List<File> getFiles() {
-        return files;
+        return this.files;
     }
 
-    @Override
+    @Override // com.qcl.launcher.utils.gson.tools.Validation
     public void validate() throws JsonParseException {
-        if (files == null)
+        if (this.files == null) {
             throw new JsonParseException("ForgeVersion files cannot be null");
-        if (version == null)
+        }
+        if (this.version == null) {
             throw new JsonParseException("ForgeVersion version cannot be null");
-        if (mcversion == null)
+        }
+        if (this.mcversion == null) {
             throw new JsonParseException("ForgeVersion mcversion cannot be null");
+        }
     }
 
+    /* loaded from: classes2.dex */
     public static final class File {
-        private final String format;
         private final String category;
+        private final String format;
         private final String hash;
 
         public File() {
             this("", "", "");
         }
 
-        public File(String format, String category, String hash) {
-            this.format = format;
-            this.category = category;
-            this.hash = hash;
+        public File(String str, String str2, String str3) {
+            this.format = str;
+            this.category = str2;
+            this.hash = str3;
         }
 
         public String getFormat() {
-            return format;
+            return this.format;
         }
 
         public String getCategory() {
-            return category;
+            return this.category;
         }
 
         public String getHash() {
-            return hash;
+            return this.hash;
         }
     }
 }

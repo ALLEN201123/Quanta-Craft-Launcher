@@ -3,21 +3,22 @@ package com.qcl.launcher.auth.yggdrasil;
 import java.util.Map;
 import java.util.UUID;
 
+/* loaded from: classes2.dex */
 public enum TextureModel {
-    STEVE("default"), ALEX("slim");
+    STEVE("default"),
+    ALEX("slim");
 
     public final String modelName;
 
-    TextureModel(String modelName) {
-        this.modelName = modelName;
+    TextureModel(String str) {
+        this.modelName = str;
     }
 
-    public static TextureModel detectModelName(Map<String, String> metadata) {
-        if (metadata != null && "slim".equals(metadata.get("model"))) {
+    public static TextureModel detectModelName(Map<String, String> map) {
+        if (map != null && "slim".equals(map.get("model"))) {
             return ALEX;
-        } else {
-            return STEVE;
         }
+        return STEVE;
     }
 
     public static TextureModel detectUUID(UUID uuid) {

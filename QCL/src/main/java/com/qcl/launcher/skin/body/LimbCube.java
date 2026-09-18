@@ -1,22 +1,13 @@
 package com.qcl.launcher.skin.body;
 
-import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
-
 import javax.microedition.khronos.opengles.GL10;
 
-public class LimbCube
-{
-    /** 原地走步摆角（度），GameCharacter 每帧下发。 */
-    protected float mSwingAngle;
-
-    public void setSwingAngle(final float angle) {
-        this.mSwingAngle = angle;
-    }
-
+/* loaded from: classes2.dex */
+public class LimbCube {
     protected int[] face_indecies;
     protected float[] face_vertices;
     protected float fixedDir;
@@ -26,6 +17,7 @@ public class LimbCube
     protected float[] mOffset;
     protected float[] mScale;
     protected float mSubAngle;
+    protected float mSwingAngle;
     protected ArrayList<FloatBuffer> mTextureBuffers;
     protected FloatBuffer mVertexBuffer;
     protected float[] main_angle_axis;
@@ -38,106 +30,124 @@ public class LimbCube
     protected float sub_min_angle;
     protected float sub_step_value;
     private float[] vertices;
-    
-    public LimbCube(final float n, final float n2, final float n3, final float n4, final float n5, final float n6) {
-        this.mScale = new float[] { 0.0f, 0.0f, 0.0f };
-        this.mOffset = new float[] { 0.0f, 0.0f, 0.0f };
+
+    public void setSwingAngle(float f) {
+        this.mSwingAngle = f;
+    }
+
+    public LimbCube(float f, float f2, float f3, float f4, float f5, float f6) {
+        this.mScale = new float[]{0.0f, 0.0f, 0.0f};
+        this.mOffset = new float[]{0.0f, 0.0f, 0.0f};
         this.mMainAngle = 0.0f;
         this.main_step_value = -3.0f;
         this.main_max_angle = 3.0f;
         this.main_min_angle = -3.0f;
-        this.main_angle_axis = new float[] { 0.0f, 0.0f, 0.0f };
+        this.main_angle_axis = new float[]{0.0f, 0.0f, 0.0f};
         this.mSubAngle = 0.0f;
         this.sub_step_value = -0.15f;
         this.sub_max_angle = 3.0f;
         this.sub_min_angle = -3.0f;
-        this.sub_angle_axis = new float[] { 0.0f, 0.0f, 0.0f };
+        this.sub_angle_axis = new float[]{0.0f, 0.0f, 0.0f};
         this.isFixOneAxis = true;
         this.fixedDir = 1.0f;
-        this.vertices = new float[] { -1.0f, -1.0f, 1.0f, 1.0f, -1.0f, 1.0f, 1.0f, 1.0f, 1.0f, -1.0f, 1.0f, 1.0f, -1.0f, -1.0f, -1.0f, 1.0f, -1.0f, -1.0f, 1.0f, 1.0f, -1.0f, -1.0f, 1.0f, -1.0f, -1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f, -1.0f, -1.0f, 0.0f, -1.0f };
-        this.face_indecies = new int[] { 0, 8, 9, 1, 8, 3, 2, 9, 3, 7, 6, 2, 1, 5, 4, 0, 1, 9, 10, 5, 9, 2, 6, 10, 4, 11, 8, 0, 11, 7, 3, 8, 5, 10, 11, 4, 10, 6, 7, 11 };
-        this.face_vertices = new float[this.face_indecies.length * 3];
-        this.normal_vertices = new float[] { 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, -1.0f };
-        this.mTextureBuffers = new ArrayList<FloatBuffer>();
-        this.mScale[0] = n;
-        this.mScale[1] = n2;
-        this.mScale[2] = n3;
-        this.mOffset[0] = n4;
-        this.mOffset[1] = n5;
-        this.mOffset[2] = n6;
-        final ByteBuffer allocateDirect = ByteBuffer.allocateDirect(this.face_vertices.length * 4);
+        this.vertices = new float[]{-1.0f, -1.0f, 1.0f, 1.0f, -1.0f, 1.0f, 1.0f, 1.0f, 1.0f, -1.0f, 1.0f, 1.0f, -1.0f, -1.0f, -1.0f, 1.0f, -1.0f, -1.0f, 1.0f, 1.0f, -1.0f, -1.0f, 1.0f, -1.0f, -1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f, -1.0f, -1.0f, 0.0f, -1.0f};
+        int[] iArr = {0, 8, 9, 1, 8, 3, 2, 9, 3, 7, 6, 2, 1, 5, 4, 0, 1, 9, 10, 5, 9, 2, 6, 10, 4, 11, 8, 0, 11, 7, 3, 8, 5, 10, 11, 4, 10, 6, 7, 11};
+        this.face_indecies = iArr;
+        this.face_vertices = new float[iArr.length * 3];
+        this.normal_vertices = new float[]{0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, -1.0f};
+        this.mTextureBuffers = new ArrayList<>();
+        float[] fArr = this.mScale;
+        fArr[0] = f;
+        fArr[1] = f2;
+        fArr[2] = f3;
+        float[] fArr2 = this.mOffset;
+        fArr2[0] = f4;
+        fArr2[1] = f5;
+        fArr2[2] = f6;
+        ByteBuffer allocateDirect = ByteBuffer.allocateDirect(this.face_vertices.length * 4);
         allocateDirect.order(ByteOrder.nativeOrder());
-        (this.mVertexBuffer = allocateDirect.asFloatBuffer()).put(this.face_vertices);
+        FloatBuffer asFloatBuffer = allocateDirect.asFloatBuffer();
+        this.mVertexBuffer = asFloatBuffer;
+        asFloatBuffer.put(this.face_vertices);
         this.mVertexBuffer.position(0);
-        final ByteBuffer allocateDirect2 = ByteBuffer.allocateDirect(this.normal_vertices.length * 4);
+        ByteBuffer allocateDirect2 = ByteBuffer.allocateDirect(this.normal_vertices.length * 4);
         allocateDirect2.order(ByteOrder.nativeOrder());
-        (this.mNormalVertexBuffer = allocateDirect2.asFloatBuffer()).put(this.normal_vertices);
+        FloatBuffer asFloatBuffer2 = allocateDirect2.asFloatBuffer();
+        this.mNormalVertexBuffer = asFloatBuffer2;
+        asFloatBuffer2.put(this.normal_vertices);
         this.mNormalVertexBuffer.position(0);
     }
-    
-    public LimbCube(final float n, final float n2, final float n3, final float n4, final float n5, final float n6, final float main_step_value, final float n7, final float n8, final float n9, final float main_max_angle, final float main_min_angle, final float sub_step_value, final float sub_max_angle, final float sub_min_angle, final boolean isFixOneAxis, final float fixedDir) {
-        this(n, n2, n3, n4, n5, n6);
-        this.main_step_value = main_step_value;
-        this.main_angle_axis[0] = n7;
-        this.main_angle_axis[1] = n8;
-        this.main_angle_axis[2] = n9;
-        this.main_max_angle = main_max_angle;
-        this.main_min_angle = main_min_angle;
-        this.sub_step_value = sub_step_value;
-        this.sub_max_angle = sub_max_angle;
-        this.sub_min_angle = sub_min_angle;
-        this.isFixOneAxis = isFixOneAxis;
-        this.fixedDir = fixedDir;
+
+    public LimbCube(float f, float f2, float f3, float f4, float f5, float f6, float f7, float f8, float f9, float f10, float f11, float f12, float f13, float f14, float f15, boolean z, float f16) {
+        this(f, f2, f3, f4, f5, f6);
+        this.main_step_value = f7;
+        float[] fArr = this.main_angle_axis;
+        fArr[0] = f8;
+        fArr[1] = f9;
+        fArr[2] = f10;
+        this.main_max_angle = f11;
+        this.main_min_angle = f12;
+        this.sub_step_value = f13;
+        this.sub_max_angle = f14;
+        this.sub_min_angle = f15;
+        this.isFixOneAxis = z;
+        this.fixedDir = f16;
     }
-    
-    public FloatBuffer AddTextures(final float[] array) {
-        final ByteBuffer allocateDirect = ByteBuffer.allocateDirect(array.length * 4);
+
+    public FloatBuffer AddTextures(float[] fArr) {
+        ByteBuffer allocateDirect = ByteBuffer.allocateDirect(fArr.length * 4);
         allocateDirect.order(ByteOrder.nativeOrder());
-        final FloatBuffer floatBuffer = allocateDirect.asFloatBuffer();
-        floatBuffer.put(array);
-        floatBuffer.position(0);
-        this.mTextureBuffers.add(floatBuffer);
-        return floatBuffer;
+        FloatBuffer asFloatBuffer = allocateDirect.asFloatBuffer();
+        asFloatBuffer.put(fArr);
+        asFloatBuffer.position(0);
+        this.mTextureBuffers.add(asFloatBuffer);
+        return asFloatBuffer;
     }
-    
+
     public void ClearAllTextures() {
         this.mTextureBuffers.clear();
     }
-    
-    public void draw(final GL10 gl10, final boolean b) {
+
+    public void draw(GL10 gl10, boolean z) {
         gl10.glEnable(3042);
         gl10.glBlendFunc(1, 771);
         gl10.glEnableClientState(32884);
         gl10.glEnableClientState(32885);
         gl10.glEnableClientState(32888);
-        gl10.glNormalPointer(5126, 0, (Buffer)this.mNormalVertexBuffer);
-        for (int i = 0; i < this.face_indecies.length; ++i) {
-            final int n = this.face_indecies[i];
-            final float n2 = this.vertices[n * 3 + 1] * this.mScale[1] / 2.0f;
-            final float n3 = this.vertices[n * 3 + 2] * this.mScale[2] / 2.0f;
-            float n4;
-            float n5;
-            n4 = n2;
-            n5 = n3;
-            this.mVertexBuffer.put(i * 3, this.vertices[n * 3] * this.mScale[0] / 2.0f);
-            this.mVertexBuffer.put(i * 3 + 1, n4);
-            this.mVertexBuffer.put(i * 3 + 2, n5);
+        gl10.glNormalPointer(5126, 0, this.mNormalVertexBuffer);
+        int i = 0;
+        while (true) {
+            int[] iArr = this.face_indecies;
+            if (i >= iArr.length) {
+                break;
+            }
+            int i2 = iArr[i];
+            float[] fArr = this.vertices;
+            int i3 = i2 * 3;
+            float f = fArr[i3 + 1];
+            float[] fArr2 = this.mScale;
+            float f2 = (f * fArr2[1]) / 2.0f;
+            float f3 = (fArr[i3 + 2] * fArr2[2]) / 2.0f;
+            int i4 = i * 3;
+            this.mVertexBuffer.put(i4, (fArr[i3] * fArr2[0]) / 2.0f);
+            this.mVertexBuffer.put(i4 + 1, f2);
+            this.mVertexBuffer.put(i4 + 2, f3);
+            i++;
         }
-        gl10.glVertexPointer(3, 5126, 0, (Buffer)this.mVertexBuffer);
+        gl10.glVertexPointer(3, 5126, 0, this.mVertexBuffer);
         gl10.glPushMatrix();
-        gl10.glTranslatef(this.mOffset[0], this.mOffset[1], this.mOffset[2]);
-        if (b && this.mSwingAngle != 0.0f) {
-            // 原地走步：绕方块 3/4 高度处（关节）摆动。角度由 GameCharacter 每帧下发，
-            // 同侧手脚相反、贴身层与本体一致。不用内置 mMainAngle——那套自带 ±3° 限位，幅度太小。
-            final float pivot = this.mScale[1] / 4.0f * 3.0f;
-            gl10.glTranslatef(0.0f, pivot, 0.0f);
+        float[] fArr3 = this.mOffset;
+        gl10.glTranslatef(fArr3[0], fArr3[1], fArr3[2]);
+        if (z && this.mSwingAngle != 0.0f) {
+            float f4 = (this.mScale[1] / 4.0f) * 3.0f;
+            gl10.glTranslatef(0.0f, f4, 0.0f);
             gl10.glRotatef(this.mSwingAngle, 1.0f, 0.0f, 0.0f);
-            gl10.glTranslatef(0.0f, -pivot, 0.0f);
+            gl10.glTranslatef(0.0f, -f4, 0.0f);
         }
-        for (int j = 0; j < this.mTextureBuffers.size(); ++j) {
-            gl10.glTexCoordPointer(2, 5126, 0, (Buffer)this.mTextureBuffers.get(j));
-            for (int k = 0; k < 10; ++k) {
-                gl10.glDrawArrays(6, k * 4, 4);
+        for (int i5 = 0; i5 < this.mTextureBuffers.size(); i5++) {
+            gl10.glTexCoordPointer(2, 5126, 0, this.mTextureBuffers.get(i5));
+            for (int i6 = 0; i6 < 10; i6++) {
+                gl10.glDrawArrays(6, i6 * 4, 4);
             }
         }
         gl10.glPopMatrix();
@@ -145,7 +155,7 @@ public class LimbCube
         gl10.glDisableClientState(32888);
         gl10.glDisableClientState(32884);
     }
-    
+
     public void setZeroRun() {
         this.mMainAngle = 1.5f;
         this.main_step_value = 0.7f;

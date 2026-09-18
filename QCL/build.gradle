@@ -29,7 +29,24 @@ android {
         }
     }
      
+    // ★★★ 对齐 FCL：ABI 按 -Darch 属性切换，默认 all（全 ABI 正式包）。
+    //   调试单架构示例：./gradlew :QCL:assembleRelease -Darch=x86_64
+    //   注意：AGP 禁止 splits.abi 与 ndk.abiFilters 共存，QCL 单 APK 方案只走 abiFilters。
+    def qclArch = System.getProperty("arch", "all")
+
     defaultConfig {
+        if (qclArch != "all") {
+            ndk {
+                switch (qclArch) {
+                    case "arm":    abiFilters 'armeabi-v7a'; break
+                    case "arm64":  abiFilters 'arm64-v8a';   break
+                    case "x86":    abiFilters 'x86';          break
+                    case "x86_64": abiFilters 'x86_64';       break
+                }
+            }
+        }
+        // 默认（-Darch=all）不写 abiFilters = 全 ABI 正式包
+
 
 
 
@@ -77,7 +94,6 @@ dependencies {
     implementation project(path: ':FilePicker')
     implementation project(path: ':Terracotta')
     implementation project(path: ':ZipTools')
-    implementation project(path: ':Boat')
     implementation project(path: ':PojavLauncher')
     implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'com.github.naman14:app-theme-engine:0.5.2@aar'
@@ -88,7 +104,28 @@ dependencies {
     implementation 'cat.ereza:customactivityoncrash:2.3.0'
     implementation 'com.google.code.gson:gson:2.10.1'
     implementation 'com.moandjiezana.toml:toml4j:0.7.2'
-    implementation 'org.apache.commons:commons-compress:1.21'
+    implementation 'org.apache.commons:commons-compress:1.26.0'
+    // 参照 FCL（libs.versions.toml: commonsCompress=1.26.0 / xz=1.9）：
+    // JRE 运行时改以 universal.tar.xz + bin-<abi>.tar.xz 内置，解压需要 XZ 解码器。
+    implementation('org.tukaani:xz:1.9')
+    // commons-compress 1.26.0 会传递引入 commons-io 2.15.1，而 FilePicker 模块
+    // 仍在使用 libs/commons-io-2.11.0.jar。两者同时进 classpath 会让
+    // checkReleaseDuplicateClasses 直接失败（org.apache.commons.io.* 全量重复）。
+    // 这里只把**传递副本**排掉，FilePicker 那份原样保留，不影响其它模块。
+    configurations.configureEach {
+        exclude group: 'commons-io', module: 'commons-io'
+    }
+    // ★ 锁 commons-lang3 回 3.13.0：
+    //   commons-compress 1.26.0 会把下面 L108 显式声明的 commons-lang3:3.13.0
+    //   顶到 3.14.0，而 3.14.0 这个 jar 在 D8 dex 阶段会**稳定**抛 NPE：
+    //     ERROR: jetified-commons-lang3-3.14.0.jar: D8: java.lang.NullPointerException:
+    //            Cannot invoke "String.length()" because "<parameter1>" is null
+    //   → Task :QCL:mergeExtDexRelease FAILED
+    //   3.13.0 无此问题（工程原本就在用），且 commons-lang3 并非解压 tar.xz 的
+    //   必需依赖 —— 用 force 精确锁定版本，不影响任何显式声明。
+    configurations.configureEach {
+        resolutionStrategy.force 'org.apache.commons:commons-lang3:3.13.0'
+    }
     implementation 'com.github.steveice10:opennbt:1.5'
     implementation 'com.jaredrummler:colorpicker:1.1.0'
     implementation 'com.jaredrummler:android-device-names:2.1.0'

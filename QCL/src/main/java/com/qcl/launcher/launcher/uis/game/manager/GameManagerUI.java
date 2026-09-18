@@ -1,3 +1,20 @@
+/*
+ * Decompiled with CFR 0.152.
+ * 
+ * Could not load the following classes:
+ *  android.annotation.SuppressLint
+ *  android.app.AlertDialog$Builder
+ *  android.content.Context
+ *  android.content.Intent
+ *  android.os.Bundle
+ *  android.util.Log
+ *  android.view.View
+ *  android.view.View$OnClickListener
+ *  android.widget.LinearLayout
+ *  androidx.appcompat.view.ContextThemeWrapper
+ *  androidx.appcompat.widget.PopupMenu
+ *  com.tungsten.filepicker.FileBrowser
+ */
 package com.qcl.launcher.launcher.uis.game.manager;
 
 import android.annotation.SuppressLint;
@@ -6,43 +23,38 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.Gravity;
 import android.view.View;
 import android.widget.LinearLayout;
-
 import androidx.appcompat.view.ContextThemeWrapper;
 import androidx.appcompat.widget.PopupMenu;
-
-import com.tungsten.filepicker.Constants;
-import com.tungsten.filepicker.FileBrowser;
-import com.qcl.launcher.R;
 import com.qcl.launcher.launcher.MainActivity;
 import com.qcl.launcher.launcher.dialogs.CopyVersionDialog;
 import com.qcl.launcher.launcher.dialogs.RenameVersionDialog;
 import com.qcl.launcher.launcher.download.AssetsUpdateDialog;
 import com.qcl.launcher.launcher.launch.check.LaunchTools;
 import com.qcl.launcher.launcher.setting.game.PrivateGameSetting;
+import com.qcl.launcher.launcher.uis.game.manager.GameManagerUIManager;
 import com.qcl.launcher.launcher.uis.tools.BaseUI;
 import com.qcl.launcher.manifest.AppManifest;
 import com.qcl.launcher.utils.animation.CustomAnimationUtils;
 import com.qcl.launcher.utils.file.FileUtils;
 import com.qcl.launcher.utils.gson.GsonUtils;
-
+import com.tungsten.filepicker.FileBrowser;
 import java.io.File;
 import java.util.ArrayList;
 
-public class GameManagerUI extends BaseUI implements View.OnClickListener {
-
+import com.qcl.launcher.R;
+public class GameManagerUI
+extends BaseUI
+implements View.OnClickListener {
     public LinearLayout gameManagerUI;
     public GameManagerUIManager gameManagerUIManager;
     public String versionPath;
     public String versionName;
-
     public LinearLayout startGameSetting;
     public LinearLayout startModManager;
     public LinearLayout startAutoInstall;
     public LinearLayout startWorldManager;
-
     private LinearLayout testGame;
     private LinearLayout browse;
     private LinearLayout manage;
@@ -54,274 +66,235 @@ public class GameManagerUI extends BaseUI implements View.OnClickListener {
     @Override
     public void onCreate() {
         super.onCreate();
-        gameManagerUI = activity.findViewById(R.id.ui_game_manager);
-
-        startGameSetting = activity.findViewById(R.id.game_manager_game_setting);
-        startModManager = activity.findViewById(R.id.game_manager_manage_mod);
-        startAutoInstall = activity.findViewById(R.id.game_manager_auto_install);
-        startWorldManager = activity.findViewById(R.id.game_manager_world);
-
-        testGame = activity.findViewById(R.id.game_manager_test_game);
-        browse = activity.findViewById(R.id.game_manager_browse);
-        manage = activity.findViewById(R.id.game_manager_manage);
-
-        startGameSetting.setOnClickListener(this);
-        startModManager.setOnClickListener(this);
-        startAutoInstall.setOnClickListener(this);
-        startWorldManager.setOnClickListener(this);
-
-        testGame.setOnClickListener(this);
-        browse.setOnClickListener(this);
-        manage.setOnClickListener(this);
-
-        gameManagerUIManager = new GameManagerUIManager(context,activity);
+        this.gameManagerUI = (LinearLayout)this.activity.findViewById(R.id.ui_game_manager);
+        this.startGameSetting = (LinearLayout)this.activity.findViewById(R.id.game_manager_game_setting);
+        this.startModManager = (LinearLayout)this.activity.findViewById(R.id.game_manager_manage_mod);
+        this.startAutoInstall = (LinearLayout)this.activity.findViewById(R.id.game_manager_auto_install);
+        this.startWorldManager = (LinearLayout)this.activity.findViewById(R.id.game_manager_world);
+        this.testGame = (LinearLayout)this.activity.findViewById(R.id.game_manager_test_game);
+        this.browse = (LinearLayout)this.activity.findViewById(R.id.game_manager_browse);
+        this.manage = (LinearLayout)this.activity.findViewById(R.id.game_manager_manage);
+        this.startGameSetting.setOnClickListener((View.OnClickListener)this);
+        this.startModManager.setOnClickListener((View.OnClickListener)this);
+        this.startAutoInstall.setOnClickListener((View.OnClickListener)this);
+        this.startWorldManager.setOnClickListener((View.OnClickListener)this);
+        this.testGame.setOnClickListener((View.OnClickListener)this);
+        this.browse.setOnClickListener((View.OnClickListener)this);
+        this.manage.setOnClickListener((View.OnClickListener)this);
+        this.gameManagerUIManager = new GameManagerUIManager(this.context, this.activity);
     }
 
     @Override
     public void onStart() {
         super.onStart();
-        activity.showBarTitle(context.getResources().getString(R.string.game_manager_ui_title) + " - " + versionName,canGoBackToLast(),false);
-        CustomAnimationUtils.showViewFromLeft(gameManagerUI,activity,context,true);
-        init();
+        this.activity.showBarTitle(this.context.getResources().getString(R.string.game_manager_ui_title) + " - " + this.versionName, this.canGoBackToLast(), false);
+        CustomAnimationUtils.showViewFromLeft((View)this.gameManagerUI, this.activity, this.context, true);
+        this.init();
     }
 
     @Override
     public void onStop() {
         super.onStop();
-        CustomAnimationUtils.hideViewToLeft(gameManagerUI,activity,context,true);
+        CustomAnimationUtils.hideViewToLeft((View)this.gameManagerUI, this.activity, this.context, true);
     }
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        gameManagerUIManager.onActivityResult(requestCode,resultCode,data);
+        this.gameManagerUIManager.onActivityResult(requestCode, resultCode, data);
     }
 
     @Override
     public void onPause() {
         super.onPause();
-        gameManagerUIManager.onPause();
+        this.gameManagerUIManager.onPause();
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        gameManagerUIManager.onResume();
+        this.gameManagerUIManager.onResume();
     }
 
-    @SuppressLint("NonConstantResourceId")
-    @Override
+    @SuppressLint(value={"NonConstantResourceId"})
     public void onClick(View v) {
-        if (v == startGameSetting){
-            gameManagerUIManager.switchGameManagerUIs(gameManagerUIManager.versionSettingUI);
+        PopupMenu menu2;
+        ContextThemeWrapper wrapper;
+        if (v == this.startGameSetting) {
+            this.gameManagerUIManager.switchGameManagerUIs(this.gameManagerUIManager.versionSettingUI);
         }
-        if (v == startModManager){
-            gameManagerUIManager.switchGameManagerUIs(gameManagerUIManager.modManagerUI);
+        if (v == this.startModManager) {
+            this.gameManagerUIManager.switchGameManagerUIs(this.gameManagerUIManager.modManagerUI);
         }
-        if (v == startAutoInstall){
-            gameManagerUIManager.switchGameManagerUIs(gameManagerUIManager.autoInstallUI);
+        if (v == this.startAutoInstall) {
+            this.gameManagerUIManager.switchGameManagerUIs(this.gameManagerUIManager.autoInstallUI);
         }
-        if (v == startWorldManager){
-            gameManagerUIManager.switchGameManagerUIs(gameManagerUIManager.worldManagerUI);
+        if (v == this.startWorldManager) {
+            this.gameManagerUIManager.switchGameManagerUIs(this.gameManagerUIManager.worldManagerUI);
         }
-        if (v == testGame){
-            testGame(versionName);
+        if (v == this.testGame) {
+            this.testGame(this.versionName);
         }
-        if (v == browse){
-            Context wrapper = new ContextThemeWrapper(context, R.style.MenuStyle);
-            @SuppressLint("RtlHardcoded") PopupMenu menu = new PopupMenu(wrapper, browse, Gravity.RIGHT);
-            menu.inflate(R.menu.browse_menu);
-            menu.setForceShowIcon(true);
-            menu.setOnMenuItemClickListener(item -> {
-                PrivateGameSetting privateGameSetting;
-                String settingPath = activity.launcherSetting.gameFileDirectory + "/versions/" + versionName + "/hmclpe.cfg";
-                if (new File(settingPath).exists() && GsonUtils.getPrivateGameSettingFromFile(settingPath) != null && (GsonUtils.getPrivateGameSettingFromFile(settingPath).forceEnable || GsonUtils.getPrivateGameSettingFromFile(settingPath).enable)) {
-                    privateGameSetting = GsonUtils.getPrivateGameSettingFromFile(settingPath);
-                }
-                else {
-                    privateGameSetting = activity.privateGameSetting;
-                }
-                String gameDir;
-                if (privateGameSetting.gameDirSetting.type == 0){
-                    gameDir = activity.launcherSetting.gameFileDirectory;
-                }
-                else if (privateGameSetting.gameDirSetting.type == 1){
-                    gameDir = activity.launcherSetting.gameFileDirectory + "/versions/" + versionName;
-                }
-                else {
-                    gameDir = privateGameSetting.gameDirSetting.path;
-                }
-                Intent intent = new Intent(context, FileBrowser.class);
-                switch (item.getItemId()){
-                    case R.id.browse_game_dir:
-                        intent.putExtra(Constants.INITIAL_DIRECTORY, gameDir);
-                        context.startActivity(intent);
+        if (v == this.browse) {
+            wrapper = new ContextThemeWrapper(this.context, R.style.MenuStyle);
+            menu2 = new PopupMenu((Context)wrapper, (View)this.browse, 5);
+            menu2.inflate(R.menu.browse_menu);
+            menu2.setForceShowIcon(true);
+            menu2.setOnMenuItemClickListener(item -> {
+                String settingPath = this.activity.launcherSetting.gameFileDirectory + "/versions/" + this.versionName + "/qcl.cfg";
+                PrivateGameSetting privateGameSetting = new File(settingPath).exists() && GsonUtils.getPrivateGameSettingFromFile(settingPath) != null && (GsonUtils.getPrivateGameSettingFromFile((String)settingPath).forceEnable || GsonUtils.getPrivateGameSettingFromFile((String)settingPath).enable) ? GsonUtils.getPrivateGameSettingFromFile(settingPath) : this.activity.privateGameSetting;
+                String gameDir = privateGameSetting.gameDirSetting.type == 0 ? this.activity.launcherSetting.gameFileDirectory : (privateGameSetting.gameDirSetting.type == 1 ? this.activity.launcherSetting.gameFileDirectory + "/versions/" + this.versionName : privateGameSetting.gameDirSetting.path);
+                Intent intent = new Intent(this.context, FileBrowser.class);
+                switch (item.getItemId()) {
+                    case R.id.browse_game_dir: {
+                        intent.putExtra("INITIAL_DIRECTORY", gameDir);
+                        this.context.startActivity(intent);
                         return true;
-                    case R.id.browse_mod_dir:
+                    }
+                    case R.id.browse_mod_dir: {
                         FileUtils.createDirectory(gameDir + "/mods");
-                        intent.putExtra(Constants.INITIAL_DIRECTORY, gameDir + "/mods");
-                        context.startActivity(intent);
+                        intent.putExtra("INITIAL_DIRECTORY", gameDir + "/mods");
+                        this.context.startActivity(intent);
                         return true;
-                    case R.id.browse_setting_dir:
+                    }
+                    case R.id.browse_setting_dir: {
                         FileUtils.createDirectory(gameDir + "/config");
-                        intent.putExtra(Constants.INITIAL_DIRECTORY, gameDir + "/config");
-                        context.startActivity(intent);
+                        intent.putExtra("INITIAL_DIRECTORY", gameDir + "/config");
+                        this.context.startActivity(intent);
                         return true;
-                    case R.id.browse_resource_dir:
+                    }
+                    case R.id.browse_resource_dir: {
                         FileUtils.createDirectory(gameDir + "/resourcepacks");
-                        intent.putExtra(Constants.INITIAL_DIRECTORY, gameDir + "/resourcepacks");
-                        context.startActivity(intent);
+                        intent.putExtra("INITIAL_DIRECTORY", gameDir + "/resourcepacks");
+                        this.context.startActivity(intent);
                         return true;
-                    case R.id.browse_screenshots_dir:
+                    }
+                    case R.id.browse_screenshots_dir: {
                         FileUtils.createDirectory(gameDir + "/screenshots");
-                        intent.putExtra(Constants.INITIAL_DIRECTORY, gameDir + "/screenshots");
-                        context.startActivity(intent);
+                        intent.putExtra("INITIAL_DIRECTORY", gameDir + "/screenshots");
+                        this.context.startActivity(intent);
                         return true;
-                    case R.id.browse_save_dir:
+                    }
+                    case R.id.browse_save_dir: {
                         FileUtils.createDirectory(gameDir + "/saves");
-                        intent.putExtra(Constants.INITIAL_DIRECTORY, gameDir + "/saves");
-                        context.startActivity(intent);
+                        intent.putExtra("INITIAL_DIRECTORY", gameDir + "/saves");
+                        this.context.startActivity(intent);
                         return true;
-                    default:
-                        return false;
+                    }
                 }
+                return false;
             });
-            menu.show();
+            menu2.show();
         }
-        if (v == manage){
-            Context wrapper = new ContextThemeWrapper(context, R.style.MenuStyle);
-            @SuppressLint("RtlHardcoded") PopupMenu menu = new PopupMenu(wrapper, manage, Gravity.RIGHT);
-            menu.inflate(R.menu.manage_menu);
-            menu.setForceShowIcon(true);
-            menu.setOnMenuItemClickListener(item -> {
-                PrivateGameSetting privateGameSetting;
-                String settingPath = activity.launcherSetting.gameFileDirectory + "/versions/" + versionName + "/hmclpe.cfg";
-                if (new File(settingPath).exists() && GsonUtils.getPrivateGameSettingFromFile(settingPath) != null && (GsonUtils.getPrivateGameSettingFromFile(settingPath).forceEnable || GsonUtils.getPrivateGameSettingFromFile(settingPath).enable)) {
-                    privateGameSetting = GsonUtils.getPrivateGameSettingFromFile(settingPath);
-                }
-                else {
-                    privateGameSetting = activity.privateGameSetting;
-                }
-                String gameDir;
-                if (privateGameSetting.gameDirSetting.type == 0){
-                    gameDir = activity.launcherSetting.gameFileDirectory;
-                }
-                else if (privateGameSetting.gameDirSetting.type == 1){
-                    gameDir = activity.launcherSetting.gameFileDirectory + "/versions/" + versionName;
-                }
-                else {
-                    gameDir = privateGameSetting.gameDirSetting.path;
-                }
-                switch (item.getItemId()){
-                    case R.id.manage_test_game:
-                        testGame(versionName);
+        if (v == this.manage) {
+            wrapper = new ContextThemeWrapper(this.context, R.style.MenuStyle);
+            menu2 = new PopupMenu((Context)wrapper, (View)this.manage, 5);
+            menu2.inflate(R.menu.manage_menu);
+            menu2.setForceShowIcon(true);
+            menu2.setOnMenuItemClickListener(item -> {
+                String settingPath = this.activity.launcherSetting.gameFileDirectory + "/versions/" + this.versionName + "/qcl.cfg";
+                PrivateGameSetting privateGameSetting = new File(settingPath).exists() && GsonUtils.getPrivateGameSettingFromFile(settingPath) != null && (GsonUtils.getPrivateGameSettingFromFile((String)settingPath).forceEnable || GsonUtils.getPrivateGameSettingFromFile((String)settingPath).enable) ? GsonUtils.getPrivateGameSettingFromFile(settingPath) : this.activity.privateGameSetting;
+                String gameDir = privateGameSetting.gameDirSetting.type == 0 ? this.activity.launcherSetting.gameFileDirectory : (privateGameSetting.gameDirSetting.type == 1 ? this.activity.launcherSetting.gameFileDirectory + "/versions/" + this.versionName : privateGameSetting.gameDirSetting.path);
+                switch (item.getItemId()) {
+                    case R.id.manage_test_game: {
+                        this.testGame(this.versionName);
                         return true;
-                    case R.id.manage_rename:
-                        @SuppressLint("SetTextI18n") RenameVersionDialog dialog = new RenameVersionDialog(context, versionName, name -> new Thread(() -> {
-                            FileUtils.rename(activity.launcherSetting.gameFileDirectory + "/versions/" + versionName + "/" + versionName + ".jar",name + ".jar");
-                            FileUtils.rename(activity.launcherSetting.gameFileDirectory + "/versions/" + versionName + "/" + versionName + ".json",name + ".json");
-                            FileUtils.rename(activity.launcherSetting.gameFileDirectory + "/versions/" + versionName,name);
-                            if (versionName.equals(activity.publicGameSetting.currentVersion.substring(activity.publicGameSetting.currentVersion.lastIndexOf("/") + 1))) {
-                                activity.publicGameSetting.currentVersion = activity.launcherSetting.gameFileDirectory + "/versions/" + name;
-                                GsonUtils.savePublicGameSetting(activity.publicGameSetting,AppManifest.SETTING_DIR + "/public_game_setting.json");
+                    }
+                    case R.id.manage_rename: {
+                        RenameVersionDialog dialog = new RenameVersionDialog(this.context, this.versionName, name -> new Thread(() -> {
+                            FileUtils.rename(this.activity.launcherSetting.gameFileDirectory + "/versions/" + this.versionName + "/" + this.versionName + ".jar", name + ".jar");
+                            FileUtils.rename(this.activity.launcherSetting.gameFileDirectory + "/versions/" + this.versionName + "/" + this.versionName + ".json", name + ".json");
+                            FileUtils.rename(this.activity.launcherSetting.gameFileDirectory + "/versions/" + this.versionName, name);
+                            if (this.versionName.equals(this.activity.publicGameSetting.currentVersion.substring(this.activity.publicGameSetting.currentVersion.lastIndexOf("/") + 1))) {
+                                this.activity.publicGameSetting.currentVersion = this.activity.launcherSetting.gameFileDirectory + "/versions/" + name;
+                                GsonUtils.savePublicGameSetting(this.activity.publicGameSetting, AppManifest.SETTING_DIR + "/public_game_setting.json");
                             }
-                            versionName = name;
-                            activity.runOnUiThread(() -> {
-                                // 1.0.6：顶部标题栏已移除，不再更新标题文本。
-                                init();
-                            });
-                            activity.uiManager.versionListUI.refreshVersionList();
+                            this.versionName = name;
+                            this.activity.runOnUiThread(() -> this.init());
+                            this.activity.uiManager.versionListUI.refreshVersionList();
                         }).start());
                         dialog.show();
                         return true;
-                    case R.id.manage_copy:
-                        CopyVersionDialog copyVersionDialog = new CopyVersionDialog(context, activity.uiManager.versionListUI.gameList,privateGameSetting,gameDir, activity.launcherSetting.gameFileDirectory + "/versions/", versionName, () -> {
-                            new Thread(() -> {
-                                activity.uiManager.versionListUI.refreshVersionList();
-                            }).start();
-                        });
+                    }
+                    case R.id.manage_copy: {
+                        CopyVersionDialog copyVersionDialog = new CopyVersionDialog(this.context, this.activity.uiManager.versionListUI.gameList, privateGameSetting, gameDir, this.activity.launcherSetting.gameFileDirectory + "/versions/", this.versionName, () -> new Thread(() -> this.activity.uiManager.versionListUI.refreshVersionList()).start());
                         copyVersionDialog.show();
                         return true;
-                    case R.id.manage_delete_version:
-                        AlertDialog.Builder deleteAlertBuilder = new AlertDialog.Builder(context);
-                        deleteAlertBuilder.setTitle(context.getString(R.string.dialog_delete_version_title));
-                        deleteAlertBuilder.setPositiveButton(context.getString(R.string.dialog_delete_version_positive), (dialogInterface, i) -> {
-                            new Thread(() -> {
-                                FileUtils.deleteDirectory(activity.launcherSetting.gameFileDirectory + "/versions/" + versionName);
-                                activity.uiManager.versionListUI.refreshVersionList();
-                                if (activity.publicGameSetting.currentVersion.equals(activity.launcherSetting.gameFileDirectory + "/versions/" + versionName) && activity.uiManager.versionListUI.gameList.size() > 0) {
-                                    activity.publicGameSetting.currentVersion = activity.launcherSetting.gameFileDirectory + "/versions/" + activity.uiManager.versionListUI.gameList.get(0).name;
-                                    GsonUtils.savePublicGameSetting(activity.publicGameSetting, AppManifest.SETTING_DIR + "/public_game_setting.json");
-                                }
-                                activity.runOnUiThread(() -> {
-                                    activity.uiManager.uis = new ArrayList<>();
-                                    activity.uiManager.uis.add(activity.uiManager.mainUI);
-                                    activity.uiManager.uis.add(activity.uiManager.versionListUI);
-                                    activity.uiManager.gameManagerUI.onStop();
-                                    activity.uiManager.versionListUI.onStart();
-                                });
-                            }).start();
-                        });
-                        deleteAlertBuilder.setNegativeButton(context.getString(R.string.dialog_delete_version_negative), (dialogInterface, i) -> {});
-                        if (privateGameSetting.gameDirSetting.type == 1){
-                            deleteAlertBuilder.setMessage(context.getString(R.string.dialog_delete_version_isolate_msg).replace("%s", versionName));
-                        }
-                        else {
-                            deleteAlertBuilder.setMessage(context.getString(R.string.dialog_delete_version_msg).replace("%s", versionName));
+                    }
+                    case R.id.manage_delete_version: {
+                        AlertDialog.Builder deleteAlertBuilder = new AlertDialog.Builder(this.context);
+                        deleteAlertBuilder.setTitle((CharSequence)this.context.getString(R.string.dialog_delete_version_title));
+                        deleteAlertBuilder.setPositiveButton((CharSequence)this.context.getString(R.string.dialog_delete_version_positive), (dialogInterface, i) -> new Thread(() -> {
+                            FileUtils.deleteDirectory(this.activity.launcherSetting.gameFileDirectory + "/versions/" + this.versionName);
+                            this.activity.uiManager.versionListUI.refreshVersionList();
+                            if (this.activity.publicGameSetting.currentVersion.equals(this.activity.launcherSetting.gameFileDirectory + "/versions/" + this.versionName) && this.activity.uiManager.versionListUI.gameList.size() > 0) {
+                                this.activity.publicGameSetting.currentVersion = this.activity.launcherSetting.gameFileDirectory + "/versions/" + this.activity.uiManager.versionListUI.gameList.get((int)0).name;
+                                GsonUtils.savePublicGameSetting(this.activity.publicGameSetting, AppManifest.SETTING_DIR + "/public_game_setting.json");
+                            }
+                            this.activity.runOnUiThread(() -> {
+                                this.activity.uiManager.uis = new ArrayList();
+                                this.activity.uiManager.uis.add(this.activity.uiManager.mainUI);
+                                this.activity.uiManager.uis.add(this.activity.uiManager.versionListUI);
+                                this.activity.uiManager.gameManagerUI.onStop();
+                                this.activity.uiManager.versionListUI.onStart();
+                            });
+                        }).start());
+                        deleteAlertBuilder.setNegativeButton((CharSequence)this.context.getString(R.string.dialog_delete_version_negative), (dialogInterface, i) -> {});
+                        if (privateGameSetting.gameDirSetting.type == 1) {
+                            deleteAlertBuilder.setMessage((CharSequence)this.context.getString(R.string.dialog_delete_version_isolate_msg).replace("%s", this.versionName));
+                        } else {
+                            deleteAlertBuilder.setMessage((CharSequence)this.context.getString(R.string.dialog_delete_version_msg).replace("%s", this.versionName));
                         }
                         deleteAlertBuilder.create().show();
                         return true;
-                    case R.id.manage_export_package:
-                        activity.uiManager.switchMainUI(activity.uiManager.exportPackageTypeUI);
+                    }
+                    case R.id.manage_export_package: {
+                        this.activity.uiManager.switchMainUI(this.activity.uiManager.exportPackageTypeUI);
                         return true;
-                    case R.id.manage_update_assets:
-                        AssetsUpdateDialog assetsUpdateDialog = new AssetsUpdateDialog(context,activity,versionName);
+                    }
+                    case R.id.manage_update_assets: {
+                        AssetsUpdateDialog assetsUpdateDialog = new AssetsUpdateDialog(this.context, this.activity, this.versionName);
                         assetsUpdateDialog.show();
                         return true;
-                    case R.id.manage_delete_libs:
-                        new Thread(() -> {
-                            FileUtils.deleteDirectory(activity.launcherSetting.gameFileDirectory + "/libraries");
-                        }).start();
+                    }
+                    case R.id.manage_delete_libs: {
+                        new Thread(() -> FileUtils.deleteDirectory(this.activity.launcherSetting.gameFileDirectory + "/libraries")).start();
                         return true;
-                    case R.id.manage_clear_logs:
+                    }
+                    case R.id.manage_clear_logs: {
                         new Thread(() -> {
                             FileUtils.deleteDirectory(gameDir + "/logs");
                             FileUtils.deleteDirectory(gameDir + "/crash-reports");
                         }).start();
                         return true;
-                    default:
-                        return false;
+                    }
                 }
+                return false;
             });
-            menu.show();
+            menu2.show();
         }
     }
 
     private void testGame(String name) {
-        String settingPath = activity.launcherSetting.gameFileDirectory + "/versions/" + name + "/hmclpe.cfg";
-        String finalPath;
-        if (new File(settingPath).exists() && GsonUtils.getPrivateGameSettingFromFile(settingPath) != null && (GsonUtils.getPrivateGameSettingFromFile(settingPath).forceEnable || GsonUtils.getPrivateGameSettingFromFile(settingPath).enable)) {
-            finalPath = settingPath;
-        }
-        else {
-            finalPath = AppManifest.SETTING_DIR + "/private_game_setting.json";
-        }
+        String settingPath = this.activity.launcherSetting.gameFileDirectory + "/versions/" + name + "/qcl.cfg";
+        String finalPath = new File(settingPath).exists() && GsonUtils.getPrivateGameSettingFromFile(settingPath) != null && (GsonUtils.getPrivateGameSettingFromFile((String)settingPath).forceEnable || GsonUtils.getPrivateGameSettingFromFile((String)settingPath).enable) ? settingPath : AppManifest.SETTING_DIR + "/private_game_setting.json";
         Bundle bundle = new Bundle();
-        bundle.putString("setting_path",finalPath);
-        bundle.putBoolean("test",true);
-        bundle.putString("version",activity.launcherSetting.gameFileDirectory + "/versions/" + name);
-        LaunchTools.launch(context,activity,activity.launcherSetting.gameFileDirectory + "/versions/" + name,bundle);
+        bundle.putString("setting_path", finalPath);
+        bundle.putBoolean("test", true);
+        bundle.putString("version", this.activity.launcherSetting.gameFileDirectory + "/versions/" + name);
+        LaunchTools.launch(this.context, this.activity, this.activity.launcherSetting.gameFileDirectory + "/versions/" + name, bundle);
     }
 
-    private void init(){
-        String newVersionPath = activity.launcherSetting.gameFileDirectory + "/versions/" + versionName;
-        gameManagerUIManager.modManagerUI.refresh(versionName);
-        gameManagerUIManager.worldManagerUI.refresh(versionName);
-        if (!newVersionPath.equals(versionPath)) {
-            gameManagerUIManager.versionSettingUI.refresh(versionName);
-            gameManagerUIManager.autoInstallUI.refresh(versionName);
-            versionPath = newVersionPath;
-            Log.e("gameManager","refresh!");
+    private void init() {
+        String newVersionPath = this.activity.launcherSetting.gameFileDirectory + "/versions/" + this.versionName;
+        this.gameManagerUIManager.modManagerUI.refresh(this.versionName);
+        this.gameManagerUIManager.worldManagerUI.refresh(this.versionName);
+        if (!newVersionPath.equals(this.versionPath)) {
+            this.gameManagerUIManager.versionSettingUI.refresh(this.versionName);
+            this.gameManagerUIManager.autoInstallUI.refresh(this.versionName);
+            this.versionPath = newVersionPath;
+            Log.e((String)"gameManager", (String)"refresh!");
         }
     }
 }
+

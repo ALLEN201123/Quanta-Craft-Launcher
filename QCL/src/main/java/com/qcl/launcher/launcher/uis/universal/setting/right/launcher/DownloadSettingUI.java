@@ -1,6 +1,5 @@
 package com.qcl.launcher.launcher.uis.universal.setting.right.launcher;
 
-import android.annotation.SuppressLint;
 import android.content.Context;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -14,220 +13,213 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.SeekBar;
 import android.widget.Spinner;
-
-import com.qcl.launcher.R;
+import android.widget.SpinnerAdapter;
 import com.qcl.launcher.launcher.MainActivity;
-import com.qcl.launcher.manifest.AppManifest;
 import com.qcl.launcher.launcher.uis.tools.BaseUI;
+import com.qcl.launcher.manifest.AppManifest;
 import com.qcl.launcher.utils.animation.CustomAnimationUtils;
 import com.qcl.launcher.utils.gson.GsonUtils;
-
 import java.util.ArrayList;
+import java.util.Iterator;
 
+import com.qcl.launcher.R;
+/* loaded from: classes2.dex */
 public class DownloadSettingUI extends BaseUI implements CompoundButton.OnCheckedChangeListener, SeekBar.OnSeekBarChangeListener, AdapterView.OnItemSelectedListener, TextWatcher {
-
-    public LinearLayout downloadSettingUI;
-
-    private CheckBox checkAutoSelect;
-    private CheckBox checkAutoDownload;
     private LinearLayout autoSourceLayout;
-    private LinearLayout fixSourceLayout;
-    private LinearLayout taskSizeLayout;
     private Spinner autoSourceSpinner;
-    private Spinner fixSourceSpinner;
-    private SeekBar taskSizeSeekbar;
+    private CheckBox checkAutoDownload;
+    private CheckBox checkAutoSelect;
+    public LinearLayout downloadSettingUI;
     private EditText editTaskSize;
+    private LinearLayout fixSourceLayout;
+    private Spinner fixSourceSpinner;
+    private LinearLayout taskSizeLayout;
+    private SeekBar taskSizeSeekbar;
 
-    public DownloadSettingUI(Context context, MainActivity activity) {
-        super(context, activity);
+    @Override // android.text.TextWatcher
+    public void beforeTextChanged(CharSequence charSequence, int i, int i2, int i3) {
     }
 
-    @SuppressLint("SetTextI18n")
-    @Override
+    @Override // android.widget.AdapterView.OnItemSelectedListener
+    public void onNothingSelected(AdapterView<?> adapterView) {
+    }
+
+    @Override // android.widget.SeekBar.OnSeekBarChangeListener
+    public void onStartTrackingTouch(SeekBar seekBar) {
+    }
+
+    @Override // android.widget.SeekBar.OnSeekBarChangeListener
+    public void onStopTrackingTouch(SeekBar seekBar) {
+    }
+
+    @Override // android.text.TextWatcher
+    public void onTextChanged(CharSequence charSequence, int i, int i2, int i3) {
+    }
+
+    public DownloadSettingUI(Context context, MainActivity mainActivity) {
+        super(context, mainActivity);
+    }
+
+    @Override // com.qcl.launcher.launcher.uis.tools.BaseUI, com.qcl.launcher.launcher.uis.tools.UILifecycleCallbacks
     public void onCreate() {
         super.onCreate();
-        downloadSettingUI = activity.findViewById(R.id.ui_setting_download);
-
-        checkAutoSelect = activity.findViewById(R.id.auto_select_source);
-        checkAutoDownload = activity.findViewById(R.id.auto_select_download_num);
-        autoSourceLayout = activity.findViewById(R.id.auto_source_layout);
-        fixSourceLayout = activity.findViewById(R.id.fix_source_layout);
-        taskSizeLayout = activity.findViewById(R.id.task_size_layout);
-        autoSourceSpinner = activity.findViewById(R.id.auto_source_spinner);
-        fixSourceSpinner = activity.findViewById(R.id.fix_source_spinner);
-        taskSizeSeekbar = activity.findViewById(R.id.task_size_seekbar);
-        editTaskSize = activity.findViewById(R.id.edit_download_task_size);
-
-        ArrayList<String> autoTypeList = new ArrayList<>();
-        autoTypeList.add(context.getString(R.string.download_setting_ui_auto_official));
-        autoTypeList.add(context.getString(R.string.download_setting_ui_auto_balance));
-        autoTypeList.add(context.getString(R.string.download_setting_ui_auto_mirror));
-        ArrayAdapter<String> autoTypeAdapter = new ArrayAdapter<>(context,R.layout.item_spinner,autoTypeList);
-        autoSourceSpinner.setAdapter(autoTypeAdapter);
-
-        ArrayList<String> fixTypeList = new ArrayList<>();
-        fixTypeList.add(context.getString(R.string.download_setting_ui_source_official));
-        fixTypeList.add(context.getString(R.string.download_setting_ui_source_bmclapi));
-        fixTypeList.add(context.getString(R.string.download_setting_ui_source_bmclapi));
-        ArrayAdapter<String> fixTypeAdapter = new ArrayAdapter<>(context,R.layout.item_spinner,fixTypeList);
-        fixSourceSpinner.setAdapter(fixTypeAdapter);
-
-        checkAutoSelect.setChecked(activity.launcherSetting.downloadUrlSource.autoSelect);
-        autoSourceSpinner.setSelection(activity.launcherSetting.downloadUrlSource.autoSourceType);
-        fixSourceSpinner.setSelection(activity.launcherSetting.downloadUrlSource.fixSourceType);
-        checkAutoDownload.setChecked(activity.launcherSetting.autoDownloadTaskQuantity);
-        taskSizeSeekbar.setProgress(activity.launcherSetting.maxDownloadTask);
-        editTaskSize.setText(Integer.toString(activity.launcherSetting.maxDownloadTask));
-        refreshSourceLayout(activity.launcherSetting.downloadUrlSource.autoSelect);
-        refreshSizeLayout(activity.launcherSetting.autoDownloadTaskQuantity);
-
-        checkAutoSelect.setOnCheckedChangeListener(this);
-        checkAutoDownload.setOnCheckedChangeListener(this);
-        autoSourceSpinner.setOnItemSelectedListener(this);
-        fixSourceSpinner.setOnItemSelectedListener(this);
-        taskSizeSeekbar.setOnSeekBarChangeListener(this);
-        editTaskSize.addTextChangedListener(this);
+        this.downloadSettingUI = (LinearLayout) this.activity.findViewById(R.id.ui_setting_download);
+        this.checkAutoSelect = (CheckBox) this.activity.findViewById(R.id.auto_select_source);
+        this.checkAutoDownload = (CheckBox) this.activity.findViewById(R.id.auto_select_download_num);
+        this.autoSourceLayout = (LinearLayout) this.activity.findViewById(R.id.auto_source_layout);
+        this.fixSourceLayout = (LinearLayout) this.activity.findViewById(R.id.fix_source_layout);
+        this.taskSizeLayout = (LinearLayout) this.activity.findViewById(R.id.task_size_layout);
+        this.autoSourceSpinner = (Spinner) this.activity.findViewById(R.id.auto_source_spinner);
+        this.fixSourceSpinner = (Spinner) this.activity.findViewById(R.id.fix_source_spinner);
+        this.taskSizeSeekbar = (SeekBar) this.activity.findViewById(R.id.task_size_seekbar);
+        this.editTaskSize = (EditText) this.activity.findViewById(R.id.edit_download_task_size);
+        ArrayList arrayList = new ArrayList();
+        arrayList.add(this.context.getString(R.string.download_setting_ui_auto_official));
+        arrayList.add(this.context.getString(R.string.download_setting_ui_auto_balance));
+        arrayList.add(this.context.getString(R.string.download_setting_ui_auto_mirror));
+        this.autoSourceSpinner.setAdapter((SpinnerAdapter) new ArrayAdapter(this.context, R.layout.item_spinner, arrayList));
+        ArrayList arrayList2 = new ArrayList();
+        arrayList2.add(this.context.getString(R.string.download_setting_ui_source_official));
+        arrayList2.add(this.context.getString(R.string.download_setting_ui_source_bmclapi));
+        arrayList2.add(this.context.getString(R.string.download_setting_ui_source_bmclapi));
+        this.fixSourceSpinner.setAdapter((SpinnerAdapter) new ArrayAdapter(this.context, R.layout.item_spinner, arrayList2));
+        this.checkAutoSelect.setChecked(this.activity.launcherSetting.downloadUrlSource.autoSelect);
+        this.autoSourceSpinner.setSelection(this.activity.launcherSetting.downloadUrlSource.autoSourceType);
+        this.fixSourceSpinner.setSelection(this.activity.launcherSetting.downloadUrlSource.fixSourceType);
+        this.checkAutoDownload.setChecked(this.activity.launcherSetting.autoDownloadTaskQuantity);
+        this.taskSizeSeekbar.setProgress(this.activity.launcherSetting.maxDownloadTask);
+        this.editTaskSize.setText(Integer.toString(this.activity.launcherSetting.maxDownloadTask));
+        refreshSourceLayout(this.activity.launcherSetting.downloadUrlSource.autoSelect);
+        refreshSizeLayout(this.activity.launcherSetting.autoDownloadTaskQuantity);
+        this.checkAutoSelect.setOnCheckedChangeListener(this);
+        this.checkAutoDownload.setOnCheckedChangeListener(this);
+        this.autoSourceSpinner.setOnItemSelectedListener(this);
+        this.fixSourceSpinner.setOnItemSelectedListener(this);
+        this.taskSizeSeekbar.setOnSeekBarChangeListener(this);
+        this.editTaskSize.addTextChangedListener(this);
     }
 
-    @SuppressLint("UseCompatLoadingForDrawables")
-    @Override
+    @Override // com.qcl.launcher.launcher.uis.tools.BaseUI, com.qcl.launcher.launcher.uis.tools.UILifecycleCallbacks
     public void onStart() {
         super.onStart();
-        CustomAnimationUtils.showViewFromLeft(downloadSettingUI,activity,context,false);
-        if (activity.isLoaded){
-            activity.uiManager.settingUI.startDownloadSettingUI.setBackground(context.getResources().getDrawable(R.drawable.launcher_button_white));
+        CustomAnimationUtils.showViewFromLeft(this.downloadSettingUI, this.activity, this.context, false);
+        if (this.activity.isLoaded) {
+            this.activity.uiManager.settingUI.startDownloadSettingUI.setBackground(this.context.getResources().getDrawable(R.drawable.launcher_button_white));
         }
     }
 
-    @SuppressLint("UseCompatLoadingForDrawables")
-    @Override
+    @Override // com.qcl.launcher.launcher.uis.tools.BaseUI, com.qcl.launcher.launcher.uis.tools.UILifecycleCallbacks
     public void onStop() {
         super.onStop();
-        CustomAnimationUtils.hideViewToLeft(downloadSettingUI,activity,context,false);
-        if (activity.isLoaded){
-            activity.uiManager.settingUI.startDownloadSettingUI.setBackground(context.getResources().getDrawable(R.drawable.launcher_button_parent));
+        CustomAnimationUtils.hideViewToLeft(this.downloadSettingUI, this.activity, this.context, false);
+        if (this.activity.isLoaded) {
+            this.activity.uiManager.settingUI.startDownloadSettingUI.setBackground(this.context.getResources().getDrawable(R.drawable.launcher_button_parent));
         }
     }
 
-    private void refreshSourceLayout(boolean auto) {
-        if (auto) {
-            for (View view : getAllChild(autoSourceLayout)) {
-                view.setAlpha(1f);
-                view.setEnabled(true);
+    private void refreshSourceLayout(boolean z) {
+        if (z) {
+            Iterator<View> it = getAllChild(this.autoSourceLayout).iterator();
+            while (it.hasNext()) {
+                View next = it.next();
+                next.setAlpha(1.0f);
+                next.setEnabled(true);
             }
-            for (View view : getAllChild(fixSourceLayout)) {
-                view.setAlpha(0.4f);
-                view.setEnabled(false);
+            Iterator<View> it2 = getAllChild(this.fixSourceLayout).iterator();
+            while (it2.hasNext()) {
+                View next2 = it2.next();
+                next2.setAlpha(0.4f);
+                next2.setEnabled(false);
             }
+            return;
         }
-        else {
-            for (View view : getAllChild(autoSourceLayout)) {
-                view.setAlpha(0.4f);
-                view.setEnabled(false);
-            }
-            for (View view : getAllChild(fixSourceLayout)) {
-                view.setAlpha(1f);
-                view.setEnabled(true);
-            }
+        Iterator<View> it3 = getAllChild(this.autoSourceLayout).iterator();
+        while (it3.hasNext()) {
+            View next3 = it3.next();
+            next3.setAlpha(0.4f);
+            next3.setEnabled(false);
+        }
+        Iterator<View> it4 = getAllChild(this.fixSourceLayout).iterator();
+        while (it4.hasNext()) {
+            View next4 = it4.next();
+            next4.setAlpha(1.0f);
+            next4.setEnabled(true);
         }
     }
 
-    private void refreshSizeLayout(boolean auto) {
-        if (auto) {
-            for (View view : getAllChild(taskSizeLayout)) {
-                view.setAlpha(0.4f);
-                view.setEnabled(false);
+    private void refreshSizeLayout(boolean z) {
+        if (z) {
+            Iterator<View> it = getAllChild(this.taskSizeLayout).iterator();
+            while (it.hasNext()) {
+                View next = it.next();
+                next.setAlpha(0.4f);
+                next.setEnabled(false);
             }
+            return;
         }
-        else {
-            for (View view : getAllChild(taskSizeLayout)) {
-                view.setAlpha(1f);
-                view.setEnabled(true);
-            }
+        Iterator<View> it2 = getAllChild(this.taskSizeLayout).iterator();
+        while (it2.hasNext()) {
+            View next2 = it2.next();
+            next2.setAlpha(1.0f);
+            next2.setEnabled(true);
         }
     }
 
     private ArrayList<View> getAllChild(ViewGroup viewGroup) {
-        ArrayList<View> list = new ArrayList<>();
-        for (int i = 0;i < viewGroup.getChildCount();i++) {
+        ArrayList<View> arrayList = new ArrayList<>();
+        for (int i = 0; i < viewGroup.getChildCount(); i++) {
             if (viewGroup.getChildAt(i) instanceof ViewGroup) {
-                list.addAll(getAllChild((ViewGroup) viewGroup.getChildAt(i)));
+                arrayList.addAll(getAllChild((ViewGroup) viewGroup.getChildAt(i)));
             }
-            list.add(viewGroup.getChildAt(i));
+            arrayList.add(viewGroup.getChildAt(i));
         }
-        return list;
+        return arrayList;
     }
 
-    @Override
-    public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
-        if (compoundButton == checkAutoSelect) {
-            activity.launcherSetting.downloadUrlSource.autoSelect = b;
-            refreshSourceLayout(b);
+    @Override // android.widget.CompoundButton.OnCheckedChangeListener
+    public void onCheckedChanged(CompoundButton compoundButton, boolean z) {
+        if (compoundButton == this.checkAutoSelect) {
+            this.activity.launcherSetting.downloadUrlSource.autoSelect = z;
+            refreshSourceLayout(z);
         }
-        if (compoundButton == checkAutoDownload) {
-            activity.launcherSetting.autoDownloadTaskQuantity = b;
-            refreshSizeLayout(b);
+        if (compoundButton == this.checkAutoDownload) {
+            this.activity.launcherSetting.autoDownloadTaskQuantity = z;
+            refreshSizeLayout(z);
         }
-        GsonUtils.saveLauncherSetting(activity.launcherSetting, AppManifest.SETTING_DIR + "/launcher_setting.json");
+        GsonUtils.saveLauncherSetting(this.activity.launcherSetting, AppManifest.SETTING_DIR + "/launcher_setting.json");
     }
 
-    @SuppressLint("SetTextI18n")
-    @Override
-    public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
-        if (b && seekBar == taskSizeSeekbar) {
-            activity.launcherSetting.maxDownloadTask = i;
-            editTaskSize.setText(Integer.toString(i));
+    @Override // android.widget.SeekBar.OnSeekBarChangeListener
+    public void onProgressChanged(SeekBar seekBar, int i, boolean z) {
+        if (z && seekBar == this.taskSizeSeekbar) {
+            this.activity.launcherSetting.maxDownloadTask = i;
+            this.editTaskSize.setText(Integer.toString(i));
         }
-        GsonUtils.saveLauncherSetting(activity.launcherSetting, AppManifest.SETTING_DIR + "/launcher_setting.json");
+        GsonUtils.saveLauncherSetting(this.activity.launcherSetting, AppManifest.SETTING_DIR + "/launcher_setting.json");
     }
 
-    @Override
-    public void onStartTrackingTouch(SeekBar seekBar) {
-
-    }
-
-    @Override
-    public void onStopTrackingTouch(SeekBar seekBar) {
-
-    }
-
-    @Override
-    public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
-        if (adapterView == autoSourceSpinner) {
-            activity.launcherSetting.downloadUrlSource.autoSourceType = i;
+    @Override // android.widget.AdapterView.OnItemSelectedListener
+    public void onItemSelected(AdapterView<?> adapterView, View view, int i, long j) {
+        if (adapterView == this.autoSourceSpinner) {
+            this.activity.launcherSetting.downloadUrlSource.autoSourceType = i;
         }
-        if (adapterView == fixSourceSpinner) {
-            activity.launcherSetting.downloadUrlSource.fixSourceType = i;
+        if (adapterView == this.fixSourceSpinner) {
+            this.activity.launcherSetting.downloadUrlSource.fixSourceType = i;
         }
-        GsonUtils.saveLauncherSetting(activity.launcherSetting, AppManifest.SETTING_DIR + "/launcher_setting.json");
+        GsonUtils.saveLauncherSetting(this.activity.launcherSetting, AppManifest.SETTING_DIR + "/launcher_setting.json");
     }
 
-    @Override
-    public void onNothingSelected(AdapterView<?> adapterView) {
-
-    }
-
-    @Override
-    public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-
-    }
-
-    @Override
-    public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-
-    }
-
-    @Override
+    @Override // android.text.TextWatcher
     public void afterTextChanged(Editable editable) {
-        if (!editTaskSize.getText().toString().equals("")) {
-            if (Integer.parseInt(editTaskSize.getText().toString()) > 128) {
-                activity.launcherSetting.maxDownloadTask = 128;
-            }
-            else {
-                activity.launcherSetting.maxDownloadTask = Math.max(Integer.parseInt(editTaskSize.getText().toString()), 1);
-            }
-            taskSizeSeekbar.setProgress(activity.launcherSetting.maxDownloadTask);
-            GsonUtils.saveLauncherSetting(activity.launcherSetting, AppManifest.SETTING_DIR + "/launcher_setting.json");
+        if (this.editTaskSize.getText().toString().equals("")) {
+            return;
         }
+        if (Integer.parseInt(this.editTaskSize.getText().toString()) > 128) {
+            this.activity.launcherSetting.maxDownloadTask = 128;
+        } else {
+            this.activity.launcherSetting.maxDownloadTask = Math.max(Integer.parseInt(this.editTaskSize.getText().toString()), 1);
+        }
+        this.taskSizeSeekbar.setProgress(this.activity.launcherSetting.maxDownloadTask);
+        GsonUtils.saveLauncherSetting(this.activity.launcherSetting, AppManifest.SETTING_DIR + "/launcher_setting.json");
     }
 }

@@ -4,8 +4,6 @@ import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
-
-import com.qcl.launcher.R;
 import com.qcl.launcher.launcher.MainActivity;
 import com.qcl.launcher.launcher.mod.RemoteMod;
 import com.qcl.launcher.launcher.mod.RemoteModRepository;
@@ -13,62 +11,60 @@ import com.qcl.launcher.launcher.uis.tools.BaseUI;
 import com.qcl.launcher.utils.animation.CustomAnimationUtils;
 import com.qcl.launcher.utils.string.ModTranslations;
 
+import com.qcl.launcher.R;
+/* loaded from: classes2.dex */
 public class BaseDownloadUI extends BaseUI {
-
-    public RemoteModRepository repository;
-    public RemoteMod bean;
-    public ModTranslations.Mod modTranslation;
-    public int resourceType;
-    public boolean isFirst = true;
-
     public LinearLayout baseDownloadUI;
+    public RemoteMod bean;
+    public boolean isFirst;
+    public ModTranslations.Mod modTranslation;
+    public RemoteModRepository repository;
+    public int resourceType;
 
-    public BaseDownloadUI(Context context, MainActivity activity, RemoteModRepository repository, RemoteMod bean, int resourceType) {
-        super(context, activity);
-        this.repository = repository;
-        this.bean = bean;
+    public BaseDownloadUI(Context context, MainActivity mainActivity, RemoteModRepository remoteModRepository, RemoteMod remoteMod, int i) {
+        super(context, mainActivity);
         ModTranslations modTranslations;
-        if (resourceType == 0) {
+        this.isFirst = true;
+        this.repository = remoteModRepository;
+        this.bean = remoteMod;
+        if (i == 0) {
             modTranslations = ModTranslations.MOD;
-        }
-        else if (resourceType == 1) {
+        } else if (i == 1) {
             modTranslations = ModTranslations.MODPACK;
-        }
-        else {
+        } else {
             modTranslations = ModTranslations.EMPTY;
         }
-        this.modTranslation = modTranslations.getModByCurseForgeId(bean.getSlug());
-        this.resourceType = resourceType;
+        this.modTranslation = modTranslations.getModByCurseForgeId(remoteMod.getSlug());
+        this.resourceType = i;
         onCreate();
     }
 
-    @Override
+    @Override // com.qcl.launcher.launcher.uis.tools.BaseUI, com.qcl.launcher.launcher.uis.tools.UILifecycleCallbacks
     public void onCreate() {
         super.onCreate();
-        baseDownloadUI = (LinearLayout) LayoutInflater.from(context).inflate(R.layout.ui_download_resource,null);
+        this.baseDownloadUI = (LinearLayout) LayoutInflater.from(this.context).inflate(R.layout.ui_download_resource, (ViewGroup) null);
     }
 
-    @Override
+    @Override // com.qcl.launcher.launcher.uis.tools.BaseUI, com.qcl.launcher.launcher.uis.tools.UILifecycleCallbacks
     public void onStart() {
         super.onStart();
-        activity.uiContainer.addView(baseDownloadUI);
-        ViewGroup.LayoutParams layoutParams = baseDownloadUI.getLayoutParams();
-        layoutParams.width = ViewGroup.LayoutParams.MATCH_PARENT;
-        layoutParams.height = ViewGroup.LayoutParams.MATCH_PARENT;
-        baseDownloadUI.setLayoutParams(layoutParams);
-        activity.showBarTitle(bean.getTitle(),canGoBackToLast(),false);
-        CustomAnimationUtils.showViewFromLeft(baseDownloadUI,activity,context,true);
+        this.activity.uiContainer.addView(this.baseDownloadUI);
+        ViewGroup.LayoutParams layoutParams = this.baseDownloadUI.getLayoutParams();
+        layoutParams.width = -1;
+        layoutParams.height = -1;
+        this.baseDownloadUI.setLayoutParams(layoutParams);
+        this.activity.showBarTitle(this.bean.getTitle(), canGoBackToLast(), false);
+        CustomAnimationUtils.showViewFromLeft(this.baseDownloadUI, this.activity, this.context, true);
     }
 
-    @Override
+    @Override // com.qcl.launcher.launcher.uis.tools.BaseUI, com.qcl.launcher.launcher.uis.tools.UILifecycleCallbacks
     public void onStop() {
         super.onStop();
-        CustomAnimationUtils.hideViewToLeft(baseDownloadUI,activity,context,true);
-        activity.uiContainer.removeView(baseDownloadUI);
+        CustomAnimationUtils.hideViewToLeft(this.baseDownloadUI, this.activity, this.context, true);
+        this.activity.uiContainer.removeView(this.baseDownloadUI);
     }
 
-    public <T> T findViewById(int id) {
-        return (T) baseDownloadUI.findViewById(id);
+    public <T> T findViewById(int i) {
+        return (T) this.baseDownloadUI.findViewById(i);
     }
-
 }

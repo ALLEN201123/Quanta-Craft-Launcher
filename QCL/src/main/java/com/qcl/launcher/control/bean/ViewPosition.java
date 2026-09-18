@@ -1,21 +1,16 @@
 package com.qcl.launcher.control.bean;
 
-import androidx.annotation.NonNull;
-
+/* loaded from: classes2.dex */
 public class ViewPosition implements Cloneable {
-
     public int absolutePosition;
     public float percentPosition;
 
-    public ViewPosition(int absolutePosition, float percentPosition) {
-        this.absolutePosition = absolutePosition;
-        this.percentPosition = percentPosition;
+    public ViewPosition(int i, float f) {
+        this.absolutePosition = i;
+        this.percentPosition = f;
     }
 
-    @NonNull
-    @Override
     public Object clone() throws CloneNotSupportedException {
         return super.clone();
     }
-
 }

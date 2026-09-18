@@ -2,7 +2,6 @@ package com.qcl.launcher.launcher.dialogs.control;
 
 import android.app.Dialog;
 import android.content.Context;
-import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Handler;
 import android.text.Editable;
@@ -10,125 +9,125 @@ import android.text.TextWatcher;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ListAdapter;
 import android.widget.ListView;
-
-import androidx.annotation.NonNull;
-
-import com.qcl.launcher.R;
 import com.qcl.launcher.control.InputBridge;
 import com.qcl.launcher.control.MenuHelper;
+import com.qcl.launcher.launcher.dialogs.control.AddFastTextDialog;
 import com.qcl.launcher.launcher.list.local.controller.FastTextAdapter;
 import com.qcl.launcher.launcher.setting.SettingUtils;
-
-import net.kdt.pojavlaunch.keyboard.LwjglGlfwKeycode;
-
 import java.util.ArrayList;
 
+import com.qcl.launcher.R;
+/* loaded from: classes2.dex */
 public class InputDialog extends Dialog implements View.OnClickListener, TextWatcher {
-
-    private MenuHelper menuHelper;
-
-    private ListView listView;
-
-    public EditText editText;
-
     private Button addText;
     private Button clearText;
-    private Button send;
+    public EditText editText;
+    private ListView listView;
+    private MenuHelper menuHelper;
     private Button negative;
+    private Button send;
 
-    public InputDialog(@NonNull Context context, MenuHelper menuHelper) {
+    @Override // android.text.TextWatcher
+    public void beforeTextChanged(CharSequence charSequence, int i, int i2, int i3) {
+    }
+
+    @Override // android.text.TextWatcher
+    public void onTextChanged(CharSequence charSequence, int i, int i2, int i3) {
+    }
+
+    public InputDialog(Context context, MenuHelper menuHelper) {
         super(context);
         this.menuHelper = menuHelper;
         setContentView(R.layout.dialog_input);
         setCanceledOnTouchOutside(false);
-        getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        getWindow().setBackgroundDrawable(new ColorDrawable(0));
         init();
     }
 
     private void init() {
-        listView = findViewById(R.id.fast_text_list);
-
-        editText = findViewById(R.id.edit_input_text);
-
-        addText = findViewById(R.id.add_fast_text);
-        clearText = findViewById(R.id.clear_input_text);
-        send = findViewById(R.id.send_text);
-        negative = findViewById(R.id.exit);
-
-        addText.setOnClickListener(this);
-        clearText.setOnClickListener(this);
-        send.setOnClickListener(this);
-        negative.setOnClickListener(this);
-
-        editText.setText(">");
-        editText.addTextChangedListener(this);
-
+        this.listView = (ListView) findViewById(R.id.fast_text_list);
+        this.editText = (EditText) findViewById(R.id.edit_input_text);
+        this.addText = (Button) findViewById(R.id.add_fast_text);
+        this.clearText = (Button) findViewById(R.id.clear_input_text);
+        this.send = (Button) findViewById(R.id.send_text);
+        this.negative = (Button) findViewById(R.id.exit);
+        this.addText.setOnClickListener(this);
+        this.clearText.setOnClickListener(this);
+        this.send.setOnClickListener(this);
+        this.negative.setOnClickListener(this);
+        this.editText.setText(">");
+        this.editText.addTextChangedListener(this);
         refreshList();
     }
 
-    private void refreshList(){
-        FastTextAdapter adapter = new FastTextAdapter(getContext(),SettingUtils.getFastList(),this);
-        listView.setAdapter(adapter);
+    private void refreshList() {
+        this.listView.setAdapter((ListAdapter) new FastTextAdapter(getContext(), SettingUtils.getFastList(), this));
     }
 
-    @Override
+    @Override // android.view.View.OnClickListener
     public void onClick(View view) {
-        if (view == addText) {
-            AddFastTextDialog dialog = new AddFastTextDialog(getContext(), fastText -> {
-                ArrayList<String> list = SettingUtils.getFastList();
-                list.add(fastText);
-                SettingUtils.saveFastText(list);
-                refreshList();
-            });
-            dialog.show();
+        if (view == this.addText) {
+            new AddFastTextDialog(getContext(), new AddFastTextDialog.OnFastTextAddListener() { // from class: com.qcl.launcher.launcher.dialogs.control.InputDialog$$ExternalSyntheticLambda0
+                @Override // com.qcl.launcher.launcher.dialogs.control.AddFastTextDialog.OnFastTextAddListener
+                public final void onFastTextAdd(String str) {
+                    InputDialog.this.m285x4a74d595(str);
+                }
+            }).show();
         }
-        if (view == clearText) {
-            editText.setText(">");
+        if (view == this.clearText) {
+            this.editText.setText(">");
         }
-        if (view == send) {
-            if (menuHelper.gameCursorMode == 0) {
-                for(int i = 1; i < editText.getText().toString().length(); i++){
-                    InputBridge.sendKeyChar(menuHelper.launcher,editText.getText().toString().charAt(i));
+        if (view == this.send) {
+            if (this.menuHelper.gameCursorMode == 0) {
+                for (int i = 1; i < this.editText.getText().toString().length(); i++) {
+                    InputBridge.sendKeyChar(this.menuHelper.launcher, this.editText.getText().toString().charAt(i));
                 }
                 dismiss();
-            }
-            else {
-                InputBridge.sendEvent(menuHelper.launcher, LwjglGlfwKeycode.GLFW_KEY_T, true);
-                InputBridge.sendEvent(menuHelper.launcher, LwjglGlfwKeycode.GLFW_KEY_T, false);
-                new Handler().postDelayed(() -> {
-                    for(int i = 1; i < editText.getText().toString().length(); i++){
-                        InputBridge.sendKeyChar(menuHelper.launcher,editText.getText().toString().charAt(i));
+            } else {
+                InputBridge.sendEvent(this.menuHelper.launcher, 84, true);
+                InputBridge.sendEvent(this.menuHelper.launcher, 84, false);
+                new Handler().postDelayed(new Runnable() { // from class: com.qcl.launcher.launcher.dialogs.control.InputDialog$$ExternalSyntheticLambda1
+                    @Override // java.lang.Runnable
+                    public final void run() {
+                        InputDialog.this.m286x73c92ad6();
                     }
-                    InputBridge.sendEvent(menuHelper.launcher, LwjglGlfwKeycode.GLFW_KEY_ENTER, true);
-                    InputBridge.sendEvent(menuHelper.launcher, LwjglGlfwKeycode.GLFW_KEY_ENTER, false);
-                    dismiss();
-                },50);
+                }, 50L);
             }
         }
-        if (view == negative) {
+        if (view == this.negative) {
             dismiss();
         }
     }
 
-    @Override
-    public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-
+    /* JADX INFO: Access modifiers changed from: package-private */
+    /* renamed from: lambda$onClick$0$com-qcl-launcher-launcher-dialogs-control-InputDialog, reason: not valid java name */
+    public /* synthetic */ void m285x4a74d595(String str) {
+        ArrayList<String> fastList = SettingUtils.getFastList();
+        fastList.add(str);
+        SettingUtils.saveFastText(fastList);
+        refreshList();
     }
 
-    @Override
-    public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-
+    /* JADX INFO: Access modifiers changed from: package-private */
+    /* renamed from: lambda$onClick$1$com-qcl-launcher-launcher-dialogs-control-InputDialog, reason: not valid java name */
+    public /* synthetic */ void m286x73c92ad6() {
+        for (int i = 1; i < this.editText.getText().toString().length(); i++) {
+            InputBridge.sendKeyChar(this.menuHelper.launcher, this.editText.getText().toString().charAt(i));
+        }
+        InputBridge.sendEvent(this.menuHelper.launcher, 257, true);
+        InputBridge.sendEvent(this.menuHelper.launcher, 257, false);
+        dismiss();
     }
 
-    @Override
+    @Override // android.text.TextWatcher
     public void afterTextChanged(Editable editable) {
-        String newText = editText.getText().toString();
-        if (newText.length() < 1){
-            InputBridge.sendEvent(menuHelper.launcher, LwjglGlfwKeycode.GLFW_KEY_BACKSPACE, true);
-            InputBridge.sendEvent(menuHelper.launcher, LwjglGlfwKeycode.GLFW_KEY_BACKSPACE, false);
-            editText.setText(">");
-            editText.setSelection(1);
+        if (this.editText.getText().toString().length() < 1) {
+            InputBridge.sendEvent(this.menuHelper.launcher, 259, true);
+            InputBridge.sendEvent(this.menuHelper.launcher, 259, false);
+            this.editText.setText(">");
+            this.editText.setSelection(1);
         }
     }
 }

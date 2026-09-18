@@ -2,27 +2,22 @@ package com.qcl.launcher.task;
 
 import com.qcl.launcher.event.Event;
 
-/**
- *
- * @author huang
- */
+/* loaded from: classes2.dex */
 public class TaskEvent extends Event {
-
-    private final Task<?> task;
     private final boolean failed;
+    private final Task<?> task;
 
-    public TaskEvent(Object source, Task<?> task, boolean failed) {
-        super(source);
+    public TaskEvent(Object obj, Task<?> task, boolean z) {
+        super(obj);
         this.task = task;
-        this.failed = failed;
+        this.failed = z;
     }
 
     public Task<?> getTask() {
-        return task;
+        return this.task;
     }
 
     public boolean isFailed() {
-        return failed;
+        return this.failed;
     }
-
 }

@@ -4,99 +4,93 @@ import com.google.gson.JsonParseException;
 import com.google.gson.annotations.SerializedName;
 import com.qcl.launcher.utils.gson.tools.Validation;
 import com.qcl.launcher.utils.io.NetworkUtils;
-
-import org.jetbrains.annotations.Nullable;
-
 import java.net.URL;
 import java.util.Objects;
 
-/**
- *
- * @author huangyuhui
- */
+/* loaded from: classes2.dex */
 public final class CurseManifestFile implements Validation {
 
-    @SerializedName("projectID")
-    private final int projectID;
-    
     @SerializedName("fileID")
     private final int fileID;
-    
+
     @SerializedName("fileName")
     private final String fileName;
 
-    @SerializedName("url")
-    private final String url;
-    
+    @SerializedName("projectID")
+    private final int projectID;
+
     @SerializedName("required")
     private final boolean required;
+
+    @SerializedName("url")
+    private final String url;
 
     public CurseManifestFile() {
         this(0, 0, null, null, true);
     }
 
-    public CurseManifestFile(int projectID, int fileID, String fileName, String url, boolean required) {
-        this.projectID = projectID;
-        this.fileID = fileID;
-        this.fileName = fileName;
-        this.url = url;
-        this.required = required;
+    public CurseManifestFile(int i, int i2, String str, String str2, boolean z) {
+        this.projectID = i;
+        this.fileID = i2;
+        this.fileName = str;
+        this.url = str2;
+        this.required = z;
     }
 
     public int getProjectID() {
-        return projectID;
+        return this.projectID;
     }
 
     public int getFileID() {
-        return fileID;
+        return this.fileID;
     }
 
     public String getFileName() {
-        return fileName;
+        return this.fileName;
     }
 
     public boolean isRequired() {
-        return required;
+        return this.required;
     }
 
-    @Override
+    @Override // com.qcl.launcher.utils.gson.tools.Validation
     public void validate() throws JsonParseException {
-        if (projectID == 0 || fileID == 0)
+        if (this.projectID == 0 || this.fileID == 0) {
             throw new JsonParseException("Missing Project ID or File ID.");
-    }
-
-    @Nullable
-    public URL getUrl() {
-        if (url == null) {
-            if (fileName != null) {
-                return NetworkUtils.toURL(NetworkUtils.encodeLocation(String.format("https://edge.forgecdn.net/files/%d/%d/%s", fileID / 1000, fileID % 1000, fileName)));
-            } else {
-                return null;
-            }
-        } else {
-            return NetworkUtils.toURL(NetworkUtils.encodeLocation(url));
         }
     }
 
-    public CurseManifestFile withFileName(String fileName) {
-        return new CurseManifestFile(projectID, fileID, fileName, url, required);
+    public URL getUrl() {
+        String str = this.url;
+        if (str == null) {
+            if (this.fileName != null) {
+                return NetworkUtils.toURL(NetworkUtils.encodeLocation(String.format("https://edge.forgecdn.net/files/%d/%d/%s", Integer.valueOf(this.fileID / 1000), Integer.valueOf(this.fileID % 1000), this.fileName)));
+            }
+            return null;
+        }
+        return NetworkUtils.toURL(NetworkUtils.encodeLocation(str));
     }
 
-    public CurseManifestFile withURL(String url) {
-        return new CurseManifestFile(projectID, fileID, fileName, url, required);
+    public CurseManifestFile withFileName(String str) {
+        return new CurseManifestFile(this.projectID, this.fileID, str, this.url, this.required);
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        CurseManifestFile that = (CurseManifestFile) o;
-        return projectID == that.projectID &&
-                fileID == that.fileID;
+    public CurseManifestFile withURL(String str) {
+        return new CurseManifestFile(this.projectID, this.fileID, this.fileName, str, this.required);
     }
 
-    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null || getClass() != obj.getClass()) {
+            return false;
+        }
+        CurseManifestFile curseManifestFile = (CurseManifestFile) obj;
+        return this.projectID == curseManifestFile.projectID && this.fileID == curseManifestFile.fileID;
+    }
+
     public int hashCode() {
-        return Objects.hash(projectID, fileID);
+        return Objects.hash(Integer.valueOf(this.projectID), Integer.valueOf(this.fileID));
     }
 }

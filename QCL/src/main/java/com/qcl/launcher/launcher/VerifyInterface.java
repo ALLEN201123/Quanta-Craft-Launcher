@@ -1,8 +1,8 @@
 package com.qcl.launcher.launcher;
 
+/* loaded from: classes2.dex */
 public interface VerifyInterface {
-
-    void onSuccess();
     void onCancel();
 
+    void onSuccess();
 }

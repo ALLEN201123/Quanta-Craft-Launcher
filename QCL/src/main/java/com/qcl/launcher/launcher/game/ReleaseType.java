@@ -1,5 +1,6 @@
 package com.qcl.launcher.launcher.game;
 
+/* loaded from: classes2.dex */
 public enum ReleaseType {
     RELEASE("release"),
     SNAPSHOT("snapshot"),
@@ -10,12 +11,11 @@ public enum ReleaseType {
 
     private final String id;
 
-    ReleaseType(String id) {
-        this.id = id;
+    ReleaseType(String str) {
+        this.id = str;
     }
 
     public String getId() {
-        return id;
+        return this.id;
     }
-
 }

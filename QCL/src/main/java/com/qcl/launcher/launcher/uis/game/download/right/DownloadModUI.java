@@ -1,9 +1,5 @@
 package com.qcl.launcher.launcher.uis.game.download.right;
 
-import static com.qcl.launcher.launcher.mod.RemoteModRepository.DEFAULT_GAME_VERSIONS;
-import static java.util.stream.Collectors.toList;
-
-import android.annotation.SuppressLint;
 import android.content.Context;
 import android.os.Handler;
 import android.os.Message;
@@ -16,14 +12,12 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
+import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.Spinner;
+import android.widget.SpinnerAdapter;
 import android.widget.TextView;
-
-import androidx.annotation.NonNull;
-
-import com.qcl.launcher.R;
 import com.qcl.launcher.launcher.MainActivity;
 import com.qcl.launcher.launcher.list.download.DownloadResourceAdapter;
 import com.qcl.launcher.launcher.mod.LocalizedRemoteModRepository;
@@ -32,302 +26,310 @@ import com.qcl.launcher.launcher.mod.RemoteModRepository;
 import com.qcl.launcher.launcher.mod.curse.CurseForgeRemoteModRepository;
 import com.qcl.launcher.launcher.mod.modrinth.ModrinthRemoteModRepository;
 import com.qcl.launcher.launcher.setting.SettingUtils;
-import com.qcl.launcher.launcher.view.spinner.CategorySpinnerAdapter;
 import com.qcl.launcher.launcher.uis.tools.BaseUI;
+import com.qcl.launcher.launcher.view.spinner.CategorySpinnerAdapter;
 import com.qcl.launcher.utils.animation.CustomAnimationUtils;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
+import com.qcl.launcher.R;
+/* loaded from: classes2.dex */
 public class DownloadModUI extends BaseUI implements View.OnClickListener, AdapterView.OnItemSelectedListener, TextWatcher, TextView.OnEditorActionListener {
-
+    private ArrayList<RemoteModRepository.Category> categoryList;
+    private CategorySpinnerAdapter categoryListAdapter;
     public LinearLayout downloadModUI;
-
-    public String lastVersion;
-    public String gameVersion;
-
-    private Spinner gameSpinner;
     private Spinner downloadSourceSpinner;
     private EditText editName;
     private EditText editVersion;
-    private Spinner versionSpinner;
-    private Spinner typeSpinner;
-    private Spinner sortSpinner;
-    private Button search;
-
     private ArrayList<String> gameList;
     private ArrayAdapter<String> gameListAdapter;
-    private ArrayList<String> sourceList;
-    private ArrayAdapter<String> sourceListAdapter;
-    private ArrayList<String> versionList;
-    private ArrayAdapter<String> versionListAdapter;
-    private ArrayList<RemoteModRepository.Category> categoryList;
-    private CategorySpinnerAdapter categoryListAdapter;
-    private ArrayList<String> sortList;
-    private ArrayAdapter<String> sortListAdapter;
-
-    private ListView modListView;
+    private Spinner gameSpinner;
+    public String gameVersion;
+    private boolean isSearching;
+    public String lastVersion;
     private ArrayList<RemoteMod> modList;
     private DownloadResourceAdapter modListAdapter;
+    private ListView modListView;
     private ProgressBar progressBar;
     private TextView refreshText;
-    private boolean isSearching = false;
-
     private RemoteModRepository repository;
+    private Button search;
+    private final Handler searchHandler;
+    private ArrayList<String> sortList;
+    private ArrayAdapter<String> sortListAdapter;
+    private Spinner sortSpinner;
+    private ArrayList<String> sourceList;
+    private ArrayAdapter<String> sourceListAdapter;
+    private Spinner typeSpinner;
+    private ArrayList<String> versionList;
+    private ArrayAdapter<String> versionListAdapter;
+    private Spinner versionSpinner;
 
-    public DownloadModUI(Context context, MainActivity activity) {
-        super(context, activity);
+    @Override // android.text.TextWatcher
+    public void beforeTextChanged(CharSequence charSequence, int i, int i2, int i3) {
     }
 
-    private class Repository extends LocalizedRemoteModRepository {
+    @Override // android.widget.AdapterView.OnItemSelectedListener
+    public void onNothingSelected(AdapterView<?> adapterView) {
+    }
 
-        @Override
-        protected RemoteModRepository getBackedRemoteModRepository() {
-            if (downloadSourceSpinner.getSelectedItemPosition() == 1) {
-                return ModrinthRemoteModRepository.MODS;
-            } else {
-                return CurseForgeRemoteModRepository.MODS;
+    @Override // android.text.TextWatcher
+    public void onTextChanged(CharSequence charSequence, int i, int i2, int i3) {
+    }
+
+    public DownloadModUI(Context context, MainActivity mainActivity) {
+        super(context, mainActivity);
+        this.isSearching = false;
+        this.searchHandler = new Handler() { // from class: com.qcl.launcher.launcher.uis.game.download.right.DownloadModUI.1
+            @Override // android.os.Handler
+            public void handleMessage(Message message) {
+                super.handleMessage(message);
+                if (message.what == 0) {
+                    DownloadModUI.this.isSearching = true;
+                    DownloadModUI.this.progressBar.setVisibility(0);
+                    DownloadModUI.this.refreshText.setVisibility(8);
+                    DownloadModUI.this.modListView.setVisibility(8);
+                }
+                if (message.what == 1) {
+                    DownloadModUI.this.modListAdapter.notifyDataSetChanged();
+                    DownloadModUI.this.categoryListAdapter.notifyDataSetChanged();
+                    DownloadModUI.this.progressBar.setVisibility(8);
+                    DownloadModUI.this.refreshText.setVisibility(8);
+                    DownloadModUI.this.modListView.setVisibility(0);
+                    DownloadModUI.this.isSearching = false;
+                }
+                if (message.what == 2) {
+                    DownloadModUI.this.progressBar.setVisibility(8);
+                    DownloadModUI.this.refreshText.setVisibility(0);
+                    DownloadModUI.this.modListView.setVisibility(8);
+                    DownloadModUI.this.isSearching = false;
+                }
             }
+        };
+    }
+
+    /* JADX INFO: Access modifiers changed from: private */
+    /* loaded from: classes2.dex */
+    public class Repository extends LocalizedRemoteModRepository {
+        private Repository() {
         }
 
-        @Override
-        public Type getType() {
-            return Type.MOD;
+        @Override // com.qcl.launcher.launcher.mod.LocalizedRemoteModRepository
+        protected RemoteModRepository getBackedRemoteModRepository() {
+            if (DownloadModUI.this.downloadSourceSpinner.getSelectedItemPosition() == 1) {
+                return ModrinthRemoteModRepository.MODS;
+            }
+            return CurseForgeRemoteModRepository.MODS;
+        }
+
+        @Override // com.qcl.launcher.launcher.mod.RemoteModRepository
+        public RemoteModRepository.Type getType() {
+            return RemoteModRepository.Type.MOD;
         }
     }
 
-    @Override
+    @Override // com.qcl.launcher.launcher.uis.tools.BaseUI, com.qcl.launcher.launcher.uis.tools.UILifecycleCallbacks
     public void onCreate() {
         super.onCreate();
-        downloadModUI = activity.findViewById(R.id.ui_download_mod);
-
-        gameSpinner = activity.findViewById(R.id.download_mod_arg_game);
-        downloadSourceSpinner = activity.findViewById(R.id.download_mod_arg_source);
-        editName = activity.findViewById(R.id.download_mod_arg_name);
-        editVersion = activity.findViewById(R.id.edit_download_mod_arg_version);
-        versionSpinner = activity.findViewById(R.id.download_mod_arg_version);
-        typeSpinner = activity.findViewById(R.id.download_mod_arg_type);
-        sortSpinner = activity.findViewById(R.id.download_mod_arg_sort);
-
-        gameList = SettingUtils.getLocalVersionNames(activity.launcherSetting.gameFileDirectory);
-        gameListAdapter = new ArrayAdapter<>(context,R.layout.item_spinner,gameList);
-        gameSpinner.setAdapter(gameListAdapter);
-
-        sourceList = new ArrayList<>();
-        sourceList.add(context.getString(R.string.download_mod_source_curse_forge));
-        sourceList.add(context.getString(R.string.download_mod_source_modrinth));
-        sourceListAdapter = new ArrayAdapter<>(context, R.layout.item_spinner, sourceList);
-        sourceListAdapter.setDropDownViewResource(R.layout.item_spinner_drop_down);
-        downloadSourceSpinner.setAdapter(sourceListAdapter);
-        // 默认下载源改为 Modrinth（ CurseForge 经常连不上）
-        downloadSourceSpinner.setSelection(1);
-
-        versionList = new ArrayList<>();
-        versionList.add("");
-        versionList.addAll(Arrays.asList(DEFAULT_GAME_VERSIONS));
-        versionListAdapter = new ArrayAdapter<>(context, R.layout.item_spinner, versionList);
-        versionListAdapter.setDropDownViewResource(R.layout.item_spinner_drop_down);
-        versionSpinner.setAdapter(versionListAdapter);
-
-        categoryList = new ArrayList<>();
-        categoryList.add(new RemoteModRepository.Category(CurseForgeRemoteModRepository.CATEGORY_ALL,"0",new ArrayList<>()));
-        categoryListAdapter = new CategorySpinnerAdapter(context,categoryList,CurseForgeRemoteModRepository.SECTION_MOD);
-        typeSpinner.setAdapter(categoryListAdapter);
-
-        sortList = new ArrayList<>();
-        sortList.add(context.getString(R.string.download_mod_sort_date));
-        sortList.add(context.getString(R.string.download_mod_sort_heat));
-        sortList.add(context.getString(R.string.download_mod_sort_recent));
-        sortList.add(context.getString(R.string.download_mod_sort_name));
-        sortList.add(context.getString(R.string.download_mod_sort_author));
-        sortList.add(context.getString(R.string.download_mod_sort_downloads));
-        sortList.add(context.getString(R.string.download_mod_sort_category));
-        sortList.add(context.getString(R.string.download_mod_sort_game_version));
-        sortListAdapter = new ArrayAdapter<>(context, R.layout.item_spinner, sortList);
-        sortListAdapter.setDropDownViewResource(R.layout.item_spinner_drop_down);
-        sortSpinner.setAdapter(sortListAdapter);
-
-        gameSpinner.setOnItemSelectedListener(this);
-        downloadSourceSpinner.setOnItemSelectedListener(this);
-        versionSpinner.setOnItemSelectedListener(this);
-        typeSpinner.setOnItemSelectedListener(this);
-        sortSpinner.setOnItemSelectedListener(this);
-
-        search = activity.findViewById(R.id.search_mod);
-
-        search.setOnClickListener(this);
-
-        editName.setOnEditorActionListener(this);
-        editVersion.setOnEditorActionListener(this);
-        editVersion.addTextChangedListener(this);
-
-        repository = new Repository();
-
-        modListView = activity.findViewById(R.id.download_mod_list);
-        modList = new ArrayList<>();
-        modListAdapter = new DownloadResourceAdapter(context,activity,repository,modList,0);
-        modListView.setAdapter(modListAdapter);
-
-        progressBar = activity.findViewById(R.id.loading_download_mod_list_progress);
-        refreshText = activity.findViewById(R.id.refresh_mod_list);
-        refreshText.setOnClickListener(this);
+        this.downloadModUI = (LinearLayout) this.activity.findViewById(R.id.ui_download_mod);
+        this.gameSpinner = (Spinner) this.activity.findViewById(R.id.download_mod_arg_game);
+        this.downloadSourceSpinner = (Spinner) this.activity.findViewById(R.id.download_mod_arg_source);
+        this.editName = (EditText) this.activity.findViewById(R.id.download_mod_arg_name);
+        this.editVersion = (EditText) this.activity.findViewById(R.id.edit_download_mod_arg_version);
+        this.versionSpinner = (Spinner) this.activity.findViewById(R.id.download_mod_arg_version);
+        this.typeSpinner = (Spinner) this.activity.findViewById(R.id.download_mod_arg_type);
+        this.sortSpinner = (Spinner) this.activity.findViewById(R.id.download_mod_arg_sort);
+        this.gameList = SettingUtils.getLocalVersionNames(this.activity.launcherSetting.gameFileDirectory);
+        ArrayAdapter<String> arrayAdapter = new ArrayAdapter<>(this.context, R.layout.item_spinner, this.gameList);
+        this.gameListAdapter = arrayAdapter;
+        this.gameSpinner.setAdapter((SpinnerAdapter) arrayAdapter);
+        ArrayList<String> arrayList = new ArrayList<>();
+        this.sourceList = arrayList;
+        arrayList.add(this.context.getString(R.string.download_mod_source_curse_forge));
+        this.sourceList.add(this.context.getString(R.string.download_mod_source_modrinth));
+        ArrayAdapter<String> arrayAdapter2 = new ArrayAdapter<>(this.context, R.layout.item_spinner, this.sourceList);
+        this.sourceListAdapter = arrayAdapter2;
+        arrayAdapter2.setDropDownViewResource(R.layout.item_spinner_drop_down);
+        this.downloadSourceSpinner.setAdapter((SpinnerAdapter) this.sourceListAdapter);
+        this.downloadSourceSpinner.setSelection(1);
+        ArrayList<String> arrayList2 = new ArrayList<>();
+        this.versionList = arrayList2;
+        arrayList2.add("");
+        this.versionList.addAll(Arrays.asList(RemoteModRepository.DEFAULT_GAME_VERSIONS));
+        ArrayAdapter<String> arrayAdapter3 = new ArrayAdapter<>(this.context, R.layout.item_spinner, this.versionList);
+        this.versionListAdapter = arrayAdapter3;
+        arrayAdapter3.setDropDownViewResource(R.layout.item_spinner_drop_down);
+        this.versionSpinner.setAdapter((SpinnerAdapter) this.versionListAdapter);
+        ArrayList<RemoteModRepository.Category> arrayList3 = new ArrayList<>();
+        this.categoryList = arrayList3;
+        arrayList3.add(new RemoteModRepository.Category(CurseForgeRemoteModRepository.CATEGORY_ALL, "0", new ArrayList()));
+        CategorySpinnerAdapter categorySpinnerAdapter = new CategorySpinnerAdapter(this.context, this.categoryList, 6);
+        this.categoryListAdapter = categorySpinnerAdapter;
+        this.typeSpinner.setAdapter((SpinnerAdapter) categorySpinnerAdapter);
+        ArrayList<String> arrayList4 = new ArrayList<>();
+        this.sortList = arrayList4;
+        arrayList4.add(this.context.getString(R.string.download_mod_sort_date));
+        this.sortList.add(this.context.getString(R.string.download_mod_sort_heat));
+        this.sortList.add(this.context.getString(R.string.download_mod_sort_recent));
+        this.sortList.add(this.context.getString(R.string.download_mod_sort_name));
+        this.sortList.add(this.context.getString(R.string.download_mod_sort_author));
+        this.sortList.add(this.context.getString(R.string.download_mod_sort_downloads));
+        this.sortList.add(this.context.getString(R.string.download_mod_sort_category));
+        this.sortList.add(this.context.getString(R.string.download_mod_sort_game_version));
+        ArrayAdapter<String> arrayAdapter4 = new ArrayAdapter<>(this.context, R.layout.item_spinner, this.sortList);
+        this.sortListAdapter = arrayAdapter4;
+        arrayAdapter4.setDropDownViewResource(R.layout.item_spinner_drop_down);
+        this.sortSpinner.setAdapter((SpinnerAdapter) this.sortListAdapter);
+        this.gameSpinner.setOnItemSelectedListener(this);
+        this.downloadSourceSpinner.setOnItemSelectedListener(this);
+        this.versionSpinner.setOnItemSelectedListener(this);
+        this.typeSpinner.setOnItemSelectedListener(this);
+        this.sortSpinner.setOnItemSelectedListener(this);
+        Button button = (Button) this.activity.findViewById(R.id.search_mod);
+        this.search = button;
+        button.setOnClickListener(this);
+        this.editName.setOnEditorActionListener(this);
+        this.editVersion.setOnEditorActionListener(this);
+        this.editVersion.addTextChangedListener(this);
+        this.repository = new Repository();
+        this.modListView = (ListView) this.activity.findViewById(R.id.download_mod_list);
+        this.modList = new ArrayList<>();
+        DownloadResourceAdapter downloadResourceAdapter = new DownloadResourceAdapter(this.context, this.activity, this.repository, this.modList, 0);
+        this.modListAdapter = downloadResourceAdapter;
+        this.modListView.setAdapter((ListAdapter) downloadResourceAdapter);
+        this.progressBar = (ProgressBar) this.activity.findViewById(R.id.loading_download_mod_list_progress);
+        TextView textView = (TextView) this.activity.findViewById(R.id.refresh_mod_list);
+        this.refreshText = textView;
+        textView.setOnClickListener(this);
     }
 
-    @SuppressLint("UseCompatLoadingForDrawables")
-    @Override
+    @Override // com.qcl.launcher.launcher.uis.tools.BaseUI, com.qcl.launcher.launcher.uis.tools.UILifecycleCallbacks
     public void onStart() {
         super.onStart();
-        CustomAnimationUtils.showViewFromLeft(downloadModUI,activity,context,false);
-        activity.uiManager.downloadUI.startDownloadModUI.setBackground(context.getResources().getDrawable(R.drawable.launcher_button_white));
+        CustomAnimationUtils.showViewFromLeft(this.downloadModUI, this.activity, this.context, false);
+        this.activity.uiManager.downloadUI.startDownloadModUI.setBackground(this.context.getResources().getDrawable(R.drawable.launcher_button_white));
         init();
     }
 
-    @SuppressLint("UseCompatLoadingForDrawables")
-    @Override
+    @Override // com.qcl.launcher.launcher.uis.tools.BaseUI, com.qcl.launcher.launcher.uis.tools.UILifecycleCallbacks
     public void onStop() {
         super.onStop();
-        CustomAnimationUtils.hideViewToLeft(downloadModUI,activity,context,false);
-        if (activity.isLoaded){
-            activity.uiManager.downloadUI.startDownloadModUI.setBackground(context.getResources().getDrawable(R.drawable.launcher_button_parent));
+        CustomAnimationUtils.hideViewToLeft(this.downloadModUI, this.activity, this.context, false);
+        if (this.activity.isLoaded) {
+            this.activity.uiManager.downloadUI.startDownloadModUI.setBackground(this.context.getResources().getDrawable(R.drawable.launcher_button_parent));
         }
     }
 
-    @Override
-    public void onClick(View v) {
-        if (v == search){
+    @Override // android.view.View.OnClickListener
+    public void onClick(View view) {
+        if (view == this.search) {
             search();
         }
-        if (v == refreshText) {
-            search();
-        }
-    }
-
-    private void init(){
-        if (modList.size() == 0 && editName.getText().toString().equals("")){
+        if (view == this.refreshText) {
             search();
         }
     }
 
-    @Override
-    public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-        if (parent == typeSpinner || parent == sortSpinner || parent == versionSpinner){
+    private void init() {
+        if (this.modList.size() == 0 && this.editName.getText().toString().equals("")) {
             search();
-            if (parent == versionSpinner){
-                editVersion.setText((String) parent.getItemAtPosition(position));
+        }
+    }
+
+    @Override // android.widget.AdapterView.OnItemSelectedListener
+    public void onItemSelected(AdapterView<?> adapterView, View view, int i, long j) {
+        if (adapterView == this.typeSpinner || adapterView == this.sortSpinner || adapterView == this.versionSpinner) {
+            search();
+            if (adapterView == this.versionSpinner) {
+                this.editVersion.setText((String) adapterView.getItemAtPosition(i));
             }
         }
-        if (parent == gameSpinner) {
-            gameVersion = gameList.size() > 0 ? gameSpinner.getSelectedItem().toString() : null;
+        if (adapterView == this.gameSpinner) {
+            this.gameVersion = this.gameList.size() > 0 ? this.gameSpinner.getSelectedItem().toString() : null;
         }
-    }
-
-    @Override
-    public void onNothingSelected(AdapterView<?> parent) {
-
     }
 
     public void refreshGameList() {
-        boolean bool = false;
-        if (!Objects.equals(lastVersion, activity.publicGameSetting.currentVersion)) {
-            bool = true;
-            lastVersion = activity.publicGameSetting.currentVersion;
+        boolean z;
+        String str;
+        if (Objects.equals(this.lastVersion, this.activity.publicGameSetting.currentVersion)) {
+            z = false;
+        } else {
+            this.lastVersion = this.activity.publicGameSetting.currentVersion;
+            z = true;
         }
-        gameList = SettingUtils.getLocalVersionNames(activity.launcherSetting.gameFileDirectory);
-        gameListAdapter = new ArrayAdapter<>(context,R.layout.item_spinner,gameList);
-        gameSpinner.setAdapter(gameListAdapter);
-        if (gameList.size() > 0) {
-            if (bool && activity.publicGameSetting.currentVersion != null && !activity.publicGameSetting.currentVersion.equals("")) {
-                String currentVersion = activity.publicGameSetting.currentVersion.substring(activity.publicGameSetting.currentVersion.lastIndexOf("/") + 1);
-                if (currentVersion.length() > 0 && gameList.contains(currentVersion)) {
-                    gameSpinner.setSelection(gameListAdapter.getPosition(currentVersion));
+        this.gameList = SettingUtils.getLocalVersionNames(this.activity.launcherSetting.gameFileDirectory);
+        ArrayAdapter<String> arrayAdapter = new ArrayAdapter<>(this.context, R.layout.item_spinner, this.gameList);
+        this.gameListAdapter = arrayAdapter;
+        this.gameSpinner.setAdapter((SpinnerAdapter) arrayAdapter);
+        if (this.gameList.size() > 0) {
+            if (z && this.activity.publicGameSetting.currentVersion != null && !this.activity.publicGameSetting.currentVersion.equals("")) {
+                String substring = this.activity.publicGameSetting.currentVersion.substring(this.activity.publicGameSetting.currentVersion.lastIndexOf("/") + 1);
+                if (substring.length() <= 0 || !this.gameList.contains(substring)) {
+                    return;
                 }
+                this.gameSpinner.setSelection(this.gameListAdapter.getPosition(substring));
+                return;
             }
-            else if (!bool && gameVersion != null && gameList.contains(gameVersion)) {
-                gameSpinner.setSelection(gameListAdapter.getPosition(gameVersion));
-            }
-            else {
-                gameSpinner.setSelection(0);
+            if (!z && (str = this.gameVersion) != null && this.gameList.contains(str)) {
+                this.gameSpinner.setSelection(this.gameListAdapter.getPosition(this.gameVersion));
+                return;
+            } else {
+                this.gameSpinner.setSelection(0);
+                return;
             }
         }
-        else {
-            gameVersion = null;
+        this.gameVersion = null;
+    }
+
+    private void search() {
+        if (this.isSearching) {
+            return;
+        }
+        new Thread(new Runnable() { // from class: com.qcl.launcher.launcher.uis.game.download.right.DownloadModUI$$ExternalSyntheticLambda0
+            @Override // java.lang.Runnable
+            public final void run() {
+                DownloadModUI.this.m477xbfb3ff53();
+            }
+        }).start();
+    }
+
+    /* JADX INFO: Access modifiers changed from: package-private */
+    /* renamed from: lambda$search$0$com-qcl-launcher-launcher-uis-game-download-right-DownloadModUI, reason: not valid java name */
+    public /* synthetic */ void m477xbfb3ff53() {
+        try {
+            this.searchHandler.sendEmptyMessage(0);
+            List list = (List) this.repository.search(this.editVersion.getText().toString(), (RemoteModRepository.Category) this.categoryListAdapter.getItem(this.typeSpinner.getSelectedItemPosition()), 0, 50, this.editName.getText().toString(), RemoteMod.getSortTypeByPosition(this.sortSpinner.getSelectedItemPosition()), RemoteModRepository.SortOrder.DESC).collect(Collectors.toList());
+            this.modList.clear();
+            this.modList.addAll(list);
+            List list2 = (List) this.repository.getCategories().collect(Collectors.toList());
+            this.categoryList.clear();
+            this.categoryList.add(new RemoteModRepository.Category(this.downloadSourceSpinner.getSelectedItemPosition() == 0 ? CurseForgeRemoteModRepository.CATEGORY_ALL : ModrinthRemoteModRepository.CATEGORY_ALL, this.downloadSourceSpinner.getSelectedItemPosition() == 0 ? "0" : "all", new ArrayList()));
+            for (int i = 0; i < list2.size(); i++) {
+                this.categoryList.add((RemoteModRepository.Category) list2.get(i));
+                this.categoryList.addAll(((RemoteModRepository.Category) list2.get(i)).getSubcategories());
+            }
+            this.searchHandler.sendEmptyMessage(1);
+        } catch (Exception e) {
+            this.searchHandler.sendEmptyMessage(2);
+            e.printStackTrace();
         }
     }
 
-    private void search(){
-        if (!isSearching){
-            new Thread(() -> {
-                try {
-                    searchHandler.sendEmptyMessage(0);
-                    List<RemoteMod> list = repository.search(editVersion.getText().toString(), (RemoteModRepository.Category) categoryListAdapter.getItem(typeSpinner.getSelectedItemPosition()), 0, 50, editName.getText().toString(), RemoteMod.getSortTypeByPosition(sortSpinner.getSelectedItemPosition()), RemoteModRepository.SortOrder.DESC).collect(toList());
-                    modList.clear();
-                    modList.addAll(list);
-                    List<RemoteModRepository.Category> categories = repository.getCategories().collect(toList());
-                    categoryList.clear();
-                    categoryList.add(new RemoteModRepository.Category(downloadSourceSpinner.getSelectedItemPosition() == 0 ? CurseForgeRemoteModRepository.CATEGORY_ALL : ModrinthRemoteModRepository.CATEGORY_ALL, downloadSourceSpinner.getSelectedItemPosition() == 0 ? "0" : "all", new ArrayList<>()));
-                    for (int i = 0;i < categories.size();i++) {
-                        categoryList.add(categories.get(i));
-                        categoryList.addAll(categories.get(i).getSubcategories());
-                    }
-                    searchHandler.sendEmptyMessage(1);
-                } catch (Exception e) {
-                    searchHandler.sendEmptyMessage(2);
-                    e.printStackTrace();
-                }
-            }).start();
-        }
-    }
-
-    @SuppressLint("HandlerLeak")
-    private final Handler searchHandler = new Handler() {
-        @Override
-        public void handleMessage(@NonNull Message msg) {
-            super.handleMessage(msg);
-            if (msg.what == 0){
-                isSearching = true;
-                progressBar.setVisibility(View.VISIBLE);
-                refreshText.setVisibility(View.GONE);
-                modListView.setVisibility(View.GONE);
-            }
-            if (msg.what == 1) {
-                modListAdapter.notifyDataSetChanged();
-                categoryListAdapter.notifyDataSetChanged();
-                progressBar.setVisibility(View.GONE);
-                refreshText.setVisibility(View.GONE);
-                modListView.setVisibility(View.VISIBLE);
-                isSearching = false;
-            }
-            if (msg.what == 2) {
-                progressBar.setVisibility(View.GONE);
-                refreshText.setVisibility(View.VISIBLE);
-                modListView.setVisibility(View.GONE);
-                isSearching = false;
-            }
-        }
-    };
-
-    @Override
-    public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-
-    }
-
-    @Override
-    public void onTextChanged(CharSequence s, int start, int before, int count) {
-
-    }
-
-    @Override
-    public void afterTextChanged(Editable s) {
+    @Override // android.text.TextWatcher
+    public void afterTextChanged(Editable editable) {
         search();
     }
 
-    @Override
-    public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
-        if (v == editName || v == editVersion){
-            search();
+    @Override // android.widget.TextView.OnEditorActionListener
+    public boolean onEditorAction(TextView textView, int i, KeyEvent keyEvent) {
+        if (textView != this.editName && textView != this.editVersion) {
+            return false;
         }
+        search();
         return false;
     }
 }

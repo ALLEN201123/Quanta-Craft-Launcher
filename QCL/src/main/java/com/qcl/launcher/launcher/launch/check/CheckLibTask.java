@@ -1,14 +1,21 @@
+/*
+ * Decompiled with CFR 0.152.
+ * 
+ * Could not load the following classes:
+ *  android.content.Context
+ *  android.os.AsyncTask
+ *  androidx.recyclerview.widget.RecyclerView
+ *  androidx.recyclerview.widget.RecyclerView$Adapter
+ *  com.google.gson.Gson
+ */
 package com.qcl.launcher.launcher.launch.check;
 
+import android.content.Context;
 import android.os.AsyncTask;
-import android.view.View;
-
 import androidx.recyclerview.widget.RecyclerView;
-import androidx.recyclerview.widget.SimpleItemAnimator;
-
 import com.google.gson.Gson;
-import com.qcl.launcher.R;
 import com.qcl.launcher.launcher.MainActivity;
+import com.qcl.launcher.launcher.download.game.LegacyArchiveInstallTask;
 import com.qcl.launcher.launcher.game.Argument;
 import com.qcl.launcher.launcher.game.Artifact;
 import com.qcl.launcher.launcher.game.AssetIndex;
@@ -28,285 +35,239 @@ import com.qcl.launcher.utils.gson.GsonUtils;
 import com.qcl.launcher.utils.gson.JsonUtils;
 import com.qcl.launcher.utils.io.NetworkUtils;
 import com.qcl.launcher.utils.platform.Bits;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Objects;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ExecutorService;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-public class CheckLibTask extends AsyncTask<RecyclerView,Integer,Exception> {
-
+import com.qcl.launcher.R;
+public class CheckLibTask
+extends AsyncTask<RecyclerView, Integer, Exception> {
     private final MainActivity activity;
     private final String launchVersion;
     private final CheckLibCallback callback;
 
-    public CheckLibTask (MainActivity activity, String launchVersion, CheckLibCallback callback) {
+    public CheckLibTask(MainActivity activity, String launchVersion, CheckLibCallback callback) {
         this.activity = activity;
         this.launchVersion = launchVersion;
         this.callback = callback;
     }
 
-    @Override
     protected void onPreExecute() {
         super.onPreExecute();
-        callback.onStart();
+        this.callback.onStart();
     }
 
-    @Override
-    protected Exception doInBackground(RecyclerView... recyclerViews) {
-        PrivateGameSetting privateGameSetting;
-        String settingPath = launchVersion + "/hmclpe.cfg";
-        if (new File(settingPath).exists() && GsonUtils.getPrivateGameSettingFromFile(settingPath) != null && (GsonUtils.getPrivateGameSettingFromFile(settingPath).forceEnable || GsonUtils.getPrivateGameSettingFromFile(settingPath).enable)) {
-            privateGameSetting = GsonUtils.getPrivateGameSettingFromFile(settingPath);
-        }
-        else {
-            privateGameSetting = activity.privateGameSetting;
-        }
+    protected Exception doInBackground(RecyclerView ... recyclerViews) {
+        String assetIndexString;
+        String settingPath = this.launchVersion + "/qcl.cfg";
+        PrivateGameSetting privateGameSetting = new File(settingPath).exists() && GsonUtils.getPrivateGameSettingFromFile(settingPath) != null && (GsonUtils.getPrivateGameSettingFromFile((String)settingPath).forceEnable || GsonUtils.getPrivateGameSettingFromFile((String)settingPath).enable) ? GsonUtils.getPrivateGameSettingFromFile(settingPath) : this.activity.privateGameSetting;
         if (privateGameSetting.notCheckMinecraft) {
             return null;
         }
-        String versionJson = FileStringUtils.getStringFromFile(launchVersion + "/" + new File(launchVersion).getName() + ".json");
-        Gson gson = JsonUtils.defaultGsonBuilder()
-                .registerTypeAdapter(Artifact.class, new Artifact.Serializer())
-                .registerTypeAdapter(Bits.class, new Bits.Serializer())
-                .registerTypeAdapter(RuledArgument.class, new RuledArgument.Serializer())
-                .registerTypeAdapter(Argument.class, new Argument.Deserializer())
-                .create();
-        Version version = gson.fromJson(versionJson, Version.class);
+        String versionJson = FileStringUtils.getStringFromFile(this.launchVersion + "/" + new File(this.launchVersion).getName() + ".json");
+        Gson gson = JsonUtils.defaultGsonBuilder().registerTypeAdapter(Artifact.class, (Object)new Artifact.Serializer()).registerTypeAdapter(Bits.class, (Object)new Bits.Serializer()).registerTypeAdapter(RuledArgument.class, (Object)new RuledArgument.Serializer()).registerTypeAdapter(Argument.class, (Object)new Argument.Deserializer()).create();
+        Version version = (Version)gson.fromJson(versionJson, Version.class);
         if (version == null) {
-            // 归档/手拷版本可能只剩一个 jar：用归档启动模板自动重建版本 json 再继续，
-            // 缺的库/资源由下面的下载清单补齐并展示进度，而不是直接报错让玩家重装。
             try {
-                String id = new File(launchVersion).getName();
-                File jar = new File(launchVersion, id + ".jar");
+                String id2 = new File(this.launchVersion).getName();
+                File jar = new File(this.launchVersion, id2 + ".jar");
                 if (jar.isFile()) {
-                    String rebuilt = com.qcl.launcher.launcher.download.game.LegacyArchiveInstallTask
-                            .buildLegacyJson(activity, id, "");
-                    FileStringUtils.writeFile(launchVersion + "/" + id + ".json", rebuilt);
-                    version = gson.fromJson(rebuilt, Version.class);
+                    String rebuilt = LegacyArchiveInstallTask.buildLegacyJson((Context)this.activity, id2, "");
+                    FileStringUtils.writeFile(this.launchVersion + "/" + id2 + ".json", rebuilt);
+                    version = (Version)gson.fromJson(rebuilt, Version.class);
                 }
-            } catch (Throwable t) {
+            }
+            catch (Throwable t) {
                 t.printStackTrace();
             }
             if (version == null) {
-                // Gson returns null (instead of throwing) for an empty or half-written version json,
-                // which used to take the whole launch down with a NullPointerException.
-                return new Exception(activity.getString(R.string.launch_check_dialog_exception_lib_failed));
+                return new Exception(this.activity.getString(R.string.launch_check_dialog_exception_lib_failed));
             }
         }
-        String assetIndexString;
-        ArrayList<DownloadTaskListBean> list = new ArrayList<>();
+        ArrayList<DownloadTaskListBean> list = new ArrayList<DownloadTaskListBean>();
         AssetIndexInfo assetIndexInfo = version.getAssetIndex();
         if (assetIndexInfo == null || assetIndexInfo.id == null) {
-            // Builds from before the asset system keep their assets inside the client jar, and
-            // archive builds may have no index at all: there is nothing to download or verify.
             assetIndexString = "{\"objects\":{}}";
-        }
-        else if (isRightFile(activity.launcherSetting.gameFileDirectory + "/assets/indexes/" + assetIndexInfo.id + ".json",assetIndexInfo.getSha1())) {
-            assetIndexString = FileStringUtils.getStringFromFile(activity.launcherSetting.gameFileDirectory + "/assets/indexes/" + assetIndexInfo.id + ".json");
-        }
-        else {
-            String assetIndexUrl = DownloadUrlSource.getSubUrl(DownloadUrlSource.getSource(activity.launcherSetting.downloadUrlSource),DownloadUrlSource.ASSETS_INDEX_JSON) + assetIndexInfo.getUrl().replace("https://launchermeta.mojang.com", "").replace("https://piston-meta.mojang.com", "");
+        } else if (CheckLibTask.isRightFile(this.activity.launcherSetting.gameFileDirectory + "/assets/indexes/" + assetIndexInfo.id + ".json", assetIndexInfo.getSha1())) {
+            assetIndexString = FileStringUtils.getStringFromFile(this.activity.launcherSetting.gameFileDirectory + "/assets/indexes/" + assetIndexInfo.id + ".json");
+        } else {
+            String assetIndexUrl = DownloadUrlSource.getSubUrl(DownloadUrlSource.getSource(this.activity.launcherSetting.downloadUrlSource), 3) + assetIndexInfo.getUrl().replace("https://launchermeta.mojang.com", "").replace("https://piston-meta.mojang.com", "");
             try {
                 assetIndexString = NetworkUtils.doGet(NetworkUtils.toURL(assetIndexUrl));
-                list.add(new DownloadTaskListBean(assetIndexInfo.id + ".json",
-                        assetIndexUrl,
-                        activity.launcherSetting.gameFileDirectory + "/assets/indexes/" + assetIndexInfo.id + ".json",
-                        assetIndexInfo.getSha1()));
-            } catch (IOException e) {
+                list.add(new DownloadTaskListBean(assetIndexInfo.id + ".json", assetIndexUrl, this.activity.launcherSetting.gameFileDirectory + "/assets/indexes/" + assetIndexInfo.id + ".json", assetIndexInfo.getSha1()).withFallback(CheckLibTask.alternateSourceUrl(assetIndexUrl, 3, assetIndexInfo.getUrl())));
+            }
+            catch (IOException e) {
                 e.printStackTrace();
-                return new Exception(activity.getString(R.string.launch_check_dialog_exception_assets_failed));
+                return new Exception(this.activity.getString(R.string.launch_check_dialog_exception_assets_failed));
             }
         }
-        AssetIndex assetIndex = gson.fromJson(assetIndexString,AssetIndex.class);
+        AssetIndex assetIndex = (AssetIndex)gson.fromJson(assetIndexString, AssetIndex.class);
         for (Library library : version.getLibraries()) {
-            if (!isRightFile(activity.launcherSetting.gameFileDirectory + "/libraries/" + library.getPath(),library.getDownload().getSha1()) && !library.getPath().contains("tv/twitch") && !library.getPath().contains("lwjgl-platform-2.9.1-nightly")) {
-                String libUrl;
-                if (library.getDownload().getUrl() != null && !library.getDownload().getUrl().equals("")) {
-                    libUrl = library.getDownload().getUrl();
-                }
-                else {
-                    libUrl = DownloadUrlSource.getSubUrl(DownloadUrlSource.getSource(activity.launcherSetting.downloadUrlSource),DownloadUrlSource.LIBRARIES) + "/" + library.getPath();
-                }
-                list.add(new DownloadTaskListBean(library.getArtifactFileName(),
-                        libUrl,
-                        activity.launcherSetting.gameFileDirectory + "/libraries/" + library.getPath(),
-                        library.getDownload().getSha1()));
+            String libFallback;
+            String libUrl;
+            if (CheckLibTask.isRightFile(this.activity.launcherSetting.gameFileDirectory + "/libraries/" + library.getPath(), library.getDownload().getSha1()) || library.getPath().contains("tv/twitch") || library.getPath().contains("lwjgl-platform-2.9.1-nightly")) continue;
+            if (library.getDownload().getUrl() != null && !library.getDownload().getUrl().equals("")) {
+                libUrl = library.getDownload().getUrl();
+                libFallback = CheckLibTask.alternateSourceUrl(libUrl, 5, null);
+            } else {
+                libUrl = DownloadUrlSource.getSubUrl(DownloadUrlSource.getSource(this.activity.launcherSetting.downloadUrlSource), 5) + "/" + library.getPath();
+                libFallback = "https://bmclapi2.bangbang93.com/maven/" + library.getPath();
             }
+            list.add(new DownloadTaskListBean(library.getArtifactFileName(), libUrl, this.activity.launcherSetting.gameFileDirectory + "/libraries/" + library.getPath(), library.getDownload().getSha1()).withFallback(libFallback));
         }
         for (AssetObject object : assetIndex.getObjects().values()) {
-            if (!isRightFile(activity.launcherSetting.gameFileDirectory + "/assets/objects/" + object.getLocation(),object.getHash())) {
-                list.add(new DownloadTaskListBean(object.getHash(),
-                        DownloadUrlSource.getSubUrl(DownloadUrlSource.getSource(activity.launcherSetting.downloadUrlSource),DownloadUrlSource.ASSETS_OBJ) + "/" + object.getLocation(),
-                        activity.launcherSetting.gameFileDirectory + "/assets/objects/" + object.getLocation(),
-                        object.getHash()));
-            }
+            if (CheckLibTask.isRightFile(this.activity.launcherSetting.gameFileDirectory + "/assets/objects/" + object.getLocation(), object.getHash())) continue;
+            String objUrl = DownloadUrlSource.getSubUrl(DownloadUrlSource.getSource(this.activity.launcherSetting.downloadUrlSource), 4) + "/" + object.getLocation();
+            list.add(new DownloadTaskListBean(object.getHash(), objUrl, this.activity.launcherSetting.gameFileDirectory + "/assets/objects/" + object.getLocation(), object.getHash()).withFallback("https://resources.download.minecraft.net/" + object.getLocation()));
         }
         if (list.size() == 0) {
             return null;
         }
-        else {
-            DownloadTaskListAdapter downloadTaskListAdapter = new DownloadTaskListAdapter(activity);
-            activity.runOnUiThread(() -> {
-                recyclerViews[0].setAdapter(downloadTaskListAdapter);
-                recyclerViews[0].setVisibility(View.VISIBLE);
+        final DownloadTaskListAdapter downloadTaskListAdapter = new DownloadTaskListAdapter((Context)this.activity);
+        this.activity.runOnUiThread(() -> {
+            recyclerViews[0].setAdapter((RecyclerView.Adapter)downloadTaskListAdapter);
+            recyclerViews[0].setVisibility(0);
+        });
+        ArrayList failedFile = new ArrayList();
+        int maxTask = this.activity.launcherSetting.autoDownloadTaskQuantity ? 64 : this.activity.launcherSetting.maxDownloadTask;
+        ThreadPoolExecutor threadPool = new ThreadPoolExecutor(maxTask, maxTask, 30L, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>(), new ThreadPoolExecutor.CallerRunsPolicy());
+        for (int j = 0; j < list.size(); ++j) {
+            final DownloadTaskListBean bean = (DownloadTaskListBean)list.get(j);
+            String url = bean.url;
+            String path = bean.path;
+            String sha1 = bean.sha1;
+            threadPool.execute(() -> {
+                int tryTimes = 5;
+                for (int i = 0; i < tryTimes; ++i) {
+                    if (this.isCancelled()) {
+                        threadPool.shutdownNow();
+                        return;
+                    }
+                    this.activity.runOnUiThread(() -> downloadTaskListAdapter.addDownloadTask(bean));
+                    DownloadTask.DownloadFeedback fb = new DownloadTask.DownloadFeedback(){
+
+                        @Override
+                        public void updateProgress(long curr, long max) {
+                            long progress = 100L * curr / max;
+                            bean.progress = (int)progress;
+                            CheckLibTask.this.activity.runOnUiThread(() -> downloadTaskListAdapter.onProgress(bean));
+                        }
+
+                        @Override
+                        public void updateSpeed(String speed) {
+                        }
+                    };
+                    if (DownloadTask.downloadFileMonitored(bean.urlForAttempt(i), path, sha1, fb)) {
+                        this.activity.runOnUiThread(() -> downloadTaskListAdapter.onComplete(bean));
+                        break;
+                    }
+                    if (i == tryTimes - 1) {
+                        failedFile.add(bean);
+                    }
+                    this.activity.runOnUiThread(() -> downloadTaskListAdapter.onComplete(bean));
+                }
             });
-            ArrayList<DownloadTaskListBean> failedFile = new ArrayList<>();
-            int maxTask = activity.launcherSetting.autoDownloadTaskQuantity ? 64 : activity.launcherSetting.maxDownloadTask;
-            BlockingQueue<Runnable> workQueue = new ArrayBlockingQueue<>(maxTask);
-            ExecutorService threadPool = new ThreadPoolExecutor(maxTask, maxTask,
-                    0, TimeUnit.SECONDS,
-                    workQueue,
-                    new ThreadPoolExecutor.DiscardPolicy());
-            for (int j = 0; j < list.size(); j++) {
-                DownloadTaskListBean bean = list.get(j);
-                String url = bean.url;
-                String path = bean.path;
-                String sha1 = bean.sha1;
-                threadPool.execute(() -> {
-                    int tryTimes = 5;
-                    for (int i = 0; i < tryTimes; i++) {
-                        if (isCancelled()) {
-                            threadPool.shutdownNow();
+        }
+        threadPool.shutdown();
+        try {
+            threadPool.awaitTermination(1L, TimeUnit.HOURS);
+        }
+        catch (InterruptedException e) {
+            e.printStackTrace();
+            return e;
+        }
+        if (failedFile.size() > 0) {
+            ArrayList retryList = new ArrayList(failedFile);
+            failedFile.clear();
+            ThreadPoolExecutor retryPool = new ThreadPoolExecutor(maxTask, maxTask, 30L, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>(), new ThreadPoolExecutor.CallerRunsPolicy());
+            for (int j = 0; j < retryList.size(); ++j) {
+                final DownloadTaskListBean bean = (DownloadTaskListBean)retryList.get(j);
+                retryPool.execute(() -> {
+                    int tryTimes = 3;
+                    for (int i = 0; i < tryTimes; ++i) {
+                        if (this.isCancelled()) {
+                            retryPool.shutdownNow();
                             return;
                         }
-                        activity.runOnUiThread(() -> {
-                            downloadTaskListAdapter.addDownloadTask(bean);
-                        });
-                        DownloadTask.DownloadFeedback fb = new DownloadTask.DownloadFeedback() {
+                        DownloadTask.DownloadFeedback fb = new DownloadTask.DownloadFeedback(){
+
                             @Override
                             public void updateProgress(long curr, long max) {
-                                long progress = 100 * curr / max;
-                                bean.progress = (int) progress;
-                                activity.runOnUiThread(() -> {
-                                    downloadTaskListAdapter.onProgress(bean);
-                                });
+                                bean.progress = (int)(100L * curr / max);
+                                CheckLibTask.this.activity.runOnUiThread(() -> downloadTaskListAdapter.onProgress(bean));
                             }
 
                             @Override
                             public void updateSpeed(String speed) {
-
                             }
                         };
-                        if (DownloadTask.downloadFileMonitored(url, path, sha1, fb)) {
-                            activity.runOnUiThread(() -> {
-                                downloadTaskListAdapter.onComplete(bean);
-                            });
+                        if (DownloadTask.downloadFileMonitored(bean.urlForAttempt(i + 1), bean.path, bean.sha1, fb)) {
+                            this.activity.runOnUiThread(() -> downloadTaskListAdapter.onComplete(bean));
                             break;
                         }
-                        else {
-                            if (i == tryTimes - 1) {
-                                failedFile.add(bean);
-                            }
-                            activity.runOnUiThread(() -> {
-                                downloadTaskListAdapter.onComplete(bean);
-                            });
-                        }
+                        if (i != tryTimes - 1) continue;
+                        failedFile.add(bean);
+                        this.activity.runOnUiThread(() -> downloadTaskListAdapter.onComplete(bean));
                     }
                 });
-                while (!workQueue.isEmpty()) {
-                    ;
-                }
             }
-            threadPool.shutdown();
+            retryPool.shutdown();
             try {
-                threadPool.awaitTermination(1, TimeUnit.HOURS);
-            } catch (InterruptedException e) {
+                retryPool.awaitTermination(1L, TimeUnit.HOURS);
+            }
+            catch (InterruptedException e) {
                 e.printStackTrace();
                 return e;
             }
-            // 第二轮：只对第一轮失败的文件再补一次。并发下载抖动很常见，
-            // 以前会直接弹"当前版本缺少必要文件"，而文件随后其实就下好了 —— 属于误报。
-            if (failedFile.size() > 0) {
-                ArrayList<DownloadTaskListBean> retryList = new ArrayList<>(failedFile);
-                failedFile.clear();
-                ExecutorService retryPool = new ThreadPoolExecutor(maxTask, maxTask,
-                        0, TimeUnit.SECONDS,
-                        new ArrayBlockingQueue<>(maxTask),
-                        new ThreadPoolExecutor.DiscardPolicy());
-                for (int j = 0; j < retryList.size(); j++) {
-                    DownloadTaskListBean bean = retryList.get(j);
-                    retryPool.execute(() -> {
-                        int tryTimes = 3;
-                        for (int i = 0; i < tryTimes; i++) {
-                            if (isCancelled()) {
-                                retryPool.shutdownNow();
-                                return;
-                            }
-                            DownloadTask.DownloadFeedback fb = new DownloadTask.DownloadFeedback() {
-                                @Override
-                                public void updateProgress(long curr, long max) {
-                                    bean.progress = (int) (100 * curr / max);
-                                    activity.runOnUiThread(() -> downloadTaskListAdapter.onProgress(bean));
-                                }
-
-                                @Override
-                                public void updateSpeed(String speed) {
-                                }
-                            };
-                            if (DownloadTask.downloadFileMonitored(bean.url, bean.path, bean.sha1, fb)) {
-                                activity.runOnUiThread(() -> downloadTaskListAdapter.onComplete(bean));
-                                break;
-                            }
-                            else if (i == tryTimes - 1) {
-                                failedFile.add(bean);
-                                activity.runOnUiThread(() -> downloadTaskListAdapter.onComplete(bean));
-                            }
-                        }
-                    });
-                }
-                retryPool.shutdown();
-                try {
-                    retryPool.awaitTermination(1, TimeUnit.HOURS);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                    return e;
-                }
-            }
-            activity.runOnUiThread(() -> {
-                recyclerViews[0].setVisibility(View.GONE);
-            });
-            if (failedFile.size() > 0) {
-                return new Exception(activity.getString(R.string.launch_check_dialog_exception_lib_failed));
-            }
-            else {
-                return null;
-            }
         }
+        this.activity.runOnUiThread(() -> recyclerViews[0].setVisibility(8));
+        if (failedFile.size() > 0) {
+            return new Exception(this.activity.getString(R.string.launch_check_dialog_exception_lib_failed));
+        }
+        return null;
     }
 
-    @Override
-    protected void onProgressUpdate(Integer... values) {
+    private static String alternateSourceUrl(String currentUrl, int type, String officialUrl) {
+        if (currentUrl == null || currentUrl.isEmpty()) {
+            return null;
+        }
+        if (currentUrl.startsWith("https://bmclapi2.bangbang93.com")) {
+            if (officialUrl != null && !officialUrl.equals(currentUrl)) {
+                return officialUrl;
+            }
+            return null;
+        }
+        String mirror = DownloadUrlSource.replaceSubUrl(currentUrl, 1, type);
+        return mirror != null && !mirror.equals(currentUrl) ? mirror : null;
+    }
+
+    protected void onProgressUpdate(Integer ... values) {
         super.onProgressUpdate(values);
     }
 
-    @Override
     protected void onPostExecute(Exception e) {
         super.onPostExecute(e);
-        callback.onFinish(e);
+        this.callback.onFinish(e);
     }
 
-    public interface CheckLibCallback{
-        void onStart();
-        void onFinish(Exception e);
-    }
-
-    public static boolean isRightFile(String path,String sha1) {
+    public static boolean isRightFile(String path, String sha1) {
         if (new File(path).exists()) {
             if (sha1 != null && !sha1.equals("")) {
                 return Objects.equals(FileUtils.getFileSha1(path), sha1);
             }
-            else {
-                return true;
-            }
+            return true;
         }
-        else {
-            return false;
-        }
+        return false;
+    }
+
+    public static interface CheckLibCallback {
+        public void onStart();
+
+        public void onFinish(Exception var1);
     }
 }
+

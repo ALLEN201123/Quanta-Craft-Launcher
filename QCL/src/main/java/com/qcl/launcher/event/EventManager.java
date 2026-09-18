@@ -1,28 +1,46 @@
 package com.qcl.launcher.event;
 
+import com.qcl.launcher.event.Event;
 import com.qcl.launcher.utils.SimpleMultimap;
-
 import java.lang.ref.WeakReference;
 import java.util.EnumMap;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
-/**
- *
- * @author huangyuhui
- */
+/* loaded from: classes2.dex */
 public final class EventManager<T extends Event> {
+    private final SimpleMultimap<EventPriority, Consumer<T>> handlers = new SimpleMultimap<>(new Supplier() { // from class: com.qcl.launcher.event.EventManager$$ExternalSyntheticLambda3
+        @Override // java.util.function.Supplier
+        public final Object get() {
+            return EventManager.lambda$new$0();
+        }
+    }, new Supplier() { // from class: com.qcl.launcher.event.EventManager$$ExternalSyntheticLambda2
+        @Override // java.util.function.Supplier
+        public final Object get() {
+            return EventManager.m205$r8$lambda$sMWsn4MZQR24qK4Yd75_okqFB0();
+        }
+    });
 
-    private final SimpleMultimap<EventPriority, Consumer<T>> handlers
-            = new SimpleMultimap<>(() -> new EnumMap<>(EventPriority.class), CopyOnWriteArraySet::new);
+    /* renamed from: $r8$lambda$sMWsn4MZQR24qK4Yd75_o-kqFB0, reason: not valid java name */
+    public static /* synthetic */ CopyOnWriteArraySet m205$r8$lambda$sMWsn4MZQR24qK4Yd75_okqFB0() {
+        return new CopyOnWriteArraySet();
+    }
+
+    /* JADX INFO: Access modifiers changed from: package-private */
+    public static /* synthetic */ Map lambda$new$0() {
+        return new EnumMap(EventPriority.class);
+    }
 
     public Consumer<T> registerWeak(Consumer<T> consumer) {
         register(new WeakListener(consumer));
         return consumer;
     }
 
-    public Consumer<T> registerWeak(Consumer<T> consumer, EventPriority priority) {
-        register(new WeakListener(consumer), priority);
+    public Consumer<T> registerWeak(Consumer<T> consumer, EventPriority eventPriority) {
+        register(new WeakListener(consumer), eventPriority);
         return consumer;
     }
 
@@ -30,49 +48,62 @@ public final class EventManager<T extends Event> {
         register(consumer, EventPriority.NORMAL);
     }
 
-    public synchronized void register(Consumer<T> consumer, EventPriority priority) {
-        if (!handlers.get(priority).contains(consumer))
-            handlers.put(priority, consumer);
-    }
-
-    public void register(Runnable runnable) {
-        register(t -> runnable.run());
-    }
-
-    public void register(Runnable runnable, EventPriority priority) {
-        register(t -> runnable.run(), priority);
-    }
-
-    public synchronized Event.Result fireEvent(T event) {
-        for (EventPriority priority : EventPriority.values()) {
-            for (Consumer<T> handler : handlers.get(priority))
-                handler.accept(event);
+    public synchronized void register(Consumer<T> consumer, EventPriority eventPriority) {
+        if (!this.handlers.get(eventPriority).contains(consumer)) {
+            this.handlers.put(eventPriority, consumer);
         }
+    }
 
-        if (event.hasResult())
-            return event.getResult();
-        else
-            return Event.Result.DEFAULT;
+    public void register(final Runnable runnable) {
+        register(new Consumer() { // from class: com.qcl.launcher.event.EventManager$$ExternalSyntheticLambda0
+            @Override // java.util.function.Consumer
+            public final void accept(Object obj) {
+                runnable.run();
+            }
+        });
+    }
+
+    public void register(final Runnable runnable, EventPriority eventPriority) {
+        register(new Consumer() { // from class: com.qcl.launcher.event.EventManager$$ExternalSyntheticLambda1
+            @Override // java.util.function.Consumer
+            public final void accept(Object obj) {
+                runnable.run();
+            }
+        }, eventPriority);
+    }
+
+    public synchronized Event.Result fireEvent(T t) {
+        for (EventPriority eventPriority : EventPriority.values()) {
+            Iterator<Consumer<T>> it = this.handlers.get(eventPriority).iterator();
+            while (it.hasNext()) {
+                it.next().accept(t);
+            }
+        }
+        if (t.hasResult()) {
+            return t.getResult();
+        }
+        return Event.Result.DEFAULT;
     }
 
     public synchronized void unregister(Consumer<T> consumer) {
-        handlers.removeValue(consumer);
+        this.handlers.removeValue(consumer);
     }
 
+    /* loaded from: classes2.dex */
     private class WeakListener implements Consumer<T> {
         private final WeakReference<Consumer<T>> ref;
 
-        public WeakListener(Consumer<T> listener) {
-            this.ref = new WeakReference<>(listener);
+        public WeakListener(Consumer<T> consumer) {
+            this.ref = new WeakReference<>(consumer);
         }
 
-        @Override
+        @Override // java.util.function.Consumer
         public void accept(T t) {
-            Consumer<T> listener = ref.get();
-            if (listener == null) {
-                unregister(this);
+            Consumer<T> consumer = this.ref.get();
+            if (consumer == null) {
+                EventManager.this.unregister(this);
             } else {
-                listener.accept(t);
+                consumer.accept(t);
             }
         }
     }

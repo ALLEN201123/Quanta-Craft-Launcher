@@ -2,453 +2,418 @@ package com.qcl.launcher.launcher.launch;
 
 import android.util.ArrayMap;
 import android.util.Log;
-
 import com.google.gson.Gson;
 import com.qcl.launcher.launcher.setting.game.GameLaunchSetting;
-
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import cosine.boat.utils.BoatUtils;
-
+/* loaded from: classes2.dex */
 public class LaunchVersion {
+    public static String LAUNCHER_NAME = "QCL";
+    public static String LAUNCHER_VERSION = "";
+    private Map<String, String> SHAs;
+    public Arguments arguments;
+    public AssetsIndex assetIndex;
+    public String assets;
+    public HashMap<String, Download> downloads;
+    public String id;
+    public String inheritsFrom;
+    public Library[] libraries;
+    public String mainClass;
+    public String minecraftArguments;
+    public String minecraftPath;
+    public int minimumLauncherVersion;
+    public String releaseTime;
+    public String time;
+    public String type;
 
+    public static void setLauncherIdentity(String str, String str2) {
+        if (str != null && !str.isEmpty()) {
+            LAUNCHER_NAME = str;
+        }
+        if (str2 != null) {
+            LAUNCHER_VERSION = str2;
+        }
+    }
+
+    /* loaded from: classes2.dex */
     public class AssetsIndex {
         public String id;
         public String sha1;
         public int size;
         public int totalSize;
         public String url;
+
+        public AssetsIndex() {
+        }
     }
 
+    /* loaded from: classes2.dex */
     public class Download {
         public String path;
         public String sha1;
         public int size;
         public String url;
+
+        public Download() {
+        }
     }
 
-    public AssetsIndex assetIndex;
-    public String assets;
-
-    public HashMap<String, Download> downloads;
-    public String id;
-
+    /* loaded from: classes2.dex */
     public class Library {
-        public String name;
         public HashMap<String, Download> downloads;
+        public String name;
+
+        public Library() {
+        }
     }
 
-    public Library libraries[];
-
-    public String mainClass;
-    public String minecraftArguments;
-    public int minimumLauncherVersion;
-    public String releaseTime;
-    public String time;
-    public String type;
-
+    /* loaded from: classes2.dex */
     public class Arguments {
         private Object[] game;
         private Object[] jvm;
+
+        public Arguments() {
+        }
     }
-
-    public Arguments arguments;
-
-    // forge
-    public String inheritsFrom;
-
-    public String minecraftPath;
 
     public static LaunchVersion fromDirectory(File file) {
         try {
-
-            String json = new String(BoatUtils.readFile(new File(file, file.getName() + ".json")), "UTF-8");
-            LaunchVersion result = new Gson().fromJson(json, LaunchVersion.class);
+            LaunchVersion launchVersion = (LaunchVersion) new Gson().fromJson(new String(readAllBytes(new File(file, file.getName() + ".json")), "UTF-8"), LaunchVersion.class);
             if (new File(file, file.getName() + ".jar").exists()) {
-                result.minecraftPath = new File(file, file.getName() + ".jar").getAbsolutePath();
+                launchVersion.minecraftPath = new File(file, file.getName() + ".jar").getAbsolutePath();
             } else {
-                result.minecraftPath = "";
+                launchVersion.minecraftPath = "";
             }
-
-            if (result.inheritsFrom != null && !result.inheritsFrom.equals("")) {
-
-                LaunchVersion self = result;
-                result = LaunchVersion.fromDirectory(new File(file.getParentFile(), self.inheritsFrom));
-
-                if (self.assetIndex != null) {
-                    result.assetIndex = self.assetIndex;
+            String str = launchVersion.inheritsFrom;
+            if (str == null || str.equals("")) {
+                return launchVersion;
+            }
+            LaunchVersion fromDirectory = fromDirectory(new File(file.getParentFile(), launchVersion.inheritsFrom));
+            AssetsIndex assetsIndex = launchVersion.assetIndex;
+            if (assetsIndex != null) {
+                fromDirectory.assetIndex = assetsIndex;
+            }
+            String str2 = launchVersion.assets;
+            if (str2 != null && !str2.equals("")) {
+                fromDirectory.assets = launchVersion.assets;
+            }
+            HashMap<String, Download> hashMap = launchVersion.downloads;
+            if (hashMap != null && !hashMap.isEmpty()) {
+                if (fromDirectory.downloads == null) {
+                    fromDirectory.downloads = new HashMap<>();
                 }
-                if (self.assets != null && !self.assets.equals("")) {
-                    result.assets = self.assets;
-                }
-                if (self.downloads != null && !self.downloads.isEmpty()) {
-
-                    if (result.downloads == null) {
-                        result.downloads = new HashMap<String, Download>();
-                    }
-
-                    for (Map.Entry<String, Download> e : self.downloads.entrySet()) {
-                        result.downloads.put(e.getKey(), e.getValue());
-                    }
-                }
-                if (self.libraries != null && self.libraries.length > 0) {
-                    Library newLibs[] = new Library[result.libraries.length + self.libraries.length];
-                    int i = 0;
-                    for (Library lib : self.libraries) {
-                        newLibs[i] = lib;
-                        i++;
-                    }
-                    for (Library lib : result.libraries) {
-                        newLibs[i] = lib;
-                        i++;
-                    }
-                    result.libraries = newLibs;
-                }
-                if (self.mainClass != null && !self.mainClass.equals("")) {
-                    result.mainClass = self.mainClass;
-                }
-                if (self.minecraftArguments != null && !self.minecraftArguments.equals("")) {
-                    result.minecraftArguments = self.minecraftArguments;
-                }
-                if (self.minimumLauncherVersion > result.minimumLauncherVersion) {
-                    result.minimumLauncherVersion = self.minimumLauncherVersion;
-                }
-                if (self.releaseTime != null && !self.releaseTime.equals("")) {
-                    result.releaseTime = self.releaseTime;
-                }
-                if (self.time != null && !self.time.equals("")) {
-                    result.time = self.time;
-                }
-                if (self.type != null && !self.type.equals("")) {
-                    result.type = self.type;
-                }
-                if (self.minecraftPath != null && !self.minecraftPath.equals("")) {
-                    result.minecraftPath = self.minecraftPath;
-                }
-                if (result.minimumLauncherVersion >= 21) {
-                    if (self.arguments.game != null && self.arguments.game.length > 0) {
-                        Object newObj[] = new Object[result.arguments.game.length + self.arguments.game.length];
-                        int i = 0;
-                        for (Object obj : self.arguments.game) {
-                            newObj[i] = obj;
-                            i++;
-                        }
-                        for (Object obj : result.arguments.game) {
-                            newObj[i] = obj;
-                            i++;
-                        }
-                        result.arguments.game = newObj;
-                    }
+                for (Map.Entry<String, Download> entry : launchVersion.downloads.entrySet()) {
+                    fromDirectory.downloads.put(entry.getKey(), entry.getValue());
                 }
             }
-            return result;
-        } catch (UnsupportedEncodingException e) {
+            Library[] libraryArr = launchVersion.libraries;
+            if (libraryArr != null && libraryArr.length > 0) {
+                Library[] libraryArr2 = new Library[fromDirectory.libraries.length + libraryArr.length];
+                int i = 0;
+                for (Library library : libraryArr) {
+                    libraryArr2[i] = library;
+                    i++;
+                }
+                for (Library library2 : fromDirectory.libraries) {
+                    libraryArr2[i] = library2;
+                    i++;
+                }
+                fromDirectory.libraries = libraryArr2;
+            }
+            String str3 = launchVersion.mainClass;
+            if (str3 != null && !str3.equals("")) {
+                fromDirectory.mainClass = launchVersion.mainClass;
+            }
+            String str4 = launchVersion.minecraftArguments;
+            if (str4 != null && !str4.equals("")) {
+                fromDirectory.minecraftArguments = launchVersion.minecraftArguments;
+            }
+            int i2 = launchVersion.minimumLauncherVersion;
+            if (i2 > fromDirectory.minimumLauncherVersion) {
+                fromDirectory.minimumLauncherVersion = i2;
+            }
+            String str5 = launchVersion.releaseTime;
+            if (str5 != null && !str5.equals("")) {
+                fromDirectory.releaseTime = launchVersion.releaseTime;
+            }
+            String str6 = launchVersion.time;
+            if (str6 != null && !str6.equals("")) {
+                fromDirectory.time = launchVersion.time;
+            }
+            String str7 = launchVersion.type;
+            if (str7 != null && !str7.equals("")) {
+                fromDirectory.type = launchVersion.type;
+            }
+            String str8 = launchVersion.minecraftPath;
+            if (str8 != null && !str8.equals("")) {
+                fromDirectory.minecraftPath = launchVersion.minecraftPath;
+            }
+            if (fromDirectory.minimumLauncherVersion >= 21 && launchVersion.arguments.game != null && launchVersion.arguments.game.length > 0) {
+                Object[] objArr = new Object[fromDirectory.arguments.game.length + launchVersion.arguments.game.length];
+                int i3 = 0;
+                for (Object obj : launchVersion.arguments.game) {
+                    objArr[i3] = obj;
+                    i3++;
+                }
+                for (Object obj2 : fromDirectory.arguments.game) {
+                    objArr[i3] = obj2;
+                    i3++;
+                }
+                fromDirectory.arguments.game = objArr;
+            }
+            return fromDirectory;
+        } catch (UnsupportedEncodingException unused) {
             return null;
         }
     }
 
-    public String getClassPath(String gameFileDir,boolean high,boolean isJava17) {
-        String cp = "";
-        int count = 0;
-        String libraries_path = gameFileDir + "/libraries/";
-        for (Library lib : this.libraries) {
-            if (lib.name == null || lib.name.equals("") || lib.name.contains("org.lwjgl") || lib.name.contains("natives") || (isJava17 && lib.name.contains("java-objc-bridge"))) {
-                continue;
+    private static byte[] readAllBytes(File file) {
+        try {
+            FileInputStream fileInputStream = new FileInputStream(file);
+            try {
+                ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream((int) Math.max(1024L, file.length()));
+                byte[] bArr = new byte[8192];
+                while (true) {
+                    int read = fileInputStream.read(bArr);
+                    if (read <= 0) {
+                        byte[] byteArray = byteArrayOutputStream.toByteArray();
+                        fileInputStream.close();
+                        return byteArray;
+                    }
+                    byteArrayOutputStream.write(bArr, 0, read);
+                }
+            } finally {
             }
-            Log.e("boat",lib.name);
-            String names[] = lib.name.split(":");
-            String packageName = names[0];
-            String mainName = names[1];
-            String versionName = names[2];
+        } catch (Throwable th) {
+            th.printStackTrace();
+            return new byte[0];
+        }
+    }
 
-            String path = "";
-            path = path + libraries_path;
-            path = path + packageName.replaceAll("\\.", "/");
-            path = path + "/";
-            path = path + mainName;
-            path = path + "/";
-            path = path + versionName;
-            path = path + "/" + mainName + "-" + versionName + ".jar";
-            Log.e("路径",path);
-            if (!new File(path).exists()){
-                continue;
+    public String getClassPath(String str, boolean z, boolean z2) {
+        String str2 = str + "/libraries/";
+        int i = 0;
+        String str3 = "";
+        for (Library library : this.libraries) {
+            if (library.name != null && !library.name.equals("") && !library.name.contains("org.lwjgl") && !library.name.contains("natives") && (!z2 || !library.name.contains("java-objc-bridge"))) {
+                Log.e("boat", library.name);
+                String[] split = library.name.split(":");
+                String str4 = split[0];
+                String str5 = split[1];
+                String str6 = split[2];
+                String str7 = (((((("" + str2) + str4.replaceAll("\\.", "/")) + "/") + str5) + "/") + str6) + "/" + str5 + "-" + str6 + ".jar";
+                Log.e("路径", str7);
+                if (new File(str7).exists()) {
+                    if (i > 0) {
+                        str3 = str3 + ":";
+                    }
+                    str3 = str3 + str7;
+                    i++;
+                }
             }
-            if (count > 0) {
-                cp = cp + ":";
-            }
-            cp = cp + path;
-            count++;
         }
-        String split = count > 0 ? ":" : "";
-        if (high) {
-            cp = cp + split + minecraftPath;
+        String str8 = i > 0 ? ":" : "";
+        if (z) {
+            return str3 + str8 + this.minecraftPath;
         }
-        else {
-            cp = minecraftPath + split + cp;
-        }
-        return cp;
+        return this.minecraftPath + str8 + str3;
     }
 
     public String[] getJVMArguments(GameLaunchSetting gameLaunchSetting) {
-        StringBuilder test = new StringBuilder();
-        if (arguments != null && arguments.jvm != null) {
-            Object[] jvmObjs = this.arguments.jvm;
-            for (Object obj : jvmObjs) {
-                if (obj instanceof String && !((String) obj).startsWith("-Djava.library.path") && !((String) obj).startsWith("-cp") && !((String) obj).startsWith("${classpath}")) {
-                    test.append(obj.toString()).append(" ");
-                }
-            }
-        }
-        else {
+        String str;
+        StringBuilder sb = new StringBuilder();
+        Arguments arguments = this.arguments;
+        if (arguments == null || arguments.jvm == null) {
             return new String[0];
         }
-        String result = "";
-
-        int state = 0;
-        int start = 0;
-        int stop = 0;
-        for (int i = 0; i < test.length(); i++) {
-            if (state == 0) {
-                if (test.charAt(i) != '$') {
-                    result = result + test.charAt(i);
-
-                } else {
-                    if (i + 1 < test.length() && test.charAt(i + 1) == '{') {
-                        state = 1;
-                        start = i;
-                    } else {
-                        result = result + test.charAt(i);
-                    }
-                }
-                continue;
-            } else {
-                if (test.charAt(i) == '}') {
-                    stop = i;
-
-                    String key = test.substring(start + 2, stop);
-
-                    String value = "";
-
-                    if (key.equals("version_name")) {
-                        value = id;
-                    }
-                    else if (key.equals("launcher_name")) {
-                        value = "HMCL-PE";
-                    }
-                    else if (key.equals("launcher_version")) {
-                        value = "1.0.0";
-                    }
-                    else if (key.equals("version_type")) {
-                        value = type;
-                    }
-                    else if (key.equals("assets_index_name")) {
-                        if (assetIndex != null) {
-                            value = assetIndex.id;
-                        }
-                        else {
-                            value = assets;
-                        }
-                    }
-                    else if (key.equals("game_directory")) {
-                        value = gameLaunchSetting.game_directory;
-                    }
-                    else if (key.equals("assets_root") || key.equals("game_assets")) {
-                        // ★ 1.1.0 修复：老版本（b1.x / 1.7.x 等）的 json 用 ${game_assets} 变量，
-                        // 原实现只认 assets_root，导致值替换为空 -> "--assetsDir" 后直接跟
-                        // "--width"（参数错位）-> 图标路径变成 "--width/icons/..." -> IIOException 崩溃。
-                        value = gameLaunchSetting.gameFileDirectory + "/assets";
-                    }
-                    else if (key.equals("user_properties")) {
-                        value = "{}";
-                    }
-                    else if (key.equals("auth_player_name")) {
-                        value = gameLaunchSetting.account.auth_player_name;
-                    }
-                    else if (key.equals("auth_session")) {
-                        value = gameLaunchSetting.account.auth_session;
-                    }
-                    else if (key.equals("auth_uuid")) {
-                        value = gameLaunchSetting.account.auth_uuid;
-                    }
-                    else if (key.equals("auth_access_token")) {
-                        value = gameLaunchSetting.account.auth_access_token;
-                    }
-                    else if (key.equals("user_type")) {
-                        value = gameLaunchSetting.account.user_type;
-                    }
-                    else if (key.equals("primary_jar_name")) {
-                        value = new File(gameLaunchSetting.currentVersion).getName() + ".jar";
-                    }
-                    else if (key.equals("library_directory")) {
-                        value = gameLaunchSetting.gameFileDirectory + "/libraries";
-                    }
-                    else if (key.equals("classpath_separator")) {
-                        value = ":";
-                    }
-                    else {
-                        value = "";
-                    }
-                    result = result + value;
-                    i = stop;
-                    state = 0;
+        for (Object obj : this.arguments.jvm) {
+            if (obj instanceof String) {
+                String str2 = (String) obj;
+                if (!str2.startsWith("-Djava.library.path") && !str2.startsWith("-cp") && !str2.startsWith("${classpath}")) {
+                    sb.append(obj.toString()).append(" ");
                 }
             }
         }
-        return result.split(" ");
+        String str3 = "";
+        boolean z = false;
+        int i = 0;
+        for (int i2 = 0; i2 < sb.length(); i2++) {
+            if (!z) {
+                if (sb.charAt(i2) != '$') {
+                    str3 = str3 + sb.charAt(i2);
+                } else {
+                    int i3 = i2 + 1;
+                    if (i3 >= sb.length() || sb.charAt(i3) != '{') {
+                        str3 = str3 + sb.charAt(i2);
+                    } else {
+                        z = true;
+                        i = i2;
+                    }
+                }
+            } else if (sb.charAt(i2) == '}') {
+                String substring = sb.substring(i + 2, i2);
+                if (substring.equals("version_name")) {
+                    str = this.id;
+                } else if (substring.equals("launcher_name")) {
+                    str = LAUNCHER_NAME;
+                } else if (substring.equals("launcher_version")) {
+                    str = LAUNCHER_VERSION;
+                } else if (substring.equals("version_type")) {
+                    str = LAUNCHER_NAME;
+                } else if (substring.equals("assets_index_name")) {
+                    AssetsIndex assetsIndex = this.assetIndex;
+                    if (assetsIndex != null) {
+                        str = assetsIndex.id;
+                    } else {
+                        str = this.assets;
+                    }
+                } else if (substring.equals("game_directory")) {
+                    str = gameLaunchSetting.game_directory;
+                } else if (substring.equals("assets_root") || substring.equals("game_assets")) {
+                    str = gameLaunchSetting.gameFileDirectory + "/assets";
+                } else if (substring.equals("user_properties")) {
+                    str = "{}";
+                } else if (substring.equals("auth_player_name")) {
+                    str = gameLaunchSetting.account.auth_player_name;
+                } else if (substring.equals("auth_session")) {
+                    str = gameLaunchSetting.account.auth_session;
+                } else if (substring.equals("auth_uuid")) {
+                    str = gameLaunchSetting.account.auth_uuid;
+                } else if (substring.equals("auth_access_token")) {
+                    str = gameLaunchSetting.account.auth_access_token;
+                } else if (substring.equals("user_type")) {
+                    str = gameLaunchSetting.account.user_type;
+                } else if (substring.equals("primary_jar_name")) {
+                    str = new File(gameLaunchSetting.currentVersion).getName() + ".jar";
+                } else if (substring.equals("library_directory")) {
+                    str = gameLaunchSetting.gameFileDirectory + "/libraries";
+                } else {
+                    str = substring.equals("classpath_separator") ? ":" : "";
+                }
+                str3 = str3 + str;
+                z = false;
+            }
+        }
+        return str3.split(" ");
     }
 
-    public String[] getMinecraftArguments(GameLaunchSetting gameLaunchSetting, boolean isHighVer) {
-        StringBuilder test = new StringBuilder();
-        if (isHighVer) {
-            Object[] objs = this.arguments.game;
-            for (Object obj : objs) {
+    public String[] getMinecraftArguments(GameLaunchSetting gameLaunchSetting, boolean z) {
+        Arguments arguments;
+        String str;
+        StringBuilder sb = new StringBuilder();
+        if (z) {
+            for (Object obj : this.arguments.game) {
                 if (obj instanceof String) {
-                    test.append(obj.toString()).append(" ");
+                    sb.append(obj.toString()).append(" ");
                 }
             }
+        } else {
+            sb = new StringBuilder(this.minecraftArguments);
         }
-        else {
-            test = new StringBuilder(this.minecraftArguments);
-        }
-        String result = "";
-
-        int state = 0;
-        int start = 0;
-        int stop = 0;
-        for (int i = 0; i < test.length(); i++) {
-            if (state == 0) {
-                if (test.charAt(i) != '$') {
-                    result = result + test.charAt(i);
-
+        boolean z2 = false;
+        int i = 0;
+        String str2 = "";
+        for (int i2 = 0; i2 < sb.length(); i2++) {
+            if (!z2) {
+                if (sb.charAt(i2) != '$') {
+                    str2 = str2 + sb.charAt(i2);
                 } else {
-                    if (i + 1 < test.length() && test.charAt(i + 1) == '{') {
-                        state = 1;
-                        start = i;
+                    int i3 = i2 + 1;
+                    if (i3 >= sb.length() || sb.charAt(i3) != '{') {
+                        str2 = str2 + sb.charAt(i2);
                     } else {
-                        result = result + test.charAt(i);
+                        z2 = true;
+                        i = i2;
                     }
                 }
-                continue;
-            } else {
-                if (test.charAt(i) == '}') {
-                    stop = i;
-
-                    String key = test.substring(start + 2, stop);
-
-                    String value = "";
-
-                    if (key.equals("version_name")) {
-                        value = id;
+            } else if (sb.charAt(i2) == '}') {
+                String substring = sb.substring(i + 2, i2);
+                if (substring.equals("version_name")) {
+                    str = this.id;
+                } else if (substring.equals("launcher_name")) {
+                    str = LAUNCHER_NAME;
+                } else if (substring.equals("launcher_version")) {
+                    str = LAUNCHER_VERSION;
+                } else if (substring.equals("version_type")) {
+                    str = LAUNCHER_NAME;
+                } else if (substring.equals("assets_index_name")) {
+                    AssetsIndex assetsIndex = this.assetIndex;
+                    if (assetsIndex != null) {
+                        str = assetsIndex.id;
+                    } else {
+                        str = this.assets;
                     }
-                    else if (key.equals("launcher_name")) {
-                        value = "HMCL-PE";
-                    }
-                    else if (key.equals("launcher_version")) {
-                        value = "1.0.0";
-                    }
-                    else if (key.equals("version_type")) {
-                        value = type;
-                    }
-                    else if (key.equals("assets_index_name")) {
-                        if (assetIndex != null) {
-                            value = assetIndex.id;
-                        }
-                        else {
-                            value = assets;
-                        }
-                    }
-                    else if (key.equals("game_directory")) {
-                        value = gameLaunchSetting.game_directory;
-                    }
-                    else if (key.equals("assets_root") || key.equals("game_assets")) {
-                        // ★ 1.1.0 修复：老版本（b1.x / 1.7.x 等）的 json 用 ${game_assets} 变量，
-                        // 原实现只认 assets_root，导致值替换为空 -> "--assetsDir" 后直接跟
-                        // "--width"（参数错位）-> 图标路径变成 "--width/icons/..." -> IIOException 崩溃。
-                        value = gameLaunchSetting.gameFileDirectory + "/assets";
-                    }
-                    else if (key.equals("user_properties")) {
-                        value = "{}";
-                    }
-                    else if (key.equals("auth_player_name")) {
-                        value = gameLaunchSetting.account.auth_player_name;
-                    }
-                    else if (key.equals("auth_session")) {
-                        value = gameLaunchSetting.account.auth_session;
-                    }
-                    else if (key.equals("auth_uuid")) {
-                        value = gameLaunchSetting.account.auth_uuid;
-                    }
-                    else if (key.equals("auth_access_token")) {
-                        value = gameLaunchSetting.account.auth_access_token;
-                    }
-                    else if (key.equals("user_type")) {
-                        value = gameLaunchSetting.account.user_type;
-                    }
-                    else if (key.equals("primary_jar_name")) {
-                        value = new File(gameLaunchSetting.currentVersion).getName() + ".jar";
-                    }
-                    else if (key.equals("library_directory")) {
-                        value = gameLaunchSetting.gameFileDirectory + "/libraries";
-                    }
-                    else if (key.equals("classpath_separator")) {
-                        value = ":";
-                    }
-                    else {
-                        value = "";
-                    }
-                    result = result + value;
-                    i = stop;
-                    state = 0;
+                } else if (substring.equals("game_directory")) {
+                    str = gameLaunchSetting.game_directory;
+                } else if (substring.equals("assets_root") || substring.equals("game_assets")) {
+                    str = gameLaunchSetting.gameFileDirectory + "/assets";
+                } else if (substring.equals("user_properties")) {
+                    str = "{}";
+                } else if (substring.equals("auth_player_name")) {
+                    str = gameLaunchSetting.account.auth_player_name;
+                } else if (substring.equals("auth_session")) {
+                    str = gameLaunchSetting.account.auth_session;
+                } else if (substring.equals("auth_uuid")) {
+                    str = gameLaunchSetting.account.auth_uuid;
+                } else if (substring.equals("auth_access_token")) {
+                    str = gameLaunchSetting.account.auth_access_token;
+                } else if (substring.equals("user_type")) {
+                    str = gameLaunchSetting.account.user_type;
+                } else if (substring.equals("primary_jar_name")) {
+                    str = new File(gameLaunchSetting.currentVersion).getName() + ".jar";
+                } else if (substring.equals("library_directory")) {
+                    str = gameLaunchSetting.gameFileDirectory + "/libraries";
+                } else {
+                    str = substring.equals("classpath_separator") ? ":" : "";
+                }
+                str2 = str2 + str;
+                z2 = false;
+            }
+        }
+        if (!z && (arguments = this.arguments) != null && arguments.game != null) {
+            for (Object obj2 : this.arguments.game) {
+                if (obj2 instanceof String) {
+                    str2 = str2 + " " + obj2.toString();
                 }
             }
         }
-        if (!isHighVer && arguments != null && arguments.game != null) {
-            Object[] objs = this.arguments.game;
-            for (Object obj : objs) {
-                if (obj instanceof String) {
-                    result = result + " " + obj.toString();
-                }
-            }
-        }
-        return result.split(" ");
+        return str2.split(" ");
     }
+
     public List<String> getLibraries() {
-        List<String> libs=new ArrayList<>();
-        for (Library lib : this.libraries) {
-            if (lib.name == null || lib.name.equals("") || lib.name.contains("net.java.jinput") || lib.name.contains("org.lwjgl")||lib.name.contains("platform")) {
-                continue;
-            }
-            libs.add(parseLibNameToPath(lib.name));
-        }
-        return libs;
-    }
-    private Map<String,String> SHAs;
-    public String getSHA1(String libName){
-        if (SHAs==null){
-            SHAs=new ArrayMap<>();
-            for (Library lib : this.libraries) {
-                if (lib.name == null || lib.name.equals("") || lib.name.contains("net.java.jinput") || lib.name.contains("org.lwjgl")||lib.name.contains("platform")) {
-                    continue;
-                }
-                String sha1;
-                try {
-                    sha1=lib.downloads.get("artifact").sha1;
-                }catch (Exception e){
-                    continue;
-                }
-                SHAs.put(parseLibNameToPath(lib.name),sha1);
+        ArrayList arrayList = new ArrayList();
+        for (Library library : this.libraries) {
+            if (library.name != null && !library.name.equals("") && !library.name.contains("net.java.jinput") && !library.name.contains("org.lwjgl") && !library.name.contains("platform")) {
+                arrayList.add(parseLibNameToPath(library.name));
             }
         }
-        return SHAs.get(libName);
+        return arrayList;
     }
 
-    public String parseLibNameToPath(String libName){
-        String[] tmp=libName.split(":");
-        return tmp[0].replace(".","/")+"/"+tmp[1]+"/"+tmp[2]+"/"+tmp[1]+"-"+tmp[2]+".jar";
+    public String getSHA1(String str) {
+        if (this.SHAs == null) {
+            this.SHAs = new ArrayMap();
+            for (Library library : this.libraries) {
+                if (library.name != null && !library.name.equals("") && !library.name.contains("net.java.jinput") && !library.name.contains("org.lwjgl") && !library.name.contains("platform")) {
+                    try {
+                        this.SHAs.put(parseLibNameToPath(library.name), library.downloads.get("artifact").sha1);
+                    } catch (Exception unused) {
+                    }
+                }
+            }
+        }
+        return this.SHAs.get(str);
+    }
+
+    public String parseLibNameToPath(String str) {
+        String[] split = str.split(":");
+        return split[0].replace(".", "/") + "/" + split[1] + "/" + split[2] + "/" + split[1] + "-" + split[2] + ".jar";
     }
 }
