@@ -21,6 +21,7 @@ import com.qcl.launcher.launcher.game.Artifact;
 import com.qcl.launcher.launcher.game.AssetIndex;
 import com.qcl.launcher.launcher.game.AssetIndexInfo;
 import com.qcl.launcher.launcher.game.AssetObject;
+import com.qcl.launcher.launcher.game.DownloadInfo;
 import com.qcl.launcher.launcher.game.Library;
 import com.qcl.launcher.launcher.game.RuledArgument;
 import com.qcl.launcher.launcher.game.Version;
@@ -89,26 +90,54 @@ extends AsyncTask<RecyclerView, Integer, Exception> {
             }
         }
         ArrayList<DownloadTaskListBean> list = new ArrayList<DownloadTaskListBean>();
+        // ===== FCL checkGameCompletionAsync 对齐：版本 jar 缺失或空文件时自动补下 =====
+        String versionName = new File(this.launchVersion).getName();
+        File versionJarFile = new File(this.launchVersion, versionName + ".jar");
+        if (!versionJarFile.isFile() || versionJarFile.length() == 0) {
+            DownloadInfo downloadInfo = version.getDownloadInfo();
+            String jarUrl = DownloadUrlSource.replaceSubUrl(downloadInfo.getUrl(), DownloadUrlSource.getSource(this.activity.launcherSetting.downloadUrlSource), DownloadUrlSource.VERSION_JAR);
+            if (jarUrl == null || jarUrl.equals("")) {
+                jarUrl = downloadInfo.getUrl();
+            }
+            list.add(new DownloadTaskListBean(versionName + ".jar", jarUrl, versionJarFile.getAbsolutePath(), downloadInfo.getSha1()).withFallback(downloadInfo.getUrl()));
+        }
         AssetIndexInfo assetIndexInfo = version.getAssetIndex();
         if (assetIndexInfo == null || assetIndexInfo.id == null) {
             assetIndexString = "{\"objects\":{}}";
-        } else if (CheckLibTask.isRightFile(this.activity.launcherSetting.gameFileDirectory + "/assets/indexes/" + assetIndexInfo.id + ".json", assetIndexInfo.getSha1())) {
-            assetIndexString = FileStringUtils.getStringFromFile(this.activity.launcherSetting.gameFileDirectory + "/assets/indexes/" + assetIndexInfo.id + ".json");
         } else {
-            String assetIndexUrl = DownloadUrlSource.getSubUrl(DownloadUrlSource.getSource(this.activity.launcherSetting.downloadUrlSource), 3) + assetIndexInfo.getUrl().replace("https://launchermeta.mojang.com", "").replace("https://piston-meta.mojang.com", "");
-            try {
-                assetIndexString = NetworkUtils.doGet(NetworkUtils.toURL(assetIndexUrl));
-                list.add(new DownloadTaskListBean(assetIndexInfo.id + ".json", assetIndexUrl, this.activity.launcherSetting.gameFileDirectory + "/assets/indexes/" + assetIndexInfo.id + ".json", assetIndexInfo.getSha1()).withFallback(CheckLibTask.alternateSourceUrl(assetIndexUrl, 3, assetIndexInfo.getUrl())));
+            String localIndexPath = this.activity.launcherSetting.gameFileDirectory + "/assets/indexes/" + assetIndexInfo.id + ".json";
+            assetIndexString = null;
+            if (CheckLibTask.isRightFile(localIndexPath, assetIndexInfo.getSha1())) {
+                // FCL GameAssetIndexDownloadTask 对齐：本地索引必须能解析出有效对象表，损坏/空索引视为不存在
+                String localIndex = FileStringUtils.getStringFromFile(localIndexPath);
+                try {
+                    AssetIndex parsedIndex = (AssetIndex) gson.fromJson(localIndex, AssetIndex.class);
+                    if (parsedIndex != null && parsedIndex.getObjects() != null && !parsedIndex.getObjects().isEmpty()) {
+                        assetIndexString = localIndex;
+                    }
+                }
+                catch (Throwable t) {
+                    assetIndexString = null;
+                }
             }
-            catch (IOException e) {
-                e.printStackTrace();
-                return new Exception(this.activity.getString(R.string.launch_check_dialog_exception_assets_failed));
+            if (assetIndexString == null) {
+                String assetIndexUrl = DownloadUrlSource.getSubUrl(DownloadUrlSource.getSource(this.activity.launcherSetting.downloadUrlSource), 3) + assetIndexInfo.getUrl().replace("https://launchermeta.mojang.com", "").replace("https://piston-meta.mojang.com", "");
+                try {
+                    assetIndexString = NetworkUtils.doGet(NetworkUtils.toURL(assetIndexUrl));
+                    list.add(new DownloadTaskListBean(assetIndexInfo.id + ".json", assetIndexUrl, localIndexPath, assetIndexInfo.getSha1()).withFallback(CheckLibTask.alternateSourceUrl(assetIndexUrl, 3, assetIndexInfo.getUrl())));
+                }
+                catch (IOException e) {
+                    e.printStackTrace();
+                    return new Exception(this.activity.getString(R.string.launch_check_dialog_exception_assets_failed));
+                }
             }
         }
         AssetIndex assetIndex = (AssetIndex)gson.fromJson(assetIndexString, AssetIndex.class);
         for (Library library : version.getLibraries()) {
             String libFallback;
             String libUrl;
+            // FCL GameLibrariesTask 对齐：不适用当前环境的库（规则不匹配）直接跳过
+            if (!library.appliesToCurrentEnvironment()) continue;
             if (CheckLibTask.isRightFile(this.activity.launcherSetting.gameFileDirectory + "/libraries/" + library.getPath(), library.getDownload().getSha1()) || library.getPath().contains("tv/twitch") || library.getPath().contains("lwjgl-platform-2.9.1-nightly")) continue;
             if (library.getDownload().getUrl() != null && !library.getDownload().getUrl().equals("")) {
                 libUrl = library.getDownload().getUrl();
@@ -119,14 +148,17 @@ extends AsyncTask<RecyclerView, Integer, Exception> {
             }
             list.add(new DownloadTaskListBean(library.getArtifactFileName(), libUrl, this.activity.launcherSetting.gameFileDirectory + "/libraries/" + library.getPath(), library.getDownload().getSha1()).withFallback(libFallback));
         }
+        int assetSource = DownloadUrlSource.getSource(this.activity.launcherSetting.downloadUrlSource);
         for (AssetObject object : assetIndex.getObjects().values()) {
             if (CheckLibTask.isRightFile(this.activity.launcherSetting.gameFileDirectory + "/assets/objects/" + object.getLocation(), object.getHash())) continue;
-            String objUrl = DownloadUrlSource.getSubUrl(DownloadUrlSource.getSource(this.activity.launcherSetting.downloadUrlSource), 4) + "/" + object.getLocation();
-            list.add(new DownloadTaskListBean(object.getHash(), objUrl, this.activity.launcherSetting.gameFileDirectory + "/assets/objects/" + object.getLocation(), object.getHash()).withFallback("https://resources.download.minecraft.net/" + object.getLocation()));
+            // FCL 下载候选对齐：主 URL = 用户所选源，fallback = 另一条源（BMCLAPI ↔ 官方双向兜底）
+            String objUrl = DownloadUrlSource.getSubUrl(assetSource, 4) + "/" + object.getLocation();
+            String objFallback = assetSource == DownloadUrlSource.DOWNLOAD_URL_SOURCE_BMCLAPI
+                    ? "https://resources.download.minecraft.net/" + object.getLocation()
+                    : DownloadUrlSource.BMCLAPI_BASE + "/assets/" + object.getLocation();
+            list.add(new DownloadTaskListBean(object.getHash(), objUrl, this.activity.launcherSetting.gameFileDirectory + "/assets/objects/" + object.getLocation(), object.getHash()).withFallback(objFallback));
         }
-        if (list.size() == 0) {
-            return null;
-        }
+        if (list.size() > 0) {
         final DownloadTaskListAdapter downloadTaskListAdapter = new DownloadTaskListAdapter((Context)this.activity);
         this.activity.runOnUiThread(() -> {
             recyclerViews[0].setAdapter((RecyclerView.Adapter)downloadTaskListAdapter);
@@ -227,6 +259,51 @@ extends AsyncTask<RecyclerView, Integer, Exception> {
         this.activity.runOnUiThread(() -> recyclerViews[0].setVisibility(8));
         if (failedFile.size() > 0) {
             return new Exception(this.activity.getString(R.string.launch_check_dialog_exception_lib_failed));
+        }
+        }
+        // ===== FCL DefaultGameRepository.reconstructAssets 对齐：资产映射 =====
+        // virtual/map_to_resources 索引（pre-1.6 远古版等）把对象铺进 assets/virtual/<id>/ 与 gameDir/resources/，
+        // 远古版 MC 从 gameDir/resources/ 读音效音乐——这是 b1.7.3 无声的根因修复。幂等，只复制缺失目标。
+        try {
+            if (assetIndex != null && assetIndex.isVirtual() && assetIndex.getObjects() != null && !assetIndex.getObjects().isEmpty()) {
+                String gameDirForMap;
+                if (privateGameSetting.gameDirSetting.type == 1) {
+                    gameDirForMap = this.launchVersion;
+                } else if (privateGameSetting.gameDirSetting.type == 2) {
+                    gameDirForMap = privateGameSetting.gameDirSetting.path;
+                } else {
+                    gameDirForMap = this.activity.launcherSetting.gameFileDirectory;
+                }
+                String assetsRoot = this.activity.launcherSetting.gameFileDirectory + "/assets";
+                String assetIdForMap = (assetIndexInfo != null && assetIndexInfo.id != null) ? assetIndexInfo.id : "legacy";
+                String virtualRoot = assetsRoot + "/virtual/" + assetIdForMap;
+                String resourcesRoot = gameDirForMap + "/resources";
+                boolean mapToResources = assetIndex.needMapToResources();
+                for (java.util.Map.Entry<String, AssetObject> entry : assetIndex.getObjects().entrySet()) {
+                    String key = entry.getKey();
+                    AssetObject mapObj = entry.getValue();
+                    if (mapObj == null || key == null || key.length() == 0 || key.contains("..")) continue;
+                    String original = assetsRoot + "/objects/" + mapObj.getLocation();
+                    if (!new File(original).isFile()) continue;
+                    File targetVirtual = new File(virtualRoot, key);
+                    if (!targetVirtual.isFile()) {
+                        File parentVirtual = targetVirtual.getParentFile();
+                        if (parentVirtual != null) parentVirtual.mkdirs();
+                        FileUtils.copyFile(original, targetVirtual.getAbsolutePath());
+                    }
+                    if (mapToResources) {
+                        File targetRes = new File(resourcesRoot, key);
+                        if (!targetRes.isFile()) {
+                            File parentRes = targetRes.getParentFile();
+                            if (parentRes != null) parentRes.mkdirs();
+                            FileUtils.copyFile(original, targetRes.getAbsolutePath());
+                        }
+                    }
+                }
+            }
+        }
+        catch (Throwable t) {
+            t.printStackTrace();
         }
         return null;
     }

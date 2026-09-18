@@ -43,11 +43,20 @@ public class DownloadUrlSource {
                 prefix = "https://bmclapi2.bangbang93.com/assets";
             } else if ("libraries.minecraft.net".equalsIgnoreCase(host) || "maven.minecraftforge.net".equalsIgnoreCase(host) || "files.minecraftforge.net".equalsIgnoreCase(host)) {
                 prefix = "https://bmclapi2.bangbang93.com/maven";
+            } else if ("maven.neoforged.net".equalsIgnoreCase(host)) {
+                // FCL BMCLAPIDownloadProvider 同款映射
+                prefix = "https://bmclapi2.bangbang93.com/maven/";
+            } else if ("meta.fabricmc.net".equalsIgnoreCase(host)) {
+                // FCL 同款：fabric-meta 镜像
+                prefix = "https://bmclapi2.bangbang93.com/fabric-meta";
             } else {
                 return url;
             }
             String string2 = path = uri.getRawPath() == null ? "" : uri.getRawPath();
             if (prefix.endsWith("/maven") && path.startsWith("/maven/")) {
+                path = path.substring(6);
+            }
+            if (prefix.endsWith("/maven/") && path.startsWith("/maven/")) {
                 path = path.substring(6);
             }
             return prefix + path + (uri.getRawQuery() == null ? "" : "?" + uri.getRawQuery());

@@ -201,6 +201,10 @@ public class JREUtils {
         arrayMap.put("ALSOFT_DRIVERS", "opensl");
         arrayMap.put("POJAV_VSYNC_IN_ZINK", "1");
         arrayMap.put("LIBGL_NOINTOVLHACK", "1");
+        // ★★★ 1.1.2 性能优化（照搬 FCL addRendererEnvInner）：FCL 在 opengles2 与 ng_gl4es 分支都设
+        // LIBGL_NOERROR=1，让 gl4es 跳过 glGetError 错误跟踪开销，提升帧率。QCL 原先只在 ng_gl4es
+        // 分支有，opengles2（≤1.16.5 默认渲染器）缺失。mesa/zink 不识别 LIBGL_* 前缀，全局设置无害。
+        arrayMap.put("LIBGL_NOERROR", "1");
         arrayMap.put("LIBGL_NORMALIZE", "1");
         arrayMap.put("LIBGL_ES", str4);
         arrayMap.put("MESA_GLSL_CACHE_DIR", activity.getCacheDir().getAbsolutePath());

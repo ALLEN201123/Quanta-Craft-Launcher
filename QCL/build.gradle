@@ -68,6 +68,18 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
+
+    // ★★★ 对齐 FCL：输出 APK 名带架构标签（FCL 命名 FCL-<type>-<ver>-<abi>.apk），杜绝放错架构。
+    //   -Darch=x86_64 → QCL-release-1.1.2-x86_64.apk；-Darch=arm64 → QCL-release-1.1.2-arm64.apk。
+    //   all → -universal：★仅限本地测试，禁止发布！模拟器 ROM（MuMu 等）会把 universal 包强装成
+    //   arm64 转译（primaryCpuAbi=arm64-v8a），而 JRE 运行时按物理 CPU 选 x86_64，进程与 JRE 不匹配
+    //   → 游戏进不去（09-19 实锤）。发布一律分架构：模拟器用户拿 x86_64 包，真机用户拿 arm64/arm 包。
+    applicationVariants.all { variant ->
+        variant.outputs.all { output ->
+            def abiTag = (qclArch == "all") ? "universal" : qclArch
+            outputFileName = "QCL-${variant.buildType.name}-${variant.versionName}-${abiTag}.apk"
+        }
+    }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8

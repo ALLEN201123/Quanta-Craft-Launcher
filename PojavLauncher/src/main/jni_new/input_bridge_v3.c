@@ -448,6 +448,12 @@ JNIEXPORT jstring JNICALL Java_org_lwjgl_glfw_CallbackBridge_nativeClipboard(JNI
     return pasteDst;
 }
 
+JNIEXPORT jboolean JNICALL
+JavaCritical_org_lwjgl_glfw_CallbackBridge_nativeSetInputReady(jboolean inputReady) {
+    pojav_environ->isInputReady = inputReady;
+    return pojav_environ->isUseStackQueueCall;
+}
+
 JNIEXPORT jboolean JNICALL Java_org_lwjgl_glfw_CallbackBridge_nativeSetInputReady(JNIEnv* env, jclass clazz, jboolean inputReady) {
 #ifdef DEBUG
     LOGD("Debug: Changing input state, isReady=%d, isUseStackQueueCall=%d\n", inputReady, pojav_environ->isUseStackQueueCall);
@@ -780,5 +786,56 @@ void pojavStopPumping() {
         pojav_environ->shouldUpdateMonitorSize = false;
         pojav_environ->monitorSizeConsumed = false;
     }
+}
+
+/*
+ * ★★★ 1.1.2 修复「进存档后 Ticking screen 崩溃」（照搬 FCL input_bridge_v3.c，一个字不改）：
+ *   MC 崩溃报告：java.lang.UnsatisfiedLinkError:
+ *     'void org.lwjgl.glfw.GLFW.glfwSetCursorPos(long, double, double)'
+ *     at eyv.a(MouseHandler:489) → Ticking screen → 游戏退出（随后关音频踩已销毁 mutex 报 SIGABRT，属二次伤害）。
+ *   根因：QCL 移植 input_bridge_v3.c 时只搬了注释、漏掉了下面这一组 JNI 实现。
+ *   MC 的 MouseHandler 在屏幕 tick 中调 glfwSetCursorPos 归中镜头，缺符号即崩；
+ *   nglfwGetCursorPos / nglfwGetCursorPosA 是 MC 轮询光标位置的同族符号，一并补齐。
+ *   （手柄/SDL 的 JNI 符号 FCL 虽有，但 QCL Java 侧无对应 native 声明、零引用，不搬。）
+ */
+
+JNIEXPORT void JNICALL
+Java_org_lwjgl_glfw_GLFW_nglfwGetCursorPos(JNIEnv *env, __attribute__((unused)) jclass clazz,
+                                           __attribute__((unused)) jlong window, jobject xpos,
+                                           jobject ypos) {
+    *(double *) (*env)->GetDirectBufferAddress(env, xpos) = pojav_environ->cursorX;
+    *(double *) (*env)->GetDirectBufferAddress(env, ypos) = pojav_environ->cursorY;
+}
+
+JNIEXPORT void JNICALL
+JavaCritical_org_lwjgl_glfw_GLFW_nglfwGetCursorPosA(__attribute__((unused)) jlong window,
+                                                    jint lengthx, jdouble *xpos, jint lengthy,
+                                                    jdouble *ypos) {
+    *xpos = pojav_environ->cursorX;
+    *ypos = pojav_environ->cursorY;
+}
+
+JNIEXPORT void JNICALL
+Java_org_lwjgl_glfw_GLFW_nglfwGetCursorPosA(JNIEnv *env, __attribute__((unused)) jclass clazz,
+                                            __attribute__((unused)) jlong window,
+                                            jdoubleArray xpos, jdoubleArray ypos) {
+    (*env)->SetDoubleArrayRegion(env, xpos, 0, 1, &pojav_environ->cursorX);
+    (*env)->SetDoubleArrayRegion(env, ypos, 0, 1, &pojav_environ->cursorY);
+}
+
+JNIEXPORT void JNICALL
+JavaCritical_org_lwjgl_glfw_GLFW_glfwSetCursorPos(__attribute__((unused)) jlong window,
+                                                  jdouble xpos,
+                                                  jdouble ypos) {
+    pojav_environ->cLastX = pojav_environ->cursorX = xpos;
+    pojav_environ->cLastY = pojav_environ->cursorY = ypos;
+}
+
+JNIEXPORT void JNICALL
+Java_org_lwjgl_glfw_GLFW_glfwSetCursorPos(__attribute__((unused)) JNIEnv *env,
+                                          __attribute__((unused)) jclass clazz,
+                                          __attribute__((unused)) jlong window, jdouble xpos,
+                                          jdouble ypos) {
+    JavaCritical_org_lwjgl_glfw_GLFW_glfwSetCursorPos(window, xpos, ypos);
 }
 

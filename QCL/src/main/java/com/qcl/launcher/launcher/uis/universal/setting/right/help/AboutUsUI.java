@@ -16,6 +16,8 @@ public class AboutUsUI extends BaseUI implements View.OnClickListener {
     public LinearLayout aboutUsUI;
     private ImageButton author;
     private ImageButton downloadMirror;
+    private ImageButton fclLink;
+    private ImageButton hmclpeLink;
     private ImageButton mcmod;
     private ImageButton upstream;
 
@@ -31,10 +33,15 @@ public class AboutUsUI extends BaseUI implements View.OnClickListener {
         this.mcmod = (ImageButton) this.activity.findViewById(R.id.mcmod_link);
         this.upstream = (ImageButton) this.activity.findViewById(R.id.upstream_link);
         this.author = (ImageButton) this.activity.findViewById(R.id.author_link);
+        // ★ 1.1.2：补上 FCL / HMCL-PE（已归档）两个仓库入口，此前字段未绑定是死代码
+        this.fclLink = (ImageButton) this.activity.findViewById(R.id.fcl_link);
+        this.hmclpeLink = (ImageButton) this.activity.findViewById(R.id.hmclpe_link);
         this.downloadMirror.setOnClickListener(this);
         this.mcmod.setOnClickListener(this);
         this.upstream.setOnClickListener(this);
         this.author.setOnClickListener(this);
+        this.fclLink.setOnClickListener(this);
+        this.hmclpeLink.setOnClickListener(this);
     }
 
     @Override // com.qcl.launcher.launcher.uis.tools.BaseUI, com.qcl.launcher.launcher.uis.tools.UILifecycleCallbacks
@@ -66,6 +73,12 @@ public class AboutUsUI extends BaseUI implements View.OnClickListener {
         }
         if (view == this.author) {
             parse = Uri.parse("https://space.bilibili.com/550905358");
+        }
+        if (view == this.fclLink) {
+            parse = Uri.parse("https://github.com/FCL-Team/FoldCraftLauncher");
+        }
+        if (view == this.hmclpeLink) {
+            parse = Uri.parse("https://github.com/HMCL-dev/HMCL-PE");
         }
         if (parse != null) {
             this.context.startActivity(new Intent("android.intent.action.VIEW", parse));

@@ -32,6 +32,11 @@ public final class AssetIndex {
         return this.virtual || this.mapToResources;
     }
 
+    /* FCL AssetIndex.needMapToResources 对齐：pre-1.6 等远古索引靠它把对象铺进 gameDir/resources/ */
+    public boolean needMapToResources() {
+        return this.mapToResources;
+    }
+
     public Map<String, AssetObject> getObjects() {
         return Collections.unmodifiableMap(this.objects);
     }

@@ -2,7 +2,7 @@
     <string name="app_name" translatable="false">Quanta Craft Launcher</string>
     <string name="app_name_pri" translatable="false">Quanta Craft Launcher</string>
     <string name="app_name_sec" translatable="false">量子方块启动器</string>
-    <string name="version_name" translatable="false">v1.1.1</string>
+    <string name="version_name" translatable="false">v1.1.2</string>
     <string name="app_bar_title" translatable="false">QCL · Quanta Craft Launcher v1.0.4</string>
 
     <string name="dialog_outdated_warning_title">Warning</string>
@@ -1017,7 +1017,7 @@
 	<string name="feedback_ui_join_qq_channel">Join QQ Channel</string>
 
 
-    <string name="revival_future_plan">QCL (Quanta Craft Launcher) is an independent Minecraft Java Edition launcher. Since 1.1.1 the launch / render / input / Java runtime pipeline is self-built, using FCL (FoldCraftLauncher) as reference; versions 1.1.0 and earlier were based on HMCL-PE. Upstream licenses and attribution are preserved. It is not an official FCL release, nor an official HMCL-PE release.</string>
+    <string name="revival_future_plan">QCL (Quanta Craft Launcher) is an independent Minecraft Java Edition launcher. Since 1.1.1 the launch / render / input / Java runtime pipeline is self-built with an SDL3 window backend, using FCL (FoldCraftLauncher) as reference; versions 1.1.0 and earlier were based on HMCL-PE. Upstream licenses and attribution are preserved. It is not an official FCL release, nor an official HMCL-PE release.</string>
     <string name="revival_fcl_reference">Android Java 21/25 runtimes sourced from FCL-Team. FCL project: https://github.com/FCL-Team/FoldCraftLauncher</string>
     <string name="revival_manifest_failed">Unable to refresh the version list. The previous list has been retained; check your network and try again.</string>
     <string name="feedback_ui_join_qq">Join QQ group</string>
@@ -1048,6 +1048,8 @@ Multiplayer is powered by Terracotta (by BurningTNT). The multiplayer feature is
     <string name="ui_about_terracotta_sub">Multiplayer framework</string>
     <string name="ui_about_fcl_main">FoldCraftLauncher (FCL-Team)</string>
     <string name="ui_about_fcl_sub">Some implementations in this project (Java runtime handling, authlib-injector usage) reference or reuse code and ideas from the FCL open-source project. Special thanks.</string>
+    <string name="ui_about_hmclpe_main">HMCL-PE Repository (archived)</string>
+    <string name="ui_about_hmclpe_sub">HMCL-PE has stopped maintenance and been archived. QCL versions up to 1.1.0 were based on it. Thanks to Tungs and HMCL-dev.</string>
     <string name="ui_about_libs_main">LWJGL / GL4ES / OpenAL / OpenJDK</string>
     <string name="ui_about_libs_sub">Graphics, audio and Java runtime</string>
     <string name="drawer_custom_menu_create_pattern">New layout</string>
