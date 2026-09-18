@@ -172,8 +172,12 @@ public class JREUtils {
         nativeLibDir = context.getApplicationInfo().nativeLibraryDir;
         String str2 = Architecture.is64BitsDevice() ? "lib64" : "lib";
         StringBuilder sb = new StringBuilder();
+        // 1.1.1 SDL3：把 APK 原生库目录放最前，确保 libstdc++.so（NDK 桩）优先于
+        // 系统 /system/lib64 里的 libtcb.so（vivo 把废弃的 libstdc++.so 替换成它，
+        // 加载时触发 libc++ iostream 静态初始化崩溃）。
+        sb.append(nativeLibDir + ":");
         sb.append(javaLibDir + "/jli:" + javaLibDir + ":");
-        sb.append("/system/" + str2 + ":/vendor/" + str2 + ":/vendor/" + str2 + "/hw:/system_ext/" + str2 + ":" + nativeLibDir);
+        sb.append("/system/" + str2 + ":/vendor/" + str2 + ":/vendor/" + str2 + "/hw:/system_ext/" + str2);
         LD_LIBRARY_PATH = sb.toString();
     }
 
@@ -246,6 +250,17 @@ public class JREUtils {
             if (!str5.equals(str6)) {
                 arrayMap.put("POJAV_RENDERER", str6);
             }
+        }
+        // ★★★ 1.1.1：SDL3 集成（照搬 FCL 的 FCLauncher.addRendererEnv）——给 SDL 明确的 GL / EGL 库路径。
+        // 非 SDL 版本不会读这两个变量，所以无副作用。SDL 自己会在需要时加载。
+        String sdlGl = str6 == null ? "" : getGraphicsLibrary(str6);
+        if (sdlGl != null && !sdlGl.isEmpty()) {
+            arrayMap.put("SDL_OPENGL_LIBRARY", sdlGl);
+        }
+        String sdlEgl = (String) arrayMap.get("POJAVEXEC_EGL");
+        if (sdlEgl != null && !sdlEgl.isEmpty() && !sdlEgl.startsWith("/")) {
+            // 渲染器自带 EGL；系统 EGL（libEGL.so）交给 SDL 按自身默认解析。
+            arrayMap.put("SDL_EGL_LIBRARY", sdlEgl);
         }
         arrayMap.put("AWTSTUB_WIDTH", Integer.toString(CallbackBridge.windowWidth > 0 ? CallbackBridge.windowWidth : CallbackBridge.physicalWidth));
         arrayMap.put("AWTSTUB_HEIGHT", Integer.toString(CallbackBridge.windowHeight > 0 ? CallbackBridge.windowHeight : CallbackBridge.physicalHeight));

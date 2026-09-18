@@ -30,6 +30,10 @@ public class QCLApplication extends Application {
         installCrashLogger();
         DeviceIdentifier.register(this);
         context = getApplicationContext();
+        // ★★★ 1.1.1 SDL3：把 C++ 库提前到主线程加载，避免在游戏渲染线程 dlopen 时触发
+        // libc++ 的 iostream/locale 静态初始化崩溃（fault addr 0x0）。
+        try { System.loadLibrary("bytehook"); } catch (Throwable ignored) { }
+        try { System.loadLibrary("SDL3"); } catch (Throwable ignored) { }
     }
 
     private void installCrashLogger() {

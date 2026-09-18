@@ -876,7 +876,7 @@
     <string name="dialog_force_exit_message">Você quer forçar a saída?</string>
     <string name="dialog_force_exit_positive">Sim</string>
     <string name="dialog_force_exit_negative">Não</string>
-    <string name="drawer_game_menu_title">Painel de Controle HMCL-PE</string>
+    <string name="drawer_game_menu_title">Painel de Controle QCL</string>
     <string name="drawer_game_menu_type">Painel de controle</string>
     <string name="drawer_game_menu_type_float">Janela flutuante</string>
     <string name="drawer_game_menu_type_bar">Barra Lateral</string>

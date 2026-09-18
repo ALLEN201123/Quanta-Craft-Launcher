@@ -137,4 +137,23 @@ public class TouchCharInput extends AppCompatEditText {
         this.menuHelper.baseLayout.requestPointerCapture();
         return false;
     }
+
+    /* ★★★ 1.1.1：SDL 输入法接管时统一关闭当前输入控件（参照 FCL 的 TouchCharInput.disableActiveInput）。 */
+    private static volatile TouchCharInput sActiveInstance = null;
+
+    /** 由 SDL 输入通道调用：关闭当前激活的字符输入控件。 */
+    public static void disableActiveInput() {
+        try {
+            TouchCharInput inst = sActiveInstance;
+            if (inst != null) {
+                inst.setVisibility(8);
+            }
+        } catch (Throwable ignored) {
+        }
+    }
+
+    /** 记录当前激活实例，供 disableActiveInput() 使用。 */
+    public static void setActiveInstance(TouchCharInput instance) {
+        sActiveInstance = instance;
+    }
 }

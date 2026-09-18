@@ -1016,7 +1016,7 @@
 	<string name="feedback_ui_join_qq_channel">Join QQ Channel</string>
 
 
-    <string name="revival_future_plan">QCL (Quanta Craft Launcher) is an independent Minecraft Java Edition launcher. Part of its code originates from HMCL-PE, and its rendering / launch pipeline was rebuilt with FCL (FoldCraftLauncher) as the reference. This is an independent derivative project; upstream licenses and attribution are preserved. It is not an official FCL release, nor an official HMCL-PE release.</string>
+    <string name="revival_future_plan">QCL (Quanta Craft Launcher) is an independent Minecraft Java Edition launcher. Since 1.1.1 the launch / render / input / Java runtime pipeline is self-built, using FCL (FoldCraftLauncher) as reference; versions 1.1.0 and earlier were based on HMCL-PE. Upstream licenses and attribution are preserved. It is not an official FCL release, nor an official HMCL-PE release.</string>
     <string name="revival_fcl_reference">Android Java 21/25 runtimes sourced from FCL-Team. FCL project: https://github.com/FCL-Team/FoldCraftLauncher</string>
     <string name="revival_manifest_failed">Unable to refresh the version list. The previous list has been retained; check your network and try again.</string>
     <string name="feedback_ui_join_qq">Join QQ group</string>
@@ -1024,14 +1024,14 @@
     <string name="revival_java_unavailable">The selected Java runtime is unavailable or incomplete on this architecture. Java 25 is not available for 32-bit x86.</string>
     <string name="revival_java_unavailable_32bit">Java 25 has no 32-bit x86 build, so it cannot run on this device. Please use a 64-bit runtime, launch a version that needs Java 21 or lower, or pick another Java runtime in the game settings.</string>
     <string name="revival_archive_install_unsupported">Archived build: this version must use the archive install path (historical archive, covering almost every ancient version).</string>
-    <string name="ui_about_upstream_main">HMCL-PE (partial code source)</string>
+    <string name="ui_about_upstream_main">HMCL-PE (legacy upstream; launch pipeline self-built since 1.1.1)</string>
     <string name="ui_about_upstream_sub">QCL (Quanta Craft Launcher) partially uses code from HMCL-PE. Original HMCL-PE author: Tungs (bilibili 18115101).
-This project is licensed under GNU AGPL-3.0 (because it links the AGPL-3.0 Terracotta; the upstream HMCL-PE is GPL-3.0); the complete source code is provided with every release.</string>
+This project is licensed under GNU GPL-3.0; the complete source code is provided with every release.</string>
     <string name="ui_about_author_main">Rod123456</string>
     <string name="ui_about_author_sub">bilibili UID: 550905358</string>
     <string name="ui_about_author_style">Author of this launcher. Enjoys researching every early Minecraft version released before 1.0, and mainly makes videos about those ancient builds.
 
-Multiplayer is powered by Terracotta (by BurningTNT, also AGPL-3.0). The multiplayer feature is restricted to mainland China only.</string>
+Multiplayer is powered by Terracotta (by BurningTNT). The multiplayer feature is restricted to mainland China only.</string>
     <string name="download_ui_shader">Shader</string>
     <string name="game_menu_launch_log">Launch log</string>
     <string name="qcl_multiplayer_disclaimer">The multiplayer feature is restricted to mainland China only. Outside mainland China, this launcher assumes no responsibility whatsoever. Please check the laws and regulations of your region; using this feature may carry legal risk, which you evaluate and bear yourself. Never share the invite code, IP or port with strangers.</string>
@@ -1044,7 +1044,7 @@ Multiplayer is powered by Terracotta (by BurningTNT, also AGPL-3.0). The multipl
     <string name="ui_about_pojav_main">PojavLauncher (PojavLauncherTeam)</string>
     <string name="ui_about_pojav_sub">JVM launching and LWJGL port</string>
     <string name="ui_about_terracotta_main">Terracotta (BurningTNT)</string>
-    <string name="ui_about_terracotta_sub">Multiplayer framework (AGPL-3.0)</string>
+    <string name="ui_about_terracotta_sub">Multiplayer framework</string>
     <string name="ui_about_fcl_main">FoldCraftLauncher (FCL-Team)</string>
     <string name="ui_about_fcl_sub">Some implementations in this project (Java runtime handling, authlib-injector usage) reference or reuse code and ideas from the FCL open-source project. Special thanks.</string>
     <string name="ui_about_libs_main">LWJGL / GL4ES / OpenAL / OpenJDK</string>

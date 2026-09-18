@@ -139,7 +139,7 @@ public class WorldManagerUI extends BaseUI implements CompoundButton.OnCheckedCh
     public void refresh(String versionName){
         this.versionName = versionName;
         PrivateGameSetting privateGameSetting;
-        String settingPath = activity.launcherSetting.gameFileDirectory + "/versions/" + versionName + "/hmclpe.cfg";
+        String settingPath = activity.launcherSetting.gameFileDirectory + "/versions/" + versionName + "/qcl.cfg";
         if (new File(settingPath).exists() && GsonUtils.getPrivateGameSettingFromFile(settingPath) != null && (GsonUtils.getPrivateGameSettingFromFile(settingPath).forceEnable || GsonUtils.getPrivateGameSettingFromFile(settingPath).enable)) {
             privateGameSetting = GsonUtils.getPrivateGameSettingFromFile(settingPath);
         }

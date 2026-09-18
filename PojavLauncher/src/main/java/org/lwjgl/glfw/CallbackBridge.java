@@ -180,6 +180,52 @@ public class CallbackBridge {
 
     public static native boolean nativeIsGrabbing();
 
+    // ===== 1.1.1 SDL3 集成（移植自 FCL CallbackBridge）=====
+    public static final int NOTIF_TYPE_SDL = 0;
+    public static final int ACTION_INIT_LAUNCHER_INTEGRATION = 0;
+    public static final int ACTION_SEND_TEXTBOX_RECT = 1;
+
+    /** org.lwjgl.sdl.SDLInit（LWJGL 3.4.1 的 SDL 绑定）在 SDL_Init 时调用的 native 入口，
+     *  转发到 {@link #notifyLauncher}。 */
+    public static native boolean nativeNotifyLauncher(int type, int[] action);
+
+    /** ★★★ 1.1.1（移植自 FCL）：重置 SDL 相关状态，由 SdlBridge.reset() 调用。
+     *  QCL 的 CallbackBridge 暂无手柄直通/增量字段，先留空实现（与 FCL 语义对齐）。 */
+    public static void clearSdlBridgeState() {
+    }
+
+    /** 由 native 层（input_bridge_v3.c 的 nativeNotifyLauncher）回调：加载 SDL3 并绑定 surface。 */
+    @SuppressWarnings("unused")
+    public static boolean notifyLauncher(int type, int... action) {
+        if (action == null || action.length == 0) {
+            return false;
+        }
+        if (type == NOTIF_TYPE_SDL && action[0] == ACTION_INIT_LAUNCHER_INTEGRATION) {
+            if (!org.libsdl.app.SdlBridge.markSdlInitialized()) {
+                return true;
+            }
+            try {
+                System.loadLibrary("SDL3");
+                System.loadLibrary("SDL2");
+                org.libsdl.app.SdlBridge.setupJNI();
+                org.libsdl.app.SdlBridge.setSdlEnabled(true);
+                org.libsdl.app.SDLSurface surface = org.libsdl.app.SDLActivity.getSDLSurface();
+                if (surface != null) {
+                    surface.surfaceChanged();
+                    if (windowWidth > 0 && windowHeight > 0) {
+                        surface.nativeResize(windowWidth, windowHeight);
+                    }
+                }
+                return true;
+            } catch (Throwable e) {
+                org.libsdl.app.SdlBridge.setSdlEnabled(false);
+                org.libsdl.app.SdlBridge.clearSdlInitialized();
+                return false;
+            }
+        }
+        return false;
+    }
+
     static {
         DEBUG_STRING = new StringBuilder();
         System.loadLibrary("pojavexec");

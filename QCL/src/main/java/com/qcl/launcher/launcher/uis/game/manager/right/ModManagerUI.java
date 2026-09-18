@@ -152,7 +152,7 @@ public class ModManagerUI extends BaseUI implements View.OnClickListener {
         Version version = gson.fromJson(gameJsonText, Version.class);
         this.versionId = version.getId();
         PrivateGameSetting privateGameSetting;
-        String settingPath = activity.launcherSetting.gameFileDirectory + "/versions/" + versionName + "/hmclpe.cfg";
+        String settingPath = activity.launcherSetting.gameFileDirectory + "/versions/" + versionName + "/qcl.cfg";
         if (new File(settingPath).exists() && GsonUtils.getPrivateGameSettingFromFile(settingPath) != null && (GsonUtils.getPrivateGameSettingFromFile(settingPath).forceEnable || GsonUtils.getPrivateGameSettingFromFile(settingPath).enable)) {
             privateGameSetting = GsonUtils.getPrivateGameSettingFromFile(settingPath);
         }

@@ -942,7 +942,7 @@
     <string name="loading_hint_java_25">正在檢查 Java 25…</string>
     <string name="game_setting_ui_java_path_21">Java 21（Android）</string>
     <string name="game_setting_ui_java_path_25">Java 25（Android，x86 32位不可用）</string>
-    <string name="revival_future_plan">未來計畫：基於 HMCL-PE 開發 QCL（Quanta Craft Launcher，量子方塊啟動器，擬用名）。先完善相容性與國內下載，再重構首頁、遊戲庫、下載中心及所有操作配置。本專案為獨立衍生開發，保留上游授權與來源說明，不是 FCL 官方版本。</string>
+    <string name="revival_future_plan">QCL（Quanta Craft Launcher，量子方塊啟動器）是獨立的 Minecraft Java 版啟動器。1.1.1 起，啟動／渲染／輸入／Java 執行時鏈路已改為自研實現，並以 FCL（FoldCraftLauncher）為參照；1.1.0 及更早版本基於 HMCL-PE。本專案保留上游授權與來源說明，不是 FCL 官方版本，也不是 HMCL-PE 官方版本。</string>
     <string name="revival_fcl_reference">Java 21/25 使用 FCL-Team 的 Android 執行環境。FCL 專案：https://github.com/FCL-Team/FoldCraftLauncher</string>
     <string name="revival_manifest_failed">版本清單重新整理失敗，已保留原清單。請檢查網路後重試。</string>
     <string name="revival_sdl_unavailable">此版本需要 SDL3。目前的 Boat/Pojav 視窗後端尚未適配 SDL3，選擇 Java 25 不能取代視窗適配。</string>

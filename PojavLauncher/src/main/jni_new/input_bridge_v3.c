@@ -58,6 +58,22 @@ jclass bridgeClazz;
 // 这里照 FCL 删掉本文件那份，全链路统一读结构体字段。
 // （grabCursor* / lastCursor* 是 QCL 触屏抓取独有，FCL 没有，继续保留在本文件。）
 
+JNIEXPORT jboolean JNICALL Java_org_lwjgl_glfw_CallbackBridge_nativeNotifyLauncher(JNIEnv* env, __attribute__((unused)) jclass clazz, jint type, jintArray action) {
+    TRY_ATTACH_ENV(dvm_env, pojav_environ->dalvikJavaVMPtr, "nativeNotifyLauncher failed!\n", return JNI_FALSE;);
+    if (pojav_environ->method_notifyLauncher == NULL || pojav_environ->bridgeClazz == NULL) {
+        return JNI_FALSE;
+    }
+    jintArray converted = convertIntArrayJVM(env, dvm_env, action);
+    jboolean result = (*dvm_env)->CallStaticBooleanMethod(dvm_env, pojav_environ->bridgeClazz,
+                                                          pojav_environ->method_notifyLauncher, type, converted);
+    if ((*dvm_env)->ExceptionCheck(dvm_env)) {
+        (*dvm_env)->ExceptionDescribe(dvm_env);
+        (*dvm_env)->ExceptionClear(dvm_env);
+        return JNI_FALSE;
+    }
+    return result;
+}
+
 jint JNI_OnLoad(JavaVM* vm, void* reserved) {
     if (dalvikJavaVMPtr == NULL) {
         //Save dalvik global JavaVM pointer
@@ -68,6 +84,9 @@ jint JNI_OnLoad(JavaVM* vm, void* reserved) {
         (*vm)->GetEnv(vm, (void**) &dalvikJNIEnvPtr_ANDROID, JNI_VERSION_1_4);
         bridgeClazz = (*dalvikJNIEnvPtr_ANDROID)->NewGlobalRef(dalvikJNIEnvPtr_ANDROID,(*dalvikJNIEnvPtr_ANDROID) ->FindClass(dalvikJNIEnvPtr_ANDROID,"org/lwjgl/glfw/CallbackBridge"));
         assert(bridgeClazz != NULL);
+        pojav_environ->bridgeClazz = bridgeClazz;
+        pojav_environ->method_notifyLauncher = (*dalvikJNIEnvPtr_ANDROID)->GetStaticMethodID(
+                dalvikJNIEnvPtr_ANDROID, bridgeClazz, "notifyLauncher", "(I[I)Z");
         pojav_environ->isUseStackQueueCall = JNI_FALSE;
     } else if (dalvikJavaVMPtr != vm) {
         runtimeJavaVMPtr = vm;

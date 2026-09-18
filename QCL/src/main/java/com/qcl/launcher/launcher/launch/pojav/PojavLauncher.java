@@ -23,6 +23,7 @@ import android.util.Log;
 import com.qcl.launcher.launcher.launch.AccountPatch;
 import com.qcl.launcher.launcher.launch.LaunchVersion;
 import com.qcl.launcher.launcher.launch.Lwjgl333Helper;
+import com.qcl.launcher.launcher.launch.QCLHooks;
 import com.qcl.launcher.launcher.launch.TouchInjector;
 import com.qcl.launcher.launcher.setting.game.GameLaunchSetting;
 import com.qcl.launcher.manifest.AppManifest;
@@ -234,10 +235,16 @@ public class PojavLauncher {
             System.setProperty("qcl.highver", qclNeed333 ? "1" : "0");
             String qclEffectiveRenderer = gameLaunchSetting.pojavRenderer;
             boolean qclNeedsDesktopGl = qclNeed333 || qclNeed341;
+            // SDL3 判定：版本 json 里有 lwjgl-sdl 且没有 lwjgl-glfw → 需要 SDL3 窗口后端
+            final boolean qclNeedsSdl = qclHasLwjglLibrary(version, "lwjgl-sdl") && !qclHasLwjglLibrary(version, "lwjgl-glfw");
             System.setProperty("qcl.highver", qclNeedsDesktopGl ? "1" : "0");
             System.setProperty("qcl.renderer.picked", qclEffectiveRenderer);
             args.add("-Dorg.lwjgl.opengl.libname=" + JREUtils.getGraphicsLibrary((String)qclEffectiveRenderer));
             args.add("-Dorg.lwjgl.spvc.libname=spirv-cross-c-shared");
+            // ★★★ 1.1.1：SDL3 版本（版本 json 里是 lwjgl-sdl）先挂上 native hooks（bytehook + SDL hook + exit hook）
+            if (qclNeedsSdl) {
+                QCLHooks.initializeHooks();
+            }
             args.add("-cp");
             args.add(classPath);
             args.add(version.mainClass);
@@ -325,6 +332,22 @@ public class PojavLauncher {
             Log.e((String)"OPENGL SELECTION", (String)exception.toString());
             return "2";
         }
+    }
+
+    /**
+     * ★★★ 1.1.1：判断版本 json 的 libraries 里有没有某个 org.lwjgl 构件（如 lwjgl-sdl / lwjgl-glfw）。
+     * 注意不能复用 {@code LaunchVersion.getLibraries()} —— 它把 org.lwjgl 开头的库全部排除了。
+     */
+    private static boolean qclHasLwjglLibrary(LaunchVersion version, String artifact) {
+        if (version == null || version.libraries == null) {
+            return false;
+        }
+        for (LaunchVersion.Library lib : version.libraries) {
+            if (lib != null && lib.name != null && lib.name.startsWith("org.lwjgl:" + artifact)) {
+                return true;
+            }
+        }
+        return false;
     }
 }
 

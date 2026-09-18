@@ -687,8 +687,8 @@
         "percentSize": 0.06
       },
       "xPosition": {
-        "absolutePosition": 0,
-        "percentPosition": 0.0
+        "absolutePosition": 15,
+        "percentPosition": 0.0195
       },
       "yPosition": {
         "absolutePosition": 128,
@@ -745,12 +745,12 @@
         "percentSize": 0.06
       },
       "xPosition": {
-        "absolutePosition": 476,
-        "percentPosition": 0.62
+        "absolutePosition": 668,
+        "percentPosition": 0.8698
       },
       "yPosition": {
         "absolutePosition": 6,
-        "percentPosition": 0.02
+        "percentPosition": 0.0187
       }
     },
     {
@@ -803,12 +803,12 @@
         "percentSize": 0.06
       },
       "xPosition": {
-        "absolutePosition": 384,
-        "percentPosition": 0.5
+        "absolutePosition": 600,
+        "percentPosition": 0.7812
       },
       "yPosition": {
         "absolutePosition": 6,
-        "percentPosition": 0.02
+        "percentPosition": 0.0187
       }
     },
     {
@@ -967,7 +967,7 @@
       }
     }
   ],
-  "name": "Default",
+  "name": "game_layout",
   "visibility": 0,
   "versionName": "1.3"
 }

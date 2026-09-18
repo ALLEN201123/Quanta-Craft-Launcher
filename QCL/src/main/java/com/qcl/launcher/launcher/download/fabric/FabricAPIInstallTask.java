@@ -46,7 +46,7 @@ public class FabricAPIInstallTask extends AsyncTask<RemoteMod.Version,Integer,Ex
         RemoteMod.Version fabricAPIVersion = versions[0];
         String path;
         if (PublicGameSetting.isUsingIsolateSetting(activity.launcherSetting.gameFileDirectory + "/versions/" + name)) {
-            path = PrivateGameSetting.getGameDir(activity.launcherSetting.gameFileDirectory,activity.launcherSetting.gameFileDirectory + "/versions/" + name, GsonUtils.getPrivateGameSettingFromFile(activity.launcherSetting.gameFileDirectory + "/versions/" + name + "/hmclpe.cfg").gameDirSetting);
+            path = PrivateGameSetting.getGameDir(activity.launcherSetting.gameFileDirectory,activity.launcherSetting.gameFileDirectory + "/versions/" + name, GsonUtils.getPrivateGameSettingFromFile(activity.launcherSetting.gameFileDirectory + "/versions/" + name + "/qcl.cfg").gameDirSetting);
         }
         else {
             path = PrivateGameSetting.getGameDir(activity.launcherSetting.gameFileDirectory,activity.launcherSetting.gameFileDirectory + "/versions/" + name,GsonUtils.getPrivateGameSettingFromFile(AppManifest.SETTING_DIR + "/private_game_setting.json").gameDirSetting);

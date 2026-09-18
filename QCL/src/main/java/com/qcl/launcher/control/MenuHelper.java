@@ -212,7 +212,18 @@ SeekBar.OnSeekBarChangeListener {
         if (this.currentPattern == null) {
             this.currentPattern = new ControlPattern(currentPattern == null ? "Default" : currentPattern, "Rod123456 (bilibili UID 550905358)", "1.1", "QCL \u9ed8\u8ba4\u63a7\u952e\u5e03\u5c40 \u00b7 Quanta Craft Launcher", 1);
         }
-        String string2 = this.currentChild = SettingUtils.getChildList(currentPattern).size() > 0 ? SettingUtils.getChildList((String)currentPattern).get((int)0).name : null;
+        ArrayList<ChildLayout> childList = SettingUtils.getChildList(currentPattern);
+        String defaultChild = null;
+        if (childList.size() > 0) {
+            defaultChild = childList.get(0).name;
+            for (ChildLayout childLayout : childList) {
+                if ("game_layout".equals(childLayout.name)) {
+                    defaultChild = childLayout.name;
+                    break;
+                }
+            }
+        }
+        String string2 = this.currentChild = defaultChild;
         if (this.launcher == 0) {
             baseLayout.showBackground();
         }
@@ -332,7 +343,8 @@ SeekBar.OnSeekBarChangeListener {
             this.createButtonStyle.setEnabled(false);
         }
         this.editModeSwitch.setChecked(this.editMode);
-        this.childSpinner.setSelection(0);
+        int childIndex = this.childAdapter.getPosition(this.currentChild);
+        this.childSpinner.setSelection(childIndex >= 0 ? childIndex : 0);
         this.patternSpinner.setOnItemSelectedListener((AdapterView.OnItemSelectedListener)this);
         this.editModeSwitch.setOnCheckedChangeListener((CompoundButton.OnCheckedChangeListener)this);
         this.showOutlineSwitch.setOnCheckedChangeListener((CompoundButton.OnCheckedChangeListener)this);

@@ -19,7 +19,7 @@ import java.util.logging.StreamHandler;
 
 /* loaded from: classes2.dex */
 public final class Logging {
-    public static final Logger LOG = Logger.getLogger("HMCL");
+    public static final Logger LOG = Logger.getLogger("QCL");
     private static ByteArrayOutputStream storedLogs = new ByteArrayOutputStream();
 
     private Logging() {

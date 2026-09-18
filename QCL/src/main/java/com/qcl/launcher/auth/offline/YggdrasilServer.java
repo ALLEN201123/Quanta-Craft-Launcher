@@ -47,8 +47,8 @@ public class YggdrasilServer extends HttpServer {
                         "localhost"
                 )),
                 pair("meta", mapOf(
-                        pair("serverName", "HMCL-PE"),
-                        pair("implementationName", "HMCL-PE"),
+                        pair("serverName", "QCL"),
+                        pair("implementationName", "QCL"),
                         pair("implementationVersion", "1.0"),
                         pair("feature.non_email_login", true)
                 ))

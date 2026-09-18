@@ -177,12 +177,15 @@ extends RockerView {
 
     public void refreshVisibility() {
         int mode = this.menuHelper.viewManager == null ? 0 : this.menuHelper.gameCursorMode;
-        boolean qclEditTargetMatches = true;
+        // ★★★ 编辑模式：只显示「当前选中子布局(currentChild)」的控件，
+        // 游戏布局 / 键盘布局二选一（玩家在子布局下拉框切换），其余布局一律隐藏。
         if (this.menuHelper.editMode) {
             String c = this.info.child;
-            boolean bl = qclEditTargetMatches = c == null || c.isEmpty() || "game_layout".equals(c) || this.menuHelper.currentChild != null && !this.menuHelper.currentChild.isEmpty() && this.menuHelper.currentChild.equals(c);
+            boolean matches = c != null && c.equals(this.menuHelper.currentChild);
+            this.setVisibility(matches ? 0 : 4);
+            return;
         }
-        if (this.menuHelper.editMode && qclEditTargetMatches || this.isShowing && (this.info.showType == 0 || mode == 1 && this.info.showType == 1 || mode == 0 && this.info.showType == 2)) {
+        if (this.isShowing && (this.info.showType == 0 || mode == 1 && this.info.showType == 1 || mode == 0 && this.info.showType == 2)) {
             this.setVisibility(0);
         } else {
             this.setVisibility(4);

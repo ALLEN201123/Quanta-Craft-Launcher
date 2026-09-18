@@ -1076,21 +1076,21 @@
     <string name="loading_hint_java_patching">正在优化运行环境…</string>
     <string name="game_setting_ui_java_path_21">Java 21（Android）</string>
     <string name="game_setting_ui_java_path_25">Java 25（Android，x86 32位不可用）</string>
-    <string name="revival_future_plan">QCL（Quanta Craft Launcher，量子方块启动器）是独立的 Minecraft Java 版启动器，部分代码来自 HMCL-PE，并以 FCL（FoldCraftLauncher）为参照重写了渲染与启动链路。本项目为独立衍生开发，保留上游许可与来源说明，不是 FCL 官方版本，也不是 HMCL-PE 官方版本。</string>
+    <string name="revival_future_plan">QCL（Quanta Craft Launcher，量子方块启动器）是独立的 Minecraft Java 版启动器。1.1.1 起，启动/渲染/输入/Java 运行时链路已改为自研实现，并以 FCL（FoldCraftLauncher）为参照；1.1.0 及更早版本基于 HMCL-PE。本项目保留上游许可与来源说明，不是 FCL 官方版本，也不是 HMCL-PE 官方版本。</string>
     <string name="revival_fcl_reference">Java 21/25 使用 FCL-Team 的 Android 运行时。FCL 项目：https://github.com/FCL-Team/FoldCraftLauncher</string>
     <string name="revival_manifest_failed">版本列表刷新失败，已保留原列表。请检查网络后重试。</string>
     <string name="revival_sdl_unavailable">此版本需要 SDL3。本测试版的 Boat/Pojav 窗口后端尚未适配 SDL3，选择 Java 25 不能替代窗口适配。请暂时使用不依赖 SDL3 的版本。</string>
     <string name="revival_java_unavailable">当前架构的 Java 运行时不可用或安装不完整。Java 25 暂不支持 x86 32位，请检查所选运行时。</string>
     <string name="revival_java_unavailable_32bit">Java 25 没有 32 位 x86 版本，无法在这台设备上运行。请改用 64 位运行时、启动需要 Java 21 或更低版本的整合包，或在游戏设置里另行选择 Java 运行时。</string>
     <string name="revival_archive_install_unsupported">归档版：该版本需要走归档安装通道（历史归档，几乎涵盖全部远古版本）。</string>
-    <string name="ui_about_upstream_main">HMCL-PE（部分代码来源）</string>
+    <string name="ui_about_upstream_main">HMCL-PE（历史上游，1.1.1 起启动链路自研）</string>
     <string name="ui_about_upstream_sub">QCL（量子方块启动器）部分使用了 HMCL-PE 的代码。HMCL-PE 原作者：Tungs（B 站 18115101）。
-本项目基于 GNU AGPL-3.0 开源（因链接 AGPL-3.0 的 Terracotta；HMCL-PE 上游为 GPL-3.0），发布时会随包提供完整源码。</string>
+本项目基于 GNU GPL-3.0 开源，发布时会随包提供完整源码。</string>
     <string name="ui_about_author_main">Rod123456</string>
     <string name="ui_about_author_sub">B 站 UID：550905358</string>
     <string name="ui_about_author_style">本启动器作者。喜欢研究 Minecraft 1.0 以前的所有远古版本，视频也主要围绕这些老版本。
 
-多人联机由 Terracotta（作者 BurningTNT，同样以 AGPL-3.0 开源）提供支持；多人联机功能仅限中国大陆地区使用。</string>
+多人联机由 Terracotta（作者 BurningTNT）提供支持；多人联机功能仅限中国大陆地区使用。</string>
     <string name="download_ui_shader">光影</string>
     <string name="game_menu_launch_log">启动日志</string>
     <string name="qcl_multiplayer_disclaimer">多人联机功能仅限中国大陆地区使用。在中华人民共和国境外使用本功能，本启动器不承担任何责任。请自行确认你所在地区的法律法规；使用本功能可能带来法律风险，请自行评估并承担相应后果。请勿将邀请码、IP、端口告知任何陌生人。</string>
@@ -1103,7 +1103,7 @@
     <string name="ui_about_pojav_main">PojavLauncher（PojavLauncherTeam）</string>
     <string name="ui_about_pojav_sub">JVM 启动与 LWJGL 移植</string>
     <string name="ui_about_terracotta_main">Terracotta 陶瓷联机（BurningTNT）</string>
-    <string name="ui_about_terracotta_sub">多人联机框架（AGPL-3.0）</string>
+    <string name="ui_about_terracotta_sub">多人联机框架</string>
     <string name="ui_about_fcl_main">FoldCraftLauncher（FCL-Team）</string>
     <string name="ui_about_fcl_sub">本项目的 Java 运行时方案、authlib-injector 用法等部分实现参考/借用了 FCL 的开源代码与思路，在此特别致谢。</string>
     <string name="ui_about_libs_main">LWJGL / GL4ES / OpenAL / OpenJDK</string>

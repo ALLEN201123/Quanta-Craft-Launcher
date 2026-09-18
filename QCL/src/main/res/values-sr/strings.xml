@@ -876,7 +876,7 @@
     <string name="dialog_force_exit_message">Da li želite da na silu odustanete?</string>
     <string name="dialog_force_exit_positive">Da</string>
     <string name="dialog_force_exit_negative">NE</string>
-    <string name="drawer_game_menu_title">HMCL-PE Kontrolna tabla</string>
+    <string name="drawer_game_menu_title">QCL Kontrolna tabla</string>
     <string name="drawer_game_menu_type">Kontrolna tabla</string>
     <string name="drawer_game_menu_type_float">Plutajući prozor</string>
     <string name="drawer_game_menu_type_bar">Bočna traka</string>

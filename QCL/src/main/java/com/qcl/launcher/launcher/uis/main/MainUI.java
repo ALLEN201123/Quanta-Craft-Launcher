@@ -468,7 +468,7 @@ public class MainUI extends BaseUI implements View.OnClickListener, AdapterView.
             activity.uiManager.switchMainUI(activity.uiManager.settingUI);
         }
         if (v == startGame){
-            String settingPath = activity.publicGameSetting.currentVersion + "/hmclpe.cfg";
+            String settingPath = activity.publicGameSetting.currentVersion + "/qcl.cfg";
             String finalPath;
             if (new File(settingPath).exists() && GsonUtils.getPrivateGameSettingFromFile(settingPath) != null && (GsonUtils.getPrivateGameSettingFromFile(settingPath).forceEnable || GsonUtils.getPrivateGameSettingFromFile(settingPath).enable)) {
                 finalPath = settingPath;

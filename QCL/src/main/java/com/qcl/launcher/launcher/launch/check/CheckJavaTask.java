@@ -42,7 +42,7 @@ public class CheckJavaTask extends AsyncTask<Object,Integer,Exception> {
     protected Exception doInBackground(Object... objects) {
         try {
             PrivateGameSetting privateGameSetting;
-            String settingPath = launchVersion + "/hmclpe.cfg";
+            String settingPath = launchVersion + "/qcl.cfg";
             if (new File(settingPath).exists() && GsonUtils.getPrivateGameSettingFromFile(settingPath) != null && (GsonUtils.getPrivateGameSettingFromFile(settingPath).forceEnable || GsonUtils.getPrivateGameSettingFromFile(settingPath).enable)) {
                 privateGameSetting = GsonUtils.getPrivateGameSettingFromFile(settingPath);
             }
@@ -77,9 +77,7 @@ public class CheckJavaTask extends AsyncTask<Object,Integer,Exception> {
                 // null here rather than throwing.
                 return new Exception(activity.getString(R.string.launch_check_dialog_exception_lib_failed));
             }
-            if (GameLaunchSetting.requiresSdl(version)) {
-                return new Exception(activity.getString(R.string.revival_sdl_unavailable));
-            }
+            // ★★★ 1.1.1：SDL3 已由 native hooks（编进 libpojavexec.so）支持，这里不再拦截，继续正常检查。
             expectedJava = GameLaunchSetting.requiredJava(version);
             String runtimeName = privateGameSetting.javaSetting.autoSelect
                     ? GameLaunchSetting.selectJavaRuntime(expectedJava) : privateGameSetting.javaSetting.name;

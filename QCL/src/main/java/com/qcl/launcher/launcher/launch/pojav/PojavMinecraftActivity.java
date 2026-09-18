@@ -153,7 +153,14 @@ extends BaseMainActivity {
                         return;
                     }
                     PojavMinecraftActivity.this.runOnUiThread(() -> {
-                        JREUtils.setupBridgeWindowNew((Surface)new Surface(surface));
+                        Surface nativeSurface = new Surface(surface);
+                        // ★★★ 1.1.1 SDL3 集成：绑定 SDL surface（非 SDL 版本无副作用，SDL3 版本必须）
+                        try {
+                            org.libsdl.app.SdlBridge.prepareSurface(PojavMinecraftActivity.this,
+                                    nativeSurface, null, PojavMinecraftActivity.this);
+                        } catch (Throwable ignored) {
+                        }
+                        JREUtils.setupBridgeWindowNew(nativeSurface);
                         PojavMinecraftActivity.this.startGame(((PojavMinecraftActivity)PojavMinecraftActivity.this).gameLaunchSetting.javaPath, ((PojavMinecraftActivity)PojavMinecraftActivity.this).gameLaunchSetting.home, GameLaunchSetting.isHighVersion(PojavMinecraftActivity.this.gameLaunchSetting), args, ((PojavMinecraftActivity)PojavMinecraftActivity.this).gameLaunchSetting.pojavRenderer, ((PojavMinecraftActivity)PojavMinecraftActivity.this).gameLaunchSetting.game_directory, PojavLauncher.getGlVersion(((PojavMinecraftActivity)PojavMinecraftActivity.this).gameLaunchSetting.currentVersion));
                     });
                 }).start();

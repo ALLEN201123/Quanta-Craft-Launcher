@@ -29,3 +29,6 @@ QCL/src/main/assets/app_runtime/java/JRE25/
 # ===== 其它 =====
 *.log
 *.hprof
+# 构建缓存残留与布局备份
+build_old*/
+*.bak

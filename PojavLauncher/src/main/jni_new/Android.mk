@@ -2,6 +2,12 @@ LOCAL_PATH := $(call my-dir)
 HERE_PATH := $(LOCAL_PATH)
 
 include $(CLEAR_VARS)
+# 1.1.1：bytehook 预编译库（bytedance），供 SDL3 native hooks 链接（BYTEHOOK_CALL_PREV 等宏）。
+LOCAL_MODULE := bytehook
+LOCAL_SRC_FILES := bytehook/prebuilt/$(TARGET_ARCH_ABI)/libbytehook.so
+include $(PREBUILT_SHARED_LIBRARY)
+
+include $(CLEAR_VARS)
 # ★★★ 2026-09-18 用户指令：**把旧桥的名字给新桥，不能改 GLFW 里的**。
 # 因此本模块名由 `pojavexec_new` 改回 `pojavexec` —— 产出的 so 就是 `libpojavexec.so`。
 #
@@ -12,6 +18,7 @@ include $(CLEAR_VARS)
 #   · 旧的 libpojavexec.so（v1.0.9 遗留）已从 jni/Android.mk 删除，不会与它撞名。
 LOCAL_LDLIBS := -ldl -llog -landroid
 LOCAL_MODULE := pojavexec
+LOCAL_SHARED_LIBRARIES := bytehook
 LOCAL_SRC_FILES := \
     egl_bridge.c \
     qcl_bridge_compat.c \
@@ -30,7 +37,12 @@ LOCAL_SRC_FILES := \
     androidnsbypass/elf_soname_patcher.c \
     androidnsbypass/nsbypass.c \
     androidnsbypass/nsbypass_dlfcn.c \
-    androidnsbypass/utils.c
+    androidnsbypass/utils.c \
+    native_hooks/sdl_hook.c \
+    native_hooks/sdl_dlopen_hook.c \
+    native_hooks/exit_hook.c \
+    native_hooks/chmod_hook.c \
+    bytehook/qcl_nominal_exit.c
 LOCAL_C_INCLUDES := \
     $(LOCAL_PATH) \
     $(LOCAL_PATH)/ctxbridges \
@@ -42,7 +54,9 @@ LOCAL_C_INCLUDES := \
     $(LOCAL_PATH)/androidnsbypass/include/androidnsbypass \
     $(LOCAL_PATH)/androidnsbypass/include/fasthook \
     $(LOCAL_PATH)/androidnsbypass/include/linkernsbypass_compat \
-    $(LOCAL_PATH)/androidnsbypass/liblinkernsbypass_compat
+    $(LOCAL_PATH)/androidnsbypass/liblinkernsbypass_compat \
+    $(LOCAL_PATH)/bytehook \
+    $(LOCAL_PATH)/native_hooks
 LOCAL_CFLAGS := -fvisibility=default
 include $(BUILD_SHARED_LIBRARY)
 

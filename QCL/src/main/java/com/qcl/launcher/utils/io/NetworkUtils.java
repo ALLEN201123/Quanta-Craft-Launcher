@@ -84,7 +84,7 @@ public final class NetworkUtils {
             connection.setRequestProperty("User-Agent", "pan.baidu.com");
         } else {
             // Default
-            connection.setRequestProperty("User-Agent", "HMCL-PE/2.0.7");
+            connection.setRequestProperty("User-Agent", "QCL/1.1.1");
         }
         connection.setUseCaches(false);
         connection.setConnectTimeout(5000);
