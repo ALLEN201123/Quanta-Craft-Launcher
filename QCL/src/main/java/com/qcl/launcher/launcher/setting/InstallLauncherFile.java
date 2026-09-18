@@ -62,8 +62,20 @@ public class InstallLauncherFile {
             AssetsUtils.getInstance((Context)activity).setProgressCallback(progressCallback).copyOnMainThread("plugin/login/nide8auth", AppManifest.PLUGIN_DIR + "/login/nide8auth");
         }
         activity.runOnUiThread(() -> activity.loadingText.setText((CharSequence)activity.getString(R.string.loading_hint_control)));
-        if (SettingUtils.getControlPatternList().size() == 0) {
-            AssetsUtils.getInstance(activity.getApplicationContext()).setProgressCallback(progressCallback).copyOnMainThread("control", AppManifest.CONTROLLER_DIR);
+        // ★ 2026-09-19：默认控键布局改为「按 info.json 内容比对更新」。
+        //   原逻辑只在 control 目录为空（首次安装）时复制一次，导致之后修正的按钮坐标
+        //   （F5 偏下、F8/F12 绝对坐标归零、P/Ctrl 坐标错乱）永远到不了已安装用户手里。
+        //   这里只比对/覆盖 Default 一个目录，玩家自建布局不受影响。
+        try {
+            String assetControlInfo = AssetsUtils.readAssetsTxt((Context)activity, "control/Default/info.json");
+            String localControlInfo = FileStringUtils.getStringFromFile(AppManifest.CONTROLLER_DIR + "/Default/info.json");
+            if (assetControlInfo != null && !assetControlInfo.equals(localControlInfo)) {
+                com.qcl.launcher.utils.file.FileUtils.deleteDirectory(AppManifest.CONTROLLER_DIR + "/Default");
+                AssetsUtils.getInstance(activity.getApplicationContext()).setProgressCallback(progressCallback)
+                        .copyOnMainThread("control/Default", AppManifest.CONTROLLER_DIR + "/Default");
+            }
+        } catch (Throwable t) {
+            android.util.Log.w("jrelog", "[控键布局] 默认布局更新失败", t);
         }
         activity.runOnUiThread(() -> activity.loadingText.setText((CharSequence)activity.getString(R.string.loading_hint_lib)));
         if (!new File(AppManifest.DEFAULT_RUNTIME_DIR + "/version").exists() || Integer.parseInt(Objects.requireNonNull(FileStringUtils.getStringFromFile(AppManifest.DEFAULT_RUNTIME_DIR + "/version"))) < Integer.parseInt(Objects.requireNonNull(AssetsUtils.readAssetsTxt((Context)activity, "app_runtime/version")))) {
@@ -98,8 +110,20 @@ public class InstallLauncherFile {
         InstallLauncherFile.copyPluginIfNeeded(activity, progressCallback, "plugin/login/authlib-injector", AppManifest.PLUGIN_DIR + "/login/authlib-injector");
         InstallLauncherFile.copyPluginIfNeeded(activity, progressCallback, "plugin/login/nide8auth", AppManifest.PLUGIN_DIR + "/login/nide8auth");
         activity.runOnUiThread(() -> activity.loadingText.setText((CharSequence)activity.getString(R.string.loading_hint_control)));
-        if (SettingUtils.getControlPatternList().size() == 0) {
-            AssetsUtils.getInstance(activity.getApplicationContext()).setProgressCallback(progressCallback).copyOnMainThread("control", AppManifest.CONTROLLER_DIR);
+        // ★ 2026-09-19：默认控键布局改为「按 info.json 内容比对更新」。
+        //   原逻辑只在 control 目录为空（首次安装）时复制一次，导致之后修正的按钮坐标
+        //   （F5 偏下、F8/F12 绝对坐标归零、P/Ctrl 坐标错乱）永远到不了已安装用户手里。
+        //   这里只比对/覆盖 Default 一个目录，玩家自建布局不受影响。
+        try {
+            String assetControlInfo = AssetsUtils.readAssetsTxt((Context)activity, "control/Default/info.json");
+            String localControlInfo = FileStringUtils.getStringFromFile(AppManifest.CONTROLLER_DIR + "/Default/info.json");
+            if (assetControlInfo != null && !assetControlInfo.equals(localControlInfo)) {
+                com.qcl.launcher.utils.file.FileUtils.deleteDirectory(AppManifest.CONTROLLER_DIR + "/Default");
+                AssetsUtils.getInstance(activity.getApplicationContext()).setProgressCallback(progressCallback)
+                        .copyOnMainThread("control/Default", AppManifest.CONTROLLER_DIR + "/Default");
+            }
+        } catch (Throwable t) {
+            android.util.Log.w("jrelog", "[控键布局] 默认布局更新失败", t);
         }
         activity.runOnUiThread(() -> activity.loadingText.setText((CharSequence)activity.getString(R.string.loading_hint_lib)));
         if (!new File(AppManifest.DEFAULT_RUNTIME_DIR + "/version").exists() || Integer.parseInt(Objects.requireNonNull(FileStringUtils.getStringFromFile(AppManifest.DEFAULT_RUNTIME_DIR + "/version"))) < Integer.parseInt(Objects.requireNonNull(AssetsUtils.readAssetsTxt((Context)activity, "app_runtime/version")))) {
