@@ -25,6 +25,7 @@ import com.qcl.launcher.launcher.launch.LaunchVersion;
 import com.qcl.launcher.launcher.launch.Lwjgl333Helper;
 import com.qcl.launcher.launcher.launch.QCLHooks;
 import com.qcl.launcher.launcher.launch.TouchInjector;
+import com.qcl.launcher.launcher.setting.RuntimeUtils;
 import com.qcl.launcher.launcher.setting.game.GameLaunchSetting;
 import com.qcl.launcher.manifest.AppManifest;
 import com.qcl.launcher.utils.string.StringUtils;
@@ -76,6 +77,9 @@ public class PojavLauncher {
                 // empty catch block
             }
             JREUtils.relocateLibPath((Context)context, (String)javaPath);
+            // ★★★ 远古版本音效：JRE8 自带 ALSA 版 libjsound（Android 无后端→没声音），
+            // 每次启动前兜底换成 APK 的 OpenAL 版（patchJava 只在装 JRE 时跑，升级不重装就漏了）
+            RuntimeUtils.ensureJsound(context, javaPath);
             String libraryPath = PojavLauncher.buildFclLibraryPath(context, javaPath) + ":" + JREUtils.LD_LIBRARY_PATH;
             boolean qclNeed333 = Lwjgl333Helper.needs(gameLaunchSetting.currentVersion);
             boolean qclNeed341 = !qclNeed333 && Lwjgl333Helper.needs341(gameLaunchSetting.currentVersion);
@@ -241,6 +245,8 @@ public class PojavLauncher {
             System.setProperty("qcl.renderer.picked", qclEffectiveRenderer);
             args.add("-Dorg.lwjgl.opengl.libname=" + JREUtils.getGraphicsLibrary((String)qclEffectiveRenderer));
             args.add("-Dorg.lwjgl.spvc.libname=spirv-cross-c-shared");
+            // ★★★ 音效：对齐 FCL DefaultLauncher，指定 OpenAL 库路径（远古/LWJGL2 时代的 paulscode 走 LWJGL OpenAL）。
+            args.add("-Dorg.lwjgl.openal.libname=" + context.getApplicationInfo().nativeLibraryDir + "/libopenal.so");
             // ★★★ 1.1.1：SDL3 版本（版本 json 里是 lwjgl-sdl）先挂上 native hooks（bytehook + SDL hook + exit hook）
             if (qclNeedsSdl) {
                 QCLHooks.initializeHooks();

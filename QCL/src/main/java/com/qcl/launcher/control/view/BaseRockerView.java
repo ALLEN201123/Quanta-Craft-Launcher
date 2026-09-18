@@ -113,7 +113,6 @@ extends RockerView {
             outlinePath.lineTo(0.0f, 0.0f);
             canvas.drawPath(outlinePath, this.outlinePaint);
         }
-        this.invalidate();
     }
 
     @Override

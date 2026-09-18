@@ -101,7 +101,6 @@ public class MenuView extends View {
             outlinePath.lineTo(0,0);
             canvas.drawPath(outlinePath,outlinePaint);
         }
-        invalidate();
     }
 
     public void addCallback(MenuCallback menuCallback){

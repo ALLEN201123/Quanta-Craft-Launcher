@@ -529,6 +529,66 @@
                     android:visibility="gone" />
             </LinearLayout>
 
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@android:color/darker_gray" />
+
+            <!-- ========== 9. SDL3（随 APK 内置，无需下载） ========== -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:padding="10dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:text="@string/splash_runtime_sdl"
+                        android:textSize="15sp" />
+
+                    <View
+                        android:layout_width="0dp"
+                        android:layout_height="0dp"
+                        android:layout_weight="1" />
+
+                    <ProgressBar
+                        android:id="@+id/qcl_sdl_progress"
+                        style="?android:attr/progressBarStyle"
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:layout_gravity="center"
+                        android:layout_marginStart="10dp"
+                        android:visibility="gone" />
+
+                    <ImageView
+                        android:id="@+id/qcl_sdl_state"
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:layout_gravity="center"
+                        android:layout_marginStart="10dp"
+                        android:contentDescription="@string/splash_runtime_sdl" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/qcl_sdl_detail"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:ellipsize="middle"
+                    android:maxLines="1"
+                    android:paddingStart="10dp"
+                    android:paddingEnd="10dp"
+                    android:paddingBottom="6dp"
+                    android:textSize="12sp"
+                    android:visibility="gone" />
+            </LinearLayout>
+
         </LinearLayout>
     </ScrollView>
 

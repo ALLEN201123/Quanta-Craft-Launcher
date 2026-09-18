@@ -100,7 +100,6 @@ public class MenuFloat extends View {
             path.lineTo(0.0f, 0.0f);
             canvas.drawPath(path, this.outlinePaint);
         }
-        invalidate();
     }
 
     @Override // android.view.View

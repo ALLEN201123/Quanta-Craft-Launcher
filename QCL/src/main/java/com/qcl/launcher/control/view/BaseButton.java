@@ -95,6 +95,9 @@ extends AppCompatButton {
 
     public BaseButton(Context context, int screenWidth, int screenHeight, BaseButtonInfo info, MenuHelper menuHelper) {
         super(context);
+        // ★★★ 幻影分身修复：禁用 AppCompatButton 默认的 elevation 状态动画，
+        // 否则按住按键时系统会改 translationZ 产生阴影重影（FCL ControlButton 同款处理）。
+        this.setStateListAnimator(null);
         this.screenWidth = screenWidth;
         this.screenHeight = screenHeight;
         this.menuHelper = menuHelper;

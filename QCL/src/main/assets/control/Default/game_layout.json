@@ -50,8 +50,8 @@
         "percentSize": 0.06
       },
       "xPosition": {
-        "absolutePosition": 614,
-        "percentPosition": 0.8
+        "absolutePosition": 553,
+        "percentPosition": 0.72
       },
       "yPosition": {
         "absolutePosition": 320,
@@ -108,11 +108,11 @@
         "percentSize": 0.06
       },
       "xPosition": {
-        "absolutePosition": 676,
-        "percentPosition": 0.88
+        "absolutePosition": 663,
+        "percentPosition": 0.875
       },
       "yPosition": {
-        "absolutePosition": 240,
+        "absolutePosition": 232,
         "percentPosition": 0.75
       }
     },
@@ -166,12 +166,12 @@
         "percentSize": 0.06
       },
       "xPosition": {
-        "absolutePosition": 730,
+        "absolutePosition": 720,
         "percentPosition": 0.95
       },
       "yPosition": {
-        "absolutePosition": 304,
-        "percentPosition": 0.95
+        "absolutePosition": 290,
+        "percentPosition": 0.935
       }
     },
     {
@@ -224,11 +224,11 @@
         "percentSize": 0.06
       },
       "xPosition": {
-        "absolutePosition": 599,
-        "percentPosition": 0.78
+        "absolutePosition": 606,
+        "percentPosition": 0.8
       },
       "yPosition": {
-        "absolutePosition": 240,
+        "absolutePosition": 232,
         "percentPosition": 0.75
       }
     },
@@ -282,12 +282,12 @@
         "percentSize": 0.06
       },
       "xPosition": {
-        "absolutePosition": 676,
-        "percentPosition": 0.88
+        "absolutePosition": 663,
+        "percentPosition": 0.875
       },
       "yPosition": {
-        "absolutePosition": 166,
-        "percentPosition": 0.52
+        "absolutePosition": 175,
+        "percentPosition": 0.565
       }
     },
     {
@@ -338,12 +338,12 @@
         "percentSize": 0.06
       },
       "xPosition": {
-        "absolutePosition": 768,
-        "percentPosition": 1.0
+        "absolutePosition": 269,
+        "percentPosition": 0.35
       },
       "yPosition": {
-        "absolutePosition": 96,
-        "percentPosition": 0.3
+        "absolutePosition": 0,
+        "percentPosition": 0.0
       }
     },
     {
@@ -394,12 +394,12 @@
         "percentSize": 0.06
       },
       "xPosition": {
-        "absolutePosition": 292,
-        "percentPosition": 0.38
+        "absolutePosition": 384,
+        "percentPosition": 0.5
       },
       "yPosition": {
-        "absolutePosition": 6,
-        "percentPosition": 0.02
+        "absolutePosition": 0,
+        "percentPosition": 0.0
       }
     },
     {
@@ -452,12 +452,12 @@
         "percentSize": 0.06
       },
       "xPosition": {
-        "absolutePosition": 15,
-        "percentPosition": 0.02
+        "absolutePosition": 0,
+        "percentPosition": 0.0
       },
       "yPosition": {
-        "absolutePosition": 6,
-        "percentPosition": 0.02
+        "absolutePosition": 0,
+        "percentPosition": 0.0
       }
     },
     {
@@ -510,12 +510,12 @@
         "percentSize": 0.06
       },
       "xPosition": {
-        "absolutePosition": 108,
-        "percentPosition": 0.14
+        "absolutePosition": 75,
+        "percentPosition": 0.1
       },
       "yPosition": {
-        "absolutePosition": 6,
-        "percentPosition": 0.02
+        "absolutePosition": 0,
+        "percentPosition": 0.0
       }
     },
     {
@@ -687,8 +687,8 @@
         "percentSize": 0.06
       },
       "xPosition": {
-        "absolutePosition": 15,
-        "percentPosition": 0.0195
+        "absolutePosition": 768,
+        "percentPosition": 1.0
       },
       "yPosition": {
         "absolutePosition": 128,
@@ -745,12 +745,12 @@
         "percentSize": 0.06
       },
       "xPosition": {
-        "absolutePosition": 668,
-        "percentPosition": 0.8698
+        "absolutePosition": 748,
+        "percentPosition": 1.0
       },
       "yPosition": {
-        "absolutePosition": 6,
-        "percentPosition": 0.0187
+        "absolutePosition": 0,
+        "percentPosition": 0.0
       }
     },
     {
@@ -803,12 +803,12 @@
         "percentSize": 0.06
       },
       "xPosition": {
-        "absolutePosition": 600,
-        "percentPosition": 0.7812
+        "absolutePosition": 673,
+        "percentPosition": 0.9
       },
       "yPosition": {
-        "absolutePosition": 6,
-        "percentPosition": 0.0187
+        "absolutePosition": 0,
+        "percentPosition": 0.0
       }
     },
     {
@@ -923,8 +923,8 @@
         "percentPosition": 0.62
       },
       "yPosition": {
-        "absolutePosition": 243,
-        "percentPosition": 0.76
+        "absolutePosition": 230,
+        "percentPosition": 0.72
       }
     }
   ],
@@ -963,7 +963,7 @@
       },
       "yPosition": {
         "absolutePosition": 180,
-        "percentPosition": 0.9003125
+        "percentPosition": 0.9
       }
     }
   ],

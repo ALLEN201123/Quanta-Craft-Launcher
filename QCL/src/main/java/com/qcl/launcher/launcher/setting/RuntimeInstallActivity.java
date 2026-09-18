@@ -109,6 +109,7 @@ implements View.OnClickListener {
         this.items.put("java21", new Item((ImageView)this.findViewById(R.id.qcl_java21_state), (ProgressBar)this.findViewById(R.id.qcl_java21_progress), (TextView)this.findViewById(R.id.qcl_java21_detail)));
         this.items.put("java25", new Item((ImageView)this.findViewById(R.id.qcl_java25_state), (ProgressBar)this.findViewById(R.id.qcl_java25_progress), (TextView)this.findViewById(R.id.qcl_java25_detail)));
         this.items.put("jna", new Item((ImageView)this.findViewById(R.id.qcl_jna_state), (ProgressBar)this.findViewById(R.id.qcl_jna_progress), (TextView)this.findViewById(R.id.qcl_jna_detail)));
+        this.items.put("sdl", new Item((ImageView)this.findViewById(R.id.qcl_sdl_state), (ProgressBar)this.findViewById(R.id.qcl_sdl_progress), (TextView)this.findViewById(R.id.qcl_sdl_detail)));
         this.installButton = (Button)this.findViewById(R.id.qcl_runtime_install);
         this.installButton.setOnClickListener((View.OnClickListener)this);
         this.specs.put("lwjgl", new Spec("lwjgl", "app_runtime/pojav", AppManifest.POJAV_LIB_DIR, false, "lwjgl3"));
@@ -118,7 +119,8 @@ implements View.OnClickListener {
         this.specs.put("java17", new Spec("java17", "app_runtime/java/jre17", AppManifest.JAVA_DIR + "/JRE17", true, "lib/modules"));
         this.specs.put("java21", new Spec("java21", "app_runtime/java/jre21", AppManifest.JAVA_DIR + "/JRE21", true, "lib/modules"));
         this.specs.put("java25", new Spec("java25", "app_runtime/java/jre25", AppManifest.JAVA_DIR + "/JRE25", true, "lib/modules"));
-        this.specs.put("jna", new Spec("jna", "app_runtime/lwjgl333/jna", AppManifest.POJAV_LIB_DIR + "/jna", false, this.arch));
+        this.specs.put("jna", new Spec("jna", "app_runtime/lwjgl333/jna", AppManifest.POJAV_LIB_DIR + "/jna", false, RuntimeInstallActivity.deviceAbiDirName()));
+        this.specs.put("sdl", new Spec("sdl", "app_runtime/pojav", this.getApplicationInfo().nativeLibraryDir, false, "libSDL3.so"));
         this.prepareLayout = this.findViewById(R.id.qcl_prepare_layout);
         this.loadingProgress = (ProgressBar)this.findViewById(R.id.loading_progress_bar);
         this.loadingText = (TextView)this.findViewById(R.id.loading_text);
@@ -376,7 +378,7 @@ implements View.OnClickListener {
             for (Map.Entry<String, Spec> e : this.specs.entrySet()) {
                 Spec spec = e.getValue();
                 Item item = this.items.get(e.getKey());
-                if (item == null || item.installed || "java25".equals(spec.key) && "x86".equals(this.arch)) continue;
+                if (item == null || item.installed || "sdl".equals(spec.key) || "java25".equals(spec.key) && "x86".equals(this.arch)) continue;
                 this.main.post(() -> this.beginItem(item));
                 try {
                     if (spec.isJava) {
@@ -496,6 +498,20 @@ implements View.OnClickListener {
         }
         if (a == Architecture.ARCH_ARM64) {
             return "arm64";
+        }
+        if (a == Architecture.ARCH_X86) {
+            return "x86";
+        }
+        return "x86_64";
+    }
+
+    private static String deviceAbiDirName() {
+        int a = Architecture.getRuntimeArchitecture();
+        if (a == Architecture.ARCH_ARM) {
+            return "armeabi-v7a";
+        }
+        if (a == Architecture.ARCH_ARM64) {
+            return "arm64-v8a";
         }
         if (a == Architecture.ARCH_X86) {
             return "x86";

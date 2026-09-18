@@ -232,6 +232,38 @@ public final class RuntimeUtils {
         return "lib";
     }
 
+    /**
+     * ★★★ 远古版本音效：确保 JRE 里用的是 APK 的「OpenAL 版」libjsound.so。
+     *
+     * JRE8 自带的是 ALSA 版 libjsound.so，Android 上没有 ALSA 后端 → 完全没声音
+     * （按钮音、挖方块音都没有）。必须用 APK 里带 OpenAL 后端的 libjsound.so 替换（FCL 同款处理）。
+     *
+     * 关键点：patchJava 只在「安装 JRE」时执行，而升级 APK 时如果 app_runtime/version 没变
+     * （本次 1.1.1 仍是 183），JRE 不会重装 → patchJava 不跑 → JRE 里一直是无用的 ALSA 版。
+     * 所以这里在每次启动游戏前兜底检查并替换一次。
+     */
+    public static void ensureJsound(Context context, String javaPath) {
+        try {
+            File dest = new File(javaPath);
+            if (!dest.exists()) {
+                return;
+            }
+            File src = new File(context.getApplicationInfo().nativeLibraryDir, "libjsound.so");
+            if (!src.exists()) {
+                return;
+            }
+            String libFolder = resolveLibFolder(dest);
+            File dst = new File(dest, libFolder + "/libjsound.so");
+            if (dst.exists() && dst.length() == src.length()) {
+                return;
+            }
+            dst.delete();
+            FileUtils.copyFile(src, dst);
+        } catch (Throwable t) {
+            Log.w(TAG, "ensureJsound failed (不影响启动): " + t.getMessage());
+        }
+    }
+
     public static void copyAssets(Context context, String str, String str2) throws IOException {
         copyAssets(context, str, str2, null);
     }

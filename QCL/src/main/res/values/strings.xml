@@ -95,6 +95,7 @@
     <string name="splash_runtime_java21">JRE 21</string>
     <string name="splash_runtime_java25">JRE 25</string>
     <string name="splash_runtime_jna">JNA</string>
+    <string name="splash_runtime_sdl">SDL3</string>
     <string name="splash_runtime_install">Install / Update</string>
     <string name="splash_runtime_patching">Optimizing runtime…</string>
     <string name="splash_runtime_installing">Installing…</string>

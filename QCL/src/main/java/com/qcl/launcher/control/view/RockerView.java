@@ -169,7 +169,6 @@ extends View {
         if (this.downRight == State.PRESS) {
             canvas.drawPath(downRightPointerPath, pointerPaintPress);
         }
-        this.invalidate();
     }
 
     public boolean onTouchEvent(MotionEvent event) {
