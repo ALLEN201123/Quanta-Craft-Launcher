@@ -173,7 +173,7 @@ public class PojavLauncher {
             args.add("-Dos.version=Android-" + Build.VERSION.RELEASE);
             args.add("-Dpojav.path.minecraft=" + gameLaunchSetting.gameFileDirectory);
             args.addAll(JREUtils.getJavaArgs((Context)context));
-            args.add("-Dnet.minecraft.clientmodname=Hello Minecraft! Launcher Pocket Edition");
+            args.add("-Dnet.minecraft.clientmodname=Quanta Craft Launcher");
             args.add("-Dfml.earlyprogresswindow=false");
             String[] accountArgs = AccountPatch.getAccountArgs(context, gameLaunchSetting.account);
             Collections.addAll(args, accountArgs);
