@@ -62,21 +62,8 @@ public class InstallLauncherFile {
             AssetsUtils.getInstance((Context)activity).setProgressCallback(progressCallback).copyOnMainThread("plugin/login/nide8auth", AppManifest.PLUGIN_DIR + "/login/nide8auth");
         }
         activity.runOnUiThread(() -> activity.loadingText.setText((CharSequence)activity.getString(R.string.loading_hint_control)));
-        // ★ 2026-09-19：默认控键布局改为「按 info.json 内容比对更新」。
-        //   原逻辑只在 control 目录为空（首次安装）时复制一次，导致之后修正的按钮坐标
-        //   （F5 偏下、F8/F12 绝对坐标归零、P/Ctrl 坐标错乱）永远到不了已安装用户手里。
-        //   这里只比对/覆盖 Default 一个目录，玩家自建布局不受影响。
-        try {
-            String assetControlInfo = AssetsUtils.readAssetsTxt((Context)activity, "control/Default/info.json");
-            String localControlInfo = FileStringUtils.getStringFromFile(AppManifest.CONTROLLER_DIR + "/Default/info.json");
-            if (assetControlInfo != null && !assetControlInfo.equals(localControlInfo)) {
-                com.qcl.launcher.utils.file.FileUtils.deleteDirectory(AppManifest.CONTROLLER_DIR + "/Default");
-                AssetsUtils.getInstance(activity.getApplicationContext()).setProgressCallback(progressCallback)
-                        .copyOnMainThread("control/Default", AppManifest.CONTROLLER_DIR + "/Default");
-            }
-        } catch (Throwable t) {
-            android.util.Log.w("jrelog", "[控键布局] 默认布局更新失败", t);
-        }
+        // ★ 2026-09-19：默认控键布局按 info.json 内容比对更新（只动 Default，玩家自建布局不受影响）。
+        InstallLauncherFile.syncDefaultControl(activity);
         activity.runOnUiThread(() -> activity.loadingText.setText((CharSequence)activity.getString(R.string.loading_hint_lib)));
         if (!new File(AppManifest.DEFAULT_RUNTIME_DIR + "/version").exists() || Integer.parseInt(Objects.requireNonNull(FileStringUtils.getStringFromFile(AppManifest.DEFAULT_RUNTIME_DIR + "/version"))) < Integer.parseInt(Objects.requireNonNull(AssetsUtils.readAssetsTxt((Context)activity, "app_runtime/version")))) {
             com.qcl.launcher.utils.file.FileUtils.deleteDirectory(AppManifest.BOAT_LIB_DIR);
@@ -110,21 +97,8 @@ public class InstallLauncherFile {
         InstallLauncherFile.copyPluginIfNeeded(activity, progressCallback, "plugin/login/authlib-injector", AppManifest.PLUGIN_DIR + "/login/authlib-injector");
         InstallLauncherFile.copyPluginIfNeeded(activity, progressCallback, "plugin/login/nide8auth", AppManifest.PLUGIN_DIR + "/login/nide8auth");
         activity.runOnUiThread(() -> activity.loadingText.setText((CharSequence)activity.getString(R.string.loading_hint_control)));
-        // ★ 2026-09-19：默认控键布局改为「按 info.json 内容比对更新」。
-        //   原逻辑只在 control 目录为空（首次安装）时复制一次，导致之后修正的按钮坐标
-        //   （F5 偏下、F8/F12 绝对坐标归零、P/Ctrl 坐标错乱）永远到不了已安装用户手里。
-        //   这里只比对/覆盖 Default 一个目录，玩家自建布局不受影响。
-        try {
-            String assetControlInfo = AssetsUtils.readAssetsTxt((Context)activity, "control/Default/info.json");
-            String localControlInfo = FileStringUtils.getStringFromFile(AppManifest.CONTROLLER_DIR + "/Default/info.json");
-            if (assetControlInfo != null && !assetControlInfo.equals(localControlInfo)) {
-                com.qcl.launcher.utils.file.FileUtils.deleteDirectory(AppManifest.CONTROLLER_DIR + "/Default");
-                AssetsUtils.getInstance(activity.getApplicationContext()).setProgressCallback(progressCallback)
-                        .copyOnMainThread("control/Default", AppManifest.CONTROLLER_DIR + "/Default");
-            }
-        } catch (Throwable t) {
-            android.util.Log.w("jrelog", "[控键布局] 默认布局更新失败", t);
-        }
+        // ★ 2026-09-19：默认控键布局按 info.json 内容比对更新（只动 Default，玩家自建布局不受影响）。
+        InstallLauncherFile.syncDefaultControl(activity);
         activity.runOnUiThread(() -> activity.loadingText.setText((CharSequence)activity.getString(R.string.loading_hint_lib)));
         if (!new File(AppManifest.DEFAULT_RUNTIME_DIR + "/version").exists() || Integer.parseInt(Objects.requireNonNull(FileStringUtils.getStringFromFile(AppManifest.DEFAULT_RUNTIME_DIR + "/version"))) < Integer.parseInt(Objects.requireNonNull(AssetsUtils.readAssetsTxt((Context)activity, "app_runtime/version")))) {
             com.qcl.launcher.utils.file.FileUtils.deleteDirectory(AppManifest.BOAT_LIB_DIR);
@@ -136,6 +110,25 @@ public class InstallLauncherFile {
             }
             AssetsUtils.getInstance((Context)activity).setProgressCallback(progressCallback).copyOnMainThread("app_runtime/boat", AppManifest.BOAT_LIB_DIR);
             AssetsUtils.getInstance((Context)activity).setProgressCallback(progressCallback).copyOnMainThread("app_runtime/version", AppManifest.DEFAULT_RUNTIME_DIR + "/version");
+        }
+    }
+
+    /**
+     * 同步默认控键布局：把 assets 的 control/Default 与设备上的一份按 info.json 内容比对，
+     * 不一致就重新复制（修复历史版本按钮坐标 bug 的分发通道：F5 偏下、F8/F12 绝对坐标归零等）。
+     * 只动 Default 一个目录，玩家自建布局不受影响。静默执行，可在任意线程调用。
+     */
+    public static void syncDefaultControl(Context context) {
+        try {
+            String assetControlInfo = AssetsUtils.readAssetsTxt(context, "control/Default/info.json");
+            String localControlInfo = FileStringUtils.getStringFromFile(AppManifest.CONTROLLER_DIR + "/Default/info.json");
+            if (assetControlInfo != null && !assetControlInfo.equals(localControlInfo)) {
+                android.util.Log.i("jrelog", "[控键布局] 检测到默认布局版本变化，重新复制 Default");
+                com.qcl.launcher.utils.file.FileUtils.deleteDirectory(AppManifest.CONTROLLER_DIR + "/Default");
+                AssetsUtils.getInstance(context).copyOnMainThread("control/Default", AppManifest.CONTROLLER_DIR + "/Default");
+            }
+        } catch (Throwable t) {
+            android.util.Log.w("jrelog", "[控键布局] 默认布局同步失败", t);
         }
     }
 

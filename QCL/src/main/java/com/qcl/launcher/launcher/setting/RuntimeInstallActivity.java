@@ -202,7 +202,16 @@ implements View.OnClickListener {
             return;
         }
         this.prepared = true;
+        // ★ 默认控键布局同步（后台线程）：缓存命中路径会跳过 checkBaseFiles，
+        //   必须在这里也执行，否则布局修正到不了已装齐的老用户；进主界面前 join，避免读到半份布局。
+        final Thread controlSyncThread = new Thread(() ->
+                com.qcl.launcher.launcher.setting.InstallLauncherFile.syncDefaultControl(getApplicationContext()));
+        controlSyncThread.start();
         if (this.isRuntimeReadyCached()) {
+            try {
+                controlSyncThread.join(3000L);
+            } catch (InterruptedException ignored) {
+            }
             this.println("[QCL_RUNTIME] \u7f13\u5b58\u547d\u4e2d\uff08ready + appVersion + runtimeVersion \u5168\u5bf9\uff09\u2192 \u76f4\u63a5\u8fdb\u4e3b\u754c\u9762");
             this.runOnUiThread(this::enterLauncher);
             return;
