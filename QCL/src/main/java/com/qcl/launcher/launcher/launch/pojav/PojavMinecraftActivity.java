@@ -74,8 +74,19 @@ extends BaseMainActivity {
 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        // 说明：vivo/iQOO「游戏魔盒」的入口放在**启动器主界面**（MainUI 的 start_ui_gamecube），
-        // 不在这里自动弹出 —— 免得每次启动游戏都被切走界面。详见 VivoGameCube 的类注释。
+        // ★★★ 1.1.4：自动开启「持续性能模式」（等价于 vivo/iQOO 的"游戏魔盒"的性能优化）。
+        //   照搬 FCL 的实现：FCL 的"性能模式"（GameMenu 的 PERFORMANCE_MODE）就是
+        //   `activity.getWindow().setSustainedPerformanceMode(...)` —— 这才是系统级的"游戏加速"，
+        //   而不是去打开 vivo 的 gamecube App（那个没有稳定的第三方入口，会"打开失效"）。
+        //   setSustainedPerformanceMode(true) 让 CPU/GPU 在游戏期间保持高性能，Android 7.0+（API 24+）可用。
+        try {
+            if (android.os.Build.VERSION.SDK_INT >= 24) {
+                getWindow().setSustainedPerformanceMode(true);
+            }
+        }
+        catch (Throwable ignored) {
+            // 某些窗口/设备不支持也不影响启动
+        }
         this.gameLaunchSetting = GameLaunchSetting.getGameLaunchSetting(this.getIntent().getExtras().getString("setting_path"), this.getIntent().getExtras().getString("version"));
         if (this.getIntent().getExtras().getBoolean("test") || this.gameLaunchSetting.log) {
             // empty if block

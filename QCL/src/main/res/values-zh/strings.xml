@@ -50,7 +50,7 @@
     <string name="launcher_scroll_download">下载</string>
     <string name="launcher_scroll_text_universal">通用</string>
     <string name="launcher_scroll_multi_player">多人联机</string>
-    <string name="launcher_gamecube">游戏魔盒</string>
+    <string name="launcher_gamecube">持续性能模式</string>
     <string name="launcher_scroll_setting">设置</string>
     <string name="launcher_button_launch">启动游戏</string>
     <string name="launcher_button_current_version">没有游戏版本</string>

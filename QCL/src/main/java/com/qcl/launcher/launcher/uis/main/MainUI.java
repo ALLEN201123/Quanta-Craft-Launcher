@@ -124,21 +124,18 @@ public class MainUI extends BaseUI implements View.OnClickListener, AdapterView.
         startMultiPlayerUI.setOnClickListener(this);
         startSettingUI.setOnClickListener(this);
 
-        // ★★★ 1.1.4：vivo / iQOO「游戏魔盒」入口 —— 直接就摆在这里（不用等点启动游戏）。
-        //   仅「vivo/iQOO 设备 + 已安装 com.vivo.gamecube」时显示，其余设备保持 GONE（不占位）。
-        //   点一下即可打开游戏魔盒，去开启总开关 /「游戏时自动开启魔盒」/ 把本启动器加入游戏空间。
-        //   （vivo 未提供第三方开启接口，故启动器能做的是"检测 + 一键打开并引导"，详见 VivoGameCube。）
+        // ★★★ 1.1.4：vivo / iQOO「持续性能模式」入口（等价于"游戏魔盒"的性能优化，照搬 FCL）。
+        //   仅「vivo/iQOO 设备」时显示，其余设备保持 GONE。真正的开启在 PojavMinecraftActivity 里
+        //   `getWindow().setSustainedPerformanceMode(true)`（启动游戏时自动生效），这里只是一个状态提示入口。
         try {
             android.view.View gameCubeEntry = activity.findViewById(R.id.start_ui_gamecube);
             if (gameCubeEntry != null
-                    && com.qcl.launcher.launcher.launch.VivoGameCube.isVivoFamily()
-                    && com.qcl.launcher.launcher.launch.VivoGameCube.isInstalled(activity)) {
+                    && com.qcl.launcher.launcher.launch.VivoGameCube.isVivoFamily()) {
                 gameCubeEntry.setVisibility(android.view.View.VISIBLE);
                 gameCubeEntry.setOnClickListener(v -> {
-                    if (!com.qcl.launcher.launcher.launch.VivoGameCube.open(activity)) {
-                        android.widget.Toast.makeText(activity, "打开游戏魔盒失败",
-                                android.widget.Toast.LENGTH_SHORT).show();
-                    }
+                    android.widget.Toast.makeText(activity,
+                            "持续性能模式已在启动游戏时自动开启（同游戏魔盒的性能优化）",
+                            android.widget.Toast.LENGTH_SHORT).show();
                 });
             }
         }
