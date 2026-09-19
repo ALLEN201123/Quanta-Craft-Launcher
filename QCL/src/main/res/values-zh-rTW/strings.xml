@@ -647,6 +647,9 @@
     <string name="dialog_update_log">更新內容：</string>
     <string name="dialog_update_update">更新</string>
     <string name="dialog_update_ignore">忽略</string>
+    <string name="dialog_update_netdisk">網盤下載</string>
+    <string name="dialog_update_github">GitHub</string>
+    <string name="dialog_update_negative">以後再說</string>
     <string name="exterior_setting_ui_theme_title">外觀</string>
     <string name="exterior_setting_ui_theme">主題</string>
     <string name="exterior_setting_ui_bar_trans">標題欄透明</string>

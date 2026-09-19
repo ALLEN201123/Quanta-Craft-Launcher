@@ -57,6 +57,9 @@ implements View.OnClickListener {
     private ProgressBar progressBar;
     private Button update;
     private Button ignore;
+    private Button netdisk;
+    private Button github;
+    private Button negative;
     private Handler handler;
 
     public UpdateDialog(@NonNull Context context, MainActivity activity, LauncherVersion version, boolean isBeta) {
@@ -83,8 +86,14 @@ implements View.OnClickListener {
         this.progressBar = (ProgressBar)this.findViewById(R.id.update_progress);
         this.update = (Button)this.findViewById(R.id.update);
         this.ignore = (Button)this.findViewById(R.id.ignore);
+        this.netdisk = (Button)this.findViewById(R.id.netdisk);
+        this.github = (Button)this.findViewById(R.id.github);
+        this.negative = (Button)this.findViewById(R.id.negative);
         this.update.setOnClickListener((View.OnClickListener)this);
         this.ignore.setOnClickListener((View.OnClickListener)this);
+        this.netdisk.setOnClickListener((View.OnClickListener)this);
+        this.github.setOnClickListener((View.OnClickListener)this);
+        this.negative.setOnClickListener((View.OnClickListener)this);
     }
 
     private String getType(boolean isBeta) {
@@ -144,7 +153,34 @@ implements View.OnClickListener {
             }).start();
         }
         if (view == this.ignore) {
-            UpdateChecker.setIgnore(this.getContext(), this.version.versionCode);
+            // ★★★ 1.1.5：忽略此更新 = 只关闭本次弹窗，**不持久化**，
+            //   因此每次重新进入启动器仍会弹出（与 FCL 的预期一致，用户可再选择下载或以后再说）。
+            this.dismiss();
+        }
+        if (view == this.netdisk) {
+            // ★★★ 1.1.5：网盘下载（夸克网盘，暂为占位链接）。跳转到浏览器打开。
+            try {
+                Intent i = new Intent("android.intent.action.VIEW");
+                i.setData(Uri.parse(this.version.url != null && !this.version.url.isEmpty()
+                        ? this.version.url.get(0) : "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/latest"));
+                this.getContext().startActivity(i);
+            }
+            catch (Throwable ignored) {
+            }
+            this.dismiss();
+        }
+        if (view == this.github) {
+            // ★★★ 1.1.5：GitHub 下载（跳 GitHub Release 页）。
+            try {
+                Intent i = new Intent("android.intent.action.VIEW");
+                i.setData(Uri.parse("https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/latest"));
+                this.getContext().startActivity(i);
+            }
+            catch (Throwable ignored) {
+            }
+            this.dismiss();
+        }
+        if (view == this.negative) {
             this.dismiss();
         }
     }

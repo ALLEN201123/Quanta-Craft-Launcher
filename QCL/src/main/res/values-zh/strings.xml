@@ -745,6 +745,9 @@
     <string name="dialog_update_log">更新内容：</string>
     <string name="dialog_update_update">更新</string>
     <string name="dialog_update_ignore">忽略</string>
+    <string name="dialog_update_netdisk">网盘下载</string>
+    <string name="dialog_update_github">GitHub</string>
+    <string name="dialog_update_negative">以后再说</string>
 
     <string name="exterior_setting_ui_theme_title">外观</string>
     <string name="exterior_setting_ui_theme">主题</string>
