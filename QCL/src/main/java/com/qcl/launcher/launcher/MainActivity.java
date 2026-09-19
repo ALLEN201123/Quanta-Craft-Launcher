@@ -49,6 +49,7 @@ import com.afollestad.appthemeengine.ATE;
 import com.afollestad.appthemeengine.Config;
 import com.qcl.launcher.launcher.VerifyInterface;
 import com.qcl.launcher.launcher.dialogs.VerifyDialog;
+import com.qcl.launcher.launcher.dialogs.account.MicrosoftAccountSkinDialog;
 import com.qcl.launcher.launcher.dialogs.account.SkinPreviewDialog;
 import com.qcl.launcher.launcher.setting.InitializeSetting;
 import com.qcl.launcher.launcher.setting.game.PrivateGameSetting;
@@ -370,6 +371,9 @@ implements View.OnClickListener {
         }
         if (SkinPreviewDialog.getInstance() != null) {
             SkinPreviewDialog.getInstance().onActivityResult(requestCode, resultCode, data);
+        }
+        if (MicrosoftAccountSkinDialog.getInstance() != null) {
+            MicrosoftAccountSkinDialog.getInstance().onActivityResult(requestCode, resultCode, data);
         }
     }
 

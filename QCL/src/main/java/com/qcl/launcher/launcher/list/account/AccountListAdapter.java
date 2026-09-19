@@ -40,6 +40,7 @@ import com.qcl.launcher.auth.yggdrasil.YggdrasilService;
 import com.qcl.launcher.auth.yggdrasil.YggdrasilSession;
 import com.qcl.launcher.launcher.MainActivity;
 import com.qcl.launcher.launcher.dialogs.account.ReLoginDialog;
+import com.qcl.launcher.launcher.dialogs.account.MicrosoftAccountSkinDialog;
 import com.qcl.launcher.launcher.dialogs.account.SkinPreviewDialog;
 import com.qcl.launcher.launcher.uis.account.AccountUI;
 import com.qcl.launcher.manifest.AppManifest;
@@ -467,9 +468,9 @@ public class AccountListAdapter extends BaseAdapter {
                 skinPreviewDialog.show();
             }
             else if (account.loginType == 3) {
-                Uri uri = Uri.parse("https://www.minecraft.net/zh-hans/msaprofile/mygames/editskin");
-                Intent intent = new Intent(Intent.ACTION_VIEW, uri);
-                context.startActivity(intent);
+                // ★★★ 1.1.6：微软账号本地换皮（照 FCL），不再跳转官网。
+                MicrosoftAccountSkinDialog dialog = new MicrosoftAccountSkinDialog(context, activity, account);
+                dialog.show();
             }
             else if (account.loginType == 4) {
                 skinPosition = position;
