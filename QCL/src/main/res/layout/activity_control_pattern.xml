@@ -193,7 +193,7 @@
                             android:layout_gravity="center"
                             android:text="@string/menu_settings_performance_mode"
                             android:textSize="12sp"
-                            android:textColor="@color/colorPureBlack"/>
+                            android:textColor="@color/colorPureWhite"/>
 
                         <androidx.appcompat.widget.SwitchCompat
                             android:layout_width="wrap_content"
