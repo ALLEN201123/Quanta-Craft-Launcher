@@ -74,8 +74,9 @@ public final class RendererCompat {
         }
         try {
             android.content.pm.PackageManager pm = context.getPackageManager();
+            // 与 FCL PluginManager 的扫描保持一致：裸 ACTION_MAIN（不限启动图标），范围更宽，
+            // 以免某些「无启动图标但声明 MAIN」的插件应用被漏掉。
             android.content.Intent intent = new android.content.Intent(android.content.Intent.ACTION_MAIN);
-            intent.addCategory(android.content.Intent.CATEGORY_LAUNCHER);
             java.util.List<android.content.pm.ResolveInfo> list =
                     pm.queryIntentActivities(intent, 0);
             if (list == null) {
