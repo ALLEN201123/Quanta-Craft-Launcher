@@ -57,6 +57,8 @@ public class MicrosoftAccountSkinDialog extends Dialog implements View.OnClickLi
 
     private String selectedSkinPath;
     private String model = "classic"; // classic / slim，随 RadioButton 切换
+    private android.widget.RadioButton modelClassic;
+    private android.widget.RadioButton modelSlim;
 
     public MicrosoftAccountSkinDialog(Context context, MainActivity activity, Account account) {
         super(context);
@@ -89,8 +91,8 @@ public class MicrosoftAccountSkinDialog extends Dialog implements View.OnClickLi
         renderer.setBackgroundColor(1.0f, 1.0f, 1.0f, 1.0f);
 
         // 皮肤模型选择（classic / slim），切换时重建 3D 人物模型
-        android.widget.RadioButton modelClassic = findViewById(R.id.ms_model_classic);
-        android.widget.RadioButton modelSlim = findViewById(R.id.ms_model_slim);
+        modelClassic = findViewById(R.id.ms_model_classic);
+        modelSlim = findViewById(R.id.ms_model_slim);
         modelClassic.setOnClickListener(v -> {
             model = "classic";
             renderer.mCharacter = new GameCharacter(false);
@@ -114,10 +116,21 @@ public class MicrosoftAccountSkinDialog extends Dialog implements View.OnClickLi
             getWindow().setLayout(android.view.WindowManager.LayoutParams.MATCH_PARENT, height);
         }
 
-        // ★★★ 加载当前微软账号的皮肤显示在 3D 预览（不是默认 Steve）
+        // ★★★ 加载当前微软账号的皮肤显示在 3D 预览，并自动检测是苗条还是经典
         if (account.texture != null && !account.texture.isEmpty()) {
             try {
-                previewSkin(Avatar.stringToBitmap(account.texture));
+                Bitmap currentSkin = Avatar.stringToBitmap(account.texture);
+                boolean slim;
+                try {
+                    slim = new NormalizedSkin(currentSkin).isSlim();
+                } catch (InvalidSkinException e) {
+                    slim = false;
+                }
+                model = slim ? "slim" : "classic";
+                modelSlim.setChecked(slim);
+                modelClassic.setChecked(!slim);
+                renderer.mCharacter = new GameCharacter(slim);
+                previewSkin(currentSkin);
             } catch (Throwable ignored) {
             }
         }
