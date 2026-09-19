@@ -175,8 +175,12 @@ public class AccountUI extends BaseUI implements View.OnClickListener {
         ArrayList arrayList = new ArrayList();
         Iterator<Account> it = this.accounts.iterator();
         while (it.hasNext()) {
-            if (it.next().loginType == 3) {
-                arrayList.add(account.auth_player_name);
+            Account existingAccount = it.next();
+            if (existingAccount.loginType == 3) {
+                // ★★★ 修复：收集【已有】微软账户的玩家名，而不是新账号名。
+                //   原代码误写为 arrayList.add(account.auth_player_name)（新账号名），
+                //   导致只要已存在一个微软账户，contains 必为 true → 永远拒绝添加第二个微软账户。
+                arrayList.add(existingAccount.auth_player_name);
             }
         }
         if (arrayList.contains(account.auth_player_name)) {
