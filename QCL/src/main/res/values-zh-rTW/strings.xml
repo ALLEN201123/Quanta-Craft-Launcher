@@ -648,6 +648,9 @@
     <string name="dialog_update_update">更新</string>
     <string name="dialog_update_ignore">忽略</string>
     <string name="microsoft_skin_title">微軟換膚</string>
+    <string name="microsoft_skin_model_title">皮膚模型</string>
+    <string name="microsoft_skin_model_classic">經典</string>
+    <string name="microsoft_skin_model_slim">苗條</string>
     <string name="dialog_positive">完成</string>
     <string name="microsoft_skin_uploaded">皮膚已上傳</string>
     <string name="microsoft_skin_reset_done">皮膚已重置</string>

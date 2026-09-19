@@ -27,6 +27,42 @@
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
+            <TextView
+                android:singleLine="true"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/microsoft_skin_model_title"
+                android:textStyle="bold"
+                android:textSize="@dimen/text_size_middle"
+                android:textColor="@color/colorPureBlack"/>
+
+            <RadioGroup
+                android:id="@+id/ms_model_group"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:orientation="horizontal">
+
+                <RadioButton
+                    android:id="@+id/ms_model_classic"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:checked="true"
+                    android:text="@string/microsoft_skin_model_classic"
+                    android:textSize="14sp"
+                    android:textColor="@color/colorPureBlack"/>
+
+                <RadioButton
+                    android:id="@+id/ms_model_slim"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/microsoft_skin_model_slim"
+                    android:textSize="14sp"
+                    android:textColor="@color/colorPureBlack"/>
+            </RadioGroup>
+
             <Button
                 android:singleLine="true"
                 android:textAllCaps="false"

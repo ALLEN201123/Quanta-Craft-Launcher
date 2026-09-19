@@ -52,6 +52,7 @@ public class MicrosoftAccountSkinDialog extends Dialog implements View.OnClickLi
     private Button hideCape;
 
     private String selectedSkinPath;
+    private String model = "classic"; // classic / slim，随 RadioButton 切换
 
     public MicrosoftAccountSkinDialog(Context context, MainActivity activity, Account account) {
         super(context);
@@ -82,6 +83,12 @@ public class MicrosoftAccountSkinDialog extends Dialog implements View.OnClickLi
         hideCape.setOnClickListener(this);
         positive.setOnClickListener(v -> dismiss());
         negative.setOnClickListener(v -> dismiss());
+
+        // 皮肤模型选择（classic / slim）
+        android.widget.RadioButton modelClassic = findViewById(R.id.ms_model_classic);
+        android.widget.RadioButton modelSlim = findViewById(R.id.ms_model_slim);
+        modelClassic.setOnClickListener(v -> model = "classic");
+        modelSlim.setOnClickListener(v -> model = "slim");
 
         // 3D 预览视图
         SkinGLSurfaceView view = new SkinGLSurfaceView(getContext());
@@ -209,7 +216,6 @@ public class MicrosoftAccountSkinDialog extends Dialog implements View.OnClickLi
         new Thread(() -> {
             try {
                 File file = new File(path);
-                String model = detectModel(file);
                 MinecraftSkinService.uploadSkin(account.auth_access_token, model, file);
                 handler.post(() -> {
                     setLoading(false);

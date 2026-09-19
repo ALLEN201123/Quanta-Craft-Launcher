@@ -725,6 +725,9 @@
     <string name="dialog_update_update">Update</string>
     <string name="dialog_update_ignore">Ignore</string>
     <string name="microsoft_skin_title">Change skin</string>
+    <string name="microsoft_skin_model_title">Skin model</string>
+    <string name="microsoft_skin_model_classic">Classic</string>
+    <string name="microsoft_skin_model_slim">Slim</string>
     <string name="dialog_positive">Done</string>
     <string name="microsoft_skin_uploaded">Skin uploaded</string>
     <string name="microsoft_skin_reset_done">Skin reset</string>
