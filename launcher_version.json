@@ -1,12 +1,12 @@
 {
   "latestRelease": {
-    "versionCode": 313,
-    "versionName": "1.1.3",
+    "versionCode": 314,
+    "versionName": "1.1.4",
     "date": "2026-09-19",
     "url": [
-      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/tag/v1.1.3"
+      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/tag/v1.1.4"
     ],
-    "updateLog": "1.1.3：修复 MobileGlues 等外部渲染器无法启动（POJAV_RENDERER 协议名映射）；修复 26.2 无法启动；补齐所有渲染器的 EGL/GL 库路径与环境变量；26.3 SDL3 启动链路打通；渲染器支持上限标注修正为 ≤26.2；设置页渲染器列表与长按入口统一；修复启动崩溃(颜色)/控键编辑拖动/悬浮窗位置；新版本默认语言中文。26.3 正式版待 MobileGlues 官方支持 QCL（已提交请求）。"
+    "updateLog": "1.1.4：新增 vivo/iQOO 游戏魔盒检测与主界面入口（一键打开引导开启）；新增 infdev 远古版本兼容 Java 参数（useLegacyMergeSort + betacraft 代理，修复进不去单人世界）。1.1.3：修复 MobileGlues 等外部渲染器无法启动（POJAV_RENDERER 协议名映射）；修复 26.2 无法启动；补齐所有渲染器的 EGL/GL 库路径；26.3 SDL3 链路打通；渲染器支持上限标注修正 ≤26.2；修复启动崩溃/控键拖动/悬浮窗位置；新版本默认语言中文。"
   },
   "latestPrerelease": null
 }
