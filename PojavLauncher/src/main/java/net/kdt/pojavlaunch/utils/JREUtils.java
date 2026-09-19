@@ -207,6 +207,9 @@ public class JREUtils {
         // 不设这个变量时，OpenAL-soft 在模拟器/部分机型上会落到静音后端（"OpenAL initialized" 成功却没声）。
         // 强制走 OpenSL ES 后端，libopenal.so 已内置该后端（DT_NEEDED/libOpenSLES 在 .so 内）。
         arrayMap.put("ALSOFT_DRIVERS", "opensl");
+        // ★★★ 1.1.6：让 MobileGlues 识别 QCL（配合 MG PR #59）。MG 通过 QCL_VERSION_CODE!=0
+        // 判定是受支持的启动器，否则强制用默认配置（禁用 ANGLE 等）。非零即可。
+        arrayMap.put("QCL_VERSION_CODE", "316");
         arrayMap.put("POJAV_VSYNC_IN_ZINK", "1");
         arrayMap.put("LIBGL_NOINTOVLHACK", "1");
         // ★★★ 1.1.2 性能优化（照搬 FCL addRendererEnvInner）：FCL 在 opengles2 与 ng_gl4es 分支都设
