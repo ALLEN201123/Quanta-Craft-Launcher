@@ -5,6 +5,7 @@ import java.util.List;
 /* loaded from: classes2.dex */
 public class LauncherVersion {
     public String date;
+    public String netdiskUrl;
     public String updateLog;
     public List<String> url;
     public int versionCode;

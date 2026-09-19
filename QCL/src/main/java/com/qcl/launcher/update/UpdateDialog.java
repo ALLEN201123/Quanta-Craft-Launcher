@@ -158,11 +158,13 @@ implements View.OnClickListener {
             this.dismiss();
         }
         if (view == this.netdisk) {
-            // ★★★ 1.1.5：网盘下载（夸克网盘，暂为占位链接）。跳转到浏览器打开。
+            // ★★★ 1.1.5：网盘下载（夸克网盘）。链接来自远程 launcher_version.json 的 netdiskUrl，
+            //   为空则退回 GitHub Release —— 改链接只需改 json，无需重新构建 APK（照 FCL 的做法）。
+            String netdiskUrl = this.version.netdiskUrl;
             try {
                 Intent i = new Intent("android.intent.action.VIEW");
-                i.setData(Uri.parse(this.version.url != null && !this.version.url.isEmpty()
-                        ? this.version.url.get(0) : "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/latest"));
+                i.setData(Uri.parse(netdiskUrl != null && !netdiskUrl.isEmpty()
+                        ? netdiskUrl : "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/latest"));
                 this.getContext().startActivity(i);
             }
             catch (Throwable ignored) {
