@@ -10,6 +10,27 @@ QCL 是基于 **HMCL-PE**（Hello Minecraft! Launcher Pocket Edition）重构的
 2. 保留所有版权声明与许可声明（本文件与 `LICENSE` 必须随源码一起提供）。
 3. 若修改了上游代码，需以 GPL-3.0 兼容许可开放修改后的源码。
 
+### HMCL-PE 继承声明（历史来源的附加条款）
+
+QCL 的 **1.1.0 及更早版本**基于 **HMCL-PE（Hello Minecraft! Launcher: Pocket Edition）**，
+原作者 **Tungs**（bilibili 18115101，HMCL-dev 组织维护）。因历史代码在旧版本中尚未完全清除，
+依据 GPL-3.0 第 5(c) 条，特此**完整保留并公示 HMCL-PE 的原始许可声明**如下：
+
+> HMCL-PE is free software: you can redistribute it and/or modify it under the terms of the
+> GNU General Public License as published by the Free Software Foundation, either version 3
+> of the License, or (at your option) any later version.
+>
+> HMCL-PE is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+> without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+> See the GNU General Public License for more details.
+>
+> You should have received a copy of the GNU General Public License along with HMCL-PE.
+> If not, see <https://www.gnu.org/licenses/>.
+
+- HMCL-PE 已**停止维护**；使用本启动器（QCL）遇到的问题，HMCL-dev 不负责，请联系 QCL 开发者。
+- HMCL-PE 的第三方组件（Boat、PojavLauncher、Hin2n、authlib-injector、nide8auth、
+  forge-install-bootstrapper、TouchInjector）的许可，按其各自仓库声明，另见下方第三方清单。
+
 > **关于多人联机组件 Terracotta**：它按**其自身的 AGPL-3.0** 提供（见下表），
 > 属于独立的第三方组件；**本项目自身的许可仍为 GNU GPL-3.0**。
 > 这与 FCL（FoldCraftLauncher）的处理方式一致 —— FCL 同样内嵌 Terracotta，
