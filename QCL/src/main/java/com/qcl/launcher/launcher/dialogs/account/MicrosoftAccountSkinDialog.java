@@ -21,7 +21,7 @@ import com.qcl.launcher.auth.microsoft.Msa;
 import com.qcl.launcher.launcher.MainActivity;
 import com.qcl.launcher.skin.MinecraftSkinRenderer;
 import com.qcl.launcher.skin.SkinGLSurfaceView;
-import com.qcl.launcher.utils.UriUtils;
+import com.qcl.launcher.utils.file.UriUtils;
 import com.tungsten.filepicker.Constants;
 import com.tungsten.filepicker.FileChooser;
 
@@ -112,7 +112,6 @@ public class MicrosoftAccountSkinDialog extends Dialog implements View.OnClickLi
                             label = label + " [已启用]";
                         }
                         Button btn = new Button(getContext());
-                        btn.setTextAllCaps(false);
                         btn.setText(label);
                         btn.setOnClickListener(v -> activateCape(cape.id));
                         capeListLayout.addView(btn);

@@ -272,13 +272,13 @@ public class Msa {
 
     public static class MinecraftProfileResponse extends MinecraftErrorResponse implements Validation {
         @SerializedName("id")
-        UUID id;
+        public UUID id;
         @SerializedName("name")
-        String name;
+        public String name;
         @SerializedName("skins")
-        List<MinecraftProfileResponseSkin> skins;
+        public List<MinecraftProfileResponseSkin> skins;
         @SerializedName("capes")
-        List<MinecraftProfileResponseCape> capes;
+        public List<MinecraftProfileResponseCape> capes;
 
         @Override
         public void validate() throws JsonParseException, TolerableValidationException {
