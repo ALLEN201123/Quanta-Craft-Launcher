@@ -235,9 +235,34 @@ static EGLBoolean proxyEglSwapBuffers(EGLDisplay dpy, void *surface) {
 }
 
 // 接管 SDL 的 EGL 函数解析，注入上述代理
+// --- EGL 兜底（1.1.3）---
+// MuMu 等模拟器上实测：MC 调 SDL_GL_LoadLibrary(GL库路径) 后，SDL 报
+//   "Could not retrieve EGL function eglGetDisplay"（即 SDL 从该句柄里 dlsym eglGetDisplay 失败）。
+// 正常路径不变；仅在 SDL 拿不到 egl* 符号时，退回 POJAVEXEC_EGL（默认 libEGL.so）里再找一次。
+static void *sFallbackEglHandle = NULL;
+static int sFallbackEglTried = 0;
+
+static void *eglFallbackLookup(const char *name) {
+    if (!sFallbackEglTried) {
+        sFallbackEglTried = 1;
+        const char *egl = getenv("POJAVEXEC_EGL");
+        if (egl == NULL || egl[0] == '\0') egl = "libEGL.so";
+        sFallbackEglHandle = dlopen(egl, RTLD_NOW | RTLD_LOCAL);
+        LOG_TO_I("SDL_Hook: EGL 兜底 dlopen(\"%s\") -> %p", egl, sFallbackEglHandle);
+    }
+    if (sFallbackEglHandle == NULL) return NULL;
+    return dlsym(sFallbackEglHandle, name);
+}
+
 static void *custom_SDL_LoadFunction_Func(void *handle, const char *name) {
     void *r = BYTEHOOK_CALL_PREV(custom_SDL_LoadFunction_Func, SDL_LoadFunction_t, handle, name);
     BYTEHOOK_POP_STACK();
+    if (name != NULL && strncmp(name, "egl", 3) == 0) {
+    }
+    if (r == NULL && name != NULL && strncmp(name, "egl", 3) == 0) {
+        r = eglFallbackLookup(name);
+        LOG_TO_I("SDL_Hook: EGL 兜底 \"%s\" -> %p", name, r);
+    }
     if (name != NULL) {
         if (strcmp(name, "eglChooseConfig") == 0) {
             if (sOrigEglChooseConfig == NULL && r != NULL) {
@@ -276,6 +301,7 @@ static void *custom_SDL_LoadObject_Func(const char *path) {
     }
     void *r = BYTEHOOK_CALL_PREV(custom_SDL_LoadObject_Func, SDL_LoadObject_t, path);
     BYTEHOOK_POP_STACK();
+    LOG_TO_I("SDL_Hook: SDL_LoadObject(\"%s\") -> %p", path ? path : "(null)", r);
     return r;
 }
 
@@ -291,24 +317,11 @@ static void custom_SDL_UnloadObject_Func(void *handle) {
 
 // 首个成功创建的 SDL 窗口，后续创建请求将重定向到它
 static SDL_Window *sPrimaryWindow = NULL;
-// Each reused window owns an extra reference; keep the original alive until all are released.
-static size_t sPrimaryWindowExtraRefs = 0;
-
-static bool releasePrimaryWindow(SDL_Window *window) {
-    if (window == sPrimaryWindow) {
-        if (sPrimaryWindowExtraRefs > 0) {
-            --sPrimaryWindowExtraRefs;
-            return false;
-        }
-        sPrimaryWindow = NULL;
-    }
-    return true;
-}
 
 static void custom_SDL_DestroyWindow_Func(SDL_Window *window) {
-    if (releasePrimaryWindow(window)) {
-        BYTEHOOK_CALL_PREV(custom_SDL_DestroyWindow_Func, SDL_DestroyWindow_t, window);
-    }
+    // 主窗口销毁后清除记录，后续创建请求恢复正常创建流程
+    if (window == sPrimaryWindow) sPrimaryWindow = NULL;
+    BYTEHOOK_CALL_PREV(custom_SDL_DestroyWindow_Func, SDL_DestroyWindow_t, window);
     BYTEHOOK_POP_STACK();
 }
 
@@ -380,7 +393,6 @@ static void forceEglProfileEs(void) {
 // 前者由 Android Surface 决定（创建时即取 Surface 尺寸，与请求值无关）
 // 后者由 SDL_ORIENTATIONS hint 统一控制。
 static SDL_Window *reusePrimaryWindow(void) {
-    ++sPrimaryWindowExtraRefs;
     LOG_TO_I("SDL_Hook: reusing primary window %p", sPrimaryWindow);
     return sPrimaryWindow;
 }
@@ -472,6 +484,30 @@ typedef void *(*sdlLoadFunction_t)(void *, const char *);
 
 typedef void (*sdlUnloadObject_t)(void *);
 
+typedef void *(*sdlGlGetProcAddress_t)(const char *proc);
+
+static sdlGlGetProcAddress_t realSdlGlGetProcAddress;
+
+// ★ 1.1.3：MC 26.3 的 RenderPearl 会校验「LWJGL 解析到的 GL 函数 == SDL 解析到的 GL 函数」，
+// 不一致就直接报 `glGetError mismatch` 并放弃 OpenGL 后端（实测）。
+//   · LWJGL 走 dlopen(GL库) + dlsym → 拿到 GL 库的**导出符号**
+//   · SDL 走 eglGetProcAddress → 在 MG / gl4es 上可能返回不同的 trampoline → 地址不等
+// GL 库是以 RTLD_GLOBAL 加载的（ndlopen mode 0x101 实测），所以这里对 gl* 函数统一改用
+// dlsym(RTLD_DEFAULT) 取导出符号，与 LWJGL 完全一致。
+static void *proxy_SDL_GL_GetProcAddress(const char *proc) {
+    void *r = realSdlGlGetProcAddress ? realSdlGlGetProcAddress(proc) : NULL;
+    if (proc != NULL && strncmp(proc, "gl", 2) == 0) {
+        dlerror();
+        void *d = dlsym(RTLD_DEFAULT, proc);
+        if (d != NULL && d != r) {
+            LOG_TO_I("SDL_Hook: SDL_GL_GetProcAddress(\"%s\") %p -> %p（统一为 dlsym 导出符号）",
+                     proc, r, d);
+            return d;
+        }
+    }
+    return r;
+}
+
 static sdlInitSubSystem_t realSdlInitSubSystem;
 static sdlCreateWindow_t realSdlCreateWindow;
 static sdlCreateWindowWithProperties_t realSdlCreateWindowWithProperties;
@@ -509,7 +545,8 @@ static SDL_Window *proxy_SDL_CreateWindowWithProperties(uint32_t props) {
 }
 
 static void proxy_SDL_DestroyWindow(SDL_Window *window) {
-    if (releasePrimaryWindow(window)) realSdlDestroyWindow(window);
+    if (window == sPrimaryWindow) sPrimaryWindow = NULL;
+    realSdlDestroyWindow(window);
 }
 
 static SDL_Window *proxy_SDL_GetWindowFromEvent(const void *event) {
@@ -579,6 +616,10 @@ static void proxy_SDL_UnloadObject(void *handle) {
 void *sdlDlsymProxy(const char *symbol, void *real) {    if (strcmp(symbol, "SDL_InitSubSystem") == 0) {
         if (realSdlInitSubSystem == NULL) realSdlInitSubSystem = (sdlInitSubSystem_t) real;
         return (void *) proxy_SDL_InitSubSystem;
+    }
+    if (strcmp(symbol, "SDL_GL_GetProcAddress") == 0) {
+        if (realSdlGlGetProcAddress == NULL) realSdlGlGetProcAddress = (sdlGlGetProcAddress_t) real;
+        return (void *) proxy_SDL_GL_GetProcAddress;
     }
     if (strcmp(symbol, "SDL_CreateWindow") == 0) {
         if (realSdlCreateWindow == NULL) realSdlCreateWindow = (sdlCreateWindow_t) real;

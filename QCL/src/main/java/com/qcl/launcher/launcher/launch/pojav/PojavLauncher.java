@@ -254,13 +254,44 @@ public class PojavLauncher {
             final boolean qclNeedsSdl = qclHasLwjglLibrary(version, "lwjgl-sdl") && !qclHasLwjglLibrary(version, "lwjgl-glfw");
             System.setProperty("qcl.highver", qclNeedsDesktopGl ? "1" : "0");
             System.setProperty("qcl.renderer.picked", qclEffectiveRenderer);
+            // ★ 说明：外部渲染器（mg）的库能被找到，靠的是**把渲染器库目录并进 LD_LIBRARY_PATH**
+            //   （对齐 FCL 的 appendCommonPaths：`sb.append(pluginLibPath + ":")`）。
+            //   FCL 并不修改这个 libname，QCL 同样保持原样（见 JREUtils 的 LD_LIBRARY_PATH 处理）。
             args.add("-Dorg.lwjgl.opengl.libname=" + JREUtils.getGraphicsLibrary((String)qclEffectiveRenderer));
             args.add("-Dorg.lwjgl.spvc.libname=spirv-cross-c-shared");
             // ★★★ 音效：对齐 FCL DefaultLauncher，指定 OpenAL 库路径（远古/LWJGL2 时代的 paulscode 走 LWJGL OpenAL）。
             args.add("-Dorg.lwjgl.openal.libname=" + context.getApplicationInfo().nativeLibraryDir + "/libopenal.so");
+            // ★★★ 1.1.3：把「当前渲染器的 GL/EGL 库信息」传给 JREUtils（跨模块，用 System property）。
+            //   对齐 FCL 的 addRendererEnv*：FCL 给**所有**渲染器都设 POJAVEXEC_EGL / SDL_OPENGL_LIBRARY，
+            //   且 SDL_OPENGL_LIBRARY 用**绝对路径**。QCL 原先只在 ng_gl4es / zink 分支设 POJAVEXEC_EGL，
+            //   选 mg / opengles2 / virgl / vgpu / freedreno 时该变量缺失 → ≤26.2 的 GLFW 路径
+            //   窗口上下文创建失败（实测 `GLFW: Failed to create window context!`）。
+            try {
+                com.qcl.launcher.launcher.launch.RendererCompat.Info qclRInfo =
+                        com.qcl.launcher.launcher.launch.RendererCompat.find((String) qclEffectiveRenderer);
+                if (qclRInfo == null) {
+                    qclRInfo = com.qcl.launcher.launcher.launch.RendererCompat.find(
+                            com.qcl.launcher.launcher.launch.RendererCompat.defaultRendererId());
+                }
+                if (qclRInfo != null) {
+                    String qclLibDir = com.qcl.launcher.launcher.launch.RendererCompat.resolveRendererLibDir(
+                            context, qclRInfo.id, gameLaunchSetting.currentVersion, gameLaunchSetting.game_directory);
+                    System.setProperty("qcl.renderer.glname", qclRInfo.glName == null ? "" : qclRInfo.glName);
+                    System.setProperty("qcl.renderer.eglname", qclRInfo.eglName == null ? "" : qclRInfo.eglName);
+                    System.setProperty("qcl.renderer.libdir", qclLibDir == null ? "" : qclLibDir);
+                }
+            }
+            catch (Throwable qclR) {
+                // 保持旧行为，不因取渲染器信息失败而影响启动
+            }
             // ★★★ 1.1.1：SDL3 版本（版本 json 里是 lwjgl-sdl）先挂上 native hooks（bytehook + SDL hook + exit hook）
             if (qclNeedsSdl) {
                 QCLHooks.initializeHooks();
+                // ★★★ 1.1.3：hook 挂好之后，必须由**启动器侧（dalvik VM）先**完成 libSDL3.so 的首次加载，
+                //   让 SDL 的 JNI_OnLoad 在 dalvik 里执行并 RegisterNatives（libSDL3.so 没有导出 Java_org_libsdl_* 符号）。
+                //   否则游戏侧 LWJGL 会抢先加载，JNI_OnLoad 被隔离跳过 → SDL 处于「JNI 未就绪」脏状态
+                //   → 之后 dalvik 侧再触发 JNI_OnLoad 即 SIGSEGV（26.3 启动崩溃根因）。
+                org.libsdl.app.SdlBridge.preloadSdl3();
             }
             args.add("-cp");
             args.add(classPath);

@@ -42,6 +42,7 @@ LOCAL_SRC_FILES := \
     native_hooks/sdl_dlopen_hook.c \
     native_hooks/exit_hook.c \
     native_hooks/chmod_hook.c \
+    jvm_hooks/lwjgl_dlopen_hook.c \
     bytehook/qcl_nominal_exit.c
 LOCAL_C_INCLUDES := \
     $(LOCAL_PATH) \

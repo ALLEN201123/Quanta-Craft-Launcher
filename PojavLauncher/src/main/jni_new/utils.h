@@ -71,5 +71,7 @@ JNIEnv* get_attached_env(JavaVM* jvm);
 #define ACTION_INIT_LAUNCHER_INTEGRATION 0
 #define ACTION_SEND_TEXTBOX_RECT 1
 bool notifyLauncher(JNIEnv* dvm_env, int type, int actions[], int len);
+/** 1.1.3：按需补解析 dalvik 侧 CallbackBridge.notifyLauncher（自愈式，失败返回 false） */
+bool ensureNotifyLauncher(JNIEnv *dvm_env);
 
 jintArray convertIntArrayJVM(JNIEnv* srcEnv, JNIEnv* dstEnv, jintArray srcIntArray);

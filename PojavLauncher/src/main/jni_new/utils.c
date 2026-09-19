@@ -183,11 +183,38 @@ JNIEnv* get_attached_env(JavaVM* jvm) {
     }
     return jvm_env;
 }
+// ★ 1.1.3 热修：把 dalvik 侧 CallbackBridge.notifyLauncher 的解析做成「按需自愈」。
+// 原实现只在 JNI_OnLoad 里解析一次；若那时 bridgeClazz / method_notifyLauncher 解析失败
+// （时机过早、FindClass 未就绪等），就会永久为 NULL → SDL 集成被静默跳过 →
+// 游戏侧 SDL 拿不到 JNI（日志：Request to get environment variables before JNI is ready）
+// → 在 SDL_Init 里跳到 NULL（SIGSEGV rip=0）。这里每次调用都可补解析。
+// 注意：必须传「当前线程 attach 后」的 env（dvm_env），不能用缓存的 dalvikJNIEnvPtr_ANDROID。
+bool ensureNotifyLauncher(JNIEnv *dvm_env) {
+    if (pojav_environ->bridgeClazz != NULL && pojav_environ->method_notifyLauncher != NULL) return true;
+    if (dvm_env == NULL) return false;
+    if (pojav_environ->bridgeClazz == NULL) {
+        jclass local = (*dvm_env)->FindClass(dvm_env, "org/lwjgl/glfw/CallbackBridge");
+        if (local != NULL) pojav_environ->bridgeClazz = (*dvm_env)->NewGlobalRef(dvm_env, local);
+    }
+    if (pojav_environ->bridgeClazz != NULL) {
+        pojav_environ->method_notifyLauncher = (*dvm_env)->GetStaticMethodID(
+                dvm_env, pojav_environ->bridgeClazz, "notifyLauncher", "(I[I)Z");
+    }
+    if ((*dvm_env)->ExceptionCheck(dvm_env)) {
+                (*dvm_env)->ExceptionDescribe(dvm_env);
+        (*dvm_env)->ExceptionClear(dvm_env);
+    }
+        return pojav_environ->bridgeClazz != NULL && pojav_environ->method_notifyLauncher != NULL;
+}
+
 // 1.1.1：由 sdl_hook.c 的 sdlInitSubSystemPrepare 调用，转发给 Java 侧
 // CallbackBridge.notifyLauncher(int,int[])（真正加载 SDL3 并绑定 surface）。
 bool notifyLauncher(JNIEnv *dvm_env, int type, int actions[], int len) {
-    if (pojav_environ->method_notifyLauncher == NULL || pojav_environ->bridgeClazz == NULL) {
-        return false;
+    // ★ 对齐 FCL：不做 NULL 防御 —— 该防御只会把真实问题（方法未找到）掩盖成静默失败；
+    //   method_notifyLauncher 在 input_bridge_v3.c 的 JNI_OnLoad 里已解析。
+    //   （1.1.3：改为「按需自愈」，解析不到就现场重解析一次，仍失败则如实记日志）
+    if (!ensureNotifyLauncher(dvm_env)) {
+                return false;
     }
     jintArray actionArray = (*dvm_env)->NewIntArray(dvm_env, len);
     (*dvm_env)->SetIntArrayRegion(dvm_env, actionArray, 0, len, actions);
@@ -198,7 +225,7 @@ bool notifyLauncher(JNIEnv *dvm_env, int type, int actions[], int len) {
         (*dvm_env)->ExceptionClear(dvm_env);
         return false;
     }
-    return r;
+        return r;
 }
 jintArray convertIntArrayJVM(JNIEnv* srcEnv, JNIEnv* dstEnv, jintArray srcIntArray) {
     if (srcIntArray == NULL) {

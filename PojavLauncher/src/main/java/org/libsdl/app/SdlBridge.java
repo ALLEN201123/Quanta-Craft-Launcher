@@ -65,6 +65,34 @@ public final class SdlBridge {
         return true;
     }
 
+    /**
+     * ★★★ 1.1.3 修复 26.3（SDL3）启动崩溃：由启动器侧（dalvik VM）**提前**完成 libSDL3.so 的首次加载。
+     *
+     * 为什么必须这么做：
+     *  1. libSDL3.so 里**没有任何 `Java_org_libsdl_app_*` 导出符号**（已核实），
+     *     SDL 的 Java 端方法（nativeSetupJNI / SDLSurface 等）**全部依赖 JNI_OnLoad 里的 RegisterNatives**。
+     *  2. 游戏侧（LWJGL）加载 libSDL3.so 时，`sdl_dlopen_hook.c` 会**故意跳过** JNI_OnLoad 注册
+     *     （隔离双 VM 边界，FCL 同款做法），于是 SDL 停在「JNI 未就绪」状态
+     *     （实测日志：`W/SDL: Request to get environment variables before JNI is ready`）。
+     *  3. 之后 dalvik 侧再走 loadLibrary("SDL3") 触发 JNI_OnLoad 时，SDL 内部已处于脏状态 → SIGSEGV。
+     *
+     * 让启动器在**游戏 JVM 启动之前**先加载 SDL3，JNI_OnLoad 就会在 dalvik 里干净执行并完成注册；
+     * 之后游戏侧再加载时隔离机制生效，SDL 原生全局状态始终指向 dalvik + SDLActivity。FCL 即此顺序。
+     */
+    public static synchronized void preloadSdl3() {
+        try {
+            // 先确保 libpojavexec.so 由**启动器侧（dalvik VM）**完成首次加载：
+            // JNI_OnLoad 只有在首次加载时才会把 dalvikJavaVMPtr/bridgeClazz/method_notifyLauncher
+            // 指向 dalvik；若让游戏 JVM 抢先加载，整套 SDL 通知链就会指向错误的 VM。
+            System.loadLibrary("pojavexec");
+        } catch (Throwable e) {
+        }
+        try {
+            System.loadLibrary("SDL3");
+        } catch (Throwable e) {
+        }
+    }
+
     public static synchronized boolean markSdlInitialized() {
         if (sdlInitialized) {
             return false;

@@ -185,9 +185,24 @@ public class CallbackBridge {
     public static final int ACTION_INIT_LAUNCHER_INTEGRATION = 0;
     public static final int ACTION_SEND_TEXTBOX_RECT = 1;
 
-    /** org.lwjgl.sdl.SDLInit（LWJGL 3.4.1 的 SDL 绑定）在 SDL_Init 时调用的 native 入口，
-     *  转发到 {@link #notifyLauncher}。 */
-    public static native boolean nativeNotifyLauncher(int type, int[] action);
+    /** ★ LWJGL 的 org.lwjgl.sdl.SDLInit.SDL_Init() 里引用的就是这两个常量名（align with FCL）。 */
+    public static final int SDL = NOTIF_TYPE_SDL;
+    public static final int INIT = ACTION_INIT_LAUNCHER_INTEGRATION;
+
+    /**
+     * ★★★ 2026-09-19 修复 26.3（SDL3）启动崩溃（照 FCL CallbackBridge 逐字对齐）：
+     *   LWJGL 组件内的 {@code org.lwjgl.sdl.SDLInit} 把它**声明为 native**，
+     *   但 FCL 的注释写明「运行时以本实现为准（避免依赖额外 C 符号）」——
+     *   即**在本类里给出 Java 实现**，类加载后就覆盖掉 LWJGL 里的 native 声明。
+     *
+     *   QCL 此前把它写成了 {@code public static native boolean nativeNotifyLauncher(int, int[])}：
+     *   ① 声明为 native，运行时需要 JNI 符号 {@code Java_org_lwjgl_glfw_CallbackBridge_nativeNotifyLauncher}，
+     *      而 QCL 侧根本没有该符号 → 调用即跳到 NULL（SIGSEGV, rip=0，tombstone 实测）；
+     *   ② 签名也不对 —— SDLInit 调的是 {@code (SDL, INIT)} 两个 int，而不是 int[]。
+     */
+    public static void nativeNotifyLauncher(int type, int... action) {
+        notifyLauncher(type, action);
+    }
 
     /** ★★★ 1.1.1（移植自 FCL）：重置 SDL 相关状态，由 SdlBridge.reset() 调用。
      *  QCL 的 CallbackBridge 暂无手柄直通/增量字段，先留空实现（与 FCL 语义对齐）。 */
@@ -201,12 +216,18 @@ public class CallbackBridge {
             return false;
         }
         if (type == NOTIF_TYPE_SDL && action[0] == ACTION_INIT_LAUNCHER_INTEGRATION) {
-            if (!org.libsdl.app.SdlBridge.markSdlInitialized()) {
+            boolean first = org.libsdl.app.SdlBridge.markSdlInitialized();
+            if (!first) {
                 return true;
             }
             try {
                 System.loadLibrary("SDL3");
-                System.loadLibrary("SDL2");
+                // ★★★ 1.1.3：这里**不要**再 System.loadLibrary("SDL2")。
+                //   QCL 只发布 SDL3（APK 里没有 libSDL2.so），而 loadLibrary 会去 java.library.path /
+                //   系统库路径搜索；在 MuMu 上会命中系统里那份与设备不匹配的 libSDL2.so，
+                //   由 houdini 转译加载 → 在它的 C++ 静态构造里崩（实测：pthread_mutex_lock(NULL)，
+                //   arm64 libc++ iostream 初始化）。这一句是 26.3 启动崩溃的直接触发点，已删除。
+                //   （FCL 保留它是因为 FCL 还支持 SDL2 版本；QCL 无此需求。）
                 org.libsdl.app.SdlBridge.setupJNI();
                 org.libsdl.app.SdlBridge.setSdlEnabled(true);
                 org.libsdl.app.SDLSurface surface = org.libsdl.app.SDLActivity.getSDLSurface();
@@ -218,6 +239,7 @@ public class CallbackBridge {
                 }
                 return true;
             } catch (Throwable e) {
+                e.printStackTrace();
                 org.libsdl.app.SdlBridge.setSdlEnabled(false);
                 org.libsdl.app.SdlBridge.clearSdlInitialized();
                 return false;

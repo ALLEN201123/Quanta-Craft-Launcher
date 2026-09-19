@@ -782,40 +782,27 @@ SeekBar.OnSeekBarChangeListener {
     }
 
     private void showFullRendererDialog() {
+        // ★★★ 1.1.3：统一走 RendererPicker —— 与「长按启动按钮」用的是同一个选择器。
+        //   原先这里是**自己另拼一份 label**，只有「支持 ≤ x.x」与「⚠不支持当前版本」，
+        //   缺少 RendererPicker 才有的「★推荐」「⚠缺少库文件（需自行导入）」以及 mg（MobileGlues）
+        //   的安装/放置指引 → 玩家在设置页看到的列表"不齐"。
+        //   现在三处入口（主界面长按启动按钮 / 版本设置 / 通用游戏设置）共用同一套列表与提示。
         try {
-            String current = this.activity.privateGameSetting.pojavLauncherSetting.renderer;
-            String mcVer = null;
-            try {
-                String vp = this.activity.publicGameSetting.currentVersion;
-                if (vp != null && !vp.isEmpty()) {
-                    mcVer = new File(vp).getName();
-                }
-            }
-            catch (Throwable vp) {
-                // empty catch block
-            }
-            String[] ids = new String[RendererCompat.ALL.length];
-            CharSequence[] labels = new String[ids.length];
-            for (int i = 0; i < ids.length; ++i) {
-                RendererCompat.Info info = RendererCompat.ALL[i];
-                ids[i] = info.id;
-                String mark = info.id.equals(current) ? "  \u2713" : "";
-                String warn = RendererCompat.supports(info.id, mcVer) ? "" : "  \u26a0\u4e0d\u652f\u6301\u5f53\u524d\u7248\u672c";
-                labels[i] = info.displayName + "\n\uff08\u652f\u6301 \u2264 " + info.displayMax + "\uff09" + mark + warn;
-            }
-            String mcVerF = mcVer;
-            new AlertDialog.Builder((Context)this.activity).setTitle((CharSequence)("\u9009\u62e9\u6e32\u67d3\u5668\uff08\u5f53\u524d\u7248\u672c " + (mcVerF != null ? mcVerF : "?") + "\uff09")).setItems(labels, (d, which) -> {
-                String id2 = ids[which];
-                String warnText = RendererCompat.warningOf(id2, mcVerF);
-                if (warnText != null) {
-                    new AlertDialog.Builder((Context)this.activity).setTitle((CharSequence)"\u6e32\u67d3\u5668\u517c\u5bb9\u6027\u63d0\u793a").setMessage((CharSequence)warnText).setPositiveButton((CharSequence)"\u6211\u5c31\u8981\u7528\u8fd9\u4e2a\u6e32\u67d3\u5668", (d2, w2) -> this.applyRenderer(id2)).setNegativeButton((CharSequence)"\u53d6\u6d88", null).show();
-                } else {
-                    this.applyRenderer(id2);
-                }
-            }).setNegativeButton((CharSequence)"\u53d6\u6d88", null).show();
+            com.qcl.launcher.launcher.launch.RendererPicker.show(this.activity,
+                    this.activity.privateGameSetting,
+                    this.activity.publicGameSetting.currentVersion,
+                    () -> {
+                        if (this.currentPojavRenderer != null) {
+                            this.currentPojavRenderer.setText((CharSequence)
+                                    com.qcl.launcher.launcher.launch.RendererPicker.displayNameOf(
+                                            this.activity.privateGameSetting.pojavLauncherSetting.renderer));
+                        }
+                    });
         }
         catch (Throwable e) {
-            Toast.makeText((Context)this.activity, (CharSequence)("\u6253\u5f00\u6e32\u67d3\u5668\u9009\u62e9\u5931\u8d25: " + e.getMessage()), (int)0).show();
+            android.widget.Toast.makeText((android.content.Context) this.activity,
+                    (CharSequence) ("打开渲染器选择失败: " + e.getMessage()),
+                    (int) android.widget.Toast.LENGTH_SHORT).show();
         }
     }
 

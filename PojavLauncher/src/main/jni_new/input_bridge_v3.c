@@ -23,6 +23,7 @@
 #include "log.h"
 #include "utils.h"
 #include "environ/environ.h"
+#include "native_hooks/native_hooks.h"
 
 extern void updateMonitorSize(int width, int height);
 
@@ -60,8 +61,10 @@ jclass bridgeClazz;
 
 JNIEXPORT jboolean JNICALL Java_org_lwjgl_glfw_CallbackBridge_nativeNotifyLauncher(JNIEnv* env, __attribute__((unused)) jclass clazz, jint type, jintArray action) {
     TRY_ATTACH_ENV(dvm_env, pojav_environ->dalvikJavaVMPtr, "nativeNotifyLauncher failed!\n", return JNI_FALSE;);
-    if (pojav_environ->method_notifyLauncher == NULL || pojav_environ->bridgeClazz == NULL) {
-        return JNI_FALSE;
+    // ★ 1.1.3 热修：解析不到就现场补解析（实现在 utils.c），避免 SDL 集成被静默跳过。
+    ensureNotifyLauncher(dvm_env);
+        if (pojav_environ->method_notifyLauncher == NULL || pojav_environ->bridgeClazz == NULL) {
+                return JNI_FALSE;
     }
     jintArray converted = convertIntArrayJVM(env, dvm_env, action);
     jboolean result = (*dvm_env)->CallStaticBooleanMethod(dvm_env, pojav_environ->bridgeClazz,
@@ -71,7 +74,7 @@ JNIEXPORT jboolean JNICALL Java_org_lwjgl_glfw_CallbackBridge_nativeNotifyLaunch
         (*dvm_env)->ExceptionClear(dvm_env);
         return JNI_FALSE;
     }
-    return result;
+        return result;
 }
 
 jint JNI_OnLoad(JavaVM* vm, void* reserved) {
@@ -93,6 +96,9 @@ jint JNI_OnLoad(JavaVM* vm, void* reserved) {
         pojav_environ->runtimeJavaVMPtr = vm;
         (*vm)->GetEnv(vm, (void**) &runtimeJNIEnvPtr_JRE, JNI_VERSION_1_4);
         hookExec();
+        // ★ 1.1.3（照搬 FCL）：把 LWJGL 的 ndlopen 重定向到 libpojavexec，绕过 linker namespace 限制。
+        //   缺了它，MC 的图形后端拿不到 libEGL.so 句柄 → "Could not retrieve EGL function eglGetDisplay"。
+        installLwjglDlopenHook(runtimeJNIEnvPtr_JRE);
     }
     
     pojav_environ->isGrabbing = JNI_FALSE;

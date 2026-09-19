@@ -14,8 +14,8 @@ public class SkinGLSurfaceView extends GLSurfaceView {
     private float mPreviousX;
     private float mPreviousY;
     private MinecraftSkinRenderer mRenderer;
-    private int priId;
-    private int secId;
+    private int priId = -1;
+    private int secId = -1;
 
     public SkinGLSurfaceView(Context context) {
         super(context);
@@ -30,6 +30,15 @@ public class SkinGLSurfaceView extends GLSurfaceView {
     @Override // android.view.View
     public boolean onTouchEvent(MotionEvent motionEvent) {
         MinecraftSkinRenderer minecraftSkinRenderer;
+        // ★★★ 2026-09-19 修复崩溃：IllegalArgumentException: pointerIndex out of range
+        //   双指缩放里 findPointerIndex(id) 在「第二根手指已抬起 / id 失效」时返回 -1，把 -1
+        //   传给 getX/getY 就抛异常并崩进程（皮肤/角色预览界面实测）。
+        //   处理：① 抬手就把 id 复位为 -1；② 取索引后校验 <0 时忽略该事件。
+        int actionMaskedTop = motionEvent.getActionMasked();
+        if (actionMaskedTop == 1 || actionMaskedTop == 3 || actionMaskedTop == 6) {
+            this.priId = -1;
+            this.secId = -1;
+        }
         if (motionEvent.getPointerCount() == 1) {
             float x = motionEvent.getX();
             float y = motionEvent.getY();
@@ -47,8 +56,13 @@ public class SkinGLSurfaceView extends GLSurfaceView {
             } else if (actionMasked == 2) {
                 MinecraftSkinRenderer minecraftSkinRenderer2 = this.mRenderer;
                 if (minecraftSkinRenderer2 != null && minecraftSkinRenderer2.mCharacter != null) {
-                    float x2 = motionEvent.getX(motionEvent.findPointerIndex(this.priId)) - motionEvent.getX(motionEvent.findPointerIndex(this.secId));
-                    float y2 = motionEvent.getY(motionEvent.findPointerIndex(this.priId)) - motionEvent.getY(motionEvent.findPointerIndex(this.secId));
+                    int iPri = motionEvent.findPointerIndex(this.priId);
+                    int iSec = motionEvent.findPointerIndex(this.secId);
+                    if (iPri < 0 || iSec < 0) {
+                        return true;   // 指针已失效 —— 忽略，不再拿 -1 去 getX/getY
+                    }
+                    float x2 = motionEvent.getX(iPri) - motionEvent.getX(iSec);
+                    float y2 = motionEvent.getY(iPri) - motionEvent.getY(iSec);
                     double sqrt = Math.sqrt((x2 * x2) + (y2 * y2)) - this.initDist;
                     if (this.initScale + (sqrt / (Math.sqrt((getWidth() * getWidth()) + (getHeight() * getHeight())) * 1.0d)) <= 2.0d && this.initScale + (sqrt / (Math.sqrt((getWidth() * getWidth()) + (getHeight() * getHeight())) * 1.0d)) >= 0.7d) {
                         this.mRenderer.mCharacter.setScale((float) (this.initScale + (sqrt / (Math.sqrt((getWidth() * getWidth()) + (getHeight() * getHeight())) * 1.0d))));
@@ -56,8 +70,13 @@ public class SkinGLSurfaceView extends GLSurfaceView {
                 }
             } else if (actionMasked == 5) {
                 this.secId = motionEvent.getPointerId(motionEvent.getActionIndex());
-                float x3 = motionEvent.getX(motionEvent.findPointerIndex(this.priId)) - motionEvent.getX(motionEvent.findPointerIndex(this.secId));
-                float y3 = motionEvent.getY(motionEvent.findPointerIndex(this.priId)) - motionEvent.getY(motionEvent.findPointerIndex(this.secId));
+                int iPri2 = motionEvent.findPointerIndex(this.priId);
+                int iSec2 = motionEvent.findPointerIndex(this.secId);
+                if (iPri2 < 0 || iSec2 < 0) {
+                    return true;
+                }
+                float x3 = motionEvent.getX(iPri2) - motionEvent.getX(iSec2);
+                float y3 = motionEvent.getY(iPri2) - motionEvent.getY(iSec2);
                 this.initDist = Math.sqrt((x3 * x3) + (y3 * y3));
                 MinecraftSkinRenderer minecraftSkinRenderer3 = this.mRenderer;
                 if (minecraftSkinRenderer3 != null && minecraftSkinRenderer3.mCharacter != null) {

@@ -176,6 +176,14 @@ public class JREUtils {
         // 系统 /system/lib64 里的 libtcb.so（vivo 把废弃的 libstdc++.so 替换成它，
         // 加载时触发 libc++ iostream 静态初始化崩溃）。
         sb.append(nativeLibDir + ":");
+        // ★★★ 1.1.3（对齐 FCL appendCommonPaths 的 pluginLibPath）：把**外部渲染器（插件）的库目录**
+        //   并入 LD_LIBRARY_PATH。FCL 的写法是：`if (isValidPathString(pluginLibPath)) sb.append(pluginLibPath + ":")`。
+        //   缺这一条时，GLWF 路径（≤26.2）下 pojavexec 用裸库名 dlopen 外部渲染器库会失败：
+        //     实测 `dlopen("libmobileglues.so") not found` → `GLFW: Failed to create window context!`
+        String qclPluginLibPath = System.getProperty("qcl.renderer.libdir", "");
+        if (qclPluginLibPath != null && !qclPluginLibPath.isEmpty()) {
+            sb.append(qclPluginLibPath + ":");
+        }
         sb.append(javaLibDir + "/jli:" + javaLibDir + ":");
         sb.append("/system/" + str2 + ":/vendor/" + str2 + ":/vendor/" + str2 + "/hw:/system_ext/" + str2);
         LD_LIBRARY_PATH = sb.toString();
@@ -217,6 +225,17 @@ public class JREUtils {
         arrayMap.put("allow_glsl_extension_directive_midshader", "true");
         arrayMap.put("MESA_LOADER_DRIVER_OVERRIDE", "zink");
         arrayMap.put("VTEST_SOCKET_NAME", activity.getCacheDir().getAbsolutePath() + "/.virgl_test");
+        // ★★★ 1.1.3：把**外部渲染器**（如 MobileGlues 插件 APK）的库目录并入 LD_LIBRARY_PATH。
+        //   外部渲染器的 so 不在 APK 的 nativeLibraryDir 里，原先既没进 LD_LIBRARY_PATH，
+        //   GLFW 路径（≤26.2）又用裸库名去 dlopen → 必然失败：
+        //     实测 `dlopen("libmobileglues.so") not found`
+        //     → `GLFW: Failed to create window context!` → 后端创建失败、游戏起不来。
+        //   （26.3 走 SDL 用 SDL_OPENGL_LIBRARY，那条已改为绝对路径，所以不受此影响。）
+        String qclLibDirForLd = System.getProperty("qcl.renderer.libdir", "");
+        if (qclLibDirForLd != null && !qclLibDirForLd.isEmpty() && LD_LIBRARY_PATH != null
+                && !LD_LIBRARY_PATH.contains(qclLibDirForLd)) {
+            LD_LIBRARY_PATH = qclLibDirForLd + ":" + LD_LIBRARY_PATH;
+        }
         arrayMap.put("LD_LIBRARY_PATH", LD_LIBRARY_PATH);
         arrayMap.put("PATH", str + "/bin:" + Os.getenv("PATH"));
         arrayMap.put("REGAL_GL_VENDOR", "Android");
@@ -260,16 +279,72 @@ public class JREUtils {
                 arrayMap.put("POJAV_RENDERER", str6);
             }
         }
-        // ★★★ 1.1.1：SDL3 集成（照搬 FCL 的 FCLauncher.addRendererEnv）——给 SDL 明确的 GL / EGL 库路径。
-        // 非 SDL 版本不会读这两个变量，所以无副作用。SDL 自己会在需要时加载。
-        String sdlGl = str6 == null ? "" : getGraphicsLibrary(str6);
-        if (sdlGl != null && !sdlGl.isEmpty()) {
-            arrayMap.put("SDL_OPENGL_LIBRARY", sdlGl);
+        // ★★★ 1.1.3：对齐 FCL 的 addRendererEnv / addRendererEnvInner —— 为**所有**渲染器补齐
+        //   EGL/GL 库路径与专属环境变量。
+        //   修的是两个真实故障：
+        //     ① POJAVEXEC_EGL 原先只在 ng_gl4es / zink 分支设置 → 选 mg / opengles2 / virgl / vgpu /
+        //        freedreno 时该变量缺失 → ≤26.2 的 GLFW 路径（egl_bridge.c 靠它取 EGL）窗口上下文
+        //        创建失败（实测 `GLFW: Failed to create window context!`）。
+        //     ② SDL_OPENGL_LIBRARY 原先传相对库名 → dlopen 在 LD_LIBRARY_PATH 里找不到
+        //        （实测 `dlopen("libmobileglues.so") 失败: not found`）；FCL 传的是**绝对路径**。
+        String qclGlName = System.getProperty("qcl.renderer.glname", "");
+        String qclEglName = System.getProperty("qcl.renderer.eglname", "");
+        String qclLibDir = System.getProperty("qcl.renderer.libdir", "");
+
+        // 1) POJAVEXEC_EGL：所有渲染器一律设置（渲染器自带 EGL 用其名，否则系统 libEGL.so）
+        if (arrayMap.get("POJAVEXEC_EGL") == null) {
+            arrayMap.put("POJAVEXEC_EGL",
+                    (qclEglName != null && !qclEglName.isEmpty()) ? qclEglName : "libEGL.so");
         }
+
+        // 2) 各渲染器专属 env（照 FCL addRendererEnvInner 补全 QCL 缺的项）
+        if (str6 != null) {
+            // ★★★ 1.1.3 关键修复：POJAV_RENDERER 必须传**native 协议名**，不能传渲染器内部 id。
+            //   native 的 pojavInitOpenGL() 是按字符串匹配选渲染桥的：
+            //     opengles*  → gl4es 桥        （set_gl_bridge_tbl）
+            //     gallium_virgl / vulkan_zink / gallium_freedreno / custom_gallium → 另外几套
+            //   把内部 id（如 "mg"）直接喂进去 → **一个分支都不匹配** → br_init == NULL
+            //   → pojavCreateContext 返回 NULL → `GLFW: Failed to create window context!`
+            //   → OpenGL 后端创建失败（模拟器没有 Vulkan 兜底，直接起不来）。
+            //   FCL 用的是 renderer.getPojavRendererId()，同理：内部 id ≠ 协议名。
+            //   MobileGlues 是 GLES 3.x 实现、走 gl4es 桥，因此映射为 opengles3。
+            if ("mg".equals(str6)) {
+                arrayMap.put("POJAV_RENDERER", "opengles3");
+            }
+            if (str6.equals("opengles3_virgl")) {
+                // ★ 1.1.3：VirGL 同理 —— 内部 id `opengles3_virgl` 不是协议名，
+                //   native 只认 `gallium_virgl`（走 virglCreateContext + virglInit）。
+                //   漏了它同样会 br_init == NULL → 创建上下文失败。
+                arrayMap.put("POJAV_RENDERER", "gallium_virgl");
+                arrayMap.put("OSMESA_NO_FLUSH_FRONTBUFFER", "1");
+            } else if (str6.equals("opengles3_vgpu")) {
+                arrayMap.put("POJAV_RENDERER", "opengles2_vgpu");
+            } else if (str6.equals("opengles3_virgl_osmesa8") || str6.equals("opengles3_virgl_freedreno")) {
+                arrayMap.put("POJAV_RENDERER", "gallium_freedreno");
+            }
+        }
+
+        // 3) SDL 路径的 GL / EGL 库（照 FCL addRendererEnv）
+        //    SDL_OPENGL_LIBRARY 用**绝对路径**（渲染器目录 + 库名）；拿不到目录时退回相对名。
+        String qclSdlGl = (qclGlName != null && !qclGlName.isEmpty())
+                ? qclGlName
+                : (str6 == null ? "" : getGraphicsLibrary(str6));
+        if (qclSdlGl != null && !qclSdlGl.isEmpty()) {
+            String glPath = qclSdlGl;
+            if (!glPath.startsWith("/") && qclLibDir != null && !qclLibDir.isEmpty()) {
+                glPath = qclLibDir + "/" + glPath;
+            }
+            arrayMap.put("SDL_OPENGL_LIBRARY", glPath);
+        }
+        //    SDL_EGL_LIBRARY 仅在库真实存在于渲染器目录内时才给绝对路径，否则交给 SDL 自身默认解析
+        //    （系统 libEGL.so 不在渲染器目录里，不能硬塞绝对路径）。
         String sdlEgl = (String) arrayMap.get("POJAVEXEC_EGL");
-        if (sdlEgl != null && !sdlEgl.isEmpty() && !sdlEgl.startsWith("/")) {
-            // 渲染器自带 EGL；系统 EGL（libEGL.so）交给 SDL 按自身默认解析。
-            arrayMap.put("SDL_EGL_LIBRARY", sdlEgl);
+        if (sdlEgl != null && !sdlEgl.isEmpty() && !sdlEgl.startsWith("/")
+                && qclLibDir != null && !qclLibDir.isEmpty()) {
+            java.io.File qclEglCand = new java.io.File(qclLibDir, sdlEgl);
+            if (qclEglCand.isFile()) {
+                arrayMap.put("SDL_EGL_LIBRARY", qclEglCand.getAbsolutePath());
+            }
         }
         arrayMap.put("AWTSTUB_WIDTH", Integer.toString(CallbackBridge.windowWidth > 0 ? CallbackBridge.windowWidth : CallbackBridge.physicalWidth));
         arrayMap.put("AWTSTUB_HEIGHT", Integer.toString(CallbackBridge.windowHeight > 0 ? CallbackBridge.windowHeight : CallbackBridge.physicalHeight));
