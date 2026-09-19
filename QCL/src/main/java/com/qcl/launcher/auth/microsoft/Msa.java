@@ -263,7 +263,11 @@ public class Msa {
     }
 
     public static class MinecraftProfileResponseCape {
-
+        // ★★★ 1.1.6：补全披风字段（照 FCL，供微软换皮对话框读取披风列表）
+        public String id;
+        public String state;
+        public String url;
+        public String alias;
     }
 
     public static class MinecraftProfileResponse extends MinecraftErrorResponse implements Validation {
