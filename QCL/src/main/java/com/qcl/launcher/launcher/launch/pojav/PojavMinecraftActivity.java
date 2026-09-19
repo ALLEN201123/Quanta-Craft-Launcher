@@ -130,6 +130,22 @@ extends BaseMainActivity {
                 surface.setDefaultBufferSize(CallbackBridge.windowWidth, CallbackBridge.windowHeight);
                 CallbackBridge.sendUpdateWindowSize((int)CallbackBridge.windowWidth, (int)CallbackBridge.windowHeight);
                 MCOptionUtils.load(((PojavMinecraftActivity)PojavMinecraftActivity.this).gameLaunchSetting.game_directory);
+                // ★★★ 2026-09-19 照 FCL FCLGameLauncher.generateOptionsTxt()：
+                //   玩家新下载的游戏版本首次启动时没有 options.txt（或其中没有 lang 项），
+                //   MC 会回落到英文。这里按「启动器语言 / 系统语言」补上中文，
+                //   并按 MC 版本规范化语言码大小写（<1.11 用 zh_CN，≥1.11 用 zh_cn）。
+                //   注意：只在缺失时补 —— 玩家在游戏里改过语言的话不会被覆盖。
+                try {
+                    String qclLang = MCOptionUtils.get("lang");
+                    if (qclLang == null || qclLang.trim().isEmpty()) {
+                        String ver = new java.io.File(
+                                ((PojavMinecraftActivity)PojavMinecraftActivity.this).gameLaunchSetting.currentVersion).getName();
+                        MCOptionUtils.set("lang", com.qcl.launcher.utils.LocaleUtils.normalizeMinecraftLang(
+                                ver, com.qcl.launcher.utils.LocaleUtils.getMinecraftLang((Context)PojavMinecraftActivity.this)));
+                    }
+                } catch (Throwable t) {
+                    android.util.Log.w("jrelog", "[默认语言] 写入 lang 失败", t);
+                }
                 MCOptionUtils.set("overrideWidth", String.valueOf(CallbackBridge.windowWidth));
                 MCOptionUtils.set("overrideHeight", String.valueOf(CallbackBridge.windowHeight));
                 if (GameLaunchSetting.isHighVersion(PojavMinecraftActivity.this.gameLaunchSetting)) {

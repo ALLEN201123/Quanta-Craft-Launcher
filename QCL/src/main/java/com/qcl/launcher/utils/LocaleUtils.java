@@ -28,6 +28,49 @@ public class LocaleUtils {
         return Locale.SIMPLIFIED_CHINESE.getLanguage().equals(systemLocale.getLanguage()) ? "zh_cn" : Locale.TRADITIONAL_CHINESE.getLanguage().equals(systemLocale.getLanguage()) ? "zh_tw" : "en_us";
     }
 
+    /**
+     * 按 MC 版本规范语言代码的大小写（对齐 FCL {@code FCLGameLauncher.fixLang}）：
+     * 远古/低版本（< 1.11）要求地区码**大写**（{@code zh_CN}），1.11 起改为**小写**（{@code zh_cn}）；
+     * 1.1 以前的版本不动。
+     *
+     * @param versionId 版本目录名，如 "1.20.6"、"b1.7.3"、"1.12.2-forge-xx"
+     */
+    public static String normalizeMinecraftLang(String versionId, String lang) {
+        if (lang == null) {
+            return null;
+        }
+        String[] parts = lang.split("_", 2);
+        if (parts.length != 2) {
+            return lang;
+        }
+        double v = parseMcVersion(versionId);
+        if (v <= 0.0 || v < 1.1) {
+            return lang;
+        }
+        boolean toUpper = v < 1.11;
+        return parts[0] + "_" + (toUpper ? parts[1].toUpperCase(Locale.ROOT) : parts[1].toLowerCase(Locale.ROOT));
+    }
+
+    /** 从版本目录名解析版本号：1.20.6 -> 1.2006；b1.7.3 -> 1.0703（够做 1.1 / 1.11 比较）。 */
+    private static double parseMcVersion(String versionId) {
+        if (versionId == null) {
+            return 0.0;
+        }
+        try {
+            java.util.regex.Matcher m = java.util.regex.Pattern
+                    .compile("(\\d+)\\.(\\d+)(?:\\.(\\d+))?").matcher(versionId);
+            if (m.find()) {
+                double v = Integer.parseInt(m.group(1)) + Integer.parseInt(m.group(2)) / 100.0;
+                if (m.group(3) != null) {
+                    v += Integer.parseInt(m.group(3)) / 10000.0;
+                }
+                return v;
+            }
+        } catch (Throwable ignored) {
+        }
+        return 0.0;
+    }
+
     public static boolean isSimplifiedChinese(Context context) {
         return "zh_cn".equals(getMinecraftLang(context));
     }
