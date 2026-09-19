@@ -266,6 +266,13 @@ extends RockerView {
     }
 
     public void getDirectionEvent(RockerView.Direction direction) {
+        // ★★★ 1.1.4 修复：双击方向键开启疾跑（shiftMode）后，攻击/短暂松手会让摇杆回中、
+        //   从而发送「松开 WASD」，游戏内疾跑键实际已断，但 shiftMode 还以为是开的（状态不同步）。
+        //   这里在每次方向事件里，只要 shiftMode 仍为 true，就重新按住疾跑键(340)，
+        //   让"锁定疾跑"在攻击/移动后不丢失。
+        if (this.shiftMode) {
+            InputBridge.sendEvent(this.menuHelper.launcher, 340, true);
+        }
         switch (direction) {
             case DIRECTION_CENTER: {
                 InputBridge.sendEvent(this.menuHelper.launcher, 87, false);
