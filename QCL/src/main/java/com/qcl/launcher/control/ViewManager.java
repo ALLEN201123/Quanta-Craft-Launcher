@@ -104,7 +104,10 @@ public class ViewManager implements SensorEventListener {
         if (this.menuHelper.gameMenuSetting.menuFloatSetting.enable) {
             this.layoutPanel.addView(this.menuFloat);
         }
-        // ★★★ 1.1.4：侧边栏已移除（用户指令），不再 addView(menuView)。
+        // ★★★ 1.1.4：移除 QCL 自绘的圆形「侧边栏」按钮（menuView）。
+        //   用户要的是手机系统自带的「游戏助手」（玩王者/和平左边那个系统悬浮条），
+        //   不是启动器自己画的侧边栏。系统游戏助手的触发靠「持续性能模式」
+        //   （getWindow().setSustainedPerformanceMode），不在 QCL 里画按钮。
         refreshLayout(this.menuHelper.currentPattern.name, this.menuHelper.currentChild, this.menuHelper.editMode);
     }
 
