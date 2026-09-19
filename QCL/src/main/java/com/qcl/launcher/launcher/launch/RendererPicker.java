@@ -84,10 +84,20 @@ public final class RendererPicker {
                         // ★ mg 是外部渲染器：缺库时明确告诉玩家放哪里
                         if ("mg".equals(id) && RendererCompat.resolveRendererLibDir(activity, id, versionPath, gameDir) == null) {
                             String mgTip = "未检测到 MobileGlues 渲染器库（libmobileglues.so）。\n\n"
-                                    + "推荐做法：安装官方 MobileGlues 插件 APK\n"
-                                    + "（github.com/MobileGL-Dev/MobileGlues-release/releases），装好后回到这里重新选择即可（无需拷贝文件）。\n\n"
-                                    + "也可以把 libmobileglues.so 手动放到：\n"
-                                    + (gameDir != null ? gameDir : "<游戏目录>") + "/renderer/mg/";
+                                    + "【推荐】按官方方式安装（与 FCL 用法一致）：\n"
+                                    + "1. 下载并安装 MobileGlues 插件 APK：\n"
+                                    + "     github.com/MobileGL-Dev/MobileGlues-release/releases\n"
+                                    + "     （选文件名以 .apk 结尾的那个）\n"
+                                    + "2. 装好后【打开一次】该应用，允许存储权限（会创建 /MG 目录）\n"
+                                    + "3. 回到本列表重新打开即可选中 MobileGlues\n"
+                                    + "     （QCL 每次打开都会重新扫描，无需重启启动器）\n\n"
+                                    + "【兜底】也可以把 libmobileglues.so 手动放到：\n"
+                                    + (gameDir != null ? gameDir : "<游戏目录>") + "/renderer/mg/\n\n"
+                                    + "要求：设备需支持 OpenGL ES 3.0 以上（3.2 推荐）。\n\n"
+                                    + "【玩 26.3 / 26.3-snapshot-3 及更新版本】\n"
+                                    + "MobileGlues 官方说明：必须在 MobileGlues 应用里开启\n"
+                                    + "「Ignore shader/program error」（忽略着色器/程序错误），\n"
+                                    + "否则 26.3 及之后的版本会因着色器报错而无法进入世界。";
                             warnText = (warnText == null) ? mgTip : (mgTip + "\n\n" + warnText);
                         }
                         if (warnText != null) {
