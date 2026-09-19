@@ -83,10 +83,10 @@ public final class RendererPicker {
                         String warnText = RendererCompat.warningOf(id, mcVer);
                         // ★ mg 是外部渲染器：缺库时明确告诉玩家放哪里
                         if ("mg".equals(id) && RendererCompat.resolveRendererLibDir(activity, id, versionPath, gameDir) == null) {
-                            String mgTip = "未检测到 MobileGlues 渲染器库（libMobileGlues.so）。\n\n"
+                            String mgTip = "未检测到 MobileGlues 渲染器库（libmobileglues.so）。\n\n"
                                     + "推荐做法：安装官方 MobileGlues 插件 APK\n"
                                     + "（github.com/MobileGL-Dev/MobileGlues-release/releases），装好后回到这里重新选择即可（无需拷贝文件）。\n\n"
-                                    + "也可以把 libMobileGlues.so 手动放到：\n"
+                                    + "也可以把 libmobileglues.so 手动放到：\n"
                                     + (gameDir != null ? gameDir : "<游戏目录>") + "/renderer/mg/";
                             warnText = (warnText == null) ? mgTip : (mgTip + "\n\n" + warnText);
                         }

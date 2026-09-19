@@ -417,7 +417,7 @@ public class JREUtils {
             case '\t':
                 return "libgl4es_114.so";
             case 4:
-                return "libMobileGlues.so";
+                return "libmobileglues.so";
             default:
                 Log.w("RENDER_LIBRARY", "No renderer selected, defaulting to opengles2");
                 return "libgl4es_114.so";
@@ -513,7 +513,7 @@ public class JREUtils {
                 str2 = "libgl4es_114.so";
                 break;
             case 4:
-                str2 = "libMobileGlues.so";
+                str2 = "libmobileglues.so";
                 break;
             default:
                 Log.w("RENDER_LIBRARY", "No renderer selected, defaulting to opengles2");

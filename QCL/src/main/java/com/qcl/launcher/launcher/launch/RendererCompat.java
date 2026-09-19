@@ -10,7 +10,7 @@ public final class RendererCompat {
     /**
      * 外部渲染器库是否就位。
      *
-     * <p>MobileGlues（mg）是**外部渲染器**：它的 {@code libMobileGlues.so} 不进 APK，
+     * <p>MobileGlues（mg）是**外部渲染器**：它的 {@code libmobileglues.so} 不进 APK，
      * 由玩家自行下载后放进 {@code <游戏目录>/renderer/mg/}（该目录会在启动时挂进
      * java.library.path，见 PojavLauncher）。因此不能用 APK 的 nativeLibraryDir 判断，
      * 否则列表里永远看不到 mg（玩家反馈"检测不到"的根因）。
@@ -35,7 +35,7 @@ public final class RendererCompat {
     /**
      * 在**已安装的应用**里找提供该渲染器库的插件（对齐 FCL 的插件渲染器语义：
      * FCL 的 RendererPlugin 会把配置里的 {@code **|} 前缀替换为「插件的 nativeLibraryDir」，
-     * 也就是说 MobileGlues 这类外部渲染器的 {@code libMobileGlues.so} 来自它自己的插件 APK，
+     * 也就是说 MobileGlues 这类外部渲染器的 {@code libmobileglues.so} 来自它自己的插件 APK，
      * 而不是让玩家手工拷贝）。
      *
      * <p>实现上不依赖具体包名：查询所有带启动图标的应用，谁的 nativeLibraryDir 下有目标 so 就用谁。
@@ -43,6 +43,30 @@ public final class RendererCompat {
      *
      * @return 命中则返回该插件应用的 nativeLibraryDir，否则 null
      */
+    /**
+     * 在目录里查找目标 so —— **忽略大小写**（MobileGlues 官方包内是 {@code libmobileglues.so}
+     * 全小写，历史上代码里写成 {@code libMobileGlues.so} 驼峰，在大小写敏感的文件系统上直接判定为不存在）。
+     */
+    private static boolean hasLibIgnoreCase(java.io.File dir, String libName) {
+        if (dir == null || libName == null) {
+            return false;
+        }
+        java.io.File exact = new java.io.File(dir, libName);
+        if (exact.isFile() && exact.length() > 0L) {
+            return true;
+        }
+        java.io.File[] children = dir.listFiles();
+        if (children == null) {
+            return false;
+        }
+        for (java.io.File c : children) {
+            if (c.isFile() && c.length() > 0L && c.getName().equalsIgnoreCase(libName)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public static String findInstalledRendererLibDir(android.content.Context context, String id) {
         Info info = find(id);
         if (context == null || info == null || info.glName == null || info.glName.isEmpty()) {
@@ -63,8 +87,7 @@ public final class RendererCompat {
                     if (ai == null || ai.nativeLibraryDir == null) {
                         continue;
                     }
-                    java.io.File so = new java.io.File(ai.nativeLibraryDir, info.glName);
-                    if (so.isFile() && so.length() > 0L) {
+                    if (hasLibIgnoreCase(new java.io.File(ai.nativeLibraryDir), info.glName)) {
                         return ai.nativeLibraryDir;
                     }
                 } catch (Throwable ignored) {
@@ -104,8 +127,7 @@ public final class RendererCompat {
         }
         for (java.io.File root : roots) {
             java.io.File dir = new java.io.File(root, "renderer/" + id);
-            java.io.File so = new java.io.File(dir, info.glName);
-            if (so.isFile() && so.length() > 0L) {
+            if (hasLibIgnoreCase(dir, info.glName)) {
                 return dir.getAbsolutePath();
             }
         }
@@ -131,15 +153,14 @@ public final class RendererCompat {
             }
         }
         for (java.io.File root : roots) {
-            java.io.File f = new java.io.File(root, "renderer/" + id + "/" + info.glName);
-            if (f.isFile() && f.length() > 0L) {
+            if (hasLibIgnoreCase(new java.io.File(root, "renderer/" + id), info.glName)) {
                 return true;
             }
         }
         return false;
     }
 
-    public static final Info[] ALL = {new Info("opengles2", "Holy-GL4ES", "Holy GL4ES (OpenGL 2.1)", "libgl4es_114.so", "libEGL.so", "", "1.21.4", "1.21.4", true, true), new Info("ng_gl4es", "Krypton Wrapper", "Krypton Wrapper (OpenGL 3.1+, 全版本通吃)", "libng_gl4es.so", "libEGL.so", "", "26.3", "26.2", true, true), new Info("zink", "Zink", "Kopper Zink (OpenGL 4.6, Mesa zink on Vulkan)", "libglxshim.so", "libEGL_mesa.so", "", "26.3", "26.2", true, true), new Info("opengles3_virgl", "VirGLRenderer", "VirGLRenderer (OpenGL 4.3, Mesa 软渲染)", "libOSMesa_81.so", "libEGL.so", "", "26.3", "26.2", true, true), new Info("opengles3_virgl_osmesa8", "Freedreno", "Freedreno (OpenGL 4.6, 仅高通 adreno616-a660)", "libOSMesa_8.so", "libEGL.so", "", "26.3", "26.2", true, false), new Info("opengles3_vgpu", "VGPU", "VGPU (OpenGL 2.1+)", "libvgpu.so", "libEGL.so", "", "1.16.5", "1.16.5", true, false), new Info("mg", "MobileGlues", "MobileGlues (外部渲染器，需自行导入 libMobileGlues.so)", "libMobileGlues.so", "libEGL.so", "", "26.3", "26.2", false, false)};
+    public static final Info[] ALL = {new Info("opengles2", "Holy-GL4ES", "Holy GL4ES (OpenGL 2.1)", "libgl4es_114.so", "libEGL.so", "", "1.21.4", "1.21.4", true, true), new Info("ng_gl4es", "Krypton Wrapper", "Krypton Wrapper (OpenGL 3.1+, 全版本通吃)", "libng_gl4es.so", "libEGL.so", "", "26.3", "26.2", true, true), new Info("zink", "Zink", "Kopper Zink (OpenGL 4.6, Mesa zink on Vulkan)", "libglxshim.so", "libEGL_mesa.so", "", "26.3", "26.2", true, true), new Info("opengles3_virgl", "VirGLRenderer", "VirGLRenderer (OpenGL 4.3, Mesa 软渲染)", "libOSMesa_81.so", "libEGL.so", "", "26.3", "26.2", true, true), new Info("opengles3_virgl_osmesa8", "Freedreno", "Freedreno (OpenGL 4.6, 仅高通 adreno616-a660)", "libOSMesa_8.so", "libEGL.so", "", "26.3", "26.2", true, false), new Info("opengles3_vgpu", "VGPU", "VGPU (OpenGL 2.1+)", "libvgpu.so", "libEGL.so", "", "1.16.5", "1.16.5", true, false), new Info("mg", "MobileGlues", "MobileGlues (外部渲染器，需自行导入 libmobileglues.so)", "libmobileglues.so", "libEGL.so", "", "26.3", "26.2", false, false)};
 
     public static String defaultRendererId() {
         return "opengles2";
