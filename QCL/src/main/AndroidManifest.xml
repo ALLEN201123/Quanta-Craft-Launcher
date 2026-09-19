@@ -64,7 +64,6 @@
         android:supportsRtl="true"
         android:hasFragileUserData="true"
         android:allowNativeHeapPointerTagging="false"
-        android:isGame="true"
         android:theme="@style/Theme.HelloMinecraftLauncherPocketEdition"
         tools:targetApi="32">
         <!--

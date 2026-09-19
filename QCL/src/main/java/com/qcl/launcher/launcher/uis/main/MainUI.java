@@ -134,7 +134,7 @@ public class MainUI extends BaseUI implements View.OnClickListener, AdapterView.
                 gameCubeEntry.setVisibility(android.view.View.VISIBLE);
                 gameCubeEntry.setOnClickListener(v -> {
                     android.widget.Toast.makeText(activity,
-                            "持续性能模式已在启动游戏时自动开启（同游戏魔盒的性能优化）",
+                            "持续性能模式：让 CPU / GPU 在游戏期间保持高性能（进游戏后可在菜单里切换）",
                             android.widget.Toast.LENGTH_SHORT).show();
                 });
             }
