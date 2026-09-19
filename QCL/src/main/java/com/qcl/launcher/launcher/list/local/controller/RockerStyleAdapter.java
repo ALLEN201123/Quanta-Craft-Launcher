@@ -1,5 +1,7 @@
 package com.qcl.launcher.launcher.list.local.controller;
 
+import com.qcl.launcher.utils.QclColors;
+
 import android.content.Context;
 import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
@@ -73,12 +75,12 @@ public class RockerStyleAdapter extends BaseAdapter {
         RockerStyle rockerStyle = this.list.get(i);
         final GradientDrawable gradientDrawable = new GradientDrawable();
         gradientDrawable.setCornerRadius(ConvertUtils.dip2px(this.context, rockerStyle.cornerRadius));
-        gradientDrawable.setStroke(ConvertUtils.dip2px(this.context, rockerStyle.strokeWidth), Color.parseColor(rockerStyle.strokeColor));
-        gradientDrawable.setColor(Color.parseColor(rockerStyle.fillColor));
+        gradientDrawable.setStroke(ConvertUtils.dip2px(this.context, rockerStyle.strokeWidth), QclColors.parseSafe(rockerStyle.strokeColor, 0x33555555));
+        gradientDrawable.setColor(QclColors.parseSafe(rockerStyle.fillColor, 0x666E6E6E));
         final GradientDrawable gradientDrawable2 = new GradientDrawable();
         gradientDrawable2.setCornerRadius(ConvertUtils.dip2px(this.context, rockerStyle.cornerRadiusPress));
-        gradientDrawable2.setStroke(ConvertUtils.dip2px(this.context, rockerStyle.strokeWidthPress), Color.parseColor(rockerStyle.strokeColorPress));
-        gradientDrawable2.setColor(Color.parseColor(rockerStyle.fillColorPress));
+        gradientDrawable2.setStroke(ConvertUtils.dip2px(this.context, rockerStyle.strokeWidthPress), QclColors.parseSafe(rockerStyle.strokeColorPress, 0x55555555));
+        gradientDrawable2.setColor(QclColors.parseSafe(rockerStyle.fillColorPress, 0x995E5E5E));
         RockerView rockerView = new RockerView(this.context);
         rockerView.setPointerColor(rockerStyle.pointerColor);
         rockerView.setPointerColorPress(rockerStyle.pointerColorPress);

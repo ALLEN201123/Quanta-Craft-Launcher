@@ -1,5 +1,7 @@
 package com.qcl.launcher.launcher.dialogs.control;
 
+import com.qcl.launcher.utils.QclColors;
+
 import android.annotation.SuppressLint;
 import android.app.Dialog;
 import android.content.Context;
@@ -422,12 +424,12 @@ public class EditRockerDialog extends Dialog implements View.OnClickListener, Ad
         rockerStrokeWidthText.setText(baseRockerViewInfo.rockerStyle.strokeWidth + " dp");
         rockerCornerRadiusPressedText.setText(baseRockerViewInfo.rockerStyle.cornerRadiusPress + " dp");
         rockerStrokeWidthPressedText.setText(baseRockerViewInfo.rockerStyle.strokeWidthPress + " dp");
-        pointerColorPre.setBackgroundColor(Color.parseColor(baseRockerViewInfo.rockerStyle.pointerColor));
-        rockerStrokeColorPre.setBackgroundColor(Color.parseColor(baseRockerViewInfo.rockerStyle.strokeColor));
-        rockerFillColorPre.setBackgroundColor(Color.parseColor(baseRockerViewInfo.rockerStyle.fillColor));
-        pointerColorPressedPre.setBackgroundColor(Color.parseColor(baseRockerViewInfo.rockerStyle.pointerColorPress));
-        rockerStrokeColorPressedPre.setBackgroundColor(Color.parseColor(baseRockerViewInfo.rockerStyle.strokeColorPress));
-        rockerFillColorPressedPre.setBackgroundColor(Color.parseColor(baseRockerViewInfo.rockerStyle.fillColorPress));
+        pointerColorPre.setBackgroundColor(QclColors.parseSafe(baseRockerViewInfo.rockerStyle.pointerColor, 0xFFFFFFFF));
+        rockerStrokeColorPre.setBackgroundColor(QclColors.parseSafe(baseRockerViewInfo.rockerStyle.strokeColor, 0x33555555));
+        rockerFillColorPre.setBackgroundColor(QclColors.parseSafe(baseRockerViewInfo.rockerStyle.fillColor, 0x666E6E6E));
+        pointerColorPressedPre.setBackgroundColor(QclColors.parseSafe(baseRockerViewInfo.rockerStyle.pointerColorPress, 0xFFFFFFFF));
+        rockerStrokeColorPressedPre.setBackgroundColor(QclColors.parseSafe(baseRockerViewInfo.rockerStyle.strokeColorPress, 0x55555555));
+        rockerFillColorPressedPre.setBackgroundColor(QclColors.parseSafe(baseRockerViewInfo.rockerStyle.fillColorPress, 0x995E5E5E));
         pointerColorText.setText(baseRockerViewInfo.rockerStyle.pointerColor);
         rockerStrokeColorText.setText(baseRockerViewInfo.rockerStyle.strokeColor);
         rockerFillColorText.setText(baseRockerViewInfo.rockerStyle.fillColor);
@@ -466,7 +468,7 @@ public class EditRockerDialog extends Dialog implements View.OnClickListener, Ad
             dialog.show();
         }
         if (view == selectPointerColor) {
-            ColorSelectorDialog colorSelectorDialog = new ColorSelectorDialog(getContext(),false,Color.parseColor(baseRockerViewInfo.rockerStyle.pointerColor));
+            ColorSelectorDialog colorSelectorDialog = new ColorSelectorDialog(getContext(),false,QclColors.parseSafe(baseRockerViewInfo.rockerStyle.pointerColor, 0xFFFFFFFF));
             colorSelectorDialog.setColorSelectorDialogListener(new ColorSelectorDialog.ColorSelectorDialogListener() {
                 @Override
                 public void onColorSelected(int color) {
@@ -476,8 +478,8 @@ public class EditRockerDialog extends Dialog implements View.OnClickListener, Ad
                 @Override
                 public void onPositive(int destColor) {
                     pointerColorPre.setBackgroundColor(destColor);
-                    pointerColorText.setText("#" + Integer.toHexString(destColor));
-                    baseRockerViewInfo.rockerStyle.pointerColor = "#" + Integer.toHexString(destColor);
+                    pointerColorText.setText(QclColors.format(destColor));
+                    baseRockerViewInfo.rockerStyle.pointerColor = QclColors.format(destColor);
                 }
 
                 @Override
@@ -488,7 +490,7 @@ public class EditRockerDialog extends Dialog implements View.OnClickListener, Ad
             colorSelectorDialog.show();
         }
         if (view == selectRockerStrokeColor) {
-            ColorSelectorDialog colorSelectorDialog = new ColorSelectorDialog(getContext(),false,Color.parseColor(baseRockerViewInfo.rockerStyle.strokeColor));
+            ColorSelectorDialog colorSelectorDialog = new ColorSelectorDialog(getContext(),false,QclColors.parseSafe(baseRockerViewInfo.rockerStyle.strokeColor, 0x33555555));
             colorSelectorDialog.setColorSelectorDialogListener(new ColorSelectorDialog.ColorSelectorDialogListener() {
                 @Override
                 public void onColorSelected(int color) {
@@ -498,8 +500,8 @@ public class EditRockerDialog extends Dialog implements View.OnClickListener, Ad
                 @Override
                 public void onPositive(int destColor) {
                     rockerStrokeColorPre.setBackgroundColor(destColor);
-                    rockerStrokeColorText.setText("#" + Integer.toHexString(destColor));
-                    baseRockerViewInfo.rockerStyle.strokeColor = "#" + Integer.toHexString(destColor);
+                    rockerStrokeColorText.setText(QclColors.format(destColor));
+                    baseRockerViewInfo.rockerStyle.strokeColor = QclColors.format(destColor);
                 }
 
                 @Override
@@ -510,7 +512,7 @@ public class EditRockerDialog extends Dialog implements View.OnClickListener, Ad
             colorSelectorDialog.show();
         }
         if (view == selectRockerFillColor) {
-            ColorSelectorDialog colorSelectorDialog = new ColorSelectorDialog(getContext(),false,Color.parseColor(baseRockerViewInfo.rockerStyle.fillColor));
+            ColorSelectorDialog colorSelectorDialog = new ColorSelectorDialog(getContext(),false,QclColors.parseSafe(baseRockerViewInfo.rockerStyle.fillColor, 0x666E6E6E));
             colorSelectorDialog.setColorSelectorDialogListener(new ColorSelectorDialog.ColorSelectorDialogListener() {
                 @Override
                 public void onColorSelected(int color) {
@@ -520,8 +522,8 @@ public class EditRockerDialog extends Dialog implements View.OnClickListener, Ad
                 @Override
                 public void onPositive(int destColor) {
                     rockerFillColorPre.setBackgroundColor(destColor);
-                    rockerFillColorText.setText("#" + Integer.toHexString(destColor));
-                    baseRockerViewInfo.rockerStyle.fillColor = "#" + Integer.toHexString(destColor);
+                    rockerFillColorText.setText(QclColors.format(destColor));
+                    baseRockerViewInfo.rockerStyle.fillColor = QclColors.format(destColor);
                 }
 
                 @Override
@@ -532,7 +534,7 @@ public class EditRockerDialog extends Dialog implements View.OnClickListener, Ad
             colorSelectorDialog.show();
         }
         if (view == selectPointerColorPressed) {
-            ColorSelectorDialog colorSelectorDialog = new ColorSelectorDialog(getContext(),false,Color.parseColor(baseRockerViewInfo.rockerStyle.pointerColorPress));
+            ColorSelectorDialog colorSelectorDialog = new ColorSelectorDialog(getContext(),false,QclColors.parseSafe(baseRockerViewInfo.rockerStyle.pointerColorPress, 0xFFFFFFFF));
             colorSelectorDialog.setColorSelectorDialogListener(new ColorSelectorDialog.ColorSelectorDialogListener() {
                 @Override
                 public void onColorSelected(int color) {
@@ -542,8 +544,8 @@ public class EditRockerDialog extends Dialog implements View.OnClickListener, Ad
                 @Override
                 public void onPositive(int destColor) {
                     pointerColorPressedPre.setBackgroundColor(destColor);
-                    pointerColorPressedText.setText("#" + Integer.toHexString(destColor));
-                    baseRockerViewInfo.rockerStyle.pointerColorPress = "#" + Integer.toHexString(destColor);
+                    pointerColorPressedText.setText(QclColors.format(destColor));
+                    baseRockerViewInfo.rockerStyle.pointerColorPress = QclColors.format(destColor);
                 }
 
                 @Override
@@ -554,7 +556,7 @@ public class EditRockerDialog extends Dialog implements View.OnClickListener, Ad
             colorSelectorDialog.show();
         }
         if (view == selectRockerStrokeColorPressed) {
-            ColorSelectorDialog colorSelectorDialog = new ColorSelectorDialog(getContext(),false,Color.parseColor(baseRockerViewInfo.rockerStyle.strokeColorPress));
+            ColorSelectorDialog colorSelectorDialog = new ColorSelectorDialog(getContext(),false,QclColors.parseSafe(baseRockerViewInfo.rockerStyle.strokeColorPress, 0x55555555));
             colorSelectorDialog.setColorSelectorDialogListener(new ColorSelectorDialog.ColorSelectorDialogListener() {
                 @Override
                 public void onColorSelected(int color) {
@@ -564,8 +566,8 @@ public class EditRockerDialog extends Dialog implements View.OnClickListener, Ad
                 @Override
                 public void onPositive(int destColor) {
                     rockerStrokeColorPressedPre.setBackgroundColor(destColor);
-                    rockerStrokeColorPressedText.setText("#" + Integer.toHexString(destColor));
-                    baseRockerViewInfo.rockerStyle.strokeColorPress = "#" + Integer.toHexString(destColor);
+                    rockerStrokeColorPressedText.setText(QclColors.format(destColor));
+                    baseRockerViewInfo.rockerStyle.strokeColorPress = QclColors.format(destColor);
                 }
 
                 @Override
@@ -576,7 +578,7 @@ public class EditRockerDialog extends Dialog implements View.OnClickListener, Ad
             colorSelectorDialog.show();
         }
         if (view == selectRockerFillColorPressed) {
-            ColorSelectorDialog colorSelectorDialog = new ColorSelectorDialog(getContext(),false,Color.parseColor(baseRockerViewInfo.rockerStyle.fillColorPress));
+            ColorSelectorDialog colorSelectorDialog = new ColorSelectorDialog(getContext(),false,QclColors.parseSafe(baseRockerViewInfo.rockerStyle.fillColorPress, 0x995E5E5E));
             colorSelectorDialog.setColorSelectorDialogListener(new ColorSelectorDialog.ColorSelectorDialogListener() {
                 @Override
                 public void onColorSelected(int color) {
@@ -586,8 +588,8 @@ public class EditRockerDialog extends Dialog implements View.OnClickListener, Ad
                 @Override
                 public void onPositive(int destColor) {
                     rockerFillColorPressedPre.setBackgroundColor(destColor);
-                    rockerFillColorPressedText.setText("#" + Integer.toHexString(destColor));
-                    baseRockerViewInfo.rockerStyle.fillColorPress = "#" + Integer.toHexString(destColor);
+                    rockerFillColorPressedText.setText(QclColors.format(destColor));
+                    baseRockerViewInfo.rockerStyle.fillColorPress = QclColors.format(destColor);
                 }
 
                 @Override

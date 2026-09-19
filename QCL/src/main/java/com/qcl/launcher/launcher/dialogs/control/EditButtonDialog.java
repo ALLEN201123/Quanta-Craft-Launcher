@@ -1,5 +1,7 @@
 package com.qcl.launcher.launcher.dialogs.control;
 
+import com.qcl.launcher.utils.QclColors;
+
 import android.annotation.SuppressLint;
 import android.app.Dialog;
 import android.content.Context;
@@ -524,12 +526,12 @@ public class EditButtonDialog extends Dialog implements View.OnClickListener, Ad
         textSizePressedText.setText(baseButtonInfo.buttonStyle.textSizePress + " sp");
         cornerRadiusPressedText.setText(baseButtonInfo.buttonStyle.cornerRadiusPress + " dp");
         strokeWidthPressedText.setText(baseButtonInfo.buttonStyle.strokeWidthPress + " dp");
-        textColorPre.setBackgroundColor(Color.parseColor(baseButtonInfo.buttonStyle.textColor));
-        strokeColorPre.setBackgroundColor(Color.parseColor(baseButtonInfo.buttonStyle.strokeColor));
-        fillColorPre.setBackgroundColor(Color.parseColor(baseButtonInfo.buttonStyle.fillColor));
-        textColorPressedPre.setBackgroundColor(Color.parseColor(baseButtonInfo.buttonStyle.textColorPress));
-        strokeColorPressedPre.setBackgroundColor(Color.parseColor(baseButtonInfo.buttonStyle.strokeColorPress));
-        fillColorPressedPre.setBackgroundColor(Color.parseColor(baseButtonInfo.buttonStyle.fillColorPress));
+        textColorPre.setBackgroundColor(QclColors.parseSafe(baseButtonInfo.buttonStyle.textColor, 0xFFFFFFFF));
+        strokeColorPre.setBackgroundColor(QclColors.parseSafe(baseButtonInfo.buttonStyle.strokeColor, 0x33555555));
+        fillColorPre.setBackgroundColor(QclColors.parseSafe(baseButtonInfo.buttonStyle.fillColor, 0x666E6E6E));
+        textColorPressedPre.setBackgroundColor(QclColors.parseSafe(baseButtonInfo.buttonStyle.textColorPress, 0xFFFFFFFF));
+        strokeColorPressedPre.setBackgroundColor(QclColors.parseSafe(baseButtonInfo.buttonStyle.strokeColorPress, 0x55555555));
+        fillColorPressedPre.setBackgroundColor(QclColors.parseSafe(baseButtonInfo.buttonStyle.fillColorPress, 0x995E5E5E));
         textColorText.setText(baseButtonInfo.buttonStyle.textColor);
         strokeColorText.setText(baseButtonInfo.buttonStyle.strokeColor);
         fillColorText.setText(baseButtonInfo.buttonStyle.fillColor);
@@ -576,7 +578,7 @@ public class EditButtonDialog extends Dialog implements View.OnClickListener, Ad
             dialog.show();
         }
         if (view == selectTextColor) {
-            ColorSelectorDialog colorSelectorDialog = new ColorSelectorDialog(getContext(),false,Color.parseColor(baseButtonInfo.buttonStyle.textColor));
+            ColorSelectorDialog colorSelectorDialog = new ColorSelectorDialog(getContext(),false,QclColors.parseSafe(baseButtonInfo.buttonStyle.textColor, 0xFFFFFFFF));
             colorSelectorDialog.setColorSelectorDialogListener(new ColorSelectorDialog.ColorSelectorDialogListener() {
                 @Override
                 public void onColorSelected(int color) {
@@ -586,8 +588,8 @@ public class EditButtonDialog extends Dialog implements View.OnClickListener, Ad
                 @Override
                 public void onPositive(int destColor) {
                     textColorPre.setBackgroundColor(destColor);
-                    textColorText.setText("#" + Integer.toHexString(destColor));
-                    baseButtonInfo.buttonStyle.textColor = "#" + Integer.toHexString(destColor);
+                    textColorText.setText(QclColors.format(destColor));
+                    baseButtonInfo.buttonStyle.textColor = QclColors.format(destColor);
                 }
 
                 @Override
@@ -598,7 +600,7 @@ public class EditButtonDialog extends Dialog implements View.OnClickListener, Ad
             colorSelectorDialog.show();
         }
         if (view == selectStrokeColor) {
-            ColorSelectorDialog colorSelectorDialog = new ColorSelectorDialog(getContext(),false,Color.parseColor(baseButtonInfo.buttonStyle.strokeColor));
+            ColorSelectorDialog colorSelectorDialog = new ColorSelectorDialog(getContext(),false,QclColors.parseSafe(baseButtonInfo.buttonStyle.strokeColor, 0x33555555));
             colorSelectorDialog.setColorSelectorDialogListener(new ColorSelectorDialog.ColorSelectorDialogListener() {
                 @Override
                 public void onColorSelected(int color) {
@@ -608,8 +610,8 @@ public class EditButtonDialog extends Dialog implements View.OnClickListener, Ad
                 @Override
                 public void onPositive(int destColor) {
                     strokeColorPre.setBackgroundColor(destColor);
-                    strokeColorText.setText("#" + Integer.toHexString(destColor));
-                    baseButtonInfo.buttonStyle.strokeColor = "#" + Integer.toHexString(destColor);
+                    strokeColorText.setText(QclColors.format(destColor));
+                    baseButtonInfo.buttonStyle.strokeColor = QclColors.format(destColor);
                 }
 
                 @Override
@@ -620,7 +622,7 @@ public class EditButtonDialog extends Dialog implements View.OnClickListener, Ad
             colorSelectorDialog.show();
         }
         if (view == selectFillColor) {
-            ColorSelectorDialog colorSelectorDialog = new ColorSelectorDialog(getContext(),false,Color.parseColor(baseButtonInfo.buttonStyle.fillColor));
+            ColorSelectorDialog colorSelectorDialog = new ColorSelectorDialog(getContext(),false,QclColors.parseSafe(baseButtonInfo.buttonStyle.fillColor, 0x666E6E6E));
             colorSelectorDialog.setColorSelectorDialogListener(new ColorSelectorDialog.ColorSelectorDialogListener() {
                 @Override
                 public void onColorSelected(int color) {
@@ -630,8 +632,8 @@ public class EditButtonDialog extends Dialog implements View.OnClickListener, Ad
                 @Override
                 public void onPositive(int destColor) {
                     fillColorPre.setBackgroundColor(destColor);
-                    fillColorText.setText("#" + Integer.toHexString(destColor));
-                    baseButtonInfo.buttonStyle.fillColor = "#" + Integer.toHexString(destColor);
+                    fillColorText.setText(QclColors.format(destColor));
+                    baseButtonInfo.buttonStyle.fillColor = QclColors.format(destColor);
                 }
 
                 @Override
@@ -642,7 +644,7 @@ public class EditButtonDialog extends Dialog implements View.OnClickListener, Ad
             colorSelectorDialog.show();
         }
         if (view == selectTextColorPressed) {
-            ColorSelectorDialog colorSelectorDialog = new ColorSelectorDialog(getContext(),false,Color.parseColor(baseButtonInfo.buttonStyle.textColorPress));
+            ColorSelectorDialog colorSelectorDialog = new ColorSelectorDialog(getContext(),false,QclColors.parseSafe(baseButtonInfo.buttonStyle.textColorPress, 0xFFFFFFFF));
             colorSelectorDialog.setColorSelectorDialogListener(new ColorSelectorDialog.ColorSelectorDialogListener() {
                 @Override
                 public void onColorSelected(int color) {
@@ -652,8 +654,8 @@ public class EditButtonDialog extends Dialog implements View.OnClickListener, Ad
                 @Override
                 public void onPositive(int destColor) {
                     textColorPressedPre.setBackgroundColor(destColor);
-                    textColorPressedText.setText("#" + Integer.toHexString(destColor));
-                    baseButtonInfo.buttonStyle.textColorPress = "#" + Integer.toHexString(destColor);
+                    textColorPressedText.setText(QclColors.format(destColor));
+                    baseButtonInfo.buttonStyle.textColorPress = QclColors.format(destColor);
                 }
 
                 @Override
@@ -664,7 +666,7 @@ public class EditButtonDialog extends Dialog implements View.OnClickListener, Ad
             colorSelectorDialog.show();
         }
         if (view == selectStrokeColorPressed) {
-            ColorSelectorDialog colorSelectorDialog = new ColorSelectorDialog(getContext(),false,Color.parseColor(baseButtonInfo.buttonStyle.strokeColorPress));
+            ColorSelectorDialog colorSelectorDialog = new ColorSelectorDialog(getContext(),false,QclColors.parseSafe(baseButtonInfo.buttonStyle.strokeColorPress, 0x55555555));
             colorSelectorDialog.setColorSelectorDialogListener(new ColorSelectorDialog.ColorSelectorDialogListener() {
                 @Override
                 public void onColorSelected(int color) {
@@ -674,8 +676,8 @@ public class EditButtonDialog extends Dialog implements View.OnClickListener, Ad
                 @Override
                 public void onPositive(int destColor) {
                     strokeColorPressedPre.setBackgroundColor(destColor);
-                    strokeColorPressedText.setText("#" + Integer.toHexString(destColor));
-                    baseButtonInfo.buttonStyle.strokeColorPress = "#" + Integer.toHexString(destColor);
+                    strokeColorPressedText.setText(QclColors.format(destColor));
+                    baseButtonInfo.buttonStyle.strokeColorPress = QclColors.format(destColor);
                 }
 
                 @Override
@@ -686,7 +688,7 @@ public class EditButtonDialog extends Dialog implements View.OnClickListener, Ad
             colorSelectorDialog.show();
         }
         if (view == selectFillColorPressed) {
-            ColorSelectorDialog colorSelectorDialog = new ColorSelectorDialog(getContext(),false,Color.parseColor(baseButtonInfo.buttonStyle.fillColorPress));
+            ColorSelectorDialog colorSelectorDialog = new ColorSelectorDialog(getContext(),false,QclColors.parseSafe(baseButtonInfo.buttonStyle.fillColorPress, 0x995E5E5E));
             colorSelectorDialog.setColorSelectorDialogListener(new ColorSelectorDialog.ColorSelectorDialogListener() {
                 @Override
                 public void onColorSelected(int color) {
@@ -696,8 +698,8 @@ public class EditButtonDialog extends Dialog implements View.OnClickListener, Ad
                 @Override
                 public void onPositive(int destColor) {
                     fillColorPressedPre.setBackgroundColor(destColor);
-                    fillColorPressedText.setText("#" + Integer.toHexString(destColor));
-                    baseButtonInfo.buttonStyle.fillColorPress = "#" + Integer.toHexString(destColor);
+                    fillColorPressedText.setText(QclColors.format(destColor));
+                    baseButtonInfo.buttonStyle.fillColorPress = QclColors.format(destColor);
                 }
 
                 @Override

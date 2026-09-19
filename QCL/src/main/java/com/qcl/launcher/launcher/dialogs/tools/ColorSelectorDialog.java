@@ -1,5 +1,7 @@
 package com.qcl.launcher.launcher.dialogs.tools;
 
+import com.qcl.launcher.utils.QclColors;
+
 import android.app.Dialog;
 import android.content.Context;
 import android.graphics.Color;
@@ -82,7 +84,7 @@ public class ColorSelectorDialog extends Dialog implements ColorPickerView.OnCol
         EditText editText = (EditText) findViewById(R.id.color_text);
         this.editColor = editText;
         editText.setOnEditorActionListener(this);
-        this.editColor.setText("#" + Integer.toHexString(this.initColor));
+        this.editColor.setText(QclColors.format(this.initColor));
         this.positive = (Button) findViewById(R.id.color_picker_positive);
         this.negative = (Button) findViewById(R.id.color_picker_negative);
         this.positive.setOnClickListener(this);
@@ -92,7 +94,7 @@ public class ColorSelectorDialog extends Dialog implements ColorPickerView.OnCol
     private void setColor(int i) {
         this.currentColor = i;
         this.colorPickerView.setColor(i);
-        this.editColor.setText("#" + Integer.toHexString(i));
+        this.editColor.setText(QclColors.format(i));
         this.destColorBar.setBackgroundColor(i);
         this.colorSelectorDialogListener.onColorSelected(i);
     }

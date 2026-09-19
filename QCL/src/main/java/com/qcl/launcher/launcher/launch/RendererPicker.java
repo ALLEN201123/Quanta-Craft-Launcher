@@ -52,16 +52,26 @@ public final class RendererPicker {
             final List<String> ids = new ArrayList<String>();
             String nativeDir = activity.getApplicationInfo().nativeLibraryDir;
 
+            // ★★★ 2026-09-19 修复「外部渲染器（mg）检测不到」：
+            //   原逻辑对「APK 内没有该 so」的渲染器直接 continue 隐藏 —— 而 mg（MobileGlues）
+            //   是外部渲染器，so 由玩家放在 <游戏目录>/renderer/mg/，永远不会出现在 APK 里，
+            //   于是列表里根本看不到它，玩家误以为"没抄/没加"。
+            //   现在：**所有渲染器都列出**，缺库的标注「⚠缺少库文件（需自行导入）」，一目了然。
+            final String gameDir = RendererCompat.gameDirOf(versionPath);
             for (RendererCompat.Info info : RendererCompat.ALL) {
+                boolean libOk = true;
                 if (info.glName != null && !info.glName.isEmpty()) {
-                    if (!new File(nativeDir, info.glName).isFile()) {
-                        continue;   // 库不存在就不显示
-                    }
+                    boolean inApk = new File(nativeDir, info.glName).isFile();
+                    // 外部渲染器（mg）：优先从「已安装的插件应用」取（与 FCL 一致），
+                    // 其次才是 <gameDir>/renderer/<id>/ 手工放置
+                    boolean external = RendererCompat.resolveRendererLibDir(activity, info.id, versionPath, gameDir) != null;
+                    libOk = inApk || external;
                 }
                 String line = info.displayName + "\n（" + info.supportRangeText() + "）"
                         + (info.recommended ? " ★推荐" : "")
                         + (info.id.equals(current) ? "  ✓当前" : "")
-                        + (RendererCompat.supports(info.id, mcVer) ? "" : "  ⚠不支持当前版本");
+                        + (RendererCompat.supports(info.id, mcVer) ? "" : "  ⚠不支持当前版本")
+                        + (libOk ? "" : "  ⚠缺少库文件");
                 labels.add(line);
                 ids.add(info.id);
             }
@@ -71,6 +81,15 @@ public final class RendererPicker {
                     .setItems(labels.toArray(new String[0]), (d, which) -> {
                         final String id = ids.get(which);
                         String warnText = RendererCompat.warningOf(id, mcVer);
+                        // ★ mg 是外部渲染器：缺库时明确告诉玩家放哪里
+                        if ("mg".equals(id) && RendererCompat.resolveRendererLibDir(activity, id, versionPath, gameDir) == null) {
+                            String mgTip = "未检测到 MobileGlues 渲染器库（libMobileGlues.so）。\n\n"
+                                    + "推荐做法：安装官方 MobileGlues 插件 APK\n"
+                                    + "（github.com/MobileGL-Dev/MobileGlues-release/releases），装好后回到这里重新选择即可（无需拷贝文件）。\n\n"
+                                    + "也可以把 libMobileGlues.so 手动放到：\n"
+                                    + (gameDir != null ? gameDir : "<游戏目录>") + "/renderer/mg/";
+                            warnText = (warnText == null) ? mgTip : (mgTip + "\n\n" + warnText);
+                        }
                         if (warnText != null) {
                             new AlertDialog.Builder(activity)
                                     .setTitle("渲染器兼容性提示")

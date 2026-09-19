@@ -32,6 +32,8 @@
  */
 package com.qcl.launcher.launcher.dialogs.control;
 
+import com.qcl.launcher.utils.QclColors;
+
 import android.annotation.SuppressLint;
 import android.app.Dialog;
 import android.content.Context;
@@ -610,12 +612,12 @@ TextWatcher {
         this.textSizePressedText.setText((CharSequence)(this.baseButtonInfo.buttonStyle.textSizePress + " sp"));
         this.cornerRadiusPressedText.setText((CharSequence)(this.baseButtonInfo.buttonStyle.cornerRadiusPress + " dp"));
         this.strokeWidthPressedText.setText((CharSequence)(this.baseButtonInfo.buttonStyle.strokeWidthPress + " dp"));
-        this.textColorPre.setBackgroundColor(Color.parseColor((String)this.baseButtonInfo.buttonStyle.textColor));
-        this.strokeColorPre.setBackgroundColor(Color.parseColor((String)this.baseButtonInfo.buttonStyle.strokeColor));
-        this.fillColorPre.setBackgroundColor(Color.parseColor((String)this.baseButtonInfo.buttonStyle.fillColor));
-        this.textColorPressedPre.setBackgroundColor(Color.parseColor((String)this.baseButtonInfo.buttonStyle.textColorPress));
-        this.strokeColorPressedPre.setBackgroundColor(Color.parseColor((String)this.baseButtonInfo.buttonStyle.strokeColorPress));
-        this.fillColorPressedPre.setBackgroundColor(Color.parseColor((String)this.baseButtonInfo.buttonStyle.fillColorPress));
+        this.textColorPre.setBackgroundColor(QclColors.parseSafe(this.baseButtonInfo.buttonStyle.textColor, 0xFFFFFFFF));
+        this.strokeColorPre.setBackgroundColor(QclColors.parseSafe(this.baseButtonInfo.buttonStyle.strokeColor, 0x33555555));
+        this.fillColorPre.setBackgroundColor(QclColors.parseSafe(this.baseButtonInfo.buttonStyle.fillColor, 0x666E6E6E));
+        this.textColorPressedPre.setBackgroundColor(QclColors.parseSafe(this.baseButtonInfo.buttonStyle.textColorPress, 0xFFFFFFFF));
+        this.strokeColorPressedPre.setBackgroundColor(QclColors.parseSafe(this.baseButtonInfo.buttonStyle.strokeColorPress, 0x55555555));
+        this.fillColorPressedPre.setBackgroundColor(QclColors.parseSafe(this.baseButtonInfo.buttonStyle.fillColorPress, 0x995E5E5E));
         this.textColorText.setText((CharSequence)this.baseButtonInfo.buttonStyle.textColor);
         this.strokeColorText.setText((CharSequence)this.baseButtonInfo.buttonStyle.strokeColor);
         this.fillColorText.setText((CharSequence)this.baseButtonInfo.buttonStyle.fillColor);
@@ -849,12 +851,12 @@ TextWatcher {
         this.rockerStrokeWidthText.setText((CharSequence)(this.baseRockerViewInfo.rockerStyle.strokeWidth + " dp"));
         this.rockerCornerRadiusPressedText.setText((CharSequence)(this.baseRockerViewInfo.rockerStyle.cornerRadiusPress + " dp"));
         this.rockerStrokeWidthPressedText.setText((CharSequence)(this.baseRockerViewInfo.rockerStyle.strokeWidthPress + " dp"));
-        this.pointerColorPre.setBackgroundColor(Color.parseColor((String)this.baseRockerViewInfo.rockerStyle.pointerColor));
-        this.rockerStrokeColorPre.setBackgroundColor(Color.parseColor((String)this.baseRockerViewInfo.rockerStyle.strokeColor));
-        this.rockerFillColorPre.setBackgroundColor(Color.parseColor((String)this.baseRockerViewInfo.rockerStyle.fillColor));
-        this.pointerColorPressedPre.setBackgroundColor(Color.parseColor((String)this.baseRockerViewInfo.rockerStyle.pointerColorPress));
-        this.rockerStrokeColorPressedPre.setBackgroundColor(Color.parseColor((String)this.baseRockerViewInfo.rockerStyle.strokeColorPress));
-        this.rockerFillColorPressedPre.setBackgroundColor(Color.parseColor((String)this.baseRockerViewInfo.rockerStyle.fillColorPress));
+        this.pointerColorPre.setBackgroundColor(QclColors.parseSafe(this.baseRockerViewInfo.rockerStyle.pointerColor, 0xFFFFFFFF));
+        this.rockerStrokeColorPre.setBackgroundColor(QclColors.parseSafe(this.baseRockerViewInfo.rockerStyle.strokeColor, 0x33555555));
+        this.rockerFillColorPre.setBackgroundColor(QclColors.parseSafe(this.baseRockerViewInfo.rockerStyle.fillColor, 0x666E6E6E));
+        this.pointerColorPressedPre.setBackgroundColor(QclColors.parseSafe(this.baseRockerViewInfo.rockerStyle.pointerColorPress, 0xFFFFFFFF));
+        this.rockerStrokeColorPressedPre.setBackgroundColor(QclColors.parseSafe(this.baseRockerViewInfo.rockerStyle.strokeColorPress, 0x55555555));
+        this.rockerFillColorPressedPre.setBackgroundColor(QclColors.parseSafe(this.baseRockerViewInfo.rockerStyle.fillColorPress, 0x995E5E5E));
         this.pointerColorText.setText((CharSequence)this.baseRockerViewInfo.rockerStyle.pointerColor);
         this.rockerStrokeColorText.setText((CharSequence)this.baseRockerViewInfo.rockerStyle.strokeColor);
         this.rockerFillColorText.setText((CharSequence)this.baseRockerViewInfo.rockerStyle.fillColor);
@@ -910,7 +912,7 @@ TextWatcher {
             dialog.show();
         }
         if (view == this.selectTextColor) {
-            colorSelectorDialog = new ColorSelectorDialog(this.getContext(), false, Color.parseColor((String)this.baseButtonInfo.buttonStyle.textColor));
+            colorSelectorDialog = new ColorSelectorDialog(this.getContext(), false, QclColors.parseSafe(this.baseButtonInfo.buttonStyle.textColor, 0xFFFFFFFF));
             colorSelectorDialog.setColorSelectorDialogListener(new ColorSelectorDialog.ColorSelectorDialogListener(){
 
                 @Override
@@ -920,8 +922,8 @@ TextWatcher {
                 @Override
                 public void onPositive(int destColor) {
                     AddViewDialog.this.textColorPre.setBackgroundColor(destColor);
-                    AddViewDialog.this.textColorText.setText((CharSequence)("#" + Integer.toHexString(destColor)));
-                    ((AddViewDialog)AddViewDialog.this).baseButtonInfo.buttonStyle.textColor = "#" + Integer.toHexString(destColor);
+                    AddViewDialog.this.textColorText.setText((CharSequence)(QclColors.format(destColor)));
+                    ((AddViewDialog)AddViewDialog.this).baseButtonInfo.buttonStyle.textColor = QclColors.format(destColor);
                 }
 
                 @Override
@@ -931,7 +933,7 @@ TextWatcher {
             colorSelectorDialog.show();
         }
         if (view == this.selectStrokeColor) {
-            colorSelectorDialog = new ColorSelectorDialog(this.getContext(), false, Color.parseColor((String)this.baseButtonInfo.buttonStyle.strokeColor));
+            colorSelectorDialog = new ColorSelectorDialog(this.getContext(), false, QclColors.parseSafe(this.baseButtonInfo.buttonStyle.strokeColor, 0x33555555));
             colorSelectorDialog.setColorSelectorDialogListener(new ColorSelectorDialog.ColorSelectorDialogListener(){
 
                 @Override
@@ -941,8 +943,8 @@ TextWatcher {
                 @Override
                 public void onPositive(int destColor) {
                     AddViewDialog.this.strokeColorPre.setBackgroundColor(destColor);
-                    AddViewDialog.this.strokeColorText.setText((CharSequence)("#" + Integer.toHexString(destColor)));
-                    ((AddViewDialog)AddViewDialog.this).baseButtonInfo.buttonStyle.strokeColor = "#" + Integer.toHexString(destColor);
+                    AddViewDialog.this.strokeColorText.setText((CharSequence)(QclColors.format(destColor)));
+                    ((AddViewDialog)AddViewDialog.this).baseButtonInfo.buttonStyle.strokeColor = QclColors.format(destColor);
                 }
 
                 @Override
@@ -952,7 +954,7 @@ TextWatcher {
             colorSelectorDialog.show();
         }
         if (view == this.selectFillColor) {
-            colorSelectorDialog = new ColorSelectorDialog(this.getContext(), false, Color.parseColor((String)this.baseButtonInfo.buttonStyle.fillColor));
+            colorSelectorDialog = new ColorSelectorDialog(this.getContext(), false, QclColors.parseSafe(this.baseButtonInfo.buttonStyle.fillColor, 0x666E6E6E));
             colorSelectorDialog.setColorSelectorDialogListener(new ColorSelectorDialog.ColorSelectorDialogListener(){
 
                 @Override
@@ -962,8 +964,8 @@ TextWatcher {
                 @Override
                 public void onPositive(int destColor) {
                     AddViewDialog.this.fillColorPre.setBackgroundColor(destColor);
-                    AddViewDialog.this.fillColorText.setText((CharSequence)("#" + Integer.toHexString(destColor)));
-                    ((AddViewDialog)AddViewDialog.this).baseButtonInfo.buttonStyle.fillColor = "#" + Integer.toHexString(destColor);
+                    AddViewDialog.this.fillColorText.setText((CharSequence)(QclColors.format(destColor)));
+                    ((AddViewDialog)AddViewDialog.this).baseButtonInfo.buttonStyle.fillColor = QclColors.format(destColor);
                 }
 
                 @Override
@@ -973,7 +975,7 @@ TextWatcher {
             colorSelectorDialog.show();
         }
         if (view == this.selectTextColorPressed) {
-            colorSelectorDialog = new ColorSelectorDialog(this.getContext(), false, Color.parseColor((String)this.baseButtonInfo.buttonStyle.textColorPress));
+            colorSelectorDialog = new ColorSelectorDialog(this.getContext(), false, QclColors.parseSafe(this.baseButtonInfo.buttonStyle.textColorPress, 0xFFFFFFFF));
             colorSelectorDialog.setColorSelectorDialogListener(new ColorSelectorDialog.ColorSelectorDialogListener(){
 
                 @Override
@@ -983,8 +985,8 @@ TextWatcher {
                 @Override
                 public void onPositive(int destColor) {
                     AddViewDialog.this.textColorPressedPre.setBackgroundColor(destColor);
-                    AddViewDialog.this.textColorPressedText.setText((CharSequence)("#" + Integer.toHexString(destColor)));
-                    ((AddViewDialog)AddViewDialog.this).baseButtonInfo.buttonStyle.textColorPress = "#" + Integer.toHexString(destColor);
+                    AddViewDialog.this.textColorPressedText.setText((CharSequence)(QclColors.format(destColor)));
+                    ((AddViewDialog)AddViewDialog.this).baseButtonInfo.buttonStyle.textColorPress = QclColors.format(destColor);
                 }
 
                 @Override
@@ -994,7 +996,7 @@ TextWatcher {
             colorSelectorDialog.show();
         }
         if (view == this.selectStrokeColorPressed) {
-            colorSelectorDialog = new ColorSelectorDialog(this.getContext(), false, Color.parseColor((String)this.baseButtonInfo.buttonStyle.strokeColorPress));
+            colorSelectorDialog = new ColorSelectorDialog(this.getContext(), false, QclColors.parseSafe(this.baseButtonInfo.buttonStyle.strokeColorPress, 0x55555555));
             colorSelectorDialog.setColorSelectorDialogListener(new ColorSelectorDialog.ColorSelectorDialogListener(){
 
                 @Override
@@ -1004,8 +1006,8 @@ TextWatcher {
                 @Override
                 public void onPositive(int destColor) {
                     AddViewDialog.this.strokeColorPressedPre.setBackgroundColor(destColor);
-                    AddViewDialog.this.strokeColorPressedText.setText((CharSequence)("#" + Integer.toHexString(destColor)));
-                    ((AddViewDialog)AddViewDialog.this).baseButtonInfo.buttonStyle.strokeColorPress = "#" + Integer.toHexString(destColor);
+                    AddViewDialog.this.strokeColorPressedText.setText((CharSequence)(QclColors.format(destColor)));
+                    ((AddViewDialog)AddViewDialog.this).baseButtonInfo.buttonStyle.strokeColorPress = QclColors.format(destColor);
                 }
 
                 @Override
@@ -1015,7 +1017,7 @@ TextWatcher {
             colorSelectorDialog.show();
         }
         if (view == this.selectFillColorPressed) {
-            colorSelectorDialog = new ColorSelectorDialog(this.getContext(), false, Color.parseColor((String)this.baseButtonInfo.buttonStyle.fillColorPress));
+            colorSelectorDialog = new ColorSelectorDialog(this.getContext(), false, QclColors.parseSafe(this.baseButtonInfo.buttonStyle.fillColorPress, 0x995E5E5E));
             colorSelectorDialog.setColorSelectorDialogListener(new ColorSelectorDialog.ColorSelectorDialogListener(){
 
                 @Override
@@ -1025,8 +1027,8 @@ TextWatcher {
                 @Override
                 public void onPositive(int destColor) {
                     AddViewDialog.this.fillColorPressedPre.setBackgroundColor(destColor);
-                    AddViewDialog.this.fillColorPressedText.setText((CharSequence)("#" + Integer.toHexString(destColor)));
-                    ((AddViewDialog)AddViewDialog.this).baseButtonInfo.buttonStyle.fillColorPress = "#" + Integer.toHexString(destColor);
+                    AddViewDialog.this.fillColorPressedText.setText((CharSequence)(QclColors.format(destColor)));
+                    ((AddViewDialog)AddViewDialog.this).baseButtonInfo.buttonStyle.fillColorPress = QclColors.format(destColor);
                 }
 
                 @Override
@@ -1180,7 +1182,7 @@ TextWatcher {
             dialog2.show();
         }
         if (view == this.selectPointerColor) {
-            ColorSelectorDialog colorSelectorDialog2 = new ColorSelectorDialog(this.getContext(), false, Color.parseColor((String)this.baseRockerViewInfo.rockerStyle.pointerColor));
+            ColorSelectorDialog colorSelectorDialog2 = new ColorSelectorDialog(this.getContext(), false, QclColors.parseSafe(this.baseRockerViewInfo.rockerStyle.pointerColor, 0xFFFFFFFF));
             colorSelectorDialog2.setColorSelectorDialogListener(new ColorSelectorDialog.ColorSelectorDialogListener(){
 
                 @Override
@@ -1190,8 +1192,8 @@ TextWatcher {
                 @Override
                 public void onPositive(int destColor) {
                     AddViewDialog.this.pointerColorPre.setBackgroundColor(destColor);
-                    AddViewDialog.this.pointerColorText.setText((CharSequence)("#" + Integer.toHexString(destColor)));
-                    ((AddViewDialog)AddViewDialog.this).baseRockerViewInfo.rockerStyle.pointerColor = "#" + Integer.toHexString(destColor);
+                    AddViewDialog.this.pointerColorText.setText((CharSequence)(QclColors.format(destColor)));
+                    ((AddViewDialog)AddViewDialog.this).baseRockerViewInfo.rockerStyle.pointerColor = QclColors.format(destColor);
                 }
 
                 @Override
@@ -1201,7 +1203,7 @@ TextWatcher {
             colorSelectorDialog2.show();
         }
         if (view == this.selectRockerStrokeColor) {
-            ColorSelectorDialog colorSelectorDialog3 = new ColorSelectorDialog(this.getContext(), false, Color.parseColor((String)this.baseRockerViewInfo.rockerStyle.strokeColor));
+            ColorSelectorDialog colorSelectorDialog3 = new ColorSelectorDialog(this.getContext(), false, QclColors.parseSafe(this.baseRockerViewInfo.rockerStyle.strokeColor, 0x33555555));
             colorSelectorDialog3.setColorSelectorDialogListener(new ColorSelectorDialog.ColorSelectorDialogListener(){
 
                 @Override
@@ -1211,8 +1213,8 @@ TextWatcher {
                 @Override
                 public void onPositive(int destColor) {
                     AddViewDialog.this.rockerStrokeColorPre.setBackgroundColor(destColor);
-                    AddViewDialog.this.rockerStrokeColorText.setText((CharSequence)("#" + Integer.toHexString(destColor)));
-                    ((AddViewDialog)AddViewDialog.this).baseRockerViewInfo.rockerStyle.strokeColor = "#" + Integer.toHexString(destColor);
+                    AddViewDialog.this.rockerStrokeColorText.setText((CharSequence)(QclColors.format(destColor)));
+                    ((AddViewDialog)AddViewDialog.this).baseRockerViewInfo.rockerStyle.strokeColor = QclColors.format(destColor);
                 }
 
                 @Override
@@ -1222,7 +1224,7 @@ TextWatcher {
             colorSelectorDialog3.show();
         }
         if (view == this.selectRockerFillColor) {
-            ColorSelectorDialog colorSelectorDialog4 = new ColorSelectorDialog(this.getContext(), false, Color.parseColor((String)this.baseRockerViewInfo.rockerStyle.fillColor));
+            ColorSelectorDialog colorSelectorDialog4 = new ColorSelectorDialog(this.getContext(), false, QclColors.parseSafe(this.baseRockerViewInfo.rockerStyle.fillColor, 0x666E6E6E));
             colorSelectorDialog4.setColorSelectorDialogListener(new ColorSelectorDialog.ColorSelectorDialogListener(){
 
                 @Override
@@ -1232,8 +1234,8 @@ TextWatcher {
                 @Override
                 public void onPositive(int destColor) {
                     AddViewDialog.this.rockerFillColorPre.setBackgroundColor(destColor);
-                    AddViewDialog.this.rockerFillColorText.setText((CharSequence)("#" + Integer.toHexString(destColor)));
-                    ((AddViewDialog)AddViewDialog.this).baseRockerViewInfo.rockerStyle.fillColor = "#" + Integer.toHexString(destColor);
+                    AddViewDialog.this.rockerFillColorText.setText((CharSequence)(QclColors.format(destColor)));
+                    ((AddViewDialog)AddViewDialog.this).baseRockerViewInfo.rockerStyle.fillColor = QclColors.format(destColor);
                 }
 
                 @Override
@@ -1243,7 +1245,7 @@ TextWatcher {
             colorSelectorDialog4.show();
         }
         if (view == this.selectPointerColorPressed) {
-            ColorSelectorDialog colorSelectorDialog5 = new ColorSelectorDialog(this.getContext(), false, Color.parseColor((String)this.baseRockerViewInfo.rockerStyle.pointerColorPress));
+            ColorSelectorDialog colorSelectorDialog5 = new ColorSelectorDialog(this.getContext(), false, QclColors.parseSafe(this.baseRockerViewInfo.rockerStyle.pointerColorPress, 0xFFFFFFFF));
             colorSelectorDialog5.setColorSelectorDialogListener(new ColorSelectorDialog.ColorSelectorDialogListener(){
 
                 @Override
@@ -1253,8 +1255,8 @@ TextWatcher {
                 @Override
                 public void onPositive(int destColor) {
                     AddViewDialog.this.pointerColorPressedPre.setBackgroundColor(destColor);
-                    AddViewDialog.this.pointerColorPressedText.setText((CharSequence)("#" + Integer.toHexString(destColor)));
-                    ((AddViewDialog)AddViewDialog.this).baseRockerViewInfo.rockerStyle.pointerColorPress = "#" + Integer.toHexString(destColor);
+                    AddViewDialog.this.pointerColorPressedText.setText((CharSequence)(QclColors.format(destColor)));
+                    ((AddViewDialog)AddViewDialog.this).baseRockerViewInfo.rockerStyle.pointerColorPress = QclColors.format(destColor);
                 }
 
                 @Override
@@ -1264,7 +1266,7 @@ TextWatcher {
             colorSelectorDialog5.show();
         }
         if (view == this.selectRockerStrokeColorPressed) {
-            ColorSelectorDialog colorSelectorDialog6 = new ColorSelectorDialog(this.getContext(), false, Color.parseColor((String)this.baseRockerViewInfo.rockerStyle.strokeColorPress));
+            ColorSelectorDialog colorSelectorDialog6 = new ColorSelectorDialog(this.getContext(), false, QclColors.parseSafe(this.baseRockerViewInfo.rockerStyle.strokeColorPress, 0x55555555));
             colorSelectorDialog6.setColorSelectorDialogListener(new ColorSelectorDialog.ColorSelectorDialogListener(){
 
                 @Override
@@ -1274,8 +1276,8 @@ TextWatcher {
                 @Override
                 public void onPositive(int destColor) {
                     AddViewDialog.this.rockerStrokeColorPressedPre.setBackgroundColor(destColor);
-                    AddViewDialog.this.rockerStrokeColorPressedText.setText((CharSequence)("#" + Integer.toHexString(destColor)));
-                    ((AddViewDialog)AddViewDialog.this).baseRockerViewInfo.rockerStyle.strokeColorPress = "#" + Integer.toHexString(destColor);
+                    AddViewDialog.this.rockerStrokeColorPressedText.setText((CharSequence)(QclColors.format(destColor)));
+                    ((AddViewDialog)AddViewDialog.this).baseRockerViewInfo.rockerStyle.strokeColorPress = QclColors.format(destColor);
                 }
 
                 @Override
@@ -1285,7 +1287,7 @@ TextWatcher {
             colorSelectorDialog6.show();
         }
         if (view == this.selectRockerFillColorPressed) {
-            ColorSelectorDialog colorSelectorDialog7 = new ColorSelectorDialog(this.getContext(), false, Color.parseColor((String)this.baseRockerViewInfo.rockerStyle.fillColorPress));
+            ColorSelectorDialog colorSelectorDialog7 = new ColorSelectorDialog(this.getContext(), false, QclColors.parseSafe(this.baseRockerViewInfo.rockerStyle.fillColorPress, 0x995E5E5E));
             colorSelectorDialog7.setColorSelectorDialogListener(new ColorSelectorDialog.ColorSelectorDialogListener(){
 
                 @Override
@@ -1295,8 +1297,8 @@ TextWatcher {
                 @Override
                 public void onPositive(int destColor) {
                     AddViewDialog.this.rockerFillColorPressedPre.setBackgroundColor(destColor);
-                    AddViewDialog.this.rockerFillColorPressedText.setText((CharSequence)("#" + Integer.toHexString(destColor)));
-                    ((AddViewDialog)AddViewDialog.this).baseRockerViewInfo.rockerStyle.fillColorPress = "#" + Integer.toHexString(destColor);
+                    AddViewDialog.this.rockerFillColorPressedText.setText((CharSequence)(QclColors.format(destColor)));
+                    ((AddViewDialog)AddViewDialog.this).baseRockerViewInfo.rockerStyle.fillColorPress = QclColors.format(destColor);
                 }
 
                 @Override

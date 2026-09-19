@@ -36,7 +36,16 @@
     <uses-permission
         android:name="android.permission.CHANGE_WIFI_STATE" />
 
-    <application
+    
+    <!-- ★ Android 11+ 包可见性：外部渲染器（如 MobileGlues / VGPU 插件）通过
+         「已安装应用的 nativeLibraryDir」提供 so，需要能查询到这些带启动图标的应用。 -->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.LAUNCHER" />
+        </intent>
+    </queries>
+<application
         android:name=".launcher.QCLApplication"
         android:allowBackup="true"
         android:requestLegacyExternalStorage="true"

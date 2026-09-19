@@ -36,6 +36,8 @@
  */
 package com.qcl.launcher.launcher.uis.universal.setting.right.launcher;
 
+import com.qcl.launcher.utils.QclColors;
+
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
@@ -291,11 +293,11 @@ CompoundButton.OnCheckedChangeListener {
         if (this.activity.isLoaded) {
             this.activity.uiManager.settingUI.startExteriorSettingUI.setBackground(this.context.getResources().getDrawable(R.drawable.launcher_button_white));
         }
-        this.colorView.setBackgroundColor(Color.parseColor((String)ExteriorSettingUI.getThemeColor(this.context, this.activity.launcherSetting.launcherTheme)));
+        this.colorView.setBackgroundColor(ExteriorSettingUI.parseThemeColorSafe(this.context, this.activity.launcherSetting.launcherTheme));
         this.colorText.setText((CharSequence)ExteriorSettingUI.getThemeColor(this.context, this.activity.launcherSetting.launcherTheme));
         int pc = ExteriorSettingUI.getPanelColor(this.context, this.activity.launcherSetting.panelColor);
         this.panelColorView.setBackgroundColor(pc);
-        this.panelColorText.setText((CharSequence)("#" + Integer.toHexString(pc)));
+        this.panelColorText.setText((CharSequence)(QclColors.format(pc)));
     }
 
     @Override
@@ -322,7 +324,7 @@ CompoundButton.OnCheckedChangeListener {
             return context.getResources().getColor(R.color.qcl_panel_gray_alt);
         }
         try {
-            return Color.parseColor((String)color2);
+            return QclColors.parseSafe(color2, 0xFFFFFFFF);
         }
         catch (Throwable t) {
             return context.getResources().getColor(R.color.qcl_panel_gray_alt);
@@ -351,11 +353,29 @@ CompoundButton.OnCheckedChangeListener {
         }
     }
 
+    /**
+     * 主题色字符串 —— 读取侧已加固：null / 空 / DEFAULT / 历史非法值（如未补零的 "#ff"）
+     * 一律回退为合法的默认强调色串，绝不再把非法值抛给 Color.parseColor。
+     * （真机 OPPO PDVM00 曾因存档里 "#ff" 这类值在启动期 parseColor 崩溃。）
+     */
     public static String getThemeColor(Context context, String color2) {
-        if (color2.equals("DEFAULT")) {
-            return "#" + Integer.toHexString(context.getColor(R.color.colorAccent));
+        int fallback = context.getColor(R.color.colorAccent);
+        if (color2 == null || "DEFAULT".equals(color2) || color2.trim().isEmpty()) {
+            return QclColors.format(fallback);
         }
-        return color2;
+        String s = color2.trim();
+        try {
+            Color.parseColor(s);
+            return s;
+        } catch (Throwable t) {
+            android.util.Log.w("jrelog", "[颜色] 主题色非法值已回退: " + s);
+            return QclColors.format(fallback);
+        }
+    }
+
+    /** 主题色 → int，安全解析（启动期着色用，绝不抛异常）。 */
+    public static int parseThemeColorSafe(Context context, String color2) {
+        return QclColors.parseSafeTheme(context, getThemeColor(context, color2), R.color.colorAccent);
     }
 
     public static boolean isImageFile(String filePath) {
@@ -368,7 +388,7 @@ CompoundButton.OnCheckedChangeListener {
     public void onClick(View v) {
         ColorSelectorDialog dialog;
         if (v == this.selectTheme) {
-            dialog = new ColorSelectorDialog(this.context, true, Color.parseColor((String)ExteriorSettingUI.getThemeColor(this.context, this.activity.launcherSetting.launcherTheme)));
+            dialog = new ColorSelectorDialog(this.context, true, ExteriorSettingUI.parseThemeColorSafe(this.context, this.activity.launcherSetting.launcherTheme));
             dialog.setColorSelectorDialogListener(new ColorSelectorDialog.ColorSelectorDialogListener(){
 
                 @Override
@@ -378,19 +398,19 @@ CompoundButton.OnCheckedChangeListener {
                     ExteriorSettingUI.this.activity.exteriorConfig.accentColor(color2);
                     ExteriorSettingUI.this.activity.exteriorConfig.apply((Activity)ExteriorSettingUI.this.activity);
                     ExteriorSettingUI.this.colorView.setBackgroundColor(color2);
-                    ExteriorSettingUI.this.colorText.setText((CharSequence)("#" + Integer.toHexString(color2)));
+                    ExteriorSettingUI.this.colorText.setText((CharSequence)(QclColors.format(color2)));
                 }
 
                 @Override
                 @SuppressLint(value={"SetTextI18n"})
                 public void onPositive(int destColor) {
-                    ExteriorSettingUI.this.activity.launcherSetting.launcherTheme = "#" + Integer.toHexString(destColor);
+                    ExteriorSettingUI.this.activity.launcherSetting.launcherTheme = QclColors.format(destColor);
                     GsonUtils.saveLauncherSetting(ExteriorSettingUI.this.activity.launcherSetting, AppManifest.SETTING_DIR + "/launcher_setting.json");
                     ExteriorSettingUI.this.activity.exteriorConfig.primaryColor(destColor);
                     ExteriorSettingUI.this.activity.exteriorConfig.accentColor(destColor);
                     ExteriorSettingUI.this.activity.exteriorConfig.apply((Activity)ExteriorSettingUI.this.activity);
                     ExteriorSettingUI.this.colorView.setBackgroundColor(destColor);
-                    ExteriorSettingUI.this.colorText.setText((CharSequence)("#" + Integer.toHexString(destColor)));
+                    ExteriorSettingUI.this.colorText.setText((CharSequence)(QclColors.format(destColor)));
                 }
 
                 @Override
@@ -400,7 +420,7 @@ CompoundButton.OnCheckedChangeListener {
                     ExteriorSettingUI.this.activity.exteriorConfig.accentColor(initColor);
                     ExteriorSettingUI.this.activity.exteriorConfig.apply((Activity)ExteriorSettingUI.this.activity);
                     ExteriorSettingUI.this.colorView.setBackgroundColor(initColor);
-                    ExteriorSettingUI.this.colorText.setText((CharSequence)("#" + Integer.toHexString(initColor)));
+                    ExteriorSettingUI.this.colorText.setText((CharSequence)(QclColors.format(initColor)));
                 }
             });
             dialog.show();
@@ -413,16 +433,16 @@ CompoundButton.OnCheckedChangeListener {
                 @SuppressLint(value={"SetTextI18n"})
                 public void onColorSelected(int color2) {
                     ExteriorSettingUI.this.panelColorView.setBackgroundColor(color2);
-                    ExteriorSettingUI.this.panelColorText.setText((CharSequence)("#" + Integer.toHexString(color2)));
+                    ExteriorSettingUI.this.panelColorText.setText((CharSequence)(QclColors.format(color2)));
                 }
 
                 @Override
                 @SuppressLint(value={"SetTextI18n"})
                 public void onPositive(int destColor) {
-                    ExteriorSettingUI.this.activity.launcherSetting.panelColor = "#" + Integer.toHexString(destColor);
+                    ExteriorSettingUI.this.activity.launcherSetting.panelColor = QclColors.format(destColor);
                     GsonUtils.saveLauncherSetting(ExteriorSettingUI.this.activity.launcherSetting, AppManifest.SETTING_DIR + "/launcher_setting.json");
                     ExteriorSettingUI.this.panelColorView.setBackgroundColor(destColor);
-                    ExteriorSettingUI.this.panelColorText.setText((CharSequence)("#" + Integer.toHexString(destColor)));
+                    ExteriorSettingUI.this.panelColorText.setText((CharSequence)(QclColors.format(destColor)));
                     ExteriorSettingUI.applyPanelTint(ExteriorSettingUI.this.context, (View)ExteriorSettingUI.this.exteriorSettingUI, destColor);
                     ExteriorSettingUI.applyPanelTint(ExteriorSettingUI.this.context, ExteriorSettingUI.this.activity.getWindow().getDecorView(), destColor);
                 }
@@ -431,7 +451,7 @@ CompoundButton.OnCheckedChangeListener {
                 @SuppressLint(value={"SetTextI18n"})
                 public void onNegative(int initColor) {
                     ExteriorSettingUI.this.panelColorView.setBackgroundColor(initColor);
-                    ExteriorSettingUI.this.panelColorText.setText((CharSequence)("#" + Integer.toHexString(initColor)));
+                    ExteriorSettingUI.this.panelColorText.setText((CharSequence)(QclColors.format(initColor)));
                 }
             });
             dialog.show();

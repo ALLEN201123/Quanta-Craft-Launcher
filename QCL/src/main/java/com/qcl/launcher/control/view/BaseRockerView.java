@@ -21,6 +21,8 @@
  */
 package com.qcl.launcher.control.view;
 
+import com.qcl.launcher.utils.QclColors;
+
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Canvas;
@@ -120,9 +122,12 @@ extends RockerView {
         if (this.menuHelper.editMode) {
             switch (event.getActionMasked()) {
                 case 0: {
+                    // ★★★ 2026-09-19：改用屏幕绝对坐标 —— event.getX()/getY() 是「相对本 View」的坐标，
+                    //   而拖动时 View 自身跟着手指移动 → 相对坐标差恒 ≈0 → 拖不动/松手被误判成点击
+                    //   （回弹原位 + 弹编辑对话框）。与 BaseButton 同一处病根。
                     this.downTime = System.currentTimeMillis();
-                    this.initialX = event.getX();
-                    this.initialY = event.getY();
+                    this.initialX = event.getRawX();
+                    this.initialY = event.getRawY();
                     this.initialPositionX = this.getX();
                     this.initialPositionY = this.getY();
                     this.deleteHandler.postDelayed(this.deleteRunnable, 600L);
@@ -130,34 +135,38 @@ extends RockerView {
                     break;
                 }
                 case 2: {
-                    float targetX = this.getX() + event.getX() - this.initialX >= 0.0f && this.getX() + event.getX() - this.initialX <= (float)(this.screenWidth - this.getWidth()) ? this.getX() + event.getX() - this.initialX : (this.getX() + event.getX() - this.initialX < 0.0f ? 0.0f : (float)(this.screenWidth - this.getWidth()));
-                    float targetY = this.getY() + event.getY() - this.initialY >= 0.0f && this.getY() + event.getY() - this.initialY <= (float)(this.screenHeight - this.getHeight()) ? this.getY() + event.getY() - this.initialY : (this.getY() + event.getY() - this.initialY < 0.0f ? 0.0f : (float)(this.screenHeight - this.getHeight()));
+                    float maxX = (float) Math.max(0, this.screenWidth - this.getWidth());
+                    float maxY = (float) Math.max(0, this.screenHeight - this.getHeight());
+                    float dx = event.getRawX() - this.initialX;
+                    float dy = event.getRawY() - this.initialY;
+                    float rawX = this.initialPositionX + dx;
+                    float rawY = this.initialPositionY + dy;
+                    float targetX = rawX < 0.0f ? 0.0f : (rawX > maxX ? maxX : rawX);
+                    float targetY = rawY < 0.0f ? 0.0f : (rawY > maxY ? maxY : rawY);
                     this.setX(targetX);
                     this.setY(targetY);
                     this.info.xPosition.absolutePosition = ConvertUtils.px2dip(this.getContext(), targetX);
                     this.info.yPosition.absolutePosition = ConvertUtils.px2dip(this.getContext(), targetY);
-                    this.info.xPosition.percentPosition = targetX / (float)(this.screenWidth - this.getWidth());
-                    this.info.yPosition.percentPosition = targetY / (float)(this.screenHeight - this.getHeight());
+                    this.info.xPosition.percentPosition = maxX > 0f ? targetX / maxX : 0f;
+                    this.info.yPosition.percentPosition = maxY > 0f ? targetY / maxY : 0f;
                     this.saveRockerInfo();
                     this.menuHelper.viewManager.layoutPanel.showReference(this.info.positionType, this.getX(), this.getY(), this.getWidth(), this.getHeight());
-                    if (!(Math.abs(event.getX() - this.initialX) > 1.0f) && !(Math.abs(event.getY() - this.initialY) > 1.0f)) break;
-                    this.deleteHandler.removeCallbacks(this.deleteRunnable);
+                    if (Math.abs(dx) > 3.0f || Math.abs(dy) > 3.0f) {
+                        this.deleteHandler.removeCallbacks(this.deleteRunnable);
+                    }
                     break;
                 }
                 case 1: 
                 case 3: {
                     this.deleteHandler.removeCallbacks(this.deleteRunnable);
-                    if (System.currentTimeMillis() - this.downTime <= 200L && Math.abs(event.getX() - this.initialX) <= 10.0f && Math.abs(event.getY() - this.initialY) <= 10.0f) {
-                        this.setX(this.initialPositionX);
-                        this.setY(this.initialPositionY);
-                        this.info.xPosition.absolutePosition = ConvertUtils.px2dip(this.getContext(), this.initialPositionX);
-                        this.info.yPosition.absolutePosition = ConvertUtils.px2dip(this.getContext(), this.initialPositionY);
-                        this.info.xPosition.percentPosition = this.initialPositionX / (float)(this.screenWidth - this.getWidth());
-                        this.info.yPosition.percentPosition = this.initialPositionY / (float)(this.screenHeight - this.getHeight());
-                        this.saveRockerInfo();
+                    float totalDx = Math.abs(event.getRawX() - this.initialX);
+                    float totalDy = Math.abs(event.getRawY() - this.initialY);
+                    if (System.currentTimeMillis() - this.downTime <= 200L && totalDx <= 10.0f && totalDy <= 10.0f) {
+                        // 确实是点击（没拖动）→ 位置不动，弹编辑对话框；★ 不再回弹到 initialPosition
                         EditRockerDialog dialog = new EditRockerDialog(this.getContext(), this.menuHelper.viewManager, this.info.pattern, this.info.child, this.screenWidth, this.screenHeight, this, this.menuHelper.fullscreen);
                         dialog.show();
                     }
+                    // 拖动过 → 保持 MOVE 期间写入并保存的新位置
                     this.menuHelper.viewManager.layoutPanel.hideReference();
                 }
             }
@@ -196,11 +205,11 @@ extends RockerView {
         this.drawableNormal = new GradientDrawable();
         this.drawablePress = new GradientDrawable();
         this.drawableNormal.setCornerRadius((float)ConvertUtils.dip2px(this.getContext(), info.rockerStyle.cornerRadius));
-        this.drawableNormal.setStroke(ConvertUtils.dip2px(this.getContext(), info.rockerStyle.strokeWidth), Color.parseColor((String)info.rockerStyle.strokeColor));
-        this.drawableNormal.setColor(Color.parseColor((String)info.rockerStyle.fillColor));
+        this.drawableNormal.setStroke(ConvertUtils.dip2px(this.getContext(), info.rockerStyle.strokeWidth), QclColors.parseSafe(info.rockerStyle.strokeColor, 0x33555555));
+        this.drawableNormal.setColor(QclColors.parseSafe(info.rockerStyle.fillColor, 0x666E6E6E));
         this.drawablePress.setCornerRadius((float)ConvertUtils.dip2px(this.getContext(), info.rockerStyle.cornerRadiusPress));
-        this.drawablePress.setStroke(ConvertUtils.dip2px(this.getContext(), info.rockerStyle.strokeWidthPress), Color.parseColor((String)info.rockerStyle.strokeColorPress));
-        this.drawablePress.setColor(Color.parseColor((String)info.rockerStyle.fillColorPress));
+        this.drawablePress.setStroke(ConvertUtils.dip2px(this.getContext(), info.rockerStyle.strokeWidthPress), QclColors.parseSafe(info.rockerStyle.strokeColorPress, 0x55555555));
+        this.drawablePress.setColor(QclColors.parseSafe(info.rockerStyle.fillColorPress, 0x995E5E5E));
         this.setPointerColor(info.rockerStyle.pointerColor);
         this.setPointerColorPress(info.rockerStyle.pointerColorPress);
         this.setFollowType(info.followType);

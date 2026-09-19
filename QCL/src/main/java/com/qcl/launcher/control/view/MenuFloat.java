@@ -24,6 +24,13 @@ public class MenuFloat extends View {
     private long downTime;
     private float initialX;
     private float initialY;
+    // ★★★ 2026-09-19 新增：记录按下瞬间的控件位置。
+    //   拖动必须用「初始位置 + 累计位移(屏幕绝对坐标)」计算目标位置；
+    //   原来用 getX() + (event.getX() - initialX)（相对本 View 的坐标），
+    //   而 View 拖动时自身也在移动 → 相对坐标差恒 ≈0 → 跟手失灵、只挪一点点就停住，
+    //   松开时保存的就是那个"偏移很小"的位置 → 重启后看起来又回到中间。
+    private float initialPositionX;
+    private float initialPositionY;
     private MenuHelper menuHelper;
     private final Paint outlinePaint;
     private Paint paint;
@@ -105,36 +112,42 @@ public class MenuFloat extends View {
     @Override // android.view.View
     public boolean onTouchEvent(MotionEvent motionEvent) {
         MenuFloatCallback menuFloatCallback;
-        float measuredWidth;
         int action = motionEvent.getAction();
+        float maxX = (float) Math.max(0, this.screenWidth - getMeasuredWidth());
+        float maxY = (float) Math.max(0, this.screenHeight - getMeasuredHeight());
         if (action == 0) {
-            this.initialX = motionEvent.getX();
-            this.initialY = motionEvent.getY();
+            // 屏幕绝对坐标 + 按下瞬间的位置（配合下面「初始位置 + 累计位移」的算法）
+            this.initialX = motionEvent.getRawX();
+            this.initialY = motionEvent.getRawY();
+            this.initialPositionX = getX();
+            this.initialPositionY = getY();
             this.downTime = System.currentTimeMillis();
             this.pressed = true;
         } else if (action == 1) {
-            if (Math.abs(motionEvent.getX() - this.initialX) <= 10.0f && Math.abs(motionEvent.getY() - this.initialY) <= 10.0f && System.currentTimeMillis() - this.downTime <= 400 && (menuFloatCallback = this.callback) != null) {
+            float totalDx = Math.abs(motionEvent.getRawX() - this.initialX);
+            float totalDy = Math.abs(motionEvent.getRawY() - this.initialY);
+            if (totalDx <= 10.0f && totalDy <= 10.0f && System.currentTimeMillis() - this.downTime <= 400 && (menuFloatCallback = this.callback) != null) {
                 menuFloatCallback.onClick();
             }
             this.pressed = false;
+            // ★ 拖动结束：把最终位置再写一次并落盘，确保重启后回到这里
+            if (this.menuHelper.gameMenuSetting.menuFloatSetting.movable && (totalDx > 10.0f || totalDy > 10.0f) && maxX > 0.0f && maxY > 0.0f) {
+                MenuFloatCallback cb = this.callback;
+                if (cb != null) {
+                    cb.onMove(getX() / maxX, getY() / maxY);
+                }
+            }
         } else if (action == 2) {
-            float f = 0.0f;
-            if ((getX() + motionEvent.getX()) - this.initialX >= 0.0f && (getX() + motionEvent.getX()) - this.initialX <= this.screenWidth - getMeasuredWidth()) {
-                measuredWidth = (getX() + motionEvent.getX()) - this.initialX;
-            } else {
-                measuredWidth = (getX() + motionEvent.getX()) - this.initialX < 0.0f ? 0.0f : this.screenWidth - getMeasuredWidth();
-            }
-            if ((getY() + motionEvent.getY()) - this.initialY >= 0.0f && (getY() + motionEvent.getY()) - this.initialY <= this.screenHeight - getMeasuredHeight()) {
-                f = (getY() + motionEvent.getY()) - this.initialY;
-            } else if ((getY() + motionEvent.getY()) - this.initialY >= 0.0f) {
-                f = this.screenHeight - getMeasuredHeight();
-            }
             if (this.menuHelper.gameMenuSetting.menuFloatSetting.movable) {
-                setX(measuredWidth);
-                setY(f);
+                float targetX = this.initialPositionX + (motionEvent.getRawX() - this.initialX);
+                float targetY = this.initialPositionY + (motionEvent.getRawY() - this.initialY);
+                targetX = targetX < 0.0f ? 0.0f : (targetX > maxX ? maxX : targetX);
+                targetY = targetY < 0.0f ? 0.0f : (targetY > maxY ? maxY : targetY);
+                setX(targetX);
+                setY(targetY);
                 MenuFloatCallback menuFloatCallback2 = this.callback;
-                if (menuFloatCallback2 != null) {
-                    menuFloatCallback2.onMove(getX() / (this.screenWidth - getMeasuredWidth()), getY() / (this.screenHeight - getMeasuredHeight()));
+                if (menuFloatCallback2 != null && maxX > 0.0f && maxY > 0.0f) {
+                    menuFloatCallback2.onMove(targetX / maxX, targetY / maxY);
                 }
             }
             this.pressed = true;

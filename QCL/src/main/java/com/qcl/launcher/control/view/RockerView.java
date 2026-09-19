@@ -15,6 +15,8 @@
  */
 package com.qcl.launcher.control.view;
 
+import com.qcl.launcher.utils.QclColors;
+
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Canvas;
@@ -109,11 +111,11 @@ extends View {
         downRightPointerPath.lineTo((float)(8 * (this.getWidth() / 10)), (float)(7 * (this.getHeight() / 10)));
         Paint pointerPaint = new Paint();
         pointerPaint.setAntiAlias(true);
-        pointerPaint.setColor(Color.parseColor((String)this.pointerColor));
+        pointerPaint.setColor(QclColors.parseSafe(this.pointerColor, 0xFFFFFFFF));
         pointerPaint.setStyle(Paint.Style.FILL);
         Paint pointerPaintPress = new Paint();
         pointerPaintPress.setAntiAlias(true);
-        pointerPaintPress.setColor(Color.parseColor((String)this.pointerColorPress));
+        pointerPaintPress.setColor(QclColors.parseSafe(this.pointerColorPress, 0xFFFFFFFF));
         pointerPaintPress.setStyle(Paint.Style.FILL);
         if (this.center == State.NORMAL) {
             canvas.drawPath(centerPointerPath, pointerPaint);

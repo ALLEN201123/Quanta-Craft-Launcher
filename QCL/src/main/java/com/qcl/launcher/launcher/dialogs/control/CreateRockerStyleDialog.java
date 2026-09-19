@@ -1,5 +1,7 @@
 package com.qcl.launcher.launcher.dialogs.control;
 
+import com.qcl.launcher.utils.QclColors;
+
 import android.app.Dialog;
 import android.content.Context;
 import android.graphics.Color;
@@ -123,12 +125,12 @@ public class CreateRockerStyleDialog extends Dialog implements SeekBar.OnSeekBar
         this.rockerStrokeWidthText.setText(this.rockerStyle.strokeWidth + " dp");
         this.rockerCornerRadiusPressedText.setText(this.rockerStyle.cornerRadiusPress + " dp");
         this.rockerStrokeWidthPressedText.setText(this.rockerStyle.strokeWidthPress + " dp");
-        this.pointerColorPre.setBackgroundColor(Color.parseColor(this.rockerStyle.pointerColor));
-        this.rockerStrokeColorPre.setBackgroundColor(Color.parseColor(this.rockerStyle.strokeColor));
-        this.rockerFillColorPre.setBackgroundColor(Color.parseColor(this.rockerStyle.fillColor));
-        this.pointerColorPressedPre.setBackgroundColor(Color.parseColor(this.rockerStyle.pointerColorPress));
-        this.rockerStrokeColorPressedPre.setBackgroundColor(Color.parseColor(this.rockerStyle.strokeColorPress));
-        this.rockerFillColorPressedPre.setBackgroundColor(Color.parseColor(this.rockerStyle.fillColorPress));
+        this.pointerColorPre.setBackgroundColor(QclColors.parseSafe(this.rockerStyle.pointerColor, 0xFFFFFFFF));
+        this.rockerStrokeColorPre.setBackgroundColor(QclColors.parseSafe(this.rockerStyle.strokeColor, 0x33555555));
+        this.rockerFillColorPre.setBackgroundColor(QclColors.parseSafe(this.rockerStyle.fillColor, 0x666E6E6E));
+        this.pointerColorPressedPre.setBackgroundColor(QclColors.parseSafe(this.rockerStyle.pointerColorPress, 0xFFFFFFFF));
+        this.rockerStrokeColorPressedPre.setBackgroundColor(QclColors.parseSafe(this.rockerStyle.strokeColorPress, 0x55555555));
+        this.rockerFillColorPressedPre.setBackgroundColor(QclColors.parseSafe(this.rockerStyle.fillColorPress, 0x995E5E5E));
         this.pointerColorText.setText(this.rockerStyle.pointerColor);
         this.rockerStrokeColorText.setText(this.rockerStyle.strokeColor);
         this.rockerFillColorText.setText(this.rockerStyle.fillColor);
@@ -174,7 +176,7 @@ public class CreateRockerStyleDialog extends Dialog implements SeekBar.OnSeekBar
             dismiss();
         }
         if (view == this.selectPointerColor) {
-            ColorSelectorDialog colorSelectorDialog = new ColorSelectorDialog(getContext(), false, Color.parseColor(this.rockerStyle.pointerColor));
+            ColorSelectorDialog colorSelectorDialog = new ColorSelectorDialog(getContext(), false, QclColors.parseSafe(this.rockerStyle.pointerColor, 0xFFFFFFFF));
             colorSelectorDialog.setColorSelectorDialogListener(new ColorSelectorDialog.ColorSelectorDialogListener() { // from class: com.qcl.launcher.launcher.dialogs.control.CreateRockerStyleDialog.1
                 @Override // com.qcl.launcher.launcher.dialogs.tools.ColorSelectorDialog.ColorSelectorDialogListener
                 public void onColorSelected(int i) {
@@ -187,14 +189,14 @@ public class CreateRockerStyleDialog extends Dialog implements SeekBar.OnSeekBar
                 @Override // com.qcl.launcher.launcher.dialogs.tools.ColorSelectorDialog.ColorSelectorDialogListener
                 public void onPositive(int i) {
                     CreateRockerStyleDialog.this.pointerColorPre.setBackgroundColor(i);
-                    CreateRockerStyleDialog.this.pointerColorText.setText("#" + Integer.toHexString(i));
-                    CreateRockerStyleDialog.this.rockerStyle.pointerColor = "#" + Integer.toHexString(i);
+                    CreateRockerStyleDialog.this.pointerColorText.setText(QclColors.format(i));
+                    CreateRockerStyleDialog.this.rockerStyle.pointerColor = QclColors.format(i);
                 }
             });
             colorSelectorDialog.show();
         }
         if (view == this.selectRockerStrokeColor) {
-            ColorSelectorDialog colorSelectorDialog2 = new ColorSelectorDialog(getContext(), false, Color.parseColor(this.rockerStyle.strokeColor));
+            ColorSelectorDialog colorSelectorDialog2 = new ColorSelectorDialog(getContext(), false, QclColors.parseSafe(this.rockerStyle.strokeColor, 0x33555555));
             colorSelectorDialog2.setColorSelectorDialogListener(new ColorSelectorDialog.ColorSelectorDialogListener() { // from class: com.qcl.launcher.launcher.dialogs.control.CreateRockerStyleDialog.2
                 @Override // com.qcl.launcher.launcher.dialogs.tools.ColorSelectorDialog.ColorSelectorDialogListener
                 public void onColorSelected(int i) {
@@ -207,14 +209,14 @@ public class CreateRockerStyleDialog extends Dialog implements SeekBar.OnSeekBar
                 @Override // com.qcl.launcher.launcher.dialogs.tools.ColorSelectorDialog.ColorSelectorDialogListener
                 public void onPositive(int i) {
                     CreateRockerStyleDialog.this.rockerStrokeColorPre.setBackgroundColor(i);
-                    CreateRockerStyleDialog.this.rockerStrokeColorText.setText("#" + Integer.toHexString(i));
-                    CreateRockerStyleDialog.this.rockerStyle.strokeColor = "#" + Integer.toHexString(i);
+                    CreateRockerStyleDialog.this.rockerStrokeColorText.setText(QclColors.format(i));
+                    CreateRockerStyleDialog.this.rockerStyle.strokeColor = QclColors.format(i);
                 }
             });
             colorSelectorDialog2.show();
         }
         if (view == this.selectRockerFillColor) {
-            ColorSelectorDialog colorSelectorDialog3 = new ColorSelectorDialog(getContext(), false, Color.parseColor(this.rockerStyle.fillColor));
+            ColorSelectorDialog colorSelectorDialog3 = new ColorSelectorDialog(getContext(), false, QclColors.parseSafe(this.rockerStyle.fillColor, 0x666E6E6E));
             colorSelectorDialog3.setColorSelectorDialogListener(new ColorSelectorDialog.ColorSelectorDialogListener() { // from class: com.qcl.launcher.launcher.dialogs.control.CreateRockerStyleDialog.3
                 @Override // com.qcl.launcher.launcher.dialogs.tools.ColorSelectorDialog.ColorSelectorDialogListener
                 public void onColorSelected(int i) {
@@ -227,14 +229,14 @@ public class CreateRockerStyleDialog extends Dialog implements SeekBar.OnSeekBar
                 @Override // com.qcl.launcher.launcher.dialogs.tools.ColorSelectorDialog.ColorSelectorDialogListener
                 public void onPositive(int i) {
                     CreateRockerStyleDialog.this.rockerFillColorPre.setBackgroundColor(i);
-                    CreateRockerStyleDialog.this.rockerFillColorText.setText("#" + Integer.toHexString(i));
-                    CreateRockerStyleDialog.this.rockerStyle.fillColor = "#" + Integer.toHexString(i);
+                    CreateRockerStyleDialog.this.rockerFillColorText.setText(QclColors.format(i));
+                    CreateRockerStyleDialog.this.rockerStyle.fillColor = QclColors.format(i);
                 }
             });
             colorSelectorDialog3.show();
         }
         if (view == this.selectPointerColorPressed) {
-            ColorSelectorDialog colorSelectorDialog4 = new ColorSelectorDialog(getContext(), false, Color.parseColor(this.rockerStyle.pointerColorPress));
+            ColorSelectorDialog colorSelectorDialog4 = new ColorSelectorDialog(getContext(), false, QclColors.parseSafe(this.rockerStyle.pointerColorPress, 0xFFFFFFFF));
             colorSelectorDialog4.setColorSelectorDialogListener(new ColorSelectorDialog.ColorSelectorDialogListener() { // from class: com.qcl.launcher.launcher.dialogs.control.CreateRockerStyleDialog.4
                 @Override // com.qcl.launcher.launcher.dialogs.tools.ColorSelectorDialog.ColorSelectorDialogListener
                 public void onColorSelected(int i) {
@@ -247,14 +249,14 @@ public class CreateRockerStyleDialog extends Dialog implements SeekBar.OnSeekBar
                 @Override // com.qcl.launcher.launcher.dialogs.tools.ColorSelectorDialog.ColorSelectorDialogListener
                 public void onPositive(int i) {
                     CreateRockerStyleDialog.this.pointerColorPressedPre.setBackgroundColor(i);
-                    CreateRockerStyleDialog.this.pointerColorPressedText.setText("#" + Integer.toHexString(i));
-                    CreateRockerStyleDialog.this.rockerStyle.pointerColorPress = "#" + Integer.toHexString(i);
+                    CreateRockerStyleDialog.this.pointerColorPressedText.setText(QclColors.format(i));
+                    CreateRockerStyleDialog.this.rockerStyle.pointerColorPress = QclColors.format(i);
                 }
             });
             colorSelectorDialog4.show();
         }
         if (view == this.selectRockerStrokeColorPressed) {
-            ColorSelectorDialog colorSelectorDialog5 = new ColorSelectorDialog(getContext(), false, Color.parseColor(this.rockerStyle.strokeColorPress));
+            ColorSelectorDialog colorSelectorDialog5 = new ColorSelectorDialog(getContext(), false, QclColors.parseSafe(this.rockerStyle.strokeColorPress, 0x55555555));
             colorSelectorDialog5.setColorSelectorDialogListener(new ColorSelectorDialog.ColorSelectorDialogListener() { // from class: com.qcl.launcher.launcher.dialogs.control.CreateRockerStyleDialog.5
                 @Override // com.qcl.launcher.launcher.dialogs.tools.ColorSelectorDialog.ColorSelectorDialogListener
                 public void onColorSelected(int i) {
@@ -267,14 +269,14 @@ public class CreateRockerStyleDialog extends Dialog implements SeekBar.OnSeekBar
                 @Override // com.qcl.launcher.launcher.dialogs.tools.ColorSelectorDialog.ColorSelectorDialogListener
                 public void onPositive(int i) {
                     CreateRockerStyleDialog.this.rockerStrokeColorPressedPre.setBackgroundColor(i);
-                    CreateRockerStyleDialog.this.rockerStrokeColorPressedText.setText("#" + Integer.toHexString(i));
-                    CreateRockerStyleDialog.this.rockerStyle.strokeColorPress = "#" + Integer.toHexString(i);
+                    CreateRockerStyleDialog.this.rockerStrokeColorPressedText.setText(QclColors.format(i));
+                    CreateRockerStyleDialog.this.rockerStyle.strokeColorPress = QclColors.format(i);
                 }
             });
             colorSelectorDialog5.show();
         }
         if (view == this.selectRockerFillColorPressed) {
-            ColorSelectorDialog colorSelectorDialog6 = new ColorSelectorDialog(getContext(), false, Color.parseColor(this.rockerStyle.fillColorPress));
+            ColorSelectorDialog colorSelectorDialog6 = new ColorSelectorDialog(getContext(), false, QclColors.parseSafe(this.rockerStyle.fillColorPress, 0x995E5E5E));
             colorSelectorDialog6.setColorSelectorDialogListener(new ColorSelectorDialog.ColorSelectorDialogListener() { // from class: com.qcl.launcher.launcher.dialogs.control.CreateRockerStyleDialog.6
                 @Override // com.qcl.launcher.launcher.dialogs.tools.ColorSelectorDialog.ColorSelectorDialogListener
                 public void onColorSelected(int i) {
@@ -287,8 +289,8 @@ public class CreateRockerStyleDialog extends Dialog implements SeekBar.OnSeekBar
                 @Override // com.qcl.launcher.launcher.dialogs.tools.ColorSelectorDialog.ColorSelectorDialogListener
                 public void onPositive(int i) {
                     CreateRockerStyleDialog.this.rockerFillColorPressedPre.setBackgroundColor(i);
-                    CreateRockerStyleDialog.this.rockerFillColorPressedText.setText("#" + Integer.toHexString(i));
-                    CreateRockerStyleDialog.this.rockerStyle.fillColorPress = "#" + Integer.toHexString(i);
+                    CreateRockerStyleDialog.this.rockerFillColorPressedText.setText(QclColors.format(i));
+                    CreateRockerStyleDialog.this.rockerStyle.fillColorPress = QclColors.format(i);
                 }
             });
             colorSelectorDialog6.show();

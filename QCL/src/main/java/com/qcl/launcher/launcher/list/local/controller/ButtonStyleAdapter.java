@@ -1,5 +1,7 @@
 package com.qcl.launcher.launcher.list.local.controller;
 
+import com.qcl.launcher.utils.QclColors;
+
 import android.content.Context;
 import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
@@ -73,18 +75,18 @@ public class ButtonStyleAdapter extends BaseAdapter {
         final ButtonStyle buttonStyle = this.list.get(i);
         final GradientDrawable gradientDrawable = new GradientDrawable();
         gradientDrawable.setCornerRadius(ConvertUtils.dip2px(this.context, buttonStyle.cornerRadius));
-        gradientDrawable.setStroke(ConvertUtils.dip2px(this.context, buttonStyle.strokeWidth), Color.parseColor(buttonStyle.strokeColor));
-        gradientDrawable.setColor(Color.parseColor(buttonStyle.fillColor));
+        gradientDrawable.setStroke(ConvertUtils.dip2px(this.context, buttonStyle.strokeWidth), QclColors.parseSafe(buttonStyle.strokeColor, 0x33555555));
+        gradientDrawable.setColor(QclColors.parseSafe(buttonStyle.fillColor, 0x666E6E6E));
         final GradientDrawable gradientDrawable2 = new GradientDrawable();
         gradientDrawable2.setCornerRadius(ConvertUtils.dip2px(this.context, buttonStyle.cornerRadiusPress));
-        gradientDrawable2.setStroke(ConvertUtils.dip2px(this.context, buttonStyle.strokeWidthPress), Color.parseColor(buttonStyle.strokeColorPress));
-        gradientDrawable2.setColor(Color.parseColor(buttonStyle.fillColorPress));
+        gradientDrawable2.setStroke(ConvertUtils.dip2px(this.context, buttonStyle.strokeWidthPress), QclColors.parseSafe(buttonStyle.strokeColorPress, 0x55555555));
+        gradientDrawable2.setColor(QclColors.parseSafe(buttonStyle.fillColorPress, 0x995E5E5E));
         viewHolder.styleButton.setGravity(17);
         viewHolder.styleButton.setPadding(0, 0, 0, 0);
         viewHolder.styleButton.setText("S");
         viewHolder.styleButton.setAllCaps(false);
         viewHolder.styleButton.setTextSize(buttonStyle.textSize);
-        viewHolder.styleButton.setTextColor(Color.parseColor(buttonStyle.textColor));
+        viewHolder.styleButton.setTextColor(QclColors.parseSafe(buttonStyle.textColor, 0xFFFFFFFF));
         viewHolder.styleButton.setBackground(gradientDrawable);
         viewHolder.styleButton.setOnTouchListener(new View.OnTouchListener() { // from class: com.qcl.launcher.launcher.list.local.controller.ButtonStyleAdapter.1
             @Override // android.view.View.OnTouchListener
@@ -92,13 +94,13 @@ public class ButtonStyleAdapter extends BaseAdapter {
                 if (motionEvent.getActionMasked() == 0) {
                     Button button = (Button) view3;
                     button.setTextSize(buttonStyle.textSizePress);
-                    button.setTextColor(Color.parseColor(buttonStyle.textColorPress));
+                    button.setTextColor(QclColors.parseSafe(buttonStyle.textColorPress, 0xFFFFFFFF));
                     button.setBackground(gradientDrawable2);
                 }
                 if (motionEvent.getActionMasked() == 1 || motionEvent.getActionMasked() == 3) {
                     Button button2 = (Button) view3;
                     button2.setTextSize(buttonStyle.textSize);
-                    button2.setTextColor(Color.parseColor(buttonStyle.textColor));
+                    button2.setTextColor(QclColors.parseSafe(buttonStyle.textColor, 0xFFFFFFFF));
                     button2.setBackground(gradientDrawable);
                 }
                 return true;

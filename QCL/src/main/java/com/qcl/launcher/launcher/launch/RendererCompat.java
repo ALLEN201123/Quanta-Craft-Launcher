@@ -7,6 +7,138 @@ import java.util.regex.Pattern;
 
 /* loaded from: classes2.dex */
 public final class RendererCompat {
+    /**
+     * 外部渲染器库是否就位。
+     *
+     * <p>MobileGlues（mg）是**外部渲染器**：它的 {@code libMobileGlues.so} 不进 APK，
+     * 由玩家自行下载后放进 {@code <游戏目录>/renderer/mg/}（该目录会在启动时挂进
+     * java.library.path，见 PojavLauncher）。因此不能用 APK 的 nativeLibraryDir 判断，
+     * 否则列表里永远看不到 mg（玩家反馈"检测不到"的根因）。
+     *
+     * @param id          渲染器 id
+     * @param versionPath 当前版本目录（{@code <gameDir>/versions/<ver>}），用于推导 gameDir
+     * @param gameDir     已知的游戏目录，可为 null
+     */
+    /** 由版本目录推出游戏目录：{@code <gameDir>/versions/<ver>} → {@code <gameDir>}。 */
+    public static String gameDirOf(String versionPath) {
+        try {
+            java.io.File v = new java.io.File(versionPath == null ? "" : versionPath);
+            java.io.File versions = v.getParentFile();
+            if (versions != null && versions.getParentFile() != null) {
+                return versions.getParentFile().getAbsolutePath();
+            }
+        } catch (Throwable ignored) {
+        }
+        return null;
+    }
+
+    /**
+     * 在**已安装的应用**里找提供该渲染器库的插件（对齐 FCL 的插件渲染器语义：
+     * FCL 的 RendererPlugin 会把配置里的 {@code **|} 前缀替换为「插件的 nativeLibraryDir」，
+     * 也就是说 MobileGlues 这类外部渲染器的 {@code libMobileGlues.so} 来自它自己的插件 APK，
+     * 而不是让玩家手工拷贝）。
+     *
+     * <p>实现上不依赖具体包名：查询所有带启动图标的应用，谁的 nativeLibraryDir 下有目标 so 就用谁。
+     * （Android 11+ 需要在 manifest 里声明 {@code <queries>}，见 AndroidManifest.xml。）
+     *
+     * @return 命中则返回该插件应用的 nativeLibraryDir，否则 null
+     */
+    public static String findInstalledRendererLibDir(android.content.Context context, String id) {
+        Info info = find(id);
+        if (context == null || info == null || info.glName == null || info.glName.isEmpty()) {
+            return null;
+        }
+        try {
+            android.content.pm.PackageManager pm = context.getPackageManager();
+            android.content.Intent intent = new android.content.Intent(android.content.Intent.ACTION_MAIN);
+            intent.addCategory(android.content.Intent.CATEGORY_LAUNCHER);
+            java.util.List<android.content.pm.ResolveInfo> list =
+                    pm.queryIntentActivities(intent, 0);
+            if (list == null) {
+                return null;
+            }
+            for (android.content.pm.ResolveInfo ri : list) {
+                try {
+                    android.content.pm.ApplicationInfo ai = ri.activityInfo.applicationInfo;
+                    if (ai == null || ai.nativeLibraryDir == null) {
+                        continue;
+                    }
+                    java.io.File so = new java.io.File(ai.nativeLibraryDir, info.glName);
+                    if (so.isFile() && so.length() > 0L) {
+                        return ai.nativeLibraryDir;
+                    }
+                } catch (Throwable ignored) {
+                }
+            }
+        } catch (Throwable ignored) {
+        }
+        return null;
+    }
+
+    /**
+     * 解析外部渲染器的库目录，按优先级：
+     * <ol>
+     *   <li>已安装的插件应用（如 MobileGlues Plugin）的 nativeLibraryDir —— 与 FCL 一致；</li>
+     *   <li>{@code <gameDir>/renderer/<id>/}（手工放置的兜底用法）。</li>
+     * </ol>
+     *
+     * @return 命中目录；都没有则 null
+     */
+    public static String resolveRendererLibDir(android.content.Context context, String id,
+                                              String versionPath, String gameDir) {
+        String fromPlugin = findInstalledRendererLibDir(context, id);
+        if (fromPlugin != null) {
+            return fromPlugin;
+        }
+        Info info = find(id);
+        if (info == null || info.glName == null || info.glName.isEmpty()) {
+            return null;
+        }
+        java.util.List<java.io.File> roots = new java.util.ArrayList<java.io.File>();
+        if (gameDir != null && !gameDir.isEmpty()) {
+            roots.add(new java.io.File(gameDir));
+        }
+        String gd = gameDirOf(versionPath);
+        if (gd != null && !gd.isEmpty()) {
+            roots.add(new java.io.File(gd));
+        }
+        for (java.io.File root : roots) {
+            java.io.File dir = new java.io.File(root, "renderer/" + id);
+            java.io.File so = new java.io.File(dir, info.glName);
+            if (so.isFile() && so.length() > 0L) {
+                return dir.getAbsolutePath();
+            }
+        }
+        return null;
+    }
+
+    public static boolean isExternalLibPresent(String id, String versionPath, String gameDir) {
+        Info info = find(id);
+        if (info == null || info.glName == null || info.glName.isEmpty()) {
+            return false;
+        }
+        java.util.List<java.io.File> roots = new java.util.ArrayList<java.io.File>();
+        if (gameDir != null && !gameDir.isEmpty()) {
+            roots.add(new java.io.File(gameDir));
+        }
+        // 从 <gameDir>/versions/<ver> 往上一级推 gameDir
+        if (versionPath != null && !versionPath.isEmpty()) {
+            java.io.File v = new java.io.File(versionPath);
+            java.io.File p1 = v.getParentFile();                 // versions
+            java.io.File p2 = (p1 != null) ? p1.getParentFile() : null;   // gameDir
+            if (p2 != null) {
+                roots.add(p2);
+            }
+        }
+        for (java.io.File root : roots) {
+            java.io.File f = new java.io.File(root, "renderer/" + id + "/" + info.glName);
+            if (f.isFile() && f.length() > 0L) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public static final Info[] ALL = {new Info("opengles2", "Holy-GL4ES", "Holy GL4ES (OpenGL 2.1)", "libgl4es_114.so", "libEGL.so", "", "1.21.4", "1.21.4", true, true), new Info("ng_gl4es", "Krypton Wrapper", "Krypton Wrapper (OpenGL 3.1+, 全版本通吃)", "libng_gl4es.so", "libEGL.so", "", "26.3", "26.2", true, true), new Info("zink", "Zink", "Kopper Zink (OpenGL 4.6, Mesa zink on Vulkan)", "libglxshim.so", "libEGL_mesa.so", "", "26.3", "26.2", true, true), new Info("opengles3_virgl", "VirGLRenderer", "VirGLRenderer (OpenGL 4.3, Mesa 软渲染)", "libOSMesa_81.so", "libEGL.so", "", "26.3", "26.2", true, true), new Info("opengles3_virgl_osmesa8", "Freedreno", "Freedreno (OpenGL 4.6, 仅高通 adreno616-a660)", "libOSMesa_8.so", "libEGL.so", "", "26.3", "26.2", true, false), new Info("opengles3_vgpu", "VGPU", "VGPU (OpenGL 2.1+)", "libvgpu.so", "libEGL.so", "", "1.16.5", "1.16.5", true, false), new Info("mg", "MobileGlues", "MobileGlues (外部渲染器，需自行导入 libMobileGlues.so)", "libMobileGlues.so", "libEGL.so", "", "26.3", "26.2", false, false)};
 
     public static String defaultRendererId() {

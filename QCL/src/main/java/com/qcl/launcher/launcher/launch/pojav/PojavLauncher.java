@@ -103,9 +103,13 @@ public class PojavLauncher {
                 libraryPath = qclNatives341.getAbsolutePath() + ":" + libraryPath;
             }
             try {
-                File mgDir = new File(gameLaunchSetting.game_directory, "renderer/mg");
-                if (mgDir.isDirectory()) {
-                    libraryPath = libraryPath + ":" + mgDir.getAbsolutePath();
+                // ★ 2026-09-19 对齐 FCL：mg（MobileGlues）优先从「已安装的插件应用」的
+                //   nativeLibraryDir 取库（FCL 的插件渲染器就是这么做的）；<gameDir>/renderer/mg
+                //   作为手工放置的兜底。原来只认后者，导致玩家按官方方式装了插件 APK 也检测不到。
+                String mgLibDir = com.qcl.launcher.launcher.launch.RendererCompat.resolveRendererLibDir(
+                        context, "mg", gameLaunchSetting.currentVersion, gameLaunchSetting.game_directory);
+                if (mgLibDir != null) {
+                    libraryPath = libraryPath + ":" + mgLibDir;
                 }
             }
             catch (Throwable mgDir) {

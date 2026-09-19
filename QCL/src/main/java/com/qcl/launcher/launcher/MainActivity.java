@@ -105,8 +105,8 @@ implements View.OnClickListener {
                 }
                 MainActivity.this.uiContainer = (RelativeLayout)MainActivity.this.findViewById(R.id.main_ui_container);
                 MainActivity.this.uiManager = new UIManager((Context)MainActivity.this, MainActivity.this);
-                MainActivity.this.exteriorConfig.primaryColor(Color.parseColor((String)ExteriorSettingUI.getThemeColor((Context)MainActivity.this, MainActivity.this.launcherSetting.launcherTheme)));
-                MainActivity.this.exteriorConfig.accentColor(Color.parseColor((String)ExteriorSettingUI.getThemeColor((Context)MainActivity.this, MainActivity.this.launcherSetting.launcherTheme)));
+                MainActivity.this.exteriorConfig.primaryColor(ExteriorSettingUI.parseThemeColorSafe((Context)MainActivity.this, MainActivity.this.launcherSetting.launcherTheme));
+                MainActivity.this.exteriorConfig.accentColor(ExteriorSettingUI.parseThemeColorSafe((Context)MainActivity.this, MainActivity.this.launcherSetting.launcherTheme));
                 MainActivity.this.exteriorConfig.apply((Activity)MainActivity.this);
                 MainActivity.this.isLoaded = true;
                 MainActivity.this.onLoad();

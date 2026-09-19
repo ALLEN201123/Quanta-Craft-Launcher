@@ -23,6 +23,8 @@
  */
 package com.qcl.launcher.control.view;
 
+import com.qcl.launcher.utils.QclColors;
+
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Canvas;
@@ -127,8 +129,16 @@ extends AppCompatButton {
         if (this.menuHelper.editMode) {
             switch (event.getActionMasked()) {
                 case 0: {
-                    this.initialX = event.getX();
-                    this.initialY = event.getY();
+                    // ★★★ 2026-09-19 修复编辑模式拖动：
+                    //   原实现用 event.getX()/getY()（**相对本 View 的坐标**）做基准。
+                    //   但拖动时 View 本身跟着手指移动 → 手指在 View 内的相对坐标几乎不变
+                    //   → ① MOVE 里 "getX() + (event.getX() - initialX)" 的增量被 View 自身位移抵消，
+                    //      控件跟手严重滞后；
+                    //   → ② UP 里用相对坐标差判断"是否拖动" → 差值恒 ≈0 → 被误判为「点击」
+                    //      → 于是回弹原位 + 弹出「编辑控件」对话框（用户报的两个现象）。
+                    //   改用 getRawX()/getRawY()（屏幕绝对坐标）+ 以「初始位置 + 累计位移」算目标位置。
+                    this.initialX = event.getRawX();
+                    this.initialY = event.getRawY();
                     this.initialPositionX = this.getX();
                     this.initialPositionY = this.getY();
                     this.deleteHandler.postDelayed(this.deleteRunnable, 600L);
@@ -137,34 +147,40 @@ extends AppCompatButton {
                     break;
                 }
                 case 2: {
-                    float targetX = this.getX() + event.getX() - this.initialX >= 0.0f && this.getX() + event.getX() - this.initialX <= (float)(this.screenWidth - this.getWidth()) ? this.getX() + event.getX() - this.initialX : (this.getX() + event.getX() - this.initialX < 0.0f ? 0.0f : (float)(this.screenWidth - this.getWidth()));
-                    float targetY = this.getY() + event.getY() - this.initialY >= 0.0f && this.getY() + event.getY() - this.initialY <= (float)(this.screenHeight - this.getHeight()) ? this.getY() + event.getY() - this.initialY : (this.getY() + event.getY() - this.initialY < 0.0f ? 0.0f : (float)(this.screenHeight - this.getHeight()));
+                    float dx = event.getRawX() - this.initialX;
+                    float dy = event.getRawY() - this.initialY;
+                    float rawX = this.initialPositionX + dx;
+                    float rawY = this.initialPositionY + dy;
+                    float maxX = (float) Math.max(0, this.screenWidth - this.getWidth());
+                    float maxY = (float) Math.max(0, this.screenHeight - this.getHeight());
+                    float targetX = rawX < 0.0f ? 0.0f : (rawX > maxX ? maxX : rawX);
+                    float targetY = rawY < 0.0f ? 0.0f : (rawY > maxY ? maxY : rawY);
                     this.setX(targetX);
                     this.setY(targetY);
                     this.info.xPosition.absolutePosition = ConvertUtils.px2dip(this.getContext(), targetX);
                     this.info.yPosition.absolutePosition = ConvertUtils.px2dip(this.getContext(), targetY);
-                    this.info.xPosition.percentPosition = targetX / (float)(this.screenWidth - this.getWidth());
-                    this.info.yPosition.percentPosition = targetY / (float)(this.screenHeight - this.getHeight());
+                    this.info.xPosition.percentPosition = maxX > 0f ? targetX / maxX : 0f;
+                    this.info.yPosition.percentPosition = maxY > 0f ? targetY / maxY : 0f;
                     this.saveButtonInfo();
                     this.menuHelper.viewManager.layoutPanel.showReference(this.info.positionType, this.getX(), this.getY(), this.getWidth(), this.getHeight());
-                    if (!(Math.abs(event.getX() - this.initialX) > 1.0f) && !(Math.abs(event.getY() - this.initialY) > 1.0f)) break;
-                    this.deleteHandler.removeCallbacks(this.deleteRunnable);
+                    if (Math.abs(dx) > 3.0f || Math.abs(dy) > 3.0f) {
+                        // 真拖动过 → 取消"长按删除"定时器
+                        this.deleteHandler.removeCallbacks(this.deleteRunnable);
+                    }
                     break;
                 }
-                case 1: 
+                case 1:
                 case 3: {
                     this.deleteHandler.removeCallbacks(this.deleteRunnable);
-                    if (Math.abs(event.getX() - this.initialX) <= 10.0f && Math.abs(event.getY() - this.initialY) <= 10.0f) {
-                        this.setX(this.initialPositionX);
-                        this.setY(this.initialPositionY);
-                        this.info.xPosition.absolutePosition = ConvertUtils.px2dip(this.getContext(), this.initialPositionX);
-                        this.info.yPosition.absolutePosition = ConvertUtils.px2dip(this.getContext(), this.initialPositionY);
-                        this.info.xPosition.percentPosition = this.initialPositionX / (float)(this.screenWidth - this.getWidth());
-                        this.info.yPosition.percentPosition = this.initialPositionY / (float)(this.screenHeight - this.getHeight());
-                        this.saveButtonInfo();
+                    float totalDx = Math.abs(event.getRawX() - this.initialX);
+                    float totalDy = Math.abs(event.getRawY() - this.initialY);
+                    if (totalDx <= 10.0f && totalDy <= 10.0f) {
+                        // 确实是"点击"（没拖动）→ 位置保持不动，弹出编辑对话框。
+                        // ★ 不再回弹到 initialPosition（那是拖动手感异常的元凶）。
                         EditButtonDialog dialog = new EditButtonDialog(this.getContext(), this.menuHelper.viewManager, this.info.pattern, this.info.child, this.screenWidth, this.screenHeight, this, this.menuHelper.fullscreen);
                         dialog.show();
                     }
+                    // 拖动过 → 保持 MOVE 期间写入的新位置（已 saveButtonInfo 持久化）
                     this.setNormalDrawable();
                     this.menuHelper.viewManager.layoutPanel.hideReference();
                 }
@@ -505,11 +521,11 @@ extends AppCompatButton {
         this.drawableNormal = new GradientDrawable();
         this.drawablePress = new GradientDrawable();
         this.drawableNormal.setCornerRadius((float)ConvertUtils.dip2px(this.getContext(), info.buttonStyle.cornerRadius));
-        this.drawableNormal.setStroke(ConvertUtils.dip2px(this.getContext(), info.buttonStyle.strokeWidth), Color.parseColor((String)info.buttonStyle.strokeColor));
-        this.drawableNormal.setColor(Color.parseColor((String)info.buttonStyle.fillColor));
+        this.drawableNormal.setStroke(ConvertUtils.dip2px(this.getContext(), info.buttonStyle.strokeWidth), QclColors.parseSafe(info.buttonStyle.strokeColor, 0x33555555));
+        this.drawableNormal.setColor(QclColors.parseSafe(info.buttonStyle.fillColor, 0x666E6E6E));
         this.drawablePress.setCornerRadius((float)ConvertUtils.dip2px(this.getContext(), info.buttonStyle.cornerRadiusPress));
-        this.drawablePress.setStroke(ConvertUtils.dip2px(this.getContext(), info.buttonStyle.strokeWidthPress), Color.parseColor((String)info.buttonStyle.strokeColorPress));
-        this.drawablePress.setColor(Color.parseColor((String)info.buttonStyle.fillColorPress));
+        this.drawablePress.setStroke(ConvertUtils.dip2px(this.getContext(), info.buttonStyle.strokeWidthPress), QclColors.parseSafe(info.buttonStyle.strokeColorPress, 0x55555555));
+        this.drawablePress.setColor(QclColors.parseSafe(info.buttonStyle.fillColorPress, 0x995E5E5E));
         this.setText(info.text);
         this.setGravity(17);
         this.setPadding(0, 0, 0, 0);
@@ -519,13 +535,13 @@ extends AppCompatButton {
 
     public void setNormalDrawable() {
         this.setTextSize(this.info.buttonStyle.textSize);
-        this.setTextColor(Color.parseColor((String)this.info.buttonStyle.textColor));
+        this.setTextColor(QclColors.parseSafe(this.info.buttonStyle.textColor, 0xFFFFFFFF));
         this.setBackground((Drawable)this.drawableNormal);
     }
 
     public void setPressDrawable() {
         this.setTextSize(this.info.buttonStyle.textSizePress);
-        this.setTextColor(Color.parseColor((String)this.info.buttonStyle.textColorPress));
+        this.setTextColor(QclColors.parseSafe(this.info.buttonStyle.textColorPress, 0xFFFFFFFF));
         this.setBackground((Drawable)this.drawablePress);
     }
 

@@ -1,5 +1,7 @@
 package com.qcl.launcher.launcher.dialogs.control;
 
+import com.qcl.launcher.utils.QclColors;
+
 import android.app.Dialog;
 import android.content.Context;
 import android.graphics.Color;
@@ -135,12 +137,12 @@ public class CreateButtonStyleDialog extends Dialog implements SeekBar.OnSeekBar
         this.textSizePressedText.setText(this.buttonStyle.textSizePress + " sp");
         this.cornerRadiusPressedText.setText(this.buttonStyle.cornerRadiusPress + " dp");
         this.strokeWidthPressedText.setText(this.buttonStyle.strokeWidthPress + " dp");
-        this.textColorPre.setBackgroundColor(Color.parseColor(this.buttonStyle.textColor));
-        this.strokeColorPre.setBackgroundColor(Color.parseColor(this.buttonStyle.strokeColor));
-        this.fillColorPre.setBackgroundColor(Color.parseColor(this.buttonStyle.fillColor));
-        this.textColorPressedPre.setBackgroundColor(Color.parseColor(this.buttonStyle.textColorPress));
-        this.strokeColorPressedPre.setBackgroundColor(Color.parseColor(this.buttonStyle.strokeColorPress));
-        this.fillColorPressedPre.setBackgroundColor(Color.parseColor(this.buttonStyle.fillColorPress));
+        this.textColorPre.setBackgroundColor(QclColors.parseSafe(this.buttonStyle.textColor, 0xFFFFFFFF));
+        this.strokeColorPre.setBackgroundColor(QclColors.parseSafe(this.buttonStyle.strokeColor, 0x33555555));
+        this.fillColorPre.setBackgroundColor(QclColors.parseSafe(this.buttonStyle.fillColor, 0x666E6E6E));
+        this.textColorPressedPre.setBackgroundColor(QclColors.parseSafe(this.buttonStyle.textColorPress, 0xFFFFFFFF));
+        this.strokeColorPressedPre.setBackgroundColor(QclColors.parseSafe(this.buttonStyle.strokeColorPress, 0x55555555));
+        this.fillColorPressedPre.setBackgroundColor(QclColors.parseSafe(this.buttonStyle.fillColorPress, 0x995E5E5E));
         this.textColorText.setText(this.buttonStyle.textColor);
         this.strokeColorText.setText(this.buttonStyle.strokeColor);
         this.fillColorText.setText(this.buttonStyle.fillColor);
@@ -213,7 +215,7 @@ public class CreateButtonStyleDialog extends Dialog implements SeekBar.OnSeekBar
             dismiss();
         }
         if (view == this.selectTextColor) {
-            ColorSelectorDialog colorSelectorDialog = new ColorSelectorDialog(getContext(), false, Color.parseColor(this.buttonStyle.textColor));
+            ColorSelectorDialog colorSelectorDialog = new ColorSelectorDialog(getContext(), false, QclColors.parseSafe(this.buttonStyle.textColor, 0xFFFFFFFF));
             colorSelectorDialog.setColorSelectorDialogListener(new ColorSelectorDialog.ColorSelectorDialogListener() { // from class: com.qcl.launcher.launcher.dialogs.control.CreateButtonStyleDialog.1
                 @Override // com.qcl.launcher.launcher.dialogs.tools.ColorSelectorDialog.ColorSelectorDialogListener
                 public void onColorSelected(int i) {
@@ -226,14 +228,14 @@ public class CreateButtonStyleDialog extends Dialog implements SeekBar.OnSeekBar
                 @Override // com.qcl.launcher.launcher.dialogs.tools.ColorSelectorDialog.ColorSelectorDialogListener
                 public void onPositive(int i) {
                     CreateButtonStyleDialog.this.textColorPre.setBackgroundColor(i);
-                    CreateButtonStyleDialog.this.textColorText.setText("#" + Integer.toHexString(i));
-                    CreateButtonStyleDialog.this.buttonStyle.textColor = "#" + Integer.toHexString(i);
+                    CreateButtonStyleDialog.this.textColorText.setText(QclColors.format(i));
+                    CreateButtonStyleDialog.this.buttonStyle.textColor = QclColors.format(i);
                 }
             });
             colorSelectorDialog.show();
         }
         if (view == this.selectStrokeColor) {
-            ColorSelectorDialog colorSelectorDialog2 = new ColorSelectorDialog(getContext(), false, Color.parseColor(this.buttonStyle.strokeColor));
+            ColorSelectorDialog colorSelectorDialog2 = new ColorSelectorDialog(getContext(), false, QclColors.parseSafe(this.buttonStyle.strokeColor, 0x33555555));
             colorSelectorDialog2.setColorSelectorDialogListener(new ColorSelectorDialog.ColorSelectorDialogListener() { // from class: com.qcl.launcher.launcher.dialogs.control.CreateButtonStyleDialog.2
                 @Override // com.qcl.launcher.launcher.dialogs.tools.ColorSelectorDialog.ColorSelectorDialogListener
                 public void onColorSelected(int i) {
@@ -246,14 +248,14 @@ public class CreateButtonStyleDialog extends Dialog implements SeekBar.OnSeekBar
                 @Override // com.qcl.launcher.launcher.dialogs.tools.ColorSelectorDialog.ColorSelectorDialogListener
                 public void onPositive(int i) {
                     CreateButtonStyleDialog.this.strokeColorPre.setBackgroundColor(i);
-                    CreateButtonStyleDialog.this.strokeColorText.setText("#" + Integer.toHexString(i));
-                    CreateButtonStyleDialog.this.buttonStyle.strokeColor = "#" + Integer.toHexString(i);
+                    CreateButtonStyleDialog.this.strokeColorText.setText(QclColors.format(i));
+                    CreateButtonStyleDialog.this.buttonStyle.strokeColor = QclColors.format(i);
                 }
             });
             colorSelectorDialog2.show();
         }
         if (view == this.selectFillColor) {
-            ColorSelectorDialog colorSelectorDialog3 = new ColorSelectorDialog(getContext(), false, Color.parseColor(this.buttonStyle.fillColor));
+            ColorSelectorDialog colorSelectorDialog3 = new ColorSelectorDialog(getContext(), false, QclColors.parseSafe(this.buttonStyle.fillColor, 0x666E6E6E));
             colorSelectorDialog3.setColorSelectorDialogListener(new ColorSelectorDialog.ColorSelectorDialogListener() { // from class: com.qcl.launcher.launcher.dialogs.control.CreateButtonStyleDialog.3
                 @Override // com.qcl.launcher.launcher.dialogs.tools.ColorSelectorDialog.ColorSelectorDialogListener
                 public void onColorSelected(int i) {
@@ -266,14 +268,14 @@ public class CreateButtonStyleDialog extends Dialog implements SeekBar.OnSeekBar
                 @Override // com.qcl.launcher.launcher.dialogs.tools.ColorSelectorDialog.ColorSelectorDialogListener
                 public void onPositive(int i) {
                     CreateButtonStyleDialog.this.fillColorPre.setBackgroundColor(i);
-                    CreateButtonStyleDialog.this.fillColorText.setText("#" + Integer.toHexString(i));
-                    CreateButtonStyleDialog.this.buttonStyle.fillColor = "#" + Integer.toHexString(i);
+                    CreateButtonStyleDialog.this.fillColorText.setText(QclColors.format(i));
+                    CreateButtonStyleDialog.this.buttonStyle.fillColor = QclColors.format(i);
                 }
             });
             colorSelectorDialog3.show();
         }
         if (view == this.selectTextColorPressed) {
-            ColorSelectorDialog colorSelectorDialog4 = new ColorSelectorDialog(getContext(), false, Color.parseColor(this.buttonStyle.textColorPress));
+            ColorSelectorDialog colorSelectorDialog4 = new ColorSelectorDialog(getContext(), false, QclColors.parseSafe(this.buttonStyle.textColorPress, 0xFFFFFFFF));
             colorSelectorDialog4.setColorSelectorDialogListener(new ColorSelectorDialog.ColorSelectorDialogListener() { // from class: com.qcl.launcher.launcher.dialogs.control.CreateButtonStyleDialog.4
                 @Override // com.qcl.launcher.launcher.dialogs.tools.ColorSelectorDialog.ColorSelectorDialogListener
                 public void onColorSelected(int i) {
@@ -286,14 +288,14 @@ public class CreateButtonStyleDialog extends Dialog implements SeekBar.OnSeekBar
                 @Override // com.qcl.launcher.launcher.dialogs.tools.ColorSelectorDialog.ColorSelectorDialogListener
                 public void onPositive(int i) {
                     CreateButtonStyleDialog.this.textColorPressedPre.setBackgroundColor(i);
-                    CreateButtonStyleDialog.this.textColorPressedText.setText("#" + Integer.toHexString(i));
-                    CreateButtonStyleDialog.this.buttonStyle.textColorPress = "#" + Integer.toHexString(i);
+                    CreateButtonStyleDialog.this.textColorPressedText.setText(QclColors.format(i));
+                    CreateButtonStyleDialog.this.buttonStyle.textColorPress = QclColors.format(i);
                 }
             });
             colorSelectorDialog4.show();
         }
         if (view == this.selectStrokeColorPressed) {
-            ColorSelectorDialog colorSelectorDialog5 = new ColorSelectorDialog(getContext(), false, Color.parseColor(this.buttonStyle.strokeColorPress));
+            ColorSelectorDialog colorSelectorDialog5 = new ColorSelectorDialog(getContext(), false, QclColors.parseSafe(this.buttonStyle.strokeColorPress, 0x55555555));
             colorSelectorDialog5.setColorSelectorDialogListener(new ColorSelectorDialog.ColorSelectorDialogListener() { // from class: com.qcl.launcher.launcher.dialogs.control.CreateButtonStyleDialog.5
                 @Override // com.qcl.launcher.launcher.dialogs.tools.ColorSelectorDialog.ColorSelectorDialogListener
                 public void onColorSelected(int i) {
@@ -306,14 +308,14 @@ public class CreateButtonStyleDialog extends Dialog implements SeekBar.OnSeekBar
                 @Override // com.qcl.launcher.launcher.dialogs.tools.ColorSelectorDialog.ColorSelectorDialogListener
                 public void onPositive(int i) {
                     CreateButtonStyleDialog.this.strokeColorPressedPre.setBackgroundColor(i);
-                    CreateButtonStyleDialog.this.strokeColorPressedText.setText("#" + Integer.toHexString(i));
-                    CreateButtonStyleDialog.this.buttonStyle.strokeColorPress = "#" + Integer.toHexString(i);
+                    CreateButtonStyleDialog.this.strokeColorPressedText.setText(QclColors.format(i));
+                    CreateButtonStyleDialog.this.buttonStyle.strokeColorPress = QclColors.format(i);
                 }
             });
             colorSelectorDialog5.show();
         }
         if (view == this.selectFillColorPressed) {
-            ColorSelectorDialog colorSelectorDialog6 = new ColorSelectorDialog(getContext(), false, Color.parseColor(this.buttonStyle.fillColorPress));
+            ColorSelectorDialog colorSelectorDialog6 = new ColorSelectorDialog(getContext(), false, QclColors.parseSafe(this.buttonStyle.fillColorPress, 0x995E5E5E));
             colorSelectorDialog6.setColorSelectorDialogListener(new ColorSelectorDialog.ColorSelectorDialogListener() { // from class: com.qcl.launcher.launcher.dialogs.control.CreateButtonStyleDialog.6
                 @Override // com.qcl.launcher.launcher.dialogs.tools.ColorSelectorDialog.ColorSelectorDialogListener
                 public void onColorSelected(int i) {
@@ -326,8 +328,8 @@ public class CreateButtonStyleDialog extends Dialog implements SeekBar.OnSeekBar
                 @Override // com.qcl.launcher.launcher.dialogs.tools.ColorSelectorDialog.ColorSelectorDialogListener
                 public void onPositive(int i) {
                     CreateButtonStyleDialog.this.fillColorPressedPre.setBackgroundColor(i);
-                    CreateButtonStyleDialog.this.fillColorPressedText.setText("#" + Integer.toHexString(i));
-                    CreateButtonStyleDialog.this.buttonStyle.fillColorPress = "#" + Integer.toHexString(i);
+                    CreateButtonStyleDialog.this.fillColorPressedText.setText(QclColors.format(i));
+                    CreateButtonStyleDialog.this.buttonStyle.fillColorPress = QclColors.format(i);
                 }
             });
             colorSelectorDialog6.show();
