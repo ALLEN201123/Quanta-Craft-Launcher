@@ -1,12 +1,13 @@
 {
   "latestRelease": {
-    "versionCode": 314,
-    "versionName": "1.1.4",
-    "date": "2026-09-19",
+    "versionCode": 315,
+    "versionName": "1.1.5",
+    "date": "2026-09-20",
     "url": [
-      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/tag/v1.1.4"
+      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/tag/v1.1.5"
     ],
-    "updateLog": "1.1.4：新增 vivo/iQOO 游戏魔盒检测与主界面入口（一键打开引导开启）；新增 infdev 远古版本兼容 Java 参数（useLegacyMergeSort + betacraft 代理，修复进不去单人世界）。1.1.3：修复 MobileGlues 等外部渲染器无法启动（POJAV_RENDERER 协议名映射）；修复 26.2 无法启动；补齐所有渲染器的 EGL/GL 库路径；26.3 SDL3 链路打通；渲染器支持上限标注修正 ≤26.2；修复启动崩溃/控键拖动/悬浮窗位置；新版本默认语言中文。"
+    "updateLog": "1.1.5：版本更新弹窗对齐 FCL（自动下载/网盘/GitHub 三下载按钮 + 忽略不持久化 + 以后再说）。1.1.4：修复只能登录一个微软账户、双击疾跑失效、悬浮球误触；持续性能模式 + infdev 参数。",
+    "netdiskUrl": ""
   },
   "latestPrerelease": null
 }
