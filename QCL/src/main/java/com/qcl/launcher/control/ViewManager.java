@@ -104,9 +104,7 @@ public class ViewManager implements SensorEventListener {
         if (this.menuHelper.gameMenuSetting.menuFloatSetting.enable) {
             this.layoutPanel.addView(this.menuFloat);
         }
-        if (this.menuHelper.gameMenuSetting.menuViewSetting.enable) {
-            this.layoutPanel.addView(this.menuView);
-        }
+        // ★★★ 1.1.4：侧边栏已移除（用户指令），不再 addView(menuView)。
         refreshLayout(this.menuHelper.currentPattern.name, this.menuHelper.currentChild, this.menuHelper.editMode);
     }
 

@@ -258,9 +258,34 @@ SeekBar.OnSeekBarChangeListener {
         this.openHin2nMenu = (Button)this.activity.findViewById(R.id.open_hin2n_menu);
         this.forceExit = (Button)this.activity.findViewById(R.id.force_exit);
         this.switchMenuFloat.setChecked(this.gameMenuSetting.menuFloatSetting.enable);
-        this.switchMenuView.setChecked(this.gameMenuSetting.menuViewSetting.enable);
+        this.switchMenuView.setChecked(false);
         this.switchMenuSlide.setChecked(this.gameMenuSetting.menuSlideSetting);
         this.switchFloatMovable.setChecked(this.gameMenuSetting.menuFloatSetting.movable);
+
+        // ★★★ 1.1.4：持续性能模式开关（点一下开 / 点一下关，默认开 = 自动开启）。
+        //   等价于 vivo/iQOO「游戏魔盒」的性能优化（照搬 FCL 的 PERFORMANCE_MODE：
+        //   activity.getWindow().setSustainedPerformanceMode(...)）。
+        //   用 SharedPreferences 单独存，避免动 GameMenuSetting 的构造参数。
+        try {
+            final android.content.SharedPreferences qclPerfSp = this.context.getSharedPreferences("qcl_perf", 0);
+            final boolean qclPerfOn = qclPerfSp.getBoolean("performanceMode", true);
+            final SwitchCompat qclPerfSwitch = (SwitchCompat) this.activity.findViewById(R.id.switch_performance);
+            if (qclPerfSwitch != null) {
+                qclPerfSwitch.setChecked(qclPerfOn);
+                qclPerfSwitch.setOnCheckedChangeListener((cb, checked) -> {
+                    qclPerfSp.edit().putBoolean("performanceMode", checked).apply();
+                    try {
+                        if (android.os.Build.VERSION.SDK_INT >= 24) {
+                            this.activity.getWindow().setSustainedPerformanceMode(checked);
+                        }
+                    }
+                    catch (Throwable ignored) {
+                    }
+                });
+            }
+        }
+        catch (Throwable ignored) {
+        }
         this.switchLaunchLog.setChecked(!this.gameMenuSetting.hideLaunchLog);
         this.switchLaunchLog.setOnCheckedChangeListener((CompoundButton.OnCheckedChangeListener)this);
         this.switchAdvanceInput.setChecked(this.gameMenuSetting.advanceInput);
@@ -436,10 +461,10 @@ SeekBar.OnSeekBarChangeListener {
             GameMenuSetting.saveGameMenuSetting(this.gameMenuSetting);
         }
         if (compoundButton == this.switchMenuView) {
-            this.gameMenuSetting.menuViewSetting.enable = b;
-            if (b) {
-                this.baseLayout.addView(this.viewManager.menuView);
-            } else {
+            // ★★★ 1.1.4：侧边栏已移除（用户指令）。强制关闭，不再启用侧边栏。
+            this.gameMenuSetting.menuViewSetting.enable = false;
+            this.switchMenuView.setChecked(false);
+            if (this.viewManager.menuView != null && this.viewManager.menuView.getParent() != null) {
                 this.baseLayout.removeView(this.viewManager.menuView);
             }
             this.checkOpenMenuSetting();

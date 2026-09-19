@@ -127,11 +127,13 @@
 
                     </LinearLayout>
 
+                    <!-- ★★★ 1.1.4：移除「侧边栏」打开方式（用户指令）。整个块 GONE，功能在 MenuHelper 里同时禁用。 -->
                     <LinearLayout
                         android:padding="5dp"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="horizontal">
+                        android:orientation="horizontal"
+                        android:visibility="gone">
 
                         <TextView
                             android:singleLine="true"
@@ -172,6 +174,32 @@
                             android:layout_height="wrap_content"
                             android:layout_gravity="center"
                             android:id="@+id/switch_gesture"/>
+
+                    </LinearLayout>
+
+                    <!-- ★★★ 1.1.4：持续性能模式开关（点一下开 / 点一下关，默认开）。
+                         等价于 vivo/iQOO 游戏魔盒的性能优化，照搬 FCL 的 PERFORMANCE_MODE。 -->
+                    <LinearLayout
+                        android:padding="5dp"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:singleLine="true"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_gravity="center"
+                            android:text="@string/menu_settings_performance_mode"
+                            android:textSize="12sp"
+                            android:textColor="@color/colorPureBlack"/>
+
+                        <androidx.appcompat.widget.SwitchCompat
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center"
+                            android:id="@+id/switch_performance"/>
 
                     </LinearLayout>
 

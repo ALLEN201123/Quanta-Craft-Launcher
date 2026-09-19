@@ -74,14 +74,12 @@ extends BaseMainActivity {
 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        // ★★★ 1.1.4：自动开启「持续性能模式」（等价于 vivo/iQOO 的"游戏魔盒"的性能优化）。
-        //   照搬 FCL 的实现：FCL 的"性能模式"（GameMenu 的 PERFORMANCE_MODE）就是
-        //   `activity.getWindow().setSustainedPerformanceMode(...)` —— 这才是系统级的"游戏加速"，
-        //   而不是去打开 vivo 的 gamecube App（那个没有稳定的第三方入口，会"打开失效"）。
-        //   setSustainedPerformanceMode(true) 让 CPU/GPU 在游戏期间保持高性能，Android 7.0+（API 24+）可用。
+        // ★★★ 1.1.4：自动开启「持续性能模式」（等价于 vivo/iQOO 的"游戏魔盒"性能优化，照搬 FCL）。
+        //   默认开启；玩家可在游戏菜单里点一下关 / 再点一下开（存于 qcl_perf 的 performanceMode）。
         try {
             if (android.os.Build.VERSION.SDK_INT >= 24) {
-                getWindow().setSustainedPerformanceMode(true);
+                boolean qclPerf = getSharedPreferences("qcl_perf", 0).getBoolean("performanceMode", true);
+                getWindow().setSustainedPerformanceMode(qclPerf);
             }
         }
         catch (Throwable ignored) {

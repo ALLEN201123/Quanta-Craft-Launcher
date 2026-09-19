@@ -113,6 +113,7 @@
     <string name="launcher_scroll_multi_player">Multiplayer</string>
     <!-- ★ 1.1.4：vivo / iQOO「游戏魔盒」入口（仅该品牌设备 + 已装魔盒时显示） -->
     <string name="launcher_gamecube">Sustained Performance</string>
+    <string name="menu_settings_performance_mode">Sustained performance mode</string>
     <string name="launcher_scroll_setting">Settings</string>
     <string name="launcher_button_launch">Launch Game</string>
     <string name="launcher_button_current_version">No Instances</string>
