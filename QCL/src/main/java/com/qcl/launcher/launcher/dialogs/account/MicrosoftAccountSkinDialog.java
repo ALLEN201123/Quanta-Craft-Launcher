@@ -19,6 +19,7 @@ import com.qcl.launcher.auth.Account;
 import com.qcl.launcher.auth.microsoft.MinecraftSkinService;
 import com.qcl.launcher.auth.microsoft.Msa;
 import com.qcl.launcher.launcher.MainActivity;
+import com.qcl.launcher.skin.GameCharacter;
 import com.qcl.launcher.skin.MinecraftSkinRenderer;
 import com.qcl.launcher.skin.SkinGLSurfaceView;
 import com.qcl.launcher.skin.utils.Avatar;
@@ -78,20 +79,26 @@ public class MicrosoftAccountSkinDialog extends Dialog implements View.OnClickLi
         selectSkin = findViewById(R.id.ms_skin_select);
         resetSkin = findViewById(R.id.ms_skin_reset);
         hideCape = findViewById(R.id.ms_cape_hide);
-        Button positive = findViewById(R.id.ms_skin_positive);
-        Button negative = findViewById(R.id.ms_skin_negative);
 
         selectSkin.setOnClickListener(this);
         resetSkin.setOnClickListener(this);
         hideCape.setOnClickListener(this);
-        positive.setOnClickListener(v -> dismiss());
-        negative.setOnClickListener(v -> dismiss());
+        findViewById(R.id.ms_skin_negative).setOnClickListener(v -> dismiss());
 
-        // 皮肤模型选择（classic / slim）
+        // ★★★ 白色背景（人物预览背景改白）
+        renderer.setBackgroundColor(1.0f, 1.0f, 1.0f, 1.0f);
+
+        // 皮肤模型选择（classic / slim），切换时重建 3D 人物模型
         android.widget.RadioButton modelClassic = findViewById(R.id.ms_model_classic);
         android.widget.RadioButton modelSlim = findViewById(R.id.ms_model_slim);
-        modelClassic.setOnClickListener(v -> model = "classic");
-        modelSlim.setOnClickListener(v -> model = "slim");
+        modelClassic.setOnClickListener(v -> {
+            model = "classic";
+            renderer.mCharacter = new GameCharacter(false);
+        });
+        modelSlim.setOnClickListener(v -> {
+            model = "slim";
+            renderer.mCharacter = new GameCharacter(true);
+        });
 
         // 3D 预览视图
         SkinGLSurfaceView view = new SkinGLSurfaceView(getContext());
@@ -101,10 +108,10 @@ public class MicrosoftAccountSkinDialog extends Dialog implements View.OnClickLi
         view.setPreserveEGLContextOnPause(true);
         skinParentView.addView(view);
 
-        // ★★★ 左右分栏布局需要足够宽，否则右侧按钮会被挤没
+        // ★★★ 左右分栏布局：固定高度（约屏幕 60%），让右侧 ScrollView 内容超高时可上下滚动
         if (getWindow() != null) {
-            getWindow().setLayout(android.view.WindowManager.LayoutParams.MATCH_PARENT,
-                    android.view.WindowManager.LayoutParams.WRAP_CONTENT);
+            int height = (int) (getContext().getResources().getDisplayMetrics().heightPixels * 0.6);
+            getWindow().setLayout(android.view.WindowManager.LayoutParams.MATCH_PARENT, height);
         }
 
         // ★★★ 加载当前微软账号的皮肤显示在 3D 预览（不是默认 Steve）

@@ -1,168 +1,156 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="horizontal"
+    android:orientation="vertical"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
+    android:layout_height="match_parent"
     android:padding="10dp">
 
-    <!-- 左侧：3D 皮肤预览 -->
+    <!-- 上半部分：左人物 + 右操作区 -->
     <LinearLayout
-        android:layout_width="0dp"
-        android:layout_height="400dp"
-        android:layout_weight="1"
-        android:gravity="center"
-        android:orientation="vertical"
-        android:id="@+id/ms_skin_parent_view"/>
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
 
-    <!-- 右侧：操作区（可滚动） -->
-    <ScrollView
-        android:layout_width="0dp"
-        android:layout_height="400dp"
-        android:layout_weight="1"
-        android:layout_marginStart="10dp"
-        android:scrollbars="none">
-
+        <!-- 左侧：3D 皮肤预览 -->
         <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:id="@+id/ms_skin_parent_view"/>
 
-            <TextView
-                android:singleLine="true"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/microsoft_skin_model_title"
-                android:textStyle="bold"
-                android:textSize="@dimen/text_size_middle"
-                android:textColor="@color/colorPureBlack"/>
-
-            <RadioGroup
-                android:id="@+id/ms_model_group"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:orientation="horizontal">
-
-                <RadioButton
-                    android:id="@+id/ms_model_classic"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:checked="true"
-                    android:text="@string/microsoft_skin_model_classic"
-                    android:textSize="14sp"
-                    android:textColor="@color/colorPureBlack"/>
-
-                <RadioButton
-                    android:id="@+id/ms_model_slim"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="@string/microsoft_skin_model_slim"
-                    android:textSize="14sp"
-                    android:textColor="@color/colorPureBlack"/>
-            </RadioGroup>
-
-            <Button
-                android:singleLine="true"
-                android:textAllCaps="false"
-                android:layout_width="match_parent"
-                android:layout_height="40dp"
-                android:gravity="center"
-                android:text="@string/microsoft_skin_select"
-                android:textSize="14sp"
-                android:textColor="@color/colorLinkBlue"
-                android:background="@drawable/launcher_button_parent"
-                android:id="@+id/ms_skin_select"/>
-
-            <Button
-                android:singleLine="true"
-                android:textAllCaps="false"
-                android:layout_width="match_parent"
-                android:layout_height="40dp"
-                android:layout_marginTop="6dp"
-                android:gravity="center"
-                android:text="@string/microsoft_skin_reset"
-                android:textSize="14sp"
-                android:textColor="@color/colorPureBlack"
-                android:background="@drawable/launcher_button_parent"
-                android:id="@+id/ms_skin_reset"/>
-
-            <TextView
-                android:singleLine="true"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:text="@string/microsoft_cape_title"
-                android:textStyle="bold"
-                android:textSize="@dimen/text_size_middle"
-                android:textColor="@color/colorPureBlack"/>
+        <!-- 右侧：操作区（可滚动） -->
+        <ScrollView
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:layout_marginStart="10dp"
+            android:scrollbars="none">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:orientation="vertical"
-                android:id="@+id/ms_cape_list_layout"/>
+                android:orientation="vertical">
 
-            <Button
-                android:singleLine="true"
-                android:textAllCaps="false"
-                android:layout_width="match_parent"
-                android:layout_height="40dp"
-                android:layout_marginTop="6dp"
-                android:gravity="center"
-                android:text="@string/microsoft_cape_hide"
-                android:textSize="14sp"
-                android:textColor="@color/colorPureBlack"
-                android:background="@drawable/launcher_button_parent"
-                android:id="@+id/ms_cape_hide"/>
+                <TextView
+                    android:singleLine="true"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/microsoft_skin_model_title"
+                    android:textStyle="bold"
+                    android:textSize="@dimen/text_size_middle"
+                    android:textColor="@color/colorPureBlack"/>
 
-            <ProgressBar
-                android:visibility="gone"
-                android:layout_marginTop="8dp"
-                android:layout_width="match_parent"
-                android:layout_height="3dp"
-                android:max="100"
-                android:tag="tint_accent_color"
-                style="@style/Widget.AppCompat.ProgressBar.Horizontal"
-                android:id="@+id/ms_skin_progress"/>
+                <RadioGroup
+                    android:id="@+id/ms_model_group"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:orientation="horizontal">
 
-            <LinearLayout
-                android:layout_marginTop="10dp"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal">
+                    <RadioButton
+                        android:id="@+id/ms_model_classic"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:checked="true"
+                        android:text="@string/microsoft_skin_model_classic"
+                        android:textSize="14sp"
+                        android:textColor="@color/colorPureBlack"/>
+
+                    <RadioButton
+                        android:id="@+id/ms_model_slim"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/microsoft_skin_model_slim"
+                        android:textSize="14sp"
+                        android:textColor="@color/colorPureBlack"/>
+                </RadioGroup>
 
                 <Button
                     android:singleLine="true"
                     android:textAllCaps="false"
-                    android:layout_width="0dp"
-                    android:layout_weight="1"
+                    android:layout_width="match_parent"
                     android:layout_height="40dp"
                     android:gravity="center"
-                    android:text="@string/dialog_positive"
+                    android:text="@string/microsoft_skin_select"
                     android:textSize="14sp"
                     android:textColor="@color/colorLinkBlue"
                     android:background="@drawable/launcher_button_parent"
-                    android:id="@+id/ms_skin_positive"/>
+                    android:id="@+id/ms_skin_select"/>
 
                 <Button
                     android:singleLine="true"
                     android:textAllCaps="false"
-                    android:layout_width="0dp"
-                    android:layout_weight="1"
+                    android:layout_width="match_parent"
                     android:layout_height="40dp"
-                    android:layout_marginStart="8dp"
+                    android:layout_marginTop="6dp"
                     android:gravity="center"
-                    android:text="@string/dialog_negative"
+                    android:text="@string/microsoft_skin_reset"
                     android:textSize="14sp"
                     android:textColor="@color/colorPureBlack"
                     android:background="@drawable/launcher_button_parent"
-                    android:id="@+id/ms_skin_negative"/>
-            </LinearLayout>
+                    android:id="@+id/ms_skin_reset"/>
 
-        </LinearLayout>
-    </ScrollView>
+                <TextView
+                    android:singleLine="true"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:text="@string/microsoft_cape_title"
+                    android:textStyle="bold"
+                    android:textSize="@dimen/text_size_middle"
+                    android:textColor="@color/colorPureBlack"/>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:orientation="vertical"
+                    android:id="@+id/ms_cape_list_layout"/>
+
+                <Button
+                    android:singleLine="true"
+                    android:textAllCaps="false"
+                    android:layout_width="match_parent"
+                    android:layout_height="40dp"
+                    android:layout_marginTop="6dp"
+                    android:gravity="center"
+                    android:text="@string/microsoft_cape_hide"
+                    android:textSize="14sp"
+                    android:textColor="@color/colorPureBlack"
+                    android:background="@drawable/launcher_button_parent"
+                    android:id="@+id/ms_cape_hide"/>
+
+            </LinearLayout>
+        </ScrollView>
+    </LinearLayout>
+
+    <!-- 底部：进度条 + 关闭按钮（固定，不随滚动） -->
+    <ProgressBar
+        android:visibility="gone"
+        android:layout_marginTop="6dp"
+        android:layout_width="match_parent"
+        android:layout_height="3dp"
+        android:max="100"
+        android:tag="tint_accent_color"
+        style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+        android:id="@+id/ms_skin_progress"/>
+
+    <Button
+        android:singleLine="true"
+        android:textAllCaps="false"
+        android:layout_width="match_parent"
+        android:layout_height="44dp"
+        android:layout_marginTop="6dp"
+        android:gravity="center"
+        android:text="@string/dialog_negative"
+        android:textSize="15sp"
+        android:textColor="@color/colorPureBlack"
+        android:background="@drawable/launcher_button_parent"
+        android:id="@+id/ms_skin_negative"/>
 
 </LinearLayout>

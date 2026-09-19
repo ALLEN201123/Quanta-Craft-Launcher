@@ -25,6 +25,15 @@ public class MinecraftSkinRenderer implements GLSurfaceView.Renderer {
     public Bitmap skin;
     boolean superRun;
     boolean updateBitmapSkin;
+    // ★★★ 1.1.5：背景色（默认黑色透明，微软换皮对话框设白色）
+    private float bgR = 0.0f, bgG = 0.0f, bgB = 0.0f, bgA = 0.0f;
+
+    public void setBackgroundColor(float r, float g, float b, float a) {
+        this.bgR = r;
+        this.bgG = g;
+        this.bgB = b;
+        this.bgA = a;
+    }
 
     public MinecraftSkinRenderer(Context context) {
         this.mCharacterTexData = new int[]{0, 0};
@@ -87,7 +96,7 @@ public class MinecraftSkinRenderer implements GLSurfaceView.Renderer {
             }
             this.updateBitmapSkin = false;
         }
-        gl10.glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+        gl10.glClearColor(this.bgR, this.bgG, this.bgB, this.bgA);
         gl10.glClear(16640);
         gl10.glEnable(3553);
         gl10.glLoadIdentity();
