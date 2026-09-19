@@ -124,6 +124,28 @@ public class MainUI extends BaseUI implements View.OnClickListener, AdapterView.
         startMultiPlayerUI.setOnClickListener(this);
         startSettingUI.setOnClickListener(this);
 
+        // ★★★ 1.1.4：vivo / iQOO「游戏魔盒」入口 —— 直接就摆在这里（不用等点启动游戏）。
+        //   仅「vivo/iQOO 设备 + 已安装 com.vivo.gamecube」时显示，其余设备保持 GONE（不占位）。
+        //   点一下即可打开游戏魔盒，去开启总开关 /「游戏时自动开启魔盒」/ 把本启动器加入游戏空间。
+        //   （vivo 未提供第三方开启接口，故启动器能做的是"检测 + 一键打开并引导"，详见 VivoGameCube。）
+        try {
+            android.view.View gameCubeEntry = activity.findViewById(R.id.start_ui_gamecube);
+            if (gameCubeEntry != null
+                    && com.qcl.launcher.launcher.launch.VivoGameCube.isVivoFamily()
+                    && com.qcl.launcher.launcher.launch.VivoGameCube.isInstalled(activity)) {
+                gameCubeEntry.setVisibility(android.view.View.VISIBLE);
+                gameCubeEntry.setOnClickListener(v -> {
+                    if (!com.qcl.launcher.launcher.launch.VivoGameCube.open(activity)) {
+                        android.widget.Toast.makeText(activity, "打开游戏魔盒失败",
+                                android.widget.Toast.LENGTH_SHORT).show();
+                    }
+                });
+            }
+        }
+        catch (Throwable ignored) {
+            // 任何异常都不影响主界面
+        }
+
         startGame.setOnClickListener(this);
         // ★★★ 1.1.1：长按启动按钮 → 选择渲染器（公共选择器，版本设置/全局设置共用同一套）
         startGame.setOnLongClickListener(v -> {

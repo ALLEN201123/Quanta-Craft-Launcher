@@ -211,6 +211,33 @@
 
 
             <!-- 5. 多人游戏（沿用原有隐藏状态） -->
+            <!-- ★★★ 1.1.4：vivo / iQOO「游戏魔盒」入口。
+                 仅当「vivo/iQOO 设备 + 已安装 com.vivo.gamecube」时由 MainUI 设为可见，
+                 其余设备默认 GONE（不占位、不影响布局）。 -->
+            <LinearLayout
+                android:background="@drawable/qcl_button_gray"
+                android:focusable="true"
+                android:id="@+id/start_ui_gamecube"
+                android:clickable="true"
+                android:visibility="gone"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginEnd="6dp"
+                android:padding="6dp">
+
+                <TextView
+                    android:singleLine="true"
+                    android:layout_width="wrap_content"
+                    android:layout_height="26dp"
+                    android:layout_gravity="center"
+                    android:gravity="center"
+                    android:paddingStart="4dp"
+                    android:paddingEnd="4dp"
+                    android:text="@string/launcher_gamecube"
+                    android:textSize="13sp"/>
+            </LinearLayout>
+
             <LinearLayout
                 android:background="@drawable/qcl_button_gray"
                 android:focusable="true"

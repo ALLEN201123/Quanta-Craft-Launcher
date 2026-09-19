@@ -43,6 +43,9 @@
         <intent>
             <action android:name="android.intent.action.MAIN" />
         </intent>
+        <!-- ★ 1.1.4：vivo/iQOO「游戏魔盒」。Android 11+ 的包可见性限制下，
+             不声明就 getLaunchIntentForPackage("com.vivo.gamecube") 会返回 null。 -->
+        <package android:name="com.vivo.gamecube" />
     </queries>
 <application
         android:name=".launcher.QCLApplication"

@@ -74,6 +74,8 @@ extends BaseMainActivity {
 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        // 说明：vivo/iQOO「游戏魔盒」的入口放在**启动器主界面**（MainUI 的 start_ui_gamecube），
+        // 不在这里自动弹出 —— 免得每次启动游戏都被切走界面。详见 VivoGameCube 的类注释。
         this.gameLaunchSetting = GameLaunchSetting.getGameLaunchSetting(this.getIntent().getExtras().getString("setting_path"), this.getIntent().getExtras().getString("version"));
         if (this.getIntent().getExtras().getBoolean("test") || this.gameLaunchSetting.log) {
             // empty if block
