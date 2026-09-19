@@ -110,10 +110,14 @@ public class MicrosoftAccountSkinDialog extends Dialog implements View.OnClickLi
         view.setPreserveEGLContextOnPause(true);
         skinParentView.addView(view);
 
-        // ★★★ 左右分栏布局：固定高度（约屏幕 60%），让右侧 ScrollView 内容超高时可上下滚动
+        // ★★★ 尺寸照 FCL 的皮肤对话框：宽=屏幕 2/3；高=横屏时全高、竖屏时 2/3
         if (getWindow() != null) {
-            int height = (int) (getContext().getResources().getDisplayMetrics().heightPixels * 0.6);
-            getWindow().setLayout(android.view.WindowManager.LayoutParams.MATCH_PARENT, height);
+            android.util.DisplayMetrics dm = getContext().getResources().getDisplayMetrics();
+            int w = dm.widthPixels;
+            int h = dm.heightPixels;
+            int dialogW = w * 2 / 3;
+            int dialogH = (h * 2 < w) ? android.view.WindowManager.LayoutParams.MATCH_PARENT : h * 2 / 3;
+            getWindow().setLayout(dialogW, dialogH);
         }
 
         // ★★★ 加载当前微软账号的皮肤显示在 3D 预览，并自动检测是苗条还是经典
