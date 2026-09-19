@@ -21,6 +21,9 @@ import com.qcl.launcher.auth.microsoft.Msa;
 import com.qcl.launcher.launcher.MainActivity;
 import com.qcl.launcher.skin.MinecraftSkinRenderer;
 import com.qcl.launcher.skin.SkinGLSurfaceView;
+import com.qcl.launcher.skin.utils.Avatar;
+import com.qcl.launcher.skin.utils.InvalidSkinException;
+import com.qcl.launcher.skin.utils.NormalizedSkin;
 import com.qcl.launcher.utils.file.UriUtils;
 import com.tungsten.filepicker.Constants;
 import com.tungsten.filepicker.FileChooser;
@@ -104,7 +107,26 @@ public class MicrosoftAccountSkinDialog extends Dialog implements View.OnClickLi
                     android.view.WindowManager.LayoutParams.WRAP_CONTENT);
         }
 
+        // ★★★ 加载当前微软账号的皮肤显示在 3D 预览（不是默认 Steve）
+        if (account.texture != null && !account.texture.isEmpty()) {
+            try {
+                previewSkin(Avatar.stringToBitmap(account.texture));
+            } catch (Throwable ignored) {
+            }
+        }
+
         loadCapes();
+    }
+
+    /** 用皮肤 Bitmap 更新 3D 预览（自动处理 old format 规范化） */
+    private void previewSkin(Bitmap bitmap) {
+        try {
+            NormalizedSkin normalized = new NormalizedSkin(bitmap);
+            renderer.updateTexture(normalized.isOldFormat()
+                    ? normalized.getNormalizedTexture() : normalized.getOriginalTexture(), null);
+        } catch (InvalidSkinException e) {
+            renderer.updateTexture(bitmap, null);
+        }
     }
 
     /** 加载当前账号的披风列表 */
@@ -219,6 +241,11 @@ public class MicrosoftAccountSkinDialog extends Dialog implements View.OnClickLi
                 MinecraftSkinService.uploadSkin(account.auth_access_token, model, file);
                 handler.post(() -> {
                     setLoading(false);
+                    // ★★★ 上传成功后，左边 3D 人物跟着变成新皮肤
+                    try {
+                        previewSkin(BitmapFactory.decodeFile(path));
+                    } catch (Throwable ignored) {
+                    }
                     Toast.makeText(getContext(), R.string.microsoft_skin_uploaded, Toast.LENGTH_SHORT).show();
                 });
             } catch (Throwable e) {
