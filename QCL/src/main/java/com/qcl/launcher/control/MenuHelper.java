@@ -388,11 +388,20 @@ SeekBar.OnSeekBarChangeListener {
         });
     }
 
+    // ★★★ 1.1.4：修复"点悬浮窗外面关掉后、悬浮球这次点击又把它打开"的问题。
+    //   机制：点外面 → LayoutPanel 的 ACTION_DOWN 触发 onOutsideTouched→hideGameMenu（先关）；
+    //   而 MenuFloat 的 ACTION_UP 判定为"点击"→ onClick→toggleGameMenu（又把菜单打开）。
+    //   记录"被外部关闭"的时间戳，toggleGameMenu 在极短时间内不再重复打开。
+    private long qclLastOutsideCloseTime = 0;
+
     public void toggleGameMenu() {
         if (this.gameMenuContainer == null) {
             return;
         }
         boolean show = this.gameMenuContainer.getVisibility() != 0;
+        if (show && System.currentTimeMillis() - this.qclLastOutsideCloseTime < 300) {
+            return; // 刚被"点外面"关掉，忽略悬浮球这次点击，避免"关掉又打开"
+        }
         this.gameMenuContainer.setVisibility(show ? 0 : 8);
         this.setGameMenuOutsideCloseEnabled(show);
     }
@@ -403,7 +412,7 @@ SeekBar.OnSeekBarChangeListener {
         }
         if (enabled) {
             this.baseLayout.setMenuPanel(this.gameMenuContainer);
-            this.baseLayout.setOutsideCloseListener(this::hideGameMenu);
+            this.baseLayout.setOutsideCloseListener(this::hideGameMenuFromOutside);
             this.baseLayout.setMenuOutsideCloseEnabled(true);
         } else {
             this.baseLayout.setMenuOutsideCloseEnabled(false);
@@ -419,6 +428,12 @@ SeekBar.OnSeekBarChangeListener {
         }
         this.gameMenuContainer.setVisibility(8);
         this.setGameMenuOutsideCloseEnabled(false);
+    }
+
+    /** 被「点击外部」关闭：记录时间戳，供 toggleGameMenu 防抖（见 qclLastOutsideCloseTime 注释）。 */
+    public void hideGameMenuFromOutside() {
+        this.qclLastOutsideCloseTime = System.currentTimeMillis();
+        this.hideGameMenu();
     }
 
     private void checkOpenMenuSetting() {
