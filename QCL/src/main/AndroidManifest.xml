@@ -50,6 +50,8 @@
 <application
         android:name=".launcher.QCLApplication"
         android:allowBackup="true"
+        android:appCategory="game"
+        android:isGame="true"
         android:requestLegacyExternalStorage="true"
         android:preserveLegacyExternalStorage="true"
         android:icon="@drawable/ic_craft_table"
