@@ -91,6 +91,12 @@ public class MicrosoftAccountSkinDialog extends Dialog implements View.OnClickLi
         view.setPreserveEGLContextOnPause(true);
         skinParentView.addView(view);
 
+        // ★★★ 左右分栏布局需要足够宽，否则右侧按钮会被挤没
+        if (getWindow() != null) {
+            getWindow().setLayout(android.view.WindowManager.LayoutParams.MATCH_PARENT,
+                    android.view.WindowManager.LayoutParams.WRAP_CONTENT);
+        }
+
         loadCapes();
     }
 

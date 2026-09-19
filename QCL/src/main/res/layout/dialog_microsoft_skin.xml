@@ -1,141 +1,132 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical"
-    android:layout_width="360dp"
+    android:orientation="horizontal"
+    android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:paddingTop="16dp"
-    android:paddingStart="16dp"
-    android:paddingEnd="16dp"
-    android:paddingBottom="12dp">
+    android:padding="10dp">
 
-    <TextView
-        android:singleLine="true"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:text="@string/microsoft_skin_title"
-        android:textSize="@dimen/text_size_big"
-        android:textColor="@color/colorPureBlack"/>
-
-    <!-- 3D 皮肤预览 -->
+    <!-- 左侧：3D 皮肤预览 -->
     <LinearLayout
-        android:layout_marginTop="10dp"
-        android:layout_width="match_parent"
-        android:layout_height="260dp"
+        android:layout_width="0dp"
+        android:layout_height="400dp"
+        android:layout_weight="1"
         android:gravity="center"
         android:orientation="vertical"
         android:id="@+id/ms_skin_parent_view"/>
 
-    <ProgressBar
-        android:visibility="gone"
-        android:layout_marginTop="6dp"
-        android:layout_width="match_parent"
-        android:layout_height="3dp"
-        android:max="100"
-        android:tag="tint_accent_color"
-        style="@style/Widget.AppCompat.ProgressBar.Horizontal"
-        android:id="@+id/ms_skin_progress"/>
+    <!-- 右侧：操作区（可滚动） -->
+    <ScrollView
+        android:layout_width="0dp"
+        android:layout_height="400dp"
+        android:layout_weight="1"
+        android:layout_marginStart="10dp"
+        android:scrollbars="none">
 
-    <!-- 皮肤操作 -->
-    <LinearLayout
-        android:layout_marginTop="10dp"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal">
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
 
-        <Button
-            android:singleLine="true"
-            android:textAllCaps="false"
-            android:layout_width="0dp"
-            android:layout_weight="1"
-            android:layout_height="40dp"
-            android:gravity="center"
-            android:text="@string/microsoft_skin_select"
-            android:textSize="14sp"
-            android:textColor="@color/colorLinkBlue"
-            android:background="@drawable/launcher_button_parent"
-            android:id="@+id/ms_skin_select"/>
+            <Button
+                android:singleLine="true"
+                android:textAllCaps="false"
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:gravity="center"
+                android:text="@string/microsoft_skin_select"
+                android:textSize="14sp"
+                android:textColor="@color/colorLinkBlue"
+                android:background="@drawable/launcher_button_parent"
+                android:id="@+id/ms_skin_select"/>
 
-        <Button
-            android:singleLine="true"
-            android:textAllCaps="false"
-            android:layout_width="0dp"
-            android:layout_weight="1"
-            android:layout_height="40dp"
-            android:layout_marginStart="8dp"
-            android:gravity="center"
-            android:text="@string/microsoft_skin_reset"
-            android:textSize="14sp"
-            android:textColor="@color/colorPureBlack"
-            android:background="@drawable/launcher_button_parent"
-            android:id="@+id/ms_skin_reset"/>
-    </LinearLayout>
+            <Button
+                android:singleLine="true"
+                android:textAllCaps="false"
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:layout_marginTop="6dp"
+                android:gravity="center"
+                android:text="@string/microsoft_skin_reset"
+                android:textSize="14sp"
+                android:textColor="@color/colorPureBlack"
+                android:background="@drawable/launcher_button_parent"
+                android:id="@+id/ms_skin_reset"/>
 
-    <!-- 披风操作 -->
-    <TextView
-        android:singleLine="true"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
-        android:text="@string/microsoft_cape_title"
-        android:textSize="@dimen/text_size_middle"
-        android:textColor="@color/colorPureBlack"/>
+            <TextView
+                android:singleLine="true"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:text="@string/microsoft_cape_title"
+                android:textStyle="bold"
+                android:textSize="@dimen/text_size_middle"
+                android:textColor="@color/colorPureBlack"/>
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:id="@+id/ms_cape_list_layout"/>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:orientation="vertical"
+                android:id="@+id/ms_cape_list_layout"/>
 
-    <Button
-        android:singleLine="true"
-        android:textAllCaps="false"
-        android:layout_width="match_parent"
-        android:layout_height="40dp"
-        android:layout_marginTop="6dp"
-        android:gravity="center"
-        android:text="@string/microsoft_cape_hide"
-        android:textSize="14sp"
-        android:textColor="@color/colorPureBlack"
-        android:background="@drawable/launcher_button_parent"
-        android:id="@+id/ms_cape_hide"/>
+            <Button
+                android:singleLine="true"
+                android:textAllCaps="false"
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:layout_marginTop="6dp"
+                android:gravity="center"
+                android:text="@string/microsoft_cape_hide"
+                android:textSize="14sp"
+                android:textColor="@color/colorPureBlack"
+                android:background="@drawable/launcher_button_parent"
+                android:id="@+id/ms_cape_hide"/>
 
-    <!-- 底部按钮 -->
-    <LinearLayout
-        android:layout_marginTop="10dp"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal">
+            <ProgressBar
+                android:visibility="gone"
+                android:layout_marginTop="8dp"
+                android:layout_width="match_parent"
+                android:layout_height="3dp"
+                android:max="100"
+                android:tag="tint_accent_color"
+                style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+                android:id="@+id/ms_skin_progress"/>
 
-        <View
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:layout_weight="1"/>
+            <LinearLayout
+                android:layout_marginTop="10dp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
 
-        <Button
-            android:singleLine="true"
-            android:textAllCaps="false"
-            android:layout_width="60dp"
-            android:layout_height="40dp"
-            android:gravity="center"
-            android:text="@string/dialog_positive"
-            android:textSize="15sp"
-            android:textColor="@color/colorLinkBlue"
-            android:background="@drawable/launcher_button_parent"
-            android:id="@+id/ms_skin_positive"/>
+                <Button
+                    android:singleLine="true"
+                    android:textAllCaps="false"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="40dp"
+                    android:gravity="center"
+                    android:text="@string/dialog_positive"
+                    android:textSize="14sp"
+                    android:textColor="@color/colorLinkBlue"
+                    android:background="@drawable/launcher_button_parent"
+                    android:id="@+id/ms_skin_positive"/>
 
-        <Button
-            android:singleLine="true"
-            android:textAllCaps="false"
-            android:layout_width="60dp"
-            android:layout_height="40dp"
-            android:gravity="center"
-            android:layout_marginStart="8dp"
-            android:text="@string/dialog_negative"
-            android:textSize="15sp"
-            android:textColor="@color/colorPureBlack"
-            android:background="@drawable/launcher_button_parent"
-            android:id="@+id/ms_skin_negative"/>
-    </LinearLayout>
+                <Button
+                    android:singleLine="true"
+                    android:textAllCaps="false"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="40dp"
+                    android:layout_marginStart="8dp"
+                    android:gravity="center"
+                    android:text="@string/dialog_negative"
+                    android:textSize="14sp"
+                    android:textColor="@color/colorPureBlack"
+                    android:background="@drawable/launcher_button_parent"
+                    android:id="@+id/ms_skin_negative"/>
+            </LinearLayout>
+
+        </LinearLayout>
+    </ScrollView>
 
 </LinearLayout>
