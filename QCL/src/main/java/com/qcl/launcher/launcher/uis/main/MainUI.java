@@ -124,25 +124,6 @@ public class MainUI extends BaseUI implements View.OnClickListener, AdapterView.
         startMultiPlayerUI.setOnClickListener(this);
         startSettingUI.setOnClickListener(this);
 
-        // ★★★ 1.1.4：vivo / iQOO「持续性能模式」入口（等价于"游戏魔盒"的性能优化，照搬 FCL）。
-        //   仅「vivo/iQOO 设备」时显示，其余设备保持 GONE。真正的开启在 PojavMinecraftActivity 里
-        //   `getWindow().setSustainedPerformanceMode(true)`（启动游戏时自动生效），这里只是一个状态提示入口。
-        try {
-            android.view.View gameCubeEntry = activity.findViewById(R.id.start_ui_gamecube);
-            if (gameCubeEntry != null
-                    && com.qcl.launcher.launcher.launch.VivoGameCube.isVivoFamily()) {
-                gameCubeEntry.setVisibility(android.view.View.VISIBLE);
-                gameCubeEntry.setOnClickListener(v -> {
-                    android.widget.Toast.makeText(activity,
-                            "持续性能模式：让 CPU / GPU 在游戏期间保持高性能（进游戏后可在菜单里切换）",
-                            android.widget.Toast.LENGTH_SHORT).show();
-                });
-            }
-        }
-        catch (Throwable ignored) {
-            // 任何异常都不影响主界面
-        }
-
         startGame.setOnClickListener(this);
         // ★★★ 1.1.1：长按启动按钮 → 选择渲染器（公共选择器，版本设置/全局设置共用同一套）
         startGame.setOnLongClickListener(v -> {

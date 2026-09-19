@@ -211,39 +211,6 @@
 
 
             <!-- 5. 多人游戏（沿用原有隐藏状态） -->
-            <!-- ★★★ 1.1.4：vivo / iQOO「持续性能模式」入口。
-                 仅当「vivo/iQOO 设备」时由 MainUI 设为可见，其余设备默认 GONE（不占位、不影响布局）。 -->
-            <LinearLayout
-                android:background="@drawable/qcl_button_gray"
-                android:focusable="true"
-                android:id="@+id/start_ui_gamecube"
-                android:clickable="true"
-                android:visibility="gone"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_marginEnd="6dp"
-                android:padding="6dp">
-
-                <ImageView
-                    android:id="@+id/gamecube_icon"
-                    android:layout_gravity="center"
-                    android:layout_width="26dp"
-                    android:layout_height="26dp"
-                    android:background="@drawable/ic_qcl_gamecube_white"/>
-
-                <TextView
-                    android:singleLine="true"
-                    android:layout_width="wrap_content"
-                    android:layout_height="26dp"
-                    android:layout_gravity="center"
-                    android:gravity="center"
-                    android:layout_marginStart="6dp"
-                    android:text="@string/launcher_gamecube"
-                    android:textColor="@color/colorPureWhite"
-                    android:textSize="@dimen/text_size_middle"/>
-            </LinearLayout>
-
             <LinearLayout
                 android:background="@drawable/qcl_button_gray"
                 android:focusable="true"
