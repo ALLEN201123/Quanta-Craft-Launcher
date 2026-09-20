@@ -1,12 +1,12 @@
 {
   "latestRelease": {
-    "versionCode": 318,
-    "versionName": "1.1.8",
+    "versionCode": 319,
+    "versionName": "1.1.9",
     "date": "2026-09-20",
     "url": [
-      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/tag/v1.1.8"
+      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/tag/v1.1.9"
     ],
-    "updateLog": "1.1.8：修复 infdev 启动与滑动视角 + tweakClass 精确分类 + 远古版本参数扩展。1.1.7：修复 infdev Applet 结构进不去。",
+    "updateLog": "1.1.9：修好 infdev 的划屏转视角（补上 caciocavallo 那套注入 AWT 指针的钩子），并删掉启动日志里那行 Grab 调试输出。",
     "netdiskUrl": "https://pan.quark.cn/s/f2c26c4fb66f"
   },
   "latestPrerelease": null
