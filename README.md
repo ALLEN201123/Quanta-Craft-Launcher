@@ -95,12 +95,13 @@ QCL 是一个安卓平台的 Minecraft Java 版启动器，界面按自己的「
 **每个版本改了什么，都在 GitHub Releases 里，README 不逐版记录：**
 
 - 全部版本：https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases
-- 当前版本：**1.2.0**（versionCode 320）
+- 当前版本：**1.2.1**（versionCode 321）
 
 > 建议先按下面这张表判断自己关心的问题是在哪一版修的，直接查对应 Release 的说明：
 >
 > | 关注点 | 去看 |
 > |---|---|
+> | clone 下来构建不了 / 令牌被写进日志 / 想参与开发 | 1.2.1 |
 > | 应用内「更新」按钮下错包 | 1.2.0 |
 > | infdev 划屏转视角转不动 | 1.1.9 |
 > | infdev 进不去 / 远古版本启动 | 1.1.7 / 1.1.8 |
