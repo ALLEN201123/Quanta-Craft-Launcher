@@ -55,8 +55,8 @@ android {
         minSdk 26
         targetSdk 34
         // Own version line for QCL; kept above 208 so any earlier test build is an upgrade, never a downgrade.
-        versionCode 317
-        versionName "1.1.7"
+        versionCode 318
+        versionName "1.1.8"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }

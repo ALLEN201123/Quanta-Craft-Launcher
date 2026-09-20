@@ -89,6 +89,20 @@ extends AsyncTask<RecyclerView, Integer, Exception> {
                 return new Exception(this.activity.getString(R.string.launch_check_dialog_exception_lib_failed));
             }
         }
+        // ★★★ 1.1.8：old_alpha（infdev/alpha，Applet 结构）旧 json 缺 --tweakClass AlphaVanillaTweaker
+        // 时自动重建（老用户升级后无需手动删 json）。默认 VanillaTweaker 会找不存在的
+        // net.minecraft.client.Minecraft 而崩溃。
+        if (versionJson != null && versionJson.contains("\"old_alpha\"") && !versionJson.contains("tweakClass")) {
+            try {
+                String id2 = new File(this.launchVersion).getName();
+                String rebuilt = LegacyArchiveInstallTask.buildLegacyJson((Context)this.activity, id2, "");
+                FileStringUtils.writeFile(this.launchVersion + "/" + id2 + ".json", rebuilt);
+                version = (Version)gson.fromJson(rebuilt, Version.class);
+            }
+            catch (Throwable t) {
+                t.printStackTrace();
+            }
+        }
         ArrayList<DownloadTaskListBean> list = new ArrayList<DownloadTaskListBean>();
         // ===== FCL checkGameCompletionAsync 对齐：版本 jar 缺失或空文件时自动补下 =====
         String versionName = new File(this.launchVersion).getName();
