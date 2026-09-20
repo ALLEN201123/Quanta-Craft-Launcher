@@ -1,12 +1,12 @@
 {
   "latestRelease": {
-    "versionCode": 320,
-    "versionName": "1.2.0",
+    "versionCode": 321,
+    "versionName": "1.2.1",
     "date": "2026-09-20",
     "url": [
-      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.2.0/QCL-release-1.2.0-all.apk"
+      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.2.1/QCL-release-1.2.1-all.apk"
     ],
-    "updateLog": "1.2.0：修好应用内「更新」按钮（按设备架构挑对应包，以前会下到一个网页当安装包），更新机制照 FCL 重做。",
+    "updateLog": "1.2.1：gradle-wrapper 改回官方地址（别人 clone 后能构建了）；微软账号令牌不再写进日志；清掉已删除功能的残留（manifest 里 3 个不存在的组件、拷贝不存在的 boat 资源）；统一版本号；CI 修好（JDK 11→17）。",
     "netdiskUrl": "https://pan.quark.cn/s/f2c26c4fb66f"
   },
   "latestPrerelease": null
