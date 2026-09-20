@@ -1,12 +1,12 @@
 {
   "latestRelease": {
-    "versionCode": 316,
-    "versionName": "1.1.6",
+    "versionCode": 317,
+    "versionName": "1.1.7",
     "date": "2026-09-20",
     "url": [
-      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/tag/v1.1.6"
+      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/tag/v1.1.7"
     ],
-    "updateLog": "1.1.6：修复远古版本(b1.7.3等)进不去（CallbackBridge 重编译为 Java8，兼容 JRE8）。1.1.5：微软账号本地换皮 + 更新弹窗对齐 FCL + 多账号修复。",
+    "updateLog": "1.1.7：修复 infdev Applet 结构版本进不去（改用 AlphaVanillaTweaker）。1.1.6：修复远古版本进不去（CallbackBridge Java8）。1.1.5：微软换皮 + 更新弹窗。",
     "netdiskUrl": "https://pan.quark.cn/s/f2c26c4fb66f"
   },
   "latestPrerelease": null
