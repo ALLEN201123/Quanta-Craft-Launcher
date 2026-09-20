@@ -243,20 +243,26 @@ public class PojavLauncher {
             }
             args.add("-Xms" + minRam + "M");
             args.add("-Xmx" + maxRam + "M");
-            // ★★★ 1.1.4：远古 **infdev** 系列的兼容 Java 参数（现代启动器普遍缺这一环，导致进不去单人世界）。
+            // ★★★ 1.1.8：远古版本（infdev/alpha/beta/classic）的兼容 Java 参数，自动注入。
             //   ① `-Djava.util.Arrays.useLegacyMergeSort=true`
             //      Java 7+ 的 TimSort 会在旧版排序比较器上抛
             //      "Comparison method violates its general contract!" → 世界加载/进入时崩。
-            //      该参数让 Arrays.sort 退回旧的归并排序实现。
             //   ② `-Dhttp.proxyHost=betacraft.uk`
             //      极老版本的会话/资源请求指向早已废弃的地址，走社区 BetaCraft 代理才能通过验证。
-            //   仅在版本名判定为 infdev（如 inf-20100618 / infdev-xxx）时追加，其它版本完全不受影响。
+            //   ★ 覆盖所有远古版本（inf-* / a* / b* / c0.* / rd-*），不再只限 infdev。
+            //   ★ 玩家可在 JVM 参数框（extraJavaFlags）里写 useLegacyMergeSort / proxyHost 覆盖删除。
             try {
                 String qclVerArg = new File(gameLaunchSetting.currentVersion).getName().toLowerCase();
-                boolean qclIsInfdev = qclVerArg.startsWith("inf")
-                        || qclVerArg.contains("infdev")
-                        || qclVerArg.contains("inf-");
-                if (qclIsInfdev) {
+                boolean qclIsLegacy = qclVerArg.startsWith("inf")
+                        || qclVerArg.startsWith("a")
+                        || qclVerArg.startsWith("b")
+                        || qclVerArg.startsWith("c0.")
+                        || qclVerArg.startsWith("rd")
+                        || qclVerArg.contains("infdev");
+                boolean qclPlayerOverrides = gameLaunchSetting.extraJavaFlags != null
+                        && (gameLaunchSetting.extraJavaFlags.contains("useLegacyMergeSort")
+                            || gameLaunchSetting.extraJavaFlags.contains("proxyHost"));
+                if (qclIsLegacy && !qclPlayerOverrides) {
                     args.add("-Dhttp.proxyHost=betacraft.uk");
                     args.add("-Djava.util.Arrays.useLegacyMergeSort=true");
                 }
