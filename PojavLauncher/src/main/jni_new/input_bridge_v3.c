@@ -541,11 +541,6 @@ JNIEXPORT void JNICALL Java_org_lwjgl_glfw_CallbackBridge_nativeSendCursorPos(JN
         }
 
         if (!pojav_environ->isUseStackQueueCall) {
-            // ★★★ 1.1.8：直接回调模式也更新 cursorX/cursorY。超老版本（infdev 等）的 LWJGL
-            // Mouse 用「轮询」（Mouse.getX → nglfwGetCursorPos 读 cursorX/cursorY），直接回调分支
-            // 若不更新，轮询读到的永远是旧值 → 滑动视角无效。b1.7.3 走回调不受影响，赋值无害。
-            pojav_environ->cursorX = x;
-            pojav_environ->cursorY = y;
             pojav_environ->GLFW_invoke_CursorPos((void*) pojav_environ->showingWindow, (double) (x), (double) (y));
         } else {
             // ★★★ 2026-09-19 修复「1.20.6 转视角迟钝/极难转动」（b1.7.3 同机丝滑）：
