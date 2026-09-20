@@ -324,16 +324,28 @@ public class Msa {
     private static void throwResponseError(HttpURLConnection conn) throws IOException {
         String otherErrStr = "";
         String errStr = Tools.read(conn.getErrorStream());
-        Log.i("MicroAuth","Error code: " + conn.getResponseCode() + ": " + conn.getResponseMessage() + "\n" + errStr);
+        int code = conn.getResponseCode();
+        Log.i("MicroAuth","Error code: " + code + ": " + conn.getResponseMessage() + "\n" + errStr);
         
         if (errStr.contains("NOT_FOUND") &&
             errStr.contains("The server has not found anything matching the request URI"))
         {
             // TODO localize this
             otherErrStr = "It seems that this Microsoft Account does not own the game. Make sure that you have bought/migrated to your Microsoft account.";
+            throw new RuntimeException(otherErrStr);
         }
-        
-        throw new RuntimeException(otherErrStr + "\n\nMSA Error: " + conn.getResponseCode() + ": " + conn.getResponseMessage() + ", error stream:\n" + errStr);
+
+        // ★★★ 1.1.8：把原始技术错误（如 503 Service Unavailable）改成友好提示。
+        //   微软服务/国内网络偶发 503/502/504，对用户展示「登录超时」而非原始错误流。
+        String friendly;
+        if (code == 503 || code == 502 || code == 504) {
+            friendly = "登录超时：微软服务器繁忙或网络不稳定，请稍后重试。";
+        } else if (code == 401 || code == 403) {
+            friendly = "登录失败：请重新登录微软账号。";
+        } else {
+            friendly = "登录失败（错误码 " + code + "），请稍后重试。";
+        }
+        throw new RuntimeException(friendly);
     }
 }
 
