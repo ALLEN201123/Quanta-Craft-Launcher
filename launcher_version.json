@@ -1,12 +1,12 @@
 {
   "latestRelease": {
-    "versionCode": 319,
-    "versionName": "1.1.9",
+    "versionCode": 320,
+    "versionName": "1.2.0",
     "date": "2026-09-20",
     "url": [
-      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/tag/v1.1.9"
+      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.2.0/QCL-release-1.2.0-all.apk"
     ],
-    "updateLog": "1.1.9：修好 infdev 的划屏转视角（补上 caciocavallo 那套注入 AWT 指针的钩子），并删掉启动日志里那行 Grab 调试输出。",
+    "updateLog": "1.2.0：修好应用内「更新」按钮（按设备架构挑对应包，以前会下到一个网页当安装包），更新机制照 FCL 重做。",
     "netdiskUrl": "https://pan.quark.cn/s/f2c26c4fb66f"
   },
   "latestPrerelease": null
