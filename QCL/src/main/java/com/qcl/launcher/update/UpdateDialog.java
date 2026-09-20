@@ -56,7 +56,6 @@ implements View.OnClickListener {
     private TextView log;
     private ProgressBar progressBar;
     private Button update;
-    private Button ignore;
     private Button netdisk;
     private Button github;
     private Button negative;
@@ -85,12 +84,10 @@ implements View.OnClickListener {
         this.log.setText((CharSequence)charSequence);
         this.progressBar = (ProgressBar)this.findViewById(R.id.update_progress);
         this.update = (Button)this.findViewById(R.id.update);
-        this.ignore = (Button)this.findViewById(R.id.ignore);
         this.netdisk = (Button)this.findViewById(R.id.netdisk);
         this.github = (Button)this.findViewById(R.id.github);
         this.negative = (Button)this.findViewById(R.id.negative);
         this.update.setOnClickListener((View.OnClickListener)this);
-        this.ignore.setOnClickListener((View.OnClickListener)this);
         this.netdisk.setOnClickListener((View.OnClickListener)this);
         this.github.setOnClickListener((View.OnClickListener)this);
         this.negative.setOnClickListener((View.OnClickListener)this);
@@ -106,7 +103,6 @@ implements View.OnClickListener {
     public void onClick(View view) {
         if (view == this.update) {
             this.update.setEnabled(false);
-            this.ignore.setEnabled(false);
             this.progressBar.setVisibility(0);
             String finalUrl = this.version.url.get(0);
             new Thread(() -> {
@@ -134,7 +130,6 @@ implements View.OnClickListener {
                         public void onFinished(ArrayList<DownloadTaskListBean> failedFile) {
                             UpdateDialog.this.handler.post(() -> {
                                 UpdateDialog.this.update.setEnabled(true);
-                                UpdateDialog.this.ignore.setEnabled(true);
                                 UpdateDialog.this.progressBar.setVisibility(8);
                                 Intent intent = new Intent("android.intent.action.VIEW");
                                 intent.addFlags(0x10000000);
@@ -151,11 +146,6 @@ implements View.OnClickListener {
                     });
                 }
             }).start();
-        }
-        if (view == this.ignore) {
-            // ★★★ 1.1.5：忽略此更新 = 只关闭本次弹窗，**不持久化**，
-            //   因此每次重新进入启动器仍会弹出（与 FCL 的预期一致，用户可再选择下载或以后再说）。
-            this.dismiss();
         }
         if (view == this.netdisk) {
             // ★★★ 1.1.5：网盘下载（夸克网盘）。链接来自远程 launcher_version.json 的 netdiskUrl，
