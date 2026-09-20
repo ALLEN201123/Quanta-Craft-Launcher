@@ -304,10 +304,18 @@ public class LegacyArchiveInstallTask extends AsyncTask<VersionManifest.Version,
         if (template == null || template.trim().isEmpty()) {
             throw new IOException("Missing legacy_launch_template.json asset");
         }
+        String type = legacyTypeFor(id);
+        // ★★★ 1.1.7：old_alpha（infdev/alpha，含 Applet 结构的超老版本）必须用
+        // AlphaVanillaTweaker 启动，默认 VanillaTweaker 会去找 net.minecraft.client.Minecraft
+        // 而 jar 里只有 MinecraftApplet → ClassNotFoundException。照 FCL 的 unlisted 版本 json。
+        String tweak = type.equals("old_alpha")
+                ? " --tweakClass net.minecraft.launchwrapper.AlphaVanillaTweaker"
+                : "";
         return template
                 .replace("__ID__", id)
                 .replace("__TIME__", time)
-                .replace("__TYPE__", legacyTypeFor(id))
+                .replace("__TYPE__", type)
+                .replace("__TWEAK__", tweak)
                 .replace("__SOURCE__", jarUrl);
     }
 

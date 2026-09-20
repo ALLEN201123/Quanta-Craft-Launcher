@@ -5,7 +5,7 @@
   "releaseTime": "__TIME__",
   "type": "__TYPE__",
   "mainClass": "net.minecraft.launchwrapper.Launch",
-  "minecraftArguments": "${auth_player_name} ${auth_session} --gameDir ${game_directory} --assetsDir ${game_assets}",
+  "minecraftArguments": "${auth_player_name} ${auth_session} --gameDir ${game_directory} --assetsDir ${game_assets}__TWEAK__",
   "assets": "pre-1.6",
   "assetIndex": {
     "id": "pre-1.6",
