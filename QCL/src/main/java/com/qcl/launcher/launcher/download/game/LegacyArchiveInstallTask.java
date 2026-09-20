@@ -305,18 +305,34 @@ public class LegacyArchiveInstallTask extends AsyncTask<VersionManifest.Version,
             throw new IOException("Missing legacy_launch_template.json asset");
         }
         String type = legacyTypeFor(id);
-        // ★★★ 1.1.7：old_alpha（infdev/alpha，含 Applet 结构的超老版本）必须用
-        // AlphaVanillaTweaker 启动，默认 VanillaTweaker 会去找 net.minecraft.client.Minecraft
-        // 而 jar 里只有 MinecraftApplet → ClassNotFoundException。照 FCL 的 unlisted 版本 json。
-        String tweak = type.equals("old_alpha")
-                ? " --tweakClass net.minecraft.launchwrapper.AlphaVanillaTweaker"
-                : "";
+        // ★★★ 1.1.7/1.1.8：按版本类型精确选择 tweaker（对齐 FCL + launchwrapper 三个 tweaker 的分工）：
+        //   - indev（in-*）            → IndevVanillaTweaker（主类 net.minecraft.client.d）
+        //   - infdev（inf-*）/alpha（a*）→ AlphaVanillaTweaker（主类 net.minecraft.client.MinecraftApplet）
+        //   - beta（b*）/release        → 默认 VanillaTweaker（主类 net.minecraft.client.Minecraft）
+        //   - classic（c0.*）/pre-classic（pc-*）→ com.mojang.minecraft 包，三个 tweaker 都不适用，留空（默认）
+        String tweak = tweakClassFor(id);
         return template
                 .replace("__ID__", id)
                 .replace("__TIME__", time)
                 .replace("__TYPE__", type)
                 .replace("__TWEAK__", tweak)
                 .replace("__SOURCE__", jarUrl);
+    }
+
+    /** 按版本 id 前缀选择正确的 launchwrapper tweaker，未命中则返回空串（默认 VanillaTweaker）。 */
+    private static String tweakClassFor(String id) {
+        String lower = id.toLowerCase();
+        // indev（in-*，主类 net.minecraft.client.d）
+        if (lower.startsWith("in-")) {
+            return " --tweakClass net.minecraft.launchwrapper.IndevVanillaTweaker";
+        }
+        // infdev（inf-*）/ alpha（a*）/ classic（c0.*，含 com.mojang 包）→ AlphaVanillaTweaker
+        // AlphaVanillaTweakInjector 扫描 classpath 找 Applet 子类，net.minecraft 与 com.mojang 都识别。
+        if (lower.startsWith("inf") || lower.startsWith("a") || lower.startsWith("c0.")) {
+            return " --tweakClass net.minecraft.launchwrapper.AlphaVanillaTweaker";
+        }
+        // beta（b*）/ release / pre-classic（pc-*，FCL 也不支持）→ 默认 VanillaTweaker
+        return "";
     }
 
     private static String legacyTypeFor(String id) {
