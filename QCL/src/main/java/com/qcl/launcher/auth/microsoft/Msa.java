@@ -48,7 +48,7 @@ public class Msa {
     public void acquireAccessToken(boolean isRefresh, String authcode) throws IOException, JSONException {
 
         URL url = new URL(authTokenUrl);
-        Log.i("MicroAuth", "isRefresh=" + isRefresh + ", authCode= "+authcode);
+        Log.i("MicroAuth", "isRefresh=" + isRefresh + " (authCode 不打印，含凭据)");
         Map<Object, Object> data = new HashMap<>();
 
         data.put("client_id", "00000000402b5328");
@@ -73,7 +73,8 @@ public class Msa {
         if(conn.getResponseCode() >= 200 && conn.getResponseCode() < 300) {
             JSONObject jo = new JSONObject(Tools.read(conn.getInputStream()));
             msRefreshToken = jo.getString("refresh_token");
-            Log.i("MicroAuth","Acess Token = "+jo.getString("access_token"));
+            // ★ 不打印 access_token（令牌入日志＝账号可被冒用；日志窗还支持复制/分享，风险被放大）
+            Log.i("MicroAuth", "获取到 Acess Token（内容不打印）");
             acquireXBLToken(jo.getString("access_token"));
         }else{
             throwResponseError(conn);
@@ -109,7 +110,8 @@ public class Msa {
         }
         if(conn.getResponseCode() >= 200 && conn.getResponseCode() < 300) {
             JSONObject jo = new JSONObject(Tools.read(conn.getInputStream()));
-            Log.i("MicroAuth","Xbl Token = "+jo.getString("Token"));
+            // ★ 不打印 Xbl Token
+            Log.i("MicroAuth","获取到 Xbl Token（内容不打印）");
             acquireXsts(jo.getString("Token"));
         }else{
             throwResponseError(conn);
@@ -144,7 +146,8 @@ public class Msa {
         if(conn.getResponseCode() >= 200 && conn.getResponseCode() < 300) {
             JSONObject jo = new JSONObject(Tools.read(conn.getInputStream()));
             String uhs = jo.getJSONObject("DisplayClaims").getJSONArray("xui").getJSONObject(0).getString("uhs");
-            Log.i("MicroAuth","Xbl Xsts = "+jo.getString("Token")+"; Uhs = " + uhs);
+            // ★ 不打印 XSTS Token 与 UHS
+            Log.i("MicroAuth","获取到 Xbl Xsts（内容不打印）");
             acquireMinecraftToken(uhs,jo.getString("Token"));
         }else{
             throwResponseError(conn);
@@ -175,7 +178,8 @@ public class Msa {
 
         if(conn.getResponseCode() >= 200 && conn.getResponseCode() < 300) {
             JSONObject jo = new JSONObject(Tools.read(conn.getInputStream()));
-            Log.i("MicroAuth","MC token: "+jo.getString("access_token"));
+            // ★ 不打印 MC Token
+            Log.i("MicroAuth","获取到 MC Token（内容不打印）");
             mcToken = jo.getString("access_token");
             tokenType = jo.getString("token_type");
             checkMcProfile(jo.getString("access_token"));

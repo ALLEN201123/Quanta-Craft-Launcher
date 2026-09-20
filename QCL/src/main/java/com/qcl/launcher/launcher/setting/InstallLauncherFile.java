@@ -73,7 +73,9 @@ public class InstallLauncherFile {
             if (new File(AppManifest.DEFAULT_RUNTIME_DIR + "/version").exists()) {
                 new File(AppManifest.DEFAULT_RUNTIME_DIR + "/version").delete();
             }
-            AssetsUtils.getInstance((Context)activity).setProgressCallback(progressCallback).copyOnMainThread("app_runtime/boat", AppManifest.BOAT_LIB_DIR);
+            // ★ Boat 后端已彻底移除：assets/app_runtime/ 下没有 boat 目录，
+            //   原来这里会无条件拷贝一次，属确定的死路径（copyOnMainThread 对不存在的路径会静默失败），已删除。
+            //   BOAT_LIB_DIR 的 deleteDirectory 仍保留，用于清理历史安装残留。
             AssetsUtils.getInstance((Context)activity).setProgressCallback(progressCallback).copyOnMainThread("app_runtime/pojav", AppManifest.POJAV_LIB_DIR);
             AssetsUtils.getInstance((Context)activity).setProgressCallback(progressCallback).copyOnMainThread("app_runtime/caciocavallo", AppManifest.CACIOCAVALLO_DIR);
             AssetsUtils.getInstance((Context)activity).setProgressCallback(progressCallback).copyOnMainThread("app_runtime/caciocavallo17", AppManifest.CACIOCAVALLO17_DIR);
@@ -108,7 +110,9 @@ public class InstallLauncherFile {
             if (new File(AppManifest.DEFAULT_RUNTIME_DIR + "/version").exists()) {
                 new File(AppManifest.DEFAULT_RUNTIME_DIR + "/version").delete();
             }
-            AssetsUtils.getInstance((Context)activity).setProgressCallback(progressCallback).copyOnMainThread("app_runtime/boat", AppManifest.BOAT_LIB_DIR);
+            // ★ Boat 后端已彻底移除：assets/app_runtime/ 下没有 boat 目录，
+            //   原来这里会无条件拷贝一次，属确定的死路径（copyOnMainThread 对不存在的路径会静默失败），已删除。
+            //   BOAT_LIB_DIR 的 deleteDirectory 仍保留，用于清理历史安装残留。
             AssetsUtils.getInstance((Context)activity).setProgressCallback(progressCallback).copyOnMainThread("app_runtime/version", AppManifest.DEFAULT_RUNTIME_DIR + "/version");
         }
     }

@@ -1,20 +1,13 @@
 {
+  "_note": "★ 注意：这个文件不是更新检查的真源。App 实际读取的是 main 分支上的同名文件（raw.githubusercontent.com/ALLEN201123/Quanta-Craft-Launcher/main/launcher_version.json）。这里保留一份当前值只是为了让克隆下来的人能看清格式，改版本时请一并同步，避免两份漂移。",
   "latestRelease": {
-    "versionCode": 310,
-    "versionName": "1.1.0",
-    "date": "2026.09.18",
+    "versionCode": 320,
+    "versionName": "1.2.0",
+    "date": "2026-09-20",
     "url": [
-      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/latest"
+      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.2.0/QCL-release-1.2.0-all.apk"
     ],
-    "updateLog": "<b>Quanta Craft Launcher 1.1.0</b><br/>· 渲染栈与启动流程整体对齐 FCL<br/>· 修复 1.20.6 / 26.2 触屏点击无效（回调指针未注册）<br/>· 新增「安装或更新运行环境」页，运行环境状态一目了然<br/>· 已装齐后不再重复弹出安装页，仅启动器或运行环境更新时才提示<br/>· 新增启动器版本更新检测<br/>· 游戏内语言跟随启动器语言"
+    "updateLog": "<b>Quanta Craft Launcher 1.2.0</b><br/>· 应用内「更新」按钮改为按设备架构挑对应包（照 FCL），修掉原先把发布页网页当安装包下载的问题<br/>· 1.1.9 修好 infdev 划屏转视角（补上 caciocavallo 注入 AWT 指针的钩子）<br/>· 移除启动日志里遗留的 Grab 调试输出"
   },
-  "latestPrerelease": {
-    "versionCode": 310,
-    "versionName": "1.1.0",
-    "date": "2026.09.18",
-    "url": [
-      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/latest"
-    ],
-    "updateLog": "<b>Quanta Craft Launcher 1.1.0</b><br/>当前没有独立的测试版，与正式版一致。"
-  }
+  "latestPrerelease": null
 }

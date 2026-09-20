@@ -118,37 +118,16 @@
         <activity
             android:launchMode="standard"
             android:multiprocess="true"
-            android:name=".launcher.launch.boat.BoatMinecraftActivity"
-            android:alwaysRetainTaskState="true"
-            android:configChanges="fontScale|keyboard|keyboardHidden|locale|orientation|screenLayout|uiMode|screenSize|navigation"
-            android:screenOrientation="sensorLandscape"
-            android:theme="@style/Theme.HelloMinecraftLauncherPocketEdition"/>
-        <activity
-            android:launchMode="standard"
-            android:multiprocess="true"
             android:name=".launcher.launch.pojav.PojavMinecraftActivity"
             android:alwaysRetainTaskState="true"
             android:configChanges="keyboardHidden|orientation|screenSize|smallestScreenSize|screenLayout|keyboard|navigation"
             android:screenOrientation="sensorLandscape"
             android:theme="@style/Theme.HelloMinecraftLauncherPocketEdition"/>
         <service
-            android:name=".launcher.launch.boat.VirGLService"
-            android:process=":virGLProcess"
-            android:enabled="true"
-            android:exported="true" />
-        <service
             android:name=".launcher.download.ApiService"
             android:process=":apiService"
             android:enabled="true"
             android:exported="true" />
-        <service
-            android:name=".multiplayer.Hin2nService"
-            android:exported="true"
-            android:permission="android.permission.BIND_VPN_SERVICE">
-            <intent-filter>
-                <action android:name="android.net.VpnService" />
-            </intent-filter>
-        </service>
     
         <service
             android:name=".launcher.terracotta.TerracottaVpnService"
