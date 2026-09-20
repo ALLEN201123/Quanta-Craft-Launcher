@@ -59,6 +59,9 @@ extends View {
     private float downY;
     private float initialX;
     private float initialY;
+    // ★ 09-20 照搬 FCL：逐帧位移累积用（FCL 里是每帧把 downX/downY 推进到当前点）
+    private float lastMoveX;
+    private float lastMoveY;
     private long downTime;
     private int pointerID;
     private final Handler handler = new Handler();
@@ -236,12 +239,14 @@ extends View {
                 this.menuHelper.cursorY = event.getY();
                 this.menuHelper.pointerX = event.getX();
                 this.menuHelper.pointerY = event.getY();
-                InputBridge.setPointer(this.launcher, (int)(event.getX() * this.menuHelper.scaleFactor), (int)(event.getY() * this.menuHelper.scaleFactor));
+                InputBridge.setPointer(this.launcher, (int)event.getX(), (int)event.getY());
             }
             switch (event.getActionMasked()) {
                 case 0: {
                     this.initialX = event.getX();
                     this.initialY = event.getY();
+                    this.lastMoveX = event.getX();
+                    this.lastMoveY = event.getY();
                     this.downTime = System.currentTimeMillis();
                     this.pointerID = event.getPointerId(event.getActionIndex());
                     if (this.menuHelper.gameMenuSetting.mouseMode == 1 && this.menuHelper.gameCursorMode == 0) {
@@ -267,10 +272,35 @@ extends View {
                         this.menuHelper.cursorY = targetY;
                         this.menuHelper.pointerX = targetX;
                         this.menuHelper.pointerY = targetY;
-                        InputBridge.setPointer(this.launcher, (int)(targetX * this.menuHelper.scaleFactor), (int)(targetY * this.menuHelper.scaleFactor));
+                        // FCL 同款：不乘 scaleFactor（FCL TouchPad 第193行 setPointer(targetX, targetY, POINTER_ID)）
+                        InputBridge.setPointer(this.launcher, (int)targetX, (int)targetY);
                     }
                     if (this.menuHelper.gameCursorMode != 1 || this.menuHelper.gameMenuSetting.disableHalfScreen && !(this.initialX > (float)(this.screenWidth >> 1)) || event.getPointerId(event.getActionIndex()) != this.pointerID) break;
-                    this.menuHelper.viewManager.setGamePointer("1", true, event.getX() - this.initialX, event.getY() - this.initialY);
+                    // ★★★ 2026-09-20 完全照搬 FCL TouchPad.onTouchEvent 的 grab 分支（FCL 第226-251行）：
+                    //   FCL 用「本帧点 − 上一帧点」得到位移，累加到 DOWN 时记下的基准（getPointerX），
+                    //   再 setPointer 投递**累积后的绝对坐标**；每帧把基准推进到当前点。
+                    //   QCL 原实现调 viewManager.setGamePointer("1", true, dx, dy)，而该函数在
+                    //   hold=true（手指还按着）时**直接 return，pointerX 永不推进** → 每次都拿同一个
+                    //   旧 pointerX 加上「从 initialX 起算的绝对位移」重复投递 → MC 侧算出的 delta
+                    //   恒定不变 → 视角纹丝不动（实测：滑动 800px 画面完全没变；且因为乘了
+                    //   scaleFactor，投递值高达 3057 远超屏宽 1600，坐标完全离谱）。
+                    int movePointerIndex = event.findPointerIndex(this.pointerID);
+                    if (movePointerIndex != -1) {
+                        float newX = event.getX(movePointerIndex);
+                        float newY = event.getY(movePointerIndex);
+                        float moveDeltaX = (newX - this.lastMoveX) * this.menuHelper.gameMenuSetting.mouseSpeed;
+                        float moveDeltaY = (newY - this.lastMoveY) * this.menuHelper.gameMenuSetting.mouseSpeed;
+                        this.menuHelper.pointerX += moveDeltaX;
+                        this.menuHelper.pointerY += moveDeltaY;
+                        this.menuHelper.currentX = this.menuHelper.pointerX;
+                        this.menuHelper.currentY = this.menuHelper.pointerY;
+                        this.lastMoveX = newX;
+                        this.lastMoveY = newY;
+                        // FCL 直接传未缩放坐标（gameMenu.getInput().setPointer(initialX + deltaX, ...)）
+                        InputBridge.setPointer(this.launcher,
+                                (int) this.menuHelper.pointerX,
+                                (int) this.menuHelper.pointerY);
+                    }
                     if (!(Math.abs(event.getX() - this.initialX) > 1.0f) && !(Math.abs(event.getY() - this.initialY) > 1.0f) || System.currentTimeMillis() - this.downTime >= 400L) break;
                     this.handler.removeCallbacks(this.runnable);
                     break;
@@ -283,7 +313,8 @@ extends View {
                     }
                     if (event.getPointerId(event.getActionIndex()) != this.pointerID) break;
                     if (this.menuHelper.gameCursorMode == 1 && event.getPointerId(event.getActionIndex()) == this.pointerID && (!this.menuHelper.gameMenuSetting.disableHalfScreen || this.initialX > (float)(this.screenWidth >> 1))) {
-                        this.menuHelper.viewManager.setGamePointer("1", false, event.getX() - this.initialX, event.getY() - this.initialY);
+                        // ★ 09-20：抬手时**不再**调 setGamePointer 累加位移 —— 位移已在 ACTION_MOVE 里
+                        //   逐帧累积并投递完毕；这里重复投递会让视角在松手瞬间多跳一段。
                         this.handler.removeCallbacks(this.runnable);
                         if (Objects.equals(this.rayTraceResultType, RAYTRACE_RESULT_TYPE_BLOCK)) {
                             InputBridge.sendMouseEvent(this.launcher, 0, false);

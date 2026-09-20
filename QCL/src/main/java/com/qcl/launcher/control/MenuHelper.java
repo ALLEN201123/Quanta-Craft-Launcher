@@ -181,6 +181,7 @@ SeekBar.OnSeekBarChangeListener {
     }
 
     public void enableCursor() {
+        android.util.Log.i("QCL_TOUCH", "enableCursor() -> gameCursorMode=0 (光标模式)");
         this.gameCursorMode = 0;
         if (this.viewManager != null) {
             this.viewManager.enableCursor();
@@ -191,7 +192,20 @@ SeekBar.OnSeekBarChangeListener {
     }
 
     public void disableCursor() {
+        android.util.Log.i("QCL_TOUCH", "disableCursor() -> gameCursorMode=1 (grab 视角模式)");
         this.gameCursorMode = 1;
+        // ★ 09-20 对齐 FCL：进入 grab 视角模式时把 pointer 基准重置到屏幕中心，
+        //   否则会继承光标模式下/历史上累加的脏值（实测曾出现 pointerX=3057 远超屏宽 1600），
+        //   MC 用它算 delta 会得到离谱的巨大跳变。
+        if (this.viewManager != null && this.viewManager.screenWidth > 0) {
+            this.pointerX = this.viewManager.screenWidth / 2.0f;
+            this.pointerY = this.viewManager.screenHeight / 2.0f;
+            this.currentX = this.pointerX;
+            this.currentY = this.pointerY;
+            this.cursorX = this.pointerX;
+            this.cursorY = this.pointerY;
+            InputBridge.setPointer(this.launcher, (int) this.pointerX, (int) this.pointerY);
+        }
         if (this.viewManager != null) {
             this.viewManager.disableCursor();
         }

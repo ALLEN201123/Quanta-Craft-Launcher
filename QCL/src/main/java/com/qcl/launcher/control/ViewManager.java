@@ -215,7 +215,7 @@ public class ViewManager implements SensorEventListener {
 
     public void enableCursor() {
         if (this.touchPad != null) {
-            InputBridge.setPointer(this.launcher, (int) (this.menuHelper.cursorX * this.menuHelper.scaleFactor), (int) (this.menuHelper.cursorY * this.menuHelper.scaleFactor));
+            InputBridge.setPointer(this.launcher, (int) this.menuHelper.cursorX, (int) this.menuHelper.cursorY);
         }
         for (int i = 0; i < this.layoutPanel.getChildCount(); i++) {
             if (this.layoutPanel.getChildAt(i) instanceof BaseButton) {

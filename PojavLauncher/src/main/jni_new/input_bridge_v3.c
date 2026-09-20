@@ -49,7 +49,8 @@ typedef void GLFW_invoke_MouseButton_func(void* window, int button, int action, 
 typedef void GLFW_invoke_Scroll_func(void* window, double xoffset, double yoffset);
 typedef void GLFW_invoke_WindowSize_func(void* window, int width, int height);
 
-static float grabCursorX, grabCursorY, lastCursorX, lastCursorY;
+// 09-20：grabCursor 系列已无读写点（09-19 删除 isGrabbing 坐标重映射后残留），保留声明仅为兼容旧引用。
+static float __attribute__((unused)) grabCursorX, grabCursorY, lastCursorX, lastCursorY;
 
 jclass inputBridgeClass_ANDROID, inputBridgeClass_JRE;
 jmethodID inputBridgeMethod_ANDROID, inputBridgeMethod_JRE;
@@ -473,11 +474,13 @@ JNIEXPORT jboolean JNICALL Java_org_lwjgl_glfw_CallbackBridge_nativeSetInputRead
     return pojav_environ->isUseStackQueueCall;
 }
 
-JNIEXPORT void JNICALL Java_org_lwjgl_glfw_CallbackBridge_nativeSetGrabbing(JNIEnv* env, jclass clazz, jboolean grabbing, jint xset, jint yset) {
+// ★ 必须与游戏侧 jar 的调用签名一致：lwjgl-glfw.jar 的 GLFW.glfwSetInputMode
+//   调 CallbackBridge.nativeSetGrabbing:(Z)V —— 单参数！老的三参数 (ZII)V 是 HMCL-PE 遗留，
+//   ART 按描述符精确匹配，签名不符 → 找不到实现 → isGrabbing 恒 false
+//   → VirtualMouseGrabThread 永不切 gameCursorMode → 视角转不动。
+JNIEXPORT void JNICALL Java_org_lwjgl_glfw_CallbackBridge_nativeSetGrabbing(JNIEnv* env, jclass clazz, jboolean grabbing) {
     pojav_environ->isGrabbing = grabbing;
     if (pojav_environ->isGrabbing == JNI_TRUE) {
-        grabCursorX = xset; // savedWidth / 2;
-        grabCursorY = yset; // savedHeight / 2;
         isPrepareGrabPos = true;
     }
 }
@@ -541,6 +544,13 @@ JNIEXPORT void JNICALL Java_org_lwjgl_glfw_CallbackBridge_nativeSendCursorPos(JN
         }
 
         if (!pojav_environ->isUseStackQueueCall) {
+            if (getenv("QCL_DBG_INPUT")) {
+                __android_log_print(ANDROID_LOG_INFO, "QCL_INPUT",
+                    "sendCursorPos x=%.2f y=%.2f | invoke_CursorPos=%p window=%p",
+                    (double) x, (double) y,
+                    (void*) pojav_environ->GLFW_invoke_CursorPos,
+                    (void*) pojav_environ->showingWindow);
+            }
             pojav_environ->GLFW_invoke_CursorPos((void*) pojav_environ->showingWindow, (double) (x), (double) (y));
         } else {
             // ★★★ 2026-09-19 修复「1.20.6 转视角迟钝/极难转动」（b1.7.3 同机丝滑）：
