@@ -326,12 +326,12 @@ public class LegacyArchiveInstallTask extends AsyncTask<VersionManifest.Version,
         if (lower.startsWith("in-")) {
             return " --tweakClass net.minecraft.launchwrapper.IndevVanillaTweaker";
         }
-        // infdev（inf-*）/ alpha（a*）/ classic（c0.*，含 com.mojang 包）→ AlphaVanillaTweaker
-        // AlphaVanillaTweakInjector 扫描 classpath 找 Applet 子类，net.minecraft 与 com.mojang 都识别。
-        if (lower.startsWith("inf") || lower.startsWith("a") || lower.startsWith("c0.")) {
+        // infdev（inf-*）/ alpha（a*）/ classic（c0.*）/ pre-classic（pc-*，即 rd-*，com.mojang 包）
+        // → AlphaVanillaTweaker（扫描 classpath 找 Applet 子类，net.minecraft 与 com.mojang 都识别）。
+        if (lower.startsWith("inf") || lower.startsWith("a") || lower.startsWith("c0.") || lower.startsWith("pc-")) {
             return " --tweakClass net.minecraft.launchwrapper.AlphaVanillaTweaker";
         }
-        // beta（b*）/ release / pre-classic（pc-*，FCL 也不支持）→ 默认 VanillaTweaker
+        // beta（b*）/ release → 默认 VanillaTweaker
         return "";
     }
 
