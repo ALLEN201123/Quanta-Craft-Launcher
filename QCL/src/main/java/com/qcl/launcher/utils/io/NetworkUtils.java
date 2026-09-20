@@ -87,8 +87,9 @@ public final class NetworkUtils {
             connection.setRequestProperty("User-Agent", "QCL/1.1.1");
         }
         connection.setUseCaches(false);
-        connection.setConnectTimeout(5000);
-        connection.setReadTimeout(5000);
+        // ★ 1.2.2：原来 5 秒。国内网络下 5 秒经常超时，导致「明明有更新却检测不到」，放宽到 15 秒。
+        connection.setConnectTimeout(15000);
+        connection.setReadTimeout(15000);
         connection.setRequestProperty("Accept-Language", Locale.getDefault().toString());
         return connection;
     }
@@ -143,8 +144,9 @@ public final class NetworkUtils {
         while (true) {
 
             conn.setUseCaches(false);
-            conn.setConnectTimeout(5000);
-            conn.setReadTimeout(5000);
+            // ★ 1.2.2：5 秒 → 15 秒，同上
+            conn.setConnectTimeout(15000);
+            conn.setReadTimeout(15000);
             conn.setInstanceFollowRedirects(false);
             Map<String, List<String>> properties = conn.getRequestProperties();
             String method = conn.getRequestMethod();

@@ -2,7 +2,7 @@
     <string name="app_name" translatable="false">Quanta Craft Launcher</string>
     <string name="app_name_pri" translatable="false">Quanta Craft Launcher</string>
     <string name="app_name_sec" translatable="false">量子方块启动器</string>
-    <string name="version_name" translatable="false">v1.2.1</string>
+    <string name="version_name" translatable="false">v1.2.2</string>
     <string name="app_bar_title" translatable="false">QCL · Quanta Craft Launcher v1.0.4</string>
 
     <string name="dialog_outdated_warning_title">Warning</string>
@@ -34,7 +34,7 @@
     <string name="game_setting_ui_pojav_renderer_virgl" translatable="false">VirGLRenderer (OpenGL 4.3)</string>
     <string name="dialog_color_selector_arrow" translatable="false">→</string>
     <string name="ui_about_qcl_main" translatable="false">QCL (Quanta Craft Launcher)</string>
-    <string name="ui_about_qcl_sub" translatable="false">1.2.1</string>
+    <string name="ui_about_qcl_sub" translatable="false">1.2.2</string>
     <string name="ui_about_tungsten_main" translatable="false">Tungsten</string>
     <string name="ui_about_tungsten_sub" translatable="false">B 站 ID：@念小六</string>
     <string name="ui_about_shirosakimio_main" translatable="false">ShirosakiMio</string>
