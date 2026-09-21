@@ -1,4 +1,6 @@
 package com.qcl.launcher.launcher.download.game;
+import com.qcl.launcher.launcher.setting.game.PrivateGameSetting;
+import com.qcl.launcher.utils.gson.GsonUtils;
 
 import android.os.AsyncTask;
 import android.os.Looper;
@@ -41,13 +43,23 @@ public class LegacyArchiveInstallTask extends AsyncTask<VersionManifest.Version,
     private final MainActivity activity;
     private final DownloadTaskListAdapter adapter;
     private final Callback callback;
-    private final DownloadTaskListBean bean;
+
+    /**
+     * ★ 1.2.3：归档版安装对外只有两件事，所以列表里就给两行，名字分别标清楚是哪个文件。
+     *
+     * 修的是这个 bug：以前只有一个 bean，却在 onPreExecute 和 doInBackground 里
+     * 各 addDownloadTask 了一次 —— 于是下载列表里冒出两行完全一样的
+     * 「Install Minecraft」，玩家根本看不出在装什么。
+     */
+    private final DownloadTaskListBean jarBean;
+    private final DownloadTaskListBean jsonBean;
 
     public LegacyArchiveInstallTask(MainActivity activity, DownloadTaskListAdapter adapter, Callback callback) {
         this.activity = activity;
         this.adapter = adapter;
         this.callback = callback;
-        this.bean = new DownloadTaskListBean(activity.getString(R.string.dialog_install_game_install_game), "", "", "");
+        this.jarBean = new DownloadTaskListBean("jar", "", "", "");
+        this.jsonBean = new DownloadTaskListBean("json", "", "", "");
     }
 
     public interface Callback {
@@ -58,15 +70,35 @@ public class LegacyArchiveInstallTask extends AsyncTask<VersionManifest.Version,
         void onFinish(String versionId);
     }
 
+    /**
+     * ★ 1.2.3：用来「立刻打断下载」的内部信号。
+     * 下载的进度回调是 void 的、不能抛受检异常，所以用一个非受检异常把字节拷贝循环顶出来。
+     * 它**不是错误**，是玩家按了取消 —— 外层会把它按正常收尾处理，不弹失败框。
+     */
+    static class DownloadCancelledException extends RuntimeException {
+        DownloadCancelledException() {
+            super("download cancelled");
+        }
+    }
+
     @Override
     protected void onPreExecute() {
         super.onPreExecute();
         callback.onStart();
-        if (!isCancelled()) adapter.addDownloadTask(bean);
+        if (!isCancelled()) {
+            adapter.addDownloadTask(jarBean);
+            adapter.addDownloadTask(jsonBean);
+        }
     }
 
-    /** Reads the archive metadata and returns the client jar url recorded inside it. */
-    private String resolveJarUrl(String infoUrl) throws IOException {
+    /**
+     * Reads the archive metadata and returns the client jar url recorded inside it.
+     *
+     * ★ 1.2.3：改成 public static —— 整合包（MultiMC/Prism）安装时要复用它：
+     *   整合包得先按 mmc-pack 里的游戏版本自动把本体 jar 下好（照 FCL 的
+     *   `gameBuilder().name(name).gameVersion(...)`），再往里合并 jarmods / patch。
+     */
+    public static String resolveJarUrl(String infoUrl) throws IOException {
         String info = NetworkUtils.doGet(NetworkUtils.toURL(infoUrl));
         if (info == null) throw new IOException("Empty archive metadata: " + infoUrl);
         for (String rawLine : info.split("\n")) {
@@ -88,6 +120,18 @@ public class LegacyArchiveInstallTask extends AsyncTask<VersionManifest.Version,
         }
         VersionManifest.Version version = versions[0];
         String id = version.id;
+
+        // ★ 1.2.3：两个 task 的名字是在构造函数里建的，那时候还不知道装的是哪个版本，
+        //   所以只能写 "jar" / "json" —— 玩家看不出在装什么。
+        //   拿到 id 之后立刻补全，显示成实际文件名，例如 b1.9pre6.jar / b1.9pre6.json。
+        jarBean.name = id + ".jar";
+        jsonBean.name = id + ".json";
+        activity.runOnUiThread(() -> {
+            if (!isCancelled()) {
+                adapter.onProgress(jarBean);
+                adapter.onProgress(jsonBean);
+            }
+        });
         try {
             String jarUrl = resolveJarUrl(version.url);
 
@@ -99,10 +143,17 @@ public class LegacyArchiveInstallTask extends AsyncTask<VersionManifest.Version,
             DownloadTask.DownloadFeedback feedback = new DownloadTask.DownloadFeedback() {
                 @Override
                 public void updateProgress(long curr, long max) {
+                    // ★ 1.2.3：取消要能**立刻**中断下载。
+                    //   以前这里只在外面判 isCancelled()，取消之后这一轮字节拷贝仍然跑完，
+                    //   而且重试循环还会再下两遍 —— 玩家看到的「取消了还在后台下」就是这个。
+                    //   抛一个非受检异常让下载的流拷贝马上停下来。
+                    if (isCancelled()) {
+                        throw new DownloadCancelledException();
+                    }
                     if (max <= 0) return;
-                    bean.progress = (int) (100 * curr / max);
+                    jarBean.progress = (int) (100 * curr / max);
                     activity.runOnUiThread(() -> {
-                        if (!isCancelled()) adapter.onProgress(bean);
+                        if (!isCancelled()) adapter.onProgress(jarBean);
                     });
                 }
 
@@ -111,9 +162,8 @@ public class LegacyArchiveInstallTask extends AsyncTask<VersionManifest.Version,
                 }
             };
 
-            activity.runOnUiThread(() -> {
-                if (!isCancelled()) adapter.addDownloadTask(bean);
-            });
+            // ★ 这里以前又 addDownloadTask(bean) 了一次，导致列表出现两行同名任务。
+            //   现在两个 bean 已经在 onPreExecute 里加过了，这里不再重复添加。
 
             boolean ok = false;
             IOException last = null;
@@ -123,11 +173,27 @@ public class LegacyArchiveInstallTask extends AsyncTask<VersionManifest.Version,
             String[] candidates = secureUrl.equals(jarUrl)
                     ? new String[]{jarUrl} : new String[]{jarUrl, secureUrl};
             for (int attempt = 0; attempt < 3 && !ok; attempt++) {
+                // ★ 1.2.3：每次重试前先看有没有被取消 —— 取消了就别再下第二遍、第三遍
+                if (isCancelled()) {
+                    android.util.Log.i("LegacyArchive", "已取消，停止下载 " + id);
+                    return null;
+                }
                 String url = candidates[attempt % candidates.length];
                 try {
                     ok = DownloadUtil.downloadFile(url, jarFile.getAbsolutePath(), null, feedback);
+                } catch (DownloadCancelledException cancelled) {
+                    android.util.Log.i("LegacyArchive", "下载中途被取消：" + url);
+                    //noinspection ResultOfMethodCallIgnored
+                    jarFile.delete();   // 半截文件清掉，免得下次被当成已下好
+                    return null;
                 } catch (IOException e) {
                     last = new IOException("下载失败 [" + url + "]: " + e.getMessage(), e);
+                }
+                if (isCancelled()) {
+                    android.util.Log.i("LegacyArchive", "下载返回时已取消，停止后续重试");
+                    //noinspection ResultOfMethodCallIgnored
+                    jarFile.delete();
+                    return null;
                 }
                 // Betacraft occasionally answers 200 with an empty body: treat that as a failure
                 // instead of writing a version json around a broken jar.
@@ -140,19 +206,28 @@ public class LegacyArchiveInstallTask extends AsyncTask<VersionManifest.Version,
             }
             if (!ok) {
                 if (!isCancelled()) {
-                    activity.runOnUiThread(() -> adapter.onComplete(bean));
+                    activity.runOnUiThread(() -> {
+                        adapter.onComplete(jarBean);
+                        adapter.onComplete(jsonBean);   // jar 失败就不会写 json，这行也一并收掉
+                    });
                     return last != null ? last : new IOException("Failed to download " + jarUrl);
                 }
                 return null;
             }
 
             writeVersionJson(versionDir, id, jarUrl);
+            // ★ json 是本地生成的（不是下载的），所以这一行直接标完成。
+            //   归档版没有自带元数据，这份 json 是按 b1.7.3 骨架重建出来的，
+            //   玩家在列表里能看到「jar 下完了、json 也写好了」两件事都成。
+            activity.runOnUiThread(() -> {
+                if (!isCancelled()) adapter.onComplete(jsonBean);
+            });
             // 官方老版本元数据里写着的依赖（launchwrapper / LWJGL2 / jinput）和 pre-1.6 资源，
             // 装的时候就一并下载，和普通版本一样逐个显示进度。
             downloadDependencies(id);
 
             activity.runOnUiThread(() -> {
-                if (!isCancelled()) adapter.onComplete(bean);
+                if (!isCancelled()) adapter.onComplete(jarBean);
             });
             if (!isCancelled()) {
                 callback.onFinish(id);
@@ -161,7 +236,10 @@ public class LegacyArchiveInstallTask extends AsyncTask<VersionManifest.Version,
         } catch (Exception e) {
             e.printStackTrace();
             activity.runOnUiThread(() -> {
-                if (!isCancelled()) adapter.onComplete(bean);
+                if (!isCancelled()) {
+                    adapter.onComplete(jarBean);
+                    adapter.onComplete(jsonBean);
+                }
             });
             return e;
         }
@@ -293,6 +371,7 @@ public class LegacyArchiveInstallTask extends AsyncTask<VersionManifest.Version,
         String json = buildLegacyJson(activity, id, jarUrl);
         com.qcl.launcher.utils.file.FileStringUtils.writeFile(
                 new File(versionDir, id + ".json").getAbsolutePath(), json);
+
     }
 
     /** 用归档启动模板拼出一份版本 json（归档安装与启动检查的自动修复共用）。 */

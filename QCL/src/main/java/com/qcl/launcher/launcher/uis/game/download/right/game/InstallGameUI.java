@@ -8,6 +8,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.app.AlertDialog;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -17,6 +18,7 @@ import com.qcl.launcher.launcher.download.fabric.FabricLoaderVersion;
 import com.qcl.launcher.launcher.download.forge.ForgeVersion;
 import com.qcl.launcher.launcher.download.game.VersionManifest;
 import com.qcl.launcher.launcher.download.liteloader.LiteLoaderVersion;
+import com.qcl.launcher.launcher.download.modloader.ModLoaderVersions;
 import com.qcl.launcher.launcher.download.optifine.OptifineVersion;
 import com.qcl.launcher.launcher.download.quilt.QuiltLoaderVersion;
 import com.qcl.launcher.launcher.mod.RemoteMod;
@@ -66,6 +68,24 @@ public class InstallGameUI extends BaseUI implements View.OnClickListener, TextW
     private ImageView selectQuilt;
     private ImageView selectQuiltAPI;
     private LinearLayout selectQuiltAPIVersion;
+
+    /**
+     * ★ 1.2.3：Risugami's ModLoader。
+     *
+     * 它和上面几个加载器不一样 —— **没有「版本可以选」**：
+     * 装哪一份由 MC 版本自己决定（b1.7.3 就装 b1.7.3 那份），
+     * 所以这里只是一个「装 / 不装」的开关，不是选版本。
+     *
+     * ★ 时机：ModLoader 是往 minecraft.jar 里注入 class，
+     *   必须等基础版本装完才能装 —— 所以这里只记一个标记，
+     *   真正的下载+注入由 GameInstallDialog 在安装链跑完之后执行。
+     */
+    public boolean installModLoader;
+    private LinearLayout selectModLoaderVersion;
+    private TextView modLoaderVersionText;
+    public boolean installBabric;
+    private LinearLayout selectBabricVersion;
+    private TextView babricVersionText;
     private LinearLayout selectQuiltVersion;
     public VersionManifest.Version version;
 
@@ -124,6 +144,14 @@ public class InstallGameUI extends BaseUI implements View.OnClickListener, TextW
         this.selectFabricAPIVersion.setOnClickListener(this);
         this.selectQuiltVersion.setOnClickListener(this);
         this.selectQuiltAPIVersion.setOnClickListener(this);
+
+        // ★ 1.2.3：ModLoader 那一行（图标是白底 ML）
+        this.selectModLoaderVersion = (LinearLayout) this.activity.findViewById(R.id.select_modloader_version);
+        this.modLoaderVersionText = (TextView) this.activity.findViewById(R.id.modloader_version_text);
+        this.selectModLoaderVersion.setOnClickListener(this);
+        this.selectBabricVersion = (LinearLayout) this.activity.findViewById(R.id.select_babric_version);
+        this.babricVersionText = (TextView) this.activity.findViewById(R.id.babric_version_text);
+        this.selectBabricVersion.setOnClickListener(this);
         this.selectForge = (ImageView) this.activity.findViewById(R.id.select_forge);
         this.selectLiteLoader = (ImageView) this.activity.findViewById(R.id.select_lite_loader);
         this.selectOptiFine = (ImageView) this.activity.findViewById(R.id.select_optifine);
@@ -215,8 +243,29 @@ public class InstallGameUI extends BaseUI implements View.OnClickListener, TextW
             this.activity.uiManager.downloadQuiltAPIUI.install = false;
             this.activity.uiManager.switchMainUI(this.activity.uiManager.downloadQuiltAPIUI);
         }
-        if (view == this.install) {
-            if (SettingUtils.getLocalVersionNames(this.activity.launcherSetting.gameFileDirectory).contains(this.editName.getText().toString())) {
+        // ★ 1.2.3：ModLoader 与 Forge **互斥**，不能同时选。
+        //   原因：1.3 起 FML（Forge 的加载器）已经把 RML 包含进去了，
+        //   再叠一份 ModLoader 会类冲突，进游戏直接崩。
+        //   而 LiteLoader 和 ModLoader 是**可以共存**的（历史上就是这么搭的），
+        //   所以这里只挡 Forge。
+        if (view == this.selectModLoaderVersion) {
+            toggleModLoader();
+        }
+        if (view == this.selectBabricVersion) {
+            toggleBabric();
+        }
+        if (view == this.selectForgeVersion && this.installModLoader) {
+            new AlertDialog.Builder(this.context)
+                    .setTitle("ModLoader")
+                    .setMessage("已经选了 ModLoader，不能再装 Forge。\n\n"
+                            + "从 1.3 起 Forge 的加载器（FML）已经把 ModLoader 包含进去了，"
+                            + "两个一起装会类冲突、进游戏直接崩。\n"
+                            + "要装 Forge，请先点 ModLoader 那一行取消掉。")
+                    .setPositiveButton(android.R.string.ok, null)
+                    .create().show();
+            return;
+        }
+        if (view == this.install) {            if (SettingUtils.getLocalVersionNames(this.activity.launcherSetting.gameFileDirectory).contains(this.editName.getText().toString())) {
                 Toast.makeText(this.context, this.context.getString(R.string.install_game_ui_exist), 0).show();
                 return;
             }
@@ -224,13 +273,118 @@ public class InstallGameUI extends BaseUI implements View.OnClickListener, TextW
                 this.fabricAPIVersion = null;
                 this.quiltAPIVersion = null;
             }
-            new GameInstallDialog(this.context, this.activity, this.editName.getText().toString(), this.version, this.forgeVersion, this.optifineVersion, this.liteLoaderVersion, this.fabricVersion, this.fabricAPIVersion, this.quiltVersion, this.quiltAPIVersion).show();
+            // ★ 1.2.3：把「勾了 ModLoader」这件事传给安装流程，
+            //   它会在基础版本装完之后（installJson 那一步）才真正去装 ModLoader
+            GameInstallDialog dialog = new GameInstallDialog(this.context, this.activity, this.editName.getText().toString(), this.version, this.forgeVersion, this.optifineVersion, this.liteLoaderVersion, this.fabricVersion, this.fabricAPIVersion, this.quiltVersion, this.quiltAPIVersion);
+            dialog.installModLoader = this.installModLoader;
+            dialog.installBabric = this.installBabric;
+            dialog.show();
         }
+    }
+
+    /**
+     * ★ 1.2.3：切换 ModLoader 的「装 / 不装」。
+     *
+     * ★ 时机说明：这里**只是打标记**，真正的下载+注入放在
+     *   GameInstallDialog 的安装链全部跑完之后 ——
+     *   ModLoader 是往 minecraft.jar 里注入 class，jar 必须先装好。
+     *   （这也回答了「要不要等游戏文件全下完」：是，必须等。）
+     */
+    /**
+     * ★ 1.2.3：切换 Babric 的「装 / 不装」。
+     *
+     * Babric 是 b1.7.3 时代的 Fabric 分支，只给远古版本用；装最新版稳定 loader。
+     * 和 ModLoader 一样这里只打标记，真正下载在 GameInstallDialog 里等本体装完后才做。
+     */
+    private void toggleBabric() {
+        if (this.version == null) {
+            return;
+        }
+        if (this.installBabric) {
+            this.installBabric = false;
+            init();
+            return;
+        }
+        // ★★★ Babric 的 meta 里只有 b1.7.3 这一个游戏版本（实测），
+        //   其它版本一律拒绝，别让玩家装完启动不了。
+        String id = this.version.id;
+        String low = id == null ? "" : id.toLowerCase();
+        if (!"b1.7.3".equals(low)) {
+            new AlertDialog.Builder(this.context)
+                    .setTitle("Babric")
+                    .setMessage("Babric 只支持 b1.7.3（它的 meta 里只有这一个游戏版本）。\n"
+                            + "当前版本（" + id + "）装不了。")
+                    .setPositiveButton(android.R.string.ok, null)
+                    .create().show();
+            return;
+        }
+        this.installBabric = true;
+        init();
+    }
+
+    private void toggleModLoader() {
+        if (this.version == null) {
+            return;
+        }
+        // 再点一下 = 取消
+        if (this.installModLoader) {
+            this.installModLoader = false;
+            init();
+            return;
+        }
+        ModLoaderVersions.Entry entry = ModLoaderVersions.find(this.version.id);
+        if (entry == null) {
+            new AlertDialog.Builder(this.context)
+                    .setTitle("ModLoader")
+                    .setMessage("这个版本（" + this.version.id + "）没有对应的 ModLoader。\n"
+                            + "ModLoader 只支持 1.2.5 ~ 1.6.2 的正式版和部分远古版本。")
+                    .setPositiveButton(android.R.string.ok, null)
+                    .create().show();
+            return;
+        }
+        if (!entry.isInstallable()) {
+            new AlertDialog.Builder(this.context)
+                    .setTitle("ModLoader")
+                    .setMessage("ModLoader " + entry.mcVersion + " 官方只发布了 .rar 格式的包，"
+                            + "启动器现在解不开 rar（Java 自带库不支持），这个版本暂时装不了。")
+                    .setPositiveButton(android.R.string.ok, null)
+                    .create().show();
+            return;
+        }
+        this.installModLoader = true;
+        init();
     }
 
     private void init() {
         this.editName.setText(this.name);
         this.gameVersionText.setText(this.version.id);
+
+        // ★ 1.2.3：ModLoader 那一行的状态（它没有版本可选，只显示装/不装/不支持/冲突）
+        if (this.babricVersionText != null) {
+            if (this.installBabric) {
+                this.babricVersionText.setText((CharSequence) "Babric");
+            } else {
+                this.babricVersionText.setText((CharSequence) this.context.getString(R.string.install_game_ui_none));
+            }
+        }
+        if (this.modLoaderVersionText != null) {
+            ModLoaderVersions.Entry mlEntry = this.version == null ? null
+                    : ModLoaderVersions.find(this.version.id);
+            if (this.forgeVersion != null) {
+                // Forge 与 ModLoader 互斥（1.3 起 FML 已包含 RML，叠一起会崩）
+                this.modLoaderVersionText.setText(
+                        this.context.getString(R.string.install_game_ui_modloader_not_compatible));
+            } else if (mlEntry == null || !mlEntry.isInstallable()) {
+                this.modLoaderVersionText.setText(
+                        this.context.getString(R.string.install_game_ui_modloader_not_supported));
+            } else if (this.installModLoader) {
+                this.modLoaderVersionText.setText(
+                        this.context.getString(R.string.install_game_ui_modloader_installed));
+            } else {
+                this.modLoaderVersionText.setText(
+                        this.context.getString(R.string.install_game_ui_none));
+            }
+        }
         ForgeVersion forgeVersion = this.forgeVersion;
         if (forgeVersion != null || this.optifineVersion != null) {
             this.forgeVersionText.setText(forgeVersion == null ? this.context.getString(R.string.install_game_ui_none) : forgeVersion.getVersion());

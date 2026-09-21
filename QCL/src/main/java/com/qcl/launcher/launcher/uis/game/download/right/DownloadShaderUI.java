@@ -138,6 +138,10 @@ public class DownloadShaderUI extends BaseUI implements View.OnClickListener, Ad
         this.sortListAdapter = arrayAdapter2;
         arrayAdapter2.setDropDownViewResource(R.layout.item_spinner_drop_down);
         this.editSort.setAdapter((SpinnerAdapter) this.sortListAdapter);
+        // ★ 1.2.3：默认按「下载量」排序
+
+        this.editSort.setSelection(this.sortList.indexOf(this.context.getString(R.string.download_mod_sort_downloads)));
+
         ArrayList<String> arrayList2 = new ArrayList<>();
         this.versionList = arrayList2;
         arrayList2.add("");
@@ -146,6 +150,28 @@ public class DownloadShaderUI extends BaseUI implements View.OnClickListener, Ad
         this.versionListAdapter = arrayAdapter3;
         arrayAdapter3.setDropDownViewResource(R.layout.item_spinner_drop_down);
         this.editVersionSpinner.setAdapter((SpinnerAdapter) this.versionListAdapter);
+        // ★ 1.2.3：版本筛选默认选「当前正在玩的游戏版本」
+
+        try {
+
+            String cur = this.activity.publicGameSetting.currentVersion;
+
+            if (cur != null) {
+
+                int vi = this.versionList.indexOf(cur);
+
+                if (vi >= 0) {
+
+                    this.editVersionSpinner.setSelection(vi);
+
+                }
+
+            }
+
+        } catch (Throwable ignored) {
+
+        }
+
         ArrayList<RemoteModRepository.Category> arrayList3 = new ArrayList<>();
         this.categoryList = arrayList3;
         arrayList3.add(new RemoteModRepository.Category(CurseForgeRemoteModRepository.CATEGORY_ALL, "0", new ArrayList()));

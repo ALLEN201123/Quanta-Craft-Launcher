@@ -53,37 +53,6 @@
 
             </LinearLayout>
 
-            <LinearLayout
-                android:layout_height="72dp"
-                android:minWidth="84dp"
-                android:layout_marginStart="8dp"
-                android:gravity="center"
-                android:padding="10dp"
-                android:background="@drawable/launcher_button_parent"
-                android:focusable="true"
-                android:clickable="true"
-                android:id="@+id/start_universal_setting_ui"
-                android:layout_width="wrap_content"
-                android:orientation="vertical">
-
-                <ImageView
-                    android:layout_gravity="center_horizontal"
-                    android:layout_width="22dp"
-                    android:layout_height="22dp"
-                    android:background="@drawable/ic_baseline_web_asset_black"/>
-
-                <TextView
-                    android:layout_marginTop="6dp"
-                    android:gravity="center_horizontal"
-                    android:singleLine="true"
-                    android:layout_gravity="center_horizontal"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/setting_ui_universal"
-                    android:textSize="14sp"
-                    android:textColor="@color/colorPureBlack"/>
-
-            </LinearLayout>
 
             <LinearLayout
                 android:layout_height="72dp"
@@ -149,37 +118,6 @@
 
             </LinearLayout>
 
-            <LinearLayout
-                android:layout_height="72dp"
-                android:minWidth="84dp"
-                android:layout_marginStart="8dp"
-                android:gravity="center"
-                android:padding="10dp"
-                android:background="@drawable/launcher_button_parent"
-                android:focusable="true"
-                android:clickable="true"
-                android:id="@+id/start_help_ui"
-                android:layout_width="wrap_content"
-                android:orientation="vertical">
-
-                <ImageView
-                    android:layout_gravity="center_horizontal"
-                    android:layout_width="22dp"
-                    android:layout_height="22dp"
-                    android:background="@drawable/ic_outline_help_outline_black"/>
-
-                <TextView
-                    android:layout_marginTop="6dp"
-                    android:gravity="center_horizontal"
-                    android:singleLine="true"
-                    android:layout_gravity="center_horizontal"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/setting_ui_help"
-                    android:textSize="14sp"
-                    android:textColor="@color/colorPureBlack"/>
-
-            </LinearLayout>
 
             <LinearLayout
                 android:layout_height="72dp"

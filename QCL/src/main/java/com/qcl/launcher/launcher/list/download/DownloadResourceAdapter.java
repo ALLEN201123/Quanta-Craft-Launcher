@@ -18,6 +18,7 @@ import androidx.annotation.NonNull;
 
 import com.qcl.launcher.R;
 import com.qcl.launcher.launcher.MainActivity;
+import com.qcl.launcher.launcher.download.modloader.ModLoaderDetector;
 import com.qcl.launcher.launcher.mod.RemoteMod;
 import com.qcl.launcher.launcher.mod.RemoteModRepository;
 import com.qcl.launcher.launcher.mod.curse.CurseForgeRemoteModRepository;
@@ -25,6 +26,7 @@ import com.qcl.launcher.launcher.uis.game.download.right.resource.DownloadResour
 import com.qcl.launcher.utils.LocaleUtils;
 import com.qcl.launcher.utils.string.ModTranslations;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
@@ -120,6 +122,38 @@ public class DownloadResourceAdapter extends BaseAdapter {
             categories.append(c).append("   ");
         }
         viewHolder.categories.setText(categories.toString());
+
+        // ★ 1.2.3：按「你当前的版本」装的加载器，给不兼容的模组卡片标红字警告（只对模组页生效）。
+        //   规则（用户定的）：没装加载器 → 只有不依赖加载器的（纯 class 型）不标；
+        //   ModLoader → 依赖 ModLoader 的和纯 class 型不标；Babric → 只有 Babric/Fabric 的不标。
+        //   加载器信息取自 Modrinth 的 categories（CurseForge 的 categories 是玩法分类，没有就按无依赖处理）。
+        if (type == 0) {
+            try {
+                String cur = activity.publicGameSetting.currentVersion;
+                File vDir = new File(activity.launcherSetting.gameFileDirectory + "/versions/" + cur);
+                String currentLoader = ModLoaderDetector.detect(vDir);
+                java.util.List<String> modLoaders = new java.util.ArrayList<>();
+                for (String c : modList.get(position).getCategories()) {
+                    String low = c.toLowerCase();
+                    if (low.contains("babric")) modLoaders.add("babric");
+                    else if (low.contains("modloader")) modLoaders.add("modloader");
+                    else if (low.contains("fabric")) modLoaders.add("fabric");
+                    else if (low.contains("forge")) modLoaders.add("forge");
+                    else if (low.contains("quilt")) modLoaders.add("quilt");
+                    else if (low.contains("liteloader")) modLoaders.add("liteloader");
+                }
+                if (!ModLoaderDetector.isSupported(currentLoader, modLoaders)) {
+                    android.text.SpannableStringBuilder ssb = new android.text.SpannableStringBuilder();
+                    String warn = "⚠ 不支持你当前的版本";
+                    ssb.append(warn);
+                    ssb.setSpan(new android.text.style.ForegroundColorSpan(0xFFFF4444),
+                            0, warn.length(), android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                    ssb.append("   ").append(categories);
+                    viewHolder.categories.setText(ssb);
+                }
+            } catch (Throwable ignored) {
+            }
+        }
         ModTranslations modTranslations;
         if (type == 0) {
             modTranslations = ModTranslations.MOD;

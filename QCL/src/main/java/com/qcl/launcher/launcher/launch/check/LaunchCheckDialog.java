@@ -68,6 +68,10 @@ public class LaunchCheckDialog extends Dialog implements View.OnClickListener, H
         this.login = false;
         setContentView(R.layout.dialog_launch_check);
         setCancelable(false);
+        // ★ 1.2.3：控制台透明 —— 只改布局不够，Dialog 窗口自带不透明背景，必须一起清掉
+        if (getWindow() != null) {
+            getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        }
         this.activity = mainActivity;
         this.launchVersion = str;
         this.bundle = bundle;

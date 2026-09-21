@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ★ 1.2.3：启动按钮的透明版（界面全透明模式下用）。
+     保留 ripple，按下去还有反馈，只是平时不挡背景。 -->
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="@color/colorLightWhite">
+    <item>
+        <shape>
+            <corners android:radius="3dp"/>
+            <solid android:color="#33000000"/>
+        </shape>
+    </item>
+</ripple>

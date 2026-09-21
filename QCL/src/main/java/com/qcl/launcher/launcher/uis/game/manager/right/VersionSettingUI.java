@@ -58,6 +58,7 @@ import android.widget.RadioButton;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
+import com.qcl.launcher.launcher.mod.ModClassInjector;
 import androidx.appcompat.widget.SwitchCompat;
 import com.qcl.launcher.launcher.MainActivity;
 import com.qcl.launcher.launcher.dialogs.control.ControllerManagerDialog;
@@ -195,6 +196,13 @@ SeekBar.OnSeekBarChangeListener {
         this.checkGameDirIsolate = (RadioButton)this.activity.findViewById(R.id.check_isolate_game_dir_isolate);
         this.checkGameDirCustom = (RadioButton)this.activity.findViewById(R.id.check_custom_game_dir_isolate);
         this.editGameDir = (EditText)this.activity.findViewById(R.id.edit_game_dir_path_isolate);
+
+        // ★ 1.2.3：Class 查看器 —— 看这个版本被哪些模组注入了哪些 class，可按模组删除
+        android.widget.LinearLayout classViewerRow =
+                (android.widget.LinearLayout) this.activity.findViewById(R.id.class_viewer_row);
+        if (classViewerRow != null) {
+            classViewerRow.setOnClickListener(v13 -> showClassViewer());
+        }
         this.selectGameDir = (ImageButton)this.activity.findViewById(R.id.select_game_dir_path_isolate);
         this.launchByPojav = (RadioButton)this.activity.findViewById(R.id.launch_by_pojav_isolate);
         this.checkAutoRam = (CheckBox)this.activity.findViewById(R.id.check_auto_ram_isolate);
@@ -409,6 +417,81 @@ SeekBar.OnSeekBarChangeListener {
         }
     }
 
+    /** ★ 1.2.3：是否远古版本（inf-* / a* / b* / c0.* / rd-*），与 PojavLauncher 的注入条件一致 */
+    private static boolean isAncientVersion(String id) {
+        if (id == null) return false;
+        String s = id.toLowerCase();
+        return s.startsWith("inf") || s.startsWith("a") || s.startsWith("b")
+                || s.startsWith("c0.") || s.startsWith("rd") || s.contains("infdev");
+    }
+
+    /** ★ 1.2.3：Class 查看器 —— 按模组列出注入的 class，点击可整组删除 */
+    private void showClassViewer() {
+        try {
+            File versionDir = new File(this.activity.launcherSetting.gameFileDirectory
+                    + "/versions/" + this.versionName);
+            java.util.Map<String, String> registry = ModClassInjector.loadRegistry(versionDir);
+            if (registry.isEmpty()) {
+                new AlertDialog.Builder(this.context)
+                        .setTitle("Class 查看器")
+                        .setMessage("这个版本还没有模组往本体 jar 里注入过 class。")
+                        .setPositiveButton(android.R.string.ok, null)
+                        .show();
+                return;
+            }
+            java.util.Map<String, java.util.List<String>> byMod = new java.util.LinkedHashMap<>();
+            for (java.util.Map.Entry<String, String> e : registry.entrySet()) {
+                java.util.List<String> list = byMod.get(e.getValue());
+                if (list == null) {
+                    list = new java.util.ArrayList<>();
+                    byMod.put(e.getValue(), list);
+                }
+                list.add(e.getKey());
+            }
+            final java.util.List<String> mods = new java.util.ArrayList<>(byMod.keySet());
+            final File dir = versionDir;
+            String[] items = new String[mods.size()];
+            for (int i = 0; i < mods.size(); i++) {
+                java.util.List<String> cls = byMod.get(mods.get(i));
+                StringBuilder preview = new StringBuilder();
+                for (int k = 0; k < Math.min(3, cls.size()); k++) {
+                    if (k > 0) {
+                        preview.append('\n');
+                    }
+                    preview.append(cls.get(k));
+                }
+                if (cls.size() > 3) {
+                    preview.append("\n… 共 ").append(cls.size()).append(" 个");
+                }
+                items[i] = mods.get(i) + "（" + cls.size() + " 个 class）\n" + preview;
+            }
+            new AlertDialog.Builder(this.context)
+                    .setTitle("Class 查看器")
+                    .setMessage("这些模组往本体 jar 注入了 class。点某个模组可删除它注入的全部 class：")
+                    .setItems(items, (dlg, which) -> {
+                        String mod = mods.get(which);
+                        new AlertDialog.Builder(this.context)
+                                .setTitle("删除确认")
+                                .setMessage("把「" + mod + "」注入的所有 class 从本体 jar 里删掉？")
+                                .setPositiveButton("删除", (d2, w2) -> {
+                                    try {
+                                        int n = ModClassInjector.removeClassesOf(dir, mod);
+                                        Toast.makeText(this.context,
+                                                "已删除 " + n + " 个 class", Toast.LENGTH_LONG).show();
+                                    } catch (Exception ex) {
+                                        Toast.makeText(this.context,
+                                                "删除失败：" + ex.getMessage(), Toast.LENGTH_LONG).show();
+                                    }
+                                })
+                                .setNegativeButton(android.R.string.cancel, null)
+                                .show();
+                    })
+                    .setNegativeButton(android.R.string.cancel, null)
+                    .show();
+        } catch (Throwable ignored) {
+        }
+    }
+
     public void refresh(String versionName) {
         this.versionName = versionName;
         String settingPath = this.activity.launcherSetting.gameFileDirectory + "/versions/" + versionName + "/qcl.cfg";
@@ -462,6 +545,22 @@ SeekBar.OnSeekBarChangeListener {
             }
         }
         PrivateGameSetting setting = this.privateGameSetting == null ? this.activity.privateGameSetting : this.privateGameSetting;
+        // ★ 1.2.3：远古版本自动预填 JVM 参数到「版本设置 → Java/虚拟机」框里（玩家可随意改）。
+        //   只在这个版本自己的配置（qcl.cfg）里改，不动全局。
+        try {
+            if (isAncientVersion(versionName) && this.privateGameSetting != null
+                    && !this.privateGameSetting.legacyJvmArgsFilled
+                    && (this.privateGameSetting.extraJavaFlags == null
+                        || this.privateGameSetting.extraJavaFlags.isEmpty())) {
+                this.privateGameSetting.extraJavaFlags = "-Dhttp.proxyHost=betacraft.uk -Djava.util.Arrays.useLegacyMergeSort=true";
+                // ★ 只填一次：标记写进 qcl.cfg，之后玩家手动删掉也不会再自动补回来
+                this.privateGameSetting.legacyJvmArgsFilled = true;
+                GsonUtils.savePrivateGameSetting(this.privateGameSetting,
+                        this.activity.launcherSetting.gameFileDirectory + "/versions/"
+                                + this.versionName + "/qcl.cfg");
+            }
+        } catch (Throwable ignored) {
+        }
         this.checkAutoRam.setChecked(setting.ramSetting.autoRam);
         this.ramProgressBar.setProgress(MemoryUtils.getTotalDeviceMemory(this.context) - MemoryUtils.getFreeDeviceMemory(this.context));
         this.ramSeekBar.setProgress(setting.ramSetting.minRam);

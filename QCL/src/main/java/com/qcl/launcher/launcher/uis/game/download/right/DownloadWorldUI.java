@@ -136,6 +136,28 @@ public class DownloadWorldUI extends BaseUI implements View.OnClickListener, Ada
         this.versionListAdapter = arrayAdapter2;
         arrayAdapter2.setDropDownViewResource(R.layout.item_spinner_drop_down);
         this.editVersionSpinner.setAdapter((SpinnerAdapter) this.versionListAdapter);
+        // ★ 1.2.3：版本筛选默认选「当前正在玩的游戏版本」
+
+        try {
+
+            String cur = this.activity.publicGameSetting.currentVersion;
+
+            if (cur != null) {
+
+                int vi = this.versionList.indexOf(cur);
+
+                if (vi >= 0) {
+
+                    this.editVersionSpinner.setSelection(vi);
+
+                }
+
+            }
+
+        } catch (Throwable ignored) {
+
+        }
+
         ArrayList<RemoteModRepository.Category> arrayList3 = new ArrayList<>();
         this.categoryList = arrayList3;
         arrayList3.add(new RemoteModRepository.Category(CurseForgeRemoteModRepository.CATEGORY_ALL, "0", new ArrayList()));

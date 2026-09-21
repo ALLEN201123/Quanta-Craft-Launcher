@@ -45,6 +45,9 @@ import com.qcl.launcher.launcher.download.fabric.FabricLoaderVersion;
 import com.qcl.launcher.launcher.download.forge.ForgeDownloadTask;
 import com.qcl.launcher.launcher.download.forge.ForgeInstallTask;
 import com.qcl.launcher.launcher.download.forge.ForgeVersion;
+import com.qcl.launcher.launcher.download.babric.BabricInstallTask;
+import com.qcl.launcher.launcher.setting.game.PrivateGameSetting;
+import com.qcl.launcher.utils.gson.GsonUtils;
 import com.qcl.launcher.launcher.download.game.LegacyArchiveInstallTask;
 import com.qcl.launcher.launcher.download.game.MinecraftInstallTask;
 import com.qcl.launcher.launcher.download.game.VersionManifest;
@@ -81,6 +84,16 @@ Handler.Callback {
     private final MainActivity activity;
     private final String name;
     private final VersionManifest.Version version;
+
+    /**
+     * ★ 1.2.3：玩家在安装页勾了 Risugami's ModLoader 吗。
+     * 由 {@code InstallGameUI} 在 show() 之前设置。
+     * 装完基础版本（installJson 那一步）之后才会真正去装它 —— 因为 ModLoader
+     * 是往 minecraft.jar 里注入 class，jar 必须先装好。
+     */
+    public boolean installModLoader;
+    public boolean installBabric;
+    private BabricInstallTask babricInstallTask;
     private final ForgeVersion forgeVersion;
     private final OptifineVersion optifineVersion;
     private final LiteLoaderVersion liteLoaderVersion;
@@ -202,21 +215,82 @@ Handler.Callback {
                     GameInstallDialog.this.downloadLiteLoader();
                     return;
                 }
-                GameInstallDialog.this.activity.runOnUiThread(() -> {
-                    AlertDialog.Builder builder = new AlertDialog.Builder(GameInstallDialog.this.context);
-                    builder.setTitle((CharSequence)GameInstallDialog.this.context.getString(R.string.dialog_install_success_title));
-                    builder.setMessage((CharSequence)GameInstallDialog.this.context.getString(R.string.dialog_install_success_text));
-                    builder.setCancelable(false);
-                    builder.setPositiveButton((CharSequence)GameInstallDialog.this.context.getString(R.string.dialog_install_success_positive), (dialogInterface, i) -> {
-                        GameInstallDialog.this.activity.backToLastUI();
-                        new Thread(() -> ((GameInstallDialog)GameInstallDialog.this).activity.uiManager.versionListUI.refreshVersionList()).start();
-                    });
-                    GameInstallDialog.this.exit();
-                    builder.create().show();
-                });
+                // ★★★ 1.2.3：归档版（远古版本）**不走 installJson()** ——
+                //   原来这里直接弹「安装成功」框，所以玩家勾了 ModLoader 也不会装。
+                //   这里补上同一步（复用下面那两个方法），归档版才会真的去下 ModLoader。
+                if (GameInstallDialog.this.installModLoader) {
+                    GameInstallDialog.this.installModLoaderThenFinish();
+                    return;
+                }
+                GameInstallDialog.this.showInstallSuccess();
             }
         });
         this.legacyArchiveInstallTask.execute(new VersionManifest.Version[]{this.version});
+    }
+
+    /**
+     * ★ 1.2.3：装 Babric（b1.7.3 的 Fabric 分支）。
+     *
+     * 和 ModLoader 不同，Babric 是 Fabric 系：它下载加载器 + 依赖库 + 改 mainClass，
+     * **不动本体 jar 里的 class**。所以不需要「合并 jarmods」那套。
+     */
+    public void downloadBabric() {
+        // ★ 兜底：非 b1.7.3 直接拒绝（UI 那边挡过一次，这里再挡一次）
+        String vid = this.version == null ? null : this.version.id;
+        if (vid == null || !"b1.7.3".equalsIgnoreCase(vid.trim())) {
+            throwException(new Exception("Babric 只支持 b1.7.3，当前版本（"
+                    + (vid == null ? "未知" : vid) + "）装不了。"));
+            return;
+        }
+        this.babricInstallTask = new BabricInstallTask(this.activity, this.downloadTaskListAdapter,
+                this.version.id, new BabricInstallTask.InstallBabricCallback() {
+
+            @Override
+            public void onStart() {
+            }
+
+            @Override
+            public void onFailed(Exception e) {
+                GameInstallDialog.this.throwException(e);
+            }
+
+            @Override
+            public void onFinish(Version version) {
+                GameInstallDialog.this.gameVersionJson =
+                        PatchMerger.mergePatch(GameInstallDialog.this.gameVersionJson, version);
+                // 装完：写标记（让 ModLoaderDetector 认出这是 Babric）+ 关文件校验
+                File dir = new File(GameInstallDialog.this.activity.launcherSetting.gameFileDirectory
+                        + "/versions/" + GameInstallDialog.this.name);
+                try {
+                    dir.mkdirs();
+                    new File(dir, BabricInstallTask.MARKER_NAME).createNewFile();
+                } catch (Throwable ignored) {
+                }
+                disableFileCheck(dir);
+                GameInstallDialog.this.showInstallSuccess();
+            }
+        });
+        this.babricInstallTask.execute(new String[]{null});
+    }
+
+    /** ★ 1.2.3：关闭这个版本的「检查游戏完整性」（加载器改过版本 json，校验必然对不上） */
+    private void disableFileCheck(File versionDir) {
+        try {
+            File cfg = new File(versionDir, "qcl.cfg");
+            PrivateGameSetting st = GsonUtils.getPrivateGameSettingFromFile(cfg.getAbsolutePath());
+            if (st == null) {
+                PrivateGameSetting tpl = this.activity.privateGameSetting;
+                if (tpl != null) {
+                    com.google.gson.Gson g = new com.google.gson.Gson();
+                    st = g.fromJson(g.toJson(tpl), PrivateGameSetting.class);
+                }
+            }
+            if (st != null && !st.notCheckMinecraft) {
+                st.notCheckMinecraft = true;
+                GsonUtils.savePrivateGameSetting(st, cfg.getAbsolutePath());
+            }
+        } catch (Throwable ignored) {
+        }
     }
 
     public void downloadLiteLoader() {
@@ -433,6 +507,25 @@ Handler.Callback {
         Gson gson = JsonUtils.defaultGsonBuilder().registerTypeAdapter(Artifact.class, (Object)new Artifact.Serializer()).registerTypeAdapter(Bits.class, (Object)new Bits.Serializer()).registerTypeAdapter(RuledArgument.class, (Object)new RuledArgument.Serializer()).registerTypeAdapter(Argument.class, (Object)new Argument.Deserializer()).create();
         String string2 = gson.toJson((Object)this.gameVersionJson);
         FileStringUtils.writeFile(gameFilePath + "/versions/" + this.name + "/" + this.name + ".json", string2);
+
+        // ★★★ 1.2.3：这里是整条安装链的终点。
+        //   如果玩家勾了 ModLoader，就在**基础版本已经装完、jar 已就位**之后再装它
+        //   —— ModLoader 是往 minecraft.jar 里注入 class，必须等 jar 好。
+        //   装完（成功或失败）再弹「安装成功」框，让玩家看到完整过程。
+        if (this.installModLoader) {
+            installModLoaderThenFinish();
+            return;
+        }
+        // ★ 1.2.3：勾了 Babric —— 同样等基础版本装完（jar 已就位）再装
+        if (this.installBabric) {
+            downloadBabric();
+            return;
+        }
+        showInstallSuccess();
+    }
+
+    /** 安装成功提示（原 installJson 的收尾部分） */
+    private void showInstallSuccess() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this.context);
         builder.setTitle((CharSequence)this.context.getString(R.string.dialog_install_success_title));
         builder.setMessage((CharSequence)this.context.getString(R.string.dialog_install_success_text));
@@ -443,6 +536,45 @@ Handler.Callback {
         });
         this.exit();
         builder.create().show();
+    }
+
+    /**
+     * ★ 1.2.3：把 Risugami's ModLoader 装到刚装好的这个版本上。
+     *
+     * 用**同一个 downloadTaskListAdapter** —— 玩家在同一个任务列表里能接着看到
+     * 「下载 ModLoader」→「写入 minecraft.jar」，而不是突然跳出一个新框。
+     *
+     * 装完（无论成败）都会走回 showInstallSuccess / throwException，
+     * 不会让流程卡住。
+     */
+    private void installModLoaderThenFinish() {
+        com.qcl.launcher.launcher.download.modloader.ModLoaderInstallTask task =
+                new com.qcl.launcher.launcher.download.modloader.ModLoaderInstallTask(
+                        this.activity,
+                        this.name,                     // 版本目录名
+                        this.version != null ? this.version.id : this.name,   // 查 ModLoader 表用的 MC 版本
+                        this.downloadTaskListAdapter,
+                        new com.qcl.launcher.launcher.download.modloader.ModLoaderInstallTask.Callback() {
+                            @Override
+                            public void onStart() {
+                            }
+
+                            @Override
+                            public void onFinish(int injected) {
+                                android.util.Log.i("GameInstallDialog",
+                                        "ModLoader 已写入 " + injected + " 个 class");
+                                GameInstallDialog.this.showInstallSuccess();
+                            }
+
+                            @Override
+                            public void onFailed(Exception e) {
+                                // ModLoader 失败不该让整个安装算失败（游戏本体是好的），
+                                // 但必须明确告诉玩家，不能默默吞掉
+                                android.util.Log.e("GameInstallDialog", "ModLoader 安装失败", e);
+                                GameInstallDialog.this.throwException(e);
+                            }
+                        });
+        task.execute();
     }
 
     public void throwException(Exception e) {

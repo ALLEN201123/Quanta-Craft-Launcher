@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:background="@drawable/qcl_dialog_gray"
+    android:background="#00000000"
     android:padding="15dp"
     android:orientation="vertical"
     android:layout_width="500dp"
@@ -20,7 +20,7 @@
         android:layout_marginTop="15dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@drawable/qcl_button_gray"
+        android:background="#80FFFFFF"
         android:paddingLeft="10dp"
         android:paddingTop="6dp"
         android:paddingBottom="6dp"
@@ -30,7 +30,7 @@
             android:layout_marginStart="5dp"
             android:layout_width="12dp"
             android:layout_height="12sp"
-            android:background="@drawable/ic_baseline_arrow_white"
+            android:background="@drawable/ic_baseline_arrow_black"
             android:layout_gravity="center"
             android:id="@+id/check_java_state"/>
 
@@ -41,7 +41,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:textSize="@dimen/text_size_middle"
-            android:textColor="@color/colorPureWhite"
+            android:textColor="@color/colorPureBlack"
             android:text="@string/launch_check_dialog_java"/>
 
     </LinearLayout>
@@ -50,7 +50,7 @@
         android:layout_marginTop="12dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@drawable/qcl_button_gray"
+        android:background="#80FFFFFF"
         android:paddingLeft="10dp"
         android:paddingTop="6dp"
         android:paddingBottom="6dp"
@@ -60,7 +60,7 @@
             android:layout_marginStart="5dp"
             android:layout_width="12dp"
             android:layout_height="12sp"
-            android:background="@drawable/ic_baseline_arrow_white"
+            android:background="@drawable/ic_baseline_arrow_black"
             android:layout_gravity="center"
             android:id="@+id/check_lib_state"/>
 
@@ -71,7 +71,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:textSize="@dimen/text_size_middle"
-            android:textColor="@color/colorPureWhite"
+            android:textColor="@color/colorPureBlack"
             android:text="@string/launch_check_dialog_lib"/>
 
     </LinearLayout>
@@ -89,7 +89,7 @@
         android:layout_marginTop="12dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@drawable/qcl_button_gray"
+        android:background="#80FFFFFF"
         android:paddingLeft="10dp"
         android:paddingTop="6dp"
         android:paddingBottom="6dp"
@@ -99,7 +99,7 @@
             android:layout_marginStart="5dp"
             android:layout_width="12dp"
             android:layout_height="12sp"
-            android:background="@drawable/ic_baseline_arrow_white"
+            android:background="@drawable/ic_baseline_arrow_black"
             android:layout_gravity="center"
             android:id="@+id/check_account_state"/>
 
@@ -110,7 +110,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:textSize="@dimen/text_size_middle"
-            android:textColor="@color/colorPureWhite"
+            android:textColor="@color/colorPureBlack"
             android:text="@string/launch_check_dialog_login"/>
 
     </LinearLayout>
@@ -119,7 +119,7 @@
         android:layout_marginTop="12dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@drawable/qcl_button_gray"
+        android:background="#80FFFFFF"
         android:paddingLeft="10dp"
         android:paddingTop="6dp"
         android:paddingBottom="6dp"
@@ -129,7 +129,7 @@
             android:layout_marginStart="5dp"
             android:layout_width="12dp"
             android:layout_height="12sp"
-            android:background="@drawable/ic_baseline_arrow_white"
+            android:background="@drawable/ic_baseline_arrow_black"
             android:layout_gravity="center"
             android:id="@+id/check_launch_state"/>
 
@@ -140,7 +140,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:textSize="@dimen/text_size_middle"
-            android:textColor="@color/colorPureWhite"
+            android:textColor="@color/colorPureBlack"
             android:text="@string/launch_check_dialog_launch"/>
 
     </LinearLayout>
@@ -178,8 +178,8 @@
             android:gravity="center"
             android:text="@string/dialog_install_game_exit"
             android:textSize="@dimen/text_size_middle"
-            android:textColor="@color/colorPureWhite"
-            android:background="@drawable/qcl_button_gray"
+            android:textColor="@color/colorPureBlack"
+            android:background="#80FFFFFF"
             android:id="@+id/cancel_launch_game"/>
 
     </LinearLayout>

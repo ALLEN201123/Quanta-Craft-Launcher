@@ -304,7 +304,7 @@
             android:id="@+id/launcher_play_button"
             android:focusable="true"
             android:clickable="true"
-            android:background="@drawable/launcher_button_blue"
+            android:background="@drawable/launcher_button_transparent"
             android:layout_width="200dp"
             android:layout_height="55dp"
             android:layout_centerHorizontal="true"
@@ -347,7 +347,7 @@
             <View
                 android:layout_width="1dp"
                 android:layout_height="match_parent"
-                android:background="@color/colorGray"/>
+                android:background="@color/colorTransparent"/>
 
             <RelativeLayout
                 android:layout_width="20dp"
@@ -358,7 +358,7 @@
                     android:layout_height="match_parent"
                     android:gravity="center"
                     android:text="@string/launcher_spinner_text"
-                    android:textColor="@color/colorPureWhite"
+                    android:textColor="#80FFFFFF"
                     android:textSize="8sp"/>
 
                 <androidx.appcompat.widget.AppCompatSpinner

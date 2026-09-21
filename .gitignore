@@ -33,3 +33,4 @@ runtime-source/
 # 构建缓存残留与布局备份
 build_old*/
 *.bak
+ZipFileSystem/build/

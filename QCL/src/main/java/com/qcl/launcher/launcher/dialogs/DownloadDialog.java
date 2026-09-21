@@ -63,6 +63,13 @@ Handler.Callback {
     private Handler handler;
     private DownloadTask downloadTask;
 
+    /** ★ 1.2.3：全部下载成功后的回调（模组下载完要做 class 检测/注入） */
+    private Runnable onComplete;
+
+    public void setOnComplete(Runnable r) {
+        this.onComplete = r;
+    }
+
     public DownloadDialog(@NonNull Context context, MainActivity activity, ArrayList<DownloadTaskListBean> list, boolean alert) {
         super(context);
         this.activity = activity;
@@ -131,6 +138,9 @@ Handler.Callback {
                         DownloadDialog.this.exit();
                         if (DownloadDialog.this.alert) {
                             Toast.makeText((Context)DownloadDialog.this.getContext(), (CharSequence)DownloadDialog.this.getContext().getString(R.string.dialog_download_success), (int)0).show();
+                        }
+                        if (DownloadDialog.this.onComplete != null) {
+                            DownloadDialog.this.onComplete.run();
                         }
                     }
                 });

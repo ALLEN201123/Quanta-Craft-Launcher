@@ -1,0 +1,37 @@
+// ★ ZipFileSystem 模块（从 FCL 搬过来的）
+//
+// 作用：把 OpenJDK 的 zipfs（com.sun.nio.zipfs）打包进 App，让
+//      java.nio.file.FileSystems.newFileSystem() 支持 jar: 协议。
+//
+// 为什么要它：Android 本身不带 zipfs —— QCL 原先读 zip 走 commons-compress，
+// 真机上抛 `NoClassDefFoundError: ZipFile$Builder`，导致「导入整合包」选完文件就崩。
+// FCL 的解法就是自带这份 zipfs，把 zip 挂成 FileSystem 再用标准 NIO 遍历。
+//
+// 来源：FCL（FoldCraftLauncher）/ ZipFileSystem 模块 —— OpenJDK zipfs 全量拷贝，
+//      LICENSE 见 src/main/resources/LICENSE（GPL-2.0-with-classpath-exception）。
+//      FCL 用的是 Kotlin DSL + version catalog，本工程是 Groovy DSL + AGP 7.2.2，
+//      所以这里做了等价改写；包名放 AndroidManifest.xml（AGP 7.2 没有 namespace）。
+
+plugins {
+    id 'com.android.library'
+}
+
+android {
+    compileSdk 34
+
+    defaultConfig {
+        minSdk 26
+        targetSdk 34
+    }
+
+    lintOptions {
+        abortOnError false
+    }
+
+    compileOptions {
+        // zipfs 源码来自较新的 JDK，需要 Java 11 以上才能编过。
+        // 本模块只提供 FileSystem 实现，和 App 的 Java 8 字节码互不影响。
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
+    }
+}

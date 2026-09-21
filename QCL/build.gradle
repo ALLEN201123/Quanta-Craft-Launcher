@@ -55,8 +55,8 @@ android {
         minSdk 26
         targetSdk 34
         // Own version line for QCL; kept above 208 so any earlier test build is an upgrade, never a downgrade.
-        versionCode 322
-        versionName "1.2.2"
+        versionCode 323
+        versionName "1.2.3"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -116,7 +116,13 @@ dependencies {
     implementation 'cat.ereza:customactivityoncrash:2.3.0'
     implementation 'com.google.code.gson:gson:2.10.1'
     implementation 'com.moandjiezana.toml:toml4j:0.7.2'
-    implementation 'org.apache.commons:commons-compress:1.26.0'
+    implementation 'org.apache.commons:commons-compress:1.20'
+    // ★ ZipFileSystem：自带一份 OpenJDK zipfs（com.sun.nio.zipfs）。
+    //   Android 不带 zipfs，而commons-compress 的 ZipFile 在真机上会抛
+    //   NoClassDefFoundError: ZipFile$Builder（导致导入整合包直接崩）。
+    //   有了它就能用 java.nio.file.FileSystems.newFileSystem("jar:...") 把 zip 挂成 FileSystem。
+    //   模块来源见 ZipFileSystem/build.gradle 顶部说明。
+    implementation project(':ZipFileSystem')
     // 参照 FCL（libs.versions.toml: commonsCompress=1.26.0 / xz=1.9）：
     // JRE 运行时改以 universal.tar.xz + bin-<abi>.tar.xz 内置，解压需要 XZ 解码器。
     implementation('org.tukaani:xz:1.9')

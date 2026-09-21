@@ -5,6 +5,8 @@ import com.qcl.launcher.launcher.setting.launcher.child.SourceSetting;
 
 /* loaded from: classes2.dex */
 public class LauncherSetting {
+    /** ★ 1.2.3：界面背景是否透明（默认全透明；关掉恢复原来的灰色面板） */
+    public boolean transparentBackground = true;
     public boolean autoCheckUpdate;
     public boolean autoDownloadTaskQuantity;
     public String cachePath;

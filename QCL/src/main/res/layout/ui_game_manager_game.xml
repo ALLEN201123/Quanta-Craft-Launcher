@@ -1216,6 +1216,40 @@
 
                     </LinearLayout>
 
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:paddingTop="12dp"
+                        android:paddingBottom="12dp"
+                        android:paddingLeft="15dp"
+                        android:paddingRight="15dp"
+                        android:orientation="horizontal"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:id="@+id/class_viewer_row">
+
+                        <TextView
+                            android:singleLine="true"
+                            android:layout_gravity="center"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Class 查看器（查看/删除注入的 class）"
+                            android:textSize="@dimen/text_size_middle"
+                            android:textColor="@color/colorPureBlack"/>
+
+                        <View
+                            android:layout_width="0dp"
+                            android:layout_height="0dp"
+                            android:layout_weight="1"/>
+
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:layout_gravity="center"
+                            android:background="@drawable/ic_baseline_arrow_forward_black"/>
+
+                    </LinearLayout>
+
                 </LinearLayout>
 
             </LinearLayout>

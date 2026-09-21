@@ -62,9 +62,10 @@ public final class LegacyVersionArchive {
                 VersionManifest shell = new VersionManifest(null, new VersionManifest.Version[0]);
                 for (Entry entry : root.entries) {
                     if (entry == null || entry.id == null || entry.id.isEmpty()) continue;
-                    // Builds that already exist under an official id (or an official alias) stay in the
-                    // normal list, so only the genuinely missing ones are added here.
-                    if (entry.officialId) continue;
+                    // ★ 1.2.3：不再过滤 officialId 的条目（用户明确要求「不准过滤」）。
+                    //   原来这里把 b1.7.3 这种 officialId=true 的版本跳过了，
+                    //   导致整合包要自动下载本体时，在归档清单里找不到 b1.7.3，
+                    //   报「没有它的下载地址」。现在不过滤，全部保留。
                     long stamp = entry.sortTime > 0 ? entry.sortTime
                             : (entry.compileTime > 0 ? entry.compileTime : entry.releaseTime);
                     Date when = stamp > 0 ? new Date(stamp) : null;

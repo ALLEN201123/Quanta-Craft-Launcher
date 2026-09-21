@@ -57,6 +57,7 @@ public class DownloadModUI extends BaseUI implements View.OnClickListener, Adapt
     private TextView refreshText;
     private RemoteModRepository repository;
     private Button search;
+    private Button refresh;
     private final Handler searchHandler;
     private ArrayList<String> sortList;
     private ArrayAdapter<String> sortListAdapter;
@@ -163,6 +164,17 @@ public class DownloadModUI extends BaseUI implements View.OnClickListener, Adapt
         this.versionListAdapter = arrayAdapter3;
         arrayAdapter3.setDropDownViewResource(R.layout.item_spinner_drop_down);
         this.versionSpinner.setAdapter((SpinnerAdapter) this.versionListAdapter);
+        // ★ 1.2.3：版本筛选默认选「当前正在玩的游戏版本」，不用玩家每次手动翻
+        try {
+            String cur = this.activity.publicGameSetting.currentVersion;
+            if (cur != null) {
+                int vi = this.versionList.indexOf(cur);
+                if (vi >= 0) {
+                    this.versionSpinner.setSelection(vi);
+                }
+            }
+        } catch (Throwable ignored) {
+        }
         ArrayList<RemoteModRepository.Category> arrayList3 = new ArrayList<>();
         this.categoryList = arrayList3;
         arrayList3.add(new RemoteModRepository.Category(CurseForgeRemoteModRepository.CATEGORY_ALL, "0", new ArrayList()));
@@ -183,6 +195,10 @@ public class DownloadModUI extends BaseUI implements View.OnClickListener, Adapt
         this.sortListAdapter = arrayAdapter4;
         arrayAdapter4.setDropDownViewResource(R.layout.item_spinner_drop_down);
         this.sortSpinner.setAdapter((SpinnerAdapter) this.sortListAdapter);
+        // ★ 1.2.3：默认按「下载量」排序（列表第 6 项 = download_mod_sort_downloads）
+
+        this.sortSpinner.setSelection(this.sortList.indexOf(this.context.getString(R.string.download_mod_sort_downloads)));
+
         this.gameSpinner.setOnItemSelectedListener(this);
         this.downloadSourceSpinner.setOnItemSelectedListener(this);
         this.versionSpinner.setOnItemSelectedListener(this);
@@ -190,6 +206,13 @@ public class DownloadModUI extends BaseUI implements View.OnClickListener, Adapt
         this.sortSpinner.setOnItemSelectedListener(this);
         Button button = (Button) this.activity.findViewById(R.id.search_mod);
         this.search = button;
+
+        // ★ 1.2.3：搜索按钮旁的「刷新」——切完版本/排序后点它重新查，和点搜索走同一条路
+        Button refreshBtn = (Button) this.activity.findViewById(R.id.refresh_mod_search);
+        this.refresh = refreshBtn;
+        if (refreshBtn != null) {
+            refreshBtn.setOnClickListener(this);
+        }
         button.setOnClickListener(this);
         this.editName.setOnEditorActionListener(this);
         this.editVersion.setOnEditorActionListener(this);
@@ -225,7 +248,7 @@ public class DownloadModUI extends BaseUI implements View.OnClickListener, Adapt
 
     @Override // android.view.View.OnClickListener
     public void onClick(View view) {
-        if (view == this.search) {
+        if (view == this.search || view == this.refresh) {
             search();
         }
         if (view == this.refreshText) {

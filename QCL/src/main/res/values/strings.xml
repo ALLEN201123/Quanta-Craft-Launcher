@@ -2,7 +2,7 @@
     <string name="app_name" translatable="false">Quanta Craft Launcher</string>
     <string name="app_name_pri" translatable="false">Quanta Craft Launcher</string>
     <string name="app_name_sec" translatable="false">量子方块启动器</string>
-    <string name="version_name" translatable="false">v1.2.2</string>
+    <string name="version_name" translatable="false">v1.2.3</string>
     <string name="app_bar_title" translatable="false">QCL · Quanta Craft Launcher v1.0.4</string>
 
     <string name="dialog_outdated_warning_title">Warning</string>
@@ -23,6 +23,11 @@
     <string name="install_game_ui_fabric_api" translatable="false">Fabric API</string>
     <string name="install_game_ui_quilt" translatable="false">Quilt</string>
     <string name="install_game_ui_quilt_api" translatable="false">Quilt API</string>
+    <string name="install_game_ui_babric" translatable="false">Babric</string>
+    <string name="install_game_ui_modloader" translatable="false">ModLoader</string>
+    <string name="install_game_ui_modloader_installed">Installed</string>
+    <string name="install_game_ui_modloader_not_supported">Not supported on this version</string>
+    <string name="install_game_ui_modloader_not_compatible">Incompatible with ModLoader</string>
     <string name="download_mod_source_curse_forge" translatable="false">CurseForge</string>
     <string name="download_mod_source_modrinth" translatable="false">Modrinth</string>
     <string name="download_resource_curse_forge" translatable="false">CurseForge</string>
@@ -34,7 +39,7 @@
     <string name="game_setting_ui_pojav_renderer_virgl" translatable="false">VirGLRenderer (OpenGL 4.3)</string>
     <string name="dialog_color_selector_arrow" translatable="false">→</string>
     <string name="ui_about_qcl_main" translatable="false">QCL (Quanta Craft Launcher)</string>
-    <string name="ui_about_qcl_sub" translatable="false">1.2.2</string>
+    <string name="ui_about_qcl_sub" translatable="false">1.2.3</string>
     <string name="ui_about_tungsten_main" translatable="false">Tungsten</string>
     <string name="ui_about_tungsten_sub" translatable="false">B 站 ID：@念小六</string>
     <string name="ui_about_shirosakimio_main" translatable="false">ShirosakiMio</string>
@@ -484,6 +489,7 @@
     <string name="download_mod_ui_version">Game Version</string>
     <string name="download_mod_ui_type">Category</string>
     <string name="download_mod_ui_sort">Sort By</string>
+<string name="download_mod_ui_refresh" translatable="false">刷新</string>
     <string name="download_mod_ui_search">Search</string>
     <string name="download_package_ui_source">Download Source</string>
     <string name="download_package_ui_name">Name</string>
@@ -744,6 +750,7 @@
     <string name="dialog_update_negative">Later</string>
     <string name="exterior_setting_ui_theme_title">Appearance</string>
     <string name="exterior_setting_ui_theme">Theme</string>
+    <string name="exterior_setting_ui_transparent_bg">透明界面背景（关闭恢复灰色）</string>
     <string name="exterior_setting_ui_bar_trans">Transparent titlebar</string>
     <string name="exterior_setting_ui_style">Grass Block UI</string>
     <string name="exterior_setting_ui_full_screen">Ignore notch</string>

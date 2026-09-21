@@ -172,6 +172,28 @@ public class DownloadPackageUI extends BaseUI implements View.OnClickListener, A
         this.versionListAdapter = arrayAdapter3;
         arrayAdapter3.setDropDownViewResource(R.layout.item_spinner_drop_down);
         this.editVersionSpinner.setAdapter((SpinnerAdapter) this.versionListAdapter);
+        // ★ 1.2.3：版本筛选默认选「当前正在玩的游戏版本」
+
+        try {
+
+            String cur = this.activity.publicGameSetting.currentVersion;
+
+            if (cur != null) {
+
+                int vi = this.versionList.indexOf(cur);
+
+                if (vi >= 0) {
+
+                    this.editVersionSpinner.setSelection(vi);
+
+                }
+
+            }
+
+        } catch (Throwable ignored) {
+
+        }
+
         ArrayList<RemoteModRepository.Category> arrayList4 = new ArrayList<>();
         this.categoryList = arrayList4;
         arrayList4.add(new RemoteModRepository.Category(CurseForgeRemoteModRepository.CATEGORY_ALL, "0", new ArrayList()));

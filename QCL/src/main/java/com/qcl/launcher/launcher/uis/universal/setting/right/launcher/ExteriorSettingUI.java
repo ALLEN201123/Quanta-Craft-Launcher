@@ -96,6 +96,7 @@ CompoundButton.OnCheckedChangeListener {
     private SwitchCompat transBarSwitch;
     private SwitchCompat fullscreenSwitch;
     private SwitchCompat grassUiSwitch;
+    private SwitchCompat transBgSwitch;
     private LinearLayout fullscreenSetting;
     private RadioButton defaultRadio;
     private RadioButton classicRadio;
@@ -130,6 +131,7 @@ CompoundButton.OnCheckedChangeListener {
         this.transBarSwitch = (SwitchCompat)this.activity.findViewById(R.id.switch_trans_bar);
         this.fullscreenSwitch = (SwitchCompat)this.activity.findViewById(R.id.switch_full_screen);
         this.grassUiSwitch = (SwitchCompat)this.activity.findViewById(R.id.switch_grass_ui);
+        this.transBgSwitch = (SwitchCompat)this.activity.findViewById(R.id.switch_transparent_bg);
         this.fullscreenSetting = (LinearLayout)this.activity.findViewById(R.id.fullscreen_layout);
         this.defaultRadio = (RadioButton)this.activity.findViewById(R.id.select_bg_default);
         this.classicRadio = (RadioButton)this.activity.findViewById(R.id.select_bg_classic);
@@ -190,6 +192,9 @@ CompoundButton.OnCheckedChangeListener {
         if (this.grassUiSwitch != null) {
             this.grassUiSwitch.setOnCheckedChangeListener((CompoundButton.OnCheckedChangeListener)this);
         }
+        if (this.transBgSwitch != null) {
+            this.transBgSwitch.setOnCheckedChangeListener((CompoundButton.OnCheckedChangeListener)this);
+        }
         this.defaultRadio.setOnCheckedChangeListener((CompoundButton.OnCheckedChangeListener)this);
         this.classicRadio.setOnCheckedChangeListener((CompoundButton.OnCheckedChangeListener)this);
         this.customRadio.setOnCheckedChangeListener((CompoundButton.OnCheckedChangeListener)this);
@@ -246,6 +251,9 @@ CompoundButton.OnCheckedChangeListener {
         this.fullscreenSwitch.setChecked(this.activity.launcherSetting.fullscreen);
         if (this.grassUiSwitch != null) {
             this.grassUiSwitch.setChecked(this.activity.launcherSetting.uiTheme == 1);
+            if (this.transBgSwitch != null) {
+                this.transBgSwitch.setChecked(this.activity.launcherSetting.transparentBackground);
+            }
         }
         this.refreshColorEditable();
         if (Build.VERSION.SDK_INT < 28) {
@@ -487,6 +495,17 @@ CompoundButton.OnCheckedChangeListener {
             GsonUtils.saveLauncherSetting(this.activity.launcherSetting, AppManifest.SETTING_DIR + "/launcher_setting.json");
             QclThemeUtils.apply((Activity)this.activity, this.activity.launcherSetting.uiTheme);
             this.refreshColorEditable();
+        }
+        // ★ 1.2.3：透明界面背景（默认开；关掉恢复原来的灰色面板 #C8EDEDED）
+        if (this.transBgSwitch != null && buttonView == this.transBgSwitch) {
+            this.activity.launcherSetting.transparentBackground = isChecked;
+            GsonUtils.saveLauncherSetting(this.activity.launcherSetting, AppManifest.SETTING_DIR + "/launcher_setting.json");
+            View container = this.activity.findViewById(R.id.main_ui_container);
+            if (container != null) {
+                container.setBackgroundColor(isChecked
+                        ? android.graphics.Color.TRANSPARENT
+                        : android.graphics.Color.parseColor("#C8EDEDED"));
+            }
         }
         if (buttonView == this.defaultRadio && isChecked) {
             this.classicRadio.setChecked(false);

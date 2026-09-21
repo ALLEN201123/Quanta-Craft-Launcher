@@ -21,8 +21,8 @@
          现提亮到接近白的高亮灰，并降低不透明度，让动态背景的亮色透上来。 -->
     <color name="qcl_panel_gray">#C8EDEDED</color>
     <color name="qcl_panel_gray_alt">#C0E3E3E3</color>
-    <color name="qcl_gray_translucent">#B3575757</color>
-    <color name="qcl_gray_translucent_bar">#B3545454</color>
+    <color name="qcl_gray_translucent">#00000000</color>
+    <color name="qcl_gray_translucent_bar">#00000000</color>
     <color name="colorLightGray">#0D000000</color>
     <color name="colorWhiteGray">#E3E3E3</color>
     <color name="colorLightBlue">#655C6BC0</color>
@@ -37,7 +37,7 @@
     <color name="colorBrown">#835300</color>
 
     <!-- 1.0.6：同步提亮，与 qcl_panel_gray 保持一致 -->
-    <color name="launcher_ui_background">#C8EDEDED</color>
+    <color name="launcher_ui_background">#00000000</color>
     <color name="launcher_ui_background_light">#BCE6E6E6</color>
     <color name="colorPressed">#BDBDBD</color>
 </resources>

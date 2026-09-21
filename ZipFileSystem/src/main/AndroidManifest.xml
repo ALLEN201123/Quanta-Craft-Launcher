@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ★ 这个模块是把 OpenJDK 的 zipfs（com.sun.nio.zipfs）搬进来当 Android 库用。
+  Android 本身**不带** zipfs（android.jar 里搜 zipfs 是 0 命中），
+  所以要让 java.nio.file.FileSystems.newFileSystem() 支持 jar: 协议，就必须自带一份。
+
+  来源：FCL（FoldCraftLauncher）的 ZipFileSystem 模块（OpenJDK zipfs 全量拷贝）。
+  包名写在这里而不是 build.gradle 的 namespace —— 因为本项目是 AGP 7.2.2，
+  namespace 这个 DSL 属性是 AGP 7.3 才有的。
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.sun.nio.zipfs">
+</manifest>

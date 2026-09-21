@@ -8,6 +8,8 @@ import com.qcl.launcher.launcher.setting.game.child.RamSetting;
 
 /* loaded from: classes2.dex */
 public class PrivateGameSetting implements Cloneable {
+    /** ★ 1.2.3：远古版本的兼容 JVM 参数是否已预填过（只填一次，玩家删了不再自动补） */
+    public boolean legacyJvmArgsFilled = false;
     public BoatLauncherSetting boatLauncherSetting;
     public String controlLayout;
     public boolean enable;
