@@ -54,6 +54,9 @@ QCL 是一个安卓平台的 Minecraft Java 版启动器，界面按自己的「
 - 安装时自动补齐 **jar / 版本 json / 依赖库 / 资源文件**，完成后提示安装成功
 - 启动前自动检查并补齐缺失文件（json 损坏也能用模板重建）
 - 远古版本（LWJGL2 时代）**补齐了 paulscode SoundSystem 音频链**，进游戏不再无声
+- **安卓设备上唯一支持 ModLoader 和 Babric 的启动器**（1.2.3）：
+  正式版老版本（1.2.5 ~ 1.6.2）和部分远古版本（Beta / Alpha）可以下载 ModLoader，
+  b1.7.3 可以用 Babric —— 别的安卓启动器没有这两样
 - **ModLoader（Risugami）**：安装页可直接勾选，随本体一起自动装（1.2.3 新增）。
   覆盖 1.2.5 ~ 1.6.2 及一串 Beta / Alpha（Alpha 官方只有 .rar，已转 zip 放镜像）；
   b1.7.3 用的是社区的 ModloaderFix 版（原版在现代 Java 下会卡初始化）
