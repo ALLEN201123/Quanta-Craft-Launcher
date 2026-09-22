@@ -330,6 +330,20 @@ extends AsyncTask<RecyclerView, Integer, Exception> {
                             FileUtils.copyFile(original, targetRes.getAbsolutePath());
                         }
                     }
+                    // ★ 1.2.5：远古版本（pre-1.6 的 virtual 索引）里有一批 **不在 minecraft/ 下**
+                    //   的条目，最典型的就是窗口图标 icons/icon_16x16.png、icons/icon_32x32.png ——
+                    //   游戏本体（VanillaTweakInjector）是按 `assets/icons/xxx` 直接读的，
+                    //   只铺 virtual/ 和 resources/ 都不管用，会刷一堆
+                    //   `javax.imageio.IIOException: Can't read input file!`（玩家看着像出错/卡住）。
+                    //   所以这类「根目录下的散件」额外按原路径再铺一份到 assets/ 下。
+                    if (key.startsWith("icons/") || key.startsWith("pack.")) {
+                        File targetAssets = new File(assetsRoot, key);
+                        if (!targetAssets.isFile()) {
+                            File parentAssets = targetAssets.getParentFile();
+                            if (parentAssets != null) parentAssets.mkdirs();
+                            FileUtils.copyFile(original, targetAssets.getAbsolutePath());
+                        }
+                    }
                 }
             }
         }
