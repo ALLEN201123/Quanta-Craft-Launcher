@@ -100,10 +100,25 @@ public abstract class HttpRequest {
     }
 
     public HttpURLConnection createConnection() throws IOException {
-        HttpURLConnection con = NetworkUtils.createHttpConnection(new URL(this.url));
+        return createConnection(this.url);
+    }
+
+    /**
+     * ★ 1.2.7：按指定地址建连接。
+     * 为什么需要重载：{@code this.url} 是 **final**（1.2.7 想改它做镜像重试时编译不过），
+     * 所以走镜像时用这个重载把镜像地址传进来，而不是去改字段。
+     */
+    public HttpURLConnection createConnection(String urlString) throws IOException {
+        HttpURLConnection con = NetworkUtils.createHttpConnection(new URL(urlString));
         con.setRequestMethod(this.method);
         for (Map.Entry<String, String> entry : this.headers.entrySet()) {
             con.setRequestProperty(entry.getKey(), entry.getValue());
+        }
+        // ★ 1.2.8：镜像那次用**更短的超时** —— 万一镜像自己卡住，7 秒就放弃并回退官方，
+        //   不会让用户盯着「加载中」干等（默认 15 秒在这里太久了）。
+        if (urlString != null && urlString.startsWith(MirrorUtils.MCIM)) {
+            con.setConnectTimeout(5000);
+            con.setReadTimeout(7000);
         }
         return con;
     }
@@ -142,15 +157,11 @@ public abstract class HttpRequest {
             String mirrored = MirrorUtils.rewriteApi(original);
             if (mirrored != null && !mirrored.equals(original)) {
                 try {
-                    this.url = mirrored;
-                    HttpURLConnection mcon = NetworkUtils.resolveConnection(this.createConnection());
+                    HttpURLConnection mcon = NetworkUtils.resolveConnection(this.createConnection(mirrored));
                     return IOUtils.readFullyAsString(mcon.getInputStream(), StandardCharsets.UTF_8);
                 }
                 catch (IOException e) {
                     // 镜像这次不行 → 回官方重试一次
-                }
-                finally {
-                    this.url = original;
                 }
             }
             HttpURLConnection con = NetworkUtils.resolveConnection(this.createConnection());

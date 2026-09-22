@@ -77,6 +77,27 @@ public final class MirrorUtils {
         return url;
     }
 
+    /** GitHub 加速代理前缀（国内下载 Release 安装包用；代理挂了会自动回退原地址） */
+    public static final String GH_PROXY = "https://ghproxy.net/";
+
+    /**
+     * GitHub 下载地址 → 国内代理地址。
+     * 只处理 github.com / githubusercontent.com 等，其余原样返回。
+     */
+    public static String proxy(String url) {
+        if (url == null || url.isEmpty()) {
+            return url;
+        }
+        String lower = url.toLowerCase();
+        if (lower.startsWith("https://github.com/")
+                || lower.startsWith("https://raw.githubusercontent.com/")
+                || lower.startsWith("https://objects.githubusercontent.com/")
+                || lower.startsWith("https://codeload.github.com/")) {
+            return GH_PROXY + url;
+        }
+        return url;
+    }
+
     /** 这个地址是不是可改写的（用于避免无意义的重试） */
     public static boolean canRewrite(String url) {
         return !rewriteCdn(url).equals(url) || !rewriteApi(url).equals(url);

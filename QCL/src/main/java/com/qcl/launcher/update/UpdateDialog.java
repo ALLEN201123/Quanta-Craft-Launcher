@@ -161,7 +161,10 @@ implements View.OnClickListener {
             String finalUrl = this.getTargetArchUrl();
             new Thread(() -> {
                 if (FileUtils.deleteDirectory(AppManifest.DEFAULT_CACHE_DIR + "/update")) {
-                    DownloadUtil.downloadSingleFile(this.getContext(), new DownloadTaskListBean("", finalUrl, AppManifest.DEFAULT_CACHE_DIR + "/update/latest.apk", null), new DownloadTask.Feedback(){
+                    DownloadUtil.downloadSingleFile(this.getContext(), // ★★★ 1.2.8：GitHub Release 在国内经常下不动（转圈半天/失败）。
+                    //   这里把国内代理地址作为 fallback 挂上：主地址第一次失败，下载器会自动改用代理重试。
+                    new DownloadTaskListBean("", finalUrl, AppManifest.DEFAULT_CACHE_DIR + "/update/latest.apk", null)
+                            .withFallback(com.qcl.launcher.utils.io.MirrorUtils.proxy(finalUrl)), new DownloadTask.Feedback(){
 
                         @Override
                         public void addTask(DownloadTaskListBean bean) {
