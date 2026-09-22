@@ -1160,4 +1160,7 @@
     <string name="update_failed">更新包下载失败</string>
     <string name="update_failed_msg">没能下到适合本机的安装包，可以改用网盘下载。</string>
     <string name="update_failed_empty">下载到的文件是空的或没下完。</string>
+    <string name="setting_check_update">检查更新</string>
+    <string name="setting_check_update_checking">正在检查…</string>
+    <string name="setting_check_update_none">已是最新版</string>
 </resources>

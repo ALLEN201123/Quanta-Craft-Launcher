@@ -1088,4 +1088,7 @@ Multiplayer is powered by Terracotta (by BurningTNT). The multiplayer feature is
     <string name="update_failed">Update download failed</string>
     <string name="update_failed_msg">Couldn\'t download the APK for your device. Try the Netdisk mirror instead.</string>
     <string name="update_failed_empty">The downloaded file is empty or incomplete.</string>
+    <string name="setting_check_update">Check for updates</string>
+    <string name="setting_check_update_checking">Checking…</string>
+    <string name="setting_check_update_none">Already up to date</string>
 </resources>

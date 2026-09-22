@@ -77,6 +77,28 @@ public class DynamicBackground {
         this.handler.removeCallbacks(this.tick);
     }
 
+    /**
+     * ★ 1.2.9：从后台回到前台后**保证轮播还在跑**。
+     *
+     * 现象：切到后台再回来，背景图就不动了（卡在一张上）。
+     * 可能的原因有几种（Handler 回调被系统清掉、背景被别处换成了静态图、
+     * 或者中途被 stop 过），这里不猜具体是哪一种 —— 回到前台就无条件把下一轮挂上，
+     * 并且发现背景已经不是轮播的图时补一张回来。
+     */
+    public void ensureRunning() {
+        if (!this.running) {
+            this.start();
+            return;
+        }
+        this.handler.removeCallbacks(this.tick);
+        this.handler.postDelayed(this.tick, INTERVAL_MS);
+        Drawable cur = this.target.getBackground();
+        // 背景被主题/别处换成静态图了（或压根没有）→ 把当前这张补回来
+        if (cur == null || !(cur instanceof TransitionDrawable)) {
+            this.apply(this.index, false);
+        }
+    }
+
     private void apply(int i, boolean animate) {
         Drawable next = this.get(i);
         if (next == null) {

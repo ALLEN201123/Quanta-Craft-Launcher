@@ -337,18 +337,38 @@ public class DownloadResourceUI extends BaseDownloadUI implements View.OnClickLi
                     t.printStackTrace();
                     deps = new ArrayList<>();
                 }
-                List<RemoteMod> dependencies = deps;
                 this.dependencies = new ArrayList<>(deps);
-                // ★ 1.2.5：依赖类型（必需/可选）也一起取，给前置列表标注用
+                SimpleMultimap<String, RemoteMod.Version> versions = sortVersions(bean.getData().loadVersions(repository));
+                // ★ 1.2.9：依赖类型（必需/可选）**直接从已经取回来的版本列表里建表**。
+                //   1.2.7 时这一步是单独发一次请求（把整个版本列表又拉一遍），
+                //   详情页「加载半天」有一截就是这个多出来的请求造成的 —— 现在等于白拿，零额外请求。
                 try {
-                    java.util.Map<String, String> types = bean.getData().loadDependencyTypes(repository);
-                    if (types != null) {
+                    java.util.Map<String, String> types = new java.util.HashMap<>();
+                    for (String key : versions.keys()) {
+                        java.util.List<RemoteMod.Version> vs = (java.util.List<RemoteMod.Version>) versions.get(key);
+                        if (vs == null) {
+                            continue;
+                        }
+                        for (RemoteMod.Version v : vs) {
+                            java.util.Map<String, String> m = v.getDependencyTypes();
+                            if (m == null) {
+                                continue;
+                            }
+                            for (java.util.Map.Entry<String, String> e : m.entrySet()) {
+                                String oldT = types.get(e.getKey());
+                                if (oldT == null || "required".equals(e.getValue())) {
+                                    types.put(e.getKey(), e.getValue());
+                                }
+                            }
+                        }
+                    }
+                    if (!types.isEmpty()) {
                         this.dependencyTypes = types;
                     }
                 }
                 catch (Throwable ignored) {
                 }
-                SimpleMultimap<String, RemoteMod.Version> versions = sortVersions(bean.getData().loadVersions(repository));
+                List<RemoteMod> dependencies = this.dependencies;
                 if (dependencies.size() == 0) {
                     modGameVersionAdapter = new ModGameVersionAdapter(context,versions,this);
                     activity.runOnUiThread(() -> {

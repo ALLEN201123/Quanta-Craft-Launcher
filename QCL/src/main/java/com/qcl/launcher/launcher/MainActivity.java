@@ -177,6 +177,23 @@ implements View.OnClickListener {
         }
     }
 
+    /** ★ 1.2.9：回到前台后确保动态背景继续轮播（只在「动态背景」模式下生效） */
+    public void resumeDynamicBackground() {
+        try {
+            if (this.launcherSetting == null || this.launcherSetting.launcherBackground == null
+                    || this.launcherSetting.launcherBackground.type != 0) {
+                return;
+            }
+            if (this.dynamicBackground == null) {
+                this.startDynamicBackgroundIfNeeded();
+                return;
+            }
+            this.dynamicBackground.ensureRunning();
+        }
+        catch (Throwable ignored) {
+        }
+    }
+
     public void refreshDynamicBackground() {
         try {
             if (this.launcherSetting.launcherBackground.type == 0) {
@@ -417,6 +434,8 @@ implements View.OnClickListener {
         super.onResume();
         if (this.isLoaded) {
             this.uiManager.onResume();
+            // ★ 1.2.9：回到前台时把动态背景的轮播重新挂上（切后台回来后不动的问题）
+            this.resumeDynamicBackground();
         }
         if (SkinPreviewDialog.getInstance() != null) {
             SkinPreviewDialog.getInstance().onResume();

@@ -227,6 +227,46 @@ public final class ModrinthRemoteModRepository implements RemoteModRepository {
         }
     }
 
+    /**
+     * ★ 1.2.9：拉「前置（依赖）」用的线程池（最多 6 条并发）。
+     * 以前是一个一个串行下：一个前置 1 秒、10 个就是 10 秒 —— 详情页「加载半天」主要就是这么来的。
+     */
+    private static final java.util.concurrent.ExecutorService DEP_POOL =
+            java.util.concurrent.Executors.newFixedThreadPool(6);
+
+    /** ★ 1.2.9：并行拉取依赖；拉不到的直接跳过（失败不影响其它前置，也不让整页挂掉） */
+    static ArrayList<RemoteMod> fetchDependencies(RemoteModRepository remoteModRepository, java.util.Set<String> set) {
+        ArrayList<String> ids = new ArrayList<>();
+        for (String str : set) {
+            if (str != null && str.trim().length() > 0) {
+                ids.add(str);
+            }
+        }
+        java.util.List<java.util.concurrent.Future<RemoteMod>> futures = new ArrayList<>(ids.size());
+        for (final String id : ids) {
+            futures.add(DEP_POOL.submit(() -> {
+                try {
+                    return remoteModRepository.getModById(id);
+                }
+                catch (Throwable t) {
+                    return null;
+                }
+            }));
+        }
+        ArrayList<RemoteMod> arrayList = new ArrayList<>();
+        for (java.util.concurrent.Future<RemoteMod> f : futures) {
+            try {
+                RemoteMod m = f.get();
+                if (m != null) {
+                    arrayList.add(m);
+                }
+            }
+            catch (Throwable ignored) {
+            }
+        }
+        return arrayList;
+    }
+
     /* loaded from: classes2.dex */
     public static class Project implements RemoteMod.IMod {
         private final String body;
@@ -335,21 +375,9 @@ public final class ModrinthRemoteModRepository implements RemoteModRepository {
                     return stream;
                 }
             }).collect(Collectors.toSet());
-            ArrayList arrayList = new ArrayList();
-            for (String str : set) {
-                if (StringUtils.isNotBlank(str)) {
-                    // ★ 1.2.5：Modrinth 的依赖项里既有 project_id 也有 version_id（都是 8 位
-                    //   base62，长度一样、分不出来），拿 version_id 去查 project 必然 404。
-                    //   老代码直接往外抛 → 整个「版本列表」变成「加载版本列表失败」；
-                    //   现在单条查不到就跳过，不影响这个模组本身能不能看、能不能下。
-                    try {
-                        arrayList.add(remoteModRepository.getModById(str));
-                    }
-                    catch (IOException ignored) {
-                    }
-                }
-            }
-            return arrayList;
+            // ★ 1.2.9：改成并行拉取（串行时一个前置 1 秒、10 个就要 10 秒，
+            //   详情页「加载半天」主要就是这么来的；失败的条目依旧跳过，不影响整页）
+            return fetchDependencies(remoteModRepository, set);
         }
 
         @Override // com.qcl.launcher.launcher.mod.RemoteMod.IMod
@@ -740,21 +768,9 @@ public final class ModrinthRemoteModRepository implements RemoteModRepository {
                     return stream;
                 }
             }).collect(Collectors.toSet());
-            ArrayList arrayList = new ArrayList();
-            for (String str : set) {
-                if (StringUtils.isNotBlank(str)) {
-                    // ★ 1.2.5：Modrinth 的依赖项里既有 project_id 也有 version_id（都是 8 位
-                    //   base62，长度一样、分不出来），拿 version_id 去查 project 必然 404。
-                    //   老代码直接往外抛 → 整个「版本列表」变成「加载版本列表失败」；
-                    //   现在单条查不到就跳过，不影响这个模组本身能不能看、能不能下。
-                    try {
-                        arrayList.add(remoteModRepository.getModById(str));
-                    }
-                    catch (IOException ignored) {
-                    }
-                }
-            }
-            return arrayList;
+            // ★ 1.2.9：改成并行拉取（串行时一个前置 1 秒、10 个就要 10 秒，
+            //   详情页「加载半天」主要就是这么来的；失败的条目依旧跳过，不影响整页）
+            return fetchDependencies(remoteModRepository, set);
         }
 
         @Override // com.qcl.launcher.launcher.mod.RemoteMod.IMod
