@@ -151,7 +151,8 @@ public class GameListAdapter extends BaseAdapter {
             }
         });
         if (!this.list.get(i).iconPath.equals("") && new File(this.list.get(i).iconPath).exists()) {
-            viewHolder.icon.setBackground(DrawableUtils.getDrawableFromFile(this.list.get(i).iconPath));
+            // ★ 1.2.9：改成异步加载 + 缓存（以前是主线程读文件解码，滚动会卡）
+            LocalIconLoader.loadBackground(viewHolder.icon, this.list.get(i).iconPath);
         } else {
             // ★ 1.2.3：FCL 同款 —— 装了哪个加载器就显示哪个的图标
             Integer li = loaderIconFor(new File(this.activity.launcherSetting.gameFileDirectory

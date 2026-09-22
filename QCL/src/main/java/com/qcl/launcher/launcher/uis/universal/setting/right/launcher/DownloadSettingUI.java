@@ -15,6 +15,7 @@ import android.widget.SeekBar;
 import android.widget.Spinner;
 import android.widget.SpinnerAdapter;
 import com.qcl.launcher.launcher.MainActivity;
+import com.qcl.launcher.update.UpdateChecker;
 import com.qcl.launcher.launcher.uis.tools.BaseUI;
 import com.qcl.launcher.manifest.AppManifest;
 import com.qcl.launcher.utils.animation.CustomAnimationUtils;
@@ -25,6 +26,10 @@ import java.util.Iterator;
 import com.qcl.launcher.R;
 /* loaded from: classes2.dex */
 public class DownloadSettingUI extends BaseUI implements CompoundButton.OnCheckedChangeListener, SeekBar.OnSeekBarChangeListener, AdapterView.OnItemSelectedListener, TextWatcher {
+    /** ★ 1.2.9：启动器设置里的「检查更新」一行 */
+    private LinearLayout checkUpdateRow;
+    private TextView checkUpdateState;
+
     private LinearLayout autoSourceLayout;
     private Spinner autoSourceSpinner;
     private CheckBox checkAutoDownload;
@@ -64,6 +69,17 @@ public class DownloadSettingUI extends BaseUI implements CompoundButton.OnChecke
     public void onCreate() {
         super.onCreate();
         this.downloadSettingUI = (LinearLayout) this.activity.findViewById(R.id.ui_setting_download);
+        // ★ 1.2.9：启动器设置里的「检查更新」
+        this.checkUpdateRow = (LinearLayout) this.activity.findViewById(R.id.check_update_row);
+        this.checkUpdateState = (TextView) this.activity.findViewById(R.id.check_update_state);
+        if (this.checkUpdateRow != null) {
+            this.checkUpdateRow.setOnClickListener(new View.OnClickListener(){
+                @Override
+                public void onClick(View v) {
+                    DownloadSettingUI.this.checkUpdate();
+                }
+            });
+        }
         this.checkAutoSelect = (CheckBox) this.activity.findViewById(R.id.auto_select_source);
         this.checkAutoDownload = (CheckBox) this.activity.findViewById(R.id.auto_select_download_num);
         this.autoSourceLayout = (LinearLayout) this.activity.findViewById(R.id.auto_source_layout);
@@ -97,6 +113,53 @@ public class DownloadSettingUI extends BaseUI implements CompoundButton.OnChecke
         this.fixSourceSpinner.setOnItemSelectedListener(this);
         this.taskSizeSeekbar.setOnSeekBarChangeListener(this);
         this.editTaskSize.addTextChangedListener(this);
+    }
+
+    /**
+     * ★ 1.2.9：手动检查更新（启动器设置 → 检查更新）。
+     * 收不到推送的旧版本也能在这里主动点一下；有新版会直接弹更新框，没有就显示「已是最新版」。
+     */
+    private void checkUpdate() {
+        try {
+            if (this.checkUpdateState != null) {
+                this.checkUpdateState.setText(R.string.setting_check_update_checking);
+            }
+            if (this.checkUpdateRow != null) {
+                this.checkUpdateRow.setClickable(false);
+            }
+            if (this.activity.updateChecker == null) {
+                this.activity.updateChecker = new UpdateChecker((Context) this.activity, this.activity);
+            }
+            this.activity.updateChecker.checkManually(new UpdateChecker.UpdateCallback() {
+
+                @Override
+                public void onCheck() {
+                }
+
+                @Override
+                public void onFinish(final boolean noUpdate) {
+                    DownloadSettingUI.this.activity.runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            try {
+                                if (DownloadSettingUI.this.checkUpdateRow != null) {
+                                    DownloadSettingUI.this.checkUpdateRow.setClickable(true);
+                                }
+                                if (DownloadSettingUI.this.checkUpdateState != null) {
+                                    DownloadSettingUI.this.checkUpdateState.setText(noUpdate
+                                            ? DownloadSettingUI.this.activity.getString(R.string.setting_check_update_none)
+                                            : "");
+                                }
+                            }
+                            catch (Throwable ignored) {
+                            }
+                        }
+                    });
+                }
+            });
+        }
+        catch (Throwable ignored) {
+        }
     }
 
     @Override // com.qcl.launcher.launcher.uis.tools.BaseUI, com.qcl.launcher.launcher.uis.tools.UILifecycleCallbacks

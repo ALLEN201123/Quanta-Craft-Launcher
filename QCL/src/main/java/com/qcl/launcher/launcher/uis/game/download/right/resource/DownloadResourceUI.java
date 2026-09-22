@@ -100,21 +100,10 @@ public class DownloadResourceUI extends BaseDownloadUI implements View.OnClickLi
 
         refreshText.setOnClickListener(this);
 
-        new Thread(() -> {
-            try {
-                URL url = new URL(bean.getIconUrl());
-                HttpURLConnection httpURLConnection = (HttpURLConnection)url.openConnection();
-                httpURLConnection.setDoInput(true);
-                httpURLConnection.connect();
-                InputStream inputStream = httpURLConnection.getInputStream();
-                Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
-                activity.runOnUiThread(() -> {
-                    icon.setImageBitmap(bitmap);
-                });
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }).start();
+        // ★ 1.2.9：详情页顶部的大图标也交给 ModIconLoader ——
+        //   本来就是在子线程里下的（异步），但**没有超时也没有缓存**：服务器慢就一直挂着、
+        //   每次进来都要重下一遍。现在跟列表图标共用一套：缓存命中秒开、拉不到就放弃。
+        ModIconLoader.load(context, icon, bean.getIconUrl(), 0);
         name.setText(bean.getTitle());
         if (LocaleUtils.isChinese(context)) {
             name.setText(modTranslation != null ? modTranslation.getDisplayName() : bean.getTitle());

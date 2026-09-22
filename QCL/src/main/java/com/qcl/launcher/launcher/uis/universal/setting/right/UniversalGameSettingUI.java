@@ -55,7 +55,6 @@ import android.widget.Toast;
 import androidx.appcompat.widget.SwitchCompat;
 import com.qcl.launcher.launcher.MainActivity;
 import com.qcl.launcher.launcher.dialogs.control.ControllerManagerDialog;
-import com.qcl.launcher.launcher.update.UpdateChecker;
 import com.qcl.launcher.launcher.uis.tools.BaseUI;
 import com.qcl.launcher.manifest.AppManifest;
 import com.qcl.launcher.utils.animation.CustomAnimationUtils;
@@ -96,10 +95,6 @@ SeekBar.OnSeekBarChangeListener {
     private int gameLauncherSettingHeight;
     private LinearLayout showPojavRendererSetting;
     private TextView currentPojavRenderer;
-    /** ★ 1.2.9：全局游戏设置里的「检查更新」一行 */
-    private LinearLayout checkUpdateRow;
-    private TextView checkUpdateState;
-
     private RadioButton checkJavaAuto;
     private RadioButton checkJava8;
     private RadioButton checkJava17;
@@ -147,17 +142,6 @@ SeekBar.OnSeekBarChangeListener {
         this.isolateAlertText = (TextView)this.activity.findViewById(R.id.isolate_alert_text);
         this.switchToIsolateSetting = (TextView)this.activity.findViewById(R.id.switch_to_isolate_setting);
         this.switchToIsolateSetting.setOnClickListener((View.OnClickListener)this);
-        // ★ 1.2.9：手动检查更新
-        this.checkUpdateRow = (LinearLayout)this.activity.findViewById(R.id.check_update_row);
-        this.checkUpdateState = (TextView)this.activity.findViewById(R.id.check_update_state);
-        if (this.checkUpdateRow != null) {
-            this.checkUpdateRow.setOnClickListener(new View.OnClickListener(){
-                @Override
-                public void onClick(View v) {
-                    UniversalGameSettingUI.this.checkUpdate();
-                }
-            });
-        }
         this.showJavaSetting = (LinearLayout)this.activity.findViewById(R.id.show_java_selector);
         this.javaPathText = (TextView)this.activity.findViewById(R.id.java_path_text);
         this.showJava = (ImageView)this.activity.findViewById(R.id.show_java);
@@ -350,55 +334,6 @@ SeekBar.OnSeekBarChangeListener {
         CustomAnimationUtils.hideViewToLeft((View)this.universalGameSettingUI, this.activity, this.context, false);
         if (this.activity.isLoaded) {
             this.activity.uiManager.settingUI.startGlobalGameSettingUI.setBackground(this.context.getResources().getDrawable(R.drawable.launcher_button_parent));
-        }
-    }
-
-    @Override
-    @SuppressLint(value={"UseCompatLoadingForDrawables"})
-    /**
-     * ★ 1.2.9：手动检查更新（全局游戏设置 → 检查更新）。
-     * 老版本收不到推送时，用户至少能在这里主动点一下；有新版会直接弹更新框。
-     */
-    private void checkUpdate() {
-        try {
-            if (this.checkUpdateState != null) {
-                this.checkUpdateState.setText(R.string.setting_check_update_checking);
-            }
-            if (this.checkUpdateRow != null) {
-                this.checkUpdateRow.setClickable(false);
-            }
-            if (this.activity.updateChecker == null) {
-                this.activity.updateChecker = new UpdateChecker((Context)this.activity, this.activity);
-            }
-            this.activity.updateChecker.checkManually(new UpdateChecker.UpdateCallback(){
-
-                @Override
-                public void onCheck() {
-                }
-
-                @Override
-                public void onFinish(final boolean noUpdate) {
-                    UniversalGameSettingUI.this.activity.runOnUiThread(new Runnable(){
-                        @Override
-                        public void run() {
-                            try {
-                                if (UniversalGameSettingUI.this.checkUpdateRow != null) {
-                                    UniversalGameSettingUI.this.checkUpdateRow.setClickable(true);
-                                }
-                                if (UniversalGameSettingUI.this.checkUpdateState != null) {
-                                    UniversalGameSettingUI.this.checkUpdateState.setText(noUpdate
-                                            ? UniversalGameSettingUI.this.activity.getString(R.string.setting_check_update_none)
-                                            : "");
-                                }
-                            }
-                            catch (Throwable ignored) {
-                            }
-                        }
-                    });
-                }
-            });
-        }
-        catch (Throwable ignored) {
         }
     }
 

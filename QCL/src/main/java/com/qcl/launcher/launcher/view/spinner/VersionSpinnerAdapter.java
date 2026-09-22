@@ -84,7 +84,8 @@ public class VersionSpinnerAdapter extends BaseAdapter {
         }
         GameListBean gameListBean = this.list.get(i);
         if (!gameListBean.iconPath.equals("") && new File(gameListBean.iconPath).exists()) {
-            viewHolder.icon.setBackground(DrawableUtils.getDrawableFromFile(gameListBean.iconPath));
+            // ★ 1.2.9：改成异步加载 + 缓存（以前是主线程读文件解码）
+            com.qcl.launcher.launcher.list.local.game.LocalIconLoader.loadBackground(viewHolder.icon, gameListBean.iconPath);
         } else {
             // ★★★ 1.2.5 修：原来这里按「version 里有没有逗号」分叉 —— 有逗号的
             //   （下载页装的 Fabric/Forge 版本，版本号是 "b1.7.3, xxx" 这种）显示
