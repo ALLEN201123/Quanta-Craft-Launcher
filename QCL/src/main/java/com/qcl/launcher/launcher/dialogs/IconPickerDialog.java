@@ -88,8 +88,9 @@ public class IconPickerDialog extends Dialog {
             listener.onBuiltinPicked(ICONS[position]);
             dismiss();
         });
+        // ★ 占满剩余空间（weight），列表自己滚动，底部按钮永远可见
         root.addView(grid, new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, (int) (300 * d)));
+                ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f));
 
         // ★ 底部：返回 + 自定义图片（用户点名要的两个按钮）
         LinearLayout row = new LinearLayout(getContext());
@@ -118,8 +119,9 @@ public class IconPickerDialog extends Dialog {
         setContentView(root);
         Window w = getWindow();
         if (w != null) {
+            android.util.DisplayMetrics dm = getContext().getResources().getDisplayMetrics();
             w.setLayout(ViewGroup.LayoutParams.MATCH_PARENT,
-                    (int) (d * 460));
+                    (int) (dm.heightPixels * 0.85));
         }
     }
 }
