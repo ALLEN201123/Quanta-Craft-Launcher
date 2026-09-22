@@ -22,6 +22,7 @@ import android.widget.TextView;
 import com.qcl.launcher.R;
 import com.qcl.launcher.launcher.MainActivity;
 import com.qcl.launcher.launcher.dialogs.EditDownloadNameDialog;
+import com.qcl.launcher.launcher.list.download.ModIconLoader;
 import com.qcl.launcher.launcher.list.download.ModDependencyAdapter;
 import com.qcl.launcher.launcher.list.download.ModGameVersionAdapter;
 import com.qcl.launcher.launcher.mod.ModLoaderType;
