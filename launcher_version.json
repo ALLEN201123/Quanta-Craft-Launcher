@@ -1,12 +1,12 @@
 {
   "latestRelease": {
-    "versionCode": 327,
-    "versionName": "1.2.7",
+    "versionCode": 328,
+    "versionName": "1.2.8",
     "date": "2026-09-22",
     "url": [
-      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.2.7/QCL-release-1.2.7-all.apk"
+      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.2.8/QCL-release-1.2.8-all.apk"
     ],
-    "updateLog": "1.2.7 更新内容：\n1. 修「下载页图标一直白着、加载半天出不来」：图标加载加了超时、内存+磁盘缓存、并发上限，并支持 CurseForge 的动图 GIF 图标（以前解不出来就一直白）。\n2. 国内访问加速：接入 MCIM 镜像，Modrinth / CurseForge 的接口、图标与模组文件都走国内镜像，不通会自动回退官方地址。\n3. 模组文件与前置的下载同样走镜像（cdn.modrinth.com 在国内外时好时坏）。\n\n请到 Release 页面按设备架构下载（模拟器请用 x86_64），或点弹窗里的「网盘下载」。",
+    "updateLog": "1.2.8 更新内容：\n1. 修「收不到更新提示」：各家 CDN 缓存刷新不同步，1.2.6 若只连到还没刷新的源就仍收不到 —— 现在多加两个国内可达的镜像源（cdn.jsdmirror.com、jsdelivr.b-cdn.net）。\n2. 修「更新包在国内下不动」：点更新时若 GitHub Release 下载失败，自动改用国内代理重试。\n3. 请求镜像的超时缩短（连接 5s / 读取 7s），镜像卡住时快速回退官方，不再干等。\n\n★ 1.2.4 / 1.2.5 的用户仍需**手动装一次**本版（老版本的检查逻辑读的是旧镜像）；装完 1.2.8 之后就都能正常收到提示了。",
     "netdiskUrl": "https://pan.quark.cn/s/f2c26c4fb66f"
   },
   "latestPrerelease": null
