@@ -1,12 +1,12 @@
 {
   "latestRelease": {
-    "versionCode": 326,
-    "versionName": "1.2.6",
+    "versionCode": 327,
+    "versionName": "1.2.7",
     "date": "2026-09-22",
     "url": [
-      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.2.6/QCL-release-1.2.6-all.apk"
+      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.2.7/QCL-release-1.2.7-all.apk"
     ],
-    "updateLog": "1.2.6 更新内容：\n这一版只修一件事：手机收不到更新提示。\n原因：检查更新时会同时试好几个下载源（Gitee 镜像 / GitHub / 几个 CDN），但老逻辑是「谁先返回就用谁」，中文环境先读 Gitee 镜像；只要镜像那份落后一版（发版时只推了 GitHub），手机就会读到旧版本号、判定「没有新版」，后面明明是新的源根本没机会被读到。\n修法：改成「所有源都读一遍、取版本号最大的那一份」，任何一个源是新版就一定能收到提示；并多兜了几个国内能通的源（fastly/gcore jsDelivr、ghproxy）。\n\n★ 注意：你现在手机上那个版本跑的仍是老逻辑，所以这一版需要**手动装一次**；装完 1.2.6 之后，以后各版本就能正常收到更新提示了。\n\n请到 Release 页面按设备架构下载（模拟器请用 x86_64），或点弹窗里的「网盘下载」。",
+    "updateLog": "1.2.7 更新内容：\n1. 修「下载页图标一直白着、加载半天出不来」：图标加载加了超时、内存+磁盘缓存、并发上限，并支持 CurseForge 的动图 GIF 图标（以前解不出来就一直白）。\n2. 国内访问加速：接入 MCIM 镜像，Modrinth / CurseForge 的接口、图标与模组文件都走国内镜像，不通会自动回退官方地址。\n3. 模组文件与前置的下载同样走镜像（cdn.modrinth.com 在国内外时好时坏）。\n\n请到 Release 页面按设备架构下载（模拟器请用 x86_64），或点弹窗里的「网盘下载」。",
     "netdiskUrl": "https://pan.quark.cn/s/f2c26c4fb66f"
   },
   "latestPrerelease": null
