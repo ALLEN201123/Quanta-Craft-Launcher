@@ -93,21 +93,13 @@ public class DownloadResourceAdapter extends BaseAdapter {
         }
         viewHolder.icon.setImageDrawable(context.getDrawable(R.drawable.launcher_background_color_white));
         viewHolder.icon.setTag(position);
-        new Thread(() -> {
-            try {
-                URL url = new URL(modList.get(position).getIconUrl());
-                HttpURLConnection httpURLConnection = (HttpURLConnection)url.openConnection();
-                httpURLConnection.setDoInput(true);
-                httpURLConnection.connect();
-                InputStream inputStream = httpURLConnection.getInputStream();
-                Bitmap icon = BitmapFactory.decodeStream(inputStream);
-                if (viewHolder.icon.getTag().equals(position)){
-                    handler.post(() -> viewHolder.icon.setImageBitmap(icon));
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }).start();
+        // ★★★ 1.2.7：图标下载交给 ModIconLoader（内存+磁盘缓存 / 固定线程池 / 带超时 /
+        //   兼容动图 GIF / 列表复用校验）。
+        //   老代码是「每个条目 new 一个线程 + 没有超时 + 没有缓存」：
+        //   图标服务器一慢（国内连 Modrinth 的 cdn.modrinth.com 尤其慢），
+        //   线程就一直挂着 → 表现就是「图标一直白着、加载半天出不来」；
+        //   而且每次滚动都要重下一遍，永远不会变快。
+        ModIconLoader.load(context, viewHolder.icon, modList.get(position).getIconUrl(), position);
         StringBuilder categories = new StringBuilder();
         for (String category : modList.get(position).getCategories()) {
             boolean isCurse = modList.get(position).getPageUrl() != null && modList.get(position).getPageUrl().contains("curseforge");
