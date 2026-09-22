@@ -164,24 +164,9 @@ public class DownloadModUI extends BaseUI implements View.OnClickListener, Adapt
         this.versionListAdapter = arrayAdapter3;
         arrayAdapter3.setDropDownViewResource(R.layout.item_spinner_drop_down);
         this.versionSpinner.setAdapter((SpinnerAdapter) this.versionListAdapter);
-        // ★ 1.2.3：版本筛选默认选「当前正在玩的游戏版本」，不用玩家每次手动翻
-        try {
-            // ★ 1.2.5 修：currentVersion 存的是完整路径，直接 indexOf 必然 -1，
-            //   五个下载页的「游戏版本」默认都停在第 0 项。改成先解析出真正的游戏版本号。
-            String cur = SettingUtils.getCurrentGameVersion(this.activity);
-            if (cur != null) {
-                int vi = this.versionList.indexOf(cur);
-                if (vi >= 0) {
-                    this.versionSpinner.setSelection(vi);
-                    // ★★★ 1.2.5 修：光设下拉不够 —— 真正参与查询的是旁边那个输入框
-                    //   （onItemSelected 里「选下拉」会把值写进 editVersion，查询读的就是它）。
-                    //   只 setSelection 不写输入框，就会出现「下拉明明显示 b1.7.3、
-                    //   列表里却还是 Fabric API / Sodium 这些不支持这个版本的模组」。
-                    this.editVersion.setText(cur);
-                }
-            }
-        } catch (Throwable ignored) {
-        }
+        // ★ 1.2.5：照 FCL DownloadPage.java —— 版本筛选下拉第一项是「不筛选」，
+        //   默认就停在第一项，**不做任何自动匹配**；玩家自己选版本，查询按所选版本走。
+        this.versionSpinner.setSelection(0);
         ArrayList<RemoteModRepository.Category> arrayList3 = new ArrayList<>();
         this.categoryList = arrayList3;
         arrayList3.add(new RemoteModRepository.Category(CurseForgeRemoteModRepository.CATEGORY_ALL, "0", new ArrayList()));

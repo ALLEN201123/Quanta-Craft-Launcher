@@ -11,7 +11,6 @@ import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 import com.qcl.launcher.launcher.mod.RemoteMod;
-import com.qcl.launcher.launcher.setting.SettingUtils;
 import com.qcl.launcher.launcher.uis.game.download.right.resource.DownloadResourceUI;
 import com.qcl.launcher.utils.SimpleMultimap;
 import com.qcl.launcher.utils.animation.HiddenAnimationUtils;
@@ -62,14 +61,16 @@ public class ModGameVersionAdapter extends BaseAdapter {
         this.versions = simpleMultimap;
         ArrayList arrayList = new ArrayList();
         arrayList.addAll((Collection) simpleMultimap.keys().stream().sorted(VersionNumber.VERSION_COMPARATOR.reversed()).collect(Collectors.toList()));
-        // ★ 1.2.5：把「适配你当前游戏版本」的那一组提到第一个
+        // ★ 1.2.5（照 FCL）：详情页最前面放「推荐的版本：<你的版本> · <你的加载器>」那一组，
+        //   点一下直接进下载框；这个模组没有适配你当前版本的版本时，DownloadResourceUI
+        //   不会生成这个分组，这里也就自然不插（列表保持原来的版本号倒序）。
         this.matchedGameVersion = null;
         try {
-            String cur = SettingUtils.getCurrentGameVersion(downloadResourceUI.activity);
-            if (cur != null && !cur.isEmpty() && arrayList.contains(cur)) {
-                arrayList.remove(cur);
-                arrayList.add(0, cur);
-                this.matchedGameVersion = cur;
+            String rec = downloadResourceUI.getRecommendedKey();
+            if (rec != null && !rec.isEmpty() && arrayList.contains(rec)) {
+                arrayList.remove(rec);
+                arrayList.add(0, rec);
+                this.matchedGameVersion = rec;
             }
         }
         catch (Throwable ignored) {
@@ -106,12 +107,10 @@ public class ModGameVersionAdapter extends BaseAdapter {
             viewHolder = (ViewHolder) view.getTag();
         }
         final String gameVersionName = this.list.get(i);
-        // ★ 1.2.5：适配玩家当前版本的那一组加个标记，一眼能认出来
+        // ★ 1.2.5：第一组就是「推荐的版本：…」，名字本身就带说明，不用再加后缀
         final boolean isMatched = this.matchedGameVersion != null
                 && this.matchedGameVersion.equals(gameVersionName);
-        viewHolder.name.setText((CharSequence) (isMatched
-                ? gameVersionName + "   ★ 适配你当前的版本"
-                : gameVersionName));
+        viewHolder.name.setText((CharSequence) gameVersionName);
         final ModVersionAdapter innerAdapter =
                 new ModVersionAdapter(this.context, new ArrayList(this.versions.get(gameVersionName)), this.ui);
         viewHolder.modListView.setAdapter((ListAdapter) innerAdapter);

@@ -161,33 +161,10 @@ public class DownloadShaderUI extends BaseUI implements View.OnClickListener, Ad
         this.versionListAdapter = arrayAdapter3;
         arrayAdapter3.setDropDownViewResource(R.layout.item_spinner_drop_down);
         this.editVersionSpinner.setAdapter((SpinnerAdapter) this.versionListAdapter);
-        // ★ 1.2.3：版本筛选默认选「当前正在玩的游戏版本」
+        // ★ 1.2.5：照 FCL DownloadPage.java —— 版本筛选下拉第一项是「不筛选」，
+        //   默认停在第一项，**不做任何自动匹配**；玩家自己选版本，查询按所选版本走。
 
-        try {
-
-            // ★ 1.2.5 修：currentVersion 存的是完整路径，直接 indexOf 必然 -1，
-            //   五个下载页的「游戏版本」默认都停在第 0 项。改成先解析出真正的游戏版本号。
-            String cur = SettingUtils.getCurrentGameVersion(this.activity);
-
-            if (cur != null) {
-
-                int vi = this.versionList.indexOf(cur);
-
-                if (vi >= 0) {
-
-                    this.editVersionSpinner.setSelection(vi);
-                    // ★★★ 1.2.5 修：光设下拉不够 —— 真正参与查询的是旁边那个输入框（查询读 editVersion.getText()）。
-                    //   只 setSelection 不写输入框，就会出现「下拉显示 b1.7.3、
-                    //   列表里却还是 Fabric API / Sodium 这些不支持该版本的模组」。
-                    this.editVersion.setText(cur);
-
-                }
-
-            }
-
-        } catch (Throwable ignored) {
-
-        }
+        this.editVersionSpinner.setSelection(0);
 
         ArrayList<RemoteModRepository.Category> arrayList3 = new ArrayList<>();
         this.categoryList = arrayList3;

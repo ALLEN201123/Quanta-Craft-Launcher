@@ -151,33 +151,10 @@ public class DownloadWorldUI extends BaseUI implements View.OnClickListener, Ada
         this.versionListAdapter = arrayAdapter2;
         arrayAdapter2.setDropDownViewResource(R.layout.item_spinner_drop_down);
         this.editVersionSpinner.setAdapter((SpinnerAdapter) this.versionListAdapter);
-        // ★ 1.2.3：版本筛选默认选「当前正在玩的游戏版本」
+        // ★ 1.2.5：照 FCL DownloadPage.java —— 版本筛选下拉第一项是「不筛选」，
+        //   默认停在第一项，**不做任何自动匹配**；玩家自己选版本，查询按所选版本走。
 
-        try {
-
-            // ★ 1.2.5 修：currentVersion 存的是完整路径，直接 indexOf 必然 -1，
-            //   五个下载页的「游戏版本」默认都停在第 0 项。改成先解析出真正的游戏版本号。
-            String cur = SettingUtils.getCurrentGameVersion(this.activity);
-
-            if (cur != null) {
-
-                int vi = this.versionList.indexOf(cur);
-
-                if (vi >= 0) {
-
-                    this.editVersionSpinner.setSelection(vi);
-                    // ★★★ 1.2.5 修：光设下拉不够 —— 真正参与查询的是旁边那个输入框（查询读 editVersion.getText()）。
-                    //   只 setSelection 不写输入框，就会出现「下拉显示 b1.7.3、
-                    //   列表里却还是 Fabric API / Sodium 这些不支持该版本的模组」。
-                    this.editVersion.setText(cur);
-
-                }
-
-            }
-
-        } catch (Throwable ignored) {
-
-        }
+        this.editVersionSpinner.setSelection(0);
 
         ArrayList<RemoteModRepository.Category> arrayList3 = new ArrayList<>();
         this.categoryList = arrayList3;
@@ -198,12 +175,13 @@ public class DownloadWorldUI extends BaseUI implements View.OnClickListener, Ada
         this.repository = new Repository();
         this.downloadSourceSpinner = (Spinner) this.activity.findViewById(R.id.download_world_arg_source);
         ArrayList arrayList4 = new ArrayList();
+        // ★ 1.2.5：世界页下载源**只留 CurseForge** —— Modrinth 根本没有「世界」这个分类
+        //   （以前选它会拿整合包冒充，属于假数据），所以这个源直接去掉，不留误导项。
         arrayList4.add(this.context.getString(R.string.download_mod_source_curse_forge));
-        arrayList4.add(this.context.getString(R.string.download_mod_source_modrinth));
         ArrayAdapter arrayAdapter3 = new ArrayAdapter(this.context, R.layout.item_spinner, arrayList4);
         arrayAdapter3.setDropDownViewResource(R.layout.item_spinner_drop_down);
         this.downloadSourceSpinner.setAdapter((SpinnerAdapter) arrayAdapter3);
-        this.downloadSourceSpinner.setSelection(1);
+        this.downloadSourceSpinner.setSelection(0);
         this.downloadSourceSpinner.setOnItemSelectedListener(this);
         this.worldListView = (ListView) this.activity.findViewById(R.id.download_world_list);
         this.worldList = new ArrayList<>();
@@ -243,7 +221,7 @@ public class DownloadWorldUI extends BaseUI implements View.OnClickListener, Ada
 
         @Override // com.qcl.launcher.launcher.mod.LocalizedRemoteModRepository
         protected RemoteModRepository getBackedRemoteModRepository() {
-            if (DownloadWorldUI.this.downloadSourceSpinner.getSelectedItemPosition() == 1) {
+            if (false) {   // ★ 1.2.5：世界页已经没有 Modrinth 源了，这个分支不会再走到
                 // ★ 1.2.3：Modrinth 没有世界分类，之前这里错返回了 MODPACKS，
                 //   世界页选 Modrinth 源显示的全是整合包。回退到 CurseForge 世界源。
                 return new CurseForgeRemoteModRepository(RemoteModRepository.Type.WORLD, 17);

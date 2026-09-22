@@ -24,8 +24,11 @@ import com.qcl.launcher.launcher.MainActivity;
 import com.qcl.launcher.launcher.dialogs.EditDownloadNameDialog;
 import com.qcl.launcher.launcher.list.download.ModDependencyAdapter;
 import com.qcl.launcher.launcher.list.download.ModGameVersionAdapter;
+import com.qcl.launcher.launcher.mod.ModLoaderType;
 import com.qcl.launcher.launcher.mod.RemoteMod;
 import com.qcl.launcher.launcher.mod.RemoteModRepository;
+import com.qcl.launcher.launcher.download.modloader.ModLoaderDetector;
+import com.qcl.launcher.launcher.setting.SettingUtils;
 import com.qcl.launcher.launcher.mod.curse.CurseForgeRemoteModRepository;
 import com.qcl.launcher.utils.LocaleUtils;
 import com.qcl.launcher.utils.SimpleMultimap;
@@ -191,6 +194,57 @@ public class DownloadResourceUI extends BaseDownloadUI implements View.OnClickLi
         }
     }
 
+    /**
+     * ★ 1.2.5：「推荐的版本」分组的 key（没有就是 null）。
+     * 抄 FCL RemoteModInfoPage.sortVersions —— 详情页最前面单独放一组
+     * 「适配你现在玩的这个版本的」，点一下就能下载；这个模组没有适配你当前版本的
+     * 版本时就不插这一组。
+     */
+    private String recommendedKey;
+
+    public String getRecommendedKey() {
+        return this.recommendedKey;
+    }
+
+    /** ★ 1.2.5：当前版本装的加载器名（用于「推荐的版本」标签与筛选），没有就 null */
+    private String currentLoaderName() {
+        try {
+            String cur = activity.publicGameSetting.currentVersion;
+            if (cur == null || cur.isEmpty()) {
+                return null;
+            }
+            String loader = ModLoaderDetector.detect(new java.io.File(cur));
+            if (ModLoaderDetector.MODLOADER.equals(loader)) return "ModLoader";
+            if (ModLoaderDetector.BABRIC.equals(loader)) return "Babric";
+            if (ModLoaderDetector.FABRIC.equals(loader)) return "Fabric";
+            if (ModLoaderDetector.FORGE.equals(loader)) return "Forge";
+            if (ModLoaderDetector.NEOFORGE.equals(loader)) return "NeoForge";
+            if (ModLoaderDetector.QUILT.equals(loader)) return "Quilt";
+            if (ModLoaderDetector.LITELOADER.equals(loader)) return "LiteLoader";
+        } catch (Throwable ignored) {
+        }
+        return null;
+    }
+
+    /** ★ 1.2.5：当前加载器对应的 RemoteMod 加载器类型（远古 ModLoader 没有对应枚举，返回 null 表示不筛） */
+    private ModLoaderType currentLoaderType() {
+        String loader = currentLoaderName();
+        if (loader == null) {
+            return null;
+        }
+        if ("Fabric".equals(loader) || "Quilt".equals(loader) || "Babric".equals(loader)) {
+            return ModLoaderType.FABRIC;
+        }
+        if ("Forge".equals(loader) || "NeoForge".equals(loader)) {
+            return ModLoaderType.FORGE;
+        }
+        if ("LiteLoader".equals(loader)) {
+            return ModLoaderType.LITE_LOADER;
+        }
+        return null;
+    }
+
+    @SuppressWarnings("unchecked")
     private SimpleMultimap<String, RemoteMod.Version> sortVersions(Stream<RemoteMod.Version> versions) {
         SimpleMultimap<String, RemoteMod.Version> classifiedVersions = new SimpleMultimap<>(HashMap::new, ArrayList::new);
         versions.forEach(version -> {
@@ -202,6 +256,43 @@ public class DownloadResourceUI extends BaseDownloadUI implements View.OnClickLi
         for (String gameVersion : classifiedVersions.keys()) {
             List<RemoteMod.Version> versionList = (List<RemoteMod.Version>) classifiedVersions.get(gameVersion);
             versionList.sort(Comparator.comparing(RemoteMod.Version::getDatePublished).reversed());
+        }
+
+        // ★★★ 1.2.5（照 FCL）：把「适配你当前游戏版本」的版本单独拎成一组，放最前面。
+        //   ① 取你当前版本解析出的游戏版本号（Fabric/Forge 版也能拿到本体版本）；
+        //   ② 这个模组/资源包/光影/世界/整合包支持这个版本 → 才建这一组；
+        //      不支持就直接不建（列表保持原来的版本号倒序）。
+        //   ③ 如果还认得出你装的加载器（Fabric/Forge/LiteLoader），
+        //      优先只放加载器也匹配的那几个文件；一个都没匹配上就退回整组。
+        this.recommendedKey = null;
+        try {
+            String mcv = SettingUtils.getCurrentGameVersion(activity);
+            if (mcv != null && !mcv.isEmpty() && classifiedVersions.keys().contains(mcv)) {
+                List<RemoteMod.Version> matched =
+                        new ArrayList<>((List<RemoteMod.Version>) classifiedVersions.get(mcv));
+                ModLoaderType type = currentLoaderType();
+                if (type != null) {
+                    List<RemoteMod.Version> byLoader = new ArrayList<>();
+                    for (RemoteMod.Version v : matched) {
+                        if (v.getLoaders() != null && v.getLoaders().contains(type)) {
+                            byLoader.add(v);
+                        }
+                    }
+                    if (!byLoader.isEmpty()) {
+                        matched = byLoader;
+                    }
+                }
+                if (!matched.isEmpty()) {
+                    String loaderName = currentLoaderName();
+                    String key = "推荐的版本：" + mcv + (loaderName == null ? "" : " · " + loaderName);
+                    for (RemoteMod.Version v : matched) {
+                        classifiedVersions.put(key, v);
+                    }
+                    this.recommendedKey = key;
+                }
+            }
+        } catch (Throwable t) {
+            t.printStackTrace();
         }
         return classifiedVersions;
     }
