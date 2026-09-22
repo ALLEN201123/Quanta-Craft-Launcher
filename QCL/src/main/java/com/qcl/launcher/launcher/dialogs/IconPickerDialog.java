@@ -6,7 +6,6 @@ import android.os.Bundle;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
-import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.GridView;
@@ -17,8 +16,9 @@ import android.widget.TextView;
 import com.qcl.launcher.R;
 
 /**
- * ★ 1.2.3：版本图标选择器 —— 内置一批图标 + 自定义图片，两种方式并存
- * （交互参考 mitimc：点铅笔 → 网格选内置，底部按钮走自定义选图）。
+ * ★ 1.2.4：版本图标选择器。
+ * 内置 = MultiMC 全套 24 个实例图标 + 6 个加载器 logo + OptiFine/Cleanroom；
+ * 底部「返回」和「自定义图片」两个按钮，自定义走老的文件选择流程。
  */
 public class IconPickerDialog extends Dialog {
 
@@ -28,15 +28,12 @@ public class IconPickerDialog extends Dialog {
     }
 
     private static final int[] ICONS = {
-            // MultiMC 实例图标（用户指定的风格）
-            R.drawable.ic_mm_grass, R.drawable.ic_mm_dirt, R.drawable.ic_mm_stone,
-            R.drawable.ic_mm_planks, R.drawable.ic_mm_tnt, R.drawable.ic_mm_gold,
-            R.drawable.ic_mm_iron, R.drawable.ic_mm_brick, R.drawable.ic_mm_enderpearl,
+            R.drawable.ic_mm_brick, R.drawable.ic_mm_chicken, R.drawable.ic_mm_creeper, R.drawable.ic_mm_diamond, R.drawable.ic_mm_dirt, R.drawable.ic_mm_enderpearl, R.drawable.ic_mm_flame, R.drawable.ic_mm_ftb_glow, R.drawable.ic_mm_ftb_logo, R.drawable.ic_mm_gear, R.drawable.ic_mm_gold, R.drawable.ic_mm_grass, R.drawable.ic_mm_herobrine, R.drawable.ic_mm_infinity, R.drawable.ic_mm_iron, R.drawable.ic_mm_magitech, R.drawable.ic_mm_meat, R.drawable.ic_mm_netherstar, R.drawable.ic_mm_planks, R.drawable.ic_mm_skeleton, R.drawable.ic_mm_squarecreeper, R.drawable.ic_mm_steve, R.drawable.ic_mm_stone, R.drawable.ic_mm_tnt,
             // 加载器 logo
             R.drawable.ic_forge, R.drawable.ic_neoforge, R.drawable.ic_fabric,
             R.drawable.ic_quilt, R.drawable.ic_modloader, R.drawable.ic_babric,
             // 其它
-            R.drawable.ic_optifine, R.drawable.ic_chicken, R.drawable.ic_cleanroom
+            R.drawable.ic_optifine, R.drawable.ic_cleanroom
     };
 
     private final Listener listener;
@@ -64,7 +61,7 @@ public class IconPickerDialog extends Dialog {
         root.addView(title);
 
         TextView hint = new TextView(getContext());
-        hint.setText("内置图标（点一下直接用）");
+        hint.setText("MultiMC 实例图标 + 加载器 logo（点一下直接用）");
         hint.setTextSize(13);
         hint.setPadding(0, 0, 0, (int) (8 * d));
         root.addView(hint);
@@ -92,8 +89,15 @@ public class IconPickerDialog extends Dialog {
             dismiss();
         });
         root.addView(grid, new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, (int) (250 * d)));
+                ViewGroup.LayoutParams.MATCH_PARENT, (int) (300 * d)));
 
+        // ★ 底部：返回 + 自定义图片（用户点名要的两个按钮）
+        LinearLayout row = new LinearLayout(getContext());
+        row.setOrientation(LinearLayout.HORIZONTAL);
+        Button back = new Button(getContext());
+        back.setText("返回");
+        back.setAllCaps(false);
+        back.setOnClickListener(v -> dismiss());
         Button custom = new Button(getContext());
         custom.setText("从文件选择自定义图片…");
         custom.setAllCaps(false);
@@ -101,16 +105,21 @@ public class IconPickerDialog extends Dialog {
             listener.onCustomRequested();
             dismiss();
         });
-        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        lp.topMargin = (int) (10 * d);
-        root.addView(custom, lp);
+        LinearLayout.LayoutParams b1 = new LinearLayout.LayoutParams(
+                0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
+        LinearLayout.LayoutParams b2 = new LinearLayout.LayoutParams(
+                0, ViewGroup.LayoutParams.WRAP_CONTENT, 1.6f);
+        b1.setMargins(0, (int) (10 * d), (int) (6 * d), 0);
+        b2.setMargins((int) (6 * d), (int) (10 * d), 0, 0);
+        row.addView(back, b1);
+        row.addView(custom, b2);
+        root.addView(row);
 
         setContentView(root);
         Window w = getWindow();
         if (w != null) {
             w.setLayout(ViewGroup.LayoutParams.MATCH_PARENT,
-                    ViewGroup.LayoutParams.WRAP_CONTENT);
+                    (int) (d * 460));
         }
     }
 }
