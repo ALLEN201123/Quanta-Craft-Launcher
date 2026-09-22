@@ -75,6 +75,36 @@ public class CurseAddon implements RemoteMod.IMod {
         return this.id;
     }
 
+    @Override // com.qcl.launcher.launcher.mod.RemoteMod.IMod
+    public String getRemoteId() {
+        return Integer.toString(this.id);
+    }
+
+    /** ★ 1.2.5：CurseForge 的依赖类型 —— relationType 3 = 必需、2 = 可选 */
+    @Override // com.qcl.launcher.launcher.mod.RemoteMod.IMod
+    public java.util.Map<String, String> loadDependencyTypes(RemoteModRepository remoteModRepository) {
+        java.util.Map<String, String> out = new java.util.HashMap<>();
+        if (this.latestFiles == null) {
+            return out;
+        }
+        for (LatestFile file : this.latestFiles) {
+            if (file.getDependencies() == null) {
+                continue;
+            }
+            for (Dependency d : file.getDependencies()) {
+                String t = d.getRelationType() == 3 ? "required" : (d.getRelationType() == 2 ? "optional" : null);
+                if (t == null) {
+                    continue;
+                }
+                String key = Integer.toString(d.getModId());
+                if (!out.containsKey(key) || "required".equals(t)) {
+                    out.put(key, t);
+                }
+            }
+        }
+        return out;
+    }
+
     public int getGameId() {
         return this.gameId;
     }

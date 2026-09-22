@@ -95,6 +95,17 @@ public class EditDownloadNameDialog extends Dialog implements View.OnClickListen
             DownloadTaskListBean downloadTaskListBean = new DownloadTaskListBean(name, url, append.append(this.editText.getText().toString()).toString(), "");
             ArrayList arrayList = new ArrayList();
             arrayList.add(downloadTaskListBean);
+            // ★★★ 1.2.5：模组有前置就**一起排队下载**（只对模组做，资源包/世界没有前置）。
+            //   以前只下本体，前置得玩家自己回详情页一个个找 —— 漏装前置的模组进游戏就是崩。
+            //   每个前置都自动挑「支持你当前游戏版本」的最新那一个版本。
+            if (this.ui.resourceType == 0) {
+                try {
+                    appendDependencyTasks(arrayList, str + "/mods/");
+                }
+                catch (Throwable t) {
+                    t.printStackTrace();
+                }
+            }
             DownloadDialog downloadDialog = new DownloadDialog(getContext(), this.ui.activity, arrayList, this.alert);
             dismiss();
             // ★★★ 1.2.3：模组下载完成后的「class 替换型模组」处理。
@@ -188,6 +199,71 @@ public class EditDownloadNameDialog extends Dialog implements View.OnClickListen
         if (view == this.negative) {
             dismiss();
         }
+    }
+
+    /**
+     * ★ 1.2.5：把「这个模组的前置」也加进同一批下载任务里。
+     *
+     * @param out    下载任务表（本体的那条已经在里面了）
+     * @param modsDir 模组目录（mods/）
+     */
+    private void appendDependencyTasks(List<DownloadTaskListBean> out, String modsDir) {
+        List<RemoteMod> deps = this.ui.getDependencies();
+        if (deps == null || deps.isEmpty()) {
+            return;
+        }
+        String mcv = com.qcl.launcher.launcher.setting.SettingUtils.getCurrentGameVersion(this.ui.activity);
+        for (RemoteMod dep : deps) {
+            try {
+                // ★ 1.2.5：**只自动装「必需」的**前置。可选/不兼容/已内置的不动 ——
+                //   前置列表里已经标了「【可选前置】」，玩家想装自己点一下就下。
+                String depId = dep.getData() == null ? null : dep.getData().getRemoteId();
+                String depType = depId == null ? null : this.ui.getDependencyTypes().get(depId);
+                if ("optional".equals(depType) || "incompatible".equals(depType)
+                        || "embedded".equals(depType)) {
+                    continue;
+                }
+                RemoteMod.Version best = pickDependencyVersion(dep, mcv);
+                if (best == null || best.getFile() == null || best.getFile().getUrl() == null) {
+                    continue;
+                }
+                String fileName = best.getFile().getFilename();
+                if (fileName == null || fileName.isEmpty()) {
+                    fileName = dep.getSlug() + ".jar";
+                }
+                boolean dup = false;
+                for (DownloadTaskListBean bean : out) {
+                    if (fileName.equals(bean.name)) {
+                        dup = true;
+                        break;
+                    }
+                }
+                if (dup) {
+                    continue;
+                }
+                out.add(new DownloadTaskListBean(fileName, best.getFile().getUrl(),
+                        modsDir + fileName, ""));
+            }
+            catch (Throwable ignored) {
+            }
+        }
+    }
+
+    /** ★ 1.2.5：挑前置里「支持 mcv 这个游戏版本」的最新一个版本（挑不到就返回 null，跳过） */
+    private RemoteMod.Version pickDependencyVersion(RemoteMod dep, String mcv) throws java.io.IOException {
+        List<RemoteMod.Version> all = dep.getData().loadVersions(this.ui.getRepository())
+                .collect(java.util.stream.Collectors.toList());
+        RemoteMod.Version best = null;
+        for (RemoteMod.Version v : all) {
+            if (mcv != null && !mcv.isEmpty() && (v.getGameVersions() == null || !v.getGameVersions().contains(mcv))) {
+                continue;
+            }
+            if (best == null || (best.getDatePublished() != null && v.getDatePublished() != null
+                    && v.getDatePublished().after(best.getDatePublished()))) {
+                best = v;
+            }
+        }
+        return best;
     }
 
     /** ★ 1.2.3：注入 class 后这个版本必然校验不过，自动关「检查游戏完整性」 */

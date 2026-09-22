@@ -299,6 +299,16 @@ public final class ModrinthRemoteModRepository implements RemoteModRepository {
             return this.id;
         }
 
+        @Override // com.qcl.launcher.launcher.mod.RemoteMod.IMod
+        public String getRemoteId() {
+            return getId();
+        }
+
+        @Override // com.qcl.launcher.launcher.mod.RemoteMod.IMod
+        public java.util.Map<String, String> loadDependencyTypes(RemoteModRepository remoteModRepository) throws IOException {
+            return collectDependencyTypes(remoteModRepository, getId());
+        }
+
         public String getTeam() {
             return this.team;
         }
@@ -510,6 +520,19 @@ public final class ModrinthRemoteModRepository implements RemoteModRepository {
                 versionType = RemoteMod.VersionType.Release;
             }
             RemoteMod.VersionType versionType2 = versionType;
+            // ★ 1.2.5：把 Modrinth 的 dependency_type（required/optional/incompatible/embedded）留下来。
+            //   以前这一步只取了 projectId，类型被丢掉 → 界面上没法标「必需前置 / 可选前置」。
+            java.util.Map<String, String> depTypes = new java.util.HashMap<>();
+            for (Dependency dep : this.dependencies) {
+                if (dep.getProjectId() == null || dep.getDependencyType() == null) {
+                    continue;
+                }
+                String t = dep.getDependencyType();
+                String oldT = depTypes.get(dep.getProjectId());
+                if (oldT == null || "required".equals(t)) {
+                    depTypes.put(dep.getProjectId(), t);
+                }
+            }
             if (this.files.size() == 0) {
                 return Optional.empty();
             }
@@ -530,13 +553,34 @@ public final class ModrinthRemoteModRepository implements RemoteModRepository {
                 public final Object apply(Object obj) {
                     return ModrinthRemoteModRepository.ProjectVersion.lambda$toVersion$0((String) obj);
                 }
-            }).collect(Collectors.toList())));
+            }).collect(Collectors.toList()), depTypes));
         }
 
         /* JADX INFO: Access modifiers changed from: package-private */
         public static /* synthetic */ Stream lambda$toVersion$0(String str) {
             return "fabric".equalsIgnoreCase(str) ? Stream.of(ModLoaderType.FABRIC) : "forge".equalsIgnoreCase(str) ? Stream.of(ModLoaderType.FORGE) : Stream.empty();
         }
+    }
+
+    /**
+     * ★ 1.2.5：把这个项目各个版本里的依赖类型合并成一张表（projectId → required/optional/...）。
+     * required 优先 —— 同一个项目可能在不同版本里以必需/可选两种身份出现。
+     */
+    static java.util.Map<String, String> collectDependencyTypes(RemoteModRepository remoteModRepository, String projectId) throws IOException {
+        java.util.Map<String, String> out = new java.util.HashMap<>();
+        remoteModRepository.getRemoteVersionsById(projectId).forEach(v -> {
+            java.util.Map<String, String> m = v.getDependencyTypes();
+            if (m == null) {
+                return;
+            }
+            for (java.util.Map.Entry<String, String> e : m.entrySet()) {
+                String oldT = out.get(e.getKey());
+                if (oldT == null || "required".equals(e.getValue())) {
+                    out.put(e.getKey(), e.getValue());
+                }
+            }
+        });
+        return out;
     }
 
     /* loaded from: classes2.dex */
@@ -654,6 +698,16 @@ public final class ModrinthRemoteModRepository implements RemoteModRepository {
 
         public String getProjectId() {
             return this.projectId;
+        }
+
+        @Override // com.qcl.launcher.launcher.mod.RemoteMod.IMod
+        public String getRemoteId() {
+            return this.projectId;
+        }
+
+        @Override // com.qcl.launcher.launcher.mod.RemoteMod.IMod
+        public java.util.Map<String, String> loadDependencyTypes(RemoteModRepository remoteModRepository) throws IOException {
+            return collectDependencyTypes(remoteModRepository, this.projectId);
         }
 
         public String getAuthor() {

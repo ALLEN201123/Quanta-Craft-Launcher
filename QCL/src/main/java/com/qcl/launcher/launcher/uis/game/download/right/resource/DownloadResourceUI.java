@@ -206,6 +206,27 @@ public class DownloadResourceUI extends BaseDownloadUI implements View.OnClickLi
         return this.recommendedKey;
     }
 
+    /**
+     * ★ 1.2.5：这个模组的「前置」（依赖）。下载模组时会一起排队下载 ——
+     * 以前只下本体，玩家点完还得自己回来一个个找前置。
+     */
+    private List<RemoteMod> dependencies = new ArrayList<>();
+
+    public List<RemoteMod> getDependencies() {
+        return this.dependencies;
+    }
+
+    /** ★ 1.2.5：依赖类型表（远程 id → required/optional/...），用来标「必需前置 / 可选前置」 */
+    private java.util.Map<String, String> dependencyTypes = new java.util.HashMap<>();
+
+    public java.util.Map<String, String> getDependencyTypes() {
+        return this.dependencyTypes;
+    }
+
+    public RemoteModRepository getRepository() {
+        return this.repository;
+    }
+
     /** ★ 1.2.5：当前版本装的加载器名（用于「推荐的版本」标签与筛选），没有就 null */
     private String currentLoaderName() {
         try {
@@ -308,13 +329,24 @@ public class DownloadResourceUI extends BaseDownloadUI implements View.OnClickLi
             try {
                 // ★★★ 1.2.5：依赖拉不到**不该**让整页「版本列表加载失败」——
                 //   依赖单独兜一层，失败就当没有依赖，版本列表照常显示。
-                List<RemoteMod> dependencies;
+                List<RemoteMod> deps;
                 try {
-                    dependencies = bean.getData().loadDependencies(repository);
+                    deps = bean.getData().loadDependencies(repository);
                 }
                 catch (Throwable t) {
                     t.printStackTrace();
-                    dependencies = new ArrayList<>();
+                    deps = new ArrayList<>();
+                }
+                List<RemoteMod> dependencies = deps;
+                this.dependencies = new ArrayList<>(deps);
+                // ★ 1.2.5：依赖类型（必需/可选）也一起取，给前置列表标注用
+                try {
+                    java.util.Map<String, String> types = bean.getData().loadDependencyTypes(repository);
+                    if (types != null) {
+                        this.dependencyTypes = types;
+                    }
+                }
+                catch (Throwable ignored) {
                 }
                 SimpleMultimap<String, RemoteMod.Version> versions = sortVersions(bean.getData().loadVersions(repository));
                 if (dependencies.size() == 0) {
@@ -329,7 +361,7 @@ public class DownloadResourceUI extends BaseDownloadUI implements View.OnClickLi
                     });
                 }
                 else {
-                    modDependencyAdapter = new ModDependencyAdapter(context,activity,repository,dependencies);
+                    modDependencyAdapter = new ModDependencyAdapter(context,activity,repository,dependencies,this.dependencyTypes);
                     modGameVersionAdapter = new ModGameVersionAdapter(context,versions,this);
                     activity.runOnUiThread(() -> {
                         dependencyLayout.setVisibility(View.VISIBLE);

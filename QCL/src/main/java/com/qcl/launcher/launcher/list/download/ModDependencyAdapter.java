@@ -34,11 +34,32 @@ public class ModDependencyAdapter extends BaseAdapter {
     private RemoteModRepository repository;
     private List<RemoteMod> list;
 
+    /** ★ 1.2.5：依赖类型表（远程 id → required/optional/...），用来标「必需/可选前置」 */
+    private final java.util.Map<String, String> dependencyTypes;
+
     public ModDependencyAdapter (Context context,MainActivity activity,RemoteModRepository repository,List<RemoteMod> list) {
+        this(context, activity, repository, list, null);
+    }
+
+    public ModDependencyAdapter (Context context,MainActivity activity,RemoteModRepository repository,List<RemoteMod> list, java.util.Map<String, String> dependencyTypes) {
         this.context = context;
         this.activity = activity;
         this.repository = repository;
         this.list = list;
+        this.dependencyTypes = dependencyTypes;
+    }
+
+    /** ★ 1.2.5：这个前置是「必需」还是「可选」（拿不到类型时按必需显示） */
+    private String dependencyTypeOf(int i) {
+        try {
+            if (this.dependencyTypes == null || this.list.get(i).getData() == null) {
+                return null;
+            }
+            String id = this.list.get(i).getData().getRemoteId();
+            return id == null ? null : this.dependencyTypes.get(id);
+        } catch (Throwable ignored) {
+            return null;
+        }
     }
 
     private class ViewHolder{
@@ -116,10 +137,26 @@ public class ModDependencyAdapter extends BaseAdapter {
         }
         viewHolder.categories.setText(categories.toString());
         ModTranslations modTranslations = ModTranslations.MOD;
-        viewHolder.name.setText(list.get(i).getTitle());
-        if (LocaleUtils.isChinese(context)) {
-            viewHolder.name.setText(modTranslations.getModByCurseForgeId(list.get(i).getSlug()) == null ? list.get(i).getTitle() : modTranslations.getModByCurseForgeId(list.get(i).getSlug()).getDisplayName());
+        // ★ 1.2.5：名称前标出「必需前置 / 可选前置」（类型拿不到就只写「前置」）
+        String depType = dependencyTypeOf(i);
+        String depPrefix;
+        if ("optional".equals(depType)) {
+            depPrefix = "【可选前置】";
+        } else if ("incompatible".equals(depType)) {
+            depPrefix = "【不兼容】";
+        } else if ("embedded".equals(depType)) {
+            depPrefix = "【已内置】";
+        } else if (depType == null) {
+            depPrefix = "【前置】";
+        } else {
+            depPrefix = "【必需前置】";
         }
+        // ★ 1.2.5：中文名要保留标签前缀（原来这里会把标签整段覆盖掉）
+        String depTitle = list.get(i).getTitle();
+        if (LocaleUtils.isChinese(context)) {
+            depTitle = modTranslations.getModByCurseForgeId(list.get(i).getSlug()) == null ? list.get(i).getTitle() : modTranslations.getModByCurseForgeId(list.get(i).getSlug()).getDisplayName();
+        }
+        viewHolder.name.setText(depPrefix + depTitle);
         viewHolder.introduction.setText(list.get(i).getDescription());
         viewHolder.item.setOnClickListener(view1 -> {
             DownloadResourceUI downloadResourceUI = new DownloadResourceUI(context,activity,repository,list.get(i),0);
