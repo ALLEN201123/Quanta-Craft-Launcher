@@ -1,12 +1,12 @@
 {
   "latestRelease": {
-    "versionCode": 323,
-    "versionName": "1.2.3",
+    "versionCode": 324,
+    "versionName": "1.2.4",
     "date": "2026-09-22",
     "url": [
-      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.2.3/QCL-release-1.2.3-all.apk"
+      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.2.4/QCL-release-1.2.4-all.apk"
     ],
-    "updateLog": "1.2.3：整合包导入前会自动下载游戏本体，修了 mods 全消失；新增 ModLoader 和 Babric 两个远古版本加载器（b1.7.3 专用）；改 class 的老式模组会自动注入本体并登记，撞 class 会弹窗问继续还是取消；版本设置里加了 Class 查看器；下载页默认按下载量排序、版本默认当前版本，界面做了透明化。",
+    "updateLog": "1.2.4：版本设置加图标选择器（MultiMC 风格内置图标 + 自定义图片并存）；装了哪个加载器就显示哪个的图标（修了高版本 Fabric/Forge 装了却被当没装的漏判，NeoForge 单独区分）；五个下载页统一默认下载量排序和刷新按钮；世界页选 Modrinth 源不再错显示整合包；小屏下载页布局缩小。",
     "netdiskUrl": "https://pan.quark.cn/s/f2c26c4fb66f"
   },
   "latestPrerelease": null
