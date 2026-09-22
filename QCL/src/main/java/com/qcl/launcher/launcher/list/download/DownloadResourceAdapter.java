@@ -129,8 +129,18 @@ public class DownloadResourceAdapter extends BaseAdapter {
         //   加载器信息取自 Modrinth 的 categories（CurseForge 的 categories 是玩法分类，没有就按无依赖处理）。
         if (type == 0) {
             try {
+                // ★★★ 1.2.5 修：publicGameSetting.currentVersion 里存的是**完整路径**
+                //   （<游戏目录>/versions/<版本名>，见 GameListAdapter / MainUI 的赋值），
+                //   老代码又给它拼了一次 "/versions/" → 拼出来的目录根本不存在
+                //   → ModLoaderDetector.detect() 恒返回 null（等于「没装任何加载器」）
+                //   → 不管玩家装的是 ModLoader / Babric / Fabric / Forge，
+                //     整个模组页都被标上「不支持你当前的版本」。
+                //   现在直接用这个路径；只有它不是目录时才退回归属拼接（兼容老数据）。
                 String cur = activity.publicGameSetting.currentVersion;
-                File vDir = new File(activity.launcherSetting.gameFileDirectory + "/versions/" + cur);
+                File vDir = cur == null ? null : new File(cur);
+                if (vDir == null || !vDir.isDirectory()) {
+                    vDir = new File(activity.launcherSetting.gameFileDirectory + "/versions/" + cur);
+                }
                 String currentLoader = ModLoaderDetector.detect(vDir);
                 java.util.List<String> modLoaders = new java.util.ArrayList<>();
                 for (String c : modList.get(position).getCategories()) {

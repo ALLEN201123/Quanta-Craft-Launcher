@@ -215,7 +215,16 @@ public class DownloadResourceUI extends BaseDownloadUI implements View.OnClickLi
                 refreshText.setVisibility(View.GONE);
             });
             try {
-                List<RemoteMod> dependencies = bean.getData().loadDependencies(repository);
+                // ★★★ 1.2.5：依赖拉不到**不该**让整页「版本列表加载失败」——
+                //   依赖单独兜一层，失败就当没有依赖，版本列表照常显示。
+                List<RemoteMod> dependencies;
+                try {
+                    dependencies = bean.getData().loadDependencies(repository);
+                }
+                catch (Throwable t) {
+                    t.printStackTrace();
+                    dependencies = new ArrayList<>();
+                }
                 SimpleMultimap<String, RemoteMod.Version> versions = sortVersions(bean.getData().loadVersions(repository));
                 if (dependencies.size() == 0) {
                     modGameVersionAdapter = new ModGameVersionAdapter(context,versions,this);

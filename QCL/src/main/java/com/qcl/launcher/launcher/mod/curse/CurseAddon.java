@@ -190,7 +190,12 @@ public class CurseAddon implements RemoteMod.IMod {
         ArrayList arrayList = new ArrayList();
         Iterator it = set.iterator();
         while (it.hasNext()) {
-            arrayList.add(remoteModRepository.getModById(Integer.toString(((Integer) it.next()).intValue())));
+            // ★ 1.2.5：单个依赖查不到（下架/受限）就跳过，不要让整个版本列表打不开
+            try {
+                arrayList.add(remoteModRepository.getModById(Integer.toString(((Integer) it.next()).intValue())));
+            }
+            catch (IOException ignored) {
+            }
         }
         return arrayList;
     }

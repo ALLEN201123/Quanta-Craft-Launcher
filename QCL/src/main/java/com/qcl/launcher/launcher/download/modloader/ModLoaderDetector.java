@@ -1,5 +1,7 @@
 package com.qcl.launcher.launcher.download.modloader;
 
+import com.qcl.launcher.R;
+
 import java.io.File;
 import java.nio.file.Files;
 import java.util.List;
@@ -140,6 +142,44 @@ public final class ModLoaderDetector {
         } catch (Exception ignored) {
         }
         return null;
+    }
+
+    /**
+     * ★ 1.2.5：这个版本该显示哪个图标（FCL 同款规则 —— 装了哪个加载器就显示哪个）。
+     *
+     * 供「版本列表 / 主界面下拉 / 版本设置」统一调用，避免各处各写一份导致
+     * 同一个版本在列表和设置页显示两个不同图标（1.2.4 就出过这个 bug）。
+     *
+     * @param versionDir 版本目录
+     * @return 图标资源 id；0 = 没装任何加载器（调用方自己用草方块兜底）
+     */
+    public static int iconRes(File versionDir) {
+        try {
+            String loader = detect(versionDir);
+            if (MODLOADER.equals(loader)) {
+                return R.drawable.ic_modloader;
+            }
+            if (BABRIC.equals(loader)) {
+                return R.drawable.ic_babric;
+            }
+            if (FABRIC.equals(loader)) {
+                return R.drawable.ic_fabric;
+            }
+            if (FORGE.equals(loader)) {
+                return R.drawable.ic_forge;
+            }
+            if (NEOFORGE.equals(loader)) {
+                return R.drawable.ic_neoforge;
+            }
+            if (QUILT.equals(loader)) {
+                return R.drawable.ic_quilt;
+            }
+            if (LITELOADER.equals(loader)) {
+                return R.drawable.ic_modloader;
+            }
+        } catch (Throwable ignored) {
+        }
+        return 0;
     }
 
     /**

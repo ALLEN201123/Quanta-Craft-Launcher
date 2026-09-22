@@ -1,5 +1,7 @@
 package com.qcl.launcher.launcher.uis.game.download.right;
 
+import com.qcl.launcher.launcher.setting.SettingUtils;
+
 import android.content.Context;
 import android.os.Handler;
 import android.os.Message;
@@ -189,7 +191,9 @@ public class DownloadPackageUI extends BaseUI implements View.OnClickListener, A
 
         try {
 
-            String cur = this.activity.publicGameSetting.currentVersion;
+            // ★ 1.2.5 修：currentVersion 存的是完整路径，直接 indexOf 必然 -1，
+            //   五个下载页的「游戏版本」默认都停在第 0 项。改成先解析出真正的游戏版本号。
+            String cur = SettingUtils.getCurrentGameVersion(this.activity);
 
             if (cur != null) {
 
@@ -198,6 +202,10 @@ public class DownloadPackageUI extends BaseUI implements View.OnClickListener, A
                 if (vi >= 0) {
 
                     this.editVersionSpinner.setSelection(vi);
+                    // ★★★ 1.2.5 修：光设下拉不够 —— 真正参与查询的是旁边那个输入框（查询读 editVersion.getText()）。
+                    //   只 setSelection 不写输入框，就会出现「下拉显示 b1.7.3、
+                    //   列表里却还是 Fabric API / Sodium 这些不支持该版本的模组」。
+                    this.editVersion.setText(cur);
 
                 }
 

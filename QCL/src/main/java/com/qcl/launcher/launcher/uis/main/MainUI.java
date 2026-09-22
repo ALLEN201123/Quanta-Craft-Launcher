@@ -81,20 +81,11 @@ public class MainUI extends BaseUI implements View.OnClickListener, AdapterView.
     private ImageView multiplayerIcon;
     private ImageView settingIcon;
 
-    /** ★ 1.2.3：FCL 同款 —— 版本装了哪个加载器就返回哪个的图标 */
+    /** ★ 1.2.3：FCL 同款 —— 版本装了哪个加载器就返回哪个的图标
+     *  ★ 1.2.5：改走 ModLoaderDetector.iconRes 单一来源，保证各页面图标一致 */
     private Integer loaderIconFor(File versionDir) {
-        try {
-            String loader = ModLoaderDetector.detect(versionDir);
-            if (ModLoaderDetector.MODLOADER.equals(loader)) return R.drawable.ic_modloader;
-            if (ModLoaderDetector.BABRIC.equals(loader)) return R.drawable.ic_babric;
-            if (ModLoaderDetector.FABRIC.equals(loader)) return R.drawable.ic_fabric;
-            if (ModLoaderDetector.FORGE.equals(loader)) return R.drawable.ic_forge;
-            if (ModLoaderDetector.NEOFORGE.equals(loader)) return R.drawable.ic_neoforge;
-            if (ModLoaderDetector.QUILT.equals(loader)) return R.drawable.ic_quilt;
-            if (ModLoaderDetector.LITELOADER.equals(loader)) return R.drawable.ic_modloader;
-        } catch (Throwable ignored) {
-        }
-        return null;
+        int li = ModLoaderDetector.iconRes(versionDir);
+        return li == 0 ? null : li;
     }
 
     public MainUI(Context context, MainActivity activity) {
@@ -185,7 +176,7 @@ public class MainUI extends BaseUI implements View.OnClickListener, AdapterView.
                     activity.publicGameSetting.currentVersion = activity.launcherSetting.gameFileDirectory + "/versions/" + currentVersion.name;
                     GsonUtils.savePublicGameSetting(activity.publicGameSetting, AppManifest.SETTING_DIR + "/public_game_setting.json");
                 }
-                versionSpinnerAdapter = new VersionSpinnerAdapter(context,gameList);
+                versionSpinnerAdapter = new VersionSpinnerAdapter(context,gameList,activity.launcherSetting.gameFileDirectory);
                 Spinner gameVersionSpinner = activity.findViewById(R.id.launcher_spinner_version);
                 gameVersionSpinner.setAdapter(versionSpinnerAdapter);
                 gameVersionSpinner.setSelection(versionSpinnerAdapter.getPosition(currentVersion));
@@ -511,12 +502,12 @@ public class MainUI extends BaseUI implements View.OnClickListener, AdapterView.
             versionIcon.setBackground(DrawableUtils.getDrawableFromFile(((GameListBean) versionSpinnerAdapter.getItem(position)).iconPath));
         }
         else {
-            if (!((GameListBean) versionSpinnerAdapter.getItem(position)).version.contains(",")) {
-                versionIcon.setBackground(context.getDrawable(R.drawable.ic_grass));
-            }
-            else {
-                versionIcon.setBackground(context.getDrawable(R.drawable.ic_furnace));
-            }
+            // ★★★ 1.2.5 修：这里原来跟 VersionSpinnerAdapter 一样按「version 有没有逗号」
+            //   分叉，带逗号（下载页装的 Fabric/Forge）显示 ic_furnace（熔炉），
+            //   和版本设置页的加载器 logo 不一致。统一走 loaderIconFor。
+            Integer li = loaderIconFor(new File(activity.launcherSetting.gameFileDirectory
+                    + "/versions/" + ((GameListBean) versionSpinnerAdapter.getItem(position)).name));
+            versionIcon.setBackground(context.getDrawable(li != null ? li : R.drawable.ic_grass));
         }
         changeIcon(versionIcon,themePath,"versionIcon");
     }

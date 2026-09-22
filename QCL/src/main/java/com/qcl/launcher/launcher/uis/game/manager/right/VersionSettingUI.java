@@ -493,20 +493,11 @@ SeekBar.OnSeekBarChangeListener {
         }
     }
 
-    /** ★ 1.2.3：FCL 同款 —— 版本装了哪个加载器就返回哪个的图标；没装返回 null（回退草方块） */
+    /** ★ 1.2.3：FCL 同款 —— 版本装了哪个加载器就返回哪个的图标；没装返回 null（回退草方块）
+     *  ★ 1.2.5：统一走 ModLoaderDetector.iconRes 单一来源，保证与列表/主界面一致 */
     private Integer loaderIconFor(File versionDir) {
-        try {
-            String loader = ModLoaderDetector.detect(versionDir);
-            if (ModLoaderDetector.MODLOADER.equals(loader)) return R.drawable.ic_modloader;
-            if (ModLoaderDetector.BABRIC.equals(loader)) return R.drawable.ic_babric;
-            if (ModLoaderDetector.FABRIC.equals(loader)) return R.drawable.ic_fabric;
-            if (ModLoaderDetector.FORGE.equals(loader)) return R.drawable.ic_forge;
-            if (ModLoaderDetector.NEOFORGE.equals(loader)) return R.drawable.ic_neoforge;
-            if (ModLoaderDetector.QUILT.equals(loader)) return R.drawable.ic_quilt;
-            if (ModLoaderDetector.LITELOADER.equals(loader)) return R.drawable.ic_modloader;
-        } catch (Throwable ignored) {
-        }
-        return null;
+        int li = ModLoaderDetector.iconRes(versionDir);
+        return li == 0 ? null : li;
     }
 
     /** ★ 1.2.3：把内置图标资源写成版本的 icon.png（列表/主界面同步显示） */

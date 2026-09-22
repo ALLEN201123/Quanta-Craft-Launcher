@@ -413,6 +413,11 @@
     <string name="install_game_ui_quilt_not_compatible">与 Quilt 不兼容</string>
     <string name="install_game_ui_install">安装</string>
     <string name="install_game_ui_exist">此版本已经存在，请换一个名字</string>
+    <!-- ★ 1.2.5：ModLoader / Babric 的中文（原来漏了，中文界面会直接显示英文） -->
+    <string name="install_game_ui_modloader_installed">已安装</string>
+    <string name="install_game_ui_modloader_not_supported">此版本不支持</string>
+    <string name="install_game_ui_modloader_not_compatible">与 ModLoader 不兼容</string>
+    <string name="install_game_ui_babric_only_b173">仅支持 b1.7.3</string>
 
     <string name="forge_list_ui_title">安装新游戏版本 - 选择 Forge 版本</string>
     <string name="fabric_list_ui_title">安装新游戏版本 - 选择 Fabric 版本</string>

@@ -105,7 +105,10 @@ public class EditDownloadNameDialog extends Dialog implements View.OnClickListen
             if (this.ui.resourceType == 0) {
                 String gv = this.ui.activity.uiManager.downloadUI.downloadUIManager.downloadModUI.gameVersion;
                 if (gv == null || gv.isEmpty()) {
-                    gv = this.ui.activity.publicGameSetting.currentVersion;
+                    // ★ 1.2.5 修：currentVersion 存的是**完整路径**，
+                    //   直接拿去拼 <游戏目录>/versions/<gv> 会拼出不存在的路径
+                    //   （class 型模组的注入目标就找错了），这里只取目录名。
+                    gv = new java.io.File(this.ui.activity.publicGameSetting.currentVersion).getName();
                 }
                 final String versionDirPath = this.ui.activity.launcherSetting.gameFileDirectory
                         + "/versions/" + gv;
@@ -127,6 +130,17 @@ public class EditDownloadNameDialog extends Dialog implements View.OnClickListen
                             return;   // 没有 class，普通资源
                         }
                         File versionDir = new File(versionDirPath);
+                        // ★★★ 1.2.5：装了「现代」加载器（Babric / Fabric / Forge / NeoForge /
+                        //   Quilt / LiteLoader）的版本**一律不注入本体** —— 这些加载器的模组
+                        //   必须待在 mods/ 里由加载器自己加载。（只有 Risugami's ModLoader
+                        //   版本、以及什么都没装的远古版本，才存在「裸改本体 class」的玩法。）
+                        //   这一步是兜底：万一上面元数据没认出来，也绝不把
+                        //   fabric/forge/babric 的模组塞进本体 jar。
+                        String loader = com.qcl.launcher.launcher.download.modloader.ModLoaderDetector.detect(versionDir);
+                        if (loader != null
+                                && !com.qcl.launcher.launcher.download.modloader.ModLoaderDetector.MODLOADER.equals(loader)) {
+                            return;
+                        }
                         Map<String, String> registry = ModClassInjector.loadRegistry(versionDir);
                         final List<String> conflicts =
                                 ModClassInjector.findConflicts(registry, classes, modName);

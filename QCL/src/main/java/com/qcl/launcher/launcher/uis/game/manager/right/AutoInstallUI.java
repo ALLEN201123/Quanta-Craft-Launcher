@@ -32,7 +32,11 @@ import android.widget.TextView;
 import com.google.gson.Gson;
 import com.qcl.launcher.launcher.MainActivity;
 import com.qcl.launcher.launcher.download.GameInstallLocalDialog;
+import com.qcl.launcher.launcher.download.babric.BabricInstallTask;
+import com.qcl.launcher.launcher.download.OldLoaderInstallDialog;
 import com.qcl.launcher.launcher.download.PatchMerger;
+import com.qcl.launcher.launcher.download.modloader.ModLoaderDetector;
+import com.qcl.launcher.launcher.download.modloader.ModLoaderVersions;
 import com.qcl.launcher.launcher.game.Argument;
 import com.qcl.launcher.launcher.game.Artifact;
 import com.qcl.launcher.launcher.game.RuledArgument;
@@ -89,6 +93,17 @@ implements View.OnClickListener {
     public String liteLoaderVersion;
     public String fabricVersion;
     public String quiltVersion;
+    /** ★ 1.2.5：Babric（版本 json 里的 patch，version 就是加载器版本号） */
+    public String babricVersion;
+    /** ★ 1.2.5：这两个远古加载器不像 Forge 那样"选版本"，只显示 装/不装/不支持 */
+    private TextView modLoaderVersionText;
+    private TextView babricVersionText;
+    private ImageButton deleteModLoaderVersion;
+    private ImageButton deleteBabricVersion;
+    private LinearLayout selectModLoaderVersion;
+    private LinearLayout selectBabricVersion;
+    private ImageView selectModLoader;
+    private ImageView selectBabric;
 
     public AutoInstallUI(Context context, MainActivity activity) {
         super(context, activity);
@@ -139,6 +154,29 @@ implements View.OnClickListener {
         this.selectFabricAPI = (ImageView)this.activity.findViewById(R.id.update_fabric_api);
         this.selectQuilt = (ImageView)this.activity.findViewById(R.id.update_quilt);
         this.selectQuiltAPI = (ImageView)this.activity.findViewById(R.id.update_quilt_api);
+
+        // ★ 1.2.5：ModLoader / Babric 两行（远古版本专用的加载器，
+        //   原来只有「下载 → 安装游戏」页能勾，版本设置里没有入口）
+        this.modLoaderVersionText = (TextView)this.activity.findViewById(R.id.current_modloader_version_text);
+        this.babricVersionText = (TextView)this.activity.findViewById(R.id.current_babric_version_text);
+        this.deleteModLoaderVersion = (ImageButton)this.activity.findViewById(R.id.uninstall_modloader);
+        this.deleteBabricVersion = (ImageButton)this.activity.findViewById(R.id.uninstall_babric);
+        this.selectModLoaderVersion = (LinearLayout)this.activity.findViewById(R.id.update_modloader_version);
+        this.selectBabricVersion = (LinearLayout)this.activity.findViewById(R.id.update_babric_version);
+        this.selectModLoader = (ImageView)this.activity.findViewById(R.id.update_modloader);
+        this.selectBabric = (ImageView)this.activity.findViewById(R.id.update_babric);
+        if (this.deleteModLoaderVersion != null) {
+            this.deleteModLoaderVersion.setOnClickListener((View.OnClickListener)this);
+        }
+        if (this.deleteBabricVersion != null) {
+            this.deleteBabricVersion.setOnClickListener((View.OnClickListener)this);
+        }
+        if (this.selectModLoaderVersion != null) {
+            this.selectModLoaderVersion.setOnClickListener((View.OnClickListener)this);
+        }
+        if (this.selectBabricVersion != null) {
+            this.selectBabricVersion.setOnClickListener((View.OnClickListener)this);
+        }
     }
 
     @Override
@@ -178,6 +216,7 @@ implements View.OnClickListener {
         this.optifineVersion = null;
         this.fabricVersion = null;
         this.quiltVersion = null;
+        this.babricVersion = null;
         String gameJsonText = FileStringUtils.getStringFromFile(this.activity.launcherSetting.gameFileDirectory + "/versions/" + versionName + "/" + versionName + ".json");
         Gson gson = JsonUtils.defaultGsonBuilder().registerTypeAdapter(Artifact.class, (Object)new Artifact.Serializer()).registerTypeAdapter(Bits.class, (Object)new Bits.Serializer()).registerTypeAdapter(RuledArgument.class, (Object)new RuledArgument.Serializer()).registerTypeAdapter(Argument.class, (Object)new Argument.Deserializer()).create();
         this.version = (Version)gson.fromJson(gameJsonText, Version.class);
@@ -307,6 +346,56 @@ implements View.OnClickListener {
         this.selectOptiFine.setBackground(this.deleteOptiFineVersion.getVisibility() == 0 ? this.context.getDrawable(R.drawable.ic_baseline_update_black) : this.context.getDrawable(R.drawable.ic_baseline_arrow_forward_black));
         this.selectFabric.setBackground(this.deleteFabricVersion.getVisibility() == 0 ? this.context.getDrawable(R.drawable.ic_baseline_update_black) : this.context.getDrawable(R.drawable.ic_baseline_arrow_forward_black));
         this.selectQuilt.setBackground(this.deleteQuiltVersion.getVisibility() == 0 ? this.context.getDrawable(R.drawable.ic_baseline_update_black) : this.context.getDrawable(R.drawable.ic_baseline_arrow_forward_black));
+
+        // ★ 1.2.5：ModLoader / Babric 两行的状态（它们没有"可选版本"，只显示 装/不装/不支持）
+        File loaderVersionDir = new File(this.activity.launcherSetting.gameFileDirectory
+                + "/versions/" + this.versionName);
+        boolean hasModLoader = ModLoaderDetector.hasModLoader(loaderVersionDir);
+        boolean hasBabric = ModLoaderDetector.hasBabric(loaderVersionDir);
+        // ★ 1.2.5：老版本（1.2.4 及以前）装的 Babric 留下的是 0 字节标记文件，
+        //   打开这一页时顺手补上内容，玩家不会再看到「0B 文件」
+        if (hasBabric) {
+            BabricInstallTask.repairEmptyMarker(loaderVersionDir, this.gameVersion, this.babricVersion);
+        }
+        if (this.modLoaderVersionText != null) {
+            if (hasModLoader) {
+                this.modLoaderVersionText.setText(this.context.getString(R.string.install_game_ui_modloader_installed));
+            } else if (this.forgeVersion != null) {
+                // Forge 与 ModLoader 互斥（1.3 起 FML 已包含 RML，叠一起会崩）
+                this.modLoaderVersionText.setText(this.context.getString(R.string.install_game_ui_modloader_not_compatible));
+            } else {
+                ModLoaderVersions.Entry entry = ModLoaderVersions.find(this.gameVersion);
+                this.modLoaderVersionText.setText(this.context.getString(
+                        (entry == null || !entry.isInstallable())
+                                ? R.string.install_game_ui_modloader_not_supported
+                                : R.string.install_game_ui_none));
+            }
+            if (this.deleteModLoaderVersion != null) {
+                this.deleteModLoaderVersion.setVisibility(hasModLoader ? 0 : 8);
+            }
+            if (this.selectModLoader != null) {
+                this.selectModLoader.setBackground(this.context.getDrawable(
+                        hasModLoader ? R.drawable.ic_baseline_update_black : R.drawable.ic_baseline_arrow_forward_black));
+            }
+        }
+        if (this.babricVersionText != null) {
+            // Babric 的 meta 只有 b1.7.3 这一个游戏版本，别的版本直接写"仅 b1.7.3"
+            boolean onlyB173 = "b1.7.3".equalsIgnoreCase(this.gameVersion == null ? "" : this.gameVersion.trim());
+            if (hasBabric) {
+                this.babricVersionText.setText(this.babricVersion == null ? "Babric" : this.babricVersion);
+            } else if (!onlyB173) {
+                this.babricVersionText.setText(this.context.getString(R.string.install_game_ui_babric_only_b173));
+            } else {
+                this.babricVersionText.setText(this.context.getString(R.string.install_game_ui_none));
+            }
+            if (this.deleteBabricVersion != null) {
+                this.deleteBabricVersion.setVisibility(hasBabric ? 0 : 8);
+            }
+            if (this.selectBabric != null) {
+                this.selectBabric.setBackground(this.context.getDrawable(
+                        hasBabric ? R.drawable.ic_baseline_update_black : R.drawable.ic_baseline_arrow_forward_black));
+            }
+        }
     }
 
     public void uninstall(String id2) {

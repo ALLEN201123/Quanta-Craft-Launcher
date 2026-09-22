@@ -40,7 +40,20 @@ public final class ModClassInjector {
     public static final String REGISTRY_NAME = "qcl_jarmods.json";
 
     private static final String[] LOADER_MARKERS = {
-            "fabric.mod.json", "quilt.mod.json", "mcmod.info", "mods.toml", "fml.toml"
+            "fabric.mod.json", "quilt.mod.json", "mcmod.info", "mods.toml", "fml.toml",
+            // ★ 1.2.5 补：NeoForge 用的是 META-INF/neoforge.mods.toml、LiteLoader 用 litemod.json，
+            //   老代码的 endsWith("/mods.toml") 匹配不到 NeoForge → 会被误当成「裸改本体」的模组注入。
+            "neoforge.mods.toml", "litemod.json", "riftmod.json"
+    };
+
+    /**
+     * ★ 1.2.5：加载器自己的包名前缀。
+     * jar 里出现这些包，就说明它是某个加载器的模组（哪怕元数据文件被改名/漏了），
+     * 一律不能注入本体。
+     */
+    private static final String[] LOADER_PACKAGE_PREFIXES = {
+            "net/fabricmc/", "net/minecraftforge/", "net/neoforged/", "cpw/mods/",
+            "org/quiltmc/", "com/mumfrey/liteloader/", "org/spongepowered/"
     };
 
     private ModClassInjector() {
@@ -62,8 +75,16 @@ public final class ModClassInjector {
             while (en.hasMoreElements()) {
                 String name = en.nextElement().getName();
                 String low = name.toLowerCase();
+                // ★ 1.2.5：改成纯 endsWith 匹配 —— 原来要求「等于」或「/<marker> 结尾」，
+                //   META-INF/neoforge.mods.toml 这种带点的前缀就漏了。
                 for (String marker : LOADER_MARKERS) {
-                    if (low.equals(marker) || low.endsWith("/" + marker)) {
+                    if (low.equals(marker) || low.endsWith(marker)) {
+                        return true;
+                    }
+                }
+                // ★ 1.2.5：加载器包名也算（兜住元数据缺失/改名的情况）
+                for (String prefix : LOADER_PACKAGE_PREFIXES) {
+                    if (low.startsWith(prefix)) {
                         return true;
                     }
                 }

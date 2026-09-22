@@ -20,7 +20,10 @@ import com.qcl.launcher.utils.gson.JsonUtils;
 import com.qcl.launcher.utils.io.DownloadUtil;
 import com.qcl.launcher.utils.io.NetworkUtils;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.ArrayList;
 
 /**
@@ -49,6 +52,52 @@ public class BabricInstallTask extends AsyncTask<String, Integer, Version> {
 
     /** 装完后写在版本目录里的标记文件（供 ModLoaderDetector 判断当前加载器） */
     public static final String MARKER_NAME = ".babric";
+
+    /**
+     * ★ 1.2.5：写 Babric 安装标记（版本目录下的 {@code .babric}）。
+     *
+     * 老代码用的是 {@code File.createNewFile()} —— 结果版本目录里躺着的是一个
+     * **0 字节**的空文件，玩家用文件管理器打开版本文件夹会看到「0B 文件」，
+     * 以为下载坏了。现在按 ModLoader 标记（{@code .modloader}）同样的做法，
+     * 写几行纯文本进去：既照样能被 ModLoaderDetector 认出来是 Babric，
+     * 也方便人工排查（版本、加载器版本、时间一目了然）。
+     */
+    public static void writeMarker(File versionDir, String mcVersion, String loaderVersion,
+                                   int libraryCount) {
+        try {
+            if (versionDir == null) {
+                return;
+            }
+            versionDir.mkdirs();
+            StringBuilder sb = new StringBuilder();
+            sb.append("loader=babric\n");
+            sb.append("mcVersion=").append(mcVersion == null ? "?" : mcVersion).append('\n');
+            sb.append("loaderVersion=").append(loaderVersion == null ? "?" : loaderVersion).append('\n');
+            sb.append("libraries=").append(libraryCount >= 0 ? String.valueOf(libraryCount) : "unknown").append('\n');
+            sb.append("time=").append(new java.util.Date()).append('\n');
+            OutputStream out = new FileOutputStream(new File(versionDir, MARKER_NAME));
+            out.write(sb.toString().getBytes("UTF-8"));
+            out.close();
+        } catch (Throwable ignored) {
+        }
+    }
+
+    /**
+     * ★ 1.2.5：修掉「老版本装出来的 0 字节 .babric」。
+     *
+     * 1.2.4 及以前用的是 {@code createNewFile()} —— 版本目录里留下的是个空文件，
+     * 玩家在文件管理器里看到「0B 文件」以为是坏文件。这里在打开版本设置时
+     * 顺手补一次内容（只补 0 字节的，正常文件不动）。
+     */
+    public static void repairEmptyMarker(File versionDir, String mcVersion, String loaderVersion) {
+        try {
+            File marker = new File(versionDir, MARKER_NAME);
+            if (marker.isFile() && marker.length() == 0) {
+                writeMarker(versionDir, mcVersion, loaderVersion, -1);
+            }
+        } catch (Throwable ignored) {
+        }
+    }
 
     private MainActivity activity;
     private DownloadTaskListAdapter adapter;

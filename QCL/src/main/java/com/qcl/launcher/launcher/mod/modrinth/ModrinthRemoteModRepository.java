@@ -328,7 +328,15 @@ public final class ModrinthRemoteModRepository implements RemoteModRepository {
             ArrayList arrayList = new ArrayList();
             for (String str : set) {
                 if (StringUtils.isNotBlank(str)) {
-                    arrayList.add(remoteModRepository.getModById(str));
+                    // ★ 1.2.5：Modrinth 的依赖项里既有 project_id 也有 version_id（都是 8 位
+                    //   base62，长度一样、分不出来），拿 version_id 去查 project 必然 404。
+                    //   老代码直接往外抛 → 整个「版本列表」变成「加载版本列表失败」；
+                    //   现在单条查不到就跳过，不影响这个模组本身能不能看、能不能下。
+                    try {
+                        arrayList.add(remoteModRepository.getModById(str));
+                    }
+                    catch (IOException ignored) {
+                    }
                 }
             }
             return arrayList;
@@ -681,7 +689,15 @@ public final class ModrinthRemoteModRepository implements RemoteModRepository {
             ArrayList arrayList = new ArrayList();
             for (String str : set) {
                 if (StringUtils.isNotBlank(str)) {
-                    arrayList.add(remoteModRepository.getModById(str));
+                    // ★ 1.2.5：Modrinth 的依赖项里既有 project_id 也有 version_id（都是 8 位
+                    //   base62，长度一样、分不出来），拿 version_id 去查 project 必然 404。
+                    //   老代码直接往外抛 → 整个「版本列表」变成「加载版本列表失败」；
+                    //   现在单条查不到就跳过，不影响这个模组本身能不能看、能不能下。
+                    try {
+                        arrayList.add(remoteModRepository.getModById(str));
+                    }
+                    catch (IOException ignored) {
+                    }
                 }
             }
             return arrayList;

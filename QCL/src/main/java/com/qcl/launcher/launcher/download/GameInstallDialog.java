@@ -261,11 +261,12 @@ Handler.Callback {
                 // 装完：写标记（让 ModLoaderDetector 认出这是 Babric）+ 关文件校验
                 File dir = new File(GameInstallDialog.this.activity.launcherSetting.gameFileDirectory
                         + "/versions/" + GameInstallDialog.this.name);
-                try {
-                    dir.mkdirs();
-                    new File(dir, BabricInstallTask.MARKER_NAME).createNewFile();
-                } catch (Throwable ignored) {
-                }
+                // ★ 1.2.5：写**带内容**的标记（老代码 createNewFile() 会在版本目录里
+                //   留一个 0 字节的 .babric，玩家在文件管理器里看着像坏文件）
+                BabricInstallTask.writeMarker(dir,
+                        GameInstallDialog.this.version == null ? null : GameInstallDialog.this.version.id,
+                        version.getVersion(),
+                        version.getLibraries() == null ? 0 : version.getLibraries().size());
                 disableFileCheck(dir);
                 GameInstallDialog.this.showInstallSuccess();
             }

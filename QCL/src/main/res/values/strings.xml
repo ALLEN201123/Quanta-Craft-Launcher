@@ -28,6 +28,7 @@
     <string name="install_game_ui_modloader_installed">Installed</string>
     <string name="install_game_ui_modloader_not_supported">Not supported on this version</string>
     <string name="install_game_ui_modloader_not_compatible">Incompatible with ModLoader</string>
+    <string name="install_game_ui_babric_only_b173">Only for b1.7.3</string>
     <string name="download_mod_source_curse_forge" translatable="false">CurseForge</string>
     <string name="download_mod_source_modrinth" translatable="false">Modrinth</string>
     <string name="download_resource_curse_forge" translatable="false">CurseForge</string>

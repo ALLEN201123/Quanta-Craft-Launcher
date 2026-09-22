@@ -11,6 +11,7 @@ import android.util.Log;
 import com.google.gson.Gson;
 import com.qcl.launcher.control.bean.button.ButtonStyle;
 import com.qcl.launcher.control.bean.rocker.RockerStyle;
+import com.qcl.launcher.launcher.MainActivity;
 import com.qcl.launcher.launcher.game.Argument;
 import com.qcl.launcher.launcher.game.Artifact;
 import com.qcl.launcher.launcher.game.RuledArgument;
@@ -30,6 +31,57 @@ import java.util.Arrays;
 public class SettingUtils {
     private static final String JAVA_VERSION_str = "JAVA_VERSION=\"";
     private static final String OS_ARCH_str = "OS_ARCH=\"";
+
+    /**
+     * ★★★ 1.2.5：取「当前正在玩的版本」对应的**游戏版本号**（下载页「游戏版本」筛选的默认值）。
+     *
+     * 为什么不能直接用 {@code publicGameSetting.currentVersion}：
+     *   它存的是**完整路径**（{@code <游戏目录>/versions/<版本名>}），
+     *   直接丢进「游戏版本列表」做 indexOf 必然 -1 ——
+     *   老代码就是这么写的，导致五个下载页（模组/整合包/光影/世界/资源包）的
+     *   「游戏版本」默认全停在第 0 项（= 不筛选），玩家每次都得自己翻。
+     *
+     * 解析顺序：
+     *   ① 版本 json 里 id == "game" 的 patch 版本号（最准：Fabric/Forge 版也能拿到本体版本）
+     *   ② 版本 json 的 id 字段
+     *   ③ 版本目录名（b1.7.3ml 这种带后缀的，交给调用方做前缀匹配）
+     */
+    public static String getCurrentGameVersion(MainActivity activity) {
+        try {
+            String cur = activity.publicGameSetting.currentVersion;
+            if (cur == null || cur.isEmpty()) {
+                return null;
+            }
+            File dir = new File(cur);
+            String name = dir.getName();
+            try {
+                File json = new File(dir, name + ".json");
+                if (json.isFile()) {
+                    Gson gson = JsonUtils.defaultGsonBuilder().registerTypeAdapter(Artifact.class, new Artifact.Serializer()).registerTypeAdapter(Bits.class, new Bits.Serializer()).registerTypeAdapter(RuledArgument.class, new RuledArgument.Serializer()).registerTypeAdapter(Argument.class, new Argument.Deserializer()).create();
+                    Version version = (Version)gson.fromJson(FileStringUtils.getStringFromFile(json.getAbsolutePath()), Version.class);
+                    if (version != null) {
+                        if (version.getPatches() != null) {
+                            for (Version patch : version.getPatches()) {
+                                if ("game".equals(patch.getId()) && patch.getVersion() != null
+                                        && !patch.getVersion().isEmpty()) {
+                                    return patch.getVersion();
+                                }
+                            }
+                        }
+                        if (version.getId() != null && !version.getId().isEmpty()) {
+                            return version.getId();
+                        }
+                    }
+                }
+            }
+            catch (Throwable ignored) {
+            }
+            return name;
+        }
+        catch (Throwable t) {
+            return null;
+        }
+    }
 
     public static ArrayList<GameListBean> getLocalVersionInfo(String path, String currentVersion) {
         ArrayList<GameListBean> list = new ArrayList<GameListBean>();

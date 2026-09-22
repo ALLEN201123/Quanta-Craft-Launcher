@@ -66,9 +66,14 @@ extends AsyncTask<RecyclerView, Integer, Exception> {
         String assetIndexString;
         String settingPath = this.launchVersion + "/qcl.cfg";
         PrivateGameSetting privateGameSetting = new File(settingPath).exists() && GsonUtils.getPrivateGameSettingFromFile(settingPath) != null && (GsonUtils.getPrivateGameSettingFromFile((String)settingPath).forceEnable || GsonUtils.getPrivateGameSettingFromFile((String)settingPath).enable) ? GsonUtils.getPrivateGameSettingFromFile(settingPath) : this.activity.privateGameSetting;
-        if (privateGameSetting.notCheckMinecraft) {
-            return null;
-        }
+        // ★★★ 1.2.5 修：原来这里是 `return null` —— 一开「不检查游戏文件」，
+        //   连**音效音乐**（assets 索引 + assets/objects + gameDir/resources 映射）
+        //   也一起被跳过了。而 ModLoader / Babric 装完会自动帮这个版本打开这个开关，
+        //   结果就是：加载器明明装好了，**远古版本却没有声音**（音频从来没下过）。
+        //
+        //   现在改成：音效音乐照常检查、照常补下；而且开了这个开关时
+        //   文件补不下来**不拦启动**（保持原来「不检查 = 一定能进游戏」的语义，离线也能进）。
+        final boolean skipGameFiles = privateGameSetting.notCheckMinecraft;
         String versionJson = FileStringUtils.getStringFromFile(this.launchVersion + "/" + new File(this.launchVersion).getName() + ".json");
         Gson gson = JsonUtils.defaultGsonBuilder().registerTypeAdapter(Artifact.class, (Object)new Artifact.Serializer()).registerTypeAdapter(Bits.class, (Object)new Bits.Serializer()).registerTypeAdapter(RuledArgument.class, (Object)new RuledArgument.Serializer()).registerTypeAdapter(Argument.class, (Object)new Argument.Deserializer()).create();
         Version version = (Version)gson.fromJson(versionJson, Version.class);
@@ -142,7 +147,12 @@ extends AsyncTask<RecyclerView, Integer, Exception> {
                 }
                 catch (IOException e) {
                     e.printStackTrace();
-                    return new Exception(this.activity.getString(R.string.launch_check_dialog_exception_assets_failed));
+                    // ★ 1.2.5：开了「不检查游戏文件」时，资源索引拉不到也不拦启动
+                    //   （没有索引就等于没有音频要补，游戏照样进）
+                    if (!skipGameFiles) {
+                        return new Exception(this.activity.getString(R.string.launch_check_dialog_exception_assets_failed));
+                    }
+                    assetIndexString = "{\"objects\":{}}";
                 }
             }
         }
@@ -272,7 +282,14 @@ extends AsyncTask<RecyclerView, Integer, Exception> {
         }
         this.activity.runOnUiThread(() -> recyclerViews[0].setVisibility(8));
         if (failedFile.size() > 0) {
-            return new Exception(this.activity.getString(R.string.launch_check_dialog_exception_lib_failed));
+            // ★ 1.2.5：开了「不检查游戏文件」的版本（装了 ModLoader/Babric 的古早版本）
+            //   缺文件只记日志，**不拦启动** —— 否则玩家离线/某个源挂了就彻底进不去。
+            if (skipGameFiles) {
+                android.util.Log.w("CheckLib", "该版本开着「不检查游戏文件」，"
+                        + failedFile.size() + " 个文件没补上，但继续启动");
+            } else {
+                return new Exception(this.activity.getString(R.string.launch_check_dialog_exception_lib_failed));
+            }
         }
         }
         // ===== FCL DefaultGameRepository.reconstructAssets 对齐：资产映射 =====
