@@ -136,7 +136,25 @@ public final class CurseForgeRemoteModRepository implements RemoteModRepository 
 
     @Override // com.qcl.launcher.launcher.mod.RemoteModRepository
     public Stream<RemoteMod> search(String str, RemoteModRepository.Category category, int i, int i2, String str2, RemoteModRepository.SortType sortType, RemoteModRepository.SortOrder sortOrder) throws IOException {
-        return ((List) ((Response) HttpRequest.GET("https://api.curseforge.com/v1/mods/search", Pair.pair("gameId", "432"), Pair.pair("classId", Integer.toString(this.section)), Pair.pair("categoryId", Integer.toString((category == null || !(category.getSelf() instanceof CurseAddon.Category)) ? 0 : ((CurseAddon.Category) category.getSelf()).getId())), Pair.pair("gameVersion", str), Pair.pair("searchFilter", str2), Pair.pair("sortField", Integer.toString(toModsSearchSortField(sortType))), Pair.pair("sortOrder", toSortOrder(sortOrder)), Pair.pair("index", Integer.toString(i)), Pair.pair("pageSize", Integer.toString(i2))).header("X-API-KEY", "$2a$10$fgjXkx00bZZ5ypMONic.Uu7/Be1KFjmMcprkzelHhjjs7FErXt7i6").getJson(new TypeToken<Response<List<CurseAddon>>>() { // from class: com.qcl.launcher.launcher.mod.curse.CurseForgeRemoteModRepository.1
+        // ★★★ 1.2.5：照 FCL CurseForgeRemoteModRepository.search ——
+        //   **categoryId 只有非 0 才带**。CF 会把 categoryId=0 当成一个真实分类 id，
+        //   带上它整页直接返回 0 条 —— 表现就是「选了 CurseForge 源，什么都加载不出来」。
+        int categoryId = (category == null || !(category.getSelf() instanceof CurseAddon.Category))
+                ? 0 : ((CurseAddon.Category) category.getSelf()).getId();
+        ArrayList<Pair<String, String>> query = new ArrayList<>();
+        query.add(Pair.pair("gameId", "432"));
+        query.add(Pair.pair("classId", Integer.toString(this.section)));
+        if (categoryId != 0) {
+            query.add(Pair.pair("categoryId", Integer.toString(categoryId)));
+        }
+        query.add(Pair.pair("gameVersion", str));
+        query.add(Pair.pair("searchFilter", str2));
+        query.add(Pair.pair("sortField", Integer.toString(toModsSearchSortField(sortType))));
+        query.add(Pair.pair("sortOrder", toSortOrder(sortOrder)));
+        query.add(Pair.pair("index", Integer.toString(i)));
+        query.add(Pair.pair("pageSize", Integer.toString(i2)));
+
+        return ((List) ((Response) HttpRequest.GET("https://api.curseforge.com/v1/mods/search", query.toArray(new Pair[0])).header("X-API-KEY", "$2a$10$fgjXkx00bZZ5ypMONic.Uu7/Be1KFjmMcprkzelHhjjs7FErXt7i6").getJson(new TypeToken<Response<List<CurseAddon>>>() { // from class: com.qcl.launcher.launcher.mod.curse.CurseForgeRemoteModRepository.1
         }.getType())).getData()).stream().map(new Function() { // from class: com.qcl.launcher.launcher.mod.curse.CurseForgeRemoteModRepository$$ExternalSyntheticLambda1
             @Override // java.util.function.Function
             public final Object apply(Object obj) {
