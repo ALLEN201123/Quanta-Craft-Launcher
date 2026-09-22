@@ -11,7 +11,7 @@
         android:background="@drawable/launcher_view_light_gray"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="8dp"
+        android:padding="4dp"
         android:orientation="vertical">
 
         <LinearLayout
@@ -31,7 +31,7 @@
             <RelativeLayout
                 android:layout_gravity="center"
                 android:layout_width="match_parent"
-                android:layout_height="36dp"
+                android:layout_height="30dp"
                 android:background="@drawable/launcher_view_white">
 
                 <Spinner
@@ -44,7 +44,7 @@
         </LinearLayout>
 
         <LinearLayout
-            android:layout_marginTop="8dp"
+            android:layout_marginTop="4dp"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal">
@@ -74,7 +74,7 @@
                         android:singleLine="true"
                         android:layout_gravity="center"
                         android:layout_width="match_parent"
-                        android:layout_height="36dp"
+                        android:layout_height="30dp"
                         android:paddingStart="9dp"
                         android:paddingEnd="9dp"
                         android:textSize="@dimen/text_size_middle"
@@ -86,7 +86,7 @@
 
                 <LinearLayout
                     android:layout_marginEnd="12dp"
-                    android:layout_marginTop="8dp"
+                    android:layout_marginTop="4dp"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal">
@@ -103,7 +103,7 @@
                     <RelativeLayout
                         android:layout_gravity="center"
                         android:layout_width="match_parent"
-                        android:layout_height="36dp"
+                        android:layout_height="30dp"
                         android:background="@drawable/launcher_view_white">
 
                         <Spinner
@@ -140,7 +140,7 @@
                     <RelativeLayout
                         android:layout_gravity="center"
                         android:layout_width="match_parent"
-                        android:layout_height="36dp"
+                        android:layout_height="30dp"
                         android:background="@drawable/launcher_view_white">
 
                         <Spinner
@@ -164,7 +164,7 @@
                 </LinearLayout>
 
                 <LinearLayout
-                    android:layout_marginTop="8dp"
+                    android:layout_marginTop="4dp"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal">
@@ -181,7 +181,7 @@
                     <RelativeLayout
                         android:layout_gravity="center"
                         android:layout_width="match_parent"
-                        android:layout_height="36dp"
+                        android:layout_height="30dp"
                         android:background="@drawable/launcher_view_white">
 
                         <Spinner
@@ -198,7 +198,7 @@
         </LinearLayout>
 
         <LinearLayout
-            android:layout_marginTop="8dp"
+            android:layout_marginTop="4dp"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal">
@@ -216,7 +216,7 @@
                 android:textAllCaps="false"
                 android:tag="tint_accent_color"
                 android:layout_width="wrap_content"
-                android:layout_height="36dp"
+                android:layout_height="30dp"
                 android:background="@drawable/launcher_button_transparent"
                 android:text="@string/download_package_ui_install"
                 android:textColor="@color/colorPureWhite"
@@ -233,13 +233,27 @@
                 android:tag="tint_accent_color"
                 android:layout_marginStart="8dp"
                 android:layout_width="wrap_content"
-                android:layout_height="36dp"
+                android:layout_height="30dp"
                 android:background="@drawable/launcher_button_transparent"
                 android:text="@string/download_package_ui_search"
                 android:textColor="@color/colorPureWhite"
                 android:textSize="15sp"
                 android:gravity="center"
                 android:id="@+id/search_package"/>
+
+                <Button
+                    android:singleLine="true"
+                    android:textAllCaps="false"
+                    android:tag="tint_accent_color"
+                    android:layout_marginStart="8dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="32dp"
+                    android:background="@drawable/launcher_button_transparent"
+                    android:text="@string/download_mod_ui_refresh"
+                    android:textColor="@color/colorPureWhite"
+                    android:textSize="15sp"
+                    android:gravity="center"
+                    android:id="@+id/refresh_package_search"/>
 
         </LinearLayout>
 

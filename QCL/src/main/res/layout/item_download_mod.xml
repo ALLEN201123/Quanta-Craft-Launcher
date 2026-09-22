@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical"
-    android:paddingTop="5dp"
-    android:paddingBottom="5dp"
+    android:paddingTop="2dp"
+    android:paddingBottom="2dp"
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
 
     <LinearLayout
         android:id="@+id/item"
         android:clickable="true"
-        android:padding="10dp"
+        android:padding="6dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@drawable/launcher_button_gray_blue"
@@ -19,8 +19,8 @@
         <ImageView
             android:src="@drawable/launcher_background_color_white"
             android:layout_gravity="center"
-            android:layout_width="35dp"
-            android:layout_height="35dp"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
             android:scaleType="centerInside"
             android:id="@+id/mod_icon"/>
 

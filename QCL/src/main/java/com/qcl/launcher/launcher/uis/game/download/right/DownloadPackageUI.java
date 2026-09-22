@@ -54,6 +54,7 @@ public class DownloadPackageUI extends BaseUI implements View.OnClickListener, A
     private TextView refreshText;
     private RemoteModRepository repository;
     private Button search;
+    private Button refresh;
     private final Handler searchHandler;
     private ArrayList<String> sortList;
     private ArrayAdapter<String> sortListAdapter;
@@ -140,6 +141,16 @@ public class DownloadPackageUI extends BaseUI implements View.OnClickListener, A
         button.setOnClickListener(this);
         Button button2 = (Button) this.activity.findViewById(R.id.search_package);
         this.search = button2;
+        // ★ 1.2.3：搜索旁的「刷新」——和搜索走同一条查询路
+
+        this.refresh = (Button) this.activity.findViewById(R.id.refresh_package_search);
+
+        if (this.refresh != null) {
+
+            this.refresh.setOnClickListener((View.OnClickListener)this);
+
+        }
+
         button2.setOnClickListener(this);
         ArrayList<String> arrayList = new ArrayList<>();
         this.sourceList = arrayList;
@@ -164,6 +175,8 @@ public class DownloadPackageUI extends BaseUI implements View.OnClickListener, A
         this.sortListAdapter = arrayAdapter2;
         arrayAdapter2.setDropDownViewResource(R.layout.item_spinner_drop_down);
         this.editSort.setAdapter((SpinnerAdapter) this.sortListAdapter);
+        // ★ 1.2.3：默认按「下载量」排序
+        this.editSort.setSelection(this.sortList.indexOf(this.context.getString(R.string.download_mod_sort_downloads)));
         ArrayList<String> arrayList3 = new ArrayList<>();
         this.versionList = arrayList3;
         arrayList3.add("");
@@ -281,7 +294,7 @@ public class DownloadPackageUI extends BaseUI implements View.OnClickListener, A
         if (view == this.installPackage) {
             this.activity.uiManager.switchMainUI(this.activity.uiManager.installPackageUI);
         }
-        if (view == this.search) {
+        if (view == this.search || view == this.refresh) {
             search();
         }
         if (view == this.refreshText) {

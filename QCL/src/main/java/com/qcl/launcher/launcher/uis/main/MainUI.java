@@ -21,6 +21,7 @@ import android.widget.Toast;
 import com.qcl.launcher.R;
 import com.qcl.launcher.auth.authlibinjector.AuthlibInjectorServer;
 import com.qcl.launcher.launcher.MainActivity;
+import com.qcl.launcher.launcher.download.modloader.ModLoaderDetector;
 import com.qcl.launcher.launcher.launch.check.LaunchTools;
 import com.qcl.launcher.launcher.list.local.game.GameListBean;
 import com.qcl.launcher.launcher.uis.universal.setting.right.launcher.ExteriorSettingUI;
@@ -79,6 +80,22 @@ public class MainUI extends BaseUI implements View.OnClickListener, AdapterView.
     private ImageView downloadIcon;
     private ImageView multiplayerIcon;
     private ImageView settingIcon;
+
+    /** ★ 1.2.3：FCL 同款 —— 版本装了哪个加载器就返回哪个的图标 */
+    private Integer loaderIconFor(File versionDir) {
+        try {
+            String loader = ModLoaderDetector.detect(versionDir);
+            if (ModLoaderDetector.MODLOADER.equals(loader)) return R.drawable.ic_modloader;
+            if (ModLoaderDetector.BABRIC.equals(loader)) return R.drawable.ic_babric;
+            if (ModLoaderDetector.FABRIC.equals(loader)) return R.drawable.ic_fabric;
+            if (ModLoaderDetector.FORGE.equals(loader)) return R.drawable.ic_forge;
+            if (ModLoaderDetector.NEOFORGE.equals(loader)) return R.drawable.ic_neoforge;
+            if (ModLoaderDetector.QUILT.equals(loader)) return R.drawable.ic_quilt;
+            if (ModLoaderDetector.LITELOADER.equals(loader)) return R.drawable.ic_modloader;
+        } catch (Throwable ignored) {
+        }
+        return null;
+    }
 
     public MainUI(Context context, MainActivity activity) {
         super(context, activity);
@@ -182,12 +199,9 @@ public class MainUI extends BaseUI implements View.OnClickListener, AdapterView.
                         versionIcon.setBackground(DrawableUtils.getDrawableFromFile(currentVersion.iconPath));
                     }
                     else {
-                        if (!currentVersion.version.contains(",")) {
-                            versionIcon.setBackground(context.getDrawable(R.drawable.ic_grass));
-                        }
-                        else {
-                            versionIcon.setBackground(context.getDrawable(R.drawable.ic_furnace));
-                        }
+                        Integer li = loaderIconFor(new File(activity.launcherSetting.gameFileDirectory
+                                + "/versions/" + currentVersion.name));
+                        versionIcon.setBackground(context.getDrawable(li != null ? li : R.drawable.ic_grass));
                     }
                 }
                 else {

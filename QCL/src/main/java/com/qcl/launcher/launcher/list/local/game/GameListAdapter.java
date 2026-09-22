@@ -18,6 +18,7 @@ import android.widget.TextView;
 import androidx.appcompat.view.ContextThemeWrapper;
 import androidx.appcompat.widget.PopupMenu;
 import com.qcl.launcher.launcher.MainActivity;
+import com.qcl.launcher.launcher.download.modloader.ModLoaderDetector;
 import com.qcl.launcher.launcher.dialogs.CopyVersionDialog;
 import com.qcl.launcher.launcher.dialogs.RenameVersionDialog;
 import com.qcl.launcher.launcher.launch.check.LaunchTools;
@@ -59,6 +60,22 @@ public class GameListAdapter extends BaseAdapter {
 
         private ViewHolder() {
         }
+    }
+
+    /** ★ 1.2.3：FCL 同款 —— 版本装了哪个加载器就返回哪个的图标 */
+    private Integer loaderIconFor(File versionDir) {
+        try {
+            String loader = ModLoaderDetector.detect(versionDir);
+            if (ModLoaderDetector.MODLOADER.equals(loader)) return R.drawable.ic_modloader;
+            if (ModLoaderDetector.BABRIC.equals(loader)) return R.drawable.ic_babric;
+            if (ModLoaderDetector.FABRIC.equals(loader)) return R.drawable.ic_fabric;
+            if (ModLoaderDetector.FORGE.equals(loader)) return R.drawable.ic_forge;
+            if (ModLoaderDetector.NEOFORGE.equals(loader)) return R.drawable.ic_neoforge;
+            if (ModLoaderDetector.QUILT.equals(loader)) return R.drawable.ic_quilt;
+            if (ModLoaderDetector.LITELOADER.equals(loader)) return R.drawable.ic_modloader;
+        } catch (Throwable ignored) {
+        }
+        return null;
     }
 
     public GameListAdapter(Context context, MainActivity mainActivity, ArrayList<GameListBean> arrayList) {
@@ -141,12 +158,13 @@ public class GameListAdapter extends BaseAdapter {
                 GameListAdapter.this.m439x22d581bd(i, view3);
             }
         });
-        if (!this.list.get(i).iconPath.equals("") || new File(this.list.get(i).iconPath).exists()) {
+        if (!this.list.get(i).iconPath.equals("") && new File(this.list.get(i).iconPath).exists()) {
             viewHolder.icon.setBackground(DrawableUtils.getDrawableFromFile(this.list.get(i).iconPath));
-        } else if (!this.list.get(i).version.contains(",")) {
-            viewHolder.icon.setBackground(this.context.getDrawable(R.drawable.ic_grass));
         } else {
-            viewHolder.icon.setBackground(this.context.getDrawable(R.drawable.ic_furnace));
+            // ★ 1.2.3：FCL 同款 —— 装了哪个加载器就显示哪个的图标
+            Integer li = loaderIconFor(new File(this.activity.launcherSetting.gameFileDirectory
+                    + "/versions/" + this.list.get(i).name));
+            viewHolder.icon.setBackground(this.context.getDrawable(li != null ? li : R.drawable.ic_grass));
         }
         viewHolder.name.setText(this.list.get(i).name);
         viewHolder.version.setText(this.list.get(i).version);

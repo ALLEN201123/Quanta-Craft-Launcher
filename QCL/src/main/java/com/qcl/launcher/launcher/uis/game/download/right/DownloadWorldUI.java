@@ -51,6 +51,7 @@ public class DownloadWorldUI extends BaseUI implements View.OnClickListener, Ada
     private TextView refreshText;
     private RemoteModRepository repository;
     private Button search;
+    private Button refresh;
     private final Handler searchHandler;
     private ArrayList<String> sortList;
     private ArrayAdapter<String> sortListAdapter;
@@ -113,6 +114,16 @@ public class DownloadWorldUI extends BaseUI implements View.OnClickListener, Ada
         this.editSort = (Spinner) this.activity.findViewById(R.id.download_world_arg_sort);
         Button button = (Button) this.activity.findViewById(R.id.search_world_list);
         this.search = button;
+        // ★ 1.2.3：搜索旁的「刷新」——和搜索走同一条查询路
+
+        this.refresh = (Button) this.activity.findViewById(R.id.refresh_world_search);
+
+        if (this.refresh != null) {
+
+            this.refresh.setOnClickListener((View.OnClickListener)this);
+
+        }
+
         button.setOnClickListener(this);
         ArrayList<String> arrayList = new ArrayList<>();
         this.sortList = arrayList;
@@ -128,6 +139,8 @@ public class DownloadWorldUI extends BaseUI implements View.OnClickListener, Ada
         this.sortListAdapter = arrayAdapter;
         arrayAdapter.setDropDownViewResource(R.layout.item_spinner_drop_down);
         this.editSort.setAdapter((SpinnerAdapter) this.sortListAdapter);
+        // ★ 1.2.3：默认按「下载量」排序
+        this.editSort.setSelection(this.sortList.indexOf(this.context.getString(R.string.download_mod_sort_downloads)));
         ArrayList<String> arrayList2 = new ArrayList<>();
         this.versionList = arrayList2;
         arrayList2.add("");
@@ -223,7 +236,9 @@ public class DownloadWorldUI extends BaseUI implements View.OnClickListener, Ada
         @Override // com.qcl.launcher.launcher.mod.LocalizedRemoteModRepository
         protected RemoteModRepository getBackedRemoteModRepository() {
             if (DownloadWorldUI.this.downloadSourceSpinner.getSelectedItemPosition() == 1) {
-                return ModrinthRemoteModRepository.MODPACKS;
+                // ★ 1.2.3：Modrinth 没有世界分类，之前这里错返回了 MODPACKS，
+                //   世界页选 Modrinth 源显示的全是整合包。回退到 CurseForge 世界源。
+                return new CurseForgeRemoteModRepository(RemoteModRepository.Type.WORLD, 17);
             }
             return new CurseForgeRemoteModRepository(RemoteModRepository.Type.WORLD, 17);
         }
@@ -270,7 +285,7 @@ public class DownloadWorldUI extends BaseUI implements View.OnClickListener, Ada
 
     @Override // android.view.View.OnClickListener
     public void onClick(View view) {
-        if (view == this.search) {
+        if (view == this.search || view == this.refresh) {
             search();
         }
         if (view == this.refreshText) {

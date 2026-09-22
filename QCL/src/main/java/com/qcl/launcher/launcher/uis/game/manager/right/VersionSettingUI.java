@@ -58,6 +58,7 @@ import android.widget.RadioButton;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
+import com.qcl.launcher.launcher.download.modloader.ModLoaderDetector;
 import com.qcl.launcher.launcher.mod.ModClassInjector;
 import androidx.appcompat.widget.SwitchCompat;
 import com.qcl.launcher.launcher.MainActivity;
@@ -492,6 +493,38 @@ SeekBar.OnSeekBarChangeListener {
         }
     }
 
+    /** ★ 1.2.3：FCL 同款 —— 版本装了哪个加载器就返回哪个的图标；没装返回 null（回退草方块） */
+    private Integer loaderIconFor(File versionDir) {
+        try {
+            String loader = ModLoaderDetector.detect(versionDir);
+            if (ModLoaderDetector.MODLOADER.equals(loader)) return R.drawable.ic_modloader;
+            if (ModLoaderDetector.BABRIC.equals(loader)) return R.drawable.ic_babric;
+            if (ModLoaderDetector.FABRIC.equals(loader)) return R.drawable.ic_fabric;
+            if (ModLoaderDetector.FORGE.equals(loader)) return R.drawable.ic_forge;
+            if (ModLoaderDetector.NEOFORGE.equals(loader)) return R.drawable.ic_neoforge;
+            if (ModLoaderDetector.QUILT.equals(loader)) return R.drawable.ic_quilt;
+            if (ModLoaderDetector.LITELOADER.equals(loader)) return R.drawable.ic_modloader;
+        } catch (Throwable ignored) {
+        }
+        return null;
+    }
+
+    /** ★ 1.2.3：把内置图标资源写成版本的 icon.png（列表/主界面同步显示） */
+    private void saveDrawableAsIcon(int resId) {
+        try {
+            android.graphics.Bitmap bmp = android.graphics.BitmapFactory
+                    .decodeResource(this.activity.getResources(), resId);
+            File out = new File(this.activity.launcherSetting.gameFileDirectory
+                    + "/versions/" + this.versionName + "/icon.png");
+            out.getParentFile().mkdirs();
+            java.io.FileOutputStream fos = new java.io.FileOutputStream(out);
+            bmp.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, fos);
+            fos.close();
+            this.icon.setBackground(DrawableUtils.getDrawableFromFile(out.getAbsolutePath()));
+        } catch (Throwable ignored) {
+        }
+    }
+
     public void refresh(String versionName) {
         this.versionName = versionName;
         String settingPath = this.activity.launcherSetting.gameFileDirectory + "/versions/" + versionName + "/qcl.cfg";
@@ -538,11 +571,9 @@ SeekBar.OnSeekBarChangeListener {
                 v = bean.version;
                 break;
             }
-            if (v == null || !v.contains(",")) {
-                this.icon.setBackground(this.context.getDrawable(R.drawable.ic_grass));
-            } else {
-                this.icon.setBackground(this.context.getDrawable(R.drawable.ic_furnace));
-            }
+            Integer li = loaderIconFor(new File(this.activity.launcherSetting.gameFileDirectory
+                    + "/versions/" + this.versionName));
+            this.icon.setBackground(this.context.getDrawable(li != null ? li : R.drawable.ic_grass));
         }
         PrivateGameSetting setting = this.privateGameSetting == null ? this.activity.privateGameSetting : this.privateGameSetting;
         // ★ 1.2.3：远古版本自动预填 JVM 参数到「版本设置 → Java/虚拟机」框里（玩家可随意改）。
@@ -665,11 +696,23 @@ SeekBar.OnSeekBarChangeListener {
     public void onClick(View v) {
         Intent intent;
         if (v == this.editVersionIcon) {
-            intent = new Intent(this.context, FileChooser.class);
-            intent.putExtra("SELECTION_MODE", Constants.SELECTION_MODES.SINGLE_SELECTION.ordinal());
-            intent.putExtra("ALLOWED_FILE_EXTENSIONS", "png;jpg");
-            intent.putExtra("INITIAL_DIRECTORY", Environment.getExternalStorageDirectory().getAbsolutePath());
-            this.activity.startActivityForResult(intent, 8600);
+            // ★ 1.2.3：图标选择器 —— 内置一批 + 自定义图片，两种方式并存
+            new com.qcl.launcher.launcher.dialogs.IconPickerDialog(this.context,
+                    new com.qcl.launcher.launcher.dialogs.IconPickerDialog.Listener() {
+                        @Override
+                        public void onBuiltinPicked(int res) {
+                            saveDrawableAsIcon(res);
+                        }
+
+                        @Override
+                        public void onCustomRequested() {
+                            Intent it = new Intent(VersionSettingUI.this.context, FileChooser.class);
+                            it.putExtra("SELECTION_MODE", Constants.SELECTION_MODES.SINGLE_SELECTION.ordinal());
+                            it.putExtra("ALLOWED_FILE_EXTENSIONS", "png;jpg");
+                            it.putExtra("INITIAL_DIRECTORY", Environment.getExternalStorageDirectory().getAbsolutePath());
+                            VersionSettingUI.this.activity.startActivityForResult(it, 8600);
+                        }
+                    }).show();
         }
         if (v == this.deleteVersionIcon) {
             if (new File(this.activity.launcherSetting.gameFileDirectory + "/versions/" + this.versionName + "/icon.png").exists()) {
@@ -681,11 +724,9 @@ SeekBar.OnSeekBarChangeListener {
                 ve = bean.version;
                 break;
             }
-            if (ve == null || !ve.contains(",")) {
-                this.icon.setBackground(this.context.getDrawable(R.drawable.ic_grass));
-            } else {
-                this.icon.setBackground(this.context.getDrawable(R.drawable.ic_furnace));
-            }
+            Integer li = loaderIconFor(new File(this.activity.launcherSetting.gameFileDirectory
+                    + "/versions/" + this.versionName));
+            this.icon.setBackground(this.context.getDrawable(li != null ? li : R.drawable.ic_grass));
         }
         if (v == this.switchToGlobalSetting) {
             this.activity.uiManager.switchMainUI(this.activity.uiManager.settingUI);

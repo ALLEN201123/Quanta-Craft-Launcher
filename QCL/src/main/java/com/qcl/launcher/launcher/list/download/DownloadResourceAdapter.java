@@ -138,6 +138,8 @@ public class DownloadResourceAdapter extends BaseAdapter {
                     if (low.contains("babric")) modLoaders.add("babric");
                     else if (low.contains("modloader")) modLoaders.add("modloader");
                     else if (low.contains("fabric")) modLoaders.add("fabric");
+                    // ★ neoforge 要放 forge 前面判：它包含 "forge" 字样
+                    else if (low.contains("neoforge")) modLoaders.add("neoforge");
                     else if (low.contains("forge")) modLoaders.add("forge");
                     else if (low.contains("quilt")) modLoaders.add("quilt");
                     else if (low.contains("liteloader")) modLoaders.add("liteloader");

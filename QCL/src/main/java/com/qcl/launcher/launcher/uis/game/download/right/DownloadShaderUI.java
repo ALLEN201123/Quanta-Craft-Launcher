@@ -58,6 +58,7 @@ public class DownloadShaderUI extends BaseUI implements View.OnClickListener, Ad
     private ArrayList<RemoteMod> resourcePackList;
     private ListView resourcePackListView;
     private Button search;
+    private Button refresh;
     private final Handler searchHandler;
     private ArrayList<String> sortList;
     private ArrayAdapter<String> sortListAdapter;
@@ -119,6 +120,16 @@ public class DownloadShaderUI extends BaseUI implements View.OnClickListener, Ad
         this.editSort = (Spinner) this.activity.findViewById(R.id.download_shader_arg_sort);
         Button button = (Button) this.activity.findViewById(R.id.search_shader);
         this.search = button;
+        // ★ 1.2.3：搜索旁的「刷新」——和搜索走同一条查询路
+
+        this.refresh = (Button) this.activity.findViewById(R.id.refresh_shader_search);
+
+        if (this.refresh != null) {
+
+            this.refresh.setOnClickListener((View.OnClickListener)this);
+
+        }
+
         button.setOnClickListener(this);
         this.gameList = SettingUtils.getLocalVersionNames(this.activity.launcherSetting.gameFileDirectory);
         ArrayAdapter<String> arrayAdapter = new ArrayAdapter<>(this.context, R.layout.item_spinner, this.gameList);
@@ -289,7 +300,7 @@ public class DownloadShaderUI extends BaseUI implements View.OnClickListener, Ad
 
     @Override // android.view.View.OnClickListener
     public void onClick(View view) {
-        if (view == this.search) {
+        if (view == this.search || view == this.refresh) {
             search();
         }
         if (view == this.refreshText) {
