@@ -57,6 +57,16 @@ public class UpdateChecker {
     public static final String UPDATE_URL_FASTLY = "https://fastly.jsdelivr.net/gh/ALLEN201123/Quanta-Craft-Launcher@main/launcher_version.json";
     public static final String UPDATE_URL_GCORE = "https://gcore.jsdelivr.net/gh/ALLEN201123/Quanta-Craft-Launcher@main/launcher_version.json";
     public static final String UPDATE_URL_PROXY = "https://ghproxy.net/https://raw.githubusercontent.com/ALLEN201123/Quanta-Craft-Launcher/main/launcher_version.json";
+
+    /**
+     * ★★★ 1.2.8：再加两家国内可达的 jsDelivr 镜像。
+     * 为什么：实测不同 CDN 的缓存刷新**不同步** —— 同一时刻 fastly/gcore 还停在旧版本号，
+     * 而 cdn.jsdmirror.com、jsdelivr.b-cdn.net 已经是新的（0.4s / 1.1s 就返回）。
+     * 1.2.6 只列了部分源，玩家如果恰好只能连到那几个「还没刷新」的源，
+     * 取到的最大值就还是旧的 → 依然收不到提示。多列几个源，命中新版本号的几率才够。
+     */
+    public static final String UPDATE_URL_JSDMIRROR = "https://cdn.jsdmirror.com/gh/ALLEN201123/Quanta-Craft-Launcher@main/launcher_version.json";
+    public static final String UPDATE_URL_BCDN = "https://jsdelivr.b-cdn.net/gh/ALLEN201123/Quanta-Craft-Launcher@main/launcher_version.json";
     private Context context;
     private MainActivity activity;
     private boolean isChecking;
@@ -111,6 +121,8 @@ public class UpdateChecker {
                         List<String> urls = new ArrayList<String>();
                         if (LocaleUtils.isChinese(UpdateChecker.this.context)) {
                             urls.add(UPDATE_URL_CN);
+                            urls.add(UPDATE_URL_JSDMIRROR);
+                            urls.add(UPDATE_URL_BCDN);
                             urls.add(UPDATE_URL_FASTLY);
                             urls.add(UPDATE_URL_GCORE);
                             urls.add(UPDATE_URL);
@@ -121,6 +133,8 @@ public class UpdateChecker {
                             urls.add(UPDATE_URL_CDN);
                             urls.add(UPDATE_URL_FASTLY);
                             urls.add(UPDATE_URL_GCORE);
+                            urls.add(UPDATE_URL_JSDMIRROR);
+                            urls.add(UPDATE_URL_BCDN);
                             urls.add(UPDATE_URL_PROXY);
                             urls.add(UPDATE_URL_CN);
                         }
