@@ -45,6 +45,18 @@ public class UpdateChecker {
      * 安装包仍然从 GitHub Release 下（国内用户可以选弹窗里的「网盘下载」）。
      */
     public static final String UPDATE_URL_CN = "https://gitee.com/allne201123/qcl-repo/raw/master/launcher_version.json";
+
+    /**
+     * ★★★ 1.2.6：再多兜几个国内能通的源。
+     * 实测（2026-09-22，本机）：
+     *   fastly.jsdelivr / gcore.jsdelivr / ghproxy.net 都能拿到最新 json，
+     *   而 Gitee 镜像那份**曾经落后一版**（只推了 GitHub 没推它）——
+     *   这就是「手机上收不到更新推送」的真凶（旧代码中文环境先读 Gitee，
+     *   读到旧版本号就判定「没有新版」，后面更快的源根本没机会看）。
+     */
+    public static final String UPDATE_URL_FASTLY = "https://fastly.jsdelivr.net/gh/ALLEN201123/Quanta-Craft-Launcher@main/launcher_version.json";
+    public static final String UPDATE_URL_GCORE = "https://gcore.jsdelivr.net/gh/ALLEN201123/Quanta-Craft-Launcher@main/launcher_version.json";
+    public static final String UPDATE_URL_PROXY = "https://ghproxy.net/https://raw.githubusercontent.com/ALLEN201123/Quanta-Craft-Launcher/main/launcher_version.json";
     private Context context;
     private MainActivity activity;
     private boolean isChecking;
@@ -95,30 +107,55 @@ public class UpdateChecker {
                         //    照 FCL：中文环境优先走国内镜像。
                         //    ★ 但 FCL 是「二选一、不兜底」—— 选中的那个挂了就整个失败。
                         //      这里改成按顺序逐个试，谁先通用谁，更不容易「有更新却检测不到」。
+                        // ★★★ 1.2.6：国内优先，多带几个兜底源（顺序只是「先试哪个」，不影响结果）
                         List<String> urls = new ArrayList<String>();
                         if (LocaleUtils.isChinese(UpdateChecker.this.context)) {
-                            urls.add(UPDATE_URL_CN);   // 国内先试 Gitee
-                            urls.add(UPDATE_URL);      // 再 GitHub raw
+                            urls.add(UPDATE_URL_CN);
+                            urls.add(UPDATE_URL_FASTLY);
+                            urls.add(UPDATE_URL_GCORE);
+                            urls.add(UPDATE_URL);
+                            urls.add(UPDATE_URL_CDN);
+                            urls.add(UPDATE_URL_PROXY);
                         } else {
                             urls.add(UPDATE_URL);
+                            urls.add(UPDATE_URL_CDN);
+                            urls.add(UPDATE_URL_FASTLY);
+                            urls.add(UPDATE_URL_GCORE);
+                            urls.add(UPDATE_URL_PROXY);
                             urls.add(UPDATE_URL_CN);
                         }
-                        urls.add(UPDATE_URL_CDN);      // 最后 jsDelivr
 
-                        String updateJson = null;
+                        // ★★★ 1.2.6 关键修法：**每个源都读一遍，取 versionCode 最大的那份**。
+                        //   老代码是「谁先返回用谁」→ 中文环境先读 Gitee 镜像，
+                        //   镜像只要落后一版（某次只推了 GitHub、没推镜像），
+                        //   手机就会拿到旧版本号 → 判定「没有新版」→ 更新提示永远收不到，
+                        //   而且**后面的源根本没机会被读到**。
+                        //   改成取最大值后：任何一个源是新的，就一定能收到提示。
+                        UpdateJSON json = null;
+                        int bestCode = -1;
+                        String bestUrl = null;
                         for (String url : urls) {
                             try {
-                                updateJson = NetworkUtils.doGet(NetworkUtils.toURL(url));
-                                if (updateJson != null && updateJson.trim().length() > 0) {
-                                    break;
+                                String text = NetworkUtils.doGet(NetworkUtils.toURL(url));
+                                if (text == null || text.trim().isEmpty()) {
+                                    continue;
+                                }
+                                UpdateJSON parsed = (UpdateJSON) new Gson().fromJson(text, UpdateJSON.class);
+                                if (parsed == null) {
+                                    continue;
+                                }
+                                int code = parsed.latestRelease == null ? -1 : parsed.latestRelease.versionCode;
+                                if (code > bestCode) {
+                                    bestCode = code;
+                                    json = parsed;
+                                    bestUrl = url;
                                 }
                             }
                             catch (Throwable e) {
                                 Log.w("jrelog", "[更新] 拉取失败，换下一个源: " + url, e);
-                                updateJson = null;
                             }
                         }
-                        if (updateJson == null) {
+                        if (json == null) {
                             Log.w("jrelog", "[更新] 所有源都拉不到，跳过本次检查");
                             UpdateChecker.this.isChecking = false;
                             if (callback != null) {
@@ -126,17 +163,7 @@ public class UpdateChecker {
                             }
                             return;
                         }
-
-                        // 2) 解析
-                        UpdateJSON json = (UpdateJSON) new Gson().fromJson(updateJson, UpdateJSON.class);
-                        if (json == null) {
-                            Log.w("jrelog", "[更新] 解析失败，跳过");
-                            UpdateChecker.this.isChecking = false;
-                            if (callback != null) {
-                                UpdateChecker.this.handler.post(() -> callback.onFinish(true));
-                            }
-                            return;
-                        }
+                        Log.i("jrelog", "[更新] 远端最高版本号 " + bestCode + "（来自 " + bestUrl + "）");
 
                         // 3) 遍历候选，找第一个版本比本机大的（跟 FCL 一样）
                         List<LauncherVersion> candidates = new ArrayList<LauncherVersion>();
