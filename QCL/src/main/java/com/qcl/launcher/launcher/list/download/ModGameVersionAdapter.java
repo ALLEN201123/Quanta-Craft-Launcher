@@ -11,6 +11,7 @@ import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 import com.qcl.launcher.launcher.mod.RemoteMod;
+import com.qcl.launcher.launcher.setting.SettingUtils;
 import com.qcl.launcher.launcher.uis.game.download.right.resource.DownloadResourceUI;
 import com.qcl.launcher.utils.SimpleMultimap;
 import com.qcl.launcher.utils.animation.HiddenAnimationUtils;
@@ -48,14 +49,33 @@ public class ModGameVersionAdapter extends BaseAdapter {
         }
     }
 
+    /**
+     * ★ 1.2.5：适配玩家「当前游戏版本」的那一组（没有就是 null）。
+     * 用户要求 —— 这一组排到最前面，点一下直接进下载框；这个模组没有适配你当前的
+     * 版本时就不插这一行（顺序保持原来的版本号倒序）。
+     */
+    private String matchedGameVersion;
+
     public ModGameVersionAdapter(Context context, SimpleMultimap<String, RemoteMod.Version> simpleMultimap, DownloadResourceUI downloadResourceUI) {
         this.context = context;
-        ArrayList arrayList = new ArrayList();
-        this.list = arrayList;
-        arrayList.addAll((Collection) simpleMultimap.keys().stream().sorted(VersionNumber.VERSION_COMPARATOR.reversed()).collect(Collectors.toList()));
-        this.versions = simpleMultimap;
-        this.layoutHeights = new int[this.list.size()];
         this.ui = downloadResourceUI;
+        this.versions = simpleMultimap;
+        ArrayList arrayList = new ArrayList();
+        arrayList.addAll((Collection) simpleMultimap.keys().stream().sorted(VersionNumber.VERSION_COMPARATOR.reversed()).collect(Collectors.toList()));
+        // ★ 1.2.5：把「适配你当前游戏版本」的那一组提到第一个
+        this.matchedGameVersion = null;
+        try {
+            String cur = SettingUtils.getCurrentGameVersion(downloadResourceUI.activity);
+            if (cur != null && !cur.isEmpty() && arrayList.contains(cur)) {
+                arrayList.remove(cur);
+                arrayList.add(0, cur);
+                this.matchedGameVersion = cur;
+            }
+        }
+        catch (Throwable ignored) {
+        }
+        this.list = arrayList;
+        this.layoutHeights = new int[this.list.size()];
     }
 
     @Override // android.widget.Adapter
@@ -85,12 +105,26 @@ public class ModGameVersionAdapter extends BaseAdapter {
             view2 = view;
             viewHolder = (ViewHolder) view.getTag();
         }
-        viewHolder.name.setText(this.list.get(i));
-        viewHolder.modListView.setAdapter((ListAdapter) new ModVersionAdapter(this.context, new ArrayList(this.versions.get(this.list.get(i))), this.ui));
+        final String gameVersionName = this.list.get(i);
+        // ★ 1.2.5：适配玩家当前版本的那一组加个标记，一眼能认出来
+        final boolean isMatched = this.matchedGameVersion != null
+                && this.matchedGameVersion.equals(gameVersionName);
+        viewHolder.name.setText((CharSequence) (isMatched
+                ? gameVersionName + "   ★ 适配你当前的版本"
+                : gameVersionName));
+        final ModVersionAdapter innerAdapter =
+                new ModVersionAdapter(this.context, new ArrayList(this.versions.get(gameVersionName)), this.ui);
+        viewHolder.modListView.setAdapter((ListAdapter) innerAdapter);
         this.layoutHeights[i] = getListViewHeight(viewHolder.modListView) + ConvertUtils.dip2px(this.context, 24.0f);
-        viewHolder.item.setOnClickListener(new View.OnClickListener() { // from class: com.qcl.launcher.launcher.list.download.ModGameVersionAdapter$$ExternalSyntheticLambda0
+        viewHolder.item.setOnClickListener(new View.OnClickListener() {
             @Override // android.view.View.OnClickListener
             public final void onClick(View view3) {
+                // ★ 1.2.5：适配你当前版本的那一组 —— 点一下直接进下载框（列表第一项 = 最新），
+                //   不用先展开再找；其它分组还是原来的展开/收起。
+                if (isMatched && innerAdapter.getCount() > 0) {
+                    innerAdapter.triggerDownload(0);
+                    return;
+                }
                 ModGameVersionAdapter.this.m403xa44b7e3c(viewHolder, i, view3);
             }
         });

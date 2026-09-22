@@ -128,6 +128,14 @@ public class ModVersionAdapter extends BaseAdapter {
         this.ui.activity.startActivityForResult(intent, 2700);
     }
 
+    /**
+     * ★ 1.2.5：给「游戏版本分组行」用的入口 —— 点分组行直接进这个版本的下载框。
+     * （用户要求：适配你当前版本的那一组放在最前面，一点就能进去。）
+     */
+    public void triggerDownload(int i) {
+        m406x8e4723eb(i, null);
+    }
+
     /* JADX INFO: Access modifiers changed from: package-private */
     /* renamed from: lambda$getView$1$com-qcl-launcher-launcher-list-download-ModVersionAdapter, reason: not valid java name */
     public /* synthetic */ void m406x8e4723eb(int i, View view) {
