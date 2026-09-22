@@ -1,12 +1,12 @@
 {
   "latestRelease": {
-    "versionCode": 325,
-    "versionName": "1.2.5",
+    "versionCode": 326,
+    "versionName": "1.2.6",
     "date": "2026-09-22",
     "url": [
-      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.2.5/QCL-release-1.2.5-all.apk"
+      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.2.6/QCL-release-1.2.6-all.apk"
     ],
-    "updateLog": "1.2.5 更新内容：\n1. 修好「模组页整页标不支持你当前的版本」—— 加载器检测读错了版本目录，装什么加载器都被判成没装。\n2. 版本列表 / 主界面 / 版本设置的加载器图标现在完全一致（之前列表显示熔炉、设置里显示 Fabric）。\n3. 装 Babric 不再留下一个 0 字节的 .babric 文件；老安装打开一次版本设置会自动补上内容。\n4. 「不检查游戏文件」不再把音效音乐一起跳过 —— 远古版本装了 ModLoader/Babric 会静音的问题修好了（实测删掉的音频会自动补回）。\n5. 版本设置 → 自动安装里可以直接补装/卸载 ModLoader 与 Babric（Babric 支持 b1.7.3）。\n6. CurseForge 下载源修好：内置 API key 已失效（403）+ 搜索参数 categoryId=0 导致整页 0 条；世界页下载源只保留 CurseForge。\n7. 模组详情页最前面是「推荐的版本：你现在玩的版本」，点一下直接进下载框；有前置的会把必需前置一起排队下载。\n8. 前置列表标出「必需前置 / 可选前置」。\n9. 五个下载页的「游戏版本」筛选修好（以前选了不生效），按 FCL 的做法默认不筛选、选择即过滤。\n\n请到 Release 页面按设备架构下载（模拟器请用 x86_64），或在应用内点「更新」。",
+    "updateLog": "1.2.6 更新内容：\n这一版只修一件事：手机收不到更新提示。\n原因：检查更新时会同时试好几个下载源（Gitee 镜像 / GitHub / 几个 CDN），但老逻辑是「谁先返回就用谁」，中文环境先读 Gitee 镜像；只要镜像那份落后一版（发版时只推了 GitHub），手机就会读到旧版本号、判定「没有新版」，后面明明是新的源根本没机会被读到。\n修法：改成「所有源都读一遍、取版本号最大的那一份」，任何一个源是新版就一定能收到提示；并多兜了几个国内能通的源（fastly/gcore jsDelivr、ghproxy）。\n\n★ 注意：你现在手机上那个版本跑的仍是老逻辑，所以这一版需要**手动装一次**；装完 1.2.6 之后，以后各版本就能正常收到更新提示了。\n\n请到 Release 页面按设备架构下载（模拟器请用 x86_64），或点弹窗里的「网盘下载」。",
     "netdiskUrl": "https://pan.quark.cn/s/f2c26c4fb66f"
   },
   "latestPrerelease": null
