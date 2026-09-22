@@ -92,7 +92,12 @@ public class EditDownloadNameDialog extends Dialog implements View.OnClickListen
             } else {
                 append = new StringBuilder().append(this.dir).append("/");
             }
-            DownloadTaskListBean downloadTaskListBean = new DownloadTaskListBean(name, url, append.append(this.editText.getText().toString()).toString(), "");
+            // ★ 1.2.7：模组文件也走国内镜像（cdn.modrinth.com 在国内外时好时坏），
+            //   镜像失败时下载器会自动重试 fallback（官方原始地址）。
+            DownloadTaskListBean downloadTaskListBean = new DownloadTaskListBean(name,
+                    com.qcl.launcher.utils.io.MirrorUtils.rewriteCdn(url),
+                    append.append(this.editText.getText().toString()).toString(), "")
+                    .withFallback(url);
             ArrayList arrayList = new ArrayList();
             arrayList.add(downloadTaskListBean);
             // ★★★ 1.2.5：模组有前置就**一起排队下载**（只对模组做，资源包/世界没有前置）。
@@ -241,8 +246,9 @@ public class EditDownloadNameDialog extends Dialog implements View.OnClickListen
                 if (dup) {
                     continue;
                 }
-                out.add(new DownloadTaskListBean(fileName, best.getFile().getUrl(),
-                        modsDir + fileName, ""));
+                out.add(new DownloadTaskListBean(fileName,
+                        com.qcl.launcher.utils.io.MirrorUtils.rewriteCdn(best.getFile().getUrl()),
+                        modsDir + fileName, "").withFallback(best.getFile().getUrl()));
             }
             catch (Throwable ignored) {
             }

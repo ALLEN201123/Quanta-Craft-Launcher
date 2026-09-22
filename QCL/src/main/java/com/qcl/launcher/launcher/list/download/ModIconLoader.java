@@ -116,7 +116,14 @@ public final class ModIconLoader {
         pool().execute(new Runnable() {
             @Override
             public void run() {
-                Bitmap bmp = downloadAndDecode(url);
+                // ★ 1.2.7：先走国内镜像（MCIM），镜像拿不到再回官方地址
+                Bitmap bmp = downloadAndDecode(com.qcl.launcher.utils.io.MirrorUtils.rewriteCdn(url));
+                if (bmp == null) {
+                    String mirrored = com.qcl.launcher.utils.io.MirrorUtils.rewriteCdn(url);
+                    if (!mirrored.equals(url)) {
+                        bmp = downloadAndDecode(url);
+                    }
+                }
                 if (bmp == null) {
                     return;
                 }

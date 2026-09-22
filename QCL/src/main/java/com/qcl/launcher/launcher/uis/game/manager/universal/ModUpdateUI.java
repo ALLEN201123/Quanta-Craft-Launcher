@@ -86,7 +86,7 @@ public class ModUpdateUI extends BaseUI implements View.OnClickListener {
                 Iterator<LocalModFile.ModUpdate> it = this.selectedMods.iterator();
                 while (it.hasNext()) {
                     RemoteMod.Version version = it.next().getCandidates().get(0);
-                    arrayList.add(new DownloadTaskListBean(version.getName(), version.getFile().getUrl(), this.modManager.getModsDirectory() + "/" + version.getFile().getFilename(), ""));
+                    arrayList.add(new DownloadTaskListBean(version.getName(), com.qcl.launcher.utils.io.MirrorUtils.rewriteCdn(version.getFile().getUrl()), this.modManager.getModsDirectory() + "/" + version.getFile().getFilename(), "").withFallback(version.getFile().getUrl()));
                 }
                 new UpdateDialog(this.context, this.activity, arrayList, onUpdateFinish).show();
             } else {

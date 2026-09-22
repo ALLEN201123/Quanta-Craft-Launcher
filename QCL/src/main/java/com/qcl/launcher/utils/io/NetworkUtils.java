@@ -84,7 +84,9 @@ public final class NetworkUtils {
             connection.setRequestProperty("User-Agent", "pan.baidu.com");
         } else {
             // Default
-            connection.setRequestProperty("User-Agent", "QCL/1.1.1");
+            // ★ 1.2.7：UA 写成清晰的启动器标识 —— MCIM 镜像按 UA 白名单放行，
+            //   把版本号也带上，方便镜像方识别与放行（旧值 QCL/1.1.1 已很久没动）。
+            connection.setRequestProperty("User-Agent", "QuantaCraftLauncher/1.2.7 (Android)");
         }
         connection.setUseCaches(false);
         // ★ 1.2.2：原来 5 秒。国内网络下 5 秒经常超时，导致「明明有更新却检测不到」，放宽到 15 秒。

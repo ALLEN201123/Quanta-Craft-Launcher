@@ -135,8 +135,25 @@ public abstract class HttpRequest {
 
         @Override
         public String getString() throws IOException {
-            HttpURLConnection con = this.createConnection();
-            con = NetworkUtils.resolveConnection(con);
+            // ★★★ 1.2.7：国内先走 MCIM 镜像（api.modrinth.com / api.curseforge.com），
+            //   镜像不通**自动回退官方**（路径结构完全一致，只是换域名）。
+            //   官方 API 在国内时通时不通，这是「列表/详情页加载半天出不来」的主因之一。
+            String original = this.url;
+            String mirrored = MirrorUtils.rewriteApi(original);
+            if (mirrored != null && !mirrored.equals(original)) {
+                try {
+                    this.url = mirrored;
+                    HttpURLConnection mcon = NetworkUtils.resolveConnection(this.createConnection());
+                    return IOUtils.readFullyAsString(mcon.getInputStream(), StandardCharsets.UTF_8);
+                }
+                catch (IOException e) {
+                    // 镜像这次不行 → 回官方重试一次
+                }
+                finally {
+                    this.url = original;
+                }
+            }
+            HttpURLConnection con = NetworkUtils.resolveConnection(this.createConnection());
             return IOUtils.readFullyAsString(con.getInputStream(), StandardCharsets.UTF_8);
         }
     }

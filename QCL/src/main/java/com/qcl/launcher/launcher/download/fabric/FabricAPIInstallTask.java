@@ -53,7 +53,8 @@ public class FabricAPIInstallTask extends AsyncTask<RemoteMod.Version,Integer,Ex
         }
         String fileName = "fabric-api-" + fabricAPIVersion.getVersion() + ".jar";
         String modPath = path + "/mods/" + fileName;
-        String url = fabricAPIVersion.getFile().getUrl();
+        // ★ 1.2.7：先走国内镜像，失败自动回退官方地址
+        String url = com.qcl.launcher.utils.io.MirrorUtils.rewriteCdn(fabricAPIVersion.getFile().getUrl());
         DownloadTaskListBean bean = new DownloadTaskListBean(fileName, url, modPath, fabricAPIVersion.getFile().getHashes().get("sha1"));
         DownloadTask.DownloadFeedback feedback = new DownloadTask.DownloadFeedback() {
             @Override
