@@ -204,7 +204,7 @@ public final class LegacyChinesePack {
      * 这样「早就装好的版本」「改了名字的版本」也能自动拿到中文。
      */
     public static boolean applyIfNeeded(Context context, File versionDir, String versionId) {
-        if (context == null || versionDir == null || !isSupported(versionId)) {
+        if (context == null || versionDir == null || !isSupported(versionDir, versionId)) {
             return false;
         }
         File jar = new File(versionDir, versionId + ".jar");
@@ -296,6 +296,52 @@ public final class LegacyChinesePack {
             android.util.Log.w(TAG, "写 qcl_lang.txt 失败: " + t);
             return false;
         }
+    }
+
+
+    /**
+     * 准确判断「这个版本是不是 b1.7.3」：
+     * 优先看**版本 json 里的真 id**（玩家把目录改名成别的也认得出来）；json 读不到再用目录名兜底 ✓
+     */
+    public static boolean isSupported(File versionDir, String versionId) {
+        if (versionId == null || versionId.isEmpty()) {
+            return false;
+        }
+
+        if (versionDir != null) {
+            try {
+                File jf = new File(versionDir, versionId + ".json");
+                if (jf.isFile()) {
+                    byte[] b = new byte[(int) jf.length()];
+                    FileInputStream in = new FileInputStream(jf);
+                    int n = in.read(b);
+                    in.close();
+                    String json = new String(b, 0, n, "UTF-8");
+                    int k = json.indexOf("\"id\"");
+                    if (k >= 0) {
+                        int p1 = json.indexOf('"', k + 4);
+                        int p2 = json.indexOf('"', p1 + 1);
+                        if (p1 >= 0 && p2 > p1) {
+                            String rid = json.substring(p1 + 1, p2).toLowerCase();
+                            for (String pp : SUPPORTED_PREFIXES) {
+                                if (rid.contains(pp)) {
+                                    return true;
+                                }
+                            }
+                        }
+                    }
+                }
+            } catch (Throwable ignored) {
+            }
+        }
+
+        String low = versionId.toLowerCase();
+        for (String pp : SUPPORTED_PREFIXES) {
+            if (low.contains(pp)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /** 中文包会覆盖的条目 */
