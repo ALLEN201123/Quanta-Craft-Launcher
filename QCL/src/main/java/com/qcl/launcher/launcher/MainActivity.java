@@ -113,6 +113,24 @@ implements View.OnClickListener {
                 MainActivity.this.onLoad();
                 ExteriorSettingUI.applyPanelTint((Context)MainActivity.this, MainActivity.this.getWindow().getDecorView(), ExteriorSettingUI.getPanelColor((Context)MainActivity.this, MainActivity.this.launcherSetting.panelColor));
                 MainActivity.this.startDynamicBackgroundIfNeeded();
+                // ★ 1.3.0：**初始化完成后**扫一遍已装的远古版本，没打中文包的补上。
+                //   为什么放这儿：onResume 时 isLoaded 还是 false（初始化是异步的），
+                //   在那儿挂钩子根本进不去 —— 早就装好的版本就一直没被补上。
+                try {
+                    final String gameDir = MainActivity.this.launcherSetting == null
+                            ? null : MainActivity.this.launcherSetting.gameFileDirectory;
+                    if (gameDir != null) {
+                        new Thread(() -> {
+                            try {
+                                com.qcl.launcher.launcher.download.game.LegacyChinesePack.sweepAll(MainActivity.this, gameDir);
+                            }
+                            catch (Throwable ignored) {
+                            }
+                        }).start();
+                    }
+                }
+                catch (Throwable ignored) {
+                }
                 MainActivity.this.applyUiTheme();
             }
         }
@@ -436,6 +454,7 @@ implements View.OnClickListener {
             this.uiManager.onResume();
             // ★ 1.2.9：回到前台时把动态背景的轮播重新挂上（切后台回来后不动的问题）
             this.resumeDynamicBackground();
+
         }
         if (SkinPreviewDialog.getInstance() != null) {
             SkinPreviewDialog.getInstance().onResume();

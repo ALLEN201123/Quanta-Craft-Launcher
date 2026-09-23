@@ -167,7 +167,8 @@ Handler.Callback {
 
     private void exit() {
         if (this.downloadTask != null && this.downloadTask.getStatus() != null && this.downloadTask.getStatus() == AsyncTask.Status.RUNNING) {
-            this.downloadTask.cancel(true);
+            // ★ 1.3.0：改成 requestCancel()，真正中断当前正在下载的文件（点取消就停，不再后台继续下）
+            this.downloadTask.requestCancel();
         }
         this.netSpeedTimer.stopSpeedTimer();
         this.dismiss();

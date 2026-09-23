@@ -118,6 +118,18 @@ public class LaunchCheckDialog extends Dialog implements View.OnClickListener, H
                 LaunchCheckDialog.this.throwException(exc);
             }
         });
+        // ★ 1.3.0：启动前把远古版中文包打好（早就装好的 / 改过名字的版本也能自动拿到中文；
+        //   已经打过同一个语言会直接跳过，不浪费时间）
+        new Thread(() -> {
+            try {
+                java.io.File vd = new java.io.File(this.activity.launcherSetting.gameFileDirectory, "versions/" + this.launchVersion);
+                if (vd.isDirectory()) {
+                    com.qcl.launcher.launcher.download.game.LegacyChinesePack.applyIfNeeded(this.activity, vd, this.launchVersion);
+                }
+            }
+            catch (Throwable ignored) {
+            }
+        }).start();
         this.checkLibTask = new CheckLibTask(this.activity, this.launchVersion, new CheckLibTask.CheckLibCallback() { // from class: com.qcl.launcher.launcher.launch.check.LaunchCheckDialog.2
             @Override // com.qcl.launcher.launcher.launch.check.CheckLibTask.CheckLibCallback
             public void onStart() {
