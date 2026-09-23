@@ -27,6 +27,81 @@ import java.util.Iterator;
 import com.qcl.launcher.R;
 /* loaded from: classes2.dex */
 public class DownloadSettingUI extends BaseUI implements CompoundButton.OnCheckedChangeListener, SeekBar.OnSeekBarChangeListener, AdapterView.OnItemSelectedListener, TextWatcher {
+    /** ★ 1.3.0：远古版本汉化语言 */
+    private LinearLayout legacyCnLangRow;
+    private TextView legacyCnLangValue;
+
+    public static final String CN_PREF = "qcl_legacy_cn";
+    public static final String CN_KEY_LANG = "lang";
+
+    /** 读当前设置的远古版汉化语言（默认简体中文） */
+    public static String getLegacyLang(android.content.Context ctx) {
+        return ctx.getSharedPreferences(CN_PREF, 0)
+                .getString(CN_KEY_LANG, com.qcl.launcher.launcher.download.game.LegacyChinesePack.LANG_ZH);
+    }
+
+    private void refreshLegacyCnLang() {
+        if (this.legacyCnLangValue == null) {
+            return;
+        }
+        boolean en = com.qcl.launcher.launcher.download.game.LegacyChinesePack.LANG_EN.equals(getLegacyLang(this.context));
+        this.legacyCnLangValue.setText(en ? "English" : "简体中文");
+    }
+
+    private void showLegacyCnLangDialog() {
+        final String[] items = new String[]{"简体中文", "English"};
+        final String[] vals = new String[]{
+                com.qcl.launcher.launcher.download.game.LegacyChinesePack.LANG_ZH,
+                com.qcl.launcher.launcher.download.game.LegacyChinesePack.LANG_EN};
+        int cur = com.qcl.launcher.launcher.download.game.LegacyChinesePack.LANG_EN.equals(getLegacyLang(this.context)) ? 1 : 0;
+        new android.app.AlertDialog.Builder(this.context)
+                .setTitle(R.string.setting_legacy_cn_lang)
+                .setSingleChoiceItems(items, cur, new android.content.DialogInterface.OnClickListener(){
+                    @Override
+                    public void onClick(android.content.DialogInterface d, int which) {
+                        d.dismiss();
+                        DownloadSettingUI.this.activity.getSharedPreferences(CN_PREF, 0)
+                                .edit().putString(CN_KEY_LANG, vals[which]).apply();
+                        DownloadSettingUI.this.refreshLegacyCnLang();
+                        DownloadSettingUI.this.reapplyLegacyCn(vals[which]);
+                    }
+                })
+                .setNegativeButton(R.string.gui_cancel, null)
+                .show();
+    }
+
+    /** 把语言重新应用到已安装的远古版本（后台线程，不卡界面） */
+    private void reapplyLegacyCn(final String lang) {
+        new Thread(new Runnable(){
+            @Override
+            public void run() {
+                try {
+                    java.io.File versions = new java.io.File(DownloadSettingUI.this.activity.launcherSetting.gameFileDirectory, "versions");
+                    java.io.File[] dirs = versions.listFiles();
+                    if (dirs == null) {
+                        return;
+                    }
+                    for (java.io.File d : dirs) {
+                        if (!d.isDirectory()) {
+                            continue;
+                        }
+                        String id = d.getName();
+                        if (!com.qcl.launcher.launcher.download.game.LegacyChinesePack.isSupported(id)) {
+                            continue;
+                        }
+                        if (!new java.io.File(d, id + ".jar").isFile()) {
+                            continue;
+                        }
+                        com.qcl.launcher.launcher.download.game.LegacyChinesePack.apply(
+                                DownloadSettingUI.this.context, d, id, lang);
+                    }
+                }
+                catch (Throwable ignored) {
+                }
+            }
+        }).start();
+    }
+
     /** ★ 1.2.9：启动器设置里的「检查更新」一行 */
     private LinearLayout checkUpdateRow;
     private TextView checkUpdateState;
@@ -71,6 +146,18 @@ public class DownloadSettingUI extends BaseUI implements CompoundButton.OnChecke
         super.onCreate();
         this.downloadSettingUI = (LinearLayout) this.activity.findViewById(R.id.ui_setting_download);
         // ★ 1.2.9：启动器设置里的「检查更新」
+        // ★ 1.3.0：远古版本汉化语言（简体中文 / English）
+        this.legacyCnLangRow = (LinearLayout) this.activity.findViewById(R.id.legacy_cn_lang_row);
+        this.legacyCnLangValue = (TextView) this.activity.findViewById(R.id.legacy_cn_lang_value);
+        this.refreshLegacyCnLang();
+        if (this.legacyCnLangRow != null) {
+            this.legacyCnLangRow.setOnClickListener(new View.OnClickListener(){
+                @Override
+                public void onClick(View v) {
+                    DownloadSettingUI.this.showLegacyCnLangDialog();
+                }
+            });
+        }
         this.checkUpdateRow = (LinearLayout) this.activity.findViewById(R.id.check_update_row);
         this.checkUpdateState = (TextView) this.activity.findViewById(R.id.check_update_state);
         if (this.checkUpdateRow != null) {

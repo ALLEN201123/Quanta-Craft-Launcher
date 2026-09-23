@@ -1,0 +1,81 @@
+gui.achievements=\u6210\u5c31
+gui.stats=\u7edf\u8ba1
+
+stat.generalButton=\u901a\u7528
+stat.blocksButton=\u65b9\u5757
+stat.itemsButton=\u7269\u54c1
+
+stat.used=\u4f7f\u7528\u6b21\u6570
+stat.mined=\u6316\u6398\u6b21\u6570
+stat.depleted=\u8017\u5c3d\u6b21\u6570
+stat.crafted=\u5408\u6210\u6b21\u6570
+
+stat.startGame=\u6e38\u73a9\u6b21\u6570
+stat.createWorld=\u6e38\u73a9\u4e16\u754c\u6570
+stat.loadWorld=\u52a0\u8f7d\u5b58\u6863\u6b21\u6570
+stat.joinMultiplayer=\u52a0\u5165\u591a\u4eba\u6e38\u620f\u6b21\u6570
+stat.leaveGame=\u9000\u51fa\u6e38\u620f\u6b21\u6570
+
+stat.playOneMinute=\u6e38\u620f\u65f6\u957f\uff08\u5206\u949f\uff09
+
+stat.walkOneCm=\u884c\u8d70\u8ddd\u79bb
+stat.fallOneCm=\u5760\u843d\u8ddd\u79bb
+stat.swimOneCm=\u6e38\u6cf3\u8ddd\u79bb
+stat.flyOneCm=\u98de\u884c\u8ddd\u79bb
+stat.climbOneCm=\u6500\u722c\u8ddd\u79bb
+stat.diveOneCm=\u4e0b\u6f5c\u8ddd\u79bb
+stat.minecartOneCm=\u4e58\u77ff\u8f66\u8ddd\u79bb
+stat.boatOneCm=\u4e58\u8239\u8ddd\u79bb
+stat.pigOneCm=\u9a91\u732a\u8ddd\u79bb
+stat.jump=\u8df3\u8dc3\u6b21\u6570
+stat.drop=\u4e22\u5f03\u7269\u54c1\u6b21\u6570
+
+stat.damageDealt=\u9020\u6210\u7684\u4f24\u5bb3
+stat.damageTaken=\u53d7\u5230\u7684\u4f24\u5bb3
+stat.deaths=\u6b7b\u4ea1\u6b21\u6570
+stat.mobKills=\u602a\u7269\u51fb\u6740\u6570
+stat.playerKills=\u73a9\u5bb6\u51fb\u6740\u6570
+stat.fishCaught=\u9493\u5230\u7684\u9c7c
+
+stat.mineBlock=\u6316\u6398 %1$s \u6b21
+stat.craftItem=\u5408\u6210 %1$s \u6b21
+stat.useItem=\u4f7f\u7528 %1$s \u6b21
+stat.breakItem=\u8017\u5c3d %1$s \u6b21
+
+achievement.get=\u6210\u5c31\u8fbe\u6210\uff01
+
+achievement.taken=\u5df2\u88ab\u5360\u7528\uff01
+
+achievement.requires=\u9700\u8981 '%1$s'
+achievement.openInventory=\u6253\u5f00\u7269\u54c1\u680f
+achievement.openInventory.desc=\u6309 '%1$s' \u6253\u5f00\u7269\u54c1\u680f\u3002
+achievement.mineWood=\u83b7\u5f97\u6728\u5934
+achievement.mineWood.desc=\u653b\u51fb\u4e00\u68f5\u6811\u76f4\u5230\u6389\u843d\u4e00\u4e2a\u6728\u5934\u65b9\u5757
+achievement.buildWorkBench=\u57fa\u51c6\u6d4b\u8bd5
+achievement.buildWorkBench.desc=\u7528\u56db\u5757\u6728\u677f\u505a\u4e00\u4e2a\u5de5\u4f5c\u53f0
+achievement.buildPickaxe=\u6316\u77ff\u65f6\u95f4\uff01
+achievement.buildPickaxe.desc=\u7528\u6728\u677f\u548c\u6728\u68cd\u505a\u4e00\u628a\u9550
+achievement.buildFurnace=\u70ed\u95e8\u8bdd\u9898
+achievement.buildFurnace.desc=\u7528\u516b\u4e2a\u5706\u77f3\u9020\u4e00\u4e2a\u7194\u7089
+achievement.acquireIron=\u83b7\u5f97\u786c\u4ef6
+achievement.acquireIron.desc=\u70e7\u70bc\u4e00\u5757\u94c1\u952d
+achievement.buildHoe=\u8015\u4f5c\u65f6\u95f4\uff01
+achievement.buildHoe.desc=\u7528\u6728\u677f\u548c\u6728\u68cd\u505a\u4e00\u628a\u9504
+achievement.makeBread=\u70e4\u9762\u5305
+achievement.makeBread.desc=\u628a\u5c0f\u9ea6\u53d8\u6210\u9762\u5305
+achievement.bakeCake=\u8c0e\u8a00
+achievement.bakeCake.desc=\u5c0f\u9ea6\u3001\u7cd6\u3001\u725b\u5976\u548c\u9e21\u86cb\uff01
+achievement.buildBetterPickaxe=\u5347\u7ea7\u88c5\u5907
+achievement.buildBetterPickaxe.desc=\u5236\u9020\u4e00\u628a\u66f4\u597d\u7684\u9550
+achievement.cookFish=\u7f8e\u5473\u7684\u9c7c
+achievement.cookFish.desc=\u9493\u5230\u9c7c\u5e76\u70f9\u996a\u5b83\uff01
+achievement.onARail=\u5728\u94c1\u8f68\u4e0a
+achievement.onARail.desc=\u4e58\u77ff\u8f66\u4ece\u8d77\u70b9\u51fa\u53d1\u81f3\u5c11 1 \u516c\u91cc 
+achievement.buildSword=\u51fa\u51fb\u65f6\u95f4\uff01
+achievement.buildSword.desc=\u7528\u6728\u677f\u548c\u6728\u68cd\u505a\u4e00\u628a\u5251
+achievement.killEnemy=\u602a\u7269\u730e\u4eba
+achievement.killEnemy.desc=\u653b\u51fb\u5e76\u6d88\u706d\u4e00\u53ea\u602a\u7269
+achievement.killCow=\u725b\u63a8\u624b
+achievement.killCow.desc=\u91c7\u96c6\u4e00\u4e9b\u76ae\u9769
+achievement.flyPig=\u5f53\u732a\u4f1a\u98de
+achievement.flyPig.desc=\u9a91\u7740\u732a\u8df3\u4e0b\u60ac\u5d16

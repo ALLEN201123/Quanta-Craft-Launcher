@@ -229,6 +229,17 @@ public class LegacyArchiveInstallTask extends AsyncTask<VersionManifest.Version,
             activity.runOnUiThread(() -> {
                 if (!isCancelled()) adapter.onComplete(jarBean);
             });
+            // ★ 1.3.0：远古版本**装完就把「不检查游戏文件」打开**。
+            //   否则启动器每次启动都会校验并"修复"游戏文件：把玩家自己装的东西
+            //   （汉化过的本体 jar、ModLoader/Babric 改过的 jar）覆盖回去，
+            //   还会顺手把音效音乐重下一遍。想校验可以自己去「版本设置 → 检查游戏文件」打开。
+            com.qcl.launcher.utils.QclVersionConfig.enableNotCheckMinecraft(activity, id);
+            // ★ 1.3.0：支持的远古版本（b1.7.3 系）**自动装启动器自带的中文包**，默认简体中文。
+            //   字模用的是 Mojang 官方点阵（16×16 字形画成 8px），和英文等高、不溢出。
+            if (LegacyChinesePack.isSupported(id)) {
+                LegacyChinesePack.apply(activity, versionDir, id,
+                        com.qcl.launcher.launcher.uis.universal.setting.right.launcher.DownloadSettingUI.getLegacyLang(activity));
+            }
             if (!isCancelled()) {
                 callback.onFinish(id);
             }

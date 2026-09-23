@@ -1091,4 +1091,5 @@ Multiplayer is powered by Terracotta (by BurningTNT). The multiplayer feature is
     <string name="setting_check_update">Check for updates</string>
     <string name="setting_check_update_checking">Checking…</string>
     <string name="setting_check_update_none">Already up to date</string>
+    <string name="setting_legacy_cn_lang">Legacy version language</string>
 </resources>
