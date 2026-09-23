@@ -31,6 +31,19 @@ import java.util.concurrent.TimeUnit;
 
 public class DownloadTask
 extends AsyncTask<ArrayList<DownloadTaskListBean>, Integer, ArrayList<DownloadTaskListBean>> {
+
+    /**
+     * ★ 1.3.0：取消标志。点「取消」后要能**中断正在进行的下载**，
+     *   而不只是等它这一遍下完 —— 以前 cancel(true) 只在下一次重试时被检查到，
+     *   当前正在下的那个文件会一直下完，表现就是「点取消还在后台自动下」。
+     */
+    private final java.util.concurrent.atomic.AtomicBoolean cancelled = new java.util.concurrent.atomic.AtomicBoolean(false);
+
+    @Override
+    public boolean cancel(boolean mayInterruptIfRunning) {
+        this.cancelled.set(true);
+        return super.cancel(mayInterruptIfRunning);
+    }
     private final WeakReference<Context> ctx;
     private ArrayList<DownloadTaskListBean> failedFile;
     private final Feedback feedback;
@@ -80,7 +93,7 @@ extends AsyncTask<ArrayList<DownloadTaskListBean>, Integer, ArrayList<DownloadTa
                                 DownloadTask.this.feedback.updateSpeed(speed);
                             }
                         };
-                        if (DownloadTask.downloadFileMonitored(bean.urlForAttempt(i), path, sha1, fb)) {
+                        if (DownloadTask.downloadFileMonitored(bean.urlForAttempt(i), path, sha1, fb, DownloadTask.this.cancelled)) {
                             this.feedback.removeTask(bean);
                             break;
                         }
@@ -130,6 +143,15 @@ extends AsyncTask<ArrayList<DownloadTaskListBean>, Integer, ArrayList<DownloadTa
     }
 
     public static boolean downloadFileMonitored(String url, String nameOutput, String sha1, DownloadFeedback monitor) {
+        return downloadFileMonitored(url, nameOutput, sha1, monitor, null);
+    }
+
+    /**
+     * ★ 1.3.0：带取消标志的下载。下载循环里每读一块就检查一次取消，
+     *   取消后立刻中断、删掉半截文件并返回 false。
+     */
+    public static boolean downloadFileMonitored(String url, String nameOutput, String sha1, DownloadFeedback monitor,
+                                                java.util.concurrent.atomic.AtomicBoolean cancelled) {
         File nameOutputFile = new File(nameOutput);
         if (!nameOutputFile.exists()) {
             nameOutputFile.getParentFile().mkdirs();
@@ -162,6 +184,13 @@ extends AsyncTask<ArrayList<DownloadTaskListBean>, Integer, ArrayList<DownloadTa
                     }
                 }
                 fos.write(buf, 0, cur);
+                if (cancelled != null && cancelled.get()) {
+                    // 用户点了取消：中断下载，删掉半截文件
+                    fos.close();
+                    inputStream.close();
+                    nameOutputFile.delete();
+                    return false;
+                }
                 if (monitor == null) continue;
                 monitor.updateProgress(oval, len);
             }
