@@ -245,6 +245,20 @@ public class MinecraftInstallTask extends AsyncTask<VersionManifest.Version,Inte
     protected void onPostExecute(Version version) {
         super.onPostExecute(version);
         if (!isCancelled()) adapter.onComplete(thiBean);
+        // ★ 1.3.0：**下载页走的也是这个任务**（不是 LegacyArchiveInstallTask），
+        //   所以注入点必须放这儿 —— 远古版本装完自动关文件校验 + 按当前设置打中文包。
+        try {
+            String vid = version == null ? null : version.getId();
+            if (vid != null && this.activity != null) {
+                com.qcl.launcher.utils.QclVersionConfig.enableNotCheckMinecraft(this.activity, vid);
+                java.io.File vd = new java.io.File(this.activity.launcherSetting.gameFileDirectory, "versions/" + vid);
+                if (com.qcl.launcher.launcher.download.game.LegacyChinesePack.isSupported(vd, vid)) {
+                    com.qcl.launcher.launcher.download.game.LegacyChinesePack.applyIfNeeded(this.activity, vd, vid);
+                }
+            }
+        }
+        catch (Throwable ignored) {
+        }
         callback.onFinish(version);
     }
 

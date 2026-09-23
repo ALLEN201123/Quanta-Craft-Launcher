@@ -236,7 +236,7 @@ public class LegacyArchiveInstallTask extends AsyncTask<VersionManifest.Version,
             com.qcl.launcher.utils.QclVersionConfig.enableNotCheckMinecraft(activity, id);
             // ★ 1.3.0：支持的远古版本（b1.7.3 系）**自动装启动器自带的中文包**，默认简体中文。
             //   字模用的是 Mojang 官方点阵（16×16 字形画成 8px），和英文等高、不溢出。
-            if (LegacyChinesePack.isSupported(id)) {
+            if (LegacyChinesePack.isSupported(versionDir, id)) {
                 LegacyChinesePack.apply(activity, versionDir, id,
                         com.qcl.launcher.launcher.uis.universal.setting.right.launcher.DownloadSettingUI.getLegacyLang(activity));
             }

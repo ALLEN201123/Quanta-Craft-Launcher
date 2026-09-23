@@ -63,10 +63,16 @@ public class DownloadSettingUI extends BaseUI implements CompoundButton.OnChecke
                         DownloadSettingUI.this.activity.getSharedPreferences(CN_PREF, 0)
                                 .edit().putString(CN_KEY_LANG, vals[which]).apply();
                         DownloadSettingUI.this.refreshLegacyCnLang();
+                        // ★ 关键：启动器里改语言也要写 <游戏根>/qcl_lang.txt，否则 applyIfNeeded
+                        //   以它为准，启动器侧的切换不会生效
+                        com.qcl.launcher.launcher.download.game.LegacyChinesePack.writeLangChoice(
+                                DownloadSettingUI.this.context,
+                                DownloadSettingUI.this.activity.launcherSetting.gameFileDirectory,
+                                vals[which]);
                         DownloadSettingUI.this.reapplyLegacyCn(vals[which]);
                     }
                 })
-                .setNegativeButton(R.string.gui_cancel, null)
+                .setNegativeButton(R.string.legacy_cn_lang_cancel, null)
                 .show();
     }
 
