@@ -1164,4 +1164,5 @@
     <string name="setting_check_update_checking">正在检查…</string>
     <string name="setting_check_update_none">已是最新版</string>
     <string name="setting_legacy_cn_lang">远古版本汉化语言</string>
+    <string name="legacy_cn_lang_cancel">取消</string>
 </resources>

@@ -39,10 +39,14 @@ extends AsyncTask<ArrayList<DownloadTaskListBean>, Integer, ArrayList<DownloadTa
      */
     private final java.util.concurrent.atomic.AtomicBoolean cancelled = new java.util.concurrent.atomic.AtomicBoolean(false);
 
-    @Override
-    public boolean cancel(boolean mayInterruptIfRunning) {
+    /**
+     * ★ 1.3.0：请求取消并**中断正在进行的下载**。
+     * 不能重写 {@code AsyncTask.cancel(boolean)}（它是 final 的），
+     * 所以用这个方法：先设自己的标志（下载循环每读一块就查它），再走系统的 cancel。
+     */
+    public void requestCancel() {
         this.cancelled.set(true);
-        return super.cancel(mayInterruptIfRunning);
+        cancel(true);
     }
     private final WeakReference<Context> ctx;
     private ArrayList<DownloadTaskListBean> failedFile;
