@@ -1,12 +1,12 @@
 {
   "latestRelease": {
-    "versionCode": 329,
-    "versionName": "1.2.9",
-    "date": "2026-09-22",
+    "versionCode": 330,
+    "versionName": "1.3.0",
+    "date": "2026-09-23",
     "url": [
-      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.2.9/QCL-release-1.2.9-all.apk"
+      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.3.0/QCL-release-1.3.0-all.apk"
     ],
-    "updateLog": "1.2.9 更新内容：\n1. 修「动态背景切后台回来就不动了」：回到前台会重新挂上换图。\n2. 下载页详情页提速：前置并行拉取、依赖类型不再重复请求版本列表。\n3. 图标加载异步：版本列表/下拉的图标后台解码并缓存；详情页图标也带缓存与超时。\n4. 设置 → 启动器 里新增「检查更新」一行。\n",
+    "updateLog": "1.3.0 更新内容：\n1. 远古版本（b1.7.3 系）自带中文：用 Mojang 官方中文点阵，照官方做法 16x16 字形画成 8px，中英等高不溢出；界面文本全量翻译。\n2. 语言只有两项：设置 → 启动器 → 远古版本汉化语言 → 简体中文 / English。\n3. 远古版本装完自动开启「不检查游戏文件」：不再覆盖玩家自己的 jar，也不自动重下音效音乐。\n4. 修复：点取消还在后台下载 / Finalizer 关 ZipFile 报 EIO 导致崩溃 / 下载页切版本后仍提示不支持 / 模组详情页图标白。\n",
     "netdiskUrl": "https://pan.quark.cn/s/f2c26c4fb66f"
   },
   "latestPrerelease": null
