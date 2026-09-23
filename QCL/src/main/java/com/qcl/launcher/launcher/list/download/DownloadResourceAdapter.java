@@ -128,11 +128,16 @@ public class DownloadResourceAdapter extends BaseAdapter {
                 //   → 不管玩家装的是 ModLoader / Babric / Fabric / Forge，
                 //     整个模组页都被标上「不支持你当前的版本」。
                 //   现在直接用这个路径；只有它不是目录时才退回归属拼接（兼容老数据）。
-                String cur = activity.publicGameSetting.currentVersion;
-                File vDir = cur == null ? null : new File(cur);
-                if (vDir == null || !vDir.isDirectory()) {
-                    vDir = new File(activity.launcherSetting.gameFileDirectory + "/versions/" + cur);
+                // ★ 1.3.0：改用「下载页上选的版本」（gameVersion），而不是全局 currentVersion。
+                //   玩家在下载页把版本从 Babric 切成 ModLoader 后，这个徽章要跟着变，
+                //   不能还拿全局旧版本去判断 → 否则「我明明切了版本，还提示不支持」。
+                String cur = activity.uiManager.downloadUI.downloadUIManager.downloadModUI.gameVersion;
+                if (cur == null || cur.isEmpty()) {
+                    String g = activity.publicGameSetting.currentVersion;
+                    cur = g == null ? null : new File(g).getName();
                 }
+                File vDir = cur == null ? null
+                        : new File(activity.launcherSetting.gameFileDirectory + "/versions/" + cur);
                 String currentLoader = ModLoaderDetector.detect(vDir);
                 java.util.List<String> modLoaders = new java.util.ArrayList<>();
                 for (String c : modList.get(position).getCategories()) {

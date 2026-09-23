@@ -264,6 +264,10 @@ public class DownloadModUI extends BaseUI implements View.OnClickListener, Adapt
         }
         if (adapterView == this.gameSpinner) {
             this.gameVersion = this.gameList.size() > 0 ? this.gameSpinner.getSelectedItem().toString() : null;
+            // ★ 1.3.0：切换版本后立刻重算「不支持你当前的版本」徽章（不重新联网，只刷新显示）
+            if (this.modListAdapter != null) {
+                this.modListAdapter.notifyDataSetChanged();
+            }
         }
     }
 

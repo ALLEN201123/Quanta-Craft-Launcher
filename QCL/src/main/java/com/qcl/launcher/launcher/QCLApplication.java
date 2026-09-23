@@ -49,6 +49,16 @@ public class QCLApplication extends Application {
     /* JADX INFO: Access modifiers changed from: package-private */
     /* renamed from: lambda$installCrashLogger$0$com-qcl-launcher-launcher-QCLApplication, reason: not valid java name */
     public /* synthetic */ void m211x63dcaab4(Thread.UncaughtExceptionHandler uncaughtExceptionHandler, Thread thread, Throwable th) {
+        // ★★★ 1.3.0：Finalizer 线程关 ZipFile 时偶发「close failed: EIO」——
+        //   本质是 zip 对应的文件被删/覆盖后，GC 才回收 fd 去 close，属无害的清理噪音。
+        //   以前会当成真崩溃弹崩溃页并杀进程。现在直接吞掉，不弹窗、不杀进程。
+        if (isBenignZipClose(thread, th)) {
+            try {
+                Log.w("QCLCrash", "忽略无害的 ZipFile 清理异常（" + thread.getName() + "）", th);
+            } catch (Throwable ignored) {
+            }
+            return;
+        }
         try {
             saveCrashLog(thread, th);
         } catch (Throwable unused) {
@@ -76,6 +86,20 @@ public class QCLApplication extends Application {
                 uncaughtExceptionHandler.uncaughtException(thread, th);
             }
         }
+    }
+
+    /** ★ 1.3.0：判断是不是「守护线程上关 ZipFile 的 EIO」这种无害异常 */
+    private static boolean isBenignZipClose(Thread thread, Throwable th) {
+        if (thread == null || !thread.isDaemon()) {
+            return false;
+        }
+        for (Throwable x = th; x != null; x = x.getCause()) {
+            String msg = String.valueOf(x.getMessage());
+            if (msg != null && msg.contains("close failed")) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private void saveCrashLog(Thread thread, Throwable th) {

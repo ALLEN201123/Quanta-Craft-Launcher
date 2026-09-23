@@ -210,6 +210,7 @@ public class ZipTools {
         BufferedInputStream bis = null;
         BufferedOutputStream bos = null;
         ZipFile zip = new ZipFile(zipFile);
+        try {
         Enumeration<ZipEntry> entries = (Enumeration<ZipEntry>) zip.entries();
         while (entries.hasMoreElements()) {
             entry = entries.nextElement();
@@ -246,6 +247,14 @@ public class ZipTools {
                 bis.close();
             } catch (Exception e) {
                 e.printStackTrace();
+            }
+        }
+        } finally {
+            // ★ 1.3.0：及时关闭，别等 Finalizer 去关（Finalizer 关会抛 EIO 崩进程）
+            try {
+                zip.close();
+            } catch (Exception e) {
+                // 忽略
             }
         }
     }
