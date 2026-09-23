@@ -5,6 +5,7 @@ import android.util.Log;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -303,31 +304,32 @@ public final class LegacyChinesePack {
      * 准确判断「这个版本是不是 b1.7.3」：
      * 优先看**版本 json 里的真 id**（玩家把目录改名成别的也认得出来）；json 读不到再用目录名兜底 ✓
      */
+
+
+    /**
+     * 准确判断「这个版本是不是 b1.7.3」：
+     * 优先读**版本 json**（玩家把目录改名成别的也认得出来）；json 读不到再用目录名兜底 ✓
+     */
+
+
+    /** 按版本 json 判断是不是 b1.7.3（玩家改了目录名也认得出 ✓） */
     public static boolean isSupported(File versionDir, String versionId) {
-        if (versionId == null || versionId.isEmpty()) {
+        if(versionId == null || versionId.isEmpty()) {
             return false;
         }
 
-        if (versionDir != null) {
+        if(versionDir != null) {
             try {
                 File jf = new File(versionDir, versionId + ".json");
-                if (jf.isFile()) {
-                    byte[] b = new byte[(int) jf.length()];
-                    FileInputStream in = new FileInputStream(jf);
-                    int n = in.read(b);
-                    in.close();
-                    String json = new String(b, 0, n, "UTF-8");
-                    int k = json.indexOf("\"id\"");
-                    if (k >= 0) {
-                        int p1 = json.indexOf('"', k + 4);
-                        int p2 = json.indexOf('"', p1 + 1);
-                        if (p1 >= 0 && p2 > p1) {
-                            String rid = json.substring(p1 + 1, p2).toLowerCase();
-                            for (String pp : SUPPORTED_PREFIXES) {
-                                if (rid.contains(pp)) {
-                                    return true;
-                                }
-                            }
+                if(jf.isFile()) {
+                    byte[] b = new byte[(int)jf.length()];
+                    FileInputStream fin = new FileInputStream(jf);
+                    int n = fin.read(b);
+                    fin.close();
+                    String json = new String(b, 0, n, "UTF-8").toLowerCase();
+                    for(String pp : SUPPORTED_PREFIXES) {
+                        if(json.contains(pp)) {
+                            return true;
                         }
                     }
                 }
@@ -336,8 +338,8 @@ public final class LegacyChinesePack {
         }
 
         String low = versionId.toLowerCase();
-        for (String pp : SUPPORTED_PREFIXES) {
-            if (low.contains(pp)) {
+        for(String pp : SUPPORTED_PREFIXES) {
+            if(low.contains(pp)) {
                 return true;
             }
         }
