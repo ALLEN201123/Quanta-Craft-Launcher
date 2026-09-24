@@ -45,6 +45,63 @@ public final class LegacyChinesePack {
     /** 应用标记文件（记着"这个版本已按哪个语言打过补丁"），放在版本目录里 */
     private static final String MARKER = ".cnpack_lang";
 
+    /** ★ 当前正在处理的是不是 1.0 系（决定 abe 要不要替换）✓ */
+    private static boolean v10Flag = false;
+
+    /** ★ 是不是 1.0（正式版）—— RetroMCP 里叫 1.0.0，Mojang 的 id 是 1.0 ✓ */
+    public static boolean isV10(File versionDir, String versionId) {
+        try {
+            String vid = versionId == null ? "" : versionId.trim().toLowerCase();
+            if (vid.equals("1.0") || vid.equals("1.0.0")) {
+                return true;
+            }
+            if (versionDir != null && versionId != null) {
+                File jf = new File(versionDir, versionId + ".json");
+                if (jf.isFile()) {
+                    byte[] b = new byte[(int) jf.length()];
+                    FileInputStream fin = new FileInputStream(jf);
+                    int n = fin.read(b);
+                    fin.close();
+                    String js = new String(b, 0, n, "UTF-8").toLowerCase();
+                    int k = js.indexOf("\"id\"");
+                    if (k >= 0) {
+                        String tail = js.substring(k, Math.min(js.length(), k + 30));
+                        if (tail.contains("1.0.0") || tail.contains("1.0\"")) {
+                            return true;
+                        }
+                    }
+                }
+            }
+        } catch (Throwable ignored) {
+        }
+        return false;
+    }
+
+    /** ★ 是不是 b1.8 系（b1.8 / b1.8.1）—— 这两版 kh.class 字节完全相同，一份补丁通用 ✓ */
+    public static boolean isB18(File versionDir, String versionId) {
+        try {
+            String vid = versionId == null ? "" : versionId.trim().toLowerCase();
+            if (vid.equals("b1.8") || vid.equals("b1.8.1")) {
+                return true;
+            }
+            if (versionDir != null && versionId != null) {
+                File jf = new File(versionDir, versionId + ".json");
+                if (jf.isFile()) {
+                    byte[] b = new byte[(int) jf.length()];
+                    FileInputStream fin = new FileInputStream(jf);
+                    int n = fin.read(b);
+                    fin.close();
+                    String js = new String(b, 0, n, "UTF-8").toLowerCase();
+                    if (js.contains("\"b1.8.1\"") || js.contains("\"b1.8\"")) {
+                        return true;
+                    }
+                }
+            }
+        } catch (Throwable ignored) {
+        }
+        return false;
+    }
+
     public static final String LANG_ZH = "zh_CN";
     public static final String LANG_EN = "en_US";
 
@@ -57,6 +114,14 @@ public final class LegacyChinesePack {
             return false;
         }
         String low = versionId.toLowerCase();
+        // ★ 1.3.1：b1.8 系（b1.8 / b1.8.1）也支持中文 ✓
+        if (isB18(null, versionId)) {
+            return true;
+        }
+        // ★ 1.3.1：1.0 正式版 ✓
+        if (isV10(null, versionId)) {
+            return true;
+        }
         // ★ 放宽：改了名字的版本（例如「b1.7.3东上」「我的b1.7.3」）也算
         for (String p : SUPPORTED_PREFIXES) {
             if (low.contains(p)) {
@@ -82,6 +147,9 @@ public final class LegacyChinesePack {
             return false;
         }
         String langDir = LANG_EN.equals(lang) ? "lang_en" : "lang_zh";
+        final boolean b18v = isB18(versionDir, versionId);
+        final boolean v10v = isV10(versionDir, versionId);
+        v10Flag = v10v;
         File tmp = new File(versionDir, versionId + ".jar.cnpatch");
         InputStream in = null;
         ZipInputStream zin = null;
@@ -96,7 +164,7 @@ public final class LegacyChinesePack {
             byte[] buf = new byte[65536];
             while ((entry = zin.getNextEntry()) != null) {
                 String name = entry.getName();
-                if (isPatchedEntry(name)) {
+                if (isPatchedEntry(name, b18v)) {
                     continue;   // 这些由中文包提供，跳过原版
                 }
                 ZipEntry ne = new ZipEntry(name);
@@ -113,9 +181,17 @@ public final class LegacyChinesePack {
             in = null;
 
             // 补丁类：字体（sj）+ 翻译（nh）+ 选项页（co，带「语言…」按钮）+ 语言选择页
-            writeAsset(context, ASSET_DIR + "/sj.class", "sj.class", zout);
-            writeAsset(context, ASSET_DIR + "/co.class", "co.class", zout);
-            writeAsset(context, ASSET_DIR + "/QclLangScreen.class", "QclLangScreen.class", zout);
+            if (b18v) {
+                // ★ b1.8 / b1.8.1：只换 FontRenderer（kh），其余用原生 ✓
+                writeAsset(context, "cn_b18/kh.class", "kh.class", zout);
+            } else if (v10v) {
+                // ★ 1.0 正式版：只换 FontRenderer（abe），其余用原生 ✓
+                writeAsset(context, "cn_10/abe.class", "abe.class", zout);
+            } else {
+                writeAsset(context, ASSET_DIR + "/sj.class", "sj.class", zout);
+                writeAsset(context, ASSET_DIR + "/co.class", "co.class", zout);
+                writeAsset(context, ASSET_DIR + "/QclLangScreen.class", "QclLangScreen.class", zout);
+            }
             // 字符表 + 官方中文点阵
             writeAsset(context, ASSET_DIR + "/font.txt", "font.txt", zout);
             writeAsset(context, ASSET_DIR + "/font/glyph_sizes.bin", "font/glyph_sizes.bin", zout);
@@ -317,6 +393,14 @@ public final class LegacyChinesePack {
         if(versionId == null || versionId.isEmpty()) {
             return false;
         }
+        // ★ 1.3.1：b1.8 系（b1.8 / b1.8.1）也支持中文 ✓
+        if (isB18(versionDir, versionId)) {
+            return true;
+        }
+        // ★ 1.3.1：1.0 正式版也支持中文 ✓
+        if (isV10(versionDir, versionId)) {
+            return true;
+        }
 
         if(versionDir != null) {
             try {
@@ -347,14 +431,25 @@ public final class LegacyChinesePack {
     }
 
     /** 中文包会覆盖的条目 */
-    private static boolean isPatchedEntry(String name) {
+    private static boolean isPatchedEntry(String name, boolean b18) {
+        if (b18 && name != null && name.equalsIgnoreCase("kh.class")) {
+            return true;   // b1.8 系：原版 FontRenderer，由中文包替换 ✓
+        }
+        if (name != null && name.equalsIgnoreCase("abe.class")) {
+            // ★ 1.0 系：abe 是它的 FontRenderer —— 只在 1.0 时替换 ✓
+            //   其他版本里 abe 是别的类，绝不能动 ✓（同 b1.8 的 co/sj 坑）
+            return v10Flag;
+        }
         if (name == null) {
             return false;
         }
         String low = name.toLowerCase();
         if (low.equals("sj.class") || low.equals("co.class")
                 || low.equals("qcllangscreen.class")) {
-            return true;
+            // ★ 1.3.1：这三件套是 **b1.7.3 系** 的补丁 —— 只在 b1.7.3 系跳过 ✗
+            //   ★★ b1.8 系（kh）和 1.0 系（abe）里 co/sj 都是**它自己的原生类** ✗
+            //   跳过会导致 NoClassDefFoundError（b1.8.1 报 co、1.0 报 sj）✗
+            return !(b18 || v10Flag);
         }
         // ★ 原 jar 是签名过的，注入未签名类后必须去掉签名文件，否则
         //   JVM 会抛 SecurityException: signer information does not match
@@ -363,6 +458,10 @@ public final class LegacyChinesePack {
             return true;
         }
         if (low.equals("font.txt") || low.equals("font/glyph_sizes.bin")) {
+            return true;
+        }
+        // ★ 1.3.1：语言文件本包会重写，重复注入时不跳过会 ZipException: duplicate entry ✗
+        if (low.startsWith("lang/")) {
             return true;
         }
         if (low.startsWith("font/glyph_") && low.endsWith(".png")) {
