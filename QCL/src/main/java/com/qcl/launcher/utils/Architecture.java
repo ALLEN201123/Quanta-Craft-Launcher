@@ -44,20 +44,6 @@ public class Architecture {
     }
 
     public static boolean isx86Device() {
-        // ★ 1.3.1 修复：优先用设备的「首选 ABI」SUPPORTED_ABIS[0] ——
-        //   MuMu 等模拟器的 Build.SUPPORTED_64_BIT_ABIS 可能只报 arm64-v8a，
-        //   会把明明是 x86_64 的设备误判成 arm64 ✗
-        //   → 结果装了 aarch64 的 JRE → libjvm.so 架构不符 → JVM 起不来 → 游戏冻死 ✓
-        String[] preferred = Build.SUPPORTED_ABIS;
-        if (preferred != null && preferred.length > 0) {
-            int first = archAsInt(preferred[0]);
-            if (first == ARCH_X86_64 || first == ARCH_X86) {
-                return true;
-            }
-            if (first == ARCH_ARM64 || first == ARCH_ARM) {
-                return false;
-            }
-        }
         String[] strArr = is64BitsDevice() ? Build.SUPPORTED_64_BIT_ABIS : Build.SUPPORTED_32_BIT_ABIS;
         int i = is64BitsDevice() ? ARCH_X86_64 : ARCH_X86;
         for (String str : strArr) {
