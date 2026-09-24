@@ -141,14 +141,31 @@ public class AssetsUpdateTask extends AsyncTask<String,Integer, Exception> {
 
             ArrayList<DownloadTaskListBean> failedAssets = DownloadUtil.downloadMultipleFiles(list, maxDownloadTask, this, activity, downloadCallback);
             if (failedAssets.size() > 0) {
-                StringBuilder stringBuilder = new StringBuilder();
-                stringBuilder.append("The following files failed to download:");
+                // ★ 1.3.1：legacy（pre-1.6/legacy）资源索引里有 Mojang 的占位垃圾条目
+                //   （如 READ_ME_I_AM_VERY_IMPORTANT / pack.mcmeta），在任何源都 404 ——
+                //   必须跳过，不能让整个资源下载判失败 ✗（HMCL 同款做法 ✓
+                boolean allAssetObjects = true;
                 for (DownloadTaskListBean bean : failedAssets) {
-                    stringBuilder.append("\n\n  ").append(bean.name);
+                    if (bean.path == null || !bean.path.contains("/assets/objects/")) {
+                        allAssetObjects = false;
+                        break;
+                    }
                 }
-                Exception e = new Exception(stringBuilder.toString());
-                e.printStackTrace();
-                if (!isCancelled()) return e;
+                String indexId = version.getAssetIndex() == null ? null : version.getAssetIndex().id;
+                boolean legacyIndex = "pre-1.6".equals(indexId) || "legacy".equals(indexId);
+                if (!(allAssetObjects && legacyIndex)) {
+                    StringBuilder stringBuilder = new StringBuilder();
+                    stringBuilder.append("The following files failed to download:");
+                    for (DownloadTaskListBean bean : failedAssets) {
+                        stringBuilder.append("\n\n  ").append(bean.name);
+                    }
+                    Exception e = new Exception(stringBuilder.toString());
+                    e.printStackTrace();
+                    if (!isCancelled()) return e;
+                } else {
+                    android.util.Log.i("QCLCnPack", "跳过 " + failedAssets.size()
+                            + " 个 legacy 占位资源（404，不影响启动 ✓）");
+                }
             }
         }
         return null;

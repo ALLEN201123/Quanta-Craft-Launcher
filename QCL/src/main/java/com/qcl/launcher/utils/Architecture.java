@@ -12,14 +12,15 @@ public class Architecture {
     private static int bitMode;
 
     public static int getInstalledAbiArchitecture() {
+        // ★ 1.3.1 修复：**不再用 APK 的 primaryCpuAbi** ✗
+        //   全架构（universal）APK 在 MuMu 等 x86_64 模拟器上会被系统装成 arm64，
+        //   于是 primaryCpuAbi="arm64-v8a" → 误判成 ARM64 → 装了 aarch64 的 JRE →
+        //   libjvm.so 架构不符 → JVM 起不来（表现为游戏冻死）✓
+        //   JRE 必须匹配**设备**，所以一律以设备首选 ABI 为准 ✓
         try {
-            Object invoke = Class.forName("android.app.AppGlobals").getMethod("getInitialApplication", new Class[0]).invoke(null, new Object[0]);
-            if (invoke != null) {
-                Object invoke2 = invoke.getClass().getMethod("getApplicationInfo", new Class[0]).invoke(invoke, new Object[0]);
-                int archAsInt = archAsInt((String) invoke2.getClass().getField("primaryCpuAbi").get(invoke2));
-                if (archAsInt != UNSUPPORTED_ARCH) {
-                    return archAsInt;
-                }
+            int dev = preferredDeviceArch();
+            if (dev != UNSUPPORTED_ARCH) {
+                return dev;
             }
         } catch (Throwable unused) {
         }
@@ -31,6 +32,19 @@ public class Architecture {
         }
     }
 
+    /** ★ 1.3.1：设备真实架构 —— 一律以设备「首选 ABI」SUPPORTED_ABIS[0] 为准 ✓
+     *  （MuMu 的 SUPPORTED_64_BIT_ABIS 可能只报 arm64-v8a，会把 x86_64 设备误判成 arm64 ✗） */
+    public static int preferredDeviceArch() {
+        String[] preferred = Build.SUPPORTED_ABIS;
+        if (preferred != null && preferred.length > 0) {
+            int a = archAsInt(preferred[0]);
+            if (a != UNSUPPORTED_ARCH) {
+                return a;
+            }
+        }
+        return UNSUPPORTED_ARCH;
+    }
+
     public static boolean is64BitsDevice() {
         return Build.SUPPORTED_64_BIT_ABIS.length != 0;
     }
@@ -40,6 +54,11 @@ public class Architecture {
     }
 
     public static int getDeviceArchitecture() {
+        // ★ 1.3.1：优先用设备首选 ABI（不再依赖 SUPPORTED_64_BIT_ABIS ✗）
+        int preferred = preferredDeviceArch();
+        if (preferred != UNSUPPORTED_ARCH) {
+            return preferred;
+        }
         return isx86Device() ? is64BitsDevice() ? ARCH_X86_64 : ARCH_X86 : is64BitsDevice() ? ARCH_ARM64 : ARCH_ARM;
     }
 
