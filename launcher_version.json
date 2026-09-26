@@ -1,12 +1,12 @@
 {
   "latestRelease": {
-    "versionCode": 331,
-    "versionName": "1.3.1",
-    "date": "2026-09-24",
+    "versionCode": 332,
+    "versionName": "1.3.2",
+    "date": "2026-09-27",
     "url": [
-      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.3.1/QCL-release-1.3.1-all.apk"
+      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.3.2/QCL-release-1.3.2-all.apk"
     ],
-    "updateLog": "1.3.1 更新内容：\n1. 中文界面扩到 b1.8 / b1.8.1 和 1.0 正式版（加上原有 b1.7.3 系，共 4 个版本全中文）。\n2. 改用 RetroMCP 反编译各版本自己的源码再打补丁（正确路线），每个补丁都校验「无未映射符号 + 方法全覆盖」。\n3. 修复严重问题：混淆名同名不同物导致原生类被误删（b1.8.1 报 co、1.0 报 sj 起不来）。\n4. 修复：语言文件不再整目录跳过（保住 1.1 的 languages.txt）；「不检查游戏文件」只对支持中文的版本自动开；legacy 资源占位条目 404 不再让整批下载失败。\n",
+    "updateLog": "1.3.2 更新内容：\\n1. 新增 b1.6 全系列中文界面：b1.6 / b1.6.1 / b1.6.2 / b1.6.3 / b1.6.4 / b1.6.5 / b1.6.6（这 7 个版本的 se.class 字节完全相同，一份补丁通用）。\\n2. 实机验证 b1.6.6 主菜单全中文（单人游戏 / 多人游戏 / 模组与材质包 / 选项 / 退出游戏）。\\n3. 已有中文保持不变：b1.7.3 系、b1.8 系、1.0 正式版。\\n",
     "netdiskUrl": "https://pan.quark.cn/s/f2c26c4fb66f"
   },
   "latestPrerelease": null
