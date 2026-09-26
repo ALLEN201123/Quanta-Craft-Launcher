@@ -48,6 +48,39 @@ public final class LegacyChinesePack {
     /** ★ 当前正在处理的是不是 1.0 系（决定 abe 要不要替换）✓ */
     private static boolean v10Flag = false;
 
+/** ★ 当前正在处理的是不是 b1.6 系（决定 se 要不要替换）✓ */
+    private static boolean b166Flag = false;
+
+/** ★ 是不是 b1.6 系（b1.6 / b1.6.1 ~ b1.6.6）——
+     *  实测这 7 个版本的 se.class SHA1 完全相同（d5ff012e31b3），一份补丁通用 ✓ */
+    public static boolean isB166(File versionDir, String versionId) {
+        try {
+            String vid = versionId == null ? "" : versionId.trim().toLowerCase();
+            if (vid.matches("b1\\.6(\\.[1-6])?")) {
+                return true;
+            }
+            if (versionDir != null && versionId != null) {
+                File jf = new File(versionDir, versionId + ".json");
+                if (jf.isFile()) {
+                    byte[] b = new byte[(int) jf.length()];
+                    FileInputStream fin = new FileInputStream(jf);
+                    int n = fin.read(b);
+                    fin.close();
+                    String js = new String(b, 0, n, "UTF-8").toLowerCase();
+                    int k = js.indexOf("\"id\"");
+                    if (k >= 0) {
+                        String tail = js.substring(k, Math.min(js.length(), k + 24));
+                        if (tail.matches("(?s).*\"b1\\.6(\\.[1-6])?\".*")) {
+                            return true;
+                        }
+                    }
+                }
+            }
+        } catch (Throwable ignored) {
+        }
+        return false;
+    }
+
     /** ★ 是不是 1.0（正式版）—— RetroMCP 里叫 1.0.0，Mojang 的 id 是 1.0 ✓ */
     public static boolean isV10(File versionDir, String versionId) {
         try {
@@ -122,6 +155,11 @@ public final class LegacyChinesePack {
         if (isV10(null, versionId)) {
             return true;
         }
+
+        // ★ b1.6 系 ✓
+        if (isB166(null, versionId)) {
+            return true;
+        }
         // ★ 放宽：改了名字的版本（例如「b1.7.3东上」「我的b1.7.3」）也算
         for (String p : SUPPORTED_PREFIXES) {
             if (low.contains(p)) {
@@ -149,6 +187,8 @@ public final class LegacyChinesePack {
         String langDir = LANG_EN.equals(lang) ? "lang_en" : "lang_zh";
         final boolean b18v = isB18(versionDir, versionId);
         final boolean v10v = isV10(versionDir, versionId);
+        final boolean b166v = isB166(versionDir, versionId);
+        b166Flag = b166v;
         v10Flag = v10v;
         File tmp = new File(versionDir, versionId + ".jar.cnpatch");
         InputStream in = null;
@@ -187,6 +227,9 @@ public final class LegacyChinesePack {
             } else if (v10v) {
                 // ★ 1.0 正式版：只换 FontRenderer（abe），其余用原生 ✓
                 writeAsset(context, "cn_10/abe.class", "abe.class", zout);
+            } else if (b166v) {
+                // ★ b1.6 系：只换 FontRenderer（se），其余用原生 ✓
+                writeAsset(context, "cn_166/se.class", "se.class", zout);
             } else {
                 writeAsset(context, ASSET_DIR + "/sj.class", "sj.class", zout);
                 writeAsset(context, ASSET_DIR + "/co.class", "co.class", zout);
@@ -402,6 +445,11 @@ public final class LegacyChinesePack {
             return true;
         }
 
+        // ★ b1.6 系也支持中文 ✓
+        if (isB166(versionDir, versionId)) {
+            return true;
+        }
+
         if(versionDir != null) {
             try {
                 File jf = new File(versionDir, versionId + ".json");
@@ -432,6 +480,10 @@ public final class LegacyChinesePack {
 
     /** 中文包会覆盖的条目 */
     private static boolean isPatchedEntry(String name, boolean b18) {
+        if (name != null && name.equalsIgnoreCase("se.class")) {
+            // ★ b1.6 系：se 是它的 FontRenderer —— 只在 b1.6 系时替换 ✓
+            return b166Flag;
+        }
         if (b18 && name != null && name.equalsIgnoreCase("kh.class")) {
             return true;   // b1.8 系：原版 FontRenderer，由中文包替换 ✓
         }
