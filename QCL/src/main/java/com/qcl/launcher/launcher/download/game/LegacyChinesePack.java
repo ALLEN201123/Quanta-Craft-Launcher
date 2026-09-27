@@ -48,7 +48,35 @@ public final class LegacyChinesePack {
     /** ★ 当前正在处理的是不是 1.0 系（决定 abe 要不要替换）✓ */
     private static boolean v10Flag = false;
 
-/** ★ 当前正在处理的是不是 b1.6 系（决定 se 要不要替换）✓ */
+    /** ★ b1.9 各版本的补丁（配置驱动）
+     *  每行 = { 版本名正则, 补丁资源目录, FontRenderer 混淆名 }
+     *  ★ b1.9 的 5 个 pre 版混淆名各不相同（lf/ls/mc/mb/mf），必须逐版对应 ✓ */
+    private static final String[][] B19_PACKS = {
+            {"b1\\.9-pre2$",      "cn_b19pre2",     "lf"},
+            {"b1\\.9-pre3-1402$", "cn_b19pre31402", "ls"},
+            {"b1\\.9-pre4-1415$", "cn_b19pre41415", "mc"},
+            {"b1\\.9-pre5$",      "cn_b19pre5",     "mb"},
+            {"b1\\.9-pre6$",      "cn_b19pre6",     "mf"},
+    };
+
+    /** ★ 当前正在处理的 b1.9 组（[资源目录, 混淆名]，null = 不是 b1.9）✓ */
+    private static String[] b19Active = null;
+
+    /** ★ 判断版本名命中哪一组 B19_PACKS；返回该行或 null ✓ */
+    private static String[] matchB19(String versionId) {
+        if (versionId == null || versionId.isEmpty()) {
+            return null;
+        }
+        String vid = versionId.trim().toLowerCase();
+        for (String[] row : B19_PACKS) {
+            if (vid.matches(row[0])) {
+                return row;
+            }
+        }
+        return null;
+    }
+
+    /** ★ 当前正在处理的是不是 b1.6 系（决定 se 要不要替换）✓ */
     private static boolean b166Flag = false;
 
 /** ★ 是不是 b1.6 系（b1.6 / b1.6.1 ~ b1.6.6）——
@@ -160,6 +188,10 @@ public final class LegacyChinesePack {
         if (isB166(null, versionId)) {
             return true;
         }
+        // ★ b1.9 全系（pre2 ~ pre6）✓
+        if (matchB19(versionId) != null) {
+            return true;
+        }
         // ★ 放宽：改了名字的版本（例如「b1.7.3东上」「我的b1.7.3」）也算
         for (String p : SUPPORTED_PREFIXES) {
             if (low.contains(p)) {
@@ -189,6 +221,9 @@ public final class LegacyChinesePack {
         final boolean v10v = isV10(versionDir, versionId);
         final boolean b166v = isB166(versionDir, versionId);
         b166Flag = b166v;
+        // ★ b1.9 全系：命中哪一组就换它自己的 FontRenderer ✓
+        final String[] b19 = matchB19(versionId);
+        b19Active = b19;
         v10Flag = v10v;
         File tmp = new File(versionDir, versionId + ".jar.cnpatch");
         InputStream in = null;
@@ -230,6 +265,9 @@ public final class LegacyChinesePack {
             } else if (b166v) {
                 // ★ b1.6 系：只换 FontRenderer（se），其余用原生 ✓
                 writeAsset(context, "cn_166/se.class", "se.class", zout);
+            } else if (b19 != null) {
+                // ★ b1.9：只换它自己那一版的 FontRenderer，其余用原生 ✓
+                writeAsset(context, b19[1] + "/" + b19[2] + ".class", b19[2] + ".class", zout);
             } else {
                 writeAsset(context, ASSET_DIR + "/sj.class", "sj.class", zout);
                 writeAsset(context, ASSET_DIR + "/co.class", "co.class", zout);
@@ -480,6 +518,12 @@ public final class LegacyChinesePack {
 
     /** 中文包会覆盖的条目 */
     private static boolean isPatchedEntry(String name, boolean b18) {
+        // ★ b1.9：只在「当前这一组」激活时，跳过它自己的 FontRenderer 混淆名 ✓
+        //   （5 个 pre 版名字各不相同：lf/ls/mc/mb/mf —— 不同名不同物，绝不能混跳过 ✗）
+        if (b19Active != null && name != null
+                && name.equalsIgnoreCase(b19Active[2] + ".class")) {
+            return true;
+        }
         if (name != null && name.equalsIgnoreCase("se.class")) {
             // ★ b1.6 系：se 是它的 FontRenderer —— 只在 b1.6 系时替换 ✓
             return b166Flag;
@@ -499,9 +543,10 @@ public final class LegacyChinesePack {
         if (low.equals("sj.class") || low.equals("co.class")
                 || low.equals("qcllangscreen.class")) {
             // ★ 1.3.1：这三件套是 **b1.7.3 系** 的补丁 —— 只在 b1.7.3 系跳过 ✗
-            //   ★★ b1.8 系（kh）和 1.0 系（abe）里 co/sj 都是**它自己的原生类** ✗
-            //   跳过会导致 NoClassDefFoundError（b1.8.1 报 co、1.0 报 sj）✗
-            return !(b18 || v10Flag);
+            //   ★★ b1.8 系（kh）/ 1.0 系（abe）/ b1.6 系（se）/ b1.9 全系（lf/ls/mc/mb/mf）
+            //      里 co/sj 都是**它自己的原生类** ✗ 跳过会导致 NoClassDefFoundError
+            //      （b1.8.1 报 co、1.0 报 sj、b1.9-pre5 报 co ✓ 三次同一个坑）
+            return !(b18 || v10Flag || b166Flag || b19Active != null);
         }
         // ★ 原 jar 是签名过的，注入未签名类后必须去掉签名文件，否则
         //   JVM 会抛 SecurityException: signer information does not match
