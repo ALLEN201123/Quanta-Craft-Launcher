@@ -427,19 +427,34 @@ public final class LegacyChinesePack {
             }
         } catch (Throwable ignored) {
         }
-        if (want.equals(appliedLang(versionDir))) {
-            return true;   // 已经打过同一个语言，跳过
+        // ★ 标记 = 语言 + "|" + APK versionCode —— 启动器升级后自动重注入 ✓
+        //   否则老用户升级 APK 后，已打补丁的版本 jar 里还是旧补丁类，
+        //   （1.3.4 的「标签: 值」按钮乱码就是：类修了但 jar 不更新）✓
+        //   旧标记只有语言（无竖线）→ 比较必然不等 → 升级后自动重打一次 ✓
+        String expect = want + "|" + apkVersionCode(context);
+        if (expect.equals(appliedLang(versionDir))) {
+            return true;   // 同一语言 + 同一启动器版本，跳过
         }
         boolean ok = apply(context, versionDir, versionId, want);
         if (ok) {
             try {
                 java.io.FileOutputStream out = new java.io.FileOutputStream(new File(versionDir, MARKER));
-                out.write(want.getBytes("UTF-8"));
+                out.write(expect.getBytes("UTF-8"));
                 out.close();
             } catch (Throwable ignored) {
             }
         }
         return ok;
+    }
+
+    /** 当前 APK 的 versionCode，写进补丁标记 —— 启动器升级后强制重注入 ✓ */
+    private static String apkVersionCode(Context context) {
+        try {
+            return String.valueOf(context.getPackageManager()
+                    .getPackageInfo(context.getPackageName(), 0).versionCode);
+        } catch (Throwable t) {
+            return "0";
+        }
     }
 
 
