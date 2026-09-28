@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="icon.png" width="160" alt="QCL 图标"/>
+</p>
+
 # QCL · Quanta Craft Launcher
 
 > **目前手机启动器唯一支持下载所有考古社区已归档远古版本的。**
