@@ -59,7 +59,7 @@ public class DownloadGameListAdapter extends BaseAdapter {
         if (str.equals("snapshot")) {
             return this.context.getDrawable(R.drawable.ic_command);
         }
-        return this.context.getDrawable(R.drawable.ic_craft_table);
+        return this.context.getDrawable(R.drawable.ic_command_block);
     }
 
     public DownloadGameListAdapter(Context context, MainActivity mainActivity, ArrayList<VersionManifest.Version> arrayList) {

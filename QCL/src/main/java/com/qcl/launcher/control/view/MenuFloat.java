@@ -76,7 +76,7 @@ public class MenuFloat extends View {
         if (file.exists()) {
             this.bitmap = BitmapFactory.decodeFile(file.getAbsolutePath());
         } else {
-            this.bitmap = BitmapFactory.decodeResource(getContext().getResources(), R.drawable.ic_craft_table);
+            this.bitmap = BitmapFactory.decodeResource(getContext().getResources(), R.drawable.ic_command_block);
         }
     }
 
