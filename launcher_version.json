@@ -1,12 +1,12 @@
 {
   "latestRelease": {
-    "versionCode": 333,
-    "versionName": "1.3.3",
-    "date": "2026-09-27",
+    "versionCode": 334,
+    "versionName": "1.3.4",
+    "date": "2026-09-28",
     "url": [
-      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.3.3/QCL-release-1.3.3-all.apk"
+      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.3.4/QCL-release-1.3.4-all.apk"
     ],
-    "updateLog": "1.3.3 更新内容：\\n1. 新增 b1.9 全系列中文界面：b1.9-pre2 / pre3-1402 / pre4-1415 / pre5 / pre6。\\n2. 实机验证 pre2/pre5/pre6 主菜单全中文（单人游戏 / 多人游戏 / 模组与材质包 / 选项 / 退出游戏）。\\n3. 修复启动崩溃 NoClassDefFoundError: co（注入时误删游戏原生类）。\\n4. 修复中文不显示 / 字号过大 / 字挤在一起 / 字只剩偏旁等 5 处字形渲染问题。\\n5. 修复「选项」按钮旁的乱字符；补齐 options.fov 翻译。\\n6. 已有中文保持不变：b1.7.3 系、b1.8 系、1.0、b1.6 全系。\\n",
+    "updateLog": "1.3.4 更新内容：\\n1. 远古版本界面文本「按版本适配」：b1.6/b1.7.3 显示「草 / 石台阶 / 模组与材质包」，b1.8/b1.9-pre2~pre5 显示「草方块 / 圆石台阶 / 模组与材质包」，1.0/b1.9-pre6 显示「草方块 / 圆石台阶 / 材质包」——不再出现低版本套用高版本说法的问题。\\n2. 补全全部未翻译文本共 49 处：粒子效果选项、高草/蕨/龙蛋/床提示、1.0 全成就（含狙击手的对决）、启动器关于页与分类名、鼠标左/右/中键、检查更新失败等提示。\\n3. 修复一个注入缺陷：1.0.0-rc1 / rc2 等候选版曾被误判为正式 1.0，导致往这些版本写入本不该有的游戏类；现改为精确识别。\\n4. 新用户默认背景改为「经典图片」；动态轮播改由「网络」选项承载。\\n5. 已有中文保持不变：b1.7.3 系、b1.8 系、1.0、b1.6 全系、b1.9 全系。\\n",
     "netdiskUrl": "https://pan.quark.cn/s/f2c26c4fb66f"
   },
   "latestPrerelease": null
