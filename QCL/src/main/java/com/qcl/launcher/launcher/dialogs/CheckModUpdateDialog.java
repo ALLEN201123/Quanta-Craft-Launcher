@@ -136,8 +136,8 @@ public class CheckModUpdateDialog extends Dialog implements View.OnClickListener
         }
         dismiss();
         AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
-        builder.setTitle("Failed");
-        builder.setMessage("Failed to check updates");
+        builder.setTitle("失败");
+        builder.setMessage("检查更新失败");
         builder.setPositiveButton(getContext().getString(R.string.dialog_install_fail_positive), (dialogInterface, i) -> {});
         builder.create().show();
     }

@@ -73,7 +73,9 @@ public class InitializeSetting {
         if (new File(AppManifest.SETTING_DIR + "/launcher_setting.json").exists()) {
             return GsonUtils.getLauncherSettingFromFile(AppManifest.SETTING_DIR + "/launcher_setting.json");
         }
-        LauncherSetting launcherSetting = new LauncherSetting(AppManifest.DEFAULT_GAME_DIR, new SourceSetting(true, 1, 0), 0, 64, false, true, false, false, false, "DEFAULT", "DEFAULT", new BackgroundSetting(0, "", ""), AppManifest.DEFAULT_CACHE_DIR);
+        // ★ 1.3.4：新用户默认背景改为「经典图片」（type 1）
+        //   原为 type 0（动态轮播）；动态轮播已挪到「网络」选项，见 ExteriorSettingUI
+        LauncherSetting launcherSetting = new LauncherSetting(AppManifest.DEFAULT_GAME_DIR, new SourceSetting(true, 1, 0), 0, 64, false, true, false, false, false, "DEFAULT", "DEFAULT", new BackgroundSetting(1, "", ""), AppManifest.DEFAULT_CACHE_DIR);
         GsonUtils.saveLauncherSetting(launcherSetting, AppManifest.SETTING_DIR + "/launcher_setting.json");
         return launcherSetting;
     }

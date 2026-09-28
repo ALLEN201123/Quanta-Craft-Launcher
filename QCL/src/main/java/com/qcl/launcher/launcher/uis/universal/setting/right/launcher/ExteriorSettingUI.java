@@ -140,13 +140,16 @@ CompoundButton.OnCheckedChangeListener {
         this.editBgPath = (EditText)this.activity.findViewById(R.id.edit_bg_path);
         this.editBgUrl = (EditText)this.activity.findViewById(R.id.edit_bg_url);
         this.selectBgPath = (ImageButton)this.activity.findViewById(R.id.select_bg_path);
+        // ★ 1.3.4：type 0（自动切换/动态背景）改由「网络」选项承载；type 1（经典图片）成为「默认」
         if (this.activity.launcherSetting.launcherBackground.type == 0) {
-            this.defaultRadio.setChecked(true);
+            // 动态背景（自动切换）→ 选中「网络」
+            this.onlineRadio.setChecked(true);
             this.editBgPath.setEnabled(false);
             this.editBgUrl.setEnabled(false);
             this.selectBgPath.setEnabled(false);
         } else if (this.activity.launcherSetting.launcherBackground.type == 1) {
-            this.classicRadio.setChecked(true);
+            // 经典图片 → 选中「默认」
+            this.defaultRadio.setChecked(true);
             this.editBgPath.setEnabled(false);
             this.editBgUrl.setEnabled(false);
             this.selectBgPath.setEnabled(false);
@@ -163,25 +166,16 @@ CompoundButton.OnCheckedChangeListener {
                 this.activity.launcherLayout.setBackground(this.context.getDrawable(R.drawable.qcl_bg_1));
             }
         } else {
+            // ★ 1.3.4：type 3（旧「单张网络图」）与 type 0（动态背景）统一按「网络 = 自动切换」处理
+            //   旧用户升级后：选中「网络」，由 DynamicBackground 接管轮播
             this.onlineRadio.setChecked(true);
             this.editBgPath.setEnabled(false);
-            this.editBgUrl.setEnabled(true);
+            this.editBgUrl.setEnabled(false);
             this.selectBgPath.setEnabled(false);
-            new Thread(() -> {
-                try {
-                    URL url = new URL(this.activity.launcherSetting.launcherBackground.url);
-                    HttpURLConnection httpURLConnection = (HttpURLConnection)url.openConnection();
-                    httpURLConnection.setDoInput(true);
-                    httpURLConnection.connect();
-                    InputStream inputStream = httpURLConnection.getInputStream();
-                    Bitmap bitmap = BitmapFactory.decodeStream((InputStream)inputStream);
-                    this.handler.post(() -> this.activity.launcherLayout.setBackground((Drawable)new BitmapDrawable(bitmap)));
-                }
-                catch (IOException e) {
-                    this.handler.post(() -> this.activity.launcherLayout.setBackground(this.context.getDrawable(R.drawable.qcl_bg_1)));
-                    e.printStackTrace();
-                }
-            }).start();
+            if (this.activity.launcherSetting.launcherBackground.type == 3) {
+                this.activity.launcherSetting.launcherBackground.type = 0;
+                this.activity.refreshDynamicBackground();
+            }
         }
         this.editBgPath.setText((CharSequence)this.activity.launcherSetting.launcherBackground.path);
         this.editBgUrl.setText((CharSequence)this.activity.launcherSetting.launcherBackground.url);
@@ -514,8 +508,10 @@ CompoundButton.OnCheckedChangeListener {
             this.editBgPath.setEnabled(false);
             this.editBgUrl.setEnabled(false);
             this.selectBgPath.setEnabled(false);
-            this.activity.launcherSetting.launcherBackground.type = 0;
+            // ★ 1.3.4：「默认」= 经典图片（type 1）
+            this.activity.launcherSetting.launcherBackground.type = 1;
             this.activity.refreshDynamicBackground();
+            this.activity.launcherLayout.setBackground(this.context.getDrawable(R.drawable.ic_background_classic));
         }
         if (buttonView == this.classicRadio && isChecked) {
             this.defaultRadio.setChecked(false);
@@ -550,26 +546,11 @@ CompoundButton.OnCheckedChangeListener {
             this.classicRadio.setChecked(false);
             this.customRadio.setChecked(false);
             this.editBgPath.setEnabled(false);
-            this.editBgUrl.setEnabled(true);
+            this.editBgUrl.setEnabled(false);
             this.selectBgPath.setEnabled(false);
-            this.activity.launcherSetting.launcherBackground.type = 3;
+            // ★ 1.3.4：「网络」= 自动切换的动态背景（type 0，图片由 DynamicBackground 从网络拉取）
+            this.activity.launcherSetting.launcherBackground.type = 0;
             this.activity.refreshDynamicBackground();
-            this.activity.launcherSetting.launcherBackground.path = this.editBgUrl.getText().toString();
-            new Thread(() -> {
-                try {
-                    URL url = new URL(this.editBgUrl.getText().toString());
-                    HttpURLConnection httpURLConnection = (HttpURLConnection)url.openConnection();
-                    httpURLConnection.setDoInput(true);
-                    httpURLConnection.connect();
-                    InputStream inputStream = httpURLConnection.getInputStream();
-                    Bitmap bitmap = BitmapFactory.decodeStream((InputStream)inputStream);
-                    this.handler.post(() -> this.activity.launcherLayout.setBackground((Drawable)new BitmapDrawable(bitmap)));
-                }
-                catch (IOException e) {
-                    this.handler.post(() -> this.activity.launcherLayout.setBackground(this.context.getDrawable(R.drawable.qcl_bg_1)));
-                    e.printStackTrace();
-                }
-            }).start();
         }
         GsonUtils.saveLauncherSetting(this.activity.launcherSetting, AppManifest.SETTING_DIR + "/launcher_setting.json");
     }

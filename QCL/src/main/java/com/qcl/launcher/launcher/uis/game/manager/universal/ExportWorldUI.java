@@ -94,7 +94,7 @@ public class ExportWorldUI extends BaseUI implements View.OnClickListener {
                 }).start();
                 return;
             }
-            Toast.makeText(this.context, "file already exist!", 0).show();
+            Toast.makeText(this.context, "文件已存在！", 0).show();
         }
     }
 

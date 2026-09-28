@@ -76,87 +76,121 @@ public final class LegacyChinesePack {
         return null;
     }
 
+    /**
+     * ★ 1.3.4：**按版本挑语言覆盖** —— 少数键在不同版本里含义不同，中文说法也不同 ✓。
+     *
+     * 主表 {@code zh_CN.lang} 用的是「最新（1.0 / b1.9-pre6）」措辞，旧版本用 lang_over/ 里
+     * 的小覆盖改回去。**实测全量对比**（b1.6.6 → b1.9-pre6 所有同名键）只有 4 个键的值变过，
+     * 其中 3 个需要按版本改词，{@code key.playerlist} 只是首字母大小写、中文无差别，不用管：
+     * <pre>
+     *   tile.grass.name            Grass(草)                      → Grass Block(草方块)
+     *   tile.stoneSlab.cobble.name  Stone Slab(石台阶)             → Cobblestone Slab(圆石台阶)
+     *   menu.mods                  Mods and Texture Packs(模组与材质包) → Texture Packs(材质包)
+     * </pre>
+     *
+     * @return 覆盖资源的 asset 路径；{@code null} = 不需要覆盖（主表本身就是对的）✓
+     */
+    private static String overlayFor(String versionId, File versionDir) {
+        if (versionId == null || versionId.isEmpty()) {
+            return null;
+        }
+        final String BASE = "cn_b173/lang_over/";
+        String vid = versionId.trim().toLowerCase();
+        // ★ 1.0 正式版 / b1.9-pre6 —— 用「最新」措辞，主表本身就是对的，不用覆盖 ✓
+        if (isV10(versionDir, versionId) || vid.matches("b1\\.9-pre6$")) {
+            return null;
+        }
+        // ★ b1.8 系 / b1.9-pre2~pre5 —— 草方块 ✓ 圆石台阶 ✓，但 menu.mods 还是旧的「模组与材质包」✗
+        if (isB18(versionDir, versionId) || matchB19(versionId) != null) {
+            return BASE + "over_b18.lang";
+        }
+        // ★ b1.6 系 / b1.7.3 系（默认）—— 三处全是旧措辞 ✗
+        return BASE + "over_b16.lang";
+    }
+
     /** ★ 当前正在处理的是不是 b1.6 系（决定 se 要不要替换）✓ */
     private static boolean b166Flag = false;
 
-/** ★ 是不是 b1.6 系（b1.6 / b1.6.1 ~ b1.6.6）——
-     *  实测这 7 个版本的 se.class SHA1 完全相同（d5ff012e31b3），一份补丁通用 ✓ */
+    /** ★ 是不是 b1.6 系（b1.6 / b1.6.1 ~ b1.6.6）——
+     *  实测这 7 个版本的 se.class SHA1 完全相同（d5ff012e31b3），一份补丁通用 ✓
+     *  ★ 1.3.4：id 整体相等（原写法用正则已够精确，这里统一走 readJsonId）✓ */
     public static boolean isB166(File versionDir, String versionId) {
         try {
             String vid = versionId == null ? "" : versionId.trim().toLowerCase();
             if (vid.matches("b1\\.6(\\.[1-6])?")) {
                 return true;
             }
-            if (versionDir != null && versionId != null) {
-                File jf = new File(versionDir, versionId + ".json");
-                if (jf.isFile()) {
-                    byte[] b = new byte[(int) jf.length()];
-                    FileInputStream fin = new FileInputStream(jf);
-                    int n = fin.read(b);
-                    fin.close();
-                    String js = new String(b, 0, n, "UTF-8").toLowerCase();
-                    int k = js.indexOf("\"id\"");
-                    if (k >= 0) {
-                        String tail = js.substring(k, Math.min(js.length(), k + 24));
-                        if (tail.matches("(?s).*\"b1\\.6(\\.[1-6])?\".*")) {
-                            return true;
-                        }
-                    }
-                }
+            String id = readJsonId(versionDir, versionId);
+            if (id != null && id.toLowerCase().matches("b1\\.6(\\.[1-6])?")) {
+                return true;
             }
         } catch (Throwable ignored) {
         }
         return false;
     }
 
-    /** ★ 是不是 1.0（正式版）—— RetroMCP 里叫 1.0.0，Mojang 的 id 是 1.0 ✓ */
+    /**
+     * ★ 1.3.4：从版本 json 里**精确**取顶级 {@code "id"} 的值 ✓
+     *
+     * 为什么需要它：原来用 {@code tail.contains("1.0.0")} 判断 1.0 —— 但
+     * {@code "1.0.0-rc1"} / {@code "1.0.0-rc2-1649"} 这些**候选版**的 id 也含 {@code "1.0.0"} ✗
+     * → 被当成正式 1.0 → 往它们 jar 里注入正式版才有的 {@code abe.class}（实测 rc 版根本没有
+     * 这个类，正式 1.0 的 abe SHA1 = f65d6e4d）→ 污染/崩溃风险 ✗。
+     * 现改为取 id 值做**整体相等**判断 ✓
+     */
+    private static String readJsonId(File versionDir, String versionId) {
+        if (versionDir == null || versionId == null) {
+            return null;
+        }
+        try {
+            File jf = new File(versionDir, versionId + ".json");
+            if (!jf.isFile()) {
+                return null;
+            }
+            byte[] b = new byte[(int) jf.length()];
+            FileInputStream fin = new FileInputStream(jf);
+            int n = fin.read(b);
+            fin.close();
+            String js = new String(b, 0, n, "UTF-8");
+            // 只认「行首（可含空白）的 "id"」—— 避开 libraries 数组里嵌套的 id ✓
+            java.util.regex.Matcher m = java.util.regex.Pattern
+                    .compile("(?m)^\\s*\"id\"\\s*:\\s*\"([^\"]*)\"").matcher(js);
+            return m.find() ? m.group(1).trim() : null;
+        } catch (Throwable t) {
+            return null;
+        }
+    }
+
+    /** ★ 是不是 1.0（正式版）—— RetroMCP 里叫 1.0.0，Mojang 的 id 是 1.0 ✓
+     *  ★ 1.3.4：id 必须**整体相等** —— 不能再用 contains，否则 1.0.0-rc1 这类候选版会被误判 ✗ */
     public static boolean isV10(File versionDir, String versionId) {
         try {
             String vid = versionId == null ? "" : versionId.trim().toLowerCase();
             if (vid.equals("1.0") || vid.equals("1.0.0")) {
                 return true;
             }
-            if (versionDir != null && versionId != null) {
-                File jf = new File(versionDir, versionId + ".json");
-                if (jf.isFile()) {
-                    byte[] b = new byte[(int) jf.length()];
-                    FileInputStream fin = new FileInputStream(jf);
-                    int n = fin.read(b);
-                    fin.close();
-                    String js = new String(b, 0, n, "UTF-8").toLowerCase();
-                    int k = js.indexOf("\"id\"");
-                    if (k >= 0) {
-                        String tail = js.substring(k, Math.min(js.length(), k + 30));
-                        if (tail.contains("1.0.0") || tail.contains("1.0\"")) {
-                            return true;
-                        }
-                    }
-                }
+            String id = readJsonId(versionDir, versionId);
+            if (id != null) {
+                String lowId = id.toLowerCase();
+                return lowId.equals("1.0") || lowId.equals("1.0.0");
             }
         } catch (Throwable ignored) {
         }
         return false;
     }
 
-    /** ★ 是不是 b1.8 系（b1.8 / b1.8.1）—— 这两版 kh.class 字节完全相同，一份补丁通用 ✓ */
+    /** ★ 是不是 b1.8 系（b1.8 / b1.8.1）—— 这两版 kh.class 字节完全相同，一份补丁通用 ✓
+     *  ★ 1.3.4：id 整体相等 —— b1.8-pre2 这类预发布版**不**算 ✓ */
     public static boolean isB18(File versionDir, String versionId) {
         try {
             String vid = versionId == null ? "" : versionId.trim().toLowerCase();
             if (vid.equals("b1.8") || vid.equals("b1.8.1")) {
                 return true;
             }
-            if (versionDir != null && versionId != null) {
-                File jf = new File(versionDir, versionId + ".json");
-                if (jf.isFile()) {
-                    byte[] b = new byte[(int) jf.length()];
-                    FileInputStream fin = new FileInputStream(jf);
-                    int n = fin.read(b);
-                    fin.close();
-                    String js = new String(b, 0, n, "UTF-8").toLowerCase();
-                    if (js.contains("\"b1.8.1\"") || js.contains("\"b1.8\"")) {
-                        return true;
-                    }
-                }
+            String id = readJsonId(versionDir, versionId);
+            if (id != null) {
+                String lowId = id.toLowerCase();
+                return lowId.equals("b1.8") || lowId.equals("b1.8.1");
             }
         } catch (Throwable ignored) {
         }
@@ -293,12 +327,19 @@ public final class LegacyChinesePack {
             // 语言：源文件两套都装（zh_CN/stats_zh_CN=中文，en_US_orig/stats_US_orig=英文），
             // 再把**选中语言**的内容写进 en_US.lang / stats_US.lang —— 游戏原版 StringTranslate
             // 读的就是这两个文件名，所以「启动时的语言」由这里决定；游戏内切换走 QclLangScreen。
-            writeAsset(context, ASSET_DIR + "/lang/zh_CN.lang", "lang/zh_CN.lang", zout);
+            // ★ 1.3.4：按版本取「语言覆盖」（少数键各版本含义不同，主表用的是最新措辞）✓
+            final String over = overlayFor(versionId, versionDir);
+            writeLangOverlaid(context, ASSET_DIR + "/lang/zh_CN.lang", over, "lang/zh_CN.lang", zout);
             writeAsset(context, ASSET_DIR + "/lang/stats_zh_CN.lang", "lang/stats_zh_CN.lang", zout);
             writeAsset(context, ASSET_DIR + "/lang/en_US_orig.lang", "lang/en_US_orig.lang", zout);
             writeAsset(context, ASSET_DIR + "/lang/stats_US_orig.lang", "lang/stats_US_orig.lang", zout);
             boolean wantEn = LANG_EN.equals(lang);
-            writeAsset(context, ASSET_DIR + (wantEn ? "/lang/en_US_orig.lang" : "/lang/zh_CN.lang"), "lang/en_US.lang", zout);
+            if (wantEn) {
+                writeAsset(context, ASSET_DIR + "/lang/en_US_orig.lang", "lang/en_US.lang", zout);
+            } else {
+                // ★ 生效语言是中文 → 同样要 merge 覆盖 ✓（否则旧版本会显示新版措辞）
+                writeLangOverlaid(context, ASSET_DIR + "/lang/zh_CN.lang", over, "lang/en_US.lang", zout);
+            }
             writeAsset(context, ASSET_DIR + (wantEn ? "/lang/stats_US_orig.lang" : "/lang/stats_zh_CN.lang"), "lang/stats_US.lang", zout);
 
             zout.close();
@@ -565,6 +606,64 @@ public final class LegacyChinesePack {
             return true;
         }
         return low.equals("lang/en_us.lang") || low.equals("lang/stats_us.lang");
+    }
+
+    /**
+     * ★ 1.3.4：写语言文件 —— **先把版本覆盖 merge 进主表，再写进 jar** ✓
+     *
+     * 覆盖文件只列「与主表不同的键」，值同样用 Unicode 转义（反斜杠 + u + 四位十六进制）✓
+     * （游戏用 {@code Properties.load} 读 lang，会自动解码这种转义，与 zh_CN.lang 原有写法一致）
+     * 主表里没有的键追加到末尾（防御：万一覆盖写了新键也不会丢）✓
+     */
+    private static void writeLangOverlaid(Context context, String mainAsset, String overAsset,
+                                          String entryName, ZipOutputStream zout) throws Exception {
+        byte[] mainB = probe(context, mainAsset);
+        if (mainB == null) {
+            throw new java.io.FileNotFoundException("asset 缺失: " + mainAsset);
+        }
+        String text = new String(mainB, "UTF-8");
+        if (overAsset != null) {
+            byte[] overB = probe(context, overAsset);
+            if (overB != null) {
+                java.util.LinkedHashMap<String, String> ov = new java.util.LinkedHashMap<>();
+                for (String l : new String(overB, "UTF-8").split("\n", -1)) {
+                    String s = l.trim();
+                    if (s.isEmpty() || s.startsWith("#")) {
+                        continue;
+                    }
+                    int eq = s.indexOf('=');
+                    if (eq > 0) {
+                        ov.put(s.substring(0, eq).trim(), s.substring(eq + 1));
+                    }
+                }
+                StringBuilder sb = new StringBuilder(text.length() + 256);
+                for (String l : text.split("\n", -1)) {
+                    String raw = l.endsWith("\r") ? l.substring(0, l.length() - 1) : l;
+                    if (!raw.startsWith("#")) {
+                        int eq = raw.indexOf('=');
+                        if (eq > 0) {
+                            String key = raw.substring(0, eq).trim();
+                            String worth = ov.remove(key);
+                            if (worth != null) {
+                                sb.append(key).append('=').append(worth)
+                                        .append(l.endsWith("\r") ? "\r\n" : "\n");
+                                continue;
+                            }
+                        }
+                    }
+                    sb.append(l).append('\n');
+                }
+                for (java.util.Map.Entry<String, String> e : ov.entrySet()) {
+                    sb.append(e.getKey()).append('=').append(e.getValue()).append('\n');
+                }
+                text = sb.toString();
+            } else {
+                Log.w(TAG, "语言覆盖缺失，按主表原样写入: " + overAsset);
+            }
+        }
+        zout.putNextEntry(new ZipEntry(entryName));
+        zout.write(text.getBytes("UTF-8"));
+        zout.closeEntry();
     }
 
     private static void writeAsset(Context context, String assetPath, String entryName, ZipOutputStream zout) throws Exception {

@@ -551,7 +551,7 @@
     <string name="curse_category_5232">额外行星</string>
     <string name="curse_category_5129">原版增强</string>
     <string name="curse_category_5189">实用与QOL</string>
-    <string name="curse_category_5190">QoL</string>
+    <string name="curse_category_5190">体验优化</string>
     <string name="curse_category_5191">实用与QoL</string>
     <string name="curse_category_5192">梦幻菜单</string>
     <string name="curse_category_423">信息展示</string>
@@ -625,7 +625,7 @@
     <string name="modrinth_category_adventure">冒险</string>
     <string name="modrinth_category_challenging">高难度</string>
     <string name="modrinth_category_combat">战斗</string>
-    <string name="modrinth_category_cursed">Cursed</string>
+    <string name="modrinth_category_cursed">诅咒</string>
     <string name="modrinth_category_decoration">装饰</string>
     <string name="modrinth_category_equipment">装备</string>
     <string name="modrinth_category_fabric">Fabric</string>
@@ -636,7 +636,7 @@
     <string name="modrinth_category_lightweight">轻量</string>
     <string name="modrinth_category_magic">魔法</string>
     <string name="modrinth_category_misc">其他</string>
-    <string name="modrinth_category_modloader">Modloader</string>
+    <string name="modrinth_category_modloader">模组加载器</string>
     <string name="modrinth_category_multiplayer">多人</string>
     <string name="modrinth_category_optimization">优化</string>
     <string name="modrinth_category_quests">任务</string>
@@ -1165,4 +1165,7 @@
     <string name="setting_check_update_none">已是最新版</string>
     <string name="setting_legacy_cn_lang">远古版本汉化语言</string>
     <string name="legacy_cn_lang_cancel">取消</string>
+    <string name="exterior_setting_ui_transparent_bg">透明界面背景（关闭恢复灰色）</string>
+    <string name="ui_about_hmclpe_main">HMCL-PE 仓库（已归档）</string>
+    <string name="ui_about_hmclpe_sub">HMCL-PE 已停止维护并归档。QCL 1.0.x 及以前基于 HMCL-PE 构建，之后为自建启动管线。</string>
 </resources>

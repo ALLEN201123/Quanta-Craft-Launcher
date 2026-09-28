@@ -1,0 +1,6 @@
+# ★ 版本专用语言覆盖（只写与主表不同的键；值一律 \uXXXX 转义，与 zh_CN.lang 一致）
+# 导入时由 LegacyChinesePack 按版本 merge 进 zh_CN.lang ✓
+# A组 b1.6 / b1.7.3
+tile.grass.name=\u8349
+tile.stoneSlab.cobble.name=\u77f3\u53f0\u9636
+menu.mods=\u6a21\u7ec4\u4e0e\u6750\u8d28\u5305
