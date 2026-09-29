@@ -13,7 +13,7 @@
     <string name="dialog_verify_verify_fail">驗證失敗</string>
     <string name="dialog_verify_cancel">取消</string>
     <string name="dialog_obtain_permission_title">提示</string>
-    <string name="dialog_obtain_permission_msg">你需要在愛發電贊助 10 元以獲取開發版測試權限，贊助後你將收到內測群群號，請在愛發電私信我你的 QQ 號和設備碼。</string>
+    <string name="dialog_obtain_permission_msg">你需要贊助 10 元以獲取開發版測試權限。贊助後請把你的 QQ 號和設備碼發給作者，即可獲取內測群群號。</string>
     <string name="dialog_obtain_permission_positive">前往</string>
     <string name="dialog_obtain_permission_negative">取消</string>
     <string name="import_control_label">導入控制佈局方案</string>

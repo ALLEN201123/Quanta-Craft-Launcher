@@ -72,10 +72,36 @@ public final class LegacyChinesePack {
      *    b1.2_02-dev-20110517（开发版无主菜单、类结构大变）
      *    b1.3-pcgamer_demo / b1.4-1507 / b1.8-pre1-081459 / b1.8-pre1-091357 / b1.9-pre ✓ */
     private static final String[][] EXTRA_PACKS = {
+            // ★ 1.3.7：Alpha 系列（23 组唯一字体补丁，覆盖 40 个版本）
+            {"(a1\\.0\\.1_01)$",                                              "cn_a1g01",        "em"},
+            {"(a1\\.0\\.10)$",                                                "cn_a1g02",        "jd"},
+            {"(a1\\.0\\.11)$",                                                "cn_a1g03",        "jl"},
+            {"(a1\\.0\\.12)$",                                                "cn_a1g04",        "jm"},
+            {"(a1\\.0\\.13|a1\\.0\\.13_01-1038|a1\\.0\\.13_01-1444)$",          "cn_a1g05",        "jn"},
+            {"(a1\\.0\\.14-1603|a1\\.0\\.14-1659)$",                          "cn_a1g06",        "jp"},
+            {"(a1\\.0\\.15)$",                                                "cn_a1g07",        "js"},
+            {"(a1\\.0\\.16|a1\\.0\\.16_01|a1\\.0\\.16_02)$",                      "cn_a1g08",        "jt"},
+            {"(a1\\.0\\.17_02|a1\\.0\\.17_03|a1\\.0\\.17_04)$",                   "cn_a1g09",        "kb"},
+            {"(a1\\.0\\.2_01|a1\\.0\\.2_02|a1\\.0\\.3)$",                         "cn_a1g10",        "em"},
+            {"(a1\\.0\\.4)$",                                                 "cn_a1g11",        "eo"},
+            {"(a1\\.0\\.5-2149)$",                                           "cn_a1g12",        "id"},
+            {"(a1\\.0\\.5_01)$",                                              "cn_a1g13",        "ie"},
+            {"(a1\\.0\\.6|a1\\.0\\.6_01|a1\\.0\\.6_03)$",                         "cn_a1g14",        "iu"},
+            {"(a1\\.0\\.7)$",                                                 "cn_a1g15",        "iw"},
+            {"(a1\\.0\\.8_01)$",                                              "cn_a1g16",        "iy"},
+            {"(a1\\.0\\.9)$",                                                 "cn_a1g17",        "iz"},
+            {"(a1\\.1\\.0-101847|a1\\.1\\.0-131933|a1\\.1\\.1|a1\\.1\\.2|a1\\.1\\.2_01)$", "cn_a1g18",        "kd"},
+            {"(a1\\.2\\.0|a1\\.2\\.0_01|a1\\.2\\.0_02|a1\\.2\\.1_01)$",             "cn_a1g19",        "lg"},
+            {"(a1\\.2\\.2-1624|a1\\.2\\.2-1938)$",                            "cn_a1g20",        "ln"},
+            {"(a1\\.2\\.3)$",                                                 "cn_a1g21",        "lq"},
+            {"(a1\\.2\\.5)$",                                                 "cn_a1g22",        "lr"},
+            {"(a1\\.2\\.6)$",                                                 "cn_a1g23",        "ls"},
+            {"b1\\.2_02-dev.*$",          "cn_b1202dev",    "net/minecraft/client/gui/Font"},
             {"b1\\.2(_0[12])?$",          "cn_b12",         "nh"},
             {"b1\\.3-(1713|1733|1750)$",  "cn_b13",         "oi"},
             {"b1\\.3_01$",                "cn_b13",         "oi"},
             {"b1\\.3-pcgamer_demo$",      "cn_b13demo",     "ok"},
+            {"b1\\.4-1507$",              "cn_b14",         "ox"},
             {"b1\\.4-1634$",              "cn_b14",         "ox"},
             {"b1\\.4_01$",                "cn_b14",         "ox"},
             {"b1\\.5(_01)?$",             "cn_b15",         "rf"},
@@ -365,10 +391,19 @@ public final class LegacyChinesePack {
         java.util.zip.ZipFile zf = null;
         try {
             List<String> written = new ArrayList<>();
-            // ★ 要替换/新增的条目：先记下来，边写边从 assets 塞进去
-            // ★ 1.3.6：输入优先用「原版备份」—— 保证每次注入都是「原版 + 最新补丁」，
-            //   而不是「上次注入的产物」叠加（否则误删的原生类无法自愈，b1.1-1245 的 co 就是例证）✓
-            final File srcJar = backup0.exists() ? backup0 : jar;
+            // ★ 1.3.7：输入以「**当前 jar**」为基准 —— **保留玩家用「覆盖 class」方式装的远古版本 mod** ✓
+            //   旧逻辑（1.3.6）用 .jar.orig 原版重建，会把玩家后加/覆盖的 mod class 覆盖回原版 ✗
+            //   补丁命中项（isPatchedEntry：字体类 + font.txt + lang + glyph）仍会被跳过并用最新补丁替换，
+            //   与「保留 mod」不冲突；其余条目（原生类 + 玩家 mod 类）原样复制 ✓
+            //   .jar.orig 保留为「首次注入时的纯原版备份」，供玩家手动恢复纯净版。
+            final File srcJar = jar;
+            // \u2605 1.3.7\uff1aAlpha \u7ec4\u7684\u300c\u754c\u9762\u7ffb\u8bd1\u7c7b\u300d\u4f1a\u8986\u76d6\u540c\u540d\u6761\u76ee \u2014\u2014 \u590d\u5236\u9636\u6bb5\u5148\u8df3\u8fc7\uff0c\u907f\u514d\u91cd\u590d\u6761\u76ee\u5f02\u5e38
+            final String trJarName = (extra != null)
+                    ? ("cn_a1v_" + versionId.replaceAll("[^A-Za-z0-9]", "_") + "_tr.jar")
+                    : null;
+            final java.util.Set<String> trSet = (trJarName != null)
+                    ? trEntryNames(context, trJarName)
+                    : java.util.Collections.<String>emptySet();
             // ★ 1.3.6：改用 ZipFile（随机访问 / 读中央目录）而不是 ZipInputStream（流式）——
             //   后者遇到某些 jar（如 b1.3-pcgamer_demo 这种特殊打包）会提前返回 null，
             //   导致「原版条目一个都没复制」→ jar 只剩补丁内容 → 游戏 ClassNotFoundException ✗
@@ -379,7 +414,7 @@ public final class LegacyChinesePack {
             while (en.hasMoreElements()) {
                 java.util.zip.ZipEntry entry = en.nextElement();
                 String name = entry.getName();
-                if (isPatchedEntry(name, b18v)) {
+                if (isPatchedEntry(name, b18v) || trSet.contains(name)) {
                     continue;   // 这些由中文包提供，跳过原版
                 }
                 ZipEntry ne = new ZipEntry(name);
@@ -421,6 +456,8 @@ public final class LegacyChinesePack {
                 if ("cn_b13demo".equals(extra[1])) {
                     writeAsset(context, "cn_b13demo/ei.class", "ei.class", zout);
                 }
+                // ★ 1.3.7：Alpha 组额外注入「界面翻译类」，目录 = <组名>_tr/
+                if (trJarName != null) writeAssetJar(context, trJarName, zout);
             } else {
                 writeAsset(context, ASSET_DIR + "/sj.class", "sj.class", zout);
                 writeAsset(context, ASSET_DIR + "/co.class", "co.class", zout);
@@ -848,6 +885,49 @@ public final class LegacyChinesePack {
             zout.closeEntry();
         } finally {
             closeQuietly(is);
+        }
+    }
+
+    /** ★ 1.3.7：读「界面翻译 jar」的条目名集合（供复制阶段跳过，避免重复条目）*/
+    private static java.util.Set<String> trEntryNames(Context context, String trJar) {
+        java.util.Set<String> set = new java.util.HashSet<>();
+        java.util.zip.ZipInputStream in = null;
+        try {
+            in = new java.util.zip.ZipInputStream(context.getAssets().open(trJar));
+            java.util.zip.ZipEntry e;
+            while ((e = in.getNextEntry()) != null) {
+                if (!e.isDirectory()) {
+                    set.add(e.getName());
+                }
+            }
+        } catch (Throwable ignored) {
+        } finally {
+            closeQuietly(in);
+        }
+        return set;
+    }
+
+    /** ★ 1.3.7：把「界面翻译 jar」里的所有 class 写入目标 jar（保留内部路径）*/
+    private static void writeAssetJar(Context context, String trJar, ZipOutputStream zout) {
+        java.util.zip.ZipInputStream in = null;
+        try {
+            in = new java.util.zip.ZipInputStream(context.getAssets().open(trJar));
+            java.util.zip.ZipEntry e;
+            byte[] buf = new byte[65536];
+            while ((e = in.getNextEntry()) != null) {
+                if (e.isDirectory()) {
+                    continue;
+                }
+                zout.putNextEntry(new java.util.zip.ZipEntry(e.getName()));
+                int n;
+                while ((n = in.read(buf)) > 0) {
+                    zout.write(buf, 0, n);
+                }
+                zout.closeEntry();
+            }
+        } catch (Throwable ignored) {
+        } finally {
+            closeQuietly(in);
         }
     }
 

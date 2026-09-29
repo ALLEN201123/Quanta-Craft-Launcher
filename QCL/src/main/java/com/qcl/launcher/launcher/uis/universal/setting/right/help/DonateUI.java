@@ -50,7 +50,7 @@ public class DonateUI extends BaseUI implements View.OnClickListener {
     @Override // android.view.View.OnClickListener
     public void onClick(View view) {
         if (view == this.textView) {
-            this.context.startActivity(new Intent("android.intent.action.VIEW", Uri.parse("https://afdian.net/@tungs")));
+            this.context.startActivity(new Intent("android.intent.action.VIEW", Uri.parse("https://qcl-sponsor.app.workbuddy.host/")));
         }
     }
 }

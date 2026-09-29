@@ -106,6 +106,6 @@ public class VerifyDialog extends Dialog implements View.OnClickListener {
     /* JADX INFO: Access modifiers changed from: package-private */
     /* renamed from: lambda$onClick$0$com-qcl-launcher-launcher-dialogs-VerifyDialog, reason: not valid java name */
     public /* synthetic */ void m233lambda$onClick$0$comqcllauncherlauncherdialogsVerifyDialog(DialogInterface dialogInterface, int i) {
-        getContext().startActivity(new Intent("android.intent.action.VIEW", Uri.parse("https://afdian.net/@tungs")));
+        getContext().startActivity(new Intent("android.intent.action.VIEW", Uri.parse("https://qcl-sponsor.app.workbuddy.host/")));
     }
 }

@@ -656,6 +656,7 @@
     <string name="setting_ui_public_game_setting">Global Game Settings</string>
     <string name="setting_ui_launcher">Launcher</string>
     <string name="setting_ui_universal">General</string>
+    <string name="exterior_setting_show_account_model">Show account character on main screen</string>
     <string name="setting_ui_exterior">Appearance</string>
     <string name="setting_ui_download">Download</string>
     <string name="setting_ui_help">Help</string>

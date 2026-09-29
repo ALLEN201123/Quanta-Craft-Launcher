@@ -21,7 +21,7 @@
     <string name="dialog_verify_cancel">取消</string>
 
     <string name="dialog_obtain_permission_title">提示</string>
-    <string name="dialog_obtain_permission_msg">你需要在爱发电赞助 10 元以获取开发版测试权限，赞助后你将收到内测群群号，请在爱发电私信我你的 QQ 号和设备码。</string>
+    <string name="dialog_obtain_permission_msg">你需要赞助 10 元以获取开发版测试权限。赞助后请把你的 QQ 号和设备码发给作者，即可获取内测群群号。</string>
     <string name="dialog_obtain_permission_positive">前往</string>
     <string name="dialog_obtain_permission_negative">取消</string>
 
@@ -674,6 +674,7 @@
     <string name="setting_ui_public_game_setting">全局游戏设置</string>
     <string name="setting_ui_launcher">启动器</string>
     <string name="setting_ui_universal">通用</string>
+    <string name="exterior_setting_show_account_model">主界面显示账号人物</string>
     <string name="setting_ui_exterior">外观</string>
     <string name="setting_ui_download">下载</string>
     <string name="setting_ui_help">帮助</string>

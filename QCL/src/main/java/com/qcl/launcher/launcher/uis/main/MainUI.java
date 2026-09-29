@@ -156,7 +156,19 @@ public class MainUI extends BaseUI implements View.OnClickListener, AdapterView.
     @Override
     public void onStart() {
         super.onStart();
-        if (skinGLSurfaceView != null) skinGLSurfaceView.onResume();
+        // ★ 1.3.7：回到主界面恢复 3D 人物（受「主界面显示账号人物」开关控制，默认开）
+        boolean showModelCfg = true;
+        try {
+            showModelCfg = activity.launcherSetting == null || activity.launcherSetting.showAccountModel;
+        } catch (Throwable ignored) {
+        }
+        if (skinGLSurfaceView != null) {
+            skinGLSurfaceView.onResume();
+            skinGLSurfaceView.setVisibility(showModelCfg ? View.VISIBLE : View.GONE);
+        }
+        if (!showModelCfg && accountModelView != null) {
+            accountModelView.setVisibility(View.GONE);
+        }
         CustomAnimationUtils.showViewFromLeft(mainUI,activity,context,true);
         activity.hideBarTitle();
 
@@ -442,7 +454,15 @@ public class MainUI extends BaseUI implements View.OnClickListener, AdapterView.
     @Override
     public void onStop() {
         super.onStop();
-        if (skinGLSurfaceView != null) skinGLSurfaceView.onPause();
+        // ★ 1.3.7 修复：切到其他页面时，3D 人物（GLSurfaceView）只 onPause 不够 ——
+        //   部分手机上会把画面残留在上层，遮住设置/下载/版本列表界面。这里彻底隐藏。
+        if (skinGLSurfaceView != null) {
+            skinGLSurfaceView.onPause();
+            skinGLSurfaceView.setVisibility(View.GONE);
+        }
+        if (accountModelView != null) {
+            accountModelView.setVisibility(View.GONE);
+        }
         CustomAnimationUtils.hideViewToLeft(mainUI,activity,context,true);
     }
 

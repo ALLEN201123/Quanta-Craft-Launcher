@@ -20,6 +20,8 @@ public class LauncherSetting {
     public int maxDownloadTask;
     public String panelColor;
     public boolean transBar;
+    /** 1.3.7: 主界面是否显示账号人物（默认开） */
+    public boolean showAccountModel = true;
     public int uiTheme;
 
     public LauncherSetting(String str, SourceSetting sourceSetting, int i, int i2, boolean z, boolean z2, boolean z3, boolean z4, boolean z5, String str2, String str3, BackgroundSetting backgroundSetting, String str4) {

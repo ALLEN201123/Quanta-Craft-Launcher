@@ -96,6 +96,7 @@ CompoundButton.OnCheckedChangeListener {
     private SwitchCompat transBarSwitch;
     private SwitchCompat fullscreenSwitch;
     private SwitchCompat grassUiSwitch;
+    private SwitchCompat showAccountModelSwitch;
     private SwitchCompat transBgSwitch;
     private LinearLayout fullscreenSetting;
     private RadioButton defaultRadio;
@@ -131,6 +132,7 @@ CompoundButton.OnCheckedChangeListener {
         this.transBarSwitch = (SwitchCompat)this.activity.findViewById(R.id.switch_trans_bar);
         this.fullscreenSwitch = (SwitchCompat)this.activity.findViewById(R.id.switch_full_screen);
         this.grassUiSwitch = (SwitchCompat)this.activity.findViewById(R.id.switch_grass_ui);
+        this.showAccountModelSwitch = (SwitchCompat)this.activity.findViewById(R.id.switch_show_account_model);
         this.transBgSwitch = (SwitchCompat)this.activity.findViewById(R.id.switch_transparent_bg);
         this.fullscreenSetting = (LinearLayout)this.activity.findViewById(R.id.fullscreen_layout);
         this.defaultRadio = (RadioButton)this.activity.findViewById(R.id.select_bg_default);
@@ -185,6 +187,9 @@ CompoundButton.OnCheckedChangeListener {
         this.fullscreenSwitch.setOnCheckedChangeListener((CompoundButton.OnCheckedChangeListener)this);
         if (this.grassUiSwitch != null) {
             this.grassUiSwitch.setOnCheckedChangeListener((CompoundButton.OnCheckedChangeListener)this);
+        }
+        if (this.showAccountModelSwitch != null) {
+            this.showAccountModelSwitch.setOnCheckedChangeListener((CompoundButton.OnCheckedChangeListener)this);
         }
         if (this.transBgSwitch != null) {
             this.transBgSwitch.setOnCheckedChangeListener((CompoundButton.OnCheckedChangeListener)this);
@@ -243,6 +248,9 @@ CompoundButton.OnCheckedChangeListener {
         });
         this.transBarSwitch.setChecked(this.activity.launcherSetting.transBar);
         this.fullscreenSwitch.setChecked(this.activity.launcherSetting.fullscreen);
+        if (this.showAccountModelSwitch != null) {
+            this.showAccountModelSwitch.setChecked(this.activity.launcherSetting.showAccountModel);
+        }
         if (this.grassUiSwitch != null) {
             this.grassUiSwitch.setChecked(this.activity.launcherSetting.uiTheme == 1);
             if (this.transBgSwitch != null) {
@@ -489,6 +497,11 @@ CompoundButton.OnCheckedChangeListener {
             GsonUtils.saveLauncherSetting(this.activity.launcherSetting, AppManifest.SETTING_DIR + "/launcher_setting.json");
             QclThemeUtils.apply((Activity)this.activity, this.activity.launcherSetting.uiTheme);
             this.refreshColorEditable();
+        }
+        // 1.3.7: 主界面是否显示账号人物（默认开）
+        if (this.showAccountModelSwitch != null && buttonView == this.showAccountModelSwitch) {
+            this.activity.launcherSetting.showAccountModel = isChecked;
+            GsonUtils.saveLauncherSetting(this.activity.launcherSetting, AppManifest.SETTING_DIR + "/launcher_setting.json");
         }
         // ★ 1.2.3：透明界面背景（默认开；关掉恢复原来的灰色面板 #C8EDEDED）
         if (this.transBgSwitch != null && buttonView == this.transBgSwitch) {
