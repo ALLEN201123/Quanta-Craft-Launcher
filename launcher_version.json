@@ -1,12 +1,12 @@
 {
   "latestRelease": {
-    "versionCode": 336,
-    "versionName": "1.3.6",
+    "versionCode": 337,
+    "versionName": "1.3.7",
     "date": "2026-09-29",
     "url": [
-      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.3.6/QCL-release-1.3.6-all.apk"
+      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.3.7/QCL-release-1.3.7-all.apk"
     ],
-    "updateLog": "1.3.6 更新内容：\\n1. Beta 版本基本补全中文支持：补齐 b1.0 ~ b1.9 的 45 个 Beta 版本中文（新增 b1.0 系、b1.1 系、b1.2~b1.9 各小版本与变体），彻底消灭「这个 Beta 版没有字」的情况；仅剩 2 个特殊版暂未支持（b1.2_02-dev-20110517 泄露开发版、b1.4-1507），将在后续版本补上。其中 b1.1-1245 / 1255 原版缺字库文件一并补齐。\\n2. 修复 b1.3-pcgamer_demo、b1.8-pre1（两个）、b1.9-pre 这 4 个特殊版本的中文空白/乱码重叠：根因是字形尺寸表高 4 位实为「起始列」而非「高度」，补丁按高度读算出负高度，现改用与 b1.7.3 一致的渲染方式（16×16 整格取 UV、半格绘制、高度固定），并为这些版本生成专用字体补丁。\\n3. PC Gamer 试玩版主菜单汉化：写死的英文按钮「Play demo world / Reset demo world」汉化为「玩试玩世界 / 重置试玩世界」。\\n",
+    "updateLog": "1.3.7 更新内容：\\n1. Alpha 全系列中文补丁（42 个版本）：补齐 a1.0.x ~ a1.2.x 的中文支持 —— 字体层 23 份专用补丁 + 每版本独立的界面翻译（合计 1480 个类、4690 处硬编码英文汉化），主菜单/选项/按键/物品名全部中文。\\n2. Beta 补齐 2 个：b1.2_02-dev-20110517（未混淆开发版，单独做字体补丁）、b1.4-1507（字体类与主版一致，直接复用）。至此 Beta 全系（b1.0~b1.9）支持中文。\\n3. 修复「切页面时 3D 人物残留」：切换到设置/下载/版本列表/账号列表后，主界面 3D 人物在部分手机上仍残留显示 —— 现在切页面会彻底隐藏。\\n4. 新增设置开关「主界面显示账号人物」（设置→外观，默认开）：关闭后主界面不再显示账号人物。\\n5. 默认背景改为「经典」（等待界面与网络背景不变）。\\n6. 赞助入口指向 QCL 自己的赞助页。\\n",
     "netdiskUrl": "https://pan.quark.cn/s/f2c26c4fb66f"
   },
   "latestPrerelease": null
