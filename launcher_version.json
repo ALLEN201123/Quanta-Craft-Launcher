@@ -1,12 +1,12 @@
 {
   "latestRelease": {
-    "versionCode": 335,
-    "versionName": "1.3.5",
-    "date": "2026-09-28",
+    "versionCode": 336,
+    "versionName": "1.3.6",
+    "date": "2026-09-29",
     "url": [
-      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.3.5/QCL-release-1.3.5-all.apk"
+      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.3.6/QCL-release-1.3.6-all.apk"
     ],
-    "updateLog": "1.3.5 更新内容：\\n1. 修复远古版本（b1.6 全系 / b1.7.3 系 / b1.8 系 / 1.0 / b1.9 全系）选项界面「标签: 值」按钮的显示错乱：冒号、数字等西文字符被画成乱字形并与标签重叠（如「音乐: 关」「难度: 普通」）。原因是中英文混排时字符渲染共用了被中文点阵替换掉的纹理，现已在每次刷新队列前重新绑定西文字体纹理。\\n2. 启动器升级后自动为已安装的远古版本重新注入修复补丁，无需删除版本重装。\\n",
+    "updateLog": "1.3.6 更新内容：\\n1. Beta 版本全系列中文支持：补齐 b1.0 ~ b1.9 全部 47 个 Beta 版本的中文（新增 b1.0 系、b1.1 系、b1.2~b1.9 各小版本与变体），彻底消灭「这个 Beta 版没有字」的情况；其中 b1.1-1245 / 1255 原版缺字库文件一并补齐。\\n2. 修复 b1.3-pcgamer_demo、b1.8-pre1（两个）、b1.9-pre 这 4 个特殊版本的中文空白/乱码重叠：根因是字形尺寸表高 4 位实为「起始列」而非「高度」，补丁按高度读算出负高度，现改用与 b1.7.3 一致的渲染方式（16×16 整格取 UV、半格绘制、高度固定），并为这些版本生成专用字体补丁。\\n3. PC Gamer 试玩版主菜单汉化：写死的英文按钮「Play demo world / Reset demo world」汉化为「玩试玩世界 / 重置试玩世界」。\\n",
     "netdiskUrl": "https://pan.quark.cn/s/f2c26c4fb66f"
   },
   "latestPrerelease": null
