@@ -62,6 +62,51 @@ public final class LegacyChinesePack {
     /** ★ 当前正在处理的 b1.9 组（[资源目录, 混淆名]，null = 不是 b1.9）✓ */
     private static String[] b19Active = null;
 
+    /** ★ 1.3.6：当前激活的 b1.0/b1.1 补丁类（"mi.class" / "mj.class"；null = 不是）——
+     *  isPatchedEntry 只跳它自己（坑：mj 在 b1.0 里是方块类、mi 在 b1.1 里另有其物，绝不能混跳 ✗）✓ */
+    private static String b10b11Class = null;
+
+    /** ★ 1.3.6：新增支持的 Beta 版本（b1.2~b1.9 的变体/小版本）
+     *  每行 = { 版本名正则, 补丁资源目录, FontRenderer 混淆名 }
+     *  ★ 排除（**字体类内容与主版不同 → 复用主版产物会崩**，需各自生成专用补丁，1.3.7 处理）：
+     *    b1.2_02-dev-20110517（开发版无主菜单、类结构大变）
+     *    b1.3-pcgamer_demo / b1.4-1507 / b1.8-pre1-081459 / b1.8-pre1-091357 / b1.9-pre ✓ */
+    private static final String[][] EXTRA_PACKS = {
+            {"b1\\.2(_0[12])?$",          "cn_b12",         "nh"},
+            {"b1\\.3-(1713|1733|1750)$",  "cn_b13",         "oi"},
+            {"b1\\.3_01$",                "cn_b13",         "oi"},
+            {"b1\\.3-pcgamer_demo$",      "cn_b13demo",     "ok"},
+            {"b1\\.4-1634$",              "cn_b14",         "ox"},
+            {"b1\\.4_01$",                "cn_b14",         "ox"},
+            {"b1\\.5(_01)?$",             "cn_b15",         "rf"},
+            {"b1\\.6-test_build_3$",      "cn_166t",        "se"},
+            {"b1\\.7(_01|\\.2)?$",        "cn_b17",         "sj"},
+            {"b1\\.8-pre1-081459$",       "cn_b18pre1",     "kg"},
+            {"b1\\.8-pre1-091357$",       "cn_b18pre1",     "kg"},
+            {"b1\\.8-pre2-121559$",       "cn_b18pre2",     "kh"},
+            {"b1\\.8-pre2-131225$",       "cn_b18pre2",     "kh"},
+            {"b1\\.9-pre$",               "cn_b19pre",      "lc"},
+            {"b1\\.9-pre3-1350$",         "cn_b19pre31350", "ls"},
+            {"b1\\.9-pre4-1434$",         "cn_b19pre41434", "mc"},
+    };
+
+    /** ★ 当前正在处理的扩展组（[资源目录, 混淆名]，null = 不是）✓ */
+    private static String[] extraActive = null;
+
+    /** ★ 判断版本名命中哪一组 EXTRA_PACKS；返回该行或 null ✓ */
+    private static String[] matchExtra(String versionId) {
+        if (versionId == null || versionId.isEmpty()) {
+            return null;
+        }
+        String vid = versionId.trim().toLowerCase();
+        for (String[] row : EXTRA_PACKS) {
+            if (vid.matches(row[0])) {
+                return row;
+            }
+        }
+        return null;
+    }
+
     /** ★ 判断版本名命中哪一组 B19_PACKS；返回该行或 null ✓ */
     private static String[] matchB19(String versionId) {
         if (versionId == null || versionId.isEmpty()) {
@@ -197,6 +242,43 @@ public final class LegacyChinesePack {
         return false;
     }
 
+    /** ★ 1.3.6：b1.0 系（b1.0 / b1.0_01 / b1.0.2）—— 三版 mi.class 字节完全相同（md5 ae3b9d3a），一份补丁通用 ✓
+     *  ★ b1.0 无「字符表类」（字符表内联在代码里）→ 补丁的 mi 自带读表（qclReadTable）+ 表缺失回退原版行为 ✓ */
+    public static boolean isB10(File versionDir, String versionId) {
+        try {
+            String vid = versionId == null ? "" : versionId.trim().toLowerCase();
+            if (vid.equals("b1.0") || vid.equals("b1.0_01") || vid.equals("b1.0.2")) {
+                return true;
+            }
+            String id = readJsonId(versionDir, versionId);
+            if (id != null) {
+                String lowId = id.toLowerCase();
+                return lowId.equals("b1.0") || lowId.equals("b1.0_01") || lowId.equals("b1.0.2");
+            }
+        } catch (Throwable ignored) {
+        }
+        return false;
+    }
+
+    /** ★ 1.3.6：b1.1 系（b1.1-1245 / b1.1-1255 / b1.1_01 / b1.1_02）—— 四版 mj.class 字节完全相同
+     *  （md5 7271512b），一份补丁通用 ✓。★ 1245/1255 原版缺 font.txt（「没文字」版）→ 补丁注入 font.txt 顺手修复 ✓ */
+    public static boolean isB11(File versionDir, String versionId) {
+        try {
+            String vid = versionId == null ? "" : versionId.trim().toLowerCase();
+            if (vid.equals("b1.1-1245") || vid.equals("b1.1-1255") || vid.equals("b1.1_01") || vid.equals("b1.1_02")) {
+                return true;
+            }
+            String id = readJsonId(versionDir, versionId);
+            if (id != null) {
+                String lowId = id.toLowerCase();
+                return lowId.equals("b1.1-1245") || lowId.equals("b1.1-1255")
+                        || lowId.equals("b1.1_01") || lowId.equals("b1.1_02");
+            }
+        } catch (Throwable ignored) {
+        }
+        return false;
+    }
+
     public static final String LANG_ZH = "zh_CN";
     public static final String LANG_EN = "en_US";
 
@@ -218,12 +300,20 @@ public final class LegacyChinesePack {
             return true;
         }
 
+        // ★ 1.3.6：b1.0 系 / b1.1 系 ✓
+        if (isB10(null, versionId) || isB11(null, versionId)) {
+            return true;
+        }
         // ★ b1.6 系 ✓
         if (isB166(null, versionId)) {
             return true;
         }
         // ★ b1.9 全系（pre2 ~ pre6）✓
         if (matchB19(versionId) != null) {
+            return true;
+        }
+        // ★ 1.3.6：扩展的 17 个 Beta 版本 ✓
+        if (matchExtra(versionId) != null) {
             return true;
         }
         // ★ 放宽：改了名字的版本（例如「b1.7.3东上」「我的b1.7.3」）也算
@@ -246,6 +336,8 @@ public final class LegacyChinesePack {
             return false;
         }
         File jar = new File(versionDir, versionId + ".jar");
+        // ★ 1.3.6：原版备份（首次注入时创建）—— 存在时作为「重新注入」的干净输入源 ✓
+        File backup0 = new File(versionDir, versionId + ".jar.orig");
         if (!jar.isFile() || jar.length() < 1024) {
             Log.w(TAG, "找不到本体 jar: " + jar.getAbsolutePath());
             return false;
@@ -255,42 +347,62 @@ public final class LegacyChinesePack {
         final boolean v10v = isV10(versionDir, versionId);
         final boolean b166v = isB166(versionDir, versionId);
         b166Flag = b166v;
+        // ★ 1.3.6：b1.0 系 / b1.1 系（各自只换自己的 FontRenderer：mi / mj）✓
+        final boolean b10v = isB10(versionDir, versionId);
+        final boolean b11v = isB11(versionDir, versionId);
+        b10b11Class = b10v ? "mi.class" : (b11v ? "mj.class" : null);
         // ★ b1.9 全系：命中哪一组就换它自己的 FontRenderer ✓
         final String[] b19 = matchB19(versionId);
         b19Active = b19;
+        // ★ 1.3.6：扩展 Beta 版本组 ✓
+        final String[] extra = matchExtra(versionId);
+        extraActive = extra;
         v10Flag = v10v;
         File tmp = new File(versionDir, versionId + ".jar.cnpatch");
         InputStream in = null;
         ZipInputStream zin = null;
         ZipOutputStream zout = null;
+        java.util.zip.ZipFile zf = null;
         try {
             List<String> written = new ArrayList<>();
             // ★ 要替换/新增的条目：先记下来，边写边从 assets 塞进去
-            in = new java.io.FileInputStream(jar);
-            zin = new ZipInputStream(new java.io.BufferedInputStream(in, 65536));
+            // ★ 1.3.6：输入优先用「原版备份」—— 保证每次注入都是「原版 + 最新补丁」，
+            //   而不是「上次注入的产物」叠加（否则误删的原生类无法自愈，b1.1-1245 的 co 就是例证）✓
+            final File srcJar = backup0.exists() ? backup0 : jar;
+            // ★ 1.3.6：改用 ZipFile（随机访问 / 读中央目录）而不是 ZipInputStream（流式）——
+            //   后者遇到某些 jar（如 b1.3-pcgamer_demo 这种特殊打包）会提前返回 null，
+            //   导致「原版条目一个都没复制」→ jar 只剩补丁内容 → 游戏 ClassNotFoundException ✗
+            zf = new java.util.zip.ZipFile(srcJar);
             zout = new ZipOutputStream(new java.io.BufferedOutputStream(new FileOutputStream(tmp), 65536));
-            ZipEntry entry;
             byte[] buf = new byte[65536];
-            while ((entry = zin.getNextEntry()) != null) {
+            java.util.Enumeration<? extends java.util.zip.ZipEntry> en = zf.entries();
+            while (en.hasMoreElements()) {
+                java.util.zip.ZipEntry entry = en.nextElement();
                 String name = entry.getName();
                 if (isPatchedEntry(name, b18v)) {
                     continue;   // 这些由中文包提供，跳过原版
                 }
                 ZipEntry ne = new ZipEntry(name);
                 zout.putNextEntry(ne);
+                java.io.InputStream ze = zf.getInputStream(entry);
                 int n;
-                while ((n = zin.read(buf)) > 0) {
+                while ((n = ze.read(buf)) > 0) {
                     zout.write(buf, 0, n);
                 }
+                ze.close();
                 zout.closeEntry();
             }
-            zin.close();
-            zin = null;
-            in.close();
-            in = null;
+            zf.close();
+            zf = null;
 
             // 补丁类：字体（sj）+ 翻译（nh）+ 选项页（co，带「语言…」按钮）+ 语言选择页
-            if (b18v) {
+            if (b10v) {
+                // ★ 1.3.6：b1.0 系（b1.0 / b1.0_01 / b1.0.2）—— 只换 FontRenderer（mi），其余用原生 ✓
+                writeAsset(context, "cn_b10/mi.class", "mi.class", zout);
+            } else if (b11v) {
+                // ★ 1.3.6：b1.1 系（含「没文字」的 1245 / 1255）—— 只换 FontRenderer（mj），其余用原生 ✓
+                writeAsset(context, "cn_b11/mj.class", "mj.class", zout);
+            } else if (b18v) {
                 // ★ b1.8 / b1.8.1：只换 FontRenderer（kh），其余用原生 ✓
                 writeAsset(context, "cn_b18/kh.class", "kh.class", zout);
             } else if (v10v) {
@@ -302,6 +414,13 @@ public final class LegacyChinesePack {
             } else if (b19 != null) {
                 // ★ b1.9：只换它自己那一版的 FontRenderer，其余用原生 ✓
                 writeAsset(context, b19[1] + "/" + b19[2] + ".class", b19[2] + ".class", zout);
+            } else if (extra != null) {
+                // ★ 1.3.6：扩展 Beta 版本 —— 只换它自己那一版的 FontRenderer，其余用原生 ✓
+                writeAsset(context, extra[1] + "/" + extra[2] + ".class", extra[2] + ".class", zout);
+                // ★ 1.3.6：pcgamer_demo 的主菜单按钮是硬编码英文（不走 lang），额外注入翻译后的 ei.class
+                if ("cn_b13demo".equals(extra[1])) {
+                    writeAsset(context, "cn_b13demo/ei.class", "ei.class", zout);
+                }
             } else {
                 writeAsset(context, ASSET_DIR + "/sj.class", "sj.class", zout);
                 writeAsset(context, ASSET_DIR + "/co.class", "co.class", zout);
@@ -374,6 +493,12 @@ public final class LegacyChinesePack {
             closeQuietly(zin);
             closeQuietly(in);
             closeQuietly(zout);
+            if (zf != null) {
+                try {
+                    zf.close();
+                } catch (Throwable ignored) {
+                }
+            }
             if (tmp.exists()) {
                 //noinspection ResultOfMethodCallIgnored
                 tmp.delete();
@@ -539,8 +664,18 @@ public final class LegacyChinesePack {
             return true;
         }
 
+        // ★ 1.3.6：b1.0 系 / b1.1 系 ✓
+        if (isB10(versionDir, versionId) || isB11(versionDir, versionId)) {
+            return true;
+        }
+
         // ★ b1.6 系也支持中文 ✓
         if (isB166(versionDir, versionId)) {
+            return true;
+        }
+
+        // ★ 1.3.6：扩展的 17 个 Beta 版本 ✓
+        if (matchExtra(versionId) != null) {
             return true;
         }
 
@@ -580,6 +715,20 @@ public final class LegacyChinesePack {
                 && name.equalsIgnoreCase(b19Active[2] + ".class")) {
             return true;
         }
+        // ★ 1.3.6：b1.0/b1.1 系 —— 只在对应版本激活时跳过它自己的类（mi 或 mj）✓
+        if (b10b11Class != null && name != null && name.equalsIgnoreCase(b10b11Class)) {
+            return true;
+        }
+        // ★ 1.3.6：扩展 Beta 组 —— 只在命中时跳过它自己的 FontRenderer ✓
+        if (extraActive != null && name != null
+                && name.equalsIgnoreCase(extraActive[2] + ".class")) {
+            return true;
+        }
+        // ★ 1.3.6：pcgamer_demo 额外注入了 ei.class（翻译硬编码按钮），原版 ei.class 要跳过 ✓
+        if ("cn_b13demo".equals(extraActive != null ? extraActive[1] : null)
+                && name != null && name.equalsIgnoreCase("ei.class")) {
+            return true;
+        }
         if (name != null && name.equalsIgnoreCase("se.class")) {
             // ★ b1.6 系：se 是它的 FontRenderer —— 只在 b1.6 系时替换 ✓
             return b166Flag;
@@ -596,13 +745,18 @@ public final class LegacyChinesePack {
             return false;
         }
         String low = name.toLowerCase();
-        if (low.equals("sj.class") || low.equals("co.class")
-                || low.equals("qcllangscreen.class")) {
-            // ★ 1.3.1：这三件套是 **b1.7.3 系** 的补丁 —— 只在 b1.7.3 系跳过 ✗
-            //   ★★ b1.8 系（kh）/ 1.0 系（abe）/ b1.6 系（se）/ b1.9 全系（lf/ls/mc/mb/mf）
-            //      里 co/sj 都是**它自己的原生类** ✗ 跳过会导致 NoClassDefFoundError
-            //      （b1.8.1 报 co、1.0 报 sj、b1.9-pre5 报 co ✓ 三次同一个坑）
-            return !(b18 || v10Flag || b166Flag || b19Active != null);
+        if (low.equals("sj.class")) {
+            // ★ sj 只在「默认 b1.7.3 组」或「extra 组命中 sj（b1.7 系）」时由补丁提供（跳过原版）
+            //   其余版本（b1.6/b1.8/1.0/b1.9/b1.0/b1.1/b1.2/b1.3/b1.4/b1.5）里 sj 是原生类，绝不能跳 ✗
+            if (extraActive != null) {
+                return "sj".equals(extraActive[2]);
+            }
+            return !(b18 || v10Flag || b166Flag || b19Active != null || b10b11Class != null);
+        }
+        if (low.equals("co.class") || low.equals("qcllangscreen.class")) {
+            // ★ co/QclLangScreen 是 **b1.7.3 系** 的补丁 —— 只在默认 b1.7.3 系跳过 ✗
+            //   （b1.8.1 报 co、1.0 报 sj、b1.9-pre5 报 co、b1.1-1245 报 co ✓ 四次同一个坑）
+            return !(b18 || v10Flag || b166Flag || b19Active != null || b10b11Class != null || extraActive != null);
         }
         // ★ 原 jar 是签名过的，注入未签名类后必须去掉签名文件，否则
         //   JVM 会抛 SecurityException: signer information does not match
