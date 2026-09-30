@@ -1,13 +1,12 @@
 {
   "latestRelease": {
-    "versionCode": 337,
-    "versionName": "1.3.7",
-    "date": "2026-09-29",
+    "versionCode": 338,
+    "versionName": "1.3.8",
+    "date": "2026-10-01",
     "url": [
-      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.3.7/QCL-release-1.3.7-all.apk"
+      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.3.8/QCL-release-1.3.8-universal.apk"
     ],
-    "updateLog": "1.3.7 更新内容：\\n1. Alpha 全系列中文补丁（42 个版本）：补齐 a1.0.x ~ a1.2.x 的中文支持 —— 字体层 23 份专用补丁 + 每版本独立的界面翻译（合计 1480 个类、4690 处硬编码英文汉化），主菜单/选项/按键/物品名全部中文。\\n2. Beta 补齐 2 个：b1.2_02-dev-20110517（未混淆开发版，单独做字体补丁）、b1.4-1507（字体类与主版一致，直接复用）。至此 Beta 全系（b1.0~b1.9）支持中文。\\n3. 修复「切页面时 3D 人物残留」：切换到设置/下载/版本列表/账号列表后，主界面 3D 人物在部分手机上仍残留显示 —— 现在切页面会彻底隐藏。\\n4. 新增设置开关「主界面显示账号人物」（设置→外观，默认开）：关闭后主界面不再显示账号人物。\\n5. 默认背景改为「经典」（等待界面与网络背景不变）。\\n6. 赞助入口指向 QCL 自己的赞助页。\\n",
-    "netdiskUrl": "https://pan.quark.cn/s/f2c26c4fb66f"
+    "updateLog": "1.3.8 更新内容：\\n1. 修复 Sodium 模组启动崩溃与小地图闪烁（对齐 FCL 全部 JVM 参数 + 内置 MioLibPatcher + 按渲染器自动关闭不兼容 mixin）。\\n2. 修复下载模组时已安装的前置被重复下载。\\n3. infdev 全系列 27 个版本中文（8 组字体补丁 + 每版本独立界面翻译）。\\n4. indev 全系列 23 个版本中文（9 组字体补丁 + 独立界面翻译）。\\n5. Classic 26 个有菜单的版本全中文（12 组字体补丁）；另有 6 个最早的原型版（pc-132011/132128/152252/161148、c0.0.12a-dev、c0.0.12a_03-200018）连 ESC 菜单都不存在、游戏内无任何文字，因此不翻译。\\n6. 修复 Classic 无法启动（launchwrapper 1.5→1.6，旧配置启动时自动重建）。\\n7. 补全部分 Beta/Alpha 遗漏翻译。\\n"
   },
   "latestPrerelease": null
 }
