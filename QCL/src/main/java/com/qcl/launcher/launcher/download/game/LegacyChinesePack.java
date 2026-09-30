@@ -123,6 +123,37 @@ public final class LegacyChinesePack {
             {"inf-20100627$", "cn_inf_g6", "ef"},
             {"inf-20100629$", "cn_inf_g7", "ef"},
             {"inf-20100630-(1340|1835)$", "cn_inf_g8", "ej"},
+            // 1.3.8 indev: 按 TextRenderer 混淆名分组（c/j 组覆盖 10 个版本）✓
+            {"in-(20100202-2330|20100206-2103|20100207-1101|20100207-1703|20100212-1210|20100212-1622|20100213|20100214|20100219|20100223)$", "cn_indev_g7", "net/minecraft/client/c/j"},
+            // 1.3.8 indev 早期组（immediate mode：无 display list，逐字 BufferBuilder）✓
+            {"in-20100110$", "cn_indev_g2", "net/minecraft/client/b/i"},
+            {"in-(20100124-2310|20100125)$", "cn_indev_g3", "net/minecraft/client/b/k"},
+            {"in-(20100128-2304|20100129-1452)$", "cn_indev_g4", "net/minecraft/client/b/n"},
+            {"in-20100130$", "cn_indev_g5", "net/minecraft/client/b/l"},
+            {"in-(20100131-2244|20100201-0025|20100201-2227)$", "cn_indev_g6", "net/minecraft/client/b/j"},
+            // 1.3.8 indev 补齐组：首版(d/p) / 20091231(c/q) / 20100104(b/i 独立) / 20100218(c/j 复用 g7)✓
+            {"in-20091223-1459$", "cn_indev_g8", "net/minecraft/client/d/p"},
+            {"in-20091231-2255$", "cn_indev_g9", "net/minecraft/client/c/q"},
+            {"in-20100104-2258$", "cn_indev_g10", "net/minecraft/client/b/i"},
+            {"in-20100218-0016$", "cn_indev_g7", "net/minecraft/client/c/j"},
+            // 1.3.8 Classic：12 组字体补丁，覆盖**全部 26 个有 ESC 菜单的版本**
+            //   （连 ESC 都没有的 6 个 —— pc-132011/132128/152252/161148、c0.0.12a-dev、
+            //    c0.0.12a_03-200018 —— 按用户要求不做）
+            // ★ 与 indev 一样，Classic 的类**带包名**，所以第三列是完整类路径（写入 jar 时保持目录结构）
+            // ★ 映射来源 = RetroMCP（feather 完全没有 classic）；c0.28~c0.30 共用 e/l，但 27_st 的
+            //   字体类字节码与 24/25 不同，必须分两组（g8 / g9）
+            {"(c0\\.0\\.14a_08|c0\\.0\\.15a-05311904)$", "cn_classic_g1", "com/mojang/minecraft/b/h"},
+            {"(c0\\.0\\.16a_02-081047|c0\\.0\\.17a-2014)$", "cn_classic_g2", "com/mojang/minecraft/b/j"},
+            {"(c0\\.0\\.18a_02)$", "cn_classic_g3", "com/mojang/minecraft/b/j"},
+            {"(c0\\.0\\.19a_04|c0\\.0\\.19a_06-0137)$", "cn_classic_g4", "com/mojang/minecraft/b/k"},
+            {"(c0\\.0\\.20a_01|c0\\.0\\.20a_02|c0\\.0\\.21a-2008|c0\\.0\\.21a_01)$", "cn_classic_g5", "com/mojang/minecraft/b/l"},
+            {"(c0\\.0\\.13a_03|c0\\.0\\.13a_03-renew)$", "cn_classic_g6", "com/mojang/minecraft/c/g"},
+            {"(c0\\.0\\.22a_05)$", "cn_classic_g7", "com/mojang/minecraft/c/h"},
+            {"(c0\\.24_st_03|c0\\.25_05_st)$", "cn_classic_g8", "com/mojang/minecraft/c/k"},
+            {"(c0\\.27_st)$", "cn_classic_g9", "com/mojang/minecraft/c/k"},
+            {"(c0\\.0\\.23a_01)$", "cn_classic_g10", "com/mojang/minecraft/c/l"},
+            {"(c0\\.28_01|c0\\.29|c0\\.29_01|c0\\.29_02|c0\\.30-c-1900|c0\\.30-c-1900-renew|c0\\.30-s-1858)$", "cn_classic_g11", "com/mojang/minecraft/e/l"},
+            {"(c0\\.0\\.13a-dev)$", "cn_classic_g12", "com/mojang/minecraft/gui/Font"},
     };
 
     /** ★ 当前正在处理的扩展组（[资源目录, 混淆名]，null = 不是）✓ */
