@@ -163,6 +163,14 @@ extends BaseMainActivity {
                     MCOptionUtils.set("fullscreen", "false");
                 }
                 MCOptionUtils.save(((PojavMinecraftActivity)PojavMinecraftActivity.this).gameLaunchSetting.game_directory);
+                // ★★★ 1.3.8：启动前按渲染器改 mod 配置文件（照 FCL 的 modifyIfConfigDetected）——
+                //   GL4ES / VGPU 渲染器下关掉 Sodium / Rubidium 的区块渲染 mixin，避免画面闪烁。
+                try {
+                    com.qcl.launcher.launcher.launch.ModCompatPatcher.patchBeforeLaunch(
+                            (Context)PojavMinecraftActivity.this,
+                            ((PojavMinecraftActivity)PojavMinecraftActivity.this).gameLaunchSetting);
+                } catch (Throwable ignored) {
+                }
                 int argWidth = usableWidth;
                 int argHeight = usableHeight;
                 new Thread(() -> {

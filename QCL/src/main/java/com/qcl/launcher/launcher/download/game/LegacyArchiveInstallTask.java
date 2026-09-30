@@ -399,14 +399,51 @@ public class LegacyArchiveInstallTask extends AsyncTask<VersionManifest.Version,
         //   - indev（in-*）            → IndevVanillaTweaker（主类 net.minecraft.client.d）
         //   - infdev（inf-*）/alpha（a*）→ AlphaVanillaTweaker（主类 net.minecraft.client.MinecraftApplet）
         //   - beta（b*）/release        → 默认 VanillaTweaker（主类 net.minecraft.client.Minecraft）
-        //   - classic（c0.*）/pre-classic（pc-*）→ com.mojang.minecraft 包，三个 tweaker 都不适用，留空（默认）
+        //   - classic（c0.*）/pre-classic（pc-*）→ AlphaVanillaTweaker
         String tweak = tweakClassFor(id);
+        // ★★★ 1.3.8：launchwrapper 版本也按类型选，与 FCL 使用的 zkitefly 版本清单一致。
+        //   1.5 的 AlphaVanillaTweakInjector 只认 net.minecraft.client.MinecraftApplet（硬编码），
+        //   classic 的主类是 com.mojang.minecraft.MinecraftApplet → 直接 ClassNotFoundException。
+        //   1.6 才有「先试 net.minecraft.client.*，找不到再回退 com.mojang.minecraft.*」的兜底。
+        String lwVer = launchWrapperVersionFor(id);
         return template
                 .replace("__ID__", id)
                 .replace("__TIME__", time)
                 .replace("__TYPE__", type)
                 .replace("__TWEAK__", tweak)
-                .replace("__SOURCE__", jarUrl);
+                .replace("__SOURCE__", jarUrl)
+                .replace("__LWVER__", lwVer)
+                .replace("__LWSHA1__", "1.5".equals(lwVer) ? LW_15_SHA1 : LW_16_SHA1)
+                .replace("__LWSIZE__", "1.5".equals(lwVer) ? LW_15_SIZE : LW_16_SIZE);
+    }
+
+    /** launchwrapper 1.5（官方 sha1 / 大小，用于 alpha）。 */
+    private static final String LW_15_SHA1 = "5150b9c2951f0fde987ce9c33496e26add1de224";
+    private static final String LW_15_SIZE = "27787";
+    /** launchwrapper 1.6（官方 sha1 / 大小，用于 infdev/indev/classic/pre-classic）。 */
+    private static final String LW_16_SHA1 = "4ea0aca9c022a234ebaf14b51fb119055955fc9d";
+    private static final String LW_16_SIZE = "27583";
+
+    /**
+     * 选择该版本要用的 launchwrapper 版本。
+     * 对齐 FCL（FCL 的远古版本 json 来自 zkitefly 清单：alpha=1.5，infdev/indev/classic=1.6）。
+     * 只有 1.6 的 AlphaVanillaTweakInjector 会回退查找 com.mojang.minecraft.MinecraftApplet，
+     * classic / pre-classic（com.mojang 包）非 1.6 不可。
+     */
+    public static String launchWrapperVersionFor(String id) {
+        String lower = id.toLowerCase();
+        // alpha 在 1.5 下已长期实测可用，保持原样不动
+        if (lower.startsWith("a")) return "1.5";
+        return "1.6";
+    }
+
+    /**
+     * 已生成的版本 json 是否过期需要重建。1.3.8 起 classic/indev/infdev 需要 launchwrapper 1.6，
+     * 老用户升级前装的仍是 1.5，启动时自动重建一次即可修好，不用手动删 json。
+     */
+    public static boolean legacyJsonOutdated(String id, String json) {
+        if (json == null || json.isEmpty()) return false;
+        return json.contains("launchwrapper:1.5") && "1.6".equals(launchWrapperVersionFor(id));
     }
 
     /** 按版本 id 前缀选择正确的 launchwrapper tweaker，未命中则返回空串（默认 VanillaTweaker）。 */
@@ -417,7 +454,8 @@ public class LegacyArchiveInstallTask extends AsyncTask<VersionManifest.Version,
             return " --tweakClass net.minecraft.launchwrapper.IndevVanillaTweaker";
         }
         // infdev（inf-*）/ alpha（a*）/ classic（c0.*）/ pre-classic（pc-*，即 rd-*，com.mojang 包）
-        // → AlphaVanillaTweaker（扫描 classpath 找 Applet 子类，net.minecraft 与 com.mojang 都识别）。
+        // → AlphaVanillaTweaker。1.5 的 injector 硬编码 net.minecraft.client.MinecraftApplet，
+        //   classic 的 com.mojang.minecraft.MinecraftApplet 只有 1.6 才能回退命中（见 launchWrapperVersionFor）。
         if (lower.startsWith("inf") || lower.startsWith("a") || lower.startsWith("c0.") || lower.startsWith("pc-")) {
             return " --tweakClass net.minecraft.launchwrapper.AlphaVanillaTweaker";
         }

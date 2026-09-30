@@ -108,6 +108,19 @@ extends AsyncTask<RecyclerView, Integer, Exception> {
                 t.printStackTrace();
             }
         }
+        // ★★★ 1.3.8：classic/indev/infdev 需要 launchwrapper 1.6（1.5 认不了 com.mojang.minecraft.MinecraftApplet）。
+        // 老用户升级前装的 json 里还是 1.5，这里自动重建一次，不用手动删 json。
+        if (versionJson != null && LegacyArchiveInstallTask.legacyJsonOutdated(new File(this.launchVersion).getName(), versionJson)) {
+            try {
+                String id2 = new File(this.launchVersion).getName();
+                String rebuilt = LegacyArchiveInstallTask.buildLegacyJson((Context)this.activity, id2, "");
+                FileStringUtils.writeFile(this.launchVersion + "/" + id2 + ".json", rebuilt);
+                version = (Version)gson.fromJson(rebuilt, Version.class);
+            }
+            catch (Throwable t) {
+                t.printStackTrace();
+            }
+        }
         ArrayList<DownloadTaskListBean> list = new ArrayList<DownloadTaskListBean>();
         // ===== FCL checkGameCompletionAsync 对齐：版本 jar 缺失或空文件时自动补下 =====
         String versionName = new File(this.launchVersion).getName();

@@ -166,6 +166,9 @@ public class PojavLauncher {
                 args.add("-Dstderr.encoding=UTF-8");
             } else {
                 args.add("-Duser.language=" + System.getProperty("user.language"));
+                // ★★★ 1.3.8（照 FCL）：Java <19 用 sun.*.encoding（stdout/stderr 编码），避免日志中文乱码
+                args.add("-Dsun.stdout.encoding=UTF-8");
+                args.add("-Dsun.stderr.encoding=UTF-8");
             }
             if (!qclNeed333 && !qclNeed341) {
                 try {
@@ -191,6 +194,87 @@ public class PojavLauncher {
             args.addAll(JREUtils.getJavaArgs((Context)context));
             args.add("-Dnet.minecraft.clientmodname=Quanta Craft Launcher");
             args.add("-Dfml.earlyprogresswindow=false");
+            // ★★★ 1.3.8：全面对齐 FCL 的 JVM 参数（QCL 原先缺失的补齐）。
+            //   动机：高版本装了渲染类 mod（Sodium 等）会崩溃、部分渲染异常；FCL 靠这些参数规避。
+            //   ① Sodium 兼容（Sodium issue #2561）：Sodium 启动时校验 LWJGL 版本，
+            //      在 Android 上误判为「不兼容版本」→ 直接崩溃。关掉该检查。
+            args.add("-Dsodium.checks.issue2561=false");
+            //   ② Forge/Fabric 兼容（照 FCL）：忽略证书/补丁不一致，避免加载器启动被拦。
+            args.add("-Dfml.ignoreInvalidMinecraftCertificates=true");
+            args.add("-Dfml.ignorePatchDiscrepancies=true");
+            args.add("-Dloader.disable_forked_guis=true");
+            //   ③ 进程/CPU（照 FCL）：子进程用 FORK；显式给核心数，避免 MC 把 CPU 识别成 null。
+            args.add("-Djdk.lang.Process.launchMechanism=FORK");
+            try {
+                args.add("-XX:ActiveProcessorCount=" + Runtime.getRuntime().availableProcessors());
+            } catch (Throwable ignoredX) {
+            }
+            //   ④ 渲染相关（照 FCL）：LWJGL 统一走系统内存分配器；
+            //      定制 GLFW stub 不自行初始化 EGL（交给渲染桥）；Vulkan 库名（zink 用）。
+            args.add("-Dorg.lwjgl.system.allocator=system");
+            args.add("-Dglfwstub.initEgl=false");
+            args.add("-Dorg.lwjgl.vulkan.libname=libvulkan.so");
+            //   ⑤ log4j2 RCE 漏洞防护（照 FCL）。
+            args.add("-Djava.rmi.server.useCodebaseOnly=true");
+            args.add("-Dcom.sun.jndi.rmi.object.trustURLCodebase=false");
+            args.add("-Dcom.sun.jndi.cosnaming.object.trustURLCodebase=false");
+            args.add("-Dlog4j2.formatMsgNoLookups=true");
+            //   ⑥ MioLibPatcher（照 FCL 的 -javaagent）：字节码注入把 Sodium 的
+            //      isUsingPojavLauncher() 强制返回 false —— Sodium 0.5.13+ 检测到
+            //      Pojav 系启动器会执行 "kill code" 直接杀游戏，这是「装了钠就崩」的真凶。
+            try {
+                File qclLibPatcher = ensureMioLibPatcher(context);
+                if (qclLibPatcher != null && qclLibPatcher.isFile() && qclLibPatcher.length() > 0L) {
+                    args.add("-javaagent:" + qclLibPatcher.getAbsolutePath());
+                }
+            } catch (Throwable ignoredP) {
+            }
+            //   ⑦ FreeType（照 FCL）：高版本字体渲染走独立 so，显式给出 libname。
+            try {
+                File qclFtn = qclNatives333 != null ? qclNatives333 : qclNatives341;
+                if (qclFtn != null) {
+                    File qclFtf = new File(qclFtn, "libfreetype.so");
+                    if (qclFtf.isFile()) {
+                        args.add("-Dorg.lwjgl.freetype.libname=" + qclFtf.getAbsolutePath());
+                    }
+                }
+            } catch (Throwable ignoredF) {
+            }
+            //   ⑧ 版本 jar / 启动器标识（照 FCL）：供 mod 读取。
+            args.add("-Dminecraft.launcher.brand=QCL");
+            try {
+                args.add("-Dminecraft.launcher.version=" + context.getPackageManager()
+                        .getPackageInfo(context.getPackageName(), 0).versionName);
+            } catch (Throwable ignoredV) {
+            }
+            try {
+                String qclVerName = new File(gameLaunchSetting.currentVersion).getName();
+                File qclVerJar = new File(gameLaunchSetting.currentVersion, qclVerName + ".jar");
+                if (qclVerJar.isFile()) {
+                    args.add("-Dminecraft.client.jar=" + qclVerJar.getAbsolutePath());
+                }
+            } catch (Throwable ignoredJ) {
+            }
+            //   ⑨ CPU 名（照 FCL，供 OSHI / Mod 读取，避免把 CPU 识别成 null）
+            try {
+                args.add("-Dcpu.name=" + getSocName());
+            } catch (Throwable ignoredCpu) {
+            }
+            //   ⑩ 32 位设备栈大小（照 FCL）：默认 320KB 会导致 1.13+ StackOverflowError
+            try {
+                String qclJvmArchName = JREUtils.getJavaArchName();
+                if ("aarch32".equals(qclJvmArchName) || "i386".equals(qclJvmArchName)) {
+                    args.add("-Xss1m");
+                }
+            } catch (Throwable ignoredXss) {
+            }
+            //   ⑪ 1.7.2 Forge 修复（照 FCL）
+            try {
+                if ("1.7.2".equals(new File(gameLaunchSetting.currentVersion).getName())) {
+                    args.add("-Dsort.patch=true");
+                }
+            } catch (Throwable ignoredF72) {
+            }
             String[] accountArgs = AccountPatch.getAccountArgs(context, gameLaunchSetting.account);
             Collections.addAll(args, accountArgs);
             String[] JVMArgs = version.getJVMArguments(gameLaunchSetting);
@@ -423,6 +507,49 @@ public class PojavLauncher {
             }
         }
         return false;
+    }
+
+    /**
+     * ★★★ 1.3.8：把 assets/game/MioLibPatcher.jar 解到 filesDir，供 -javaagent 使用。
+     * 照 FCL 的 LauncherHelper（从 /assets/game/MioLibPatcher.jar 复制到 PLUGIN_DIR）。
+     * 每次启动直接覆盖复制（811KB，代价可忽略），保证随 APK 更新。
+     */
+    private static File ensureMioLibPatcher(Context context) {
+        try {
+            File dst = new File(context.getFilesDir(), "MioLibPatcher.jar");
+            try (java.io.InputStream in = context.getAssets().open("game/MioLibPatcher.jar");
+                 java.io.FileOutputStream out = new java.io.FileOutputStream(dst)) {
+                byte[] buf = new byte[65536];
+                int n;
+                while ((n = in.read(buf)) > 0) {
+                    out.write(buf, 0, n);
+                }
+            }
+            return dst.isFile() && dst.length() > 0L ? dst : null;
+        } catch (Throwable t) {
+            try {
+                Logger.getInstance(context).appendToLog("MioLibPatcher 解压失败：" + t);
+            } catch (Throwable ignored) {
+            }
+            return null;
+        }
+    }
+
+    /**
+     * ★★★ 1.3.8：SoC 名（照 FCL FCLauncher.getSocName）—— 优先 getprop ro.soc.model，
+     * 拿不到回退 Build.HARDWARE。供 -Dcpu.name 使用（部分 Mod / OSHI 读它识别 CPU）。
+     */
+    private static String getSocName() {
+        String name = null;
+        try {
+            java.lang.Process process = Runtime.getRuntime().exec("getprop ro.soc.model");
+            java.io.BufferedReader reader = new java.io.BufferedReader(
+                    new java.io.InputStreamReader(process.getInputStream()));
+            name = reader.readLine();
+            reader.close();
+        } catch (Throwable ignored) {
+        }
+        return (name == null || name.trim().isEmpty()) ? Build.HARDWARE : name;
     }
 }
 

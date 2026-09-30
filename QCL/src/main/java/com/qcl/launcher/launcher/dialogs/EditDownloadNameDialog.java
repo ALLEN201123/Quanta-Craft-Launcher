@@ -236,6 +236,20 @@ public class EditDownloadNameDialog extends Dialog implements View.OnClickListen
                 if (fileName == null || fileName.isEmpty()) {
                     fileName = dep.getSlug() + ".jar";
                 }
+                // ★★★ 1.3.8 修复：先查**游戏 mods/ 目录**再排队 —— 这个前置本地已经装了就直接跳过。
+                //   原先只查本次下载任务表 out，没查磁盘：同一个前置（例如 Fabric API）
+                //   每下载一次模组都会被重新排一次队，玩家连着下两个模组就重复下两份前置。
+                if (modsDir != null && !modsDir.isEmpty()) {
+                    if (new File(modsDir, fileName).exists()) {
+                        continue;
+                    }
+                    // 同 slug 的另一版本已装（如已装 sodium-fabric-0.5.11.jar，这次要下 0.6.0）
+                    // 也视为「已存在」，避免同一个前置换个版本号又下一份。
+                    String depSlug = dep.getSlug();
+                    if (depSlug != null && !depSlug.isEmpty() && hasModBySlug(new File(modsDir), depSlug)) {
+                        continue;
+                    }
+                }
                 boolean dup = false;
                 for (DownloadTaskListBean bean : out) {
                     if (fileName.equals(bean.name)) {
@@ -253,6 +267,36 @@ public class EditDownloadNameDialog extends Dialog implements View.OnClickListen
             catch (Throwable ignored) {
             }
         }
+    }
+
+    /**
+     * ★★★ 1.3.8：判断 mods/ 里是否已有某个 slug 的模组。
+     * 文件名以「slug + 分隔符（- _ .）」开头，或就叫 slug(.jar) 都算命中。
+     * 用于前置去重 —— 避免同一个前置换个版本号又被下载一份。
+     */
+    private static boolean hasModBySlug(File modsDir, String slug) {
+        try {
+            if (modsDir == null || !modsDir.isDirectory()) {
+                return false;
+            }
+            File[] files = modsDir.listFiles();
+            if (files == null) {
+                return false;
+            }
+            String lower = slug.toLowerCase(java.util.Locale.ROOT);
+            for (File f : files) {
+                if (f == null || !f.isFile()) {
+                    continue;
+                }
+                String n = f.getName().toLowerCase(java.util.Locale.ROOT);
+                if (n.equals(lower) || n.equals(lower + ".jar")
+                        || n.startsWith(lower + "-") || n.startsWith(lower + "_") || n.startsWith(lower + ".")) {
+                    return true;
+                }
+            }
+        } catch (Throwable ignored) {
+        }
+        return false;
     }
 
     /** ★ 1.2.5：挑前置里「支持 mcv 这个游戏版本」的最新一个版本（挑不到就返回 null，跳过） */
