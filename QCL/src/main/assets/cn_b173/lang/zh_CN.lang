@@ -892,3 +892,6 @@ tile.tallgrass.fern.desc=
 tile.bed.notSafe=\u4f60\u73b0\u5728\u4e0d\u80fd\u4f11\u606f\uff0c\u5468\u56f4\u6709\u602a\u7269\u5728\u6e38\u8361
 tile.dragonEgg.name=\u9f99\u86cb
 tile.dragonEgg.desc=
+tile.stoneSlab.name=\u77f3\u5934\u53f0\u9636
+tile.stoneSlab.desc=
+item.eyeOfEnder..desc=

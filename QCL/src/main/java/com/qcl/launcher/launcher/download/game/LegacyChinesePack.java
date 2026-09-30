@@ -114,6 +114,15 @@ public final class LegacyChinesePack {
             {"b1\\.9-pre$",               "cn_b19pre",      "lc"},
             {"b1\\.9-pre3-1350$",         "cn_b19pre31350", "ls"},
             {"b1\\.9-pre4-1434$",         "cn_b19pre41434", "mc"},
+            // 1.3.8 infdev: 8 groups by FULL FONT-CLASS SIGNATURE
+            {"inf-(20100227-1433|20100313|20100316|20100320|20100325-1640)$", "cn_inf_g1", "net/minecraft/client/c/j"},
+            {"inf-20100321-1857$", "cn_inf_g2", "net/minecraft/client/c/j"},
+            {"inf-(20100327|20100330-1611|20100413-1953|20100414)$", "cn_inf_g3", "net/minecraft/client/c/k"},
+            {"inf-(20100415|20100420|20100607|20100608|20100611|20100615|20100616-1808|20100617-1205|20100617-1531|20100618)$", "cn_inf_g4", "net/minecraft/client/c/k"},
+            {"inf-(20100624|20100625-0922|20100625-1917)$", "cn_inf_g5", "net/minecraft/client/c/k"},
+            {"inf-20100627$", "cn_inf_g6", "ef"},
+            {"inf-20100629$", "cn_inf_g7", "ef"},
+            {"inf-20100630-(1340|1835)$", "cn_inf_g8", "ej"},
     };
 
     /** ★ 当前正在处理的扩展组（[资源目录, 混淆名]，null = 不是）✓ */
@@ -466,6 +475,8 @@ public final class LegacyChinesePack {
             // 字符表 + 官方中文点阵
             writeAsset(context, ASSET_DIR + "/font.txt", "font.txt", zout);
             writeAsset(context, ASSET_DIR + "/font/glyph_sizes.bin", "font/glyph_sizes.bin", zout);
+            // 1.3.8: splash CN (Alpha/Beta title/splashes.txt is a resource file)
+            writeAsset(context, ASSET_DIR + "/title/splashes.txt", "title/splashes.txt", zout);
             for (int page = 0; page <= 0xFF; ++page) {
                 String nm = String.format("glyph_%02X.png", page);
                 InputStream probe = null;
@@ -802,6 +813,11 @@ public final class LegacyChinesePack {
             return true;
         }
         if (low.equals("font.txt") || low.equals("font/glyph_sizes.bin")) {
+            return true;
+        }
+        // ★ 1.3.8：splash 中文由本包写入 title/splashes.txt —— 原版/旧补丁里的同名条目必须跳过，
+        //   否则「以当前 jar 为基准」重复注入时 ZipException: duplicate entry → 整个中文包静默失效 ✗
+        if (low.equals("title/splashes.txt")) {
             return true;
         }
         // ★ 1.3.1：语言文件本包会重写，重复注入时不跳过会 ZipException: duplicate entry ✗
