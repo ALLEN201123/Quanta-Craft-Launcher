@@ -4,7 +4,7 @@
 
 # QCL · Quanta Craft Launcher
 
-> **目前手机启动器唯一支持下载所有考古社区已归档远古版本的。**
+> **目前手机启动器唯一支持下载所有考古社区已归档远古版本的；也是唯一给「全远古版本」做好中文的启动器。**
 
 **Quanta Craft Launcher (QCL, 量子方块启动器)** is an Android launcher for Minecraft: Java Edition.
 Since 1.1.1 the launch / render / input / Java-runtime pipeline is **self-built**, with
@@ -14,7 +14,7 @@ Maintainer: **Rod123456** (bilibili UID 550905358).
 
 **English summary:** QCL focuses on *ancient* Minecraft versions (pre-classic / classic / indev / infdev /
 alpha / beta / RC) — **the only Android launcher that currently supports downloading every *archived* ancient
-version** (181 archived builds; builds the community never archived are not downloadable). Each archived build
+version** (181 archived builds; builds the community never archived are not downloadable) — and the only one that ships Chinese patches for **all** ancient versions. Each archived build
 is installed with its dependencies and assets fetched automatically. It also supports modern
 versions up to 26.x (Java 25). Pojav launch backend with native SDL3 windowing,
 automatic 32/64-bit runtime detection, dynamic memory clamping, a launch-log overlay, a crash screen, and
@@ -31,7 +31,7 @@ multiplayer powered by Terracotta (China mainland only). Licensed under **GNU GP
 > **1.1.0 及更早版本基于 [HMCL-PE](https://github.com/Tungs-HMCL/HMCL-PE)**（Tungs），其代码核心已在 1.1.1 中移除。
 > 作者：**Rod123456**（bilibili UID 550905358）—— 喜欢研究 Minecraft 1.0 以前的所有远古版本，视频也主要围绕这些老版本。
 >
-> **目前手机启动器唯一支持下载所有考古社区已归档远古版本的。**
+> **目前手机启动器唯一支持下载所有考古社区已归档远古版本的；也是唯一给「全远古版本」做好中文的启动器。**
 
 ---
 
@@ -58,6 +58,8 @@ QCL 是一个安卓平台的 Minecraft Java 版启动器，界面按自己的「
 - 安装时自动补齐 **jar / 版本 json / 依赖库 / 资源文件**，完成后提示安装成功
 - 启动前自动检查并补齐缺失文件（json 损坏也能用模板重建）
 - 远古版本（LWJGL2 时代）**补齐了 paulscode SoundSystem 音频链**，进游戏不再无声
+- **全远古版本中文**：**classic / indev / infdev / alpha / beta** 全系列都做了中文补丁（界面 + 中文字体），
+  是目前唯一做到这一点的安卓启动器（仅 6 个连 ESC 菜单都没有的最早原型版未翻译）
 - **安卓设备上唯一支持 ModLoader 和 Babric 的启动器**（1.2.3）：
   正式版老版本（1.2.5 ~ 1.6.2）和部分远古版本（Beta / Alpha）可以下载 ModLoader，
   b1.7.3 可以用 Babric —— 别的安卓启动器没有这两样
