@@ -8,6 +8,7 @@ import android.os.Environment;
 import android.os.Process;
 import android.util.Log;
 import com.github.gzuliyujiang.oaid.DeviceIdentifier;
+import com.qcl.launcher.manifest.AppManifest;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStreamWriter;
@@ -30,6 +31,11 @@ public class QCLApplication extends Application {
         installCrashLogger();
         DeviceIdentifier.register(this);
         context = getApplicationContext();
+        // ★ 1.3.9：AppManifest 目录/SETTING_DIR 初始化提到 Application 级。
+        //   之前只在 MainActivity/ApiService 里初始化，被 root 直接拉 PojavMinecraftActivity
+        //   （绕过主界面）时 SETTING_DIR 还是 null → getGameLaunchSetting 读 public_game_setting.json
+        //   路径错 → NPE 崩溃。提到这里后任何入口都会先初始化。
+        AppManifest.initializeManifest(this);
         // ★★★ 1.1.1 SDL3：把 C++ 库提前到主线程加载，避免在游戏渲染线程 dlopen 时触发
         // libc++ 的 iostream/locale 静态初始化崩溃（fault addr 0x0）。
         try { System.loadLibrary("bytehook"); } catch (Throwable ignored) { }
