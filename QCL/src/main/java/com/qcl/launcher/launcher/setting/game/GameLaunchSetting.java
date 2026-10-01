@@ -136,6 +136,10 @@ public class GameLaunchSetting {
         String str5 = str2;
         LauncherSetting launcherSettingFromFile = GsonUtils.getLauncherSettingFromFile(AppManifest.SETTING_DIR + "/launcher_setting.json");
         PublicGameSetting publicGameSettingFromFile = GsonUtils.getPublicGameSettingFromFile(AppManifest.SETTING_DIR + "/public_game_setting.json");
+        // ★ 1.3.9：public_game_setting.json 缺失/损坏时兜底（真机曾崩 NPE：account on null object）
+        if (publicGameSettingFromFile == null) {
+            publicGameSettingFromFile = new PublicGameSetting(new Account(0, "", "", "", "", "", "", "", "", "", "", ""), AppManifest.DEBUG_DIR, "");
+        }
         PrivateGameSetting privateGameSettingFromFile = GsonUtils.getPrivateGameSettingFromFile(str);
         if (privateGameSettingFromFile.gameDirSetting.type == 0) {
             str3 = launcherSettingFromFile.gameFileDirectory;
