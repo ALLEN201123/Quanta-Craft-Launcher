@@ -41,6 +41,7 @@ import java.util.Vector;
 import net.kdt.pojavlaunch.Logger;
 import net.kdt.pojavlaunch.utils.JREUtils;
 import net.kdt.pojavlaunch.utils.Tools;
+import org.lwjgl.glfw.CallbackBridge;
 
 public class PojavLauncher {
     public static Vector<String> getMcArgs(GameLaunchSetting gameLaunchSetting, Context context, int width, int height, String server) {
@@ -134,6 +135,32 @@ public class PojavLauncher {
                 if (jx.length() > 0) {
                     classPath = jx + ":" + classPath;
                 }
+            }
+            // ★★★ 1.4.0：远古 applet 版本画面尺寸修复。
+            //   launchwrapper 的 AlphaVanillaTweakInjector 把 applet 容器尺寸写死成 854x480，
+            //   而 classic（全部版本）与部分 indev 版本的游戏代码完全按容器尺寸渲染 →
+            //   画面永远只占屏幕一角（其余大片空白）；infdev/alpha 因为有自调整逻辑才没事。
+            //   这里把「修复版」jar（assets/game/qcl_appletfix.jar：容器尺寸改为动态读取，
+            //   优先 -Dqcl.applet.width/height，其次 Cacio 屏幕尺寸，最后兜底 854x480）
+            //   放到 classpath 最前 —— launchwrapper 的 LaunchClassLoader 会把同名类优先解析到它。
+            try {
+                String qclFixVer = new File(gameLaunchSetting.currentVersion).getName().toLowerCase();
+                boolean qclAppletVer = qclFixVer.startsWith("inf")
+                        || qclFixVer.startsWith("in-")
+                        || qclFixVer.startsWith("a")
+                        || qclFixVer.startsWith("c0.")
+                        || qclFixVer.startsWith("pc-")
+                        || qclFixVer.startsWith("rd")
+                        || qclFixVer.contains("infdev");
+                if (qclAppletVer) {
+                    File qclFixJar = ensureAppletFixJar(context);
+                    if (qclFixJar != null) {
+                        classPath = qclFixJar.getAbsolutePath() + ":" + classPath;
+                    }
+                }
+            }
+            catch (Throwable ignoredAppletFix) {
+                // 修复 jar 不可用时保持原样启动（画面尺寸退回旧行为），不影响启动
             }
             Vector<String> args = new Vector<String>();
             if (qclLwjglXDiag != null) {
@@ -333,22 +360,45 @@ public class PojavLauncher {
             //      "Comparison method violates its general contract!" → 世界加载/进入时崩。
             //   ② `-Dhttp.proxyHost=betacraft.uk`
             //      极老版本的会话/资源请求指向早已废弃的地址，走社区 BetaCraft 代理才能通过验证。
-            //   ★ 覆盖所有远古版本（inf-* / a* / b* / c0.* / rd-*），不再只限 infdev。
+            //   ★ 覆盖所有远古版本（inf-* / in-* / pc-* / a* / b* / c0.* / rd-*）。
+            //   ★ 1.4.0 修复：补上 indev（`in-20091223-1459` 这类，前缀是 in- 不是 inf）和
+            //     pre-classic（`pc-132011` 这类）——此前这两类前缀一个分支都命中不了，
+            //     参数永远不加，表现为「部分远古版本进不了游戏」。
             //   ★ 玩家可在 JVM 参数框（extraJavaFlags）里写 useLegacyMergeSort / proxyHost 覆盖删除。
             try {
                 String qclVerArg = new File(gameLaunchSetting.currentVersion).getName().toLowerCase();
                 boolean qclIsLegacy = qclVerArg.startsWith("inf")
+                        || qclVerArg.startsWith("in-")
                         || qclVerArg.startsWith("a")
                         || qclVerArg.startsWith("b")
                         || qclVerArg.startsWith("c0.")
+                        || qclVerArg.startsWith("pc-")
                         || qclVerArg.startsWith("rd")
                         || qclVerArg.contains("infdev");
                 boolean qclPlayerOverrides = gameLaunchSetting.extraJavaFlags != null
                         && (gameLaunchSetting.extraJavaFlags.contains("useLegacyMergeSort")
                             || gameLaunchSetting.extraJavaFlags.contains("proxyHost"));
+                // ★ 1.4.0：applet 容器尺寸修复的尺寸来源 —— qcl_appletfix.jar 里的
+                //   AlphaVanillaTweakInjector 优先读这两个属性（真实渲染 surface 的全屏尺寸）。
+                if (qclIsLegacy) {
+                    try {
+                        args.add("-Dqcl.applet.width=" + CallbackBridge.windowWidth);
+                        args.add("-Dqcl.applet.height=" + CallbackBridge.windowHeight);
+                    }
+                    catch (Throwable ignoredAppletSize) {
+                        // empty catch block
+                    }
+                }
                 if (qclIsLegacy && !qclPlayerOverrides) {
                     args.add("-Dhttp.proxyHost=betacraft.uk");
                     args.add("-Djava.util.Arrays.useLegacyMergeSort=true");
+                    try {
+                        Logger.getInstance((Context)context).appendToLog(
+                                "远古版本(" + qclVerArg + ")：已自动注入兼容参数 -Dhttp.proxyHost=betacraft.uk / -Djava.util.Arrays.useLegacyMergeSort=true");
+                    }
+                    catch (Throwable ignoredLog) {
+                        // empty catch block
+                    }
                 }
             }
             catch (Throwable ignored) {
@@ -514,6 +564,28 @@ public class PojavLauncher {
      * 照 FCL 的 LauncherHelper（从 /assets/game/MioLibPatcher.jar 复制到 PLUGIN_DIR）。
      * 每次启动直接覆盖复制（811KB，代价可忽略），保证随 APK 更新。
      */
+    /** ★ 1.4.0：远古 applet 版本画面尺寸修复 jar（assets/game/qcl_appletfix.jar → filesDir）。 */
+    private static File ensureAppletFixJar(Context context) {
+        try {
+            File dst = new File(context.getFilesDir(), "qcl_appletfix.jar");
+            try (java.io.InputStream in = context.getAssets().open("game/qcl_appletfix.jar");
+                 java.io.FileOutputStream out = new java.io.FileOutputStream(dst)) {
+                byte[] buf = new byte[65536];
+                int n;
+                while ((n = in.read(buf)) > 0) {
+                    out.write(buf, 0, n);
+                }
+            }
+            return dst.isFile() && dst.length() > 0L ? dst : null;
+        } catch (Throwable t) {
+            try {
+                Logger.getInstance(context).appendToLog("qcl_appletfix.jar 解压失败：" + t);
+            } catch (Throwable ignored) {
+            }
+            return null;
+        }
+    }
+
     private static File ensureMioLibPatcher(Context context) {
         try {
             File dst = new File(context.getFilesDir(), "MioLibPatcher.jar");

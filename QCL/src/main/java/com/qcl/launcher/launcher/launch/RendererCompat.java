@@ -242,7 +242,7 @@ public final class RendererCompat {
             return false;
         }
         String lowerCase = str.toLowerCase();
-        return lowerCase.startsWith("b") || lowerCase.startsWith("a") || lowerCase.startsWith("c") || lowerCase.startsWith("inf") || lowerCase.startsWith("rd") || lowerCase.startsWith("pre");
+        return lowerCase.startsWith("b") || lowerCase.startsWith("a") || lowerCase.startsWith("c") || lowerCase.startsWith("inf") || lowerCase.startsWith("in-") || lowerCase.startsWith("rd") || lowerCase.startsWith("pre");
     }
 
     public static boolean supports(String str, String str2) {

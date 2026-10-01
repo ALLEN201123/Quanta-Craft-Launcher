@@ -422,8 +422,9 @@ SeekBar.OnSeekBarChangeListener {
     private static boolean isAncientVersion(String id) {
         if (id == null) return false;
         String s = id.toLowerCase();
-        return s.startsWith("inf") || s.startsWith("a") || s.startsWith("b")
-                || s.startsWith("c0.") || s.startsWith("rd") || s.contains("infdev");
+        // ★ 1.4.0：补上 indev（in-*）与 pre-classic（pc-*）——与 PojavLauncher.getMcArgs 的注入判定保持一致
+        return s.startsWith("inf") || s.startsWith("in-") || s.startsWith("a") || s.startsWith("b")
+                || s.startsWith("c0.") || s.startsWith("pc-") || s.startsWith("rd") || s.contains("infdev");
     }
 
     /** ★ 1.2.3：Class 查看器 —— 按模组列出注入的 class，点击可整组删除 */
@@ -599,6 +600,16 @@ SeekBar.OnSeekBarChangeListener {
         this.editGameDir.setText((CharSequence)setting.gameDirSetting.path);
         this.editServer.setText((CharSequence)setting.server);
         this.editJVMArgs.setText((CharSequence)setting.extraJavaFlags);
+        // ★ 1.4.0：远古版本的兼容 JVM 参数由启动器在启动时自动注入（PojavLauncher.getMcArgs），
+        //   玩家没自定义参数时在此给出提示，避免「参数框是空的 = 没注入」的误解。
+        try {
+            this.editJVMArgs.setHint(R.string.game_setting_ui_jvm_setting_arg_hint);
+            if (isAncientVersion(this.versionName)
+                    && (setting.extraJavaFlags == null || setting.extraJavaFlags.trim().isEmpty())) {
+                this.editJVMArgs.setHint("已自动注入远古版本兼容参数：-Dhttp.proxyHost=betacraft.uk -Djava.util.Arrays.useLegacyMergeSort=true");
+            }
+        } catch (Throwable ignored) {
+        }
         this.currentControlPattern.setText((CharSequence)setting.controlLayout);
         if (setting.javaSetting.autoSelect) {
             this.javaPathText.setText((CharSequence)this.context.getString(R.string.game_setting_ui_java_path_auto));
