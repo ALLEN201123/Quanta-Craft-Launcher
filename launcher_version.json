@@ -1,12 +1,12 @@
 {
   "latestRelease": {
-    "versionCode": 339,
-    "versionName": "1.3.9",
+    "versionCode": 340,
+    "versionName": "1.4.0",
     "date": "2026-10-01",
     "url": [
-      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.3.9/QCL-release-1.3.9-universal.apk"
+      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.4.0/QCL-release-1.4.0-universal.apk"
     ],
-    "updateLog": "1.3.9 更新内容：\\n1. 修复版本开启「独立设置」后切换渲染器不生效（切回默认渲染器、进游戏却仍是旧渲染器）。\\n2. 修复设置文件缺失/损坏时启动游戏闪退（补空值防护）。\\n3. Alpha 全系列 F3 调试屏幕汉化：已用内存、进入下界、离开下界、帧率、区块更新等。\\n4. 补全 Alpha 界面遗漏翻译（世界类型、空世界槽位「- empty -」、删除世界确认等 70+ 条），并修复一处翻译乱码。\\n"
+    "updateLog": "1.4.0 更新内容：\\n1. 修复 indev 及部分原型版本（in- / pc- 开头）因 JVM 参数注入判定遗漏而无法进入游戏。\\n2. 修复经典版本（classic 全系 / 部分 indev）画面只占屏幕一角、其余大面积空白 —— applet 容器尺寸动态化（启动参数 → 屏幕尺寸 → 兜底 854x480），现已铺满全屏。\\n3. 版本设置页新增「已自动注入运行参数」提示。\\n"
   },
   "latestPrerelease": null
 }
