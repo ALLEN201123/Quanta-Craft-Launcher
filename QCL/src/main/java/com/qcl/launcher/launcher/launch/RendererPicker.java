@@ -5,6 +5,7 @@ import android.app.AlertDialog;
 import android.widget.Toast;
 
 import com.qcl.launcher.launcher.setting.game.PrivateGameSetting;
+import com.qcl.launcher.launcher.setting.game.child.PojavLauncherSetting;
 import com.qcl.launcher.manifest.AppManifest;
 import com.qcl.launcher.utils.gson.GsonUtils;
 
@@ -23,6 +24,20 @@ import java.util.List;
 public final class RendererPicker {
 
     private RendererPicker() {
+    }
+
+    /** 取当前「实际生效」的渲染器 id：独立设置版本读 qcl.cfg，否则读全局对象。 */
+    public static String currentRendererOf(PrivateGameSetting pgs, String versionPath) {
+        if (versionPath != null) {
+            String qclCfg = versionPath + "/qcl.cfg";
+            if (new File(qclCfg).exists()) {
+                PrivateGameSetting v = GsonUtils.getPrivateGameSettingFromFile(qclCfg);
+                if (v != null && (v.forceEnable || v.enable) && v.pojavLauncherSetting != null) {
+                    return v.pojavLauncherSetting.renderer;
+                }
+            }
+        }
+        return (pgs != null && pgs.pojavLauncherSetting != null) ? pgs.pojavLauncherSetting.renderer : null;
     }
 
     /** 从版本目录路径取版本名（用于兼容性判断）。 */
@@ -47,7 +62,7 @@ public final class RendererPicker {
                             final String versionPath, final Runnable onChanged) {
         try {
             final String mcVer = versionNameOf(versionPath);
-            final String current = pgs.pojavLauncherSetting.renderer;
+            final String current = currentRendererOf(pgs, versionPath);
             final List<String> labels = new ArrayList<String>();
             final List<String> ids = new ArrayList<String>();
             String nativeDir = activity.getApplicationInfo().nativeLibraryDir;
@@ -105,13 +120,13 @@ public final class RendererPicker {
                                     .setTitle("渲染器兼容性提示")
                                     .setMessage(warnText)
                                     .setPositiveButton("我就要用这个渲染器", (d2, w2) -> {
-                                        apply(activity, pgs, id);
+                                        apply(activity, pgs, versionPath, id);
                                         if (onChanged != null) onChanged.run();
                                     })
                                     .setNegativeButton("取消", null)
                                     .show();
                         } else {
-                            apply(activity, pgs, id);
+                            apply(activity, pgs, versionPath, id);
                             if (onChanged != null) onChanged.run();
                         }
                     })
@@ -124,11 +139,36 @@ public final class RendererPicker {
     }
 
     /** 写入设置并提示。 */
-    public static void apply(Activity activity, PrivateGameSetting pgs, String id) {
+    public static void apply(Activity activity, PrivateGameSetting pgs, String versionPath, String id) {
         try {
-            pgs.pojavLauncherSetting.renderer = id;
-            GsonUtils.savePrivateGameSetting(pgs,
-                    AppManifest.SETTING_DIR + "/private_game_setting.json");
+            // 内存同步（供 onChanged 回调/界面即时显示新值）
+            if (pgs != null && pgs.pojavLauncherSetting != null) {
+                pgs.pojavLauncherSetting.renderer = id;
+            }
+            // ★★★ 2026-10-01 修复「独立设置版本切换渲染器不生效」：
+            //   启动时（MainUI.startGame / GameManagerUI.testGame）若版本开了独立设置
+            //   （存在 <版本目录>/qcl.cfg 且 enable/forceEnable=true），读的是 qcl.cfg 而非全局。
+            //   此前 apply() 恒写全局 private_game_setting.json → 独立设置版本里切换渲染器
+            //   写到了全局、启动却读 qcl.cfg（旧渲染器）→「切回默认，进游戏还是旧渲染器」。
+            //   现在保存路径与启动读取路径对齐：qcl.cfg 优先，否则全局。
+            PrivateGameSetting target = pgs;
+            String savePath = AppManifest.SETTING_DIR + "/private_game_setting.json";
+            if (versionPath != null) {
+                String qclCfg = versionPath + "/qcl.cfg";
+                if (new File(qclCfg).exists()) {
+                    PrivateGameSetting v = GsonUtils.getPrivateGameSettingFromFile(qclCfg);
+                    if (v != null && (v.forceEnable || v.enable)) {
+                        if (v.pojavLauncherSetting == null) {
+                            v.pojavLauncherSetting = new PojavLauncherSetting(true, id, "default");
+                        } else {
+                            v.pojavLauncherSetting.renderer = id;
+                        }
+                        target = v;
+                        savePath = qclCfg;
+                    }
+                }
+            }
+            GsonUtils.savePrivateGameSetting(target, savePath);
             Toast.makeText(activity, "渲染器已切换: " + displayNameOf(id),
                     Toast.LENGTH_SHORT).show();
         } catch (Throwable ignored) {
