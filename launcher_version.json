@@ -1,12 +1,12 @@
 {
   "latestRelease": {
-    "versionCode": 338,
-    "versionName": "1.3.8",
+    "versionCode": 339,
+    "versionName": "1.3.9",
     "date": "2026-10-01",
     "url": [
-      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.3.8/QCL-release-1.3.8-universal.apk"
+      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.3.9/QCL-release-1.3.9-universal.apk"
     ],
-    "updateLog": "1.3.8 更新内容：\\n1. 修复 Sodium 模组启动崩溃与小地图闪烁（对齐 FCL 全部 JVM 参数 + 内置 MioLibPatcher + 按渲染器自动关闭不兼容 mixin）。\\n2. 修复下载模组时已安装的前置被重复下载。\\n3. infdev 全系列 27 个版本中文（8 组字体补丁 + 每版本独立界面翻译）。\\n4. indev 全系列 23 个版本中文（9 组字体补丁 + 独立界面翻译）。\\n5. Classic 26 个有菜单的版本全中文（12 组字体补丁）；另有 6 个最早的原型版（pc-132011/132128/152252/161148、c0.0.12a-dev、c0.0.12a_03-200018）连 ESC 菜单都不存在、游戏内无任何文字，因此不翻译。\\n6. 修复 Classic 无法启动（launchwrapper 1.5→1.6，旧配置启动时自动重建）。\\n7. 补全部分 Beta/Alpha 遗漏翻译。\\n"
+    "updateLog": "1.3.9 更新内容：\\n1. 修复版本开启「独立设置」后切换渲染器不生效（切回默认渲染器、进游戏却仍是旧渲染器）。\\n2. 修复设置文件缺失/损坏时启动游戏闪退（补空值防护）。\\n3. Alpha 全系列 F3 调试屏幕汉化：已用内存、进入下界、离开下界、帧率、区块更新等。\\n4. 补全 Alpha 界面遗漏翻译（世界类型、空世界槽位「- empty -」、删除世界确认等 70+ 条），并修复一处翻译乱码。\\n"
   },
   "latestPrerelease": null
 }
