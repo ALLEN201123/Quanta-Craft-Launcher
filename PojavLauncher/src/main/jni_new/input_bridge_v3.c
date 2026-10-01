@@ -543,21 +543,6 @@ JNIEXPORT void JNICALL Java_org_lwjgl_glfw_CallbackBridge_nativeSendCursorPos(JN
             }
         }
 
-        // ★★★ 2026-10-01 修复「UI 关闭后视角猛往上偏」（点返回/关背包/ESC 后必现）：
-        //   恢复上游吞首帧机制（参考 deleted_old_bridge/input_bridge_v3.c:336-339）。
-        //   isPrepareGrabPos 由 nativeSetGrabbing(true)（关 UI 回游戏重新抓取）等三处置位；
-        //   抓取后的**第一个**位置事件只当作新基准（更新 lastCursor），不转发给游戏 ——
-        //   否则该帧携带「从按钮位置到游戏内位置」的一次性大位移，MC 直接当成视角移动 → 猛偏。
-        //   注意：只恢复"吞首帧"，**不**恢复 grabCursorX 虚拟坐标累积 —— 那是 09-19
-        //   修「1.20.6 转视角极难」删掉的病灶（见 210ffc4），两条修复互不冲突：
-        //   infdev 转视角失效的根因是 grab 状态链断裂（038839a 修），与吞首帧无关。
-        if (pojav_environ->isGrabbing && isPrepareGrabPos) {
-            isPrepareGrabPos = false;
-            lastCursorX = x;
-            lastCursorY = y;
-            return;
-        }
-
         if (!pojav_environ->isUseStackQueueCall) {
             if (getenv("QCL_DBG_INPUT")) {
                 __android_log_print(ANDROID_LOG_INFO, "QCL_INPUT",
