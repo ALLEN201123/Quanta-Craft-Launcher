@@ -262,10 +262,21 @@ public class LabRecipeDialog extends Dialog {
         return grid;
     }
 
-    /** 取一个 ingredient（{item:...} 或 {tag:...} 或 数组）的中文名。 */
+    /**
+     * 取一个 ingredient 的中文名。**三种写法都要认**（版本之间变过，实测）：
+     * · 26.3 等新写法：`key`/`ingredients` 里是**纯字符串** —— `"#": "minecraft:acacia_planks"`
+     * · 1.20.6 老写法：**对象** —— `{"item": "minecraft:acacia_planks"}`（也可能有 `{"tag": "..."}`）
+     * · 还有一种是数组（多个候选材料）
+     * 只认对象的话，新写法会全部返回 null → 合成网格整片空白（已实测踩到）。
+     */
     private String ingredientName(com.google.gson.JsonElement e, java.util.Map<String, String> zh) {
         if (e == null || e.isJsonNull()) {
             return null;
+        }
+        if (e.isJsonPrimitive()) {
+            // ★ 新写法：直接就是物品 id 字符串
+            String id = e.getAsString();
+            return id.startsWith("#") ? id : displayName(id, zh);
         }
         if (e.isJsonArray()) {
             StringBuilder sb = new StringBuilder();
