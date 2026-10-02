@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:scrollbars="none">
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:padding="16dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <TextView
+            android:singleLine="true"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="@dimen/text_size_big"
+            android:textColor="@color/colorPureBlack"
+            android:textStyle="bold"
+            android:text="@string/lab_color_title"/>
+
+        <EditText
+            android:singleLine="true"
+            android:layout_marginTop="10dp"
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:textSize="@dimen/text_size_middle"
+            android:paddingLeft="8dp"
+            android:paddingRight="8dp"
+            android:hint="@string/lab_color_input_hint"
+            android:background="@color/colorLightGray"
+            android:id="@+id/lab_color_input"/>
+
+        <TextView
+            android:layout_marginTop="12dp"
+            android:singleLine="true"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="@dimen/text_size_middle"
+            android:textColor="@color/colorPureBlack"
+            android:text="@string/lab_color_preview_title"/>
+
+        <TextView
+            android:layout_marginTop="4dp"
+            android:minHeight="56dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="8dp"
+            android:textSize="16sp"
+            android:background="@color/colorLightGray"
+            android:id="@+id/lab_color_preview"/>
+
+        <TextView
+            android:layout_marginTop="12dp"
+            android:singleLine="true"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="@dimen/text_size_middle"
+            android:textColor="@color/colorPureBlack"
+            android:text="@string/lab_color_raw_title"/>
+
+        <TextView
+            android:layout_marginTop="4dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="8dp"
+            android:textSize="@dimen/text_size_middle"
+            android:textColor="@color/colorPureBlack"
+            android:background="@color/colorLightGray"
+            android:id="@+id/lab_color_raw"/>
+
+        <LinearLayout
+            android:layout_marginTop="12dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:id="@+id/lab_color_mode_row"/>
+
+        <LinearLayout
+            android:layout_marginTop="10dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:id="@+id/lab_color_palette"/>
+
+        <LinearLayout
+            android:layout_marginTop="10dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:id="@+id/lab_color_format_row"/>
+
+        <TextView
+            android:layout_marginTop="10dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="11sp"
+            android:textColor="@color/colorAccent"
+            android:text="@string/lab_color_hint"/>
+
+        <LinearLayout
+            android:layout_marginTop="12dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <Button
+                android:singleLine="true"
+                android:textAllCaps="false"
+                android:layout_weight="1"
+                android:layout_width="0dp"
+                android:layout_height="42dp"
+                android:gravity="center"
+                android:text="@string/lab_color_copy_section"
+                android:textSize="@dimen/text_size_middle"
+                android:textColor="@color/colorLinkBlue"
+                android:background="@drawable/launcher_button_parent"
+                android:id="@+id/lab_color_copy_section"/>
+
+            <Button
+                android:singleLine="true"
+                android:textAllCaps="false"
+                android:layout_weight="1"
+                android:layout_marginStart="8dp"
+                android:layout_width="0dp"
+                android:layout_height="42dp"
+                android:gravity="center"
+                android:text="@string/lab_color_clear"
+                android:textSize="@dimen/text_size_middle"
+                android:textColor="@color/colorPureBlack"
+                android:background="@drawable/launcher_button_parent"
+                android:id="@+id/lab_color_clear"/>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_marginTop="8dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <Button
+                android:singleLine="true"
+                android:textAllCaps="false"
+                android:layout_weight="1"
+                android:layout_width="0dp"
+                android:layout_height="42dp"
+                android:gravity="center"
+                android:text="@string/lab_color_copy_amp"
+                android:textSize="@dimen/text_size_middle"
+                android:textColor="@color/colorLinkBlue"
+                android:background="@drawable/launcher_button_parent"
+                android:id="@+id/lab_color_copy_amp"/>
+
+            <Button
+                android:singleLine="true"
+                android:textAllCaps="false"
+                android:layout_weight="1"
+                android:layout_marginStart="8dp"
+                android:layout_width="0dp"
+                android:layout_height="42dp"
+                android:gravity="center"
+                android:text="@string/lab_color_close"
+                android:textSize="@dimen/text_size_middle"
+                android:textColor="@color/colorPureBlack"
+                android:background="@drawable/launcher_button_parent"
+                android:id="@+id/lab_color_close"/>
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</ScrollView>

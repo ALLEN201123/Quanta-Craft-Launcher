@@ -41,6 +41,8 @@ import com.qcl.launcher.auth.yggdrasil.YggdrasilSession;
 import com.qcl.launcher.launcher.MainActivity;
 import com.qcl.launcher.launcher.dialogs.account.ReLoginDialog;
 import com.qcl.launcher.launcher.dialogs.account.MicrosoftAccountSkinDialog;
+// ★ 1.4.1：皮肤库（自研）
+import com.qcl.launcher.launcher.dialogs.account.SkinLibraryDialog;
 import com.qcl.launcher.launcher.dialogs.account.SkinPreviewDialog;
 import com.qcl.launcher.launcher.uis.account.AccountUI;
 import com.qcl.launcher.manifest.AppManifest;
@@ -482,6 +484,22 @@ public class AccountListAdapter extends BaseAdapter {
                 intent.putExtra(Constants.INITIAL_DIRECTORY, Environment.getExternalStorageDirectory().getAbsolutePath());
                 activity.startActivityForResult(intent, AccountUI.SELECT_SKIN_REQUEST);
             }
+        });
+        // ★★★ 1.4.1：长按皮肤按钮 → 打开皮肤库（不动原有单击行为）
+        //   离线 / 微软 / 第三方账户都能从库里挑皮肤：离线写本地皮肤，微软直接上传换肤
+        viewHolder.skin.setOnLongClickListener(v -> {
+            SkinLibraryDialog library = new SkinLibraryDialog(context, activity, account, offlineSkinSetting -> {
+                account.offlineSkinSetting = offlineSkinSetting;
+                if (isSelected) {
+                    activity.publicGameSetting.account = account;
+                    GsonUtils.savePublicGameSetting(activity.publicGameSetting, AppManifest.SETTING_DIR + "/public_game_setting.json");
+                }
+                activity.uiManager.accountUI.accounts.get(position).refresh(account);
+                GsonUtils.saveAccounts(activity.uiManager.accountUI.accounts, AppManifest.ACCOUNT_DIR + "/accounts.json");
+                activity.uiManager.accountUI.accountListAdapter.notifyDataSetChanged();
+            });
+            library.show();
+            return true;
         });
         viewHolder.delete.setOnClickListener(v -> {
             activity.uiManager.accountUI.accounts.remove(account);

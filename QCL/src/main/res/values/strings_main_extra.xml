@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 1.4.0 新增：主界面顶部入口文案（大厅 / 实验室 / 下载任务） -->
+<resources>
+    <string name="launcher_scroll_lobby">大厅</string>
+    <string name="launcher_scroll_lab">实验室</string>
+    <string name="launcher_scroll_download_center">下载任务</string>
+</resources>

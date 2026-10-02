@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 1.4.0 新增：模组介绍一键翻译文案 -->
+<resources>
+    <string name="translate_button_one_click">一键翻译</string>
+    <string name="translate_button_original">显示原文</string>
+    <string name="translate_loading">翻译中…</string>
+    <string name="translate_failed">翻译失败：%s</string>
+</resources>

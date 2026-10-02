@@ -50,6 +50,8 @@ import com.afollestad.appthemeengine.Config;
 import com.qcl.launcher.launcher.VerifyInterface;
 import com.qcl.launcher.launcher.dialogs.VerifyDialog;
 import com.qcl.launcher.launcher.dialogs.account.MicrosoftAccountSkinDialog;
+// ★ 1.4.1：皮肤库（自研）
+import com.qcl.launcher.launcher.dialogs.account.SkinLibraryDialog;
 import com.qcl.launcher.launcher.dialogs.account.SkinPreviewDialog;
 import com.qcl.launcher.launcher.setting.InitializeSetting;
 import com.qcl.launcher.launcher.setting.game.PrivateGameSetting;
@@ -409,6 +411,10 @@ implements View.OnClickListener {
         }
         if (MicrosoftAccountSkinDialog.getInstance() != null) {
             MicrosoftAccountSkinDialog.getInstance().onActivityResult(requestCode, resultCode, data);
+        }
+        // ★ 1.4.1：皮肤库（本地文件选择结果转发）
+        if (SkinLibraryDialog.getInstance() != null) {
+            SkinLibraryDialog.getInstance().onActivityResult(requestCode, resultCode, data);
         }
     }
 

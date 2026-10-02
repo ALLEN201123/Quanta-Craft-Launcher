@@ -67,6 +67,23 @@
         android:textSize="@dimen/text_size_middle"
         android:textColor="@color/colorPureBlack"/>
 
+    <!-- 1.4.0 新增：模组介绍一键翻译 -->
+    <Button
+        android:id="@+id/mod_info_translate"
+        android:singleLine="true"
+        android:textAllCaps="false"
+        android:visibility="gone"
+        android:layout_marginTop="6dp"
+        android:layout_width="wrap_content"
+        android:layout_height="28dp"
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp"
+        android:gravity="center"
+        android:text="@string/translate_button_one_click"
+        android:textSize="@dimen/text_size_small"
+        android:textColor="@color/colorLinkBlue"
+        android:background="@drawable/launcher_button_parent"/>
+
     <LinearLayout
         android:layout_marginTop="10dp"
         android:layout_width="match_parent"

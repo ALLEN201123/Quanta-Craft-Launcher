@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:scrollbars="none">
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:padding="16dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <TextView
+            android:singleLine="true"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="@dimen/text_size_big"
+            android:textColor="@color/colorPureBlack"
+            android:textStyle="bold"
+            android:text="@string/lab_sd_title"/>
+
+        <TextView
+            android:layout_marginTop="8dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="11sp"
+            android:textColor="@color/colorAccent"
+            android:text="@string/lab_sd_desc"/>
+
+        <TextView
+            android:layout_marginTop="8dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="11sp"
+            android:textColor="@color/colorPureBlack"
+            android:id="@+id/lab_sd_dir_text"/>
+
+        <LinearLayout
+            android:layout_marginTop="12dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <TextView
+                android:singleLine="true"
+                android:layout_weight="1"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:textSize="@dimen/text_size_middle"
+                android:textColor="@color/colorPureBlack"
+                android:text="@string/lab_sd_existing"/>
+
+            <Button
+                android:singleLine="true"
+                android:textAllCaps="false"
+                android:layout_width="72dp"
+                android:layout_height="36dp"
+                android:gravity="center"
+                android:text="@string/lab_sd_refresh"
+                android:textSize="@dimen/text_size_middle"
+                android:textColor="@color/colorLinkBlue"
+                android:background="@drawable/launcher_button_parent"
+                android:id="@+id/lab_sd_refresh"/>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_marginTop="6dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:id="@+id/lab_sd_list"/>
+
+        <TextView
+            android:layout_marginTop="14dp"
+            android:singleLine="true"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="@dimen/text_size_middle"
+            android:textColor="@color/colorPureBlack"
+            android:text="@string/lab_sd_download_label"/>
+
+        <LinearLayout
+            android:layout_marginTop="6dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <EditText
+                android:singleLine="true"
+                android:layout_weight="1"
+                android:layout_width="0dp"
+                android:layout_height="40dp"
+                android:textSize="@dimen/text_size_middle"
+                android:paddingLeft="8dp"
+                android:paddingRight="8dp"
+                android:hint="@string/lab_sd_url_hint"
+                android:background="@color/colorLightGray"
+                android:id="@+id/lab_sd_url"/>
+
+            <Button
+                android:singleLine="true"
+                android:textAllCaps="false"
+                android:layout_marginStart="8dp"
+                android:layout_width="72dp"
+                android:layout_height="40dp"
+                android:gravity="center"
+                android:text="@string/lab_sd_download"
+                android:textSize="@dimen/text_size_middle"
+                android:textColor="@color/colorLinkBlue"
+                android:background="@drawable/launcher_button_parent"
+                android:id="@+id/lab_sd_download_button"/>
+
+        </LinearLayout>
+
+        <ProgressBar
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_marginTop="10dp"
+            android:max="100"
+            android:visibility="gone"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/lab_sd_progress"/>
+
+        <TextView
+            android:layout_marginTop="4dp"
+            android:visibility="gone"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="11sp"
+            android:textColor="@color/colorPureBlack"
+            android:id="@+id/lab_sd_progress_text"/>
+
+        <Button
+            android:singleLine="true"
+            android:textAllCaps="false"
+            android:layout_marginTop="14dp"
+            android:layout_width="match_parent"
+            android:layout_height="42dp"
+            android:gravity="center"
+            android:text="@string/lab_sd_close"
+            android:textSize="@dimen/text_size_middle"
+            android:textColor="@color/colorPureBlack"
+            android:background="@drawable/launcher_button_parent"
+            android:id="@+id/lab_sd_close"/>
+
+    </LinearLayout>
+
+</ScrollView>

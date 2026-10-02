@@ -63,6 +63,23 @@
                 android:textSize="12sp"
                 android:id="@+id/resource_description"/>
 
+            <!-- 1.4.0 新增：模组介绍一键翻译 -->
+            <Button
+                android:id="@+id/resource_translate"
+                android:singleLine="true"
+                android:textAllCaps="false"
+                android:visibility="gone"
+                android:layout_marginTop="4dp"
+                android:layout_width="wrap_content"
+                android:layout_height="26dp"
+                android:paddingStart="10dp"
+                android:paddingEnd="10dp"
+                android:gravity="center"
+                android:text="@string/translate_button_one_click"
+                android:textSize="@dimen/text_size_small"
+                android:textColor="@color/colorLinkBlue"
+                android:background="@drawable/launcher_button_parent"/>
+
         </LinearLayout>
 
         <LinearLayout

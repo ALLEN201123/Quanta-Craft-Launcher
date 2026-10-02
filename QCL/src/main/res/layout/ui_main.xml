@@ -210,7 +210,71 @@
             </LinearLayout>
 
 
-            <!-- 5. 多人游戏（沿用原有隐藏状态） -->
+            <!-- 5. 大厅（★1.4.1 新增：我的世界新闻 / 新发布模组 / 版本日历） -->
+            <LinearLayout
+                android:background="@drawable/qcl_button_gray"
+                android:focusable="true"
+                android:id="@+id/start_ui_lobby"
+                android:clickable="true"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginEnd="6dp"
+                android:padding="6dp">
+
+                <ImageView
+                    android:id="@+id/lobby_icon"
+                    android:layout_width="26dp"
+                    android:layout_height="26dp"
+                    android:layout_gravity="center"
+                    android:background="@drawable/ic_baseline_home_white"/>
+
+                <TextView
+                    android:singleLine="true"
+                    android:layout_width="wrap_content"
+                    android:layout_height="26dp"
+                    android:layout_gravity="center"
+                    android:gravity="center"
+                    android:layout_marginStart="6dp"
+                    android:text="@string/launcher_scroll_lobby"
+                    android:textColor="@color/colorPureWhite"
+                    android:textSize="@dimen/text_size_middle"/>
+
+            </LinearLayout>
+
+            <!-- 6. 实验室（★1.4.1 新增：多彩文字 / 种子 / 配方 / 数据包 / 投影工坊） -->
+            <LinearLayout
+                android:background="@drawable/qcl_button_gray"
+                android:focusable="true"
+                android:id="@+id/start_ui_lab"
+                android:clickable="true"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginEnd="6dp"
+                android:padding="6dp">
+
+                <ImageView
+                    android:id="@+id/lab_icon"
+                    android:layout_width="26dp"
+                    android:layout_height="26dp"
+                    android:layout_gravity="center"
+                    android:background="@drawable/ic_command_block"/>
+
+                <TextView
+                    android:singleLine="true"
+                    android:layout_width="wrap_content"
+                    android:layout_height="26dp"
+                    android:layout_gravity="center"
+                    android:gravity="center"
+                    android:layout_marginStart="6dp"
+                    android:text="@string/launcher_scroll_lab"
+                    android:textColor="@color/colorPureWhite"
+                    android:textSize="@dimen/text_size_middle"/>
+
+            </LinearLayout>
+
+            <!-- 7. 多人游戏（沿用原有隐藏状态） -->
             <LinearLayout
                 android:background="@drawable/qcl_button_gray"
                 android:focusable="true"
@@ -242,7 +306,7 @@
 
             </LinearLayout>
 
-            <!-- 6. 设置 -->
+            <!-- 8. 设置 -->
             <LinearLayout
                 android:background="@drawable/qcl_button_gray"
                 android:focusable="true"

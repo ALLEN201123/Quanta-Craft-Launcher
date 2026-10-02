@@ -4,6 +4,7 @@ import android.content.Context;
 import android.view.View;
 import android.widget.LinearLayout;
 import com.qcl.launcher.launcher.MainActivity;
+import com.qcl.launcher.launcher.mod.export.ModpackExporter;
 import com.qcl.launcher.launcher.uis.tools.BaseUI;
 import com.qcl.launcher.utils.animation.CustomAnimationUtils;
 
@@ -17,6 +18,19 @@ public class ExportPackageTypeUI extends BaseUI implements View.OnClickListener 
 
     @Override // android.view.View.OnClickListener
     public void onClick(View view) {
+        int packType;
+        if (view == this.hmclPackage) {
+            packType = ModpackExporter.TYPE_HMCL;
+        } else if (view == this.multimc) {
+            packType = ModpackExporter.TYPE_MULTIMC;
+        } else if (view == this.server) {
+            packType = ModpackExporter.TYPE_SERVER;
+        } else {
+            return;
+        }
+        // 记录所选类型后进入「填写整合包信息」页面
+        this.activity.uiManager.exportPackageInfoUI.setPackType(packType);
+        this.activity.uiManager.switchMainUI(this.activity.uiManager.exportPackageInfoUI);
     }
 
     public ExportPackageTypeUI(Context context, MainActivity mainActivity) {

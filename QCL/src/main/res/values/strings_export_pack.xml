@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="qcl_export_pack_info_subtitle">填写整合包信息</string>
+    <string name="qcl_export_pack_file_subtitle">选择要包含的文件或文件夹</string>
+
+    <string name="qcl_export_pack_name_label">整合包名称</string>
+    <string name="qcl_export_pack_version_label">版本</string>
+    <string name="qcl_export_pack_author_label">作者</string>
+    <string name="qcl_export_pack_filename_label">文件名</string>
+
+    <string name="qcl_export_pack_next">下一步</string>
+    <string name="qcl_export_pack_start">开始导出</string>
+    <string name="qcl_export_pack_cancel">取消</string>
+
+    <string name="qcl_export_pack_current_file">正在打包：%1$s</string>
+    <string name="qcl_export_pack_progress_percent">%1$d%%</string>
+
+    <string name="qcl_export_pack_name_empty">整合包名称不能为空</string>
+    <string name="qcl_export_pack_nothing_selected">请至少选择一项要包含的内容</string>
+    <string name="qcl_export_pack_no_version">未找到当前版本，无法导出</string>
+
+    <string name="qcl_export_pack_done">导出完成：%1$s</string>
+    <string name="qcl_export_pack_failed">导出失败：%1$s</string>
+    <string name="qcl_export_pack_canceled">已取消导出</string>
+
+    <string name="qcl_export_pack_default_suffix">整合包</string>
+</resources>

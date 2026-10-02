@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- 实验室页面 -->
+    <string name="lab_ui_title">实验室</string>
+    <string name="lab_ui_subtitle">一些实验性的小工具，玩得开心</string>
+    <string name="lab_card_color_text_title">多彩文字生成器</string>
+    <string name="lab_card_color_text_sub">给文字加上颜色与格式代码</string>
+    <string name="lab_card_seed_title">种子查询器</string>
+    <string name="lab_card_seed_sub">打开 chunkbase 在线地图查看种子</string>
+    <string name="lab_card_recipe_title">物品配方查询</string>
+    <string name="lab_card_recipe_sub">常见物品的合成与熔炼配方</string>
+    <string name="lab_card_datapack_title">数据包制作</string>
+    <string name="lab_card_datapack_sub">图形化编写 function 并导出 zip</string>
+    <string name="lab_card_schematic_studio_title">投影工坊</string>
+    <string name="lab_card_schematic_studio_sub">用参数生成建筑并导出 .schematic</string>
+    <string name="lab_card_schematic_download_title">投影资源</string>
+    <string name="lab_card_schematic_download_sub">管理 / 下载 .schematic 投影文件</string>
+
+    <!-- 多彩文字生成器 -->
+    <string name="lab_color_title">多彩文字生成器</string>
+    <string name="lab_color_input_hint">输入要上色的文字</string>
+    <string name="lab_color_preview_title">预览</string>
+    <string name="lab_color_raw_title">代码</string>
+    <string name="lab_color_mode_whole">整段上色</string>
+    <string name="lab_color_mode_char">逐字上色</string>
+    <string name="lab_color_hint">逐字模式：点击上方预览中的文字即可给该字上色；格式按钮对整段生效</string>
+    <string name="lab_color_copy_section">复制 § 版本（游戏内/命令）</string>
+    <string name="lab_color_copy_amp">复制 &amp; 版本（命令方块/配置）</string>
+    <string name="lab_color_clear">清空</string>
+    <string name="lab_color_close">关闭</string>
+    <string name="lab_color_toast_copied">已复制到剪贴板</string>
+    <string name="lab_color_toast_empty">内容为空</string>
+    <string name="lab_color_fmt_l">粗体 §l</string>
+    <string name="lab_color_fmt_o">斜体 §o</string>
+    <string name="lab_color_fmt_n">下划线 §n</string>
+    <string name="lab_color_fmt_m">删除线 §m</string>
+    <string name="lab_color_fmt_k">随机 §k</string>
+
+    <!-- 种子查询器 -->
+    <string name="lab_seed_title">种子查询器</string>
+    <string name="lab_seed_desc">安卓端不进行本地地形计算，查询将用浏览器打开 chunkbase 在线地图（需要联网）。种子支持数字或任意字符串。</string>
+    <string name="lab_seed_input_hint">世界种子</string>
+    <string name="lab_seed_version">版本</string>
+    <string name="lab_seed_dimension">维度</string>
+    <string name="lab_seed_query">打开在线地图</string>
+    <string name="lab_seed_copy">复制种子</string>
+    <string name="lab_seed_close">关闭</string>
+    <string name="lab_seed_dim_overworld">主世界</string>
+    <string name="lab_seed_dim_nether">下界</string>
+    <string name="lab_seed_dim_end">末地</string>
+    <string name="lab_seed_toast_empty">请先输入种子</string>
+    <string name="lab_seed_toast_copied">已复制种子</string>
+
+    <!-- 物品配方查询 -->
+    <string name="lab_recipe_title">物品配方查询</string>
+    <string name="lab_recipe_hint">输入物品中文名搜索</string>
+    <string name="lab_recipe_search">搜索</string>
+    <string name="lab_recipe_empty">没有找到该物品的配方</string>
+    <string name="lab_recipe_result">产物</string>
+    <string name="lab_recipe_grid">合成网格</string>
+    <string name="lab_recipe_materials">所需材料</string>
+    <string name="lab_recipe_smelting">熔炼 / 其他</string>
+    <string name="lab_recipe_mcmod">去 mcmod 查完整配方</string>
+    <string name="lab_recipe_close">关闭</string>
+    <string name="lab_recipe_type_shaped">有序合成（工作台）</string>
+    <string name="lab_recipe_type_shapeless">无序合成</string>
+    <string name="lab_recipe_type_smelting">熔炼</string>
+
+    <!-- 数据包制作 -->
+    <string name="lab_dp_title">数据包制作</string>
+    <string name="lab_dp_name_hint">数据包名称</string>
+    <string name="lab_dp_ns_hint">命名空间（会自动过滤非法字符）</string>
+    <string name="lab_dp_packformat">pack_format</string>
+    <string name="lab_dp_functions">功能（function）</string>
+    <string name="lab_dp_add_function">+ 新增 function</string>
+    <string name="lab_dp_templates">常用模板（插入到当前 function）</string>
+    <string name="lab_dp_export">导出为 zip</string>
+    <string name="lab_dp_close">关闭</string>
+    <string name="lab_dp_func_name_hint">function 名称</string>
+    <string name="lab_dp_cmd_hint">每行一条命令</string>
+    <string name="lab_dp_delete_function">删除</string>
+    <string name="lab_dp_hint_no_func">请先新增并选择一个 function</string>
+    <string name="lab_dp_hint_validate">提示：命令应以字母开头，如 give @a minecraft:diamond</string>
+    <string name="lab_dp_toast_done">已导出：</string>
+    <string name="lab_dp_toast_fail">导出失败：</string>
+    <string name="lab_dp_toast_name_empty">请填写数据包名称</string>
+    <string name="lab_dp_toast_ns_empty">命名空间无效，已使用 default</string>
+
+    <!-- 投影工坊 -->
+    <string name="lab_ss_title">投影工坊</string>
+    <string name="lab_ss_type">生成器</string>
+    <string name="lab_ss_type_sphere">球体</string>
+    <string name="lab_ss_type_cylinder">圆柱</string>
+    <string name="lab_ss_type_cube">立方体</string>
+    <string name="lab_ss_type_pixel">像素画</string>
+    <string name="lab_ss_name_hint">投影名称</string>
+    <string name="lab_ss_block_hint">方块名（如 石头）</string>
+    <string name="lab_ss_hollow">空心</string>
+    <string name="lab_ss_radius">半径</string>
+    <string name="lab_ss_height">高度</string>
+    <string name="lab_ss_width">宽 X</string>
+    <string name="lab_ss_length">长 Z</string>
+    <string name="lab_ss_gen">生成预览</string>
+    <string name="lab_ss_build_pixel">生成像素网格</string>
+    <string name="lab_ss_pixel_hint">点击网格中的格子切换是否放置方块</string>
+    <string name="lab_ss_export_schematic">导出 .schematic</string>
+    <string name="lab_ss_export_litematic">导出 .litematic</string>
+    <string name="lab_ss_close">关闭</string>
+    <string name="lab_ss_layer">层</string>
+    <string name="lab_ss_prev_layer">上一层</string>
+    <string name="lab_ss_next_layer">下一层</string>
+    <string name="lab_ss_toast_empty">请先生成投影</string>
+    <string name="lab_ss_toast_done">已导出：</string>
+    <string name="lab_ss_toast_fail">导出失败：</string>
+    <string name="lab_ss_toast_block_unknown">未知方块名，已使用「石头」</string>
+    <string name="lab_ss_hint_litematic">说明：litematic 的 NBT 结构较复杂，本工具无法保证正确性，因此暂不提供导出，以免生成损坏的文件。请使用 .schematic。</string>
+
+    <!-- 投影资源 -->
+    <string name="lab_sd_title">投影资源</string>
+    <string name="lab_sd_desc">公共网络没有可靠的 .litematic/.schematic 资源接口。这里可以管理游戏目录下已有的投影文件，或从任意 http(s) 直链下载。</string>
+    <string name="lab_sd_existing">已有投影文件</string>
+    <string name="lab_sd_size">大小</string>
+    <string name="lab_sd_time">修改时间</string>
+    <string name="lab_sd_refresh">刷新</string>
+    <string name="lab_sd_rename">重命名</string>
+    <string name="lab_sd_delete">删除</string>
+    <string name="lab_sd_copy_path">复制路径</string>
+    <string name="lab_sd_empty">schematics 目录为空</string>
+    <string name="lab_sd_download_label">从直链下载</string>
+    <string name="lab_sd_url_hint">粘贴 http(s) 直链</string>
+    <string name="lab_sd_download">下载</string>
+    <string name="lab_sd_close">关闭</string>
+    <string name="lab_sd_rename_title">重命名投影</string>
+    <string name="lab_sd_delete_title">删除投影</string>
+    <string name="lab_sd_confirm">确定</string>
+    <string name="lab_sd_cancel">取消</string>
+    <string name="lab_sd_toast_copied">已复制路径</string>
+    <string name="lab_sd_toast_deleted">已删除</string>
+    <string name="lab_sd_toast_renamed">已重命名</string>
+    <string name="lab_sd_toast_url_empty">请输入下载链接</string>
+    <string name="lab_sd_toast_downloading">开始下载…</string>
+    <string name="lab_sd_toast_done">下载完成：</string>
+    <string name="lab_sd_toast_fail">下载失败：</string>
+    <string name="lab_sd_dir_label">目录：</string>
+
+</resources>

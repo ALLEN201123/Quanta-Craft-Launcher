@@ -17,6 +17,8 @@ import com.qcl.launcher.utils.Lang;
 import com.qcl.launcher.utils.Pair;
 import com.qcl.launcher.utils.io.NetworkUtils;
 import com.qcl.launcher.utils.io.ZipTools;
+// ★ 1.4.1：模组简介一键翻译（自 1.4.0 朋友源码包合并）
+import com.qcl.launcher.utils.network.ModTranslateHelper;
 import com.qcl.launcher.utils.string.ModTranslations;
 import com.qcl.launcher.utils.string.StringUtils;
 import java.io.IOException;
@@ -26,6 +28,9 @@ import com.qcl.launcher.R;
 /* loaded from: classes2.dex */
 public class ModInfoDialog extends Dialog implements View.OnClickListener {
     private TextView description;
+    // ★ 1.4.1：翻译按钮
+    private Button translateButton;
+    private ModTranslateHelper.Toggle translateToggle;
     private Button exit;
     private TextView fileName;
     private ImageView icon;
@@ -75,6 +80,9 @@ public class ModInfoDialog extends Dialog implements View.OnClickListener {
         this.version.setText(string);
         this.fileName.setText(this.localModFile.getFile().toFile().getName());
         this.description.setText(this.localModFile.getDescription().toString());
+        // ★ 1.4.1：简介下方「一键翻译 / 显示原文」切换按钮
+        this.translateButton = (Button) findViewById(R.id.mod_info_translate);
+        this.translateToggle = new ModTranslateHelper.Toggle(getContext(), this.description, this.translateButton);
         int i = 0;
         this.official.setVisibility(StringUtils.isNotBlank(this.localModFile.getUrl()) ? 0 : 8);
         this.modTranslations = ModTranslations.MOD.getModById(this.localModFile.getId());

@@ -7,4 +7,198 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <LinearLayout
+            android:layout_centerInParent="true"
+            android:layout_width="420dp"
+            android:layout_height="wrap_content"
+            android:background="@drawable/launcher_view_white"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_marginStart="15dp"
+                android:layout_marginEnd="15dp"
+                android:layout_marginTop="12dp"
+                android:singleLine="true"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="@dimen/text_size_middle"
+                android:textColor="@color/colorPureBlack"
+                android:text="@string/qcl_export_pack_info_subtitle"/>
+
+            <LinearLayout
+                android:paddingStart="15dp"
+                android:paddingEnd="15dp"
+                android:paddingTop="10dp"
+                android:paddingBottom="10dp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:singleLine="true"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_gravity="center"
+                    android:textSize="12sp"
+                    android:textColor="@color/colorPureBlack"
+                    android:text="@string/qcl_export_pack_name_label"/>
+
+                <EditText
+                    android:singleLine="true"
+                    android:paddingStart="8dp"
+                    android:paddingEnd="8dp"
+                    android:background="@color/colorLightGray"
+                    android:layout_width="220dp"
+                    android:layout_height="32dp"
+                    android:id="@+id/export_package_name_edit"
+                    android:textSize="12sp"
+                    android:textColor="@color/colorPureBlack"
+                    android:layout_gravity="center"/>
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1px"
+                android:background="@color/colorDarkGray"/>
+
+            <LinearLayout
+                android:paddingStart="15dp"
+                android:paddingEnd="15dp"
+                android:paddingTop="10dp"
+                android:paddingBottom="10dp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:singleLine="true"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_gravity="center"
+                    android:textSize="12sp"
+                    android:textColor="@color/colorPureBlack"
+                    android:text="@string/qcl_export_pack_version_label"/>
+
+                <EditText
+                    android:singleLine="true"
+                    android:paddingStart="8dp"
+                    android:paddingEnd="8dp"
+                    android:background="@color/colorLightGray"
+                    android:layout_width="220dp"
+                    android:layout_height="32dp"
+                    android:id="@+id/export_package_version_edit"
+                    android:textSize="12sp"
+                    android:textColor="@color/colorPureBlack"
+                    android:layout_gravity="center"/>
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1px"
+                android:background="@color/colorDarkGray"/>
+
+            <LinearLayout
+                android:paddingStart="15dp"
+                android:paddingEnd="15dp"
+                android:paddingTop="10dp"
+                android:paddingBottom="10dp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:singleLine="true"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_gravity="center"
+                    android:textSize="12sp"
+                    android:textColor="@color/colorPureBlack"
+                    android:text="@string/qcl_export_pack_author_label"/>
+
+                <EditText
+                    android:singleLine="true"
+                    android:paddingStart="8dp"
+                    android:paddingEnd="8dp"
+                    android:background="@color/colorLightGray"
+                    android:layout_width="220dp"
+                    android:layout_height="32dp"
+                    android:id="@+id/export_package_author_edit"
+                    android:textSize="12sp"
+                    android:textColor="@color/colorPureBlack"
+                    android:layout_gravity="center"/>
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1px"
+                android:background="@color/colorDarkGray"/>
+
+            <LinearLayout
+                android:paddingStart="15dp"
+                android:paddingEnd="15dp"
+                android:paddingTop="10dp"
+                android:paddingBottom="10dp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:singleLine="true"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_gravity="center"
+                    android:textSize="12sp"
+                    android:textColor="@color/colorPureBlack"
+                    android:text="@string/qcl_export_pack_filename_label"/>
+
+                <EditText
+                    android:singleLine="true"
+                    android:paddingStart="8dp"
+                    android:paddingEnd="8dp"
+                    android:background="@color/colorLightGray"
+                    android:layout_width="220dp"
+                    android:layout_height="32dp"
+                    android:id="@+id/export_package_filename_edit"
+                    android:textSize="12sp"
+                    android:textColor="@color/colorPureBlack"
+                    android:layout_gravity="center"/>
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1px"
+                android:background="@color/colorDarkGray"/>
+
+            <Button
+                android:singleLine="true"
+                android:textAllCaps="false"
+                android:tag="tint_accent_color"
+                android:layout_margin="15dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="end"
+                android:background="@drawable/launcher_button_transparent"
+                android:text="@string/qcl_export_pack_next"
+                android:textColor="@color/colorPureWhite"
+                android:textSize="@dimen/text_size_middle"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:paddingTop="8dp"
+                android:paddingBottom="8dp"
+                android:minWidth="0dp"
+                android:minHeight="0dp"
+                android:id="@+id/export_package_info_next"/>
+
+        </LinearLayout>
+
+    </RelativeLayout>
+
 </LinearLayout>

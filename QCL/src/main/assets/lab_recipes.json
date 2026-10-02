@@ -1,0 +1,1095 @@
+{
+  "version": 1,
+  "note": "常见物品配方表。grid 为 3x3 逐行展开（左上到右下），null 表示空；type 取值 crafting_shaped / crafting_shapeless / smelting。",
+  "recipes": [
+    {
+      "name": "工作台",
+      "id": "minecraft:crafting_table",
+      "count": 1,
+      "type": "crafting_shaped",
+      "grid": ["木板", "木板", null, "木板", "木板", null, null, null, null],
+      "materials": ["木板 x4"],
+      "smelting": null
+    },
+    {
+      "name": "木棍",
+      "id": "minecraft:stick",
+      "count": 4,
+      "type": "crafting_shaped",
+      "grid": ["木板", null, null, "木板", null, null, null, null, null],
+      "materials": ["木板 x2"],
+      "smelting": null
+    },
+    {
+      "name": "火把",
+      "id": "minecraft:torch",
+      "count": 4,
+      "type": "crafting_shaped",
+      "grid": [null, "煤炭", null, null, "木棍", null, null, null, null],
+      "materials": ["煤炭 x1", "木棍 x1"],
+      "smelting": null
+    },
+    {
+      "name": "箱子",
+      "id": "minecraft:chest",
+      "count": 1,
+      "type": "crafting_shaped",
+      "grid": ["木板", "木板", "木板", "木板", null, "木板", "木板", "木板", "木板"],
+      "materials": ["木板 x8"],
+      "smelting": null
+    },
+    {
+      "name": "熔炉",
+      "id": "minecraft:furnace",
+      "count": 1,
+      "type": "crafting_shaped",
+      "grid": ["圆石", "圆石", "圆石", "圆石", null, "圆石", "圆石", "圆石", "圆石"],
+      "materials": ["圆石 x8"],
+      "smelting": null
+    },
+    {
+      "name": "梯子",
+      "id": "minecraft:ladder",
+      "count": 3,
+      "type": "crafting_shaped",
+      "grid": ["木棍", null, "木棍", "木棍", "木棍", "木棍", "木棍", null, "木棍"],
+      "materials": ["木棍 x7"],
+      "smelting": null
+    },
+    {
+      "name": "木门",
+      "id": "minecraft:oak_door",
+      "count": 3,
+      "type": "crafting_shaped",
+      "grid": ["木板", "木板", null, "木板", "木板", null, "木板", "木板", null],
+      "materials": ["木板 x6"],
+      "smelting": null
+    },
+    {
+      "name": "铁门",
+      "id": "minecraft:iron_door",
+      "count": 3,
+      "type": "crafting_shaped",
+      "grid": ["铁锭", "铁锭", null, "铁锭", "铁锭", null, "铁锭", "铁锭", null],
+      "materials": ["铁锭 x6"],
+      "smelting": null
+    },
+    {
+      "name": "栅栏",
+      "id": "minecraft:oak_fence",
+      "count": 3,
+      "type": "crafting_shaped",
+      "grid": ["木板", "木棍", "木板", "木板", "木棍", "木板", null, null, null],
+      "materials": ["木板 x4", "木棍 x2"],
+      "smelting": null
+    },
+    {
+      "name": "船",
+      "id": "minecraft:oak_boat",
+      "count": 1,
+      "type": "crafting_shaped",
+      "grid": ["木板", null, "木板", "木板", "木板", "木板", null, null, null],
+      "materials": ["木板 x5"],
+      "smelting": null
+    },
+    {
+      "name": "床",
+      "id": "minecraft:red_bed",
+      "count": 1,
+      "type": "crafting_shaped",
+      "grid": ["羊毛", "羊毛", "羊毛", "木板", "木板", "木板", null, null, null],
+      "materials": ["任意羊毛 x3", "木板 x3"],
+      "smelting": null
+    },
+    {
+      "name": "面包",
+      "id": "minecraft:bread",
+      "count": 1,
+      "type": "crafting_shaped",
+      "grid": ["小麦", "小麦", "小麦", null, null, null, null, null, null],
+      "materials": ["小麦 x3"],
+      "smelting": null
+    },
+    {
+      "name": "蛋糕",
+      "id": "minecraft:cake",
+      "count": 1,
+      "type": "crafting_shaped",
+      "grid": ["牛奶桶", "牛奶桶", "牛奶桶", "糖", "鸡蛋", "糖", "小麦", "小麦", "小麦"],
+      "materials": ["牛奶桶 x3", "糖 x2", "鸡蛋 x1", "小麦 x3"],
+      "smelting": null
+    },
+    {
+      "name": "金苹果",
+      "id": "minecraft:golden_apple",
+      "count": 1,
+      "type": "crafting_shaped",
+      "grid": ["金锭", "金锭", "金锭", "金锭", "苹果", "金锭", "金锭", "金锭", "金锭"],
+      "materials": ["金锭 x8", "苹果 x1"],
+      "smelting": null
+    },
+    {
+      "name": "附魔金苹果",
+      "id": "minecraft:enchanted_golden_apple",
+      "count": 1,
+      "type": "crafting_shaped",
+      "grid": ["金块", "金块", "金块", "金块", "苹果", "金块", "金块", "金块", "金块"],
+      "materials": ["金块 x8", "苹果 x1"],
+      "smelting": null
+    },
+    {
+      "name": "活塞",
+      "id": "minecraft:piston",
+      "count": 1,
+      "type": "crafting_shaped",
+      "grid": ["木板", "木板", "木板", "圆石", "铁锭", "圆石", "圆石", "红石", "圆石"],
+      "materials": ["木板 x3", "圆石 x4", "铁锭 x1", "红石 x1"],
+      "smelting": null
+    },
+    {
+      "name": "粘性活塞",
+      "id": "minecraft:sticky_piston",
+      "count": 1,
+      "type": "crafting_shaped",
+      "grid": ["粘液球", null, null, "活塞", null, null, null, null, null],
+      "materials": ["粘液球 x1", "活塞 x1"],
+      "smelting": null
+    },
+    {
+      "name": "红石中继器",
+      "id": "minecraft:repeater",
+      "count": 1,
+      "type": "crafting_shaped",
+      "grid": ["石头", "石头", "石头", "红石火把", "红石", "红石火把", "石头", "石头", "石头"],
+      "materials": ["石头 x3", "红石火把 x2", "红石 x1"],
+      "smelting": null
+    },
+    {
+      "name": "红石比较器",
+      "id": "minecraft:comparator",
+      "count": 1,
+      "type": "crafting_shaped",
+      "grid": ["石头", "石头", "石头", "红石火把", "下界石英", "红石火把", "石头", "石头", "石头"],
+      "materials": ["石头 x3", "红石火把 x3", "下界石英 x1"],
+      "smelting": null
+    },
+    {
+      "name": "漏斗",
+      "id": "minecraft:hopper",
+      "count": 1,
+      "type": "crafting_shaped",
+      "grid": ["铁锭", null, "铁锭", "铁锭", "箱子", "铁锭", null, "铁锭", null],
+      "materials": ["铁锭 x5", "箱子 x1"],
+      "smelting": null
+    },
+    {
+      "name": "铁轨",
+      "id": "minecraft:rail",
+      "count": 16,
+      "type": "crafting_shaped",
+      "grid": ["铁锭", null, "铁锭", "铁锭", "木棍", "铁锭", "铁锭", null, "铁锭"],
+      "materials": ["铁锭 x6", "木棍 x1"],
+      "smelting": null
+    },
+    {
+      "name": "动力铁轨",
+      "id": "minecraft:powered_rail",
+      "count": 6,
+      "type": "crafting_shaped",
+      "grid": ["金锭", null, "金锭", "金锭", "木棍", "金锭", "金锭", "红石", "金锭"],
+      "materials": ["金锭 x6", "木棍 x1", "红石 x1"],
+      "smelting": null
+    },
+    {
+      "name": "探测铁轨",
+      "id": "minecraft:detector_rail",
+      "count": 6,
+      "type": "crafting_shaped",
+      "grid": ["铁锭", null, "铁锭", "铁锭", "石压力板", "铁锭", "铁锭", "红石", "铁锭"],
+      "materials": ["铁锭 x6", "石压力板 x1", "红石 x1"],
+      "smelting": null
+    },
+    {
+      "name": "激活铁轨",
+      "id": "minecraft:activator_rail",
+      "count": 6,
+      "type": "crafting_shaped",
+      "grid": ["铁锭", null, "铁锭", "铁锭", "木棍", "铁锭", "铁锭", "红石火把", "铁锭"],
+      "materials": ["铁锭 x6", "木棍 x1", "红石火把 x1"],
+      "smelting": null
+    },
+    {
+      "name": "矿车",
+      "id": "minecraft:minecart",
+      "count": 1,
+      "type": "crafting_shaped",
+      "grid": ["铁锭", null, "铁锭", "铁锭", "铁锭", "铁锭", null, null, null],
+      "materials": ["铁锭 x5"],
+      "smelting": null
+    },
+    {
+      "name": "箱子矿车",
+      "id": "minecraft:chest_minecart",
+      "count": 1,
+      "type": "crafting_shapeless",
+      "grid": null,
+      "materials": ["箱子 x1", "矿车 x1"],
+      "smelting": null
+    },
+    {
+      "name": "漏斗矿车",
+      "id": "minecraft:hopper_minecart",
+      "count": 1,
+      "type": "crafting_shapeless",
+      "grid": null,
+      "materials": ["漏斗 x1", "矿车 x1"],
+      "smelting": null
+    },
+    {
+      "name": "附魔台",
+      "id": "minecraft:enchanting_table",
+      "count": 1,
+      "type": "crafting_shaped",
+      "grid": [null, "书", null, "钻石", "黑曜石", "钻石", "黑曜石", "黑曜石", "黑曜石"],
+      "materials": ["书 x1", "钻石 x2", "黑曜石 x4"],
+      "smelting": null
+    },
+    {
+      "name": "书架",
+      "id": "minecraft:bookshelf",
+      "count": 1,
+      "type": "crafting_shaped",
+      "grid": ["木板", "木板", "木板", "书", "书", "书", "木板", "木板", "木板"],
+      "materials": ["木板 x6", "书 x3"],
+      "smelting": null
+    },
+    {
+      "name": "红砖块",
+      "id": "minecraft:bricks",
+      "count": 1,
+      "type": "crafting_shaped",
+      "grid": ["红砖", "红砖", null, "红砖", "红砖", null, null, null, null],
+      "materials": ["红砖 x4"],
+      "smelting": null
+    },
+    {
+      "name": "石砖",
+      "id": "minecraft:stone_bricks",
+      "count": 1,
+      "type": "crafting_shaped",
+      "grid": ["石头", "石头", null, "石头", "石头", null, null, null, null],
+      "materials": ["石头 x4"],
+      "smelting": null
+    },
+    {
+      "name": "圆石台阶",
+      "id": "minecraft:cobblestone_slab",
+      "count": 6,
+      "type": "crafting_shaped",
+      "grid": ["圆石", "圆石", "圆石", null, null, null, null, null, null],
+      "materials": ["圆石 x3"],
+      "smelting": null
+    },
+    {
+      "name": "木台阶",
+      "id": "minecraft:oak_slab",
+      "count": 6,
+      "type": "crafting_shaped",
+      "grid": ["木板", "木板", "木板", null, null, null, null, null, null],
+      "materials": ["木板 x3"],
+      "smelting": null
+    },
+    {
+      "name": "告示牌",
+      "id": "minecraft:oak_sign",
+      "count": 3,
+      "type": "crafting_shaped",
+      "grid": ["木板", "木板", "木板", "木板", "木板", "木板", null, "木棍", null],
+      "materials": ["木板 x6", "木棍 x1"],
+      "smelting": null
+    },
+    {
+      "name": "画",
+      "id": "minecraft:painting",
+      "count": 1,
+      "type": "crafting_shaped",
+      "grid": ["木棍", "木棍", "木棍", "木棍", "羊毛", "木棍", "木棍", "木棍", "木棍"],
+      "materials": ["木棍 x8", "羊毛 x1"],
+      "smelting": null
+    },
+    {
+      "name": "物品展示框",
+      "id": "minecraft:item_frame",
+      "count": 1,
+      "type": "crafting_shaped",
+      "grid": ["木棍", "木棍", "木棍", "木棍", "皮革", "木棍", "木棍", "木棍", "木棍"],
+      "materials": ["木棍 x8", "皮革 x1"],
+      "smelting": null
+    },
+    {
+      "name": "盔甲架",
+      "id": "minecraft:armor_stand",
+      "count": 1,
+      "type": "crafting_shaped",
+      "grid": ["木棍", "木棍", "木棍", "木棍", "石台阶", "木棍", null, "木棍", null],
+      "materials": ["木棍 x6", "石台阶 x1"],
+      "smelting": null
+    },
+    {
+      "name": "箭",
+      "id": "minecraft:arrow",
+      "count": 4,
+      "type": "crafting_shaped",
+      "grid": ["燧石", null, null, "木棍", null, null, "羽毛", null, null],
+      "materials": ["燧石 x1", "木棍 x1", "羽毛 x1"],
+      "smelting": null
+    },
+    {
+      "name": "弓",
+      "id": "minecraft:bow",
+      "count": 1,
+      "type": "crafting_shaped",
+      "grid": [null, "木棍", "线", "木棍", null, "线", null, "木棍", "线"],
+      "materials": ["木棍 x3", "线 x3"],
+      "smelting": null
+    },
+    {
+      "name": "鱼竿",
+      "id": "minecraft:fishing_rod",
+      "count": 1,
+      "type": "crafting_shaped",
+      "grid": [null, null, "木棍", null, "木棍", "线", "木棍", null, "线"],
+      "materials": ["木棍 x3", "线 x2"],
+      "smelting": null
+    },
+    {
+      "name": "剪刀",
+      "id": "minecraft:shears",
+      "count": 1,
+      "type": "crafting_shaped",
+      "grid": ["铁锭", null, null, null, "铁锭", null, null, null, null],
+      "materials": ["铁锭 x2"],
+      "smelting": null
+    },
+    {
+      "name": "打火石",
+      "id": "minecraft:flint_and_steel",
+      "count": 1,
+      "type": "crafting_shapeless",
+      "grid": null,
+      "materials": ["铁锭 x1", "燧石 x1"],
+      "smelting": null
+    },
+    {
+      "name": "桶",
+      "id": "minecraft:bucket",
+      "count": 1,
+      "type": "crafting_shaped",
+      "grid": ["铁锭", null, "铁锭", null, "铁锭", null, null, null, null],
+      "materials": ["铁锭 x3"],
+      "smelting": null
+    },
+    {
+      "name": "指南针",
+      "id": "minecraft:compass",
+      "count": 1,
+      "type": "crafting_shaped",
+      "grid": [null, "铁锭", null, "铁锭", "红石", "铁锭", null, "铁锭", null],
+      "materials": ["铁锭 x4", "红石 x1"],
+      "smelting": null
+    },
+    {
+      "name": "钟",
+      "id": "minecraft:clock",
+      "count": 1,
+      "type": "crafting_shaped",
+      "grid": [null, "金锭", null, "金锭", "红石", "金锭", null, "金锭", null],
+      "materials": ["金锭 x4", "红石 x1"],
+      "smelting": null
+    },
+    {
+      "name": "纸",
+      "id": "minecraft:paper",
+      "count": 3,
+      "type": "crafting_shaped",
+      "grid": ["甘蔗", "甘蔗", "甘蔗", null, null, null, null, null, null],
+      "materials": ["甘蔗 x3"],
+      "smelting": null
+    },
+    {
+      "name": "书",
+      "id": "minecraft:book",
+      "count": 1,
+      "type": "crafting_shapeless",
+      "grid": null,
+      "materials": ["纸 x3", "皮革 x1"],
+      "smelting": null
+    },
+    {
+      "name": "空地图",
+      "id": "minecraft:map",
+      "count": 1,
+      "type": "crafting_shaped",
+      "grid": ["纸", "纸", "纸", "纸", "指南针", "纸", "纸", "纸", "纸"],
+      "materials": ["纸 x8", "指南针 x1"],
+      "smelting": null
+    },
+    {
+      "name": "玻璃板",
+      "id": "minecraft:glass_pane",
+      "count": 16,
+      "type": "crafting_shaped",
+      "grid": ["玻璃", "玻璃", "玻璃", "玻璃", "玻璃", "玻璃", null, null, null],
+      "materials": ["玻璃 x6"],
+      "smelting": null
+    },
+    {
+      "name": "铁栏杆",
+      "id": "minecraft:iron_bars",
+      "count": 16,
+      "type": "crafting_shaped",
+      "grid": ["铁锭", "铁锭", "铁锭", "铁锭", "铁锭", "铁锭", null, null, null],
+      "materials": ["铁锭 x6"],
+      "smelting": null
+    },
+    {
+      "name": "圆石楼梯",
+      "id": "minecraft:cobblestone_stairs",
+      "count": 4,
+      "type": "crafting_shaped",
+      "grid": ["圆石", null, null, "圆石", "圆石", null, "圆石", "圆石", "圆石"],
+      "materials": ["圆石 x6"],
+      "smelting": null
+    },
+    {
+      "name": "木楼梯",
+      "id": "minecraft:oak_stairs",
+      "count": 4,
+      "type": "crafting_shaped",
+      "grid": ["木板", null, null, "木板", "木板", null, "木板", "木板", "木板"],
+      "materials": ["木板 x6"],
+      "smelting": null
+    },
+    {
+      "name": "石砖楼梯",
+      "id": "minecraft:stone_brick_stairs",
+      "count": 4,
+      "type": "crafting_shaped",
+      "grid": ["石砖", null, null, "石砖", "石砖", null, "石砖", "石砖", "石砖"],
+      "materials": ["石砖 x6"],
+      "smelting": null
+    },
+    {
+      "name": "圆石墙",
+      "id": "minecraft:cobblestone_wall",
+      "count": 6,
+      "type": "crafting_shaped",
+      "grid": ["圆石", "圆石", "圆石", "圆石", "圆石", "圆石", null, null, null],
+      "materials": ["圆石 x6"],
+      "smelting": null
+    },
+    {
+      "name": "陷阱门",
+      "id": "minecraft:oak_trapdoor",
+      "count": 2,
+      "type": "crafting_shaped",
+      "grid": ["木板", "木板", "木板", "木板", "木板", "木板", null, null, null],
+      "materials": ["木板 x6"],
+      "smelting": null
+    },
+    {
+      "name": "铁陷阱门",
+      "id": "minecraft:iron_trapdoor",
+      "count": 1,
+      "type": "crafting_shaped",
+      "grid": ["铁锭", "铁锭", null, "铁锭", "铁锭", null, null, null, null],
+      "materials": ["铁锭 x4"],
+      "smelting": null
+    },
+    {
+      "name": "拉杆",
+      "id": "minecraft:lever",
+      "count": 1,
+      "type": "crafting_shaped",
+      "grid": ["木棍", null, null, "圆石", null, null, null, null, null],
+      "materials": ["木棍 x1", "圆石 x1"],
+      "smelting": null
+    },
+    {
+      "name": "石按钮",
+      "id": "minecraft:stone_button",
+      "count": 1,
+      "type": "crafting_shapeless",
+      "grid": null,
+      "materials": ["石头 x1"],
+      "smelting": null
+    },
+    {
+      "name": "石压力板",
+      "id": "minecraft:stone_pressure_plate",
+      "count": 1,
+      "type": "crafting_shaped",
+      "grid": ["石头", "石头", null, null, null, null, null, null, null],
+      "materials": ["石头 x2"],
+      "smelting": null
+    },
+    {
+      "name": "红石火把",
+      "id": "minecraft:redstone_torch",
+      "count": 1,
+      "type": "crafting_shaped",
+      "grid": ["红石", null, null, "木棍", null, null, null, null, null],
+      "materials": ["红石 x1", "木棍 x1"],
+      "smelting": null
+    },
+    {
+      "name": "TNT",
+      "id": "minecraft:tnt",
+      "count": 1,
+      "type": "crafting_shaped",
+      "grid": ["火药", "沙", "火药", "沙", "火药", "沙", "火药", "沙", "火药"],
+      "materials": ["火药 x5", "沙 x4"],
+      "smelting": null
+    },
+    {
+      "name": "荧石",
+      "id": "minecraft:glowstone",
+      "count": 1,
+      "type": "crafting_shaped",
+      "grid": ["荧石粉", "荧石粉", null, "荧石粉", "荧石粉", null, null, null, null],
+      "materials": ["荧石粉 x4"],
+      "smelting": null
+    },
+    {
+      "name": "红石块",
+      "id": "minecraft:redstone_block",
+      "count": 1,
+      "type": "crafting_shaped",
+      "grid": ["红石", "红石", "红石", "红石", "红石", "红石", "红石", "红石", "红石"],
+      "materials": ["红石 x9"],
+      "smelting": null
+    },
+    {
+      "name": "铁块",
+      "id": "minecraft:iron_block",
+      "count": 1,
+      "type": "crafting_shaped",
+      "grid": ["铁锭", "铁锭", "铁锭", "铁锭", "铁锭", "铁锭", "铁锭", "铁锭", "铁锭"],
+      "materials": ["铁锭 x9"],
+      "smelting": null
+    },
+    {
+      "name": "金块",
+      "id": "minecraft:gold_block",
+      "count": 1,
+      "type": "crafting_shaped",
+      "grid": ["金锭", "金锭", "金锭", "金锭", "金锭", "金锭", "金锭", "金锭", "金锭"],
+      "materials": ["金锭 x9"],
+      "smelting": null
+    },
+    {
+      "name": "钻石块",
+      "id": "minecraft:diamond_block",
+      "count": 1,
+      "type": "crafting_shaped",
+      "grid": ["钻石", "钻石", "钻石", "钻石", "钻石", "钻石", "钻石", "钻石", "钻石"],
+      "materials": ["钻石 x9"],
+      "smelting": null
+    },
+    {
+      "name": "煤炭块",
+      "id": "minecraft:coal_block",
+      "count": 1,
+      "type": "crafting_shaped",
+      "grid": ["煤炭", "煤炭", "煤炭", "煤炭", "煤炭", "煤炭", "煤炭", "煤炭", "煤炭"],
+      "materials": ["煤炭 x9"],
+      "smelting": null
+    },
+    {
+      "name": "石英块",
+      "id": "minecraft:quartz_block",
+      "count": 1,
+      "type": "crafting_shaped",
+      "grid": ["下界石英", "下界石英", null, "下界石英", "下界石英", null, null, null, null],
+      "materials": ["下界石英 x4"],
+      "smelting": null
+    },
+    {
+      "name": "木桶",
+      "id": "minecraft:barrel",
+      "count": 1,
+      "type": "crafting_shaped",
+      "grid": ["木板", "木台阶", "木板", "木板", null, "木板", "木板", "木台阶", "木板"],
+      "materials": ["木板 x6", "木台阶 x2"],
+      "smelting": null
+    },
+    {
+      "name": "灯笼",
+      "id": "minecraft:lantern",
+      "count": 1,
+      "type": "crafting_shaped",
+      "grid": ["铁粒", "铁粒", "铁粒", "铁粒", "火把", "铁粒", "铁粒", "铁粒", "铁粒"],
+      "materials": ["铁粒 x8", "火把 x1"],
+      "smelting": null
+    },
+    {
+      "name": "营火",
+      "id": "minecraft:campfire",
+      "count": 1,
+      "type": "crafting_shaped",
+      "grid": ["木棍", null, "木棍", "木棍", "煤炭", "木棍", "原木", "原木", "原木"],
+      "materials": ["木棍 x3", "煤炭 x1", "原木 x3"],
+      "smelting": null
+    },
+    {
+      "name": "木剑",
+      "id": "minecraft:wooden_sword",
+      "count": 1,
+      "type": "crafting_shaped",
+      "grid": ["木板", null, null, "木板", null, null, "木棍", null, null],
+      "materials": ["木板 x2", "木棍 x1"],
+      "smelting": null
+    },
+    {
+      "name": "木镐",
+      "id": "minecraft:wooden_pickaxe",
+      "count": 1,
+      "type": "crafting_shaped",
+      "grid": ["木板", "木板", "木板", null, "木棍", null, null, "木棍", null],
+      "materials": ["木板 x3", "木棍 x2"],
+      "smelting": null
+    },
+    {
+      "name": "木斧",
+      "id": "minecraft:wooden_axe",
+      "count": 1,
+      "type": "crafting_shaped",
+      "grid": ["木板", "木板", null, "木板", "木棍", null, null, "木棍", null],
+      "materials": ["木板 x3", "木棍 x2"],
+      "smelting": null
+    },
+    {
+      "name": "木铲",
+      "id": "minecraft:wooden_shovel",
+      "count": 1,
+      "type": "crafting_shaped",
+      "grid": [null, "木板", null, null, "木棍", null, null, "木棍", null],
+      "materials": ["木板 x1", "木棍 x2"],
+      "smelting": null
+    },
+    {
+      "name": "木锄",
+      "id": "minecraft:wooden_hoe",
+      "count": 1,
+      "type": "crafting_shaped",
+      "grid": ["木板", "木板", null, null, "木棍", null, null, "木棍", null],
+      "materials": ["木板 x2", "木棍 x2"],
+      "smelting": null
+    },
+    {
+      "name": "石剑",
+      "id": "minecraft:stone_sword",
+      "count": 1,
+      "type": "crafting_shaped",
+      "grid": ["圆石", null, null, "圆石", null, null, "木棍", null, null],
+      "materials": ["圆石 x2", "木棍 x1"],
+      "smelting": null
+    },
+    {
+      "name": "石镐",
+      "id": "minecraft:stone_pickaxe",
+      "count": 1,
+      "type": "crafting_shaped",
+      "grid": ["圆石", "圆石", "圆石", null, "木棍", null, null, "木棍", null],
+      "materials": ["圆石 x3", "木棍 x2"],
+      "smelting": null
+    },
+    {
+      "name": "石斧",
+      "id": "minecraft:stone_axe",
+      "count": 1,
+      "type": "crafting_shaped",
+      "grid": ["圆石", "圆石", null, "圆石", "木棍", null, null, "木棍", null],
+      "materials": ["圆石 x3", "木棍 x2"],
+      "smelting": null
+    },
+    {
+      "name": "石铲",
+      "id": "minecraft:stone_shovel",
+      "count": 1,
+      "type": "crafting_shaped",
+      "grid": [null, "圆石", null, null, "木棍", null, null, "木棍", null],
+      "materials": ["圆石 x1", "木棍 x2"],
+      "smelting": null
+    },
+    {
+      "name": "石锄",
+      "id": "minecraft:stone_hoe",
+      "count": 1,
+      "type": "crafting_shaped",
+      "grid": ["圆石", "圆石", null, null, "木棍", null, null, "木棍", null],
+      "materials": ["圆石 x2", "木棍 x2"],
+      "smelting": null
+    },
+    {
+      "name": "铁剑",
+      "id": "minecraft:iron_sword",
+      "count": 1,
+      "type": "crafting_shaped",
+      "grid": ["铁锭", null, null, "铁锭", null, null, "木棍", null, null],
+      "materials": ["铁锭 x2", "木棍 x1"],
+      "smelting": null
+    },
+    {
+      "name": "铁镐",
+      "id": "minecraft:iron_pickaxe",
+      "count": 1,
+      "type": "crafting_shaped",
+      "grid": ["铁锭", "铁锭", "铁锭", null, "木棍", null, null, "木棍", null],
+      "materials": ["铁锭 x3", "木棍 x2"],
+      "smelting": null
+    },
+    {
+      "name": "铁斧",
+      "id": "minecraft:iron_axe",
+      "count": 1,
+      "type": "crafting_shaped",
+      "grid": ["铁锭", "铁锭", null, "铁锭", "木棍", null, null, "木棍", null],
+      "materials": ["铁锭 x3", "木棍 x2"],
+      "smelting": null
+    },
+    {
+      "name": "铁铲",
+      "id": "minecraft:iron_shovel",
+      "count": 1,
+      "type": "crafting_shaped",
+      "grid": [null, "铁锭", null, null, "木棍", null, null, "木棍", null],
+      "materials": ["铁锭 x1", "木棍 x2"],
+      "smelting": null
+    },
+    {
+      "name": "铁锄",
+      "id": "minecraft:iron_hoe",
+      "count": 1,
+      "type": "crafting_shaped",
+      "grid": ["铁锭", "铁锭", null, null, "木棍", null, null, "木棍", null],
+      "materials": ["铁锭 x2", "木棍 x2"],
+      "smelting": null
+    },
+    {
+      "name": "金剑",
+      "id": "minecraft:golden_sword",
+      "count": 1,
+      "type": "crafting_shaped",
+      "grid": ["金锭", null, null, "金锭", null, null, "木棍", null, null],
+      "materials": ["金锭 x2", "木棍 x1"],
+      "smelting": null
+    },
+    {
+      "name": "金镐",
+      "id": "minecraft:golden_pickaxe",
+      "count": 1,
+      "type": "crafting_shaped",
+      "grid": ["金锭", "金锭", "金锭", null, "木棍", null, null, "木棍", null],
+      "materials": ["金锭 x3", "木棍 x2"],
+      "smelting": null
+    },
+    {
+      "name": "金斧",
+      "id": "minecraft:golden_axe",
+      "count": 1,
+      "type": "crafting_shaped",
+      "grid": ["金锭", "金锭", null, "金锭", "木棍", null, null, "木棍", null],
+      "materials": ["金锭 x3", "木棍 x2"],
+      "smelting": null
+    },
+    {
+      "name": "金铲",
+      "id": "minecraft:golden_shovel",
+      "count": 1,
+      "type": "crafting_shaped",
+      "grid": [null, "金锭", null, null, "木棍", null, null, "木棍", null],
+      "materials": ["金锭 x1", "木棍 x2"],
+      "smelting": null
+    },
+    {
+      "name": "金锄",
+      "id": "minecraft:golden_hoe",
+      "count": 1,
+      "type": "crafting_shaped",
+      "grid": ["金锭", "金锭", null, null, "木棍", null, null, "木棍", null],
+      "materials": ["金锭 x2", "木棍 x2"],
+      "smelting": null
+    },
+    {
+      "name": "钻石剑",
+      "id": "minecraft:diamond_sword",
+      "count": 1,
+      "type": "crafting_shaped",
+      "grid": ["钻石", null, null, "钻石", null, null, "木棍", null, null],
+      "materials": ["钻石 x2", "木棍 x1"],
+      "smelting": null
+    },
+    {
+      "name": "钻石镐",
+      "id": "minecraft:diamond_pickaxe",
+      "count": 1,
+      "type": "crafting_shaped",
+      "grid": ["钻石", "钻石", "钻石", null, "木棍", null, null, "木棍", null],
+      "materials": ["钻石 x3", "木棍 x2"],
+      "smelting": null
+    },
+    {
+      "name": "钻石斧",
+      "id": "minecraft:diamond_axe",
+      "count": 1,
+      "type": "crafting_shaped",
+      "grid": ["钻石", "钻石", null, "钻石", "木棍", null, null, "木棍", null],
+      "materials": ["钻石 x3", "木棍 x2"],
+      "smelting": null
+    },
+    {
+      "name": "钻石铲",
+      "id": "minecraft:diamond_shovel",
+      "count": 1,
+      "type": "crafting_shaped",
+      "grid": [null, "钻石", null, null, "木棍", null, null, "木棍", null],
+      "materials": ["钻石 x1", "木棍 x2"],
+      "smelting": null
+    },
+    {
+      "name": "钻石锄",
+      "id": "minecraft:diamond_hoe",
+      "count": 1,
+      "type": "crafting_shaped",
+      "grid": ["钻石", "钻石", null, null, "木棍", null, null, "木棍", null],
+      "materials": ["钻石 x2", "木棍 x2"],
+      "smelting": null
+    },
+    {
+      "name": "皮革头盔",
+      "id": "minecraft:leather_helmet",
+      "count": 1,
+      "type": "crafting_shaped",
+      "grid": ["皮革", "皮革", "皮革", "皮革", null, "皮革", null, null, null],
+      "materials": ["皮革 x5"],
+      "smelting": null
+    },
+    {
+      "name": "皮革胸甲",
+      "id": "minecraft:leather_chestplate",
+      "count": 1,
+      "type": "crafting_shaped",
+      "grid": ["皮革", null, "皮革", "皮革", "皮革", "皮革", "皮革", "皮革", "皮革"],
+      "materials": ["皮革 x8"],
+      "smelting": null
+    },
+    {
+      "name": "皮革护腿",
+      "id": "minecraft:leather_leggings",
+      "count": 1,
+      "type": "crafting_shaped",
+      "grid": ["皮革", "皮革", "皮革", "皮革", null, "皮革", "皮革", null, "皮革"],
+      "materials": ["皮革 x7"],
+      "smelting": null
+    },
+    {
+      "name": "皮革靴子",
+      "id": "minecraft:leather_boots",
+      "count": 1,
+      "type": "crafting_shaped",
+      "grid": ["皮革", null, "皮革", "皮革", null, "皮革", null, null, null],
+      "materials": ["皮革 x4"],
+      "smelting": null
+    },
+    {
+      "name": "铁头盔",
+      "id": "minecraft:iron_helmet",
+      "count": 1,
+      "type": "crafting_shaped",
+      "grid": ["铁锭", "铁锭", "铁锭", "铁锭", null, "铁锭", null, null, null],
+      "materials": ["铁锭 x5"],
+      "smelting": null
+    },
+    {
+      "name": "铁胸甲",
+      "id": "minecraft:iron_chestplate",
+      "count": 1,
+      "type": "crafting_shaped",
+      "grid": ["铁锭", null, "铁锭", "铁锭", "铁锭", "铁锭", "铁锭", "铁锭", "铁锭"],
+      "materials": ["铁锭 x8"],
+      "smelting": null
+    },
+    {
+      "name": "铁护腿",
+      "id": "minecraft:iron_leggings",
+      "count": 1,
+      "type": "crafting_shaped",
+      "grid": ["铁锭", "铁锭", "铁锭", "铁锭", null, "铁锭", "铁锭", null, "铁锭"],
+      "materials": ["铁锭 x7"],
+      "smelting": null
+    },
+    {
+      "name": "铁靴子",
+      "id": "minecraft:iron_boots",
+      "count": 1,
+      "type": "crafting_shaped",
+      "grid": ["铁锭", null, "铁锭", "铁锭", null, "铁锭", null, null, null],
+      "materials": ["铁锭 x4"],
+      "smelting": null
+    },
+    {
+      "name": "金头盔",
+      "id": "minecraft:golden_helmet",
+      "count": 1,
+      "type": "crafting_shaped",
+      "grid": ["金锭", "金锭", "金锭", "金锭", null, "金锭", null, null, null],
+      "materials": ["金锭 x5"],
+      "smelting": null
+    },
+    {
+      "name": "金胸甲",
+      "id": "minecraft:golden_chestplate",
+      "count": 1,
+      "type": "crafting_shaped",
+      "grid": ["金锭", null, "金锭", "金锭", "金锭", "金锭", "金锭", "金锭", "金锭"],
+      "materials": ["金锭 x8"],
+      "smelting": null
+    },
+    {
+      "name": "金护腿",
+      "id": "minecraft:golden_leggings",
+      "count": 1,
+      "type": "crafting_shaped",
+      "grid": ["金锭", "金锭", "金锭", "金锭", null, "金锭", "金锭", null, "金锭"],
+      "materials": ["金锭 x7"],
+      "smelting": null
+    },
+    {
+      "name": "金靴子",
+      "id": "minecraft:golden_boots",
+      "count": 1,
+      "type": "crafting_shaped",
+      "grid": ["金锭", null, "金锭", "金锭", null, "金锭", null, null, null],
+      "materials": ["金锭 x4"],
+      "smelting": null
+    },
+    {
+      "name": "钻石头盔",
+      "id": "minecraft:diamond_helmet",
+      "count": 1,
+      "type": "crafting_shaped",
+      "grid": ["钻石", "钻石", "钻石", "钻石", null, "钻石", null, null, null],
+      "materials": ["钻石 x5"],
+      "smelting": null
+    },
+    {
+      "name": "钻石胸甲",
+      "id": "minecraft:diamond_chestplate",
+      "count": 1,
+      "type": "crafting_shaped",
+      "grid": ["钻石", null, "钻石", "钻石", "钻石", "钻石", "钻石", "钻石", "钻石"],
+      "materials": ["钻石 x8"],
+      "smelting": null
+    },
+    {
+      "name": "钻石护腿",
+      "id": "minecraft:diamond_leggings",
+      "count": 1,
+      "type": "crafting_shaped",
+      "grid": ["钻石", "钻石", "钻石", "钻石", null, "钻石", "钻石", null, "钻石"],
+      "materials": ["钻石 x7"],
+      "smelting": null
+    },
+    {
+      "name": "钻石靴子",
+      "id": "minecraft:diamond_boots",
+      "count": 1,
+      "type": "crafting_shaped",
+      "grid": ["钻石", null, "钻石", "钻石", null, "钻石", null, null, null],
+      "materials": ["钻石 x4"],
+      "smelting": null
+    },
+    {
+      "name": "铁锭",
+      "id": "minecraft:iron_ingot",
+      "count": 1,
+      "type": "smelting",
+      "grid": null,
+      "materials": ["铁矿石 x1"],
+      "smelting": "在熔炉中烧炼铁矿石（或深层铁矿石）"
+    },
+    {
+      "name": "金锭",
+      "id": "minecraft:gold_ingot",
+      "count": 1,
+      "type": "smelting",
+      "grid": null,
+      "materials": ["金矿石 x1"],
+      "smelting": "在熔炉中烧炼金矿石（或深层金矿石）"
+    },
+    {
+      "name": "铜锭",
+      "id": "minecraft:copper_ingot",
+      "count": 1,
+      "type": "smelting",
+      "grid": null,
+      "materials": ["铜矿石 x1"],
+      "smelting": "在熔炉中烧炼铜矿石（1.17 及以上）"
+    },
+    {
+      "name": "玻璃",
+      "id": "minecraft:glass",
+      "count": 1,
+      "type": "smelting",
+      "grid": null,
+      "materials": ["沙 x1"],
+      "smelting": "在熔炉中烧炼沙（红沙亦可）"
+    },
+    {
+      "name": "石头",
+      "id": "minecraft:stone",
+      "count": 1,
+      "type": "smelting",
+      "grid": null,
+      "materials": ["圆石 x1"],
+      "smelting": "在熔炉中烧炼圆石"
+    },
+    {
+      "name": "木炭",
+      "id": "minecraft:charcoal",
+      "count": 1,
+      "type": "smelting",
+      "grid": null,
+      "materials": ["原木 x1"],
+      "smelting": "在熔炉中烧炼任意原木"
+    },
+    {
+      "name": "红砖",
+      "id": "minecraft:brick",
+      "count": 1,
+      "type": "smelting",
+      "grid": null,
+      "materials": ["黏土球 x1"],
+      "smelting": "在熔炉中烧炼黏土球，4 个可合成红砖块"
+    },
+    {
+      "name": "熟牛肉",
+      "id": "minecraft:cooked_beef",
+      "count": 1,
+      "type": "smelting",
+      "grid": null,
+      "materials": ["生牛肉 x1"],
+      "smelting": "在熔炉中烧炼生牛肉"
+    },
+    {
+      "name": "熟猪肉",
+      "id": "minecraft:cooked_porkchop",
+      "count": 1,
+      "type": "smelting",
+      "grid": null,
+      "materials": ["生猪肉 x1"],
+      "smelting": "在熔炉中烧炼生猪肉"
+    }
+  ]
+}

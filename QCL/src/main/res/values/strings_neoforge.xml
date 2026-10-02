@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  NeoForge 相关字符串（新增功能，独立文件，避免改动 strings.xml）。
+  说明：NeoForge 安装器需要目标 MC 版本已安装，安装过程会下载依赖并调用安装器本体。
+-->
+<resources>
+
+    <!-- 下载页第 7 个入口 -->
+    <string name="download_ui_neoforge">NeoForge</string>
+
+    <!-- 页面 -->
+    <string name="neoforge_mc_version_label">MC 版本</string>
+    <string name="neoforge_ui_hint_text">NeoForge 源自 Forge，支持 1.20.1 及以后（20.2 起）的版本。安装前请先装好对应的原版 MC 版本。</string>
+    <string name="neoforge_select_version_hint">请选择要安装的 NeoForge 版本</string>
+    <string name="neoforge_selected" formatted="false">已选择：%s</string>
+    <string name="neoforge_install">安装</string>
+
+    <!-- 安装阶段 -->
+    <string name="neoforge_install_stage_installer">下载 NeoForge 安装器…</string>
+    <string name="neoforge_install_stage_libs">下载依赖库…</string>
+    <string name="neoforge_install_stage_build">构建 NeoForge 版本…</string>
+    <string name="neoforge_install_stage_done">安装完成</string>
+
+    <!-- 错误 -->
+    <string name="neoforge_error_installer_download">下载 NeoForge 安装器失败，请检查网络或更换下载源。</string>
+    <string name="neoforge_error_incomplete_installer">安装器内容不完整（缺少 version.json 或 install_profile.json）。</string>
+    <string name="neoforge_error_need_base_version" formatted="false">请先安装 Minecraft %s，再安装 NeoForge。</string>
+    <string name="neoforge_error_download_libs">以下依赖库下载失败：</string>
+    <string name="neoforge_error_build_failed" formatted="false">NeoForge 安装器运行失败（退出码 %d）。</string>
+    <string name="neoforge_error_build_timeout">等待 NeoForge 安装器超时。</string>
+    <string name="neoforge_error_select_first">请先选择一个 NeoForge 版本。</string>
+    <string name="neoforge_already_exists" formatted="false">版本 %s 已存在，请勿重复安装。</string>
+
+    <!-- 确认与结果 -->
+    <string name="neoforge_confirm_title">安装 NeoForge</string>
+    <string name="neoforge_confirm_message" formatted="false">将安装 NeoForge %s（对应 MC %s）。\n\n安装会下载依赖库并调用安装器生成版本，请保持网络畅通。</string>
+
+</resources>

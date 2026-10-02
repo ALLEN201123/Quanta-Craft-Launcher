@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ★★★ 1.4.1：皮肤库（英文基准文案） -->
+<resources>
+    <string name="skin_library_title">Skin Library</string>
+    <string name="skin_library_search_hint">Player name or skin image URL</string>
+    <string name="skin_library_search">Search</string>
+    <string name="skin_library_slim">Slim (Alex)</string>
+    <string name="skin_library_favorite">Favorite</string>
+    <string name="skin_library_local">Local file</string>
+    <string name="skin_library_apply">Apply</string>
+    <string name="skin_library_cancel">Cancel</string>
+    <string name="skin_library_empty">Search a player name to start</string>
+    <string name="skin_library_favorites">My favorites</string>
+    <string name="skin_library_loading">Loading…</string>
+    <string name="skin_library_search_done">Search finished</string>
+    <string name="skin_library_applying">Applying…</string>
+    <string name="skin_library_applied">Skin applied</string>
+    <string name="skin_library_ms_uploaded">Skin uploaded to your Microsoft account</string>
+    <string name="skin_library_failed">Failed:</string>
+    <string name="skin_library_not_found">Player not found</string>
+    <string name="skin_library_need_input">Please enter a player name or URL</string>
+    <string name="skin_library_added_fav">Added to favorites</string>
+    <string name="skin_library_already_fav">Already in favorites</string>
+    <string name="skin_library_pick_first">Please pick a skin first</string>
+</resources>

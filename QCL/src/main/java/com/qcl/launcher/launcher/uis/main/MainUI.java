@@ -56,6 +56,9 @@ public class MainUI extends BaseUI implements View.OnClickListener, AdapterView.
     private LinearLayout startDownloadUI;
     private LinearLayout startMultiPlayerUI;
     private LinearLayout startSettingUI;
+    // ★ 1.4.1：大厅 / 实验室入口（自 1.4.0 朋友源码包合并）
+    private LinearLayout startLobbyUI;
+    private LinearLayout startLabUI;
 
     private LinearLayout startGame;
     private TextView launchVersionText;
@@ -103,6 +106,9 @@ public class MainUI extends BaseUI implements View.OnClickListener, AdapterView.
         startDownloadUI = activity.findViewById(R.id.start_ui_download);
         startMultiPlayerUI = activity.findViewById(R.id.start_ui_multi_player);
         startSettingUI = activity.findViewById(R.id.start_ui_setting);
+        // ★ 1.4.1 新增入口
+        startLobbyUI = activity.findViewById(R.id.start_ui_lobby);
+        startLabUI = activity.findViewById(R.id.start_ui_lab);
 
         startGame = activity.findViewById(R.id.launcher_play_button);
         launchVersionText = activity.findViewById(R.id.launch_version_text);
@@ -131,6 +137,9 @@ public class MainUI extends BaseUI implements View.OnClickListener, AdapterView.
         startDownloadUI.setOnClickListener(this);
         startMultiPlayerUI.setOnClickListener(this);
         startSettingUI.setOnClickListener(this);
+        // ★ 1.4.1 新增入口
+        startLobbyUI.setOnClickListener(this);
+        startLabUI.setOnClickListener(this);
 
         startGame.setOnClickListener(this);
         // ★★★ 1.1.1：长按启动按钮 → 选择渲染器（公共选择器，版本设置/全局设置共用同一套）
@@ -491,6 +500,13 @@ public class MainUI extends BaseUI implements View.OnClickListener, AdapterView.
         }
         if (v == startSettingUI){
             activity.uiManager.switchMainUI(activity.uiManager.settingUI);
+        }
+        // ★ 1.4.1 新增：大厅 / 实验室
+        if (v == startLobbyUI){
+            activity.uiManager.switchMainUI(activity.uiManager.lobbyUI);
+        }
+        if (v == startLabUI){
+            activity.uiManager.switchMainUI(activity.uiManager.labUI);
         }
         if (v == startGame){
             String settingPath = activity.publicGameSetting.currentVersion + "/qcl.cfg";

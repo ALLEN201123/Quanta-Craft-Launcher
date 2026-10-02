@@ -13,6 +13,8 @@ import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.view.View;
 import android.view.ViewGroup;
+// ★ 1.4.1：模组简介一键翻译
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
@@ -35,6 +37,8 @@ import com.qcl.launcher.utils.LocaleUtils;
 import com.qcl.launcher.utils.SimpleMultimap;
 import com.qcl.launcher.utils.file.UriUtils;
 import com.qcl.launcher.utils.io.NetworkUtils;
+// ★ 1.4.1：模组简介一键翻译（自 1.4.0 朋友源码包合并）
+import com.qcl.launcher.utils.network.ModTranslateHelper;
 import com.qcl.launcher.utils.string.StringUtils;
 
 import java.io.IOException;
@@ -53,6 +57,9 @@ public class DownloadResourceUI extends BaseDownloadUI implements View.OnClickLi
     private TextView name;
     private TextView type;
     private TextView description;
+    // ★ 1.4.1：翻译按钮
+    private Button translateButton;
+    private ModTranslateHelper.Toggle translateToggle;
     private LinearLayout mcmod;
     private LinearLayout modWiki;
     private LinearLayout curseForge;
@@ -124,6 +131,9 @@ public class DownloadResourceUI extends BaseDownloadUI implements View.OnClickLi
         }
         type.setText(categories.toString());
         description.setText(bean.getDescription());
+        // ★ 1.4.1：简介下方「一键翻译 / 显示原文」切换按钮
+        translateButton = findViewById(R.id.resource_translate);
+        translateToggle = new ModTranslateHelper.Toggle(context, description, translateButton);
 
         mcmod.setVisibility(resourceType == 0 ? View.VISIBLE : View.GONE);
         // Forum thread IDs are not download-mirror IDs. Hide the retired forum link.

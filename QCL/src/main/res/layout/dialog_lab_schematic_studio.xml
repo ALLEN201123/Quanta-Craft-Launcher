@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:scrollbars="none">
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:padding="16dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <TextView
+            android:singleLine="true"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="@dimen/text_size_big"
+            android:textColor="@color/colorPureBlack"
+            android:textStyle="bold"
+            android:text="@string/lab_ss_title"/>
+
+        <LinearLayout
+            android:layout_marginTop="10dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <TextView
+                android:singleLine="true"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="@dimen/text_size_middle"
+                android:textColor="@color/colorPureBlack"
+                android:text="@string/lab_ss_type"/>
+
+            <Spinner
+                android:layout_weight="1"
+                android:layout_marginStart="10dp"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:id="@+id/lab_ss_type"/>
+
+        </LinearLayout>
+
+        <EditText
+            android:singleLine="true"
+            android:layout_marginTop="8dp"
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:textSize="@dimen/text_size_middle"
+            android:paddingLeft="8dp"
+            android:paddingRight="8dp"
+            android:hint="@string/lab_ss_name_hint"
+            android:background="@color/colorLightGray"
+            android:id="@+id/lab_ss_name"/>
+
+        <EditText
+            android:singleLine="true"
+            android:layout_marginTop="8dp"
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:textSize="@dimen/text_size_middle"
+            android:paddingLeft="8dp"
+            android:paddingRight="8dp"
+            android:hint="@string/lab_ss_block_hint"
+            android:background="@color/colorLightGray"
+            android:id="@+id/lab_ss_block"/>
+
+        <LinearLayout
+            android:layout_marginTop="8dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:id="@+id/lab_ss_params"/>
+
+        <Button
+            android:singleLine="true"
+            android:textAllCaps="false"
+            android:layout_marginTop="10dp"
+            android:layout_width="match_parent"
+            android:layout_height="42dp"
+            android:gravity="center"
+            android:text="@string/lab_ss_gen"
+            android:textSize="@dimen/text_size_middle"
+            android:textColor="@color/colorLinkBlue"
+            android:background="@drawable/launcher_button_parent"
+            android:id="@+id/lab_ss_gen"/>
+
+        <TextView
+            android:layout_marginTop="8dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="@dimen/text_size_middle"
+            android:textColor="@color/colorPureBlack"
+            android:id="@+id/lab_ss_info"/>
+
+        <FrameLayout
+            android:layout_marginTop="8dp"
+            android:layout_width="match_parent"
+            android:layout_height="220dp"
+            android:background="@color/colorLightGray"
+            android:id="@+id/lab_ss_preview_container"/>
+
+        <LinearLayout
+            android:layout_marginTop="8dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <Button
+                android:singleLine="true"
+                android:textAllCaps="false"
+                android:layout_weight="1"
+                android:layout_width="0dp"
+                android:layout_height="40dp"
+                android:gravity="center"
+                android:text="@string/lab_ss_prev_layer"
+                android:textSize="@dimen/text_size_middle"
+                android:textColor="@color/colorPureBlack"
+                android:background="@drawable/launcher_button_parent"
+                android:id="@+id/lab_ss_prev_layer"/>
+
+            <TextView
+                android:singleLine="true"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="10dp"
+                android:layout_marginEnd="10dp"
+                android:textSize="@dimen/text_size_middle"
+                android:textColor="@color/colorPureBlack"
+                android:id="@+id/lab_ss_layer_text"/>
+
+            <Button
+                android:singleLine="true"
+                android:textAllCaps="false"
+                android:layout_weight="1"
+                android:layout_width="0dp"
+                android:layout_height="40dp"
+                android:gravity="center"
+                android:text="@string/lab_ss_next_layer"
+                android:textSize="@dimen/text_size_middle"
+                android:textColor="@color/colorPureBlack"
+                android:background="@drawable/launcher_button_parent"
+                android:id="@+id/lab_ss_next_layer"/>
+
+        </LinearLayout>
+
+        <TextView
+            android:layout_marginTop="10dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="11sp"
+            android:textColor="@color/colorAccent"
+            android:text="@string/lab_ss_hint_litematic"/>
+
+        <Button
+            android:singleLine="true"
+            android:textAllCaps="false"
+            android:layout_marginTop="12dp"
+            android:layout_width="match_parent"
+            android:layout_height="42dp"
+            android:gravity="center"
+            android:text="@string/lab_ss_export_schematic"
+            android:textSize="@dimen/text_size_middle"
+            android:textColor="@color/colorLinkBlue"
+            android:background="@drawable/launcher_button_parent"
+            android:id="@+id/lab_ss_export_schematic"/>
+
+        <Button
+            android:singleLine="true"
+            android:textAllCaps="false"
+            android:layout_marginTop="8dp"
+            android:layout_width="match_parent"
+            android:layout_height="42dp"
+            android:gravity="center"
+            android:text="@string/lab_ss_export_litematic"
+            android:textSize="@dimen/text_size_middle"
+            android:textColor="@color/colorPureBlack"
+            android:background="@drawable/launcher_button_parent"
+            android:id="@+id/lab_ss_export_litematic"/>
+
+        <Button
+            android:singleLine="true"
+            android:textAllCaps="false"
+            android:layout_marginTop="8dp"
+            android:layout_width="match_parent"
+            android:layout_height="42dp"
+            android:gravity="center"
+            android:text="@string/lab_ss_close"
+            android:textSize="@dimen/text_size_middle"
+            android:textColor="@color/colorPureBlack"
+            android:background="@drawable/launcher_button_parent"
+            android:id="@+id/lab_ss_close"/>
+
+    </LinearLayout>
+
+</ScrollView>

@@ -56,6 +56,17 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"/>
 
+            <!-- ★ 1.4.1 新增：大厅 / 实验室 -->
+            <include
+                layout="@layout/ui_lobby"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"/>
+
+            <include
+                layout="@layout/ui_lab"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"/>
+
             <include
                 layout="@layout/ui_mod_update"
                 android:layout_width="match_parent"

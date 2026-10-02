@@ -7,4 +7,187 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <LinearLayout
+            android:layout_centerInParent="true"
+            android:layout_width="420dp"
+            android:layout_height="wrap_content"
+            android:background="@drawable/launcher_view_white"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_marginStart="15dp"
+                android:layout_marginEnd="15dp"
+                android:layout_marginTop="12dp"
+                android:singleLine="true"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="@dimen/text_size_middle"
+                android:textColor="@color/colorPureBlack"
+                android:text="@string/qcl_export_pack_file_subtitle"/>
+
+            <LinearLayout
+                android:paddingStart="15dp"
+                android:paddingEnd="15dp"
+                android:paddingTop="6dp"
+                android:paddingBottom="6dp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <CheckBox
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/export_package_file_mods"
+                    android:textColor="@color/colorPureBlack"
+                    android:textSize="12sp"
+                    android:text="mods"/>
+
+                <CheckBox
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/export_package_file_config"
+                    android:textColor="@color/colorPureBlack"
+                    android:textSize="12sp"
+                    android:text="config"/>
+
+                <CheckBox
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/export_package_file_scripts"
+                    android:textColor="@color/colorPureBlack"
+                    android:textSize="12sp"
+                    android:text="scripts"/>
+
+                <CheckBox
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/export_package_file_resourcepacks"
+                    android:textColor="@color/colorPureBlack"
+                    android:textSize="12sp"
+                    android:text="resourcepacks"/>
+
+                <CheckBox
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/export_package_file_shaderpacks"
+                    android:textColor="@color/colorPureBlack"
+                    android:textSize="12sp"
+                    android:text="shaderpacks"/>
+
+                <CheckBox
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/export_package_file_options"
+                    android:textColor="@color/colorPureBlack"
+                    android:textSize="12sp"
+                    android:text="options.txt"/>
+
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1px"
+                android:background="@color/colorDarkGray"/>
+
+            <LinearLayout
+                android:visibility="gone"
+                android:paddingStart="15dp"
+                android:paddingEnd="15dp"
+                android:paddingTop="10dp"
+                android:paddingBottom="10dp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/export_package_progress_area"
+                android:orientation="vertical">
+
+                <TextView
+                    android:singleLine="true"
+                    android:ellipsize="start"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/export_package_current_file"
+                    android:textSize="12sp"
+                    android:textColor="@color/colorPureBlack"/>
+
+                <ProgressBar
+                    style="?android:attr/progressBarStyleHorizontal"
+                    android:layout_marginTop="6dp"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:max="100"
+                    android:id="@+id/export_package_progress_bar"/>
+
+                <TextView
+                    android:singleLine="true"
+                    android:layout_marginTop="4dp"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/export_package_progress_text"
+                    android:textSize="12sp"
+                    android:textColor="@color/colorPureBlack"/>
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:paddingStart="15dp"
+                android:paddingEnd="15dp"
+                android:paddingTop="8dp"
+                android:paddingBottom="12dp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <Button
+                    android:singleLine="true"
+                    android:textAllCaps="false"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:background="@drawable/qcl_button_gray"
+                    android:text="@string/qcl_export_pack_cancel"
+                    android:textColor="@color/colorPureBlack"
+                    android:textSize="@dimen/text_size_middle"
+                    android:paddingStart="16dp"
+                    android:paddingEnd="16dp"
+                    android:paddingTop="8dp"
+                    android:paddingBottom="8dp"
+                    android:minWidth="0dp"
+                    android:minHeight="0dp"
+                    android:enabled="false"
+                    android:id="@+id/export_package_cancel"/>
+
+                <View
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:layout_weight="1"/>
+
+                <Button
+                    android:singleLine="true"
+                    android:textAllCaps="false"
+                    android:tag="tint_accent_color"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:background="@drawable/launcher_button_transparent"
+                    android:text="@string/qcl_export_pack_start"
+                    android:textColor="@color/colorPureWhite"
+                    android:textSize="@dimen/text_size_middle"
+                    android:paddingStart="16dp"
+                    android:paddingEnd="16dp"
+                    android:paddingTop="8dp"
+                    android:paddingBottom="8dp"
+                    android:minWidth="0dp"
+                    android:minHeight="0dp"
+                    android:id="@+id/export_package_start"/>
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </RelativeLayout>
+
 </LinearLayout>
