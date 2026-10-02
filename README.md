@@ -323,15 +323,21 @@ export JAVA_HOME=/path/to/jdk-17
 - 签名：请**自备** keystore（仓库不包含签名密钥），在 `QCL/build.gradle` 中配置
 
 ### 运行库（已内置）
-`QCL/src/main/assets/app_runtime/java/` 已包含全部常用 Java 运行时，克隆即可完整构建：
+`QCL/src/main/assets/app_runtime/java/` 已包含全部常用 Java 运行时，**克隆仓库即可完整构建，不需要再从任何 Release 附件补包**。
 
-- Java 8：`default`、`8-arm`、`8-arm64`、`8-x86`、`8-x86_64`
-- Java 17：`JRE17`、`17-arm`、`17-arm64`、`17-x86`、`17-x86_64`
-- Java 21：`JRE21`、`21-arm`、`21-arm64`、`21-x86`、`21-x86_64`
-- Java 25：`25-arm`、`25-arm64`、`25-x86_64`
+每个运行时目录里都是与 FCL 同款的架构分卷（`bin-<架构>.tar.xz` + `universal.tar.xz` + `version`）：
 
-唯一例外是 **JRE25**：它的 `lib/modules` 单文件 121MB，超过 GitHub 100MB 硬上限、无法入库。
-请从 Release 附件下载 `JRE25-runtime.zip`，解压到 `QCL/src/main/assets/app_runtime/java/JRE25/` 即可。
+| 仓库目录 | Java 运行时 | 架构分卷 | 目录体积 | 设备端解压到 |
+|---|---|---|---|---|
+| `jre8/` | Java 8 | arm / arm64 / x86 / x86_64 + universal | 27.3 MB | `default` |
+| `jre17/` | Java 17 | arm / arm64 / x86 / x86_64 + universal | 38.3 MB | `JRE17` |
+| `jre21/` | Java 21 | arm / arm64 / x86 / x86_64 + universal | 46.3 MB | `JRE21` |
+| `jre25/` | Java 25 | arm / arm64 / x86_64 + universal（**无 x86**） | 49.0 MB | `JRE25` |
+
+- 四个运行时的内容与 FCL 的 `FCL/src/main/jreAssets/app_runtime/java/` **逐字节一致**（23 个文件中 22 个 md5 完全相同；唯一差异是 `jre8/version` 的版本计数 `13` → `14`，QCL 用它触发设备端重新解压）。
+- **单文件最大 32.8 MB**（`jre25/universal.tar.xz`），远低于 GitHub 单文件 100 MB 硬上限，所以 **23 个文件全部已入库**。
+- 早先那个 121 MB 的 `lib/modules` 单文件已不存在 —— 它现在被压缩进 `universal.tar.xz`（32.8 MB）。**`JRE25-runtime.zip` 附件已作废，不需要了。**
+- Java 25 没有 x86 分卷（上游未提供）；在 x86 设备上安装器会直接跳过 Java 25。
 
 ## 开源许可
 
