@@ -4,7 +4,20 @@ import android.view.Choreographer;
 
 public class CallbackBridge {
     public static Choreographer sChoreographer = Choreographer.getInstance();
-    private static boolean isGrabbing = false;
+    private static volatile boolean isGrabbing = false;
+    /** push 通道是否已经收到过回调；没收到则退回 native 轮询（兜底）。 */
+    private static volatile boolean grabStatePushed = false;
+    /** 是否曾经收到过游戏的 grab=true —— 收到之后就不再抑制绝对光标推送。 */
+    private static volatile boolean grabEverReported = false;
+    /** ★ 1.4.3：无标题界面版本（Classic / Indev < 20100131）专用开关，由 PojavMinecraftActivity 设置。 */
+    private static volatile boolean suppressPointerUntilFirstGrab = false;
+    /** 首帧到达时刻（uptimeMillis）。护栏只在这个时刻之后才生效，见 shouldSuppressPointer()。 */
+    private static volatile long firstFrameAt = -1L;
+    /**
+     * 护栏最长生效时长。**这是兜底安全网**：万一某个"其实有标题界面"的版本被误开了护栏，
+     * 它只会损失这段时间的鼠标（约 20 秒）就会自动恢复，绝不会整局都推不动光标。
+     */
+    private static final long SUPPRESS_MAX_MS = 20000L;
     private static long lastGrabTime = System.currentTimeMillis();
     public static final int ANDROID_TYPE_GRAB_STATE = 0;
     public static final int CLIPBOARD_COPY = 2000;
@@ -104,13 +117,97 @@ public class CallbackBridge {
         CallbackBridge.nativeSendScreenSize(w, h);
     }
 
+    /**
+     * 当前抓取状态（= 游戏是否在接管鼠标）。
+     *
+     * ★ 1.4.3 修复：原实现是「每次轮询 native + 250ms 缓存」，导致关掉 ESC 菜单 / 背包之后
+     *   最多 250ms（实测 137~203ms）才切回游戏模式；这段窗口里 TouchPad 仍按**绝对光标**
+     *   处理，于是把光标从「菜单里最后点击的按钮位置」直接搬到你手指落点 → 视角一次性猛偏。
+     *   现在改成两条路：
+     *   · 正常：native 在状态变化时**主动 push**（onGrabStateChanged），这里零延迟返回；
+     *   · 兜底：push 通道没接上时退回轮询 nativeIsGrabbing()，但缓存从 250ms 缩到 16ms（一帧）。
+     */
     public static boolean isGrabbing() {
+        if (grabStatePushed) {
+            return isGrabbing;
+        }
         long currentTime = System.currentTimeMillis();
-        if (currentTime - lastGrabTime > 250L) {
+        if (currentTime - lastGrabTime > 16L) {
             isGrabbing = CallbackBridge.nativeIsGrabbing();
             lastGrabTime = currentTime;
         }
         return isGrabbing;
+    }
+
+    /** 抓取状态监听（由 BaseMainActivity 注册）。回调发生在游戏线程，实现方自行切主线程。 */
+    public interface GrabStateListener {
+        void onGrabStateChange(boolean grabbing);
+    }
+
+    private static volatile GrabStateListener grabStateListener;
+
+    public static void setGrabStateListener(GrabStateListener listener) {
+        grabStateListener = listener;
+    }
+
+    /**
+     * ★ 1.4.3：给「无标题界面版本」开/关「首次 grab 之前抑制绝对光标推送」。
+     * 背景：Classic 全系 + Indev 0.31 里早于 20100131 的构建（标题界面就是 20100131 加入的）
+     * 进游戏后**先加载一段时间**、没有标题界面，之后游戏才自己报 grab=true（实测首帧后约 2.7s）。
+     * 这段窗口里 QCL 还是「光标模式」，滑动被当**绝对光标位移**投给游戏 → 开局视角一次性大偏。
+     * 而这些版本在世界出现前没有任何需要鼠标的 GUI，所以这段窗口里**不投坐标是安全的**。
+     */
+    public static void setSuppressPointerUntilFirstGrab(boolean suppress) {
+        suppressPointerUntilFirstGrab = suppress;
+        firstFrameAt = -1L;      // 换版本重新开始计时
+    }
+
+    /** 首帧到达时调用（PojavMinecraftActivity.onPicOutput）。护栏的计时从这一刻才开始。 */
+    public static void notifyFirstFrame() {
+        if (firstFrameAt < 0L) {
+            firstFrameAt = android.os.SystemClock.uptimeMillis();
+        }
+    }
+
+    /**
+     * 现在是否应当抑制绝对光标推送。
+     *
+     * 成立条件（**三条都要满足**，缺一不可）：
+     *  ① 只有被标记为「无标题界面版本」的才启用；
+     *  ② 游戏还没报过 grab=true；
+     *  ③ **首帧已到达**、且距首帧不超过 {@link #SUPPRESS_MAX_MS}。
+     *
+     * ③ 里「首帧之后才生效」+「有上限」是两道安全网：
+     *   · 首帧之前（加载期）不抑制 —— 那时还没世界可转，抑制没有意义，也避免影响加载界面；
+     *   · 万一某个**其实有标题界面**的版本被误判，游戏在标题界面永远不会报 grab=true，
+     *     但护栏最多持续 20 秒就会自动放行 —— 玩家只损失约 20 秒的鼠标，不会整局推不动。
+     */
+    public static boolean shouldSuppressPointer() {
+        if (!suppressPointerUntilFirstGrab || grabEverReported) {
+            return false;
+        }
+        long start = firstFrameAt;
+        if (start < 0L) {
+            return false;
+        }
+        return android.os.SystemClock.uptimeMillis() - start <= SUPPRESS_MAX_MS;
+    }
+
+    /**
+     * 由 native nativeSetGrabbing 主动调用（照 FCL 的 onGrabStateChanged）。
+     * ★ 不要删/改名：native 侧用 GetStaticMethodID 按 "onGrabStateChanged" / "(Z)V" 精确匹配。
+     */
+    @SuppressWarnings("unused")
+    private static void onGrabStateChanged(final boolean grabbing) {
+        isGrabbing = grabbing;
+        grabStatePushed = true;
+        if (grabbing) {
+            grabEverReported = true;   // ★ 1.4.3：一旦报过 grab，就不再抑制绝对光标推送
+        }
+        GrabStateListener listener = grabStateListener;
+        if (listener != null) {
+            listener.onGrabStateChange(grabbing);
+        }
     }
 
     public static int getCurrentMods() {

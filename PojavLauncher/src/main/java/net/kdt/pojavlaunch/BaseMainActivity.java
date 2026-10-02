@@ -17,7 +17,7 @@ import org.lwjgl.glfw.CallbackBridge;
 public class BaseMainActivity extends AppCompatActivity implements TextureView.SurfaceTextureListener {
     public static boolean isInputStackCall;
     public TextureView minecraftGLView;
-    boolean mouseMode;
+    volatile boolean mouseMode;
     public PojavCallback pojavCallback;
     public float scaleFactor = 1.0f;
     private boolean picOutputNotified = false;
@@ -130,6 +130,14 @@ public class BaseMainActivity extends AppCompatActivity implements TextureView.S
     }
 
     public void startMouseThread() {
+        // ★ 1.4.3：把「抓取状态变化」**直连**到模式切换，不再等 16ms 轮询 + 250ms 缓存。
+        //   原来关掉 ESC 菜单 / 背包后，gameCursorMode 要 137~203ms 才翻到 1，
+        //   这段窗口里的滑动被当成绝对光标移动 → 视角一次性猛偏（实测点按钮路径画面差 50.35）。
+        //   Handler 是主线程创建的，sendEmptyMessage 跨线程安全；mouseMode 同步以免轮询线程重复发。
+        CallbackBridge.setGrabStateListener(grabbing -> {
+            this.mouseMode = grabbing;
+            this.mouseModeHandler.sendEmptyMessage(grabbing ? 0 : 1);
+        });
         Thread thread = new Thread(new Runnable() { // from class: net.kdt.pojavlaunch.BaseMainActivity$$ExternalSyntheticLambda2
             @Override // java.lang.Runnable
             public final void run() {

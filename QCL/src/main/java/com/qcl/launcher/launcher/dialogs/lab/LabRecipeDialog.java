@@ -17,7 +17,9 @@ import android.widget.TextView;
 
 import com.google.gson.Gson;
 import com.qcl.launcher.R;
+import com.qcl.launcher.launcher.MainActivity;
 
+import java.io.File;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -44,6 +46,8 @@ public class LabRecipeDialog extends Dialog {
     }
 
     private final List<Recipe> allRecipes = new ArrayList<>();
+    /** ★ 1.4.3：直接持有 MainActivity（不要用 getContext() 转，Dialog 的主题包装会让 instanceof 落空）。 */
+    private final MainActivity activity;
     private EditText searchInput;
     private LinearLayout resultsContainer;
     private LinearLayout detail;
@@ -56,8 +60,9 @@ public class LabRecipeDialog extends Dialog {
     private TextView smeltingText;
     private Recipe current;
 
-    public LabRecipeDialog(Context context) {
-        super(context);
+    public LabRecipeDialog(MainActivity activity) {
+        super(activity);
+        this.activity = activity;
         setContentView(R.layout.dialog_lab_recipe);
         loadRecipes();
         init();
@@ -65,6 +70,7 @@ public class LabRecipeDialog extends Dialog {
     }
 
     private void loadRecipes() {
+        // ① 先加载内置静态表：作为**兜底**，并且它的中文名更贴合习惯（会用来覆盖同名条目）
         try (InputStreamReader reader = new InputStreamReader(
                 getContext().getAssets().open("lab_recipes.json"), StandardCharsets.UTF_8)) {
             RecipeFile file = new Gson().fromJson(reader, RecipeFile.class);
@@ -74,6 +80,323 @@ public class LabRecipeDialog extends Dialog {
         } catch (Throwable e) {
             LabUtils.toast(getContext(), "配方数据加载失败");
         }
+        // ② ★★★ 1.4.3：再用当前版本 jar 里的**全量原版配方**覆盖（实测 1.20.6 有 1175 条，
+        //   而内置静态表只有 121 条 —— 这就是用户说的「漏了很多东西」）。
+        try {
+            loadRecipesFromJar();
+        } catch (Throwable ignored) {
+            // 读不到就继续用静态表，绝不让对话框打不开
+        }
+    }
+
+    /** 从当前版本客户端 jar 里读出全量原版配方；中文名从该版本的 assets 语言文件取。 */
+    private void loadRecipesFromJar() throws java.io.IOException {
+        MainActivity act = this.activity;
+        if (act == null || act.publicGameSetting == null) {
+            return;
+        }
+        LabUtils.VersionPackInfo info = LabUtils.readVersionPackInfo(act);
+        if (!info.ok) {
+            return;
+        }
+        File versionDir = new File(act.publicGameSetting.currentVersion);
+        File jar = jarOf(versionDir, info.versionName);
+        if (jar == null) {
+            return;
+        }
+        java.util.Map<String, String> zh = loadChineseNames(act, versionDir);
+        java.util.LinkedHashMap<String, Recipe> fromJar = new java.util.LinkedHashMap<>();
+        try (java.util.zip.ZipFile zip = new java.util.zip.ZipFile(jar)) {
+            // ★ 目录名 1.21 起是单数 recipe/，更早是 recipes/ —— 由 jar 探测得到，不写死
+            String prefix = "data/minecraft/" + info.recipeDir + "/";
+            java.util.Enumeration<? extends java.util.zip.ZipEntry> en = zip.entries();
+            while (en.hasMoreElements()) {
+                java.util.zip.ZipEntry entry = en.nextElement();
+                String name = entry.getName();
+                if (!name.startsWith(prefix) || !name.endsWith(".json") || entry.isDirectory()) {
+                    continue;
+                }
+                Recipe recipe = parseRecipe(readAll(zip.getInputStream(entry)), zh);
+                if (recipe != null && recipe.id != null && !recipe.id.isEmpty() && !fromJar.containsKey(recipe.id)) {
+                    fromJar.put(recipe.id, recipe);
+                }
+            }
+        }
+        if (fromJar.isEmpty()) {
+            return;
+        }
+        // 静态表里的中文名/展示更贴合习惯 → 只覆盖「展示相关」字段
+        java.util.HashMap<String, Recipe> staticById = new java.util.HashMap<>();
+        for (Recipe r : allRecipes) {
+            if (r.id != null) {
+                staticById.put(r.id, r);
+            }
+        }
+        for (Recipe r : fromJar.values()) {
+            Recipe old = staticById.get(r.id);
+            if (old == null) {
+                continue;
+            }
+            if (old.name != null && !old.name.isEmpty()) {
+                r.name = old.name;
+            }
+            if (old.grid != null) {
+                r.grid = old.grid;
+            }
+            if (old.materials != null) {
+                r.materials = old.materials;
+            }
+            r.smelting = old.smelting;
+        }
+        allRecipes.clear();
+        allRecipes.addAll(fromJar.values());
+    }
+
+    /** 把一条配方 json 映射成界面用的模型（中文名优先）。 */
+    private Recipe parseRecipe(String json, java.util.Map<String, String> zh) {
+        try {
+            com.google.gson.JsonObject o = com.google.gson.JsonParser.parseString(json).getAsJsonObject();
+            String type = str(o, "type");
+            if (type == null) {
+                return null;
+            }
+            int colon = type.indexOf(':');
+            if (colon >= 0) {
+                type = type.substring(colon + 1);
+            }
+            com.google.gson.JsonObject result = o.has("result") && o.get("result").isJsonObject()
+                    ? o.getAsJsonObject("result") : null;
+            String rid = result != null ? str(result, "id") : null;
+            if (rid == null) {
+                rid = str(o, "result");   // 极老格式可能是字符串
+            }
+            if (rid == null) {
+                return null;
+            }
+            Recipe r = new Recipe();
+            r.id = rid;
+            r.name = displayName(rid, zh);
+            r.count = result != null && result.has("count") ? result.get("count").getAsInt() : 1;
+            r.type = type;
+            java.util.List<String> mats = new java.util.ArrayList<>();
+            if ("crafting_shaped".equals(type)) {
+                r.grid = shapedGrid(o, zh, mats);
+            } else if ("crafting_shapeless".equals(type)) {
+                r.grid = shapelessGrid(o, zh, mats);
+            } else {
+                String ing = ingredientName(o.has("ingredient") ? o.get("ingredient") : null, zh);
+                if (ing != null) {
+                    mats.add(ing);
+                }
+            }
+            if (r.grid == null) {
+                r.grid = new java.util.ArrayList<>();
+            }
+            // materials 用「名字 x数量」的形式统计
+            java.util.LinkedHashMap<String, Integer> count = new java.util.LinkedHashMap<>();
+            for (String m : mats) {
+                if (m == null) {
+                    continue;
+                }
+                Integer c = count.get(m);
+                count.put(m, c == null ? 1 : c + 1);
+            }
+            java.util.List<String> matList = new java.util.ArrayList<>();
+            for (java.util.Map.Entry<String, Integer> e : count.entrySet()) {
+                matList.add(e.getValue() > 1 ? e.getKey() + " x" + e.getValue() : e.getKey());
+            }
+            r.materials = matList;
+            return r;
+        } catch (Throwable t) {
+            return null;
+        }
+    }
+
+    /** 有序合成：pattern + key → 3x3 网格。 */
+    private java.util.List<String> shapedGrid(com.google.gson.JsonObject o, java.util.Map<String, String> zh,
+                                             java.util.List<String> mats) {
+        java.util.List<String> grid = new java.util.ArrayList<>();
+        com.google.gson.JsonObject key = o.has("key") ? o.getAsJsonObject("key") : null;
+        java.util.List<String> pattern = new java.util.ArrayList<>();
+        if (o.has("pattern") && o.get("pattern").isJsonArray()) {
+            for (com.google.gson.JsonElement e : o.getAsJsonArray("pattern")) {
+                pattern.add(e.getAsString());
+            }
+        }
+        for (int row = 0; row < 3; row++) {
+            for (int col = 0; col < 3; col++) {
+                String cell = null;
+                if (row < pattern.size() && col < pattern.get(row).length()) {
+                    char c = pattern.get(row).charAt(col);
+                    if (c != ' ') {
+                        cell = key != null && key.has(String.valueOf(c))
+                                ? ingredientName(key.get(String.valueOf(c)), zh) : String.valueOf(c);
+                    }
+                }
+                grid.add(cell);
+                if (cell != null) {
+                    mats.add(cell);
+                }
+            }
+        }
+        return grid;
+    }
+
+    /** 无序合成：ingredients → 依次填入 3x3 网格。 */
+    private java.util.List<String> shapelessGrid(com.google.gson.JsonObject o, java.util.Map<String, String> zh,
+                                                 java.util.List<String> mats) {
+        java.util.List<String> grid = new java.util.ArrayList<>();
+        java.util.List<String> items = new java.util.ArrayList<>();
+        if (o.has("ingredients") && o.get("ingredients").isJsonArray()) {
+            for (com.google.gson.JsonElement e : o.getAsJsonArray("ingredients")) {
+                String n = ingredientName(e, zh);
+                items.add(n);
+                if (n != null) {
+                    mats.add(n);
+                }
+            }
+        }
+        for (int i = 0; i < 9; i++) {
+            grid.add(i < items.size() ? items.get(i) : null);
+        }
+        return grid;
+    }
+
+    /** 取一个 ingredient（{item:...} 或 {tag:...} 或 数组）的中文名。 */
+    private String ingredientName(com.google.gson.JsonElement e, java.util.Map<String, String> zh) {
+        if (e == null || e.isJsonNull()) {
+            return null;
+        }
+        if (e.isJsonArray()) {
+            StringBuilder sb = new StringBuilder();
+            for (com.google.gson.JsonElement c : e.getAsJsonArray()) {
+                String n = ingredientName(c, zh);
+                if (n == null) {
+                    continue;
+                }
+                if (sb.length() > 0) {
+                    sb.append("/");
+                }
+                sb.append(n);
+            }
+            return sb.length() == 0 ? null : sb.toString();
+        }
+        if (!e.isJsonObject()) {
+            return null;
+        }
+        com.google.gson.JsonObject o = e.getAsJsonObject();
+        String id = str(o, "item");
+        if (id != null) {
+            return displayName(id, zh);
+        }
+        String tag = str(o, "tag");
+        return tag != null ? "#" + tag : null;
+    }
+
+    /** 物品 id → 中文名；查不到就退回短 id。 */
+    private String displayName(String id, java.util.Map<String, String> zh) {
+        if (id == null) {
+            return null;
+        }
+        String shortId = id.startsWith("minecraft:") ? id.substring("minecraft:".length()) : id;
+        if (zh != null) {
+            String n = zh.get("item.minecraft." + shortId);
+            if (n == null) {
+                n = zh.get("block.minecraft." + shortId);
+            }
+            if (n != null && !n.isEmpty()) {
+                return n;
+            }
+        }
+        return shortId;
+    }
+
+    /** 从该版本的 assets 里读 zh_cn 语言文件（物品/方块中文名）。读不到返回空表。 */
+    private java.util.Map<String, String> loadChineseNames(MainActivity activity, File versionDir) {
+        try {
+            File gameDir = LabUtils.getGameDir(activity);
+            File assetIndexFile = null;
+            // 版本 json 里的 assetIndex.id 就是索引文件名（权威）
+            File vjson = new File(versionDir, versionDir.getName() + ".json");
+            if (vjson.isFile()) {
+                String s = readFile(vjson);
+                com.google.gson.JsonObject o = com.google.gson.JsonParser.parseString(s).getAsJsonObject();
+                if (o.has("assetIndex") && o.get("assetIndex").isJsonObject()) {
+                    String idx = str(o.getAsJsonObject("assetIndex"), "id");
+                    if (idx != null) {
+                        assetIndexFile = new File(new File(gameDir, "assets/indexes"), idx + ".json");
+                    }
+                }
+            }
+            if (assetIndexFile == null || !assetIndexFile.isFile()) {
+                return java.util.Collections.emptyMap();
+            }
+            // 索引很大，只做定向查找，不整体解析
+            String idx = readFile(assetIndexFile);
+            int i = idx.indexOf("\"minecraft/lang/zh_cn.json\"");
+            if (i < 0) {
+                return java.util.Collections.emptyMap();
+            }
+            int h = idx.indexOf("\"hash\"", i);
+            if (h < 0) {
+                return java.util.Collections.emptyMap();
+            }
+            int q1 = idx.indexOf('"', h + 6);
+            int q2 = idx.indexOf('"', q1 + 1);
+            if (q1 < 0 || q2 < 0) {
+                return java.util.Collections.emptyMap();
+            }
+            String hash = idx.substring(q1 + 1, q2);
+            File obj = new File(new File(gameDir, "assets/objects/" + hash.substring(0, 2)), hash);
+            if (!obj.isFile()) {
+                return java.util.Collections.emptyMap();
+            }
+            java.lang.reflect.Type t = new com.google.gson.reflect.TypeToken<java.util.Map<String, String>>() {
+            }.getType();
+            java.util.Map<String, String> m = new Gson().fromJson(readFile(obj), t);
+            return m == null ? java.util.Collections.emptyMap() : m;
+        } catch (Throwable t) {
+            return java.util.Collections.emptyMap();
+        }
+    }
+
+    private static String str(com.google.gson.JsonObject o, String key) {
+        return o.has(key) && o.get(key).isJsonPrimitive() ? o.get(key).getAsString() : null;
+    }
+
+    private static String readAll(java.io.InputStream in) throws java.io.IOException {
+        java.io.ByteArrayOutputStream bos = new java.io.ByteArrayOutputStream();
+        byte[] buf = new byte[8192];
+        int n;
+        try {
+            while ((n = in.read(buf)) > 0) {
+                bos.write(buf, 0, n);
+            }
+        } finally {
+            in.close();
+        }
+        return new String(bos.toByteArray(), StandardCharsets.UTF_8);
+    }
+
+    private static String readFile(File f) throws java.io.IOException {
+        return readAll(new java.io.FileInputStream(f));
+    }
+
+    private static File jarOf(File versionDir, String versionName) {
+        if (versionDir == null || !versionDir.isDirectory()) {
+            return null;
+        }
+        File jar = new File(versionDir, versionName + ".jar");
+        if (jar.isFile()) {
+            return jar;
+        }
+        File[] jars = versionDir.listFiles(new java.io.FilenameFilter() {
+            @Override
+            public boolean accept(File dir, String name) {
+                return name.endsWith(".jar");
+            }
+        });
+        return (jars != null && jars.length > 0) ? jars[0] : null;
     }
 
     private void init() {

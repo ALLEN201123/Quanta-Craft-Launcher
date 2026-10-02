@@ -86,6 +86,19 @@
     <string name="lab_dp_toast_fail">导出失败：</string>
     <string name="lab_dp_toast_name_empty">请填写数据包名称</string>
     <string name="lab_dp_toast_ns_empty">命名空间无效，已使用 default</string>
+    <!-- ★ 1.4.3 新增：pack_format 自动取值 + 新手引导 -->
+    <string name="lab_dp_packformat_auto">自动（%1$s → %2$d）</string>
+    <string name="lab_dp_packformat_manual">手动指定</string>
+    <string name="lab_dp_packformat_auto_miss">自动（未读到 %1$s 的 jar，请手动选）</string>
+    <string name="lab_dp_toast_cmd_empty">至少给一个 function 填一条命令</string>
+    <string name="lab_dp_toast_func_empty">有 function 没填名称，已自动命名为 funcN</string>
+    <string name="lab_dp_guide_title">导出成功，接下来怎么用？</string>
+    <string name="lab_dp_guide_file">文件：%1$s</string>
+    <string name="lab_dp_guide_pack_format">pack_format 用的是 %1$d（读自 %2$s 的 jar，权威值）</string>
+    <string name="lab_dp_guide_steps">① 把上面这个 zip 复制到「你的存档目录/datapacks/」里（每个存档各自一个 datapacks 目录，没有就新建）\n\n② 进入那个存档，按 T 打开聊天，输入：\n/reload\n\n③ 再输入：\n/function %1$s:%2$s\n\n④ 想让电脑/服务器每次启动自动跑，就把第 ③ 步那条 /function 写进 data/%1$s/%3$s/%2$s.mcfunction 之外的标签文件里（进阶，可先不管）\n\n※ 需要存档开启「允许作弊」，或你是 OP，否则命令会被拒绝。</string>
+    <string name="lab_dp_guide_copy_cmd">复制 /function 命令</string>
+    <string name="lab_dp_guide_ok">知道了</string>
+    <string name="lab_dp_guide_tip">看不懂也没关系：只要做完 ① ② ③ 三步，功能就已经生效了。</string>
 
     <!-- 投影工坊 -->
     <string name="lab_ss_title">投影工坊</string>

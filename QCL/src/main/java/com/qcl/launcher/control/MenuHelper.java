@@ -194,17 +194,33 @@ SeekBar.OnSeekBarChangeListener {
     public void disableCursor() {
         android.util.Log.i("QCL_TOUCH", "disableCursor() -> gameCursorMode=1 (grab 视角模式)");
         this.gameCursorMode = 1;
-        // ★ 09-20 对齐 FCL：进入 grab 视角模式时把 pointer 基准重置到屏幕中心，
-        //   否则会继承光标模式下/历史上累加的脏值（实测曾出现 pointerX=3057 远超屏宽 1600），
-        //   MC 用它算 delta 会得到离谱的巨大跳变。
+        // ★★★ 1.4.3 修复「关菜单后视角一次性猛偏」的真凶。
+        //   原实现（09-20）无条件把基准重置到**屏幕中心**并把光标推给游戏
+        //   （`InputBridge.setPointer(中心)`）。可关菜单时游戏内光标正停在「你点的那个按钮」上
+        //   （例如「返回游戏」= (800,701)），这一推等于让游戏看到
+        //   「按钮位置 → 屏幕中心」的**人为大位移**，MC 用相邻帧坐标差算 delta → 视角抬天。
+        //   实测对照（同一次会话、同样 20px 微滑）：
+        //     · 鼠标点「返回游戏」按钮关菜单 → 画面差 50.35，天空占屏 20.7% → 41.6%
+        //     · 用 ESC 悬浮键关菜单（光标没被动过） → 画面差 0.01
+        //   ⇒ 现在只在「指针真的越界（脏值）」时才钳回屏内，保留原来防脏值的意图，**不再制造跳变**。
         if (this.viewManager != null && this.viewManager.screenWidth > 0) {
-            this.pointerX = this.viewManager.screenWidth / 2.0f;
-            this.pointerY = this.viewManager.screenHeight / 2.0f;
+            float screenW = this.viewManager.screenWidth;
+            float screenH = this.viewManager.screenHeight;
+            boolean pointerDirty = this.pointerX < 0.0f || this.pointerX > screenW
+                    || this.pointerY < 0.0f || this.pointerY > screenH;
+            if (pointerDirty) {
+                android.util.Log.i("QCL_TOUCH", "disableCursor(): 指针越界(" + this.pointerX + "," + this.pointerY
+                        + ") → 钳回屏内，不归中");
+            }
+            this.pointerX = Math.max(0.0f, Math.min(screenW, this.pointerX));
+            this.pointerY = Math.max(0.0f, Math.min(screenH, this.pointerY));
             this.currentX = this.pointerX;
             this.currentY = this.pointerY;
             this.cursorX = this.pointerX;
             this.cursorY = this.pointerY;
-            InputBridge.setPointer(this.launcher, (int) this.pointerX, (int) this.pointerY);
+            if (pointerDirty) {
+                InputBridge.setPointer(this.launcher, (int) this.pointerX, (int) this.pointerY);
+            }
         }
         if (this.viewManager != null) {
             this.viewManager.disableCursor();

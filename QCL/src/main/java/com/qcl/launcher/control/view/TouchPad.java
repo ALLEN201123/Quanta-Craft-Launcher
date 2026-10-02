@@ -237,9 +237,19 @@ extends View {
             if (this.menuHelper.gameMenuSetting.mouseMode == 0 && this.menuHelper.gameCursorMode == 0) {
                 this.menuHelper.cursorX = event.getX();
                 this.menuHelper.cursorY = event.getY();
-                this.menuHelper.pointerX = event.getX();
-                this.menuHelper.pointerY = event.getY();
-                InputBridge.setPointer(this.launcher, (int)event.getX(), (int)event.getY());
+                // ★★★ 1.4.3（视角偏移·开局那一下）：
+                //   无标题界面版本（Classic 全系 + Indev 早于 20100131 的构建）进游戏后**先加载**，
+                //   这期间 QCL 仍是「光标模式」，而游戏那边已经开始画世界；此时投绝对坐标会被游戏
+                //   当成视角位移 → **开局第一次滑动视角一次性大偏**。实测窗口 ≈ 首帧后 2.7 秒
+                //   （日志：enableCursor → 首帧 → 2.7s 后游戏自己 disableCursor）。
+                //   这些版本在世界出现前没有任何需要鼠标的 GUI，所以这段窗口里**不投坐标是安全的**；
+                //   pointerX/Y 一并冻结在「上次真正投出去的值」，这样首次 grab 推送时与游戏内位置
+                //   连续，不会产生第二个跳变。（cursorX/Y 照常更新，屏幕上的光标仍然跟手。）
+                if (!org.lwjgl.glfw.CallbackBridge.shouldSuppressPointer()) {
+                    this.menuHelper.pointerX = event.getX();
+                    this.menuHelper.pointerY = event.getY();
+                    InputBridge.setPointer(this.launcher, (int)event.getX(), (int)event.getY());
+                }
             }
             switch (event.getActionMasked()) {
                 case 0: {
@@ -270,10 +280,13 @@ extends View {
                         float targetY = this.startCursorY + (event.getY() - this.initialY) * this.menuHelper.gameMenuSetting.mouseSpeed < 0.0f ? 0.0f : (this.startCursorY + (event.getY() - this.initialY) * this.menuHelper.gameMenuSetting.mouseSpeed > (float)this.screenHeight ? (float)this.screenHeight : this.startCursorY + (event.getY() - this.initialY) * this.menuHelper.gameMenuSetting.mouseSpeed);
                         this.menuHelper.cursorX = targetX;
                         this.menuHelper.cursorY = targetY;
-                        this.menuHelper.pointerX = targetX;
-                        this.menuHelper.pointerY = targetY;
-                        // FCL 同款：不乘 scaleFactor（FCL TouchPad 第193行 setPointer(targetX, targetY, POINTER_ID)）
-                        InputBridge.setPointer(this.launcher, (int)targetX, (int)targetY);
+                        // ★ 1.4.3：与 mouseMode==0 分支同样的护栏（无标题界面版本在首次 grab 前不投坐标）。
+                        if (!org.lwjgl.glfw.CallbackBridge.shouldSuppressPointer()) {
+                            this.menuHelper.pointerX = targetX;
+                            this.menuHelper.pointerY = targetY;
+                            // FCL 同款：不乘 scaleFactor（FCL TouchPad 第193行 setPointer(targetX, targetY, POINTER_ID)）
+                            InputBridge.setPointer(this.launcher, (int)targetX, (int)targetY);
+                        }
                     }
                     if (this.menuHelper.gameCursorMode != 1 || this.menuHelper.gameMenuSetting.disableHalfScreen && !(this.initialX > (float)(this.screenWidth >> 1)) || event.getPointerId(event.getActionIndex()) != this.pointerID) break;
                     // ★★★ 2026-09-20 完全照搬 FCL TouchPad.onTouchEvent 的 grab 分支（FCL 第226-251行）：

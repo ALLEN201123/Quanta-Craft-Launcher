@@ -62,6 +62,12 @@ public class LabDatapackDialog extends Dialog {
     private Spinner packSpinner;
     private LinearLayout functionsContainer;
     private LinearLayout templatesContainer;
+    /** 目标版本的数据包元信息（读自该版本 jar，离线权威）。 */
+    private LabUtils.VersionPackInfo packInfo = new LabUtils.VersionPackInfo();
+    /** 自动取到的 pack_format（≤0 表示没读到）。 */
+    private int autoPackFormat = -1;
+    /** 下拉每一项对应的 pack_format；-1 = 用自动值。 */
+    private int[] packSpinnerValues = PACK_VALUES;
 
     public LabDatapackDialog(MainActivity activity) {
         super(activity);
@@ -78,11 +84,30 @@ public class LabDatapackDialog extends Dialog {
         this.functionsContainer = findViewById(R.id.lab_dp_functions);
         this.templatesContainer = findViewById(R.id.lab_dp_templates);
 
+        // ★★★ 1.4.3：pack_format 改成**从目标版本的 jar 里自动取**（离线、权威、自维护），
+        //   手选档位只作兜底。原实现写死最高 18、默认 15，而实测 1.20.6 实际是 41
+        //   → 用旧档位导出的数据包在新版本上根本不会被加载。
+        this.packInfo = LabUtils.readVersionPackInfo(activity);
+        this.autoPackFormat = packInfo.packFormat;
+        java.util.List<String> pfLabels = new java.util.ArrayList<>();
+        java.util.List<Integer> pfValues = new java.util.ArrayList<>();
+        pfLabels.add(autoPackFormat > 0
+                ? getContext().getString(R.string.lab_dp_packformat_auto, packInfo.versionName, autoPackFormat)
+                : getContext().getString(R.string.lab_dp_packformat_auto_miss, packInfo.versionName));
+        pfValues.add(-1);
+        for (int i = 0; i < PACK_LABELS.length; i++) {
+            pfLabels.add(PACK_LABELS[i]);
+            pfValues.add(PACK_VALUES[i]);
+        }
+        this.packSpinnerValues = new int[pfValues.size()];
+        for (int i = 0; i < pfValues.size(); i++) {
+            this.packSpinnerValues[i] = pfValues.get(i);
+        }
         ArrayAdapter<String> adapter = new ArrayAdapter<>(getContext(),
-                android.R.layout.simple_spinner_item, PACK_LABELS);
+                android.R.layout.simple_spinner_item, pfLabels);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         packSpinner.setAdapter(adapter);
-        packSpinner.setSelection(PACK_DEFAULT_INDEX);
+        packSpinner.setSelection(0);   // 默认「自动」
 
         findViewById(R.id.lab_dp_add_function).setOnClickListener(new View.OnClickListener() {
             @Override
@@ -243,6 +268,16 @@ public class LabDatapackDialog extends Dialog {
         activeCmdEdit.setSelection(activeCmdEdit.getText().length());
     }
 
+    /** 解析最终使用的 pack_format：选「自动」时用从 jar 读到的值；都没读到才退回旧默认。 */
+    private int resolvePackFormat() {
+        int pos = Math.max(0, packSpinner.getSelectedItemPosition());
+        int picked = (pos < packSpinnerValues.length) ? packSpinnerValues[pos] : -1;
+        if (picked > 0) {
+            return picked;
+        }
+        return autoPackFormat > 0 ? autoPackFormat : PACK_VALUES[PACK_DEFAULT_INDEX];
+    }
+
     private void export() {
         String packName = nameEdit.getText().toString().trim();
         if (packName.isEmpty()) {
@@ -254,21 +289,52 @@ public class LabDatapackDialog extends Dialog {
             namespace = "default";
             LabUtils.toast(getContext(), getContext().getString(R.string.lab_dp_toast_ns_empty));
         }
-        int packFormat = PACK_VALUES[Math.max(0, packSpinner.getSelectedItemPosition())];
+        // ★ 1.4.3：至少要有一条命令，否则导出的是空壳包（新手最容易卡在这）
+        boolean anyCommand = false;
+        for (Func func : funcs) {
+            if (!func.cmdEdit.getText().toString().trim().isEmpty()) {
+                anyCommand = true;
+                break;
+            }
+        }
+        if (!anyCommand) {
+            LabUtils.toast(getContext(), getContext().getString(R.string.lab_dp_toast_cmd_empty));
+            return;
+        }
+        int packFormat = resolvePackFormat();
+        // ★ 1.4.3：数据包目录名 1.21 起改成**单数**（function/），由 jar 探测得出，不写死。
+        String functionDir = packInfo.functionDir;
 
         File dir = LabUtils.getDatapacksDir(activity);
         File outFile = new File(dir, LabUtils.sanitizeFileName(packName) + ".zip");
         int suspicious = 0;
+        int autoNamed = 0;
+        String firstFuncName = "";
         try (ZipOutputStream zos = new ZipOutputStream(new FileOutputStream(outFile))) {
             String description = packName.replace("\\", "").replace("\"", "'");
-            writeEntry(zos, "pack.mcmeta",
-                    "{\"pack\":{\"pack_format\":" + packFormat + ",\"description\":\"" + description + "\"}}");
+            // ★ 1.4.3：pack.mcmeta 的**写法要跟着目标版本走**（照抄游戏自带 pack.mcmeta 的风格）：
+            //   · 1.20.6 及更早 → {"pack":{"pack_format":41,…}}
+            //   · 26.3 等新版本 → {"pack":{"min_format":121,"max_format":121,…}}（**没有** pack_format 键）
+            //   用错写法游戏会直接不认这个数据包。
+            String mcmeta;
+            if (packInfo.newPackFormatStyle) {
+                int maxFormat = packInfo.packFormatMax > 0 ? packInfo.packFormatMax : packFormat;
+                mcmeta = "{\"pack\":{\"description\":\"" + description + "\",\"min_format\":" + packFormat
+                        + ",\"max_format\":" + maxFormat + "}}";
+            } else {
+                mcmeta = "{\"pack\":{\"pack_format\":" + packFormat + ",\"description\":\"" + description + "\"}}";
+            }
+            writeEntry(zos, "pack.mcmeta", mcmeta);
 
             for (int i = 0; i < funcs.size(); i++) {
                 Func func = funcs.get(i);
                 String funcName = LabUtils.sanitizeFileName(func.nameEdit.getText().toString().trim());
                 if (funcName.isEmpty()) {
                     funcName = "function" + (i + 1);
+                    autoNamed++;
+                }
+                if (firstFuncName.isEmpty()) {
+                    firstFuncName = funcName;
                 }
                 StringBuilder content = new StringBuilder();
                 String[] lines = func.cmdEdit.getText().toString().split("\n", -1);
@@ -282,18 +348,54 @@ public class LabDatapackDialog extends Dialog {
                     }
                     content.append(trimmed).append("\n");
                 }
-                writeEntry(zos, "data/" + namespace + "/functions/" + funcName + ".mcfunction",
+                writeEntry(zos, "data/" + namespace + "/" + functionDir + "/" + funcName + ".mcfunction",
                         content.toString());
             }
         } catch (Throwable e) {
             LabUtils.toast(getContext(), getContext().getString(R.string.lab_dp_toast_fail) + e.getMessage());
             return;
         }
-        String message = getContext().getString(R.string.lab_dp_toast_done) + outFile.getAbsolutePath();
-        if (suspicious > 0) {
-            message = message + "（" + suspicious + " 行命令格式可疑，已保留）";
+        if (autoNamed > 0) {
+            LabUtils.toast(getContext(), getContext().getString(R.string.lab_dp_toast_func_empty));
         }
-        LabUtils.toast(getContext(), message);
+        showGuide(outFile, namespace, firstFuncName.isEmpty() ? "main" : firstFuncName,
+                functionDir, packFormat, suspicious);
+    }
+
+    /**
+     * ★ 1.4.3 新增：导出后的「怎么用」引导。
+     * 用户原话：「不会制作数据包的人在那里制作，等于盲人摸象」——
+     * 所以这里把「放哪、输什么命令」全部按用户填的名字**动态生成**出来，可一键复制。
+     */
+    private void showGuide(final File outFile, final String namespace, final String funcName,
+                           final String functionDir, final int packFormat, final int suspicious) {
+        StringBuilder body = new StringBuilder();
+        body.append(getContext().getString(R.string.lab_dp_guide_file, outFile.getAbsolutePath())).append("\n\n");
+        if (packInfo.ok && autoPackFormat > 0 && packFormat == autoPackFormat) {
+            body.append(getContext().getString(R.string.lab_dp_guide_pack_format, packFormat, packInfo.versionName)).append("\n\n");
+        }
+        body.append(getContext().getString(R.string.lab_dp_guide_steps, namespace, funcName, functionDir));
+        if (suspicious > 0) {
+            body.append("\n\n（" + suspicious + " 行命令格式可疑，已原样保留）");
+        }
+        final String functionCommand = "/function " + namespace + ":" + funcName;
+        android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(getContext());
+        builder.setTitle(R.string.lab_dp_guide_title);
+        builder.setMessage(body.toString());
+        builder.setPositiveButton(R.string.lab_dp_guide_copy_cmd, new android.content.DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(android.content.DialogInterface dialog, int which) {
+                LabUtils.copyToClipboard(getContext(), functionCommand);
+                LabUtils.toast(getContext(), getContext().getString(R.string.lab_dp_guide_copy_cmd));
+            }
+        });
+        builder.setNegativeButton(R.string.lab_dp_guide_ok, null);
+        try {
+            builder.show();
+        } catch (Throwable t) {
+            // 万一弹窗失败，至少别让用户以为没导出成功
+            LabUtils.toast(getContext(), getContext().getString(R.string.lab_dp_toast_done) + outFile.getAbsolutePath());
+        }
     }
 
     private void writeEntry(ZipOutputStream zos, String path, String content) throws Exception {

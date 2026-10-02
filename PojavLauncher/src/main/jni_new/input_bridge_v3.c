@@ -91,6 +91,16 @@ jint JNI_OnLoad(JavaVM* vm, void* reserved) {
         pojav_environ->bridgeClazz = bridgeClazz;
         pojav_environ->method_notifyLauncher = (*dalvikJNIEnvPtr_ANDROID)->GetStaticMethodID(
                 dalvikJNIEnvPtr_ANDROID, bridgeClazz, "notifyLauncher", "(I[I)Z");
+        // ★ 1.4.3：抓取状态**主动推送**通道（照 FCL 的 onGrabStateChanged）。
+        //   原实现只有 nativeIsGrabbing() 供 Java 侧轮询，而 Java 侧 isGrabbing() 带 250ms 缓存
+        //   → 关菜单后 gameCursorMode 要 137~203ms 才翻到 1，这期间的滑动被当成绝对光标移动
+        //   → 视角一次性猛偏（实测：同样 20px 微滑，点按钮路径画面差 50.35，ESC 键路径 0.01）。
+        //   字段 method_onGrabStateChanged 早就声明在 environ.h:51，只是一直没接线。
+        pojav_environ->method_onGrabStateChanged = (*dalvikJNIEnvPtr_ANDROID)->GetStaticMethodID(
+                dalvikJNIEnvPtr_ANDROID, bridgeClazz, "onGrabStateChanged", "(Z)V");
+        if ((*dalvikJNIEnvPtr_ANDROID)->ExceptionCheck(dalvikJNIEnvPtr_ANDROID)) {
+            (*dalvikJNIEnvPtr_ANDROID)->ExceptionClear(dalvikJNIEnvPtr_ANDROID);
+        }
         pojav_environ->isUseStackQueueCall = JNI_FALSE;
     } else if (dalvikJavaVMPtr != vm) {
         runtimeJavaVMPtr = vm;
@@ -482,6 +492,28 @@ JNIEXPORT void JNICALL Java_org_lwjgl_glfw_CallbackBridge_nativeSetGrabbing(JNIE
     pojav_environ->isGrabbing = grabbing;
     if (pojav_environ->isGrabbing == JNI_TRUE) {
         isPrepareGrabPos = true;
+    }
+    // ★ 1.4.3（照 FCL）：状态一变就**主动推**给 Java 侧，别让 Java 去轮询。
+    //   游戏线程可能未挂到 Dalvik VM，先 AttachCurrentThread 再调（FCL 同款写法）。
+    if (pojav_environ->method_onGrabStateChanged != NULL) {
+        JavaVM* dalvikJvm = pojav_environ->dalvikJavaVMPtr;
+        JNIEnv* dalvikEnv = NULL;
+        jboolean needDetach = JNI_FALSE;
+        jint envResult = (*dalvikJvm)->GetEnv(dalvikJvm, (void**) &dalvikEnv, JNI_VERSION_1_4);
+        if (envResult == JNI_EDETACHED) {
+            envResult = (*dalvikJvm)->AttachCurrentThread(dalvikJvm, &dalvikEnv, NULL);
+            needDetach = JNI_TRUE;
+        }
+        if (envResult == JNI_OK && dalvikEnv != NULL) {
+            (*dalvikEnv)->CallStaticVoidMethod(dalvikEnv, pojav_environ->bridgeClazz,
+                                               pojav_environ->method_onGrabStateChanged, grabbing);
+            if ((*dalvikEnv)->ExceptionCheck(dalvikEnv)) {
+                (*dalvikEnv)->ExceptionClear(dalvikEnv);
+            }
+        }
+        if (needDetach) {
+            (*dalvikJvm)->DetachCurrentThread(dalvikJvm);
+        }
     }
 }
 

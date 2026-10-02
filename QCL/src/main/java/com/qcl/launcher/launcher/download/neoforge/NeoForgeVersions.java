@@ -47,6 +47,10 @@ public final class NeoForgeVersions {
 
     /** MC 版本筛选下拉的支持列表（NeoForge 实际发布过的 MC 版本，新的在前） */
     private static final String[] SUPPORTED_MC = new String[]{
+            // ★ 1.4.3：补齐 26.x 与 1.21.11 —— 实测 BMCLAPI 的 neoforge/list/<MC版本> 全部有货：
+            //   26.3→38 个构建、26.2→89、26.1.2→112、26.1→18、1.21.11→45。
+            //   原先这里从 1.21.10 起步，导致 NeoForge 安装页的 MC 下拉里 26.x 一个都没有。
+            "26.3", "26.2", "26.1.2", "26.1.1", "26.1", "1.21.11",
             "1.21.10", "1.21.9", "1.21.8", "1.21.7", "1.21.6", "1.21.5",
             "1.21.4", "1.21.3", "1.21.2", "1.21.1", "1.21",
             "1.20.6", "1.20.5", "1.20.4", "1.20.3", "1.20.2", "1.20.1"
@@ -59,6 +63,13 @@ public final class NeoForgeVersions {
     private static final Map<String, String[]> FALLBACK = new LinkedHashMap<>();
 
     static {
+        // ★ 1.4.3：补 26.x / 1.21.11（值取自实测 BMCLAPI 列表的最新几个，非猜测）
+        FALLBACK.put("26.3", new String[]{"26.3.0.39-beta", "26.3.0.38-beta", "26.3.0.37-beta"});
+        FALLBACK.put("26.2", new String[]{"26.2.0.88", "26.2.0.87", "26.2.0.86"});
+        FALLBACK.put("26.1.2", new String[]{"26.1.2.112", "26.1.2.111", "26.1.2.110"});
+        FALLBACK.put("26.1.1", new String[]{"26.1.1.15-beta", "26.1.1.14-beta", "26.1.1.13-beta"});
+        FALLBACK.put("26.1", new String[]{"26.1.0.19-beta", "26.1.0.18-beta", "26.1.0.17-beta"});
+        FALLBACK.put("1.21.11", new String[]{"21.11.45", "21.11.44", "21.11.42"});
         FALLBACK.put("1.21.10", new String[]{"21.10.64", "21.10.60", "21.10.0-beta"});
         FALLBACK.put("1.21.9", new String[]{"21.9.16-beta", "21.9.12-beta", "21.9.0-beta"});
         FALLBACK.put("1.21.8", new String[]{"21.8.54", "21.8.52", "21.8.0-beta"});

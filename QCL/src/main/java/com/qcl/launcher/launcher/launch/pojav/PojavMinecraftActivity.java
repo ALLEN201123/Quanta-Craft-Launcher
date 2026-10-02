@@ -102,6 +102,10 @@ extends BaseMainActivity {
         this.handleCallback();
         this.init(this.gameLaunchSetting.game_directory, GameLaunchSetting.isHighVersion(this.gameLaunchSetting));
         this.menuHelper = new MenuHelper((Context)this, (AppCompatActivity)this, this.gameLaunchSetting.fullscreen, this.gameLaunchSetting.game_directory, this.drawerLayout, this.baseLayout, false, this.gameLaunchSetting.controlLayout, 2, this.scaleFactor);
+        // ★ 1.4.3：给「无标题界面版本」开护栏 —— 它们进游戏先加载、不经标题界面，加载完游戏才自己
+        //   报 grab（实测首帧后 ~2.7s）；这期间 QCL 仍是光标模式，滑动被当绝对光标投给游戏 → 开局大偏。
+        org.lwjgl.glfw.CallbackBridge.setSuppressPointerUntilFirstGrab(
+                isNoTitleScreenVersion(this.gameLaunchSetting.currentVersion));
         LaunchLogWindow.GameLaunchSettingInfo info = new LaunchLogWindow.GameLaunchSettingInfo();
         info.backend = "Pojav";
         info.version = this.gameLaunchSetting.currentVersion;
@@ -110,6 +114,35 @@ extends BaseMainActivity {
         info.ramMb = this.gameLaunchSetting.maxRam;
         LaunchLogWindow.setBasics(info);
         new LaunchLogWindow((Activity)this, (ViewGroup)this.drawerLayout).show(info);
+    }
+
+    /**
+     * 该版本是否「没有标题界面」（= 进游戏先加载一段时间、不经标题界面就直接在世界里）。
+     *
+     * 依据 Minecraft Wiki「Title Screen」历史章节：**标题界面是 Indev 0.31 的 20100131 构建加入的**
+     * （20100206 背景不再滚动；Infdev 20100327 只是把按钮换成 Singleplayer/Multiplayer —— 界面本身早在
+     * Indev 20100131 就有了）。所以属于此类只有：
+     *   · Classic 全系（`c*`）—— 经典客户端本体没有标题界面，菜单在网页外壳里；
+     *   · Indev 0.31 中早于 20100131 的构建（`in-YYYYMMDD-*`）。
+     * infdev 起（含 Alpha / Beta / 现代版本）一律 false，不去动它们。
+     */
+    private static boolean isNoTitleScreenVersion(String currentVersionPath) {
+        if (currentVersionPath == null) {
+            return false;
+        }
+        String name = new java.io.File(currentVersionPath).getName().trim().toLowerCase();
+        // Classic 全系：版本名是 c0.30-c-1900 / c0.0.13a / c0.28 这种「c + 数字」。
+        // ★ 必须限定「c 后面跟数字」—— 曾用 startsWith("c") 误命中 "Cursed-Fabric-MultiMCnew"
+        //   （现代 Fabric 整合包，**有**标题界面），会把它的标题界面光标也冻住。
+        // pre-classic（RubyDung，rd-*）比 Classic 还早，同样没有标题界面。
+        if (java.util.regex.Pattern.compile("^c\\d").matcher(name).find() || name.startsWith("rd-")) {
+            return true;
+        }
+        if (!name.startsWith("in-")) {
+            return false;
+        }
+        java.util.regex.Matcher matcher = java.util.regex.Pattern.compile("^in-(\\d{8})").matcher(name);
+        return matcher.find() && matcher.group(1).compareTo("20100131") < 0;
     }
 
     private void startFrameProbe() {
@@ -226,6 +259,8 @@ extends BaseMainActivity {
 
             public void onPicOutput() {
                 Log.i((String)"jrelog", (String)"[\u753b\u9762\u5207\u6362] \u6536\u5230 onPicOutput\uff0c\u64a4\u9664\u7b49\u5f85\u754c\u9762");
+                // ★ 1.4.3：首帧到达 = 「世界开始出现」，护栏（首次 grab 前不投绝对光标）从这一刻起计时。
+                org.lwjgl.glfw.CallbackBridge.notifyFirstFrame();
                 PojavMinecraftActivity.this.stopFrameProbe();
                 PojavMinecraftActivity.this.baseLayout.hideBackground();
             }

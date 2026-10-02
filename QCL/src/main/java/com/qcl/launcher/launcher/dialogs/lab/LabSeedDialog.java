@@ -18,11 +18,16 @@ public class LabSeedDialog extends Dialog {
 
     /** 展示用版本号。 */
     private static final String[] VERSION_LABELS = {
+            // ★ 1.4.3：补 26.x。原先只到 1.21，导致「26.X 一个版本都没有」。
+            //   平台后缀取自 chunkbase 自己页面上的 option 值（实测含 java_26_1 / java_26_2 /
+            //   java_26_3 / java_26_4，且默认选中 java_26_3），不是猜的。
+            "26.3", "26.2", "26.1",
             "1.21", "1.20", "1.19", "1.18", "1.17", "1.16", "1.15", "1.14",
             "1.13", "1.12", "1.11", "1.10", "1.9", "1.8", "1.7"
     };
-    /** chunkbase 使用的平台后缀。 */
+    /** chunkbase 使用的平台后缀（与 VERSION_LABELS 严格同序同长）。 */
     private static final String[] VERSION_PLATFORM = {
+            "26_3", "26_2", "26_1",
             "1_21", "1_20", "1_19", "1_18", "1_17", "1_16", "1_15", "1_14",
             "1_13", "1_12", "1_11", "1_10", "1_9", "1_8", "1_7"
     };
@@ -48,7 +53,7 @@ public class LabSeedDialog extends Dialog {
                 android.R.layout.simple_spinner_item, VERSION_LABELS);
         versionAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         versionSpinner.setAdapter(versionAdapter);
-        versionSpinner.setSelection(1); // 默认 1.20
+        versionSpinner.setSelection(0); // ★ 1.4.3：默认选最新（26.3）；原来是 1=1.20
 
         String[] dimensions = {
                 getContext().getString(R.string.lab_seed_dim_overworld),

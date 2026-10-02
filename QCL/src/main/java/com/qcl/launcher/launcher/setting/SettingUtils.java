@@ -145,7 +145,83 @@ public class SettingUtils {
                 list.add(bean);
             }
         }
+        // ★ 1.4.3：原来**完全没有排序**，直接按 File.list() 的任意顺序返回（实测乱排：
+        //   in-20091223 / b1.0_01 / b1.8.1 / inf-… 混在一起）。
+        //   现在按「正式版在前、远古版在后」分组，组内再按版本倒序。
+        sortLocalVersions(list);
         return list;
+    }
+
+    /**
+     * 本地版本列表排序：**正式版 → 远古版**两组，组内倒序。
+     * · 正式版：按版本号数值倒序（26.3 > 1.21.11 > 1.20.6 …）
+     * · 远古版：按名字倒序（这些版本名里的日期是零填充的，字符串倒序刚好等价于时间倒序：
+     *   in-20100223 > in-20100110 > in-20091231 > in-20091223；c0.30 > c0.29；b1.9 > b1.8 …）
+     */
+    public static void sortLocalVersions(ArrayList<GameListBean> list) {
+        if (list == null || list.size() < 2) {
+            return;
+        }
+        java.util.Collections.sort(list, new java.util.Comparator<GameListBean>() {
+            @Override
+            public int compare(GameListBean a, GameListBean b) {
+                boolean la = isLegacyVersionName(a == null ? null : a.name);
+                boolean lb = isLegacyVersionName(b == null ? null : b.name);
+                if (la != lb) {
+                    return la ? 1 : -1;          // 正式版在前
+                }
+                String na = a == null || a.name == null ? "" : a.name;
+                String nb = b == null || b.name == null ? "" : b.name;
+                if (la) {
+                    return nb.compareTo(na);      // 远古版：名字倒序
+                }
+                long va = versionSortKey(na);
+                long vb = versionSortKey(nb);
+                if (va != vb) {
+                    return va < vb ? 1 : -1;      // 正式版：版本号倒序
+                }
+                return nb.compareTo(na);
+            }
+        });
+    }
+
+    /**
+     * 是否「远古版」版本名（classic / pre-classic / indev / infdev / alpha / beta / pre）。
+     * ★ 不用 startsWith("c")：那会把 `Cursed-Fabric-MultiMCnew` 这类整合包误判成 classic，
+     *   与 1.4.3 里 isNoTitleScreenVersion 踩过的坑同源。
+     */
+    public static boolean isLegacyVersionName(String name) {
+        if (name == null) {
+            return false;
+        }
+        String n = name.trim().toLowerCase();
+        // ★ 用 find()（前缀匹配），不能用 matches()：matches() 要求**整串**匹配，
+        //   而这里只想匹配前缀 —— 用 matches() 会导致所有版本都判不出远古版，
+        //   远古版（名字里的 8 位日期数值极大）就会把正式版顶到后面去（已实测踩到）。
+        if (java.util.regex.Pattern.compile("^(c\\d|rd-|in-|inf-|a1\\.|b1\\.)").matcher(n).find()) {
+            return true;
+        }
+        return n.contains("-pre") || n.contains("_pre") || n.contains("-rc") || n.contains("_rc");
+    }
+
+    /** 把版本号转成可比较的数值键：26.3 → 260003，1.21.11 → 12111；解析不了返回 0。 */
+    private static long versionSortKey(String name) {
+        if (name == null) {
+            return 0L;
+        }
+        java.util.regex.Matcher m = java.util.regex.Pattern
+                .compile("(\\d+)(?:\\.(\\d+))?(?:\\.(\\d+))?").matcher(name);
+        if (!m.find()) {
+            return 0L;
+        }
+        try {
+            long a = Long.parseLong(m.group(1));
+            long b = m.group(2) != null ? Long.parseLong(m.group(2)) : 0L;
+            long c = m.group(3) != null ? Long.parseLong(m.group(3)) : 0L;
+            return a * 1000000L + b * 1000L + c;
+        } catch (Throwable t) {
+            return 0L;
+        }
     }
 
     public static ArrayList<String> getLocalVersionNames(String path) {
