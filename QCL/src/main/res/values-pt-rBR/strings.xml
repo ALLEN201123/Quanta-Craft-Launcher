@@ -343,6 +343,7 @@
     <string name="install_game_ui_forge_not_compatible">Incompatível com Forge</string>
     <string name="install_game_ui_fabric_not_compatible">Incompatível com tecido</string>
     <string name="install_game_ui_optifine_not_compatible">Incompatível com OptiFine</string>
+    <string name="install_game_ui_neoforge_not_compatible">Incompatível com NeoForge</string>
     <string name="install_game_ui_install">Instalad</string>
     <string name="install_game_ui_exist">Esta instância já existe.  Por favor, use outro nome.</string>
     <string name="forge_list_ui_title">Adicionar uma nova instância - Escolha sua versão do Forge</string>

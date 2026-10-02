@@ -117,6 +117,12 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"/>
 
+            <!-- ★ 1.4.2：NeoForge 版本选择页（与 Forge 同级） -->
+            <include
+                layout="@layout/ui_install_neoforge_list"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"/>
+
             <include
                 layout="@layout/ui_install_fabric_list"
                 android:layout_width="match_parent"

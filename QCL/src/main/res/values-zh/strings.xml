@@ -411,6 +411,8 @@
     <string name="install_game_ui_fabric_not_compatible">与 Fabric 不兼容</string>
     <string name="install_game_ui_optifine_not_compatible">与 OptiFine 不兼容</string>
     <string name="install_game_ui_quilt_not_compatible">与 Quilt 不兼容</string>
+    <!-- ★ 1.4.2：NeoForge 互斥提示（本次新增，原只写在 values/ 英文基准里 → 中文界面显示英文） -->
+    <string name="install_game_ui_neoforge_not_compatible">与 NeoForge 不兼容</string>
     <string name="install_game_ui_install">安装</string>
     <string name="install_game_ui_exist">此版本已经存在，请换一个名字</string>
     <!-- ★ 1.2.5：ModLoader / Babric 的中文（原来漏了，中文界面会直接显示英文） -->

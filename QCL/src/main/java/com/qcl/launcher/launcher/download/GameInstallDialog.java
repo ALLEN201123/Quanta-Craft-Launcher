@@ -93,6 +93,8 @@ Handler.Callback {
      */
     public boolean installModLoader;
     public boolean installBabric;
+    /** ★ 1.4.2：勾选的 NeoForge 版本（null = 不装）。装法同 ModLoader —— 链末单独跑。 */
+    public com.qcl.launcher.launcher.download.neoforge.NeoForgeVersion neoForgeVersion;
     private BabricInstallTask babricInstallTask;
     private final ForgeVersion forgeVersion;
     private final OptifineVersion optifineVersion;
@@ -522,6 +524,13 @@ Handler.Callback {
             downloadBabric();
             return;
         }
+        // ★ 1.4.2：勾了 NeoForge —— 等基础版本装完后再跑 NeoForge 安装器。
+        //   NeoForge 安装器会**自己生成一个独立的 neoforge-<ver> 版本**（不合并进当前 json），
+        //   所以放在整条链最后单独跑，逻辑同 ModLoader。
+        if (this.neoForgeVersion != null) {
+            installNeoForgeThenFinish();
+            return;
+        }
         showInstallSuccess();
     }
 
@@ -576,6 +585,44 @@ Handler.Callback {
                             }
                         });
         task.execute();
+    }
+
+    /**
+     * ★ 1.4.2：安装链终点的 NeoForge 步骤。
+     *
+     * NeoForge 安装器自己会生成一个独立的 {@code neoforge-<ver>} 版本
+     * （不像 Forge 那样把 patch 合并进当前版本 json），所以这里只负责
+     * 把选中的版本丢给 {@link NeoForgeInstallTask}，等它跑完再弹成功框。
+     *
+     * 失败时**不静默吞掉**，走 throwException 明确告诉玩家。
+     */
+    private void installNeoForgeThenFinish() {
+        com.qcl.launcher.launcher.download.neoforge.NeoForgeInstallTask task =
+                new com.qcl.launcher.launcher.download.neoforge.NeoForgeInstallTask(
+                        this.activity,
+                        new com.qcl.launcher.launcher.download.neoforge.NeoForgeInstallTask.InstallNeoForgeCallback() {
+                            @Override
+                            public void onStart() {
+                            }
+
+                            @Override
+                            public void onProgress(int percent, String message) {
+                            }
+
+                            @Override
+                            public void onFailed(Exception e) {
+                                android.util.Log.e("GameInstallDialog", "NeoForge 安装失败", e);
+                                GameInstallDialog.this.throwException(e);
+                            }
+
+                            @Override
+                            public void onFinish(String versionId) {
+                                android.util.Log.i("GameInstallDialog",
+                                        "NeoForge 已生成版本 " + versionId);
+                                GameInstallDialog.this.showInstallSuccess();
+                            }
+                        });
+        task.execute(this.neoForgeVersion);
     }
 
     public void throwException(Exception e) {

@@ -9,6 +9,7 @@ import com.qcl.launcher.launcher.uis.game.download.DownloadUI;
 import com.qcl.launcher.launcher.uis.game.download.right.game.DownloadFabricAPIUI;
 import com.qcl.launcher.launcher.uis.game.download.right.game.DownloadFabricUI;
 import com.qcl.launcher.launcher.uis.game.download.right.game.DownloadForgeUI;
+import com.qcl.launcher.launcher.uis.game.download.right.game.DownloadNeoForgeUI;
 import com.qcl.launcher.launcher.uis.game.download.right.game.DownloadLiteLoaderUI;
 import com.qcl.launcher.launcher.uis.game.download.right.game.DownloadOptifineUI;
 import com.qcl.launcher.launcher.uis.game.download.right.game.DownloadQuiltAPIUI;
@@ -57,6 +58,7 @@ public class UIManager {
 
     public InstallGameUI installGameUI;
     public DownloadForgeUI downloadForgeUI;
+    public DownloadNeoForgeUI downloadNeoForgeUI;
     public DownloadFabricUI downloadFabricUI;
     public DownloadFabricAPIUI downloadFabricAPIUI;
     public DownloadLiteLoaderUI downloadLiteLoaderUI;
@@ -91,6 +93,7 @@ public class UIManager {
 
         installGameUI = new InstallGameUI(context, activity);
         downloadForgeUI = new DownloadForgeUI(context, activity);
+        downloadNeoForgeUI = new DownloadNeoForgeUI(context, activity);
         downloadFabricUI = new DownloadFabricUI(context, activity);
         downloadFabricAPIUI = new DownloadFabricAPIUI(context, activity);
         downloadLiteLoaderUI = new DownloadLiteLoaderUI(context, activity);
@@ -120,6 +123,7 @@ public class UIManager {
 
         installGameUI.onCreate();
         downloadForgeUI.onCreate();
+        downloadNeoForgeUI.onCreate();
         downloadFabricUI.onCreate();
         downloadFabricAPIUI.onCreate();
         downloadLiteLoaderUI.onCreate();
@@ -146,6 +150,7 @@ public class UIManager {
                 labUI,
                 installGameUI,
                 downloadForgeUI,
+                downloadNeoForgeUI,
                 downloadFabricUI,
                 downloadLiteLoaderUI,
                 downloadOptifineUI,

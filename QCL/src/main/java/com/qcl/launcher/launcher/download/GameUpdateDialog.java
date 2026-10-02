@@ -77,6 +77,8 @@ Handler.Callback {
     private int apiType;
     private String version;
     private ForgeVersion forgeVersion;
+    /** ★ 1.4.2：NeoForge（apiType = 7） */
+    private com.qcl.launcher.launcher.download.neoforge.NeoForgeVersion neoForgeVersion;
     private OptifineVersion optifineVersion;
     private LiteLoaderVersion liteLoaderVersion;
     private FabricLoaderVersion fabricVersion;
@@ -86,6 +88,8 @@ Handler.Callback {
     private LiteLoaderInstallTask liteLoaderInstallTask;
     private ForgeDownloadTask forgeDownloadTask;
     private ForgeInstallTask forgeInstallTask;
+    /** ★ 1.4.2 */
+    private com.qcl.launcher.launcher.download.neoforge.NeoForgeInstallTask neoForgeInstallTask;
     private OptifineDownloadTask optifineDownloadTask;
     private OptifineInstallTask optifineInstallTask;
     private FabricInstallTask fabricInstallTask;
@@ -134,6 +138,9 @@ Handler.Callback {
             }
             case 6: {
                 this.quiltAPIVersion = (RemoteMod.Version)apiVersion;
+            }
+            case 7: {
+                this.neoForgeVersion = (com.qcl.launcher.launcher.download.neoforge.NeoForgeVersion)apiVersion;
             }
         }
         this.setContentView(R.layout.dialog_install_update);
@@ -188,6 +195,9 @@ Handler.Callback {
             }
             case 6: {
                 this.downloadQuiltAPI();
+            }
+            case 7: {
+                this.downloadNeoForge();
             }
         }
     }
@@ -410,6 +420,47 @@ Handler.Callback {
         builder.create().show();
     }
 
+    /**
+     * ★ 1.4.2：NeoForge 换版本（自动安装页 → 点 NeoForge 行选版本 → 确认换版本）。
+     * NeoForge 安装器自己生成独立版本，所以这里直接跑 NeoForgeInstallTask。
+     */
+    public void downloadNeoForge() {
+        com.qcl.launcher.launcher.download.neoforge.NeoForgeInstallTask task =
+                new com.qcl.launcher.launcher.download.neoforge.NeoForgeInstallTask(
+                        this.activity,
+                        new com.qcl.launcher.launcher.download.neoforge.NeoForgeInstallTask.InstallNeoForgeCallback() {
+                            @Override
+                            public void onStart() {
+                                stateText.setText(context.getString(R.string.dialog_install_update_state)
+                                        .replace("%s", "NeoForge")
+                                        .replace("%v", neoForgeVersion.getVersion()));
+                            }
+
+                            @Override
+                            public void onProgress(int percent, String message) {
+                                if (stateText != null && message != null) {
+                                    stateText.setText(message);
+                                }
+                            }
+
+                            @Override
+                            public void onFailed(Exception e) {
+                                throwException(e);
+                            }
+
+                            @Override
+                            public void onFinish(String versionId) {
+                                activity.runOnUiThread(() -> {
+                                    dismiss();
+                                    activity.backToLastUI();
+                                    new Thread(() -> activity.uiManager.versionListUI.refreshVersionList()).start();
+                                });
+                            }
+                        });
+        this.neoForgeInstallTask = task;
+        task.execute(this.neoForgeVersion);
+    }
+
     public void throwException(Exception e) {
         this.activity.runOnUiThread(() -> {
             this.exit();
@@ -451,6 +502,9 @@ Handler.Callback {
         }
         if (this.forgeInstallTask != null) {
             this.forgeInstallTask.cancelBuild();
+        }
+        if (this.neoForgeInstallTask != null) {
+            this.neoForgeInstallTask.cancelBuild();
         }
         if (this.optifineInstallTask != null) {
             this.optifineInstallTask.cancelBuild();

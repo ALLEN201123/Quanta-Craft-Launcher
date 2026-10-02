@@ -726,6 +726,7 @@
     <string name="install_game_ui_name">Tên tệp</string>
     <string name="install_game_ui_none">Không được chọn</string>
     <string name="install_game_ui_optifine_not_compatible">Không tương thích với OptiFine</string>
+    <string name="install_game_ui_neoforge_not_compatible">Không tương thích với NeoForge</string>
     <string name="install_game_ui_title">Thêm một trường hợp mới - Thêm một trường hợp mới</string>
     <string name="install_package_ui_author">Author(s)</string>
     <string name="install_package_ui_description">Sự mô tả</string>

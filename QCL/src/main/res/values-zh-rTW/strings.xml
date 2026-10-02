@@ -346,6 +346,8 @@
     <string name="install_game_ui_fabric_not_compatible">與 Fabric 不兼容</string>
     <string name="install_game_ui_optifine_not_compatible">與 OptiFine 不兼容</string>
     <string name="install_game_ui_quilt_not_compatible">与 Quilt 不兼容</string>
+    <!-- ★ 1.4.2：NeoForge 互斥提示（繁體） -->
+    <string name="install_game_ui_neoforge_not_compatible">與 NeoForge 不兼容</string>
     <string name="install_game_ui_install">安裝</string>
     <string name="install_game_ui_exist">此版本已經存在，請換一個名字</string>
     <string name="forge_list_ui_title">安裝新遊戲版本 - 選擇 Forge 版本</string>

@@ -19,6 +19,7 @@ import com.qcl.launcher.launcher.download.forge.ForgeVersion;
 import com.qcl.launcher.launcher.download.game.VersionManifest;
 import com.qcl.launcher.launcher.download.liteloader.LiteLoaderVersion;
 import com.qcl.launcher.launcher.download.modloader.ModLoaderVersions;
+import com.qcl.launcher.launcher.download.neoforge.NeoForgeVersion;
 import com.qcl.launcher.launcher.download.optifine.OptifineVersion;
 import com.qcl.launcher.launcher.download.quilt.QuiltLoaderVersion;
 import com.qcl.launcher.launcher.mod.RemoteMod;
@@ -43,6 +44,12 @@ public class InstallGameUI extends BaseUI implements View.OnClickListener, TextW
     private TextView fabricVersionText;
     public ForgeVersion forgeVersion;
     private TextView forgeVersionText;
+    // ★ 1.4.2：NeoForge（照 FCL InstallerItemGroup —— 与 Forge 平级、两者互斥）
+    public NeoForgeVersion neoForgeVersion;
+    private TextView neoForgeVersionText;
+    private ImageButton deleteNeoForgeVersion;
+    private LinearLayout selectNeoForgeVersion;
+    private ImageView selectNeoForge;
     private TextView gameVersionText;
     private Button install;
     public LinearLayout installGameUI;
@@ -110,6 +117,10 @@ public class InstallGameUI extends BaseUI implements View.OnClickListener, TextW
         editText.addTextChangedListener(this);
         this.gameVersionText = (TextView) this.activity.findViewById(R.id.minecraft_version_text);
         this.forgeVersionText = (TextView) this.activity.findViewById(R.id.forge_version_text);
+        // ★ 1.4.2：NeoForge 行
+        this.neoForgeVersionText = (TextView) this.activity.findViewById(R.id.neoforge_version_text);
+        this.deleteNeoForgeVersion = (ImageButton) this.activity.findViewById(R.id.call_off_install_neoforge);
+        this.deleteNeoForgeVersion.setOnClickListener(this);
         this.liteLoaderVersionText = (TextView) this.activity.findViewById(R.id.liteloader_version_text);
         this.optiFineVersionText = (TextView) this.activity.findViewById(R.id.optifine_version_text);
         this.fabricVersionText = (TextView) this.activity.findViewById(R.id.fabric_version_text);
@@ -131,6 +142,9 @@ public class InstallGameUI extends BaseUI implements View.OnClickListener, TextW
         this.deleteQuiltVersion.setOnClickListener(this);
         this.deleteQuiltAPIVersion.setOnClickListener(this);
         this.selectForgeVersion = (LinearLayout) this.activity.findViewById(R.id.select_forge_version);
+        // ★ 1.4.2：NeoForge 选择行
+        this.selectNeoForgeVersion = (LinearLayout) this.activity.findViewById(R.id.select_neoforge_version);
+        this.selectNeoForgeVersion.setOnClickListener(this);
         this.selectLiteLoaderVersion = (LinearLayout) this.activity.findViewById(R.id.select_liteloader_version);
         this.selectOptiFineVersion = (LinearLayout) this.activity.findViewById(R.id.select_optifine_version);
         this.selectFabricVersion = (LinearLayout) this.activity.findViewById(R.id.select_fabric_version);
@@ -153,6 +167,8 @@ public class InstallGameUI extends BaseUI implements View.OnClickListener, TextW
         this.babricVersionText = (TextView) this.activity.findViewById(R.id.babric_version_text);
         this.selectBabricVersion.setOnClickListener(this);
         this.selectForge = (ImageView) this.activity.findViewById(R.id.select_forge);
+        // ★ 1.4.2：NeoForge 右侧箭头
+        this.selectNeoForge = (ImageView) this.activity.findViewById(R.id.select_neoforge);
         this.selectLiteLoader = (ImageView) this.activity.findViewById(R.id.select_lite_loader);
         this.selectOptiFine = (ImageView) this.activity.findViewById(R.id.select_optifine);
         this.selectFabric = (ImageView) this.activity.findViewById(R.id.select_fabric);
@@ -184,6 +200,11 @@ public class InstallGameUI extends BaseUI implements View.OnClickListener, TextW
             this.forgeVersion = null;
             init();
         }
+        // ★ 1.4.2：NeoForge 取消选择
+        if (view == this.deleteNeoForgeVersion && this.neoForgeVersion != null) {
+            this.neoForgeVersion = null;
+            init();
+        }
         if (view == this.deleteLiteLoaderVersion && this.liteLoaderVersion != null) {
             this.liteLoaderVersion = null;
             init();
@@ -208,37 +229,48 @@ public class InstallGameUI extends BaseUI implements View.OnClickListener, TextW
             this.quiltAPIVersion = null;
             init();
         }
-        if (view == this.selectForgeVersion && this.fabricVersion == null && this.quiltVersion == null) {
+        // ★ 1.4.2：互斥规则照 FCL InstallerItemGroup ——
+        //   mutualIncompatible(forge, fabric, quilt, neoForge, cleanroom) → 四者两两互斥
+        //   addIncompatibles(optiFine, fabric, quilt, neoForge) / (liteLoader, fabric, quilt, neoForge)
+        //   → OptiFine / LiteLoader 也与 NeoForge 互斥（QCL 无 Cleanroom）。即 NeoForge
+        //   与 Forge/Fabric/Quilt/OptiFine/LiteLoader **全部互斥**。
+        if (view == this.selectForgeVersion && this.fabricVersion == null && this.quiltVersion == null && this.neoForgeVersion == null) {
             this.activity.uiManager.downloadForgeUI.version = this.version.id;
             this.activity.uiManager.downloadForgeUI.install = false;
             this.activity.uiManager.switchMainUI(this.activity.uiManager.downloadForgeUI);
         }
-        if (view == this.selectLiteLoaderVersion && this.fabricVersion == null && this.quiltVersion == null) {
+        if (view == this.selectNeoForgeVersion && this.forgeVersion == null && this.fabricVersion == null
+                && this.quiltVersion == null && this.optifineVersion == null && this.liteLoaderVersion == null) {
+            this.activity.uiManager.downloadNeoForgeUI.version = this.version.id;
+            this.activity.uiManager.downloadNeoForgeUI.install = false;
+            this.activity.uiManager.switchMainUI(this.activity.uiManager.downloadNeoForgeUI);
+        }
+        if (view == this.selectLiteLoaderVersion && this.fabricVersion == null && this.quiltVersion == null && this.neoForgeVersion == null) {
             this.activity.uiManager.downloadLiteLoaderUI.version = this.version.id;
             this.activity.uiManager.downloadLiteLoaderUI.install = false;
             this.activity.uiManager.switchMainUI(this.activity.uiManager.downloadLiteLoaderUI);
         }
-        if (view == this.selectOptiFineVersion && this.fabricVersion == null && this.quiltVersion == null) {
+        if (view == this.selectOptiFineVersion && this.fabricVersion == null && this.quiltVersion == null && this.neoForgeVersion == null) {
             this.activity.uiManager.downloadOptifineUI.version = this.version.id;
             this.activity.uiManager.downloadOptifineUI.install = false;
             this.activity.uiManager.switchMainUI(this.activity.uiManager.downloadOptifineUI);
         }
-        if (view == this.selectFabricVersion && this.forgeVersion == null && this.optifineVersion == null && this.quiltVersion == null) {
+        if (view == this.selectFabricVersion && this.forgeVersion == null && this.optifineVersion == null && this.quiltVersion == null && this.neoForgeVersion == null) {
             this.activity.uiManager.downloadFabricUI.version = this.version.id;
             this.activity.uiManager.downloadFabricUI.install = false;
             this.activity.uiManager.switchMainUI(this.activity.uiManager.downloadFabricUI);
         }
-        if (view == this.selectFabricAPIVersion && this.forgeVersion == null && this.optifineVersion == null && this.quiltVersion == null) {
+        if (view == this.selectFabricAPIVersion && this.forgeVersion == null && this.optifineVersion == null && this.quiltVersion == null && this.neoForgeVersion == null) {
             this.activity.uiManager.downloadFabricAPIUI.version = this.version.id;
             this.activity.uiManager.downloadFabricAPIUI.install = false;
             this.activity.uiManager.switchMainUI(this.activity.uiManager.downloadFabricAPIUI);
         }
-        if (view == this.selectQuiltVersion && this.forgeVersion == null && this.optifineVersion == null && this.fabricVersion == null) {
+        if (view == this.selectQuiltVersion && this.forgeVersion == null && this.optifineVersion == null && this.fabricVersion == null && this.neoForgeVersion == null) {
             this.activity.uiManager.downloadQuiltUI.version = this.version.id;
             this.activity.uiManager.downloadQuiltUI.install = false;
             this.activity.uiManager.switchMainUI(this.activity.uiManager.downloadQuiltUI);
         }
-        if (view == this.selectQuiltAPIVersion && this.forgeVersion == null && this.optifineVersion == null && this.fabricVersion == null) {
+        if (view == this.selectQuiltAPIVersion && this.forgeVersion == null && this.optifineVersion == null && this.fabricVersion == null && this.neoForgeVersion == null) {
             this.activity.uiManager.downloadQuiltAPIUI.version = this.version.id;
             this.activity.uiManager.downloadQuiltAPIUI.install = false;
             this.activity.uiManager.switchMainUI(this.activity.uiManager.downloadQuiltAPIUI);
@@ -273,9 +305,20 @@ public class InstallGameUI extends BaseUI implements View.OnClickListener, TextW
                 this.fabricAPIVersion = null;
                 this.quiltAPIVersion = null;
             }
+            // ★ 1.4.2：NeoForge 与 Forge/Fabric/Quilt 互斥（照 FCL），选了 NeoForge 就清掉它们
+            if (this.neoForgeVersion != null) {
+                this.forgeVersion = null;
+                this.optifineVersion = null;
+                this.liteLoaderVersion = null;
+                this.fabricVersion = null;
+                this.fabricAPIVersion = null;
+                this.quiltVersion = null;
+                this.quiltAPIVersion = null;
+            }
             // ★ 1.2.3：把「勾了 ModLoader」这件事传给安装流程，
             //   它会在基础版本装完之后（installJson 那一步）才真正去装 ModLoader
             GameInstallDialog dialog = new GameInstallDialog(this.context, this.activity, this.editName.getText().toString(), this.version, this.forgeVersion, this.optifineVersion, this.liteLoaderVersion, this.fabricVersion, this.fabricAPIVersion, this.quiltVersion, this.quiltAPIVersion);
+            dialog.neoForgeVersion = this.neoForgeVersion;
             dialog.installModLoader = this.installModLoader;
             dialog.installBabric = this.installBabric;
             dialog.show();
@@ -384,6 +427,43 @@ public class InstallGameUI extends BaseUI implements View.OnClickListener, TextW
                 this.modLoaderVersionText.setText(
                         this.context.getString(R.string.install_game_ui_none));
             }
+        }
+        // ★ 1.4.2：NeoForge 行的状态（独立计算，避免干扰原有互斥矩阵）
+        //   互斥依据 FCL InstallerItemGroup：NeoForge 与 Forge / Fabric / Quilt 互斥，
+        //   也与 OptiFine / LiteLoader 互斥。
+        if (this.neoForgeVersionText != null) {
+            String neoText;
+            if (this.neoForgeVersion != null) {
+                neoText = this.neoForgeVersion.getVersion();
+                this.deleteNeoForgeVersion.setVisibility(View.VISIBLE);
+                if (this.selectNeoForge != null) {
+                    this.selectNeoForge.setVisibility(View.GONE);
+                }
+            } else {
+                this.deleteNeoForgeVersion.setVisibility(View.GONE);
+                if (this.forgeVersion != null) {
+                    neoText = this.context.getString(R.string.install_game_ui_forge_not_compatible);
+                } else if (this.fabricVersion != null) {
+                    neoText = this.context.getString(R.string.install_game_ui_fabric_not_compatible);
+                } else if (this.quiltVersion != null) {
+                    neoText = this.context.getString(R.string.install_game_ui_quilt_not_compatible);
+                } else if (this.optifineVersion != null) {
+                    neoText = this.context.getString(R.string.install_game_ui_optifine_not_compatible);
+                } else if (this.liteLoaderVersion != null) {
+                    // QCL 无 liteLoader_not_compatible 字符串，复用 Forge 版文案（与下方兜底一致）
+                    neoText = this.context.getString(R.string.install_game_ui_forge_not_compatible);
+                } else {
+                    neoText = this.context.getString(R.string.install_game_ui_none);
+                }
+                if (this.selectNeoForge != null && this.forgeVersion == null && this.fabricVersion == null
+                        && this.quiltVersion == null && this.optifineVersion == null
+                        && this.liteLoaderVersion == null) {
+                    this.selectNeoForge.setVisibility(View.VISIBLE);
+                } else if (this.selectNeoForge != null) {
+                    this.selectNeoForge.setVisibility(View.GONE);
+                }
+            }
+            this.neoForgeVersionText.setText(neoText);
         }
         ForgeVersion forgeVersion = this.forgeVersion;
         if (forgeVersion != null || this.optifineVersion != null) {
@@ -505,6 +585,74 @@ public class InstallGameUI extends BaseUI implements View.OnClickListener, TextW
             this.quiltAPIVersionText.setText(version2.getVersion());
             this.deleteQuiltAPIVersion.setVisibility(0);
             this.selectQuiltAPI.setVisibility(0);
+        }
+        // ★★★ 1.4.2：NeoForge 互斥「最后覆盖层」——必须放在 init() 最末尾。
+        //   上面的 Forge/Fabric/Quilt 分支是层层覆盖式的（后面覆盖前面），
+        //   把 NeoForge 逻辑插在中间会被后面 setText(none) 冲掉 → 表现就是「没有互斥」。
+        //   依据 FCL InstallerItemGroup：NeoForge 与 Forge/Fabric/Quilt/OptiFine/LiteLoader 全互斥。
+        applyNeoForgeExclusion();
+    }
+
+    /**
+     * ★ 1.4.2：应用 NeoForge 的互斥显示。
+     * 两个方向：① 已选 NeoForge → 其它加载器行显示「Incompatible with NeoForge」且隐藏箭头；
+     * ② 其它加载器已选 → NeoForge 行显示「Incompatible with XXX」且隐藏箭头。
+     * 只在「对方那一行自己没被选中」时才改，避免把已选行的真实版本号盖掉。
+     */
+    private void applyNeoForgeExclusion() {
+        if (this.neoForgeVersionText == null) {
+            return;
+        }
+        String incompatible = this.context.getString(R.string.install_game_ui_neoforge_not_compatible);
+        if (this.neoForgeVersion != null) {
+            // ① 已选 NeoForge：挡掉 Forge / Fabric / Quilt / OptiFine / LiteLoader
+            if (this.forgeVersion == null) {
+                this.forgeVersionText.setText(incompatible);
+                this.selectForge.setVisibility(View.GONE);
+            }
+            if (this.optifineVersion == null) {
+                this.optiFineVersionText.setText(incompatible);
+                this.selectOptiFine.setVisibility(View.GONE);
+            }
+            if (this.liteLoaderVersion == null) {
+                this.liteLoaderVersionText.setText(incompatible);
+                this.selectLiteLoader.setVisibility(View.GONE);
+            }
+            if (this.fabricVersion == null) {
+                this.fabricVersionText.setText(incompatible);
+                this.selectFabric.setVisibility(View.GONE);
+            }
+            if (this.quiltVersion == null) {
+                this.quiltVersionText.setText(incompatible);
+                this.selectQuilt.setVisibility(View.GONE);
+            }
+            if (this.fabricAPIVersion == null) {
+                this.fabricAPIVersionText.setText(incompatible);
+                this.selectFabricAPI.setVisibility(View.GONE);
+            }
+            if (this.quiltAPIVersion == null) {
+                this.quiltAPIVersionText.setText(incompatible);
+                this.selectQuiltAPI.setVisibility(View.GONE);
+            }
+            return;
+        }
+        // ② 其它加载器已选 → NeoForge 行显示不兼容（NeoForge 行自身状态已在上面算过，这里兜底）
+        if (this.forgeVersion != null) {
+            this.neoForgeVersionText.setText(this.context.getString(R.string.install_game_ui_forge_not_compatible));
+            this.selectNeoForge.setVisibility(View.GONE);
+        } else if (this.fabricVersion != null) {
+            this.neoForgeVersionText.setText(this.context.getString(R.string.install_game_ui_fabric_not_compatible));
+            this.selectNeoForge.setVisibility(View.GONE);
+        } else if (this.quiltVersion != null) {
+            this.neoForgeVersionText.setText(this.context.getString(R.string.install_game_ui_quilt_not_compatible));
+            this.selectNeoForge.setVisibility(View.GONE);
+        } else if (this.optifineVersion != null) {
+            this.neoForgeVersionText.setText(this.context.getString(R.string.install_game_ui_optifine_not_compatible));
+            this.selectNeoForge.setVisibility(View.GONE);
+        } else if (this.liteLoaderVersion != null) {
+            // QCL 无 liteLoader_not_compatible 字符串，复用 Forge 版文案避免漏翻
+            this.neoForgeVersionText.setText(this.context.getString(R.string.install_game_ui_forge_not_compatible));
+            this.selectNeoForge.setVisibility(View.GONE);
         }
     }
 

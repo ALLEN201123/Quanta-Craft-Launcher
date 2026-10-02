@@ -8,6 +8,11 @@
     <!-- 下载页第 7 个入口 -->
     <string name="download_ui_neoforge">NeoForge</string>
 
+    <!-- ★ 1.4.2：安装界面（下载 → 游戏 → 点版本）的加载器行标签 -->
+    <string name="install_game_ui_neoforge" translatable="false">NeoForge</string>
+    <string name="install_game_ui_neoforge_not_compatible">Incompatible with NeoForge</string>
+    <string name="neoforge_list_ui_title" translatable="false">NeoForge</string>
+
     <!-- 页面 -->
     <string name="neoforge_mc_version_label">MC 版本</string>
     <string name="neoforge_ui_hint_text">NeoForge 源自 Forge，支持 1.20.1 及以后（20.2 起）的版本。安装前请先装好对应的原版 MC 版本。</string>

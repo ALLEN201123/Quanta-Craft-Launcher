@@ -272,7 +272,7 @@ TextWatcher {
         ButtonStyle styleB = SettingUtils.getButtonStyleList().get(0);
         this.baseButtonInfo = new BaseButtonInfo(UUID.randomUUID().toString(), this.pattern, this.child, "", 0, 1, new ButtonSize(50, 0.06f, 0), new ButtonSize(50, 0.06f, 0), 0, new ViewPosition(0, 0.0f), new ViewPosition(0, 0.0f), 0, false, false, false, false, false, false, false, false, false, new ArrayList<String>(), "", new ArrayList<Integer>(), true, styleB);
         RockerStyle styleR = SettingUtils.getRockerStyleList().get(0);
-        this.baseRockerViewInfo = new BaseRockerViewInfo(UUID.randomUUID().toString(), this.pattern, this.child, 0, 1, new RockerSize(160, 0.2f, 0), 0, new ViewPosition(0, 0.0f), new ViewPosition(0, 0.0f), 0, true, true, styleR);
+        this.baseRockerViewInfo = new BaseRockerViewInfo(UUID.randomUUID().toString(), this.pattern, this.child, 0, 1, new RockerSize(160, 0.28f, 0), 0, new ViewPosition(0, 0.0f), new ViewPosition(0, 0.0f), 0, true, true, styleR);
         this.showButton = (Button)this.findViewById(R.id.add_button);
         this.showRocker = (Button)this.findViewById(R.id.add_rocker);
         this.editButton = (LinearLayout)this.findViewById(R.id.add_button_layout);

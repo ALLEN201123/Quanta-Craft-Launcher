@@ -214,6 +214,18 @@ extends RockerView {
         this.setPointerColorPress(info.rockerStyle.pointerColorPress);
         this.setFollowType(info.followType);
         this.setDoubleClick(info.shift);
+        // ★★★ 1.4.2：把 RockerStyle 的颜色注入「真摇杆」的底盘与杆头绘制。
+        //   取值映射：底盘 = 原来的背景圆（fillColor/strokeColor）；杆头 = 原来的指针
+        //   （pointerColor 做填充、strokeColorPress 做描边），这样旧样式表依然生效。
+        int chassisFill = QclColors.parseSafe(info.rockerStyle.fillColor, 0x666E6E6E);
+        int chassisStroke = QclColors.parseSafe(info.rockerStyle.strokeColor, 0x33555555);
+        int chassisStrokeW = Math.max(1, ConvertUtils.dip2px(this.getContext(), info.rockerStyle.strokeWidth));
+        this.setChassisStyle(chassisStrokeW, chassisStroke, chassisFill);
+        int knobFill = QclColors.parseSafe(info.rockerStyle.pointerColor, 0xF6F6F6);
+        int knobStroke = QclColors.parseSafe(info.rockerStyle.strokeColorPress, 0x55555555);
+        int knobStrokeW = Math.max(1, ConvertUtils.dip2px(this.getContext(), info.rockerStyle.strokeWidthPress));
+        this.setKnobStyle(knobStrokeW, knobStroke, knobFill);
+        this.setKnobScale(0.5f);
         this.setOnShakeListener(new RockerView.OnShakeListener(){
 
             @Override
@@ -237,14 +249,9 @@ extends RockerView {
 
             @Override
             public void onCenterDoubleClick(RockerView view) {
-                if (!BaseRockerView.this.menuHelper.editMode) {
-                    if (BaseRockerView.this.shiftMode) {
-                        InputBridge.sendEvent(BaseRockerView.this.menuHelper.launcher, 340, false);
-                    } else {
-                        InputBridge.sendEvent(BaseRockerView.this.menuHelper.launcher, 340, true);
-                    }
-                    BaseRockerView.this.shiftMode = !BaseRockerView.this.shiftMode;
-                }
+                // ★★★ 1.4.2：移除「双击摇杆中心 = 蹲下/潜行」。
+                //   原来这里 toggle Shift(340)，移动中极易误触 → 突然蹲下、走不动。
+                //   现在双击中心**不再发送任何按键**（保留回调接口，供以后接别的功能）。
             }
 
             @Override
@@ -258,11 +265,15 @@ extends RockerView {
     }
 
     public void setNormalDrawable() {
-        this.setBackground((Drawable)this.drawableNormal);
+        // ★★★ 1.4.2：真·摇杆改为「自绘圆盘 + 杆头」（见 RockerView.onDraw）。
+        //   不能再 setBackground(drawableNormal)，否则旧圆角矩形背景会盖住圆盘。
+        //   这里只做状态刷新（触发重绘），按压态由 RockerView 内部 touching 控制。
+        this.invalidate();
     }
 
     public void setPressDrawable() {
-        this.setBackground((Drawable)this.drawablePress);
+        // 同上：不再切换背景 drawable，按压态由 RockerView 自绘处理
+        this.invalidate();
     }
 
     public void getDirectionEvent(RockerView.Direction direction) {
@@ -342,6 +353,13 @@ extends RockerView {
     public void updateSizeAndPosition(BaseRockerViewInfo info) {
         this.info = info;
         int size = info.sizeType == 0 ? (info.size.object == 0 ? (int)((float)this.screenWidth * info.size.percentSize) : (int)((float)this.screenHeight * info.size.percentSize)) : ConvertUtils.dip2px(this.getContext(), info.size.absoluteSize);
+        // ★★★ 1.4.2：真·摇杆需要更大的操作面积 —— 旧的 0.2f 在 1600 宽屏上只有 320px，
+        //   手指一放就盖住整个底盘，看不出杆头在哪。这里加「最小尺寸保底」：
+        //   底盘边长不小于屏幕短边的 26%。已有旧布局也会被自动放大（不改玩家存档）。
+        int minSize = (int)(Math.min(this.screenWidth, this.screenHeight) * 0.26f);
+        if (size < minSize) {
+            size = minSize;
+        }
         this.setSize(size);
         if (info.positionType == 0) {
             this.setX((float)(this.screenWidth - size) * info.xPosition.percentPosition);
