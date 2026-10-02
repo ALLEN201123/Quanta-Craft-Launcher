@@ -1,10 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- ★★★ 1.4.1：皮肤库对话框（QCL 自研）
-     背景 = 项目通用的半透明圆角对话框底 qcl_dialog_gray（与 QCL 其它对话框一致） -->
+     背景 = launcher_view_white（→ @color/qcl_panel_gray #C8EDEDED），
+     与 QCL 全项目面板统一（dialog_offline_skin / ui_download_* / ui_install_* 等 30+ 处同款）。
+     ★ 不要再用 qcl_dialog_gray（皮肤库独有，曾导致观感与其它对话框不一致）。 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/qcl_dialog_gray"
+    android:background="@drawable/launcher_view_white"
     android:orientation="vertical"
     android:padding="14dp">
 
@@ -110,7 +112,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
                 android:layout_weight="1"
-                android:background="@color/colorPureWhite"
+                android:background="@drawable/launcher_view_white"
                 android:contentDescription="@string/skin_library_title"
                 android:scaleType="fitCenter" />
 

@@ -238,9 +238,11 @@ public class SkinLibraryDialog extends Dialog implements View.OnClickListener {
         Bitmap bmp = bitmapCache.get(cacheKey(entry));
         if (bmp != null) {
             preview.setImageBitmap(bmp);
-            preview.setBackgroundColor(Color.TRANSPARENT);
+            // 有图：透明底，让布局的 launcher_view_white 面板色透出（与 QCL 其它面板一致）
+            preview.setBackground(null);
         } else {
-            preview.setBackgroundColor(0xFFFFFFFF);
+            // 还没加载出来：保持面板底色（不要刷纯白硬块）
+            preview.setBackgroundResource(R.drawable.launcher_view_white);
         }
         status.setText(entry.name + (entry.slim ? "  ·  Alex" : "  ·  Steve"));
         renderGrid();
@@ -263,7 +265,7 @@ public class SkinLibraryDialog extends Dialog implements View.OnClickListener {
                     target.setImageBitmap(head);
                     if (entry == selected) {
                         preview.setImageBitmap(skin);
-                        preview.setBackgroundColor(Color.TRANSPARENT);
+                        preview.setBackground(null);
                     }
                 });
             } catch (Throwable ignored) {
