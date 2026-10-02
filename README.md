@@ -26,7 +26,8 @@ multiplayer powered by Terracotta (China mainland only). Licensed under **GNU GP
 ---
 
 
-> Android 版 Minecraft: Java Edition 启动器。**1.1.1 起启动 / 渲染 / 输入 / Java 运行时链路全部自研**，
+> Android 版 Minecraft: Java Edition 启动器。**1.1.1 起启动链路 / 输入桥 / Java 运行时链路自研**，
+> 图形侧**窗口、Surface、EGL 上下文、帧节奏**也自研（**渲染器本身当前仍是第三方库**，见下文「渲染器」一节）；
 > 以 [FCL（FoldCraftLauncher）](https://github.com/FCL-Team/FoldCraftLauncher) 为参照；
 > **1.1.0 及更早版本基于 [HMCL-PE](https://github.com/Tungs-HMCL/HMCL-PE)**（Tungs），其代码核心已在 1.1.1 中移除。
 > 作者：**Rod123456**（bilibili UID 550905358）—— 喜欢研究 Minecraft 1.0 以前的所有远古版本，视频也主要围绕这些老版本。
@@ -50,6 +51,28 @@ QCL 是一个安卓平台的 Minecraft Java 版启动器，界面按自己的「
   ⚠️ **Boat 后端已移除** —— 1.1.x 起源码、资源、manifest 声明都已删除，启动器里也没有切换入口了。
 - **长按启动键**可切换渲染器（Krypton Wrapper / Holy-GL4ES / Zink / VirGL / Freedreno / VGPU / MobileGlues；默认 Krypton，全版本通吃）
 - **启动日志悬浮窗**：默认开启，实时显示 JVM 与游戏输出，进入游戏主界面自动关闭（可在游戏内悬浮窗开关）
+
+### 渲染器
+QCL 自己写的是**窗口 / Surface / EGL 上下文 / 输入桥 / 帧节奏**这一层；
+真正把 OpenGL 调用翻译成设备 GLES 的**渲染器本身，目前全部是第三方库**（长按启动键切换）：
+
+| 名称 | 库 | 说明 |
+|---|---|---|
+| **Krypton Wrapper**（默认） | `libng_gl4es.so` | OpenGL 3.1+，全版本通吃；官方支持到 26.3-snapshot-3 |
+| **Holy-GL4ES** | `libgl4es_114.so` | OpenGL 2.1，老版本更稳 |
+| **Zink** | `libglxshim.so` | OpenGL 4.6（Mesa zink on Vulkan），支持到 26.3-snapshot-3 |
+| **VirGL** | `libOSMesa_81.so` | 软渲染（VirGLRenderer） |
+| **Freedreno** | `libOSMesa_8.so` | OpenGL 4.6，仅高通 adreno616-a660 |
+| **VGPU** | `libvgpu.so` | OpenGL 2.1+ |
+| **MobileGlues**（外部插件） | `libmobileglues.so` | 需另装官方插件 APK；26.3 正式版待其官方支持 |
+
+**自研渲染器（进行中）**
+- QCL 计划**自研一个自己的渲染器**，并**明确不以 MobileGlues 为模仿对象、不复制其实现思路**。
+- 起因（如实记录）：我们此前向 `MobileGL-Dev/MobileGlues` 提交过 PR（#59，26.3 崩溃的空指针保护），
+  被维护者驳回并要求「修根因、别再提补丁式 PR」，随后该问题由官方自行处理。
+  由此我们决定**不再向该仓库提交任何东西**，兼容性只做到「**能识别、能加载它**」，
+  一切以其自身实现为参照，QCL 走自己的路。
+- **进度：尚未发布，因此渲染器列表里暂时没有这一项** —— 不做装上却不能用的假选项。
 
 ### 远古版本
 - **手机启动器里，目前唯一支持下载全部「已归档」远古版本的版本** —— 内置 **181 条历史归档**
