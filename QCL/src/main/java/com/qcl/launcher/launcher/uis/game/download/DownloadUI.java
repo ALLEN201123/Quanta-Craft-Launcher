@@ -15,8 +15,6 @@ public class DownloadUI extends BaseUI implements View.OnClickListener {
     public DownloadUIManager downloadUIManager;
     public LinearLayout startDownloadGameUI;
     public LinearLayout startDownloadModUI;
-    // ★ 1.4.1：NeoForge 安装入口（自 1.4.0 朋友源码包合并）
-    public LinearLayout startDownloadNeoForgeUI;
     public LinearLayout startDownloadPackageUI;
     public LinearLayout startDownloadResourcePackUI;
     public LinearLayout startDownloadShaderUI;
@@ -32,14 +30,12 @@ public class DownloadUI extends BaseUI implements View.OnClickListener {
         this.downloadUI = (LinearLayout) this.activity.findViewById(R.id.ui_download);
         this.startDownloadGameUI = (LinearLayout) this.activity.findViewById(R.id.start_download_game_ui);
         this.startDownloadModUI = (LinearLayout) this.activity.findViewById(R.id.start_download_mod_ui);
-        this.startDownloadNeoForgeUI = (LinearLayout) this.activity.findViewById(R.id.start_download_neoforge_ui);
         this.startDownloadPackageUI = (LinearLayout) this.activity.findViewById(R.id.start_download_package_ui);
         this.startDownloadResourcePackUI = (LinearLayout) this.activity.findViewById(R.id.start_download_resource_pack_ui);
         this.startDownloadWorldUI = (LinearLayout) this.activity.findViewById(R.id.start_download_world_ui);
         this.startDownloadShaderUI = (LinearLayout) this.activity.findViewById(R.id.start_download_shader_ui);
         this.startDownloadGameUI.setOnClickListener(this);
         this.startDownloadModUI.setOnClickListener(this);
-        this.startDownloadNeoForgeUI.setOnClickListener(this);
         this.startDownloadPackageUI.setOnClickListener(this);
         this.startDownloadResourcePackUI.setOnClickListener(this);
         this.startDownloadWorldUI.setOnClickListener(this);
@@ -93,10 +89,6 @@ public class DownloadUI extends BaseUI implements View.OnClickListener {
         if (view == this.startDownloadModUI) {
             DownloadUIManager downloadUIManager2 = this.downloadUIManager;
             downloadUIManager2.switchDownloadUI(downloadUIManager2.downloadModUI);
-        }
-        if (view == this.startDownloadNeoForgeUI) {
-            DownloadUIManager downloadUIManagerNeoForge = this.downloadUIManager;
-            downloadUIManagerNeoForge.switchDownloadUI(downloadUIManagerNeoForge.downloadNeoForgeUI);
         }
         if (view == this.startDownloadPackageUI) {
             DownloadUIManager downloadUIManager3 = this.downloadUIManager;

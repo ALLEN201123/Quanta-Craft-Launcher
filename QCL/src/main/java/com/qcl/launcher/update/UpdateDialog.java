@@ -104,12 +104,15 @@ implements View.OnClickListener {
 
     /**
      * ★★★ 1.2.0 照 FCL 的 UpdateDialog.getTargetArchUrl()：
-     * 远程 launcher_version.json 里的 url 是「带 -all 的资产直链模板」，例如
-     *   https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.2.0/QCL-release-1.2.0-all.apk
-     * 按设备架构把 "-all" 换成真实后缀，得到对应架构包的直链。
-     * 以前是直接把 url.get(0) 当直链下，而 json 里填的是发布页网页，
-     * 结果把 HTML 下载成 update/latest.apk → 安装必然解析失败。
+     * 远程 launcher_version.json 里的 url 是「全架构资产直链模板」，
+     * 按设备架构把全架构后缀换成真实后缀，得到对应架构包的直链。
+     * 例：...QCL-release-1.4.1-universal.apk → ...QCL-release-1.4.1-arm64.apk
      * GitHub 的 releases/download/<tag>/<asset> 是 302 到真实资产，下载器跟得上重定向。
+     *
+     * ★★★ 1.4.2 修复：历史资产名一直是 "-universal"，而旧代码只 replace("-all") ——
+     *   不含 "-all" 子串 → 替换从不生效 → 所有设备都下 401MB 的 universal 包
+     *   （真机多下 90MB；模拟器会装成 arm64 转译版导致进不去游戏）。
+     *   现同时兼容 "-all" 与 "-universal" 两种后缀（去掉 "-all" 前缀的硬编码假设）。
      */
     private String getTargetArchUrl() {
         String url = (this.version == null || this.version.url == null || this.version.url.isEmpty())
@@ -126,6 +129,10 @@ implements View.OnClickListener {
             arch = "x86_64";
         } else {
             arch = "universal";
+        }
+        // 兼容两种全架构后缀：-all.apk（旧约定）与 -universal.apk（实际资产名）
+        if (url.contains("-universal.apk")) {
+            return url.replace("-universal.apk", "-" + arch + ".apk");
         }
         return url.replace("-all", "-" + arch);
     }

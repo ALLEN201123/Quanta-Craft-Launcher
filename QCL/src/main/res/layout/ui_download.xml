@@ -213,39 +213,6 @@
 
             </LinearLayout>
 
-            <!-- ★ 第 7 个入口：NeoForge（图标用工程已有的 ic_neoforge） -->
-            <LinearLayout
-                android:layout_height="56dp"
-                android:minWidth="84dp"
-                android:layout_marginStart="8dp"
-                android:gravity="center"
-                android:padding="6dp"
-                android:background="@drawable/launcher_button_parent"
-                android:focusable="true"
-                android:clickable="true"
-                android:id="@+id/start_download_neoforge_ui"
-                android:layout_width="wrap_content"
-                android:orientation="vertical">
-
-                <ImageView
-                    android:background="@drawable/ic_neoforge"
-                    android:layout_gravity="center_horizontal"
-                    android:layout_width="22dp"
-                    android:layout_height="22dp" />
-
-                <TextView
-                    android:layout_marginTop="6dp"
-                    android:gravity="center_horizontal"
-                    android:singleLine="true"
-                    android:layout_gravity="center_horizontal"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/download_ui_neoforge"
-                    android:textSize="14sp"
-                    android:textColor="@color/colorPureBlack"/>
-
-            </LinearLayout>
-
         </LinearLayout>
 
     </HorizontalScrollView>
@@ -283,11 +250,6 @@
 
         <include
             layout="@layout/ui_download_world"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"/>
-
-        <include
-            layout="@layout/ui_install_neoforge_list"
             android:layout_width="match_parent"
             android:layout_height="match_parent"/>
 

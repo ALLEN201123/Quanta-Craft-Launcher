@@ -9,15 +9,12 @@ import com.qcl.launcher.launcher.uis.game.download.right.DownloadPackageUI;
 import com.qcl.launcher.launcher.uis.game.download.right.DownloadResourcePackUI;
 import com.qcl.launcher.launcher.uis.game.download.right.DownloadShaderUI;
 import com.qcl.launcher.launcher.uis.game.download.right.DownloadWorldUI;
-// ★ 1.4.1：NeoForge 安装（自 1.4.0 朋友源码包合并）
-import com.qcl.launcher.launcher.uis.game.download.right.game.DownloadNeoForgeUI;
 import com.qcl.launcher.launcher.uis.tools.BaseUI;
 
 /* loaded from: classes2.dex */
 public class DownloadUIManager {
     public DownloadMinecraftUI downloadMinecraftUI;
     public DownloadModUI downloadModUI;
-    public DownloadNeoForgeUI downloadNeoForgeUI;
     public DownloadPackageUI downloadPackageUI;
     public DownloadResourcePackUI downloadResourcePackUI;
     public DownloadShaderUI downloadShaderUI;
@@ -27,20 +24,18 @@ public class DownloadUIManager {
     public DownloadUIManager(Context context, MainActivity mainActivity) {
         this.downloadMinecraftUI = new DownloadMinecraftUI(context, mainActivity);
         this.downloadModUI = new DownloadModUI(context, mainActivity);
-        this.downloadNeoForgeUI = new DownloadNeoForgeUI(context, mainActivity);
         this.downloadPackageUI = new DownloadPackageUI(context, mainActivity);
         this.downloadResourcePackUI = new DownloadResourcePackUI(context, mainActivity);
         this.downloadWorldUI = new DownloadWorldUI(context, mainActivity);
         this.downloadShaderUI = new DownloadShaderUI(context, mainActivity);
         this.downloadMinecraftUI.onCreate();
         this.downloadModUI.onCreate();
-        this.downloadNeoForgeUI.onCreate();
         this.downloadPackageUI.onCreate();
         this.downloadResourcePackUI.onCreate();
         this.downloadWorldUI.onCreate();
         this.downloadShaderUI.onCreate();
         DownloadMinecraftUI downloadMinecraftUI = this.downloadMinecraftUI;
-        this.downloadUIs = new BaseUI[]{downloadMinecraftUI, this.downloadModUI, this.downloadNeoForgeUI, this.downloadPackageUI, this.downloadResourcePackUI, this.downloadWorldUI, this.downloadShaderUI};
+        this.downloadUIs = new BaseUI[]{downloadMinecraftUI, this.downloadModUI, this.downloadPackageUI, this.downloadResourcePackUI, this.downloadWorldUI, this.downloadShaderUI};
         switchDownloadUI(downloadMinecraftUI);
     }
 
