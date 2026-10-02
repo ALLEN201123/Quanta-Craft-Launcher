@@ -34,6 +34,8 @@ import com.qcl.launcher.skin.GameCharacter;
 import com.qcl.launcher.skin.MinecraftSkinRenderer;
 import com.qcl.launcher.skin.SkinGLSurfaceView;
 import com.qcl.launcher.skin.utils.Avatar;
+// ★ 1.4.1：老格式皮肤需要归一化后再渲染（否则帽子层黑块 / 模型误判）
+import com.qcl.launcher.skin.utils.NormalizedSkin;
 import com.qcl.launcher.utils.animation.CustomAnimationUtils;
 import com.qcl.launcher.utils.file.DrawableUtils;
 import com.qcl.launcher.utils.gson.GsonUtils;
@@ -356,8 +358,19 @@ public class MainUI extends BaseUI implements View.OnClickListener, AdapterView.
                     skin = Avatar.getBitmapFromRes(context, R.drawable.skin_steve);
                 }
                 Avatar.setAvatarFromSkin(skin, accountSkinFace, accountSkinHat);
-                // A 64x32 file uses the classic (wide-arm) layout.
-                showModel(skin, decodeCape(offline.capePath), skin.getHeight() != 32);
+                // ★★★ 1.4.1 修复：原写法 `skin.getHeight() != 32` 会把**任意 64x64 的 classic 皮肤**
+                //   也当成细手臂（slim）→ 模型与贴图不匹配 → 脖子/腰出现黑色错位条。
+                //   改成用 NormalizedSkin 正确判定（老格式一律 classic），并顺带把老格式皮肤
+                //   归一化后再交给渲染器，避免帽子层黑块（与皮肤预览、游戏内保持一致）。
+                Bitmap renderSkin = skin;
+                boolean skinSlim = false;
+                try {
+                    NormalizedSkin normalized = new NormalizedSkin(skin);
+                    skinSlim = normalized.isSlim();
+                    renderSkin = normalized.isOldFormat() ? normalized.getNormalizedTexture() : normalized.getOriginalTexture();
+                } catch (Throwable ignored) {
+                }
+                showModel(renderSkin, decodeCape(offline.capePath), skinSlim);
                 return;
             }
             case 4:   // LittleSkin

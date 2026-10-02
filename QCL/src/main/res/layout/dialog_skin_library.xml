@@ -1,25 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- ★★★ 1.4.1：皮肤库对话框（QCL 自研） -->
+<!-- ★★★ 1.4.1：皮肤库对话框（QCL 自研）
+     背景 = 项目通用的半透明圆角对话框底 qcl_dialog_gray（与 QCL 其它对话框一致） -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@drawable/qcl_dialog_gray"
     android:orientation="vertical"
-    android:background="#F2151922"
     android:padding="14dp">
 
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/skin_library_title"
-        android:textColor="#FFFFFFFF"
-        android:textSize="18sp"
+        android:textColor="@color/colorPureBlack"
+        android:textSize="@dimen/text_size_middle"
         android:textStyle="bold" />
 
     <!-- 搜索：玩家名 或 皮肤图片直链 -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
+        android:layout_marginTop="8dp"
         android:gravity="center_vertical"
         android:orientation="horizontal">
 
@@ -31,8 +32,7 @@
             android:hint="@string/skin_library_search_hint"
             android:imeOptions="actionSearch"
             android:singleLine="true"
-            android:textColor="#FFFFFFFF"
-            android:textColorHint="#88FFFFFF"
+            android:textColor="@color/colorPureBlack"
             android:textSize="14sp" />
 
         <Button
@@ -40,7 +40,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
-            android:minWidth="76dp"
+            android:minWidth="72dp"
             android:text="@string/skin_library_search"
             android:textSize="13sp" />
     </LinearLayout>
@@ -49,7 +49,7 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="4dp"
+        android:layout_marginTop="2dp"
         android:gravity="center_vertical"
         android:orientation="horizontal">
 
@@ -58,7 +58,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/skin_library_slim"
-            android:textColor="#FFE8ECF3"
+            android:textColor="@color/colorPureBlack"
             android:textSize="13sp" />
 
         <Button
@@ -82,14 +82,15 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="6dp"
         android:layout_weight="1"
         android:orientation="horizontal">
 
         <ScrollView
             android:layout_width="0dp"
             android:layout_height="match_parent"
-            android:layout_weight="1">
+            android:layout_weight="1"
+            android:scrollbars="none">
 
             <LinearLayout
                 android:id="@+id/sk_grid"
@@ -99,7 +100,7 @@
         </ScrollView>
 
         <LinearLayout
-            android:layout_width="190dp"
+            android:layout_width="180dp"
             android:layout_height="match_parent"
             android:layout_marginStart="10dp"
             android:orientation="vertical">
@@ -109,7 +110,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
                 android:layout_weight="1"
-                android:background="#FF1B2029"
+                android:background="@color/colorPureWhite"
                 android:contentDescription="@string/skin_library_title"
                 android:scaleType="fitCenter" />
 
@@ -119,7 +120,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="6dp"
                 android:text="@string/skin_library_empty"
-                android:textColor="#FF9AA6B8"
+                android:textColor="@color/colorPureBlack"
                 android:textSize="12sp" />
         </LinearLayout>
     </LinearLayout>
@@ -128,7 +129,7 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
+        android:layout_marginTop="8dp"
         android:orientation="horizontal">
 
         <Button

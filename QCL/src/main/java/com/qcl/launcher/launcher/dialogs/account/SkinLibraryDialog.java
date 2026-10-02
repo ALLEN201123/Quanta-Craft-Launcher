@@ -33,6 +33,7 @@ import com.qcl.launcher.auth.offline.OfflineSkinSetting;
 import com.qcl.launcher.auth.yggdrasil.TextureModel;
 import com.qcl.launcher.launcher.MainActivity;
 import com.qcl.launcher.manifest.AppManifest;
+import com.qcl.launcher.skin.utils.NormalizedSkin;
 import com.qcl.launcher.utils.file.UriUtils;
 import com.qcl.launcher.utils.gson.JsonUtils;
 import com.tungsten.filepicker.Constants;
@@ -123,6 +124,11 @@ public class SkinLibraryDialog extends Dialog implements View.OnClickListener {
         this.account = account;
         this.callback = callback;
         setContentView(R.layout.dialog_skin_library);
+        // ★ 窗口背景设为透明，让布局的半透明圆角底（@drawable/qcl_dialog_gray）生效，
+        //   与 QCL 其它对话框（EditButtonDialog / InputDialog 等）保持一致
+        if (getWindow() != null) {
+            getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(Color.TRANSPARENT));
+        }
         instance = this;
         init();
     }
@@ -193,7 +199,9 @@ public class SkinLibraryDialog extends Dialog implements View.OnClickListener {
         lp.setMargins(dp(4), 0, dp(4), 0);
         card.setLayoutParams(lp);
         card.setPadding(dp(6), dp(6), dp(6), dp(6));
-        card.setBackground(roundRect(entry == selected ? 0xFF3D6EF5 : 0x22FFFFFF));
+        boolean isSel = entry == selected;
+        // 风格对齐 QCL 主题：未选中=浅灰底/黑字，选中=蓝底/白字
+        card.setBackground(roundRect(isSel ? 0xFF3D6EF5 : 0x14000000));
 
         ImageView icon = new ImageView(context);
         LinearLayout.LayoutParams ip = new LinearLayout.LayoutParams(AVATAR_PX, AVATAR_PX);
@@ -204,7 +212,7 @@ public class SkinLibraryDialog extends Dialog implements View.OnClickListener {
         TextView label = new TextView(context);
         label.setText(entry.name);
         label.setTextSize(11f);
-        label.setTextColor(0xFFE8ECF3);
+        label.setTextColor(isSel ? 0xFFFFFFFF : 0xFF222222);
         label.setGravity(Gravity.CENTER);
         label.setSingleLine(true);
         card.addView(label);
@@ -232,7 +240,7 @@ public class SkinLibraryDialog extends Dialog implements View.OnClickListener {
             preview.setImageBitmap(bmp);
             preview.setBackgroundColor(Color.TRANSPARENT);
         } else {
-            preview.setBackgroundColor(0xFF1B2029);
+            preview.setBackgroundColor(0xFFFFFFFF);
         }
         status.setText(entry.name + (entry.slim ? "  ·  Alex" : "  ·  Steve"));
         renderGrid();
@@ -514,32 +522,85 @@ public class SkinLibraryDialog extends Dialog implements View.OnClickListener {
         }).start();
     }
 
-    /** 保证皮肤已落到本地缓存文件，返回该文件 */
+    /** 保证皮肤已落到本地缓存文件（**落盘前统一归一化为 64x64**），返回该文件 */
     private File ensureLocalFile(SkinEntry entry) throws IOException {
         File dir = new File(LIB_DIR);
         if (!dir.exists() && !dir.mkdirs()) {
             throw new IOException("cannot create " + LIB_DIR);
         }
-        if (entry.file != null) {
-            File f = new File(entry.file);
-            if (f.exists()) {
-                return f;
-            }
+        // 已经是库内归一化缓存 → 直接用
+        if (entry.file != null && entry.file.startsWith(LIB_DIR) && new File(entry.file).exists()) {
+            return new File(entry.file);
         }
-        byte[] bytes;
-        if (entry.url != null && !entry.url.isEmpty()) {
-            bytes = httpGetBytes(entry.url);
+        byte[] raw;
+        if (entry.file != null && new File(entry.file).exists()) {
+            raw = readFileBytes(new File(entry.file));
+        } else if (entry.url != null && !entry.url.isEmpty()) {
+            raw = httpGetBytes(entry.url);
         } else {
             throw new IOException("no skin source");
         }
+        byte[] png = normalizeSkin(raw);
+        String seed = entry.url != null && !entry.url.isEmpty() ? entry.url
+                : (entry.file != null ? entry.file : entry.name);
         String fileName = (entry.name == null ? "skin" : entry.name.replaceAll("[^A-Za-z0-9_\\-]", "_"))
-                + "_" + Integer.toHexString(entry.url.hashCode()) + ".png";
+                + "_" + Integer.toHexString(seed == null ? 0 : seed.hashCode()) + ".png";
         File out = new File(dir, fileName);
         try (java.io.FileOutputStream fos = new java.io.FileOutputStream(out)) {
-            fos.write(bytes);
+            fos.write(png);
         }
         entry.file = out.getAbsolutePath();
         return out;
+    }
+
+    /**
+     * ★★★ 皮肤归一化：老版本 64x32 皮肤统一转成 64x64 再落盘。
+     * 原因：Avatar 取头像/帽子层用的是 (8,8) 与 (40,8) —— (40,8) 只有 64x64 才有，
+     * 64x32 会 Bitmap.createBitmap 越界抛异常 → 账户列表头像变黑块；游戏内渲染也不一致。
+     */
+    private byte[] normalizeSkin(byte[] raw) {
+        try {
+            Bitmap bmp = BitmapFactory.decodeByteArray(raw, 0, raw.length);
+            if (bmp == null) {
+                return raw;
+            }
+            Bitmap out = bmp;
+            try {
+                NormalizedSkin normalized = new NormalizedSkin(bmp);
+                if (normalized.isOldFormat()) {
+                    out = normalized.getNormalizedTexture();
+                } else {
+                    out = normalized.getOriginalTexture();
+                }
+            } catch (Throwable ignored) {
+            }
+            if (out == null) {
+                out = bmp;
+            }
+            if (out.getWidth() != 64 || out.getHeight() != 64) {
+                Bitmap scaled = Bitmap.createScaledBitmap(out, 64, 64, false);
+                if (scaled != null) {
+                    out = scaled;
+                }
+            }
+            ByteArrayOutputStream bos = new ByteArrayOutputStream();
+            out.compress(Bitmap.CompressFormat.PNG, 100, bos);
+            return bos.toByteArray();
+        } catch (Throwable t) {
+            return raw;
+        }
+    }
+
+    private byte[] readFileBytes(File file) throws IOException {
+        try (InputStream in = new java.io.FileInputStream(file)) {
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            byte[] buf = new byte[8192];
+            int len;
+            while ((len = in.read(buf)) > 0) {
+                out.write(buf, 0, len);
+            }
+            return out.toByteArray();
+        }
     }
 
     private void loadFavorites() {
