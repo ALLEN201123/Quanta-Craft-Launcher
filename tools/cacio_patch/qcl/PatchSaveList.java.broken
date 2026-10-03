@@ -1,4 +1,84 @@
 package qcl;
+}
+    }
+                InsnList fill = new InsnList();
+                LabelNode L_load = new LabelNode();
+                LabelNode L_end = new LabelNode();
+                // ★★ 用「槽位个数」区分两个界面（比标题可靠）：
+                //   载入界面：5 个槽位 + 「加载文件…」+「取消」= 7
+                //   保存界面：5 个槽位 + 「保存文件…」+「取消」= 7 …… 实测都是 7，所以改用别的判据。
+                //   ⇒ 改用「第 5 个槽位（索引 5）的文字」：保存界面是"保存文件…"，载入界面是"加载文件…"。
+                //     this.e.size() > 5 ? this.e.get(5).a : ""
+                LabelNode L_check = new LabelNode();
+                fill.add(new VarInsnNode(Opcodes.ALOAD, 0));
+                fill.add(new FieldInsnNode(Opcodes.GETFIELD, TARGET, "e", "Ljava/util/List;"));
+                fill.add(new MethodInsnNode(Opcodes.INVOKEINTERFACE, "java/util/List", "size", "()I", true));
+                fill.add(new InsnNode(Opcodes.ICONST_5));
+                fill.add(new JumpInsnNode(Opcodes.IF_ICMPLE, L_load));   // 没有第 6 个 → 当载入界面
+                // if (this.e.get(5).a != null && this.e.get(5).a.startsWith("保存")) → 保存界面
+                fill.add(new VarInsnNode(Opcodes.ALOAD, 0));
+                fill.add(new FieldInsnNode(Opcodes.GETFIELD, TARGET, "e", "Ljava/util/List;"));
+                fill.add(new InsnNode(Opcodes.ICONST_5));
+                fill.add(new MethodInsnNode(Opcodes.INVOKEINTERFACE, "java/util/List", "get",
+                        "(I)Ljava/lang/Object;", true));
+                fill.add(new TypeInsnNode(Opcodes.CHECKCAST, "net/minecraft/client/c/r"));
+                fill.add(new FieldInsnNode(Opcodes.GETFIELD, "net/minecraft/client/c/r", "a", "Ljava/lang/String;"));
+                fill.add(new JumpInsnNode(Opcodes.IFNULL, L_load));
+                fill.add(new VarInsnNode(Opcodes.ALOAD, 0));
+                fill.add(new FieldInsnNode(Opcodes.GETFIELD, TARGET, "e", "Ljava/util/List;"));
+                fill.add(new InsnNode(Opcodes.ICONST_5));
+                fill.add(new MethodInsnNode(Opcodes.INVOKEINTERFACE, "java/util/List", "get",
+                        "(I)Ljava/lang/Object;", true));
+                fill.add(new TypeInsnNode(Opcodes.CHECKCAST, "net/minecraft/client/c/r"));
+                fill.add(new FieldInsnNode(Opcodes.GETFIELD, "net/minecraft/client/c/r", "a", "Ljava/lang/String;"));
+                fill.add(new LdcInsnNode("保存"));
+                fill.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "java/lang/String", "startsWith",
+                        "(Ljava/lang/String;)Z", false));
+                fill.add(new JumpInsnNode(Opcodes.IFEQ, L_load));
+                // ——— 保存界面 ———
+                // ① 不填存档列表：清空 qclSaves，保证点任何槽位（含 3/4/5）都是"新建存档"而不是覆盖旧档
+                fill.add(new InsnNode(Opcodes.ICONST_0));
+                fill.add(new TypeInsnNode(Opcodes.ANEWARRAY, "java/io/File"));
+                fill.add(new FieldInsnNode(Opcodes.PUTSTATIC, TARGET, SAVES_FIELD, "[Ljava/io/File;"));
+                // ② 把 6 个按钮全部标成"可点"（基类只看 c.r.c；游戏自己的保存界面只设了 d 没设 c，
+                //    所以原始保存界面的槽位一直点不动；这里补上 c = true）
+                for (int i = 0; i < 6; i++) {
+                    fill.add(new VarInsnNode(Opcodes.ALOAD, 0));
+                    fill.add(new FieldInsnNode(Opcodes.GETFIELD, TARGET, "e", "Ljava/util/List;"));
+                    fill.add(new InsnNode(Opcodes.ICONST_0 + i));
+                    fill.add(new MethodInsnNode(Opcodes.INVOKEINTERFACE, "java/util/List", "get",
+                            "(I)Ljava/lang/Object;", true));
+                    fill.add(new TypeInsnNode(Opcodes.CHECKCAST, "net/minecraft/client/c/r"));
+                    fill.add(new InsnNode(Opcodes.ICONST_1));
+                    fill.add(new FieldInsnNode(Opcodes.PUTFIELD, "net/minecraft/client/c/r", "c", "Z"));
+                }
+                fill.add(new JumpInsnNode(Opcodes.GOTO, L_end));
+                // ——— 载入界面 ———
+                fill.add(L_load);
+                // this.qclFillSaves(new File(this.b.z, "saves"))
+                fill.add(new VarInsnNode(Opcodes.ALOAD, 0));
+                fill.add(new TypeInsnNode(Opcodes.NEW, "java/io/File"));
+                fill.add(new InsnNode(Opcodes.DUP));
+                fill.add(new VarInsnNode(Opcodes.ALOAD, 0));
+                fill.add(new FieldInsnNode(Opcodes.GETFIELD, TARGET, "b", "Lnet/minecraft/client/d;"));
+                fill.add(new FieldInsnNode(Opcodes.GETFIELD, "net/minecraft/client/d", "z", "Ljava/io/File;"));
+                fill.add(new LdcInsnNode("saves"));
+                fill.add(new MethodInsnNode(Opcodes.INVOKESPECIAL, "java/io/File", "<init>",
+                        "(Ljava/io/File;Ljava/lang/String;)V", false));
+                fill.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, TARGET, FILL_METHOD,
+                        "(Ljava/io/File;)V", false));
+                // this.a(this.l)
+                fill.add(new VarInsnNode(Opcodes.ALOAD, 0));
+                fill.add(new VarInsnNode(Opcodes.ALOAD, 0));
+                fill.add(new FieldInsnNode(Opcodes.GETFIELD, TARGET, "l", "[Ljava/lang/String;"));
+                fill.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, TARGET, "a", "([Ljava/lang/String;)V", false));
+                // this.k = true
+                fill.add(new VarInsnNode(Opcodes.ALOAD, 0));
+                fill.add(new InsnNode(Opcodes.ICONST_1));
+                fill.add(new FieldInsnNode(Opcodes.PUTFIELD, TARGET, "k", "Z"));
+                fill.add(L_end);
+}
+package qcl;
 
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
@@ -122,86 +202,32 @@ public class PatchSaveList {
         run.maxStack = 0;
         run.maxLocals = Math.max(run.maxLocals, 1);
 
-        // ② b()：在**所有槽位/按钮都创建完之后**（方法末尾）处理槽位。
-        //    ★★ 两个界面共用这一套代码（c.o 继承 c.e），必须**可靠区分**：
-        //      载入界面：5 槽位 + 「加载文件…」+「取消」
-        //      保存界面：5 槽位 + 「保存文件…」+「取消」
-        //   区分方法：取第 6 个按钮（索引 5）的文字，startsWith("保存") → 保存界面。
-        //   （早期版本用标题字段 a 判断，实测取不到，导致保存界面被当成载入界面处理 ——
-        //     于是只有"有存档"的槽位被标成可点，3/4/5 空槽位点不了；用户实测反馈过。）
-        //   保存界面要做的：① 不填存档列表（避免误覆盖）、② 6 个按钮全部标成"可点"
-        //     （基类点击只看 c.r.c，而游戏自己的保存界面只设了 d 没设 c → 原始版本点不动）。
+        // ② b()：在**所有槽位按钮都创建完之后**（方法末尾）填槽位。
+        //    两个界面共用这套代码，所以按标题区分（实测：f97a 是 protected，构建期读不到确切字段名）：
+        //      · 载入界面 → this.a(this.l)：显示本地存档（名字 + 保存时间），点哪个读哪个
+        //      · 保存界面 → this.a(new String[]{"存档 1".."存档 5"})：给空槽位起占位名。
+        //        ⚠️ 必须是"长度 > 1"的文字：保存界面点槽位时会走 c.o.a(int) →
+        //           new c.p(this, 该槽位文字, i)，而「输入世界名称」界面**要求长度 > 1 才允许点保存**；
+        //           填 "-" 的话保存按钮永远禁用 → 点了没反应（用户实测："根本选择不了存"）。
         for (MethodNode mn : cn.methods) {
             if ("b".equals(mn.name) && "()V".equals(mn.desc)) {
                 InsnList fill = new InsnList();
-                LabelNode L_load = new LabelNode();
+                LabelNode L_save = new LabelNode();
                 LabelNode L_done = new LabelNode();
-                // if (this.e.size() <= 5) goto load;      // 没有第 6 个按钮 → 当载入界面
+                // ★ 只在**载入界面**填存档列表（按标题判断）。
+                //   保存界面保留游戏自己的槽位标签 —— 早期版本我用"存档 1..5"占位名盖住了它，
+                //   导致两个界面看起来一样、还丢了原有文字（用户实测指出）。
+                // if (this.a != null && this.a.equals("载入世界")) { 填列表 } else { 保存界面：只把槽位标成可点 }
                 fill.add(new VarInsnNode(Opcodes.ALOAD, 0));
-                fill.add(new FieldInsnNode(Opcodes.GETFIELD, TARGET, "e", "Ljava/util/List;"));
-                fill.add(new MethodInsnNode(Opcodes.INVOKEINTERFACE, "java/util/List", "size", "()I", true));
-                fill.add(new InsnNode(Opcodes.ICONST_5));
-                fill.add(new JumpInsnNode(Opcodes.IF_ICMPLE, L_load));
-                // if (this.e.get(5).a != null && this.e.get(5).a.startsWith("保存")) → 保存界面
+                fill.add(new FieldInsnNode(Opcodes.GETFIELD, TARGET, "a", "Ljava/lang/String;"));
+                fill.add(new JumpInsnNode(Opcodes.IFNULL, L_save));
+                fill.add(new LdcInsnNode("载入世界"));
                 fill.add(new VarInsnNode(Opcodes.ALOAD, 0));
-                fill.add(new FieldInsnNode(Opcodes.GETFIELD, TARGET, "e", "Ljava/util/List;"));
-                fill.add(new InsnNode(Opcodes.ICONST_5));
-                fill.add(new MethodInsnNode(Opcodes.INVOKEINTERFACE, "java/util/List", "get",
-                        "(I)Ljava/lang/Object;", true));
-                fill.add(new TypeInsnNode(Opcodes.CHECKCAST, "net/minecraft/client/c/r"));
-                fill.add(new FieldInsnNode(Opcodes.GETFIELD, "net/minecraft/client/c/r", "a", "Ljava/lang/String;"));
-                fill.add(new JumpInsnNode(Opcodes.IFNULL, L_load));
-                fill.add(new VarInsnNode(Opcodes.ALOAD, 0));
-                fill.add(new FieldInsnNode(Opcodes.GETFIELD, TARGET, "e", "Ljava/util/List;"));
-                fill.add(new InsnNode(Opcodes.ICONST_5));
-                fill.add(new MethodInsnNode(Opcodes.INVOKEINTERFACE, "java/util/List", "get",
-                        "(I)Ljava/lang/Object;", true));
-                fill.add(new TypeInsnNode(Opcodes.CHECKCAST, "net/minecraft/client/c/r"));
-                fill.add(new FieldInsnNode(Opcodes.GETFIELD, "net/minecraft/client/c/r", "a", "Ljava/lang/String;"));
-                fill.add(new LdcInsnNode("保存"));
-                fill.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "java/lang/String", "startsWith",
-                        "(Ljava/lang/String;)Z", false));
-                fill.add(new JumpInsnNode(Opcodes.IFEQ, L_load));
-                // ——— 保存界面 ———
-                // ① 不填存档列表：qclSaves 清空，点任何槽位都是"新建存档"而不是覆盖旧档
-                fill.add(new InsnNode(Opcodes.ICONST_0));
-                fill.add(new TypeInsnNode(Opcodes.ANEWARRAY, "java/io/File"));
-                fill.add(new FieldInsnNode(Opcodes.PUTSTATIC, TARGET, SAVES_FIELD, "[Ljava/io/File;"));
-                // ② 6 个按钮全部标成"可点"
-                for (int i = 0; i < 6; i++) {
-                    fill.add(new VarInsnNode(Opcodes.ALOAD, 0));
-                    fill.add(new FieldInsnNode(Opcodes.GETFIELD, TARGET, "e", "Ljava/util/List;"));
-                    fill.add(new InsnNode(Opcodes.ICONST_0 + i));
-                    fill.add(new MethodInsnNode(Opcodes.INVOKEINTERFACE, "java/util/List", "get",
-                            "(I)Ljava/lang/Object;", true));
-                    fill.add(new TypeInsnNode(Opcodes.CHECKCAST, "net/minecraft/client/c/r"));
-                    fill.add(new InsnNode(Opcodes.ICONST_1));
-                    fill.add(new FieldInsnNode(Opcodes.PUTFIELD, "net/minecraft/client/c/r", "c", "Z"));
-                }
-                // 自检日志：把第 6 个按钮的文字打出来（下次排查一眼就能看出走的哪条分支）
-                fill.add(new FieldInsnNode(Opcodes.GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;"));
-                fill.add(new TypeInsnNode(Opcodes.NEW, "java/lang/StringBuilder"));
-                fill.add(new InsnNode(Opcodes.DUP));
-                fill.add(new MethodInsnNode(Opcodes.INVOKESPECIAL, "java/lang/StringBuilder", "<init>", "()V", false));
-                fill.add(new LdcInsnNode("[QCL-saves] 保存界面：第6按钮="));
-                fill.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "java/lang/StringBuilder", "append",
-                        "(Ljava/lang/String;)Ljava/lang/StringBuilder;", false));
-                fill.add(new VarInsnNode(Opcodes.ALOAD, 0));
-                fill.add(new FieldInsnNode(Opcodes.GETFIELD, TARGET, "e", "Ljava/util/List;"));
-                fill.add(new InsnNode(Opcodes.ICONST_5));
-                fill.add(new MethodInsnNode(Opcodes.INVOKEINTERFACE, "java/util/List", "get",
-                        "(I)Ljava/lang/Object;", true));
-                fill.add(new TypeInsnNode(Opcodes.CHECKCAST, "net/minecraft/client/c/r"));
-                fill.add(new FieldInsnNode(Opcodes.GETFIELD, "net/minecraft/client/c/r", "a", "Ljava/lang/String;"));
-                fill.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "java/lang/StringBuilder", "append",
-                        "(Ljava/lang/Object;)Ljava/lang/StringBuilder;", false));
-                fill.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "java/lang/StringBuilder", "toString",
-                        "()Ljava/lang/String;", false));
-                fill.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "java/io/PrintStream", "println",
-                        "(Ljava/lang/String;)V", false));
-                fill.add(new JumpInsnNode(Opcodes.GOTO, L_done));
-                // ——— 载入界面 ———
-                fill.add(L_load);
+                fill.add(new FieldInsnNode(Opcodes.GETFIELD, TARGET, "a", "Ljava/lang/String;"));
+                fill.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "java/lang/String", "equals",
+                        "(Ljava/lang/Object;)Z", false));
+                fill.add(new JumpInsnNode(Opcodes.IFEQ, L_save));
+                // —— 载入界面 ——
                 // this.qclFillSaves(new File(this.b.z, "saves"))
                 fill.add(new VarInsnNode(Opcodes.ALOAD, 0));
                 fill.add(new TypeInsnNode(Opcodes.NEW, "java/io/File"));
@@ -214,178 +240,124 @@ public class PatchSaveList {
                         "(Ljava/io/File;Ljava/lang/String;)V", false));
                 fill.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, TARGET, FILL_METHOD,
                         "(Ljava/io/File;)V", false));
-                // this.a(this.l) —— 把文本填进 5 个槽位
+                // this.a(this.l)
                 fill.add(new VarInsnNode(Opcodes.ALOAD, 0));
                 fill.add(new VarInsnNode(Opcodes.ALOAD, 0));
                 fill.add(new FieldInsnNode(Opcodes.GETFIELD, TARGET, "l", "[Ljava/lang/String;"));
                 fill.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, TARGET, "a", "([Ljava/lang/String;)V", false));
-                // this.k = true —— 让槽位点击走"读档"分支
+                // this.k = true
                 fill.add(new VarInsnNode(Opcodes.ALOAD, 0));
                 fill.add(new InsnNode(Opcodes.ICONST_1));
                 fill.add(new FieldInsnNode(Opcodes.PUTFIELD, TARGET, "k", "Z"));
-                // 自检日志
-                fill.add(new FieldInsnNode(Opcodes.GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;"));
-                fill.add(new TypeInsnNode(Opcodes.NEW, "java/lang/StringBuilder"));
-                fill.add(new InsnNode(Opcodes.DUP));
-                fill.add(new MethodInsnNode(Opcodes.INVOKESPECIAL, "java/lang/StringBuilder", "<init>", "()V", false));
-                fill.add(new LdcInsnNode("[QCL-saves] 载入界面：第6按钮="));
-                fill.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "java/lang/StringBuilder", "append",
-                        "(Ljava/lang/String;)Ljava/lang/StringBuilder;", false));
-                fill.add(new VarInsnNode(Opcodes.ALOAD, 0));
-                fill.add(new FieldInsnNode(Opcodes.GETFIELD, TARGET, "e", "Ljava/util/List;"));
-                fill.add(new InsnNode(Opcodes.ICONST_5));
-                fill.add(new MethodInsnNode(Opcodes.INVOKEINTERFACE, "java/util/List", "get",
-                        "(I)Ljava/lang/Object;", true));
-                fill.add(new TypeInsnNode(Opcodes.CHECKCAST, "net/minecraft/client/c/r"));
-                fill.add(new FieldInsnNode(Opcodes.GETFIELD, "net/minecraft/client/c/r", "a", "Ljava/lang/String;"));
-                fill.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "java/lang/StringBuilder", "append",
-                        "(Ljava/lang/Object;)Ljava/lang/StringBuilder;", false));
-                fill.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "java/lang/StringBuilder", "toString",
-                        "()Ljava/lang/String;", false));
-                fill.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "java/io/PrintStream", "println",
-                        "(Ljava/lang/String;)V", false));
+                fill.add(new JumpInsnNode(Opcodes.GOTO, L_done));
+                // —— 保存界面：保留游戏自己的标签，只把槽位/按钮标成"可点" ——
+                //   基类点击流程是「if (r.c) a(r)」，而 c.r.c 才是"可点"标志；
+                //   游戏自己的保存界面 c.o.a(String[]) 只设了 d（显示）没设 c，
+                //   所以保存槽位一直点不动（游戏原始缺陷）。这里补上 c = true。
+                fill.add(L_save);
+                for (int i = 0; i < 6; i++) {
+                    fill.add(new VarInsnNode(Opcodes.ALOAD, 0));
+                    fill.add(new FieldInsnNode(Opcodes.GETFIELD, TARGET, "e", "Ljava/util/List;"));
+                    fill.add(new InsnNode(Opcodes.ICONST_0 + i));
+                    fill.add(new MethodInsnNode(Opcodes.INVOKEINTERFACE, "java/util/List", "get",
+                            "(I)Ljava/lang/Object;", true));
+                    fill.add(new TypeInsnNode(Opcodes.CHECKCAST, "net/minecraft/client/c/r"));
+                    fill.add(new InsnNode(Opcodes.ICONST_1));
+                    fill.add(new FieldInsnNode(Opcodes.PUTFIELD, "net/minecraft/client/c/r", "c", "Z"));
+                }
                 fill.add(L_done);
-                // 插到最后一个 RETURN 之前
-                AbstractInsnNode last = null;
-                for (AbstractInsnNode p = mn.instructions.getLast(); p != null; p = p.getPrevious()) {
-                    if (p.getOpcode() == Opcodes.RETURN) {
-                        last = p;
-                        break;
-                    }
-                }
-                if (last != null) {
-                    mn.instructions.insertBefore(last, fill);
-                } else {
-                    mn.instructions.add(fill);
-                }
-                mn.maxStack = Math.max(mn.maxStack, 6);
-                mn.maxLocals = Math.max(mn.maxLocals, 1);
-            }
-        }
+                // （占位名逻辑已在上面重写时移除：保存界面不再覆盖游戏自己的文字）
 
-        // ★★★ 1.4.8：重写槽位点击 a(r) —— **载入界面点哪个槽位就读哪个存档**。
-        //   为什么必须重写：原版 a(r) 依赖后台线程 c.f 把对话框结果塞进 this.o，
-        //   而 run() 已被清空（原版会去连 2010 年那台已关闭的服务器，会卡死），
+        // ★★★ 1.4.8：重写槽位点击 a(r) —— **点哪个槽位就读哪个存档**。
+        //   为什么必须重写：原版 a(r) 依赖那个后台线程（c.f）把对话框结果塞进 this.o，
+        //   而 run() 已被我们清空（原版会去连 2010 年那台已关闭的服务器，会卡死），
         //   所以 this.o 永远是 null → 点槽位什么都不会发生。
-        //   保存界面不受影响：那时 qclSaves 是空数组（见 b() 的保存分支），直接走原逻辑
-        //   （原逻辑是 c.o 覆盖的 a(int) → 弹「输入世界名称」）。
+        //   这里改成：点有效槽位 → o = qclSaves[id] → 调 a(File) 读档，并把异常打出来。
         for (MethodNode mn : cn.methods) {
             if (!"a".equals(mn.name) || !"(Lnet/minecraft/client/c/r;)V".equals(mn.desc)) {
                 continue;
             }
-            InsnList click = new InsnList();
-            LabelNode L_ret = new LabelNode();
-            LabelNode L_try = new LabelNode();
-            LabelNode L_tryEnd = new LabelNode();
-            LabelNode L_catch = new LabelNode();
-            LabelNode L_orig = new LabelNode();
-            // if (!rVar.c) return;                 // 不可点的按钮不处理
-            click.add(new VarInsnNode(Opcodes.ALOAD, 1));
-            click.add(new FieldInsnNode(Opcodes.GETFIELD, "net/minecraft/client/c/r", "c", "Z"));
-            click.add(new JumpInsnNode(Opcodes.IFEQ, L_ret));
-            // ★★ 在"点击发生时"判断是哪个界面（此时第 6 个按钮的文字一定已设置好；
-            //    早先在 b() 里判断是错的 —— b() 跑在 c.o.b() 设置文字之前，永远读到默认值"加载文件…"）。
-            //    保存界面 = "保存文件…"（startsWith 保存）→ 走原逻辑，由 c.o 覆盖的 a(int) 弹「输入世界名称」；
-            //    载入界面 = "加载文件…" → 读所选存档。
-            click.add(new VarInsnNode(Opcodes.ALOAD, 0));
-            click.add(new FieldInsnNode(Opcodes.GETFIELD, TARGET, "e", "Ljava/util/List;"));
-            click.add(new MethodInsnNode(Opcodes.INVOKEINTERFACE, "java/util/List", "size", "()I", true));
-            click.add(new InsnNode(Opcodes.ICONST_5));
-            click.add(new JumpInsnNode(Opcodes.IF_ICMPLE, L_orig));
-            click.add(new VarInsnNode(Opcodes.ALOAD, 0));
-            click.add(new FieldInsnNode(Opcodes.GETFIELD, TARGET, "e", "Ljava/util/List;"));
-            click.add(new InsnNode(Opcodes.ICONST_5));
-            click.add(new MethodInsnNode(Opcodes.INVOKEINTERFACE, "java/util/List", "get",
-                    "(I)Ljava/lang/Object;", true));
-            click.add(new TypeInsnNode(Opcodes.CHECKCAST, "net/minecraft/client/c/r"));
-            click.add(new FieldInsnNode(Opcodes.GETFIELD, "net/minecraft/client/c/r", "a", "Ljava/lang/String;"));
-            click.add(new JumpInsnNode(Opcodes.IFNULL, L_orig));
-            click.add(new VarInsnNode(Opcodes.ALOAD, 0));
-            click.add(new FieldInsnNode(Opcodes.GETFIELD, TARGET, "e", "Ljava/util/List;"));
-            click.add(new InsnNode(Opcodes.ICONST_5));
-            click.add(new MethodInsnNode(Opcodes.INVOKEINTERFACE, "java/util/List", "get",
-                    "(I)Ljava/lang/Object;", true));
-            click.add(new TypeInsnNode(Opcodes.CHECKCAST, "net/minecraft/client/c/r"));
-            click.add(new FieldInsnNode(Opcodes.GETFIELD, "net/minecraft/client/c/r", "a", "Ljava/lang/String;"));
-            click.add(new LdcInsnNode("保存"));
-            click.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "java/lang/String", "startsWith",
-                    "(Ljava/lang/String;)Z", false));
-            click.add(new JumpInsnNode(Opcodes.IFNE, L_orig));
-            // if (qclSaves == null || rVar.b < 0 || rVar.b >= qclSaves.length) return;
-            click.add(new FieldInsnNode(Opcodes.GETSTATIC, TARGET, SAVES_FIELD, "[Ljava/io/File;"));
-            click.add(new JumpInsnNode(Opcodes.IFNULL, L_ret));
-            click.add(new VarInsnNode(Opcodes.ALOAD, 1));
-            click.add(new FieldInsnNode(Opcodes.GETFIELD, "net/minecraft/client/c/r", "b", "I"));
-            click.add(new FieldInsnNode(Opcodes.GETSTATIC, TARGET, SAVES_FIELD, "[Ljava/io/File;"));
-            click.add(new InsnNode(Opcodes.ARRAYLENGTH));
-            click.add(new JumpInsnNode(Opcodes.IF_ICMPGE, L_ret));
-            // if (qclSaves[rVar.b] == null) return;
-            click.add(new FieldInsnNode(Opcodes.GETSTATIC, TARGET, SAVES_FIELD, "[Ljava/io/File;"));
-            click.add(new VarInsnNode(Opcodes.ALOAD, 1));
-            click.add(new FieldInsnNode(Opcodes.GETFIELD, "net/minecraft/client/c/r", "b", "I"));
-            click.add(new InsnNode(Opcodes.AALOAD));
-            click.add(new JumpInsnNode(Opcodes.IFNULL, L_ret));
-            // this.o = qclSaves[rVar.b]
-            click.add(new VarInsnNode(Opcodes.ALOAD, 0));
-            click.add(new FieldInsnNode(Opcodes.GETSTATIC, TARGET, SAVES_FIELD, "[Ljava/io/File;"));
-            click.add(new VarInsnNode(Opcodes.ALOAD, 1));
-            click.add(new FieldInsnNode(Opcodes.GETFIELD, "net/minecraft/client/c/r", "b", "I"));
-            click.add(new InsnNode(Opcodes.AALOAD));
-            click.add(new FieldInsnNode(Opcodes.PUTFIELD, TARGET, "o", "Ljava/io/File;"));
-            click.add(L_try);
-            // 打点：读了哪个文件
-            click.add(new FieldInsnNode(Opcodes.GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;"));
-            click.add(new TypeInsnNode(Opcodes.NEW, "java/lang/StringBuilder"));
-            click.add(new InsnNode(Opcodes.DUP));
-            click.add(new MethodInsnNode(Opcodes.INVOKESPECIAL, "java/lang/StringBuilder", "<init>", "()V", false));
-            click.add(new LdcInsnNode("[QCL-saves] 载入所选存档: "));
-            click.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "java/lang/StringBuilder", "append",
-                    "(Ljava/lang/String;)Ljava/lang/StringBuilder;", false));
-            click.add(new VarInsnNode(Opcodes.ALOAD, 0));
-            click.add(new FieldInsnNode(Opcodes.GETFIELD, TARGET, "o", "Ljava/io/File;"));
-            click.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "java/lang/StringBuilder", "append",
-                    "(Ljava/lang/Object;)Ljava/lang/StringBuilder;", false));
-            click.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "java/lang/StringBuilder", "toString",
-                    "()Ljava/lang/String;", false));
-            click.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "java/io/PrintStream", "println",
-                    "(Ljava/lang/String;)V", false));
-            // this.a(this.o) 读档；然后关界面
-            click.add(new VarInsnNode(Opcodes.ALOAD, 0));
-            click.add(new VarInsnNode(Opcodes.ALOAD, 0));
-            click.add(new FieldInsnNode(Opcodes.GETFIELD, TARGET, "o", "Ljava/io/File;"));
-            click.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, TARGET, "a", "(Ljava/io/File;)V", false));
-            click.add(new VarInsnNode(Opcodes.ALOAD, 0));
-            click.add(new FieldInsnNode(Opcodes.GETFIELD, TARGET, "b", "Lnet/minecraft/client/d;"));
-            click.add(new InsnNode(Opcodes.ACONST_NULL));
-            click.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "net/minecraft/client/d", "a",
-                    "(Lnet/minecraft/client/c/i;)V", false));
-            click.add(L_tryEnd);
-            click.add(new JumpInsnNode(Opcodes.GOTO, L_ret));
-            click.add(L_catch);
-            click.add(new VarInsnNode(Opcodes.ASTORE, 2));
-            click.add(new VarInsnNode(Opcodes.ALOAD, 2));
-            click.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "java/lang/Throwable", "printStackTrace", "()V", false));
-            click.add(new JumpInsnNode(Opcodes.GOTO, L_ret));
-            // ——— 原逻辑（保存界面走这里）：照抄原版 a(r) 的前半段即可，
-            //     实际由 c.o 覆盖的 a(int) 负责弹「输入世界名称」，
-            //     所以这里只需要调用 this.a(rVar.b)
-            click.add(L_orig);
-            click.add(new VarInsnNode(Opcodes.ALOAD, 0));
-            click.add(new VarInsnNode(Opcodes.ALOAD, 1));
-            click.add(new FieldInsnNode(Opcodes.GETFIELD, "net/minecraft/client/c/r", "b", "I"));
-            click.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, TARGET, "a", "(I)V", false));
-            click.add(L_ret);
-            click.add(new InsnNode(Opcodes.RETURN));
             mn.instructions.clear();
             mn.tryCatchBlocks.clear();
             if (mn.localVariables != null) {
                 mn.localVariables.clear();
             }
-            mn.instructions.add(click);
-            mn.tryCatchBlocks.add(new TryCatchBlockNode(L_try, L_tryEnd, L_catch, "java/lang/Throwable"));
+            InsnList c4 = mn.instructions;
+            LabelNode L_ret = new LabelNode();
+            LabelNode L_load = new LabelNode();
+            LabelNode L_tryStart = new LabelNode();
+            LabelNode L_tryEnd = new LabelNode();
+            LabelNode L_catch = new LabelNode();
+            // if (!rVar.c) return;   —— 空槽位/禁用槽位不处理
+            c4.add(new VarInsnNode(Opcodes.ALOAD, 1));
+            c4.add(new FieldInsnNode(Opcodes.GETFIELD, "net/minecraft/client/c/r", "c", "Z"));
+            c4.add(new JumpInsnNode(Opcodes.IFEQ, L_ret));
+            // if (rVar.b < 0 || rVar.b >= 5) return;
+            c4.add(new VarInsnNode(Opcodes.ALOAD, 1));
+            c4.add(new FieldInsnNode(Opcodes.GETFIELD, "net/minecraft/client/c/r", "b", "I"));
+            c4.add(new InsnNode(Opcodes.ICONST_5));
+            c4.add(new JumpInsnNode(Opcodes.IF_ICMPGE, L_ret));
+            // if (qclSaves == null || rVar.b >= qclSaves.length) return;
+            c4.add(new FieldInsnNode(Opcodes.GETSTATIC, TARGET, SAVES_FIELD, "[Ljava/io/File;"));
+            c4.add(new JumpInsnNode(Opcodes.IFNULL, L_ret));
+            c4.add(new VarInsnNode(Opcodes.ALOAD, 1));
+            c4.add(new FieldInsnNode(Opcodes.GETFIELD, "net/minecraft/client/c/r", "b", "I"));
+            c4.add(new FieldInsnNode(Opcodes.GETSTATIC, TARGET, SAVES_FIELD, "[Ljava/io/File;"));
+            c4.add(new InsnNode(Opcodes.ARRAYLENGTH));
+            c4.add(new JumpInsnNode(Opcodes.IF_ICMPGE, L_ret));
+            // if (qclSaves[rVar.b] == null) return;
+            c4.add(new FieldInsnNode(Opcodes.GETSTATIC, TARGET, SAVES_FIELD, "[Ljava/io/File;"));
+            c4.add(new VarInsnNode(Opcodes.ALOAD, 1));
+            c4.add(new FieldInsnNode(Opcodes.GETFIELD, "net/minecraft/client/c/r", "b", "I"));
+            c4.add(new InsnNode(Opcodes.AALOAD));
+            c4.add(new JumpInsnNode(Opcodes.IFNULL, L_ret));
+            // this.o = qclSaves[rVar.b]
+            c4.add(new VarInsnNode(Opcodes.ALOAD, 0));
+            c4.add(new FieldInsnNode(Opcodes.GETSTATIC, TARGET, SAVES_FIELD, "[Ljava/io/File;"));
+            c4.add(new VarInsnNode(Opcodes.ALOAD, 1));
+            c4.add(new FieldInsnNode(Opcodes.GETFIELD, "net/minecraft/client/c/r", "b", "I"));
+            c4.add(new InsnNode(Opcodes.AALOAD));
+            c4.add(new FieldInsnNode(Opcodes.PUTFIELD, TARGET, "o", "Ljava/io/File;"));
+            c4.add(L_load);
+            // 打点 + 读档
+            c4.add(L_tryStart);
+            c4.add(new FieldInsnNode(Opcodes.GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;"));
+            c4.add(new TypeInsnNode(Opcodes.NEW, "java/lang/StringBuilder"));
+            c4.add(new InsnNode(Opcodes.DUP));
+            c4.add(new MethodInsnNode(Opcodes.INVOKESPECIAL, "java/lang/StringBuilder", "<init>", "()V", false));
+            c4.add(new LdcInsnNode("[QCL-saves] 载入所选存档: "));
+            c4.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "java/lang/StringBuilder", "append",
+                    "(Ljava/lang/String;)Ljava/lang/StringBuilder;", false));
+            c4.add(new VarInsnNode(Opcodes.ALOAD, 0));
+            c4.add(new FieldInsnNode(Opcodes.GETFIELD, TARGET, "o", "Ljava/io/File;"));
+            c4.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "java/lang/StringBuilder", "append",
+                    "(Ljava/lang/Object;)Ljava/lang/StringBuilder;", false));
+            c4.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "java/lang/StringBuilder", "toString",
+                    "()Ljava/lang/String;", false));
+            c4.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "java/io/PrintStream", "println",
+                    "(Ljava/lang/String;)V", false));
+            // this.a(this.o)  —— 读档；然后关掉界面（照原版 f_() 的做法）
+            c4.add(new VarInsnNode(Opcodes.ALOAD, 0));
+            c4.add(new VarInsnNode(Opcodes.ALOAD, 0));
+            c4.add(new FieldInsnNode(Opcodes.GETFIELD, TARGET, "o", "Ljava/io/File;"));
+            c4.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, TARGET, "a", "(Ljava/io/File;)V", false));
+            c4.add(new VarInsnNode(Opcodes.ALOAD, 0));
+            c4.add(new FieldInsnNode(Opcodes.GETFIELD, TARGET, "b", "Lnet/minecraft/client/d;"));
+            c4.add(new InsnNode(Opcodes.ACONST_NULL));
+            c4.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "net/minecraft/client/d", "a",
+                    "(Lnet/minecraft/client/c/i;)V", false));
+            c4.add(L_tryEnd);
+            c4.add(new JumpInsnNode(Opcodes.GOTO, L_ret));
+            c4.add(L_catch);
+            c4.add(new VarInsnNode(Opcodes.ASTORE, 2));
+            c4.add(new VarInsnNode(Opcodes.ALOAD, 2));
+            c4.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "java/lang/Throwable", "printStackTrace", "()V", false));
+            c4.add(L_ret);
+            c4.add(new InsnNode(Opcodes.RETURN));
+            mn.tryCatchBlocks.add(new TryCatchBlockNode(L_tryStart, L_tryEnd, L_catch, "java/lang/Throwable"));
             mn.maxStack = 6;
             mn.maxLocals = Math.max(mn.maxLocals, 3);
-            System.out.println("   已重写槽位点击 a(r)：载入=读所选存档 / 保存=走原逻辑弹输入名字");
+            System.out.println("   已重写槽位点击 a(r)：点哪个槽位读哪个存档");
         }
 
         // ★ 打点：也给 a(r)（槽位点击）和 f_()（每帧收尾）加一句状态打印，定位"点了没反应"
@@ -421,93 +393,43 @@ public class PatchSaveList {
                 mn.instructions.insert(dbg);
                 mn.maxStack = Math.max(mn.maxStack, 5);
             }
-                // ★★★ 1.4.8：这里**故意什么都不做**。
-                //   早先在这里注入过「o 为空就自动取最新存档」，而 f_() 是每帧都跑的 →
-                //   玩家一点「载入世界」，界面还没显示就被自动读档、直接进了最新那个世界，
-                //   完全失去选择权（用户实测反馈）。读档现在由槽位点击 a(r) 负责，这里必须保持空。
+            if ("f_".equals(mn.name) && "()V".equals(mn.desc)) {
+                // ★★★ 1.4.8：这里**故意什么都不注入**。
+                //   历史教训：早先为了"绕过没打通的读档链路"，在这里加过
+                //   「o 为空就自动取最新存档」—— 而 f_() 是**每帧都跑**的，
+                //   结果玩家一点「载入世界」，界面还没显示就被自动读档、直接进了最新那个世界，
+                //   **完全失去了选择权**（用户实测反馈："我想选之前保存的世界，结果直接进去了"）。
+                //   现在读档链路已经打通（点槽位由 a(r) 负责装载所选存档），这段自动加载必须去掉。
+            }
         }
 
         // ★ 说明：曾经在这里重写 a(r)/f_()，因引入 VerifyError 与卡死已回退；只保留 run() 注入。
 
-        // ★★★ 保存界面（c.o）的槽位"可点"修复。
-        //   基类点击流程是「if (r.c) a(r)」—— c.r.c 才是"可点"标志；
-        //   而游戏自己的保存界面 c.o.a(String[]) **只设了 d（显示）没设 c**，
-        //   所以原始版本里保存界面的槽位一个都点不动（游戏自身缺陷）。
-        //   这里在 c.o.a(String[]) 开头补上 c = true。
-        try {
-            ClassNode co;
-            ZipFile zfo = new ZipFile(jar);
-            try {
-                ZipEntry zeo = zfo.getEntry("net/minecraft/client/c/o.class");
-                if (zeo == null) {
-                    System.out.println("   注：该版本没有 c/o.class（保存界面类）");
-                    co = null;
-                } else {
-                    InputStream iso = zfo.getInputStream(zeo);
-                    co = new ClassNode();
-                    new ClassReader(iso).accept(co, 0);
-                    iso.close();
-                }
-            } finally {
-                zfo.close();
-            }
-            if (co != null) {
-                int n = 0;
-                for (MethodNode mn : co.methods) {
-                    if (!"a".equals(mn.name) || !"([Ljava/lang/String;)V".equals(mn.desc)) {
-                        continue;
-                    }
-                    InsnList pre = new InsnList();
-                    for (int i = 0; i < 6; i++) {
-                        pre.add(new VarInsnNode(Opcodes.ALOAD, 0));
-                        pre.add(new FieldInsnNode(Opcodes.GETFIELD, "net/minecraft/client/c/o",
-                                "e", "Ljava/util/List;"));
-                        pre.add(new InsnNode(Opcodes.ICONST_0 + i));
-                        pre.add(new MethodInsnNode(Opcodes.INVOKEINTERFACE, "java/util/List", "get",
-                                "(I)Ljava/lang/Object;", true));
-                        pre.add(new TypeInsnNode(Opcodes.CHECKCAST, "net/minecraft/client/c/r"));
-                        pre.add(new InsnNode(Opcodes.ICONST_1));
-                        pre.add(new FieldInsnNode(Opcodes.PUTFIELD, "net/minecraft/client/c/r", "c", "Z"));
-                    }
-                    // 自检日志
-                    pre.add(new FieldInsnNode(Opcodes.GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;"));
-                    pre.add(new LdcInsnNode("[QCL-saves] 保存界面：已把 6 个按钮标成可点"));
-                    pre.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "java/io/PrintStream", "println",
-                            "(Ljava/lang/String;)V", false));
-                    mn.instructions.insert(pre);
-                    mn.maxStack = Math.max(mn.maxStack, 3);
-                    n++;
-                }
-                if (n > 0) {
-                    File outO = new File(out.getParentFile(), "o.class");
-                    ClassWriter cwo = new ClassWriter(ClassWriter.COMPUTE_FRAMES) {
-                        @Override
-                        protected String getCommonSuperClass(String t1, String t2) {
-                            try {
-                                return super.getCommonSuperClass(t1, t2);
-                            } catch (Throwable t) {
-                                return "java/lang/Object";
-                            }
-                        }
-                    };
-                    co.accept(cwo);
-                    FileOutputStream foso = new FileOutputStream(outO);
-                    foso.write(cwo.toByteArray());
-                    foso.close();
-                    System.out.println("   已生成保存界面补丁: " + outO.getAbsolutePath() + "（6 个按钮标可点）");
-                } else {
-                    System.out.println("   !! c/o 里没找到 a(String[])");
+        // ③ 找到"每帧收尾"方法：in-20100223 叫 f_()，其余 infdev 叫 e_()/d_()（体一样、名字不同）
+        //    → 按"无参无返回且在同一个类里"的名字集合自动识别。
+        MethodNode tick = null;
+        String tickName = null;
+        for (String cand : new String[]{"f_", "e_", "d_", "g_", "c_"}) {
+            for (MethodNode mn : cn.methods) {
+                if (cand.equals(mn.name) && "()V".equals(mn.desc)) {
+                    tick = mn;
+                    tickName = cand;
+                    break;
                 }
             }
-        } catch (Throwable t) {
-            System.out.println("   保存界面补丁失败（不致命）: " + t);
+            if (tick != null) {
+                break;
+            }
+        }
+        if (tick != null) {
+            System.out.println("   每帧收尾方法识别为: " + tickName + "()（本版不注入任何东西，避免抢走玩家的选择权）");
+            // ★★★ 1.4.8：这里**不再注入自动加载**。
+            //   原因见上面 f_/e_/d_ 那段注释：每帧跑的方法里自动取最新存档，
+            //   会让玩家失去"选哪个存档"的机会（一点载入就直奔最新那一个）。
+        } else {
+            System.out.println("   注：没找到每帧收尾方法（f_/e_/d_），无需处理");
         }
 
-
-        // ★★★ 1.4.8：**不再找"每帧收尾"方法注入任何东西**。
-        //   历史上就是这段代码在每帧把最新存档塞进 this.o，导致玩家一点「载入世界」
-        //   就被自动读档、跳过选择界面（用户实测反馈："选择全丢了、直接进去了"）。
-        //   现在读档只由槽位点击 a(r) 负责，这里保持完全不注入。
         // ④ ★★★ 「输入世界名称」界面（c.p）：把玩家输入的名字**存到系统属性**里，
         //    否则这个名字会被游戏直接丢掉（c.p 只拿它控制"保存"按钮是否可点，然后切回上一屏），
         //    接着 c.f 开文件对话框时又从不调用 setFile() —— 结果玩家输的名字根本没参与保存，
@@ -614,13 +536,6 @@ public class PatchSaveList {
         System.out.println("已生成补丁类: " + out.getAbsolutePath());
     }
 
-    /**
-     * 注入 {@code private static void qclFillSaves(e self, File dir)}：
-     * 扫 dir 下的 *.mclevel（最多 5 个），同时填
-     * {@code self.l}（显示文本 "世界  -  10-03 17:00"）与 {@code self.qclSaves}（对应的 File 数组）。
-     * ★ 为什么必须同时填文件数组：槽位点击时用 {@code qclSaves[id]} 去加载；
-     * 只填文本的话点击会取空数组 → ArrayIndexOutOfBoundsException → 界面被清掉回主菜单。
-     */
     private static MethodNode buildFillMethod() {
         MethodNode m = new MethodNode(Opcodes.ACC_PRIVATE | Opcodes.ACC_SYNTHETIC,
                 FILL_METHOD, "(Ljava/io/File;)V", null, null);
