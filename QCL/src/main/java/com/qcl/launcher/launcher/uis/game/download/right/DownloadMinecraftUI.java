@@ -14,6 +14,7 @@ import android.widget.Toast;
 import com.google.gson.Gson;
 import com.qcl.launcher.launcher.MainActivity;
 import com.qcl.launcher.launcher.download.game.LegacyVersionArchive;
+import com.qcl.launcher.launcher.download.game.AprilFools;
 import com.qcl.launcher.launcher.download.game.VersionManifest;
 import com.qcl.launcher.launcher.list.download.minecraft.DownloadGameListAdapter;
 import com.qcl.launcher.launcher.uis.game.download.DownloadUrlSource;
@@ -33,6 +34,8 @@ public class DownloadMinecraftUI extends BaseUI implements View.OnClickListener,
     private CheckBox checkOld;
     private CheckBox checkRelease;
     private CheckBox checkSnapshot;
+    /** ★ 1.4.5：愚人节版分类 */
+    private CheckBox checkApril;
     public LinearLayout downloadMinecraftUI;
     private LinearLayout gameListLayout;
     private LinearLayout hintLayout;
@@ -57,15 +60,19 @@ public class DownloadMinecraftUI extends BaseUI implements View.OnClickListener,
         this.checkRelease = (CheckBox) this.activity.findViewById(R.id.checkbox_release);
         this.checkSnapshot = (CheckBox) this.activity.findViewById(R.id.checkbox_snapshot);
         this.checkOld = (CheckBox) this.activity.findViewById(R.id.checkbox_old);
+        this.checkApril = (CheckBox) this.activity.findViewById(R.id.checkbox_april);
         this.refresh = (LinearLayout) this.activity.findViewById(R.id.refresh_game_list);
         this.loadingProgress = (ProgressBar) this.activity.findViewById(R.id.loading_minecraft_list_progress);
         this.mcList = (ListView) this.activity.findViewById(R.id.download_minecraft_version_list);
         this.checkRelease.setChecked(true);
         this.checkSnapshot.setChecked(false);
         this.checkOld.setChecked(false);
+        // ★ 1.4.5：愚人节版（清单里被标成 snapshot，单列一类方便找）
+        this.checkApril.setChecked(false);
         this.checkRelease.setOnCheckedChangeListener(this);
         this.checkSnapshot.setOnCheckedChangeListener(this);
         this.checkOld.setOnCheckedChangeListener(this);
+        this.checkApril.setOnCheckedChangeListener(this);
         this.refresh.setOnClickListener(this);
     }
 
@@ -177,9 +184,22 @@ public class DownloadMinecraftUI extends BaseUI implements View.OnClickListener,
         Iterator<VersionManifest.Version> it = this.allList.iterator();
         while (it.hasNext()) {
             VersionManifest.Version next = it.next();
+            // ★ 1.4.5：愚人节版优先判定 —— 它们在清单里就是 snapshot，
+            //   不先摘出来的话会被"快照版"一起吃进去（用户看不到单独分类）。
+            boolean april = AprilFools.isAprilFools(next);
             boolean equals = "release".equals(next.type);
             boolean equals2 = "snapshot".equals(next.type);
-            if ((equals && this.checkRelease.isChecked()) || ((equals2 && this.checkSnapshot.isChecked()) || (!equals && !equals2 && this.checkOld.isChecked()))) {
+            boolean show;
+            if (april) {
+                show = this.checkApril.isChecked();
+            } else if (equals) {
+                show = this.checkRelease.isChecked();
+            } else if (equals2) {
+                show = this.checkSnapshot.isChecked();
+            } else {
+                show = this.checkOld.isChecked();
+            }
+            if (show) {
                 arrayList.add(next);
             }
         }

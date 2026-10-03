@@ -42,10 +42,62 @@ public class World {
 
         if (Files.isDirectory(file))
             loadFromDirectory();
+        else if (Files.isRegularFile(file) && isMcLevelFile(file))
+            // ★ 1.4.5：远古版本（indev / infdev）的存档是**单个 .mclevel 文件**（NBT 序列化），
+            //   既不是目录、也不是 zip。原来这里一律走 loadFromZip → 解压失败抛异常
+            //   → 被 getWorlds() 静默丢掉 → 用户在「存档页」永远看不到自己刚保存的世界。
+            loadFromMcLevel();
         else if (Files.isRegularFile(file))
             loadFromZip();
         else
             throw new IOException("Path " + file + " cannot be recognized as a Minecraft world");
+    }
+
+    /** 是否是远古版本的单文件存档（.mclevel，不区分大小写）。 */
+    private static boolean isMcLevelFile(Path file) {
+        String name = FileUtils.getName(file);
+        return name != null && name.toLowerCase().endsWith(".mclevel");
+    }
+
+    /**
+     * ★ 1.4.5：读远古版本的单文件存档。
+     * <p>文件名就是世界名（游戏侧就是这么存的：{@code saves/<世界名>.mclevel}）；
+     * 时间用文件修改时间兜底 —— 远古版本的 NBT 里不一定有 LastPlayed。
+     * 解析失败也不抛异常，保证「存档页一定能看到它」。
+     */
+    private void loadFromMcLevel() {
+        String name = FileUtils.getName(file);
+        fileName = name;
+        worldName = name.toLowerCase().endsWith(".mclevel")
+                ? name.substring(0, name.length() - ".mclevel".length())
+                : name;
+        if (worldName == null || worldName.isEmpty())
+            worldName = "未命名世界";
+        gameVersion = null;
+        try {
+            lastPlayed = Files.getLastModifiedTime(file).toMillis();
+        } catch (Throwable t) {
+            lastPlayed = 0L;
+        }
+        // 尝试从 NBT 里取更准确的名字/时间（取不到就用上面的兜底值，绝不因此丢掉存档）
+        try {
+            CompoundTag nbt = parseLevelDat(file);
+            if (nbt != null) {
+                Tag levelName = nbt.get("LevelName");
+                if (levelName != null && !String.valueOf(levelName).isEmpty())
+                    worldName = String.valueOf(levelName);
+                Tag played = nbt.get("LastPlayed");
+                if (played != null) {
+                    try {
+                        long v = Long.parseLong(String.valueOf(played).trim());
+                        if (v > 0L) lastPlayed = v;
+                    } catch (Throwable ignored) {
+                    }
+                }
+            }
+        } catch (Throwable ignored) {
+            // 远古存档格式各异，读不出来就用文件名+时间，别丢
+        }
     }
 
     private void loadFromDirectory() throws IOException {
@@ -175,6 +227,12 @@ public class World {
     }
 
     public void rename(String newName) throws IOException {
+        // ★ 1.4.5：远古版本的单文件存档（saves/<世界名>.mclevel）改名 = 直接重命名文件，
+        //   它没有 level.dat，原来这里会抛 "Not a valid world directory" 导致根本改不了名。
+        if (Files.isRegularFile(file) && isMcLevelFile(file)) {
+            Files.move(file, file.resolveSibling(newName + ".mclevel"));
+            return;
+        }
         if (!Files.isDirectory(file))
             throw new IOException("Not a valid world directory");
 

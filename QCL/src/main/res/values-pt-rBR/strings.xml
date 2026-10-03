@@ -303,6 +303,7 @@
     <string name="download_minecraft_ui_release">Lan</string>
     <string name="download_minecraft_ui_snapshot">Instantâneos</string>
     <string name="download_minecraft_ui_old">Histórico</string>
+    <string name="download_minecraft_ui_april">Dia da Mentira</string>
     <string name="download_minecraft_ui_refresh">Atualizar</string>
     <string name="time_pattern">EEE, MMM d, yyyy HH:mm:ss</string>
     <string name="install_package_ui_title">Instalar Modpack - Instalar Modpack</string>

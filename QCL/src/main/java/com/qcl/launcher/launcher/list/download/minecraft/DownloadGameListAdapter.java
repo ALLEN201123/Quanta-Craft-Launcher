@@ -10,6 +10,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import com.qcl.launcher.launcher.MainActivity;
+import com.qcl.launcher.launcher.download.game.AprilFools;
 import com.qcl.launcher.launcher.download.game.VersionManifest;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -50,6 +51,17 @@ public class DownloadGameListAdapter extends BaseAdapter {
             return this.context.getString(R.string.download_minecraft_ui_archive);
         }
         return this.context.getString(R.string.download_minecraft_ui_old);
+    }
+
+    /**
+     * ★ 1.4.5：类型标签 —— 愚人节版虽然在清单里是 snapshot，但列表里要单独显示"愚人节版"，
+     * 否则玩家在快照列表里根本认不出哪几个是愚人节版本。
+     */
+    private String getTypeLabel(VersionManifest.Version version) {
+        if (AprilFools.isAprilFools(version)) {
+            return this.context.getString(R.string.download_minecraft_ui_april);
+        }
+        return getType(version == null ? "" : version.type);
     }
 
     private Drawable getIcon(String str) {
@@ -99,7 +111,7 @@ public class DownloadGameListAdapter extends BaseAdapter {
         final VersionManifest.Version version = this.versions.get(i);
         viewHolder.icon.setImageDrawable(getIcon(version.type));
         viewHolder.mcId.setText(version.id);
-        viewHolder.type.setText(getType(version.type));
+        viewHolder.type.setText(getTypeLabel(version));
         viewHolder.releaseTime.setText(version.releaseTime == null ? "" : DateTimeFormatter.ofPattern(this.context.getString(R.string.time_pattern)).withZone(ZoneId.systemDefault()).format(version.releaseTime.toInstant()));
         viewHolder.item.setOnClickListener(new View.OnClickListener() { // from class: com.qcl.launcher.launcher.list.download.minecraft.DownloadGameListAdapter$$ExternalSyntheticLambda0
             @Override // android.view.View.OnClickListener

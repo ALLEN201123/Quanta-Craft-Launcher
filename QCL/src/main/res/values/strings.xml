@@ -385,6 +385,7 @@
     <string name="download_minecraft_ui_release">Releases</string>
     <string name="download_minecraft_ui_snapshot">Snapshots</string>
     <string name="download_minecraft_ui_old">Historical</string>
+    <string name="download_minecraft_ui_april">April Fools</string>
     <string name="download_minecraft_ui_archive">Archive (almost every ancient version)</string>
     <string name="revival_archive_not_installable">Archived build: from the historical archive, covering almost every ancient version (pre-classic / classic / indev / infdev / alpha / beta / RC). It can be installed directly with dependencies and assets fetched automatically.</string>
     <string name="download_minecraft_ui_refresh">Refresh</string>

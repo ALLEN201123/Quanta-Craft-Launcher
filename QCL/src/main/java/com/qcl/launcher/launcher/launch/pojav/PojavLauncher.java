@@ -157,6 +157,19 @@ public class PojavLauncher {
                     if (qclFixJar != null) {
                         classPath = qclFixJar.getAbsolutePath() + ":" + classPath;
                     }
+                    // ★★★ 1.4.5：远古版本（indev / infdev）「载入世界」列表修复。
+                    //   游戏原逻辑是 new URL("http://<2010年官方服务器>/listmaps.jsp") 取世界列表 ——
+                    //   那台服务器早就没了，所以列表永远空白（用户保存完世界也看不到）。
+                    //   这里把改好的 net/minecraft/client/c/e.class（run() 改成扫本地 saves/ 目录，
+                    //   按修改时间倒序、带时间显示）放到 classpath 最前，让 launchwrapper 优先解析它。
+                    //   ⚠️ 必须走普通 classpath，绝不能塞进 -Xbootclasspath/p：
+                    //      bootstrap 加载器看不到应用类路径上的 c.i/c.r 等类 → NoClassDefFoundError 直接崩。
+                    //   ⚠️ 补丁**按版本选**（只有 7 个版本真的用 FileDialog + .mclevel 存档）；
+                    //      没有专属补丁的版本退回默认那份，若那份也不存在则返回 null（照旧启动）。
+                    File qclSavesJar = ensureSavesListJar(context, qclFixVer);
+                    if (qclSavesJar != null) {
+                        classPath = qclSavesJar.getAbsolutePath() + ":" + classPath;
+                    }
                 }
             }
             catch (Throwable ignoredAppletFix) {
@@ -586,8 +599,60 @@ public class PojavLauncher {
         }
     }
 
-    private static File ensureMioLibPatcher(Context context) {
+    /**
+     * ★★★ 1.4.5：远古版本「载入世界」列表补丁 jar。
+     * <p>里面是改过的 {@code net/minecraft/client/c/e.class}（run() 扫本地 saves/ 目录）
+     * 与 {@code net/minecraft/client/d.class}（去掉 2010 年那套在线校验）；放进游戏 classpath 最前即可生效。
+     *
+     * <p>⚠️ 必须**按版本选文件**：只有"真的用文件对话框 + {@code .mclevel}` 存档"的 7 个版本
+     * （{@code in-20100223}、{@code inf-20100227-1433} … {@code inf-20100325-1640}）才有补丁，
+     * 其余远古版本走 {@code level.dat}，补丁对它们毫无意义 —— 硬塞反而可能出错。
+     * 每个版本的补丁**必须分开打包**：类名相同（都是 {@code net/minecraft/client/c/e}），
+     * 但"每帧收尾"方法名不同（{@code f_()} / {@code e_()} / {@code d_()}），
+     * 所以不能合并成一个 jar。
+     */
+    private static File ensureSavesListJar(Context context, String versionName) {
+        // 该版本有专属补丁就用它，否则退回默认那份（默认那份就是 in-20100223 的）
+        String asset = "game/qcl_saves_" + versionName + ".jar";
+        String outName = "qcl_saves_" + versionName + ".jar";
         try {
+            String[] probe = context.getAssets().list("game");
+            boolean has = false;
+            if (probe != null) {
+                for (String s : probe) {
+                    if (s.equals("qcl_saves_" + versionName + ".jar")) {
+                        has = true;
+                        break;
+                    }
+                }
+            }
+            if (!has) {
+                asset = "game/qcl_saveslist.jar";
+                outName = "qcl_saveslist.jar";
+            }
+        } catch (Throwable ignored) {
+        }
+        try {
+            File dst = new File(context.getFilesDir(), outName);
+            try (java.io.InputStream in = context.getAssets().open(asset);
+                 java.io.FileOutputStream out = new java.io.FileOutputStream(dst)) {
+                byte[] buf = new byte[65536];
+                int n;
+                while ((n = in.read(buf)) > 0) {
+                    out.write(buf, 0, n);
+                }
+            }
+            return dst.isFile() && dst.length() > 0L ? dst : null;
+        } catch (Throwable t) {
+            try {
+                Logger.getInstance(context).appendToLog("存档列表补丁解压失败(" + asset + ")：" + t);
+            } catch (Throwable ignored) {
+            }
+            return null;
+        }
+    }
+
+    private static File ensureMioLibPatcher(Context context) {        try {
             File dst = new File(context.getFilesDir(), "MioLibPatcher.jar");
             try (java.io.InputStream in = context.getAssets().open("game/MioLibPatcher.jar");
                  java.io.FileOutputStream out = new java.io.FileOutputStream(dst)) {

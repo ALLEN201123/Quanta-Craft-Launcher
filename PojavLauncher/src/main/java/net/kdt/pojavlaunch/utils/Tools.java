@@ -66,10 +66,34 @@ public final class Tools {
             sb.append("-Xbootclasspath/" + (z ? "p" : "a"));
             File file = new File(context.getDir("runtime", 0).getAbsolutePath() + "/caciocavallo" + (z ? "" : "17"));
             if (file.exists() && file.isDirectory()) {
-                for (File file2 : file.listFiles()) {
+                File[] fileArr = file.listFiles();
+                if (fileArr == null) {
+                    fileArr = new File[0];
+                }
+                // ★ 必须显式排序：-Xbootclasspath/p 是按顺序找类的，先出现的 jar 胜出。
+                //   file.listFiles() 的顺序由文件系统决定（实测设备上 cacio-shared 排在 ResConfHack 前面），
+                //   于是原版 CacioFileDialogPeer 抢先加载、我们打进 ResConfHack.jar 的补丁形同不存在
+                //   （1.4.5 上「保存/读取世界」依旧 NPE 就是这个原因，javap 已逐字节证实）。
+                //   规则：ResConfHack.jar 永远排第一，其余按文件名排序，保证启动参数稳定可复现。
+                List<File> jarList = new ArrayList<>();
+                for (File file2 : fileArr) {
                     if (file2.getName().endsWith(".jar")) {
-                        sb.append(":" + file2.getAbsolutePath());
+                        jarList.add(file2);
                     }
+                }
+                java.util.Collections.sort(jarList, new java.util.Comparator<File>() {
+                    @Override
+                    public int compare(File a, File b) {
+                        boolean pa = "ResConfHack.jar".equals(a.getName());
+                        boolean pb = "ResConfHack.jar".equals(b.getName());
+                        if (pa != pb) {
+                            return pa ? -1 : 1;
+                        }
+                        return a.getName().compareTo(b.getName());
+                    }
+                });
+                for (File file2 : jarList) {
+                    sb.append(":" + file2.getAbsolutePath());
                 }
             }
             list.add(sb.toString());

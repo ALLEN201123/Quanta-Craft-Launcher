@@ -101,6 +101,17 @@
                     android:text="@string/download_minecraft_ui_old"
                     android:id="@+id/checkbox_old"/>
 
+                <CheckBox
+                    android:singleLine="true"
+                    android:tag="tint_accent_color"
+                    android:layout_gravity="center"
+                    android:layout_marginTop="5dp"
+                    android:layout_marginBottom="5dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/download_minecraft_ui_april"
+                    android:id="@+id/checkbox_april"/>
+
                 <View
                     android:layout_width="0dp"
                     android:layout_height="0dp"

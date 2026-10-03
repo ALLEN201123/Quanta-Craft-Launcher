@@ -359,6 +359,7 @@
     <string name="download_minecraft_ui_release">正式版</string>
     <string name="download_minecraft_ui_snapshot">测试版</string>
     <string name="download_minecraft_ui_old">远古版</string>
+    <string name="download_minecraft_ui_april">愚人节版</string>
     <string name="download_minecraft_ui_archive">归档版（几乎涵盖全部远古版本）</string>
     <string name="revival_archive_not_installable">归档版：来自历史归档，几乎涵盖全部远古版本（pre-classic / classic / indev / infdev / alpha / beta / RC），可直接安装并自动补齐依赖与资源。</string>
     <string name="download_minecraft_ui_refresh">刷新</string>

@@ -521,6 +521,7 @@
     <string name="download_minecraft_ui_hint">Thông tin</string>
     <string name="download_minecraft_ui_hint_text">Tải xuống qua BMCLAPI. Nhấn để xem thông tin dịch vụ.</string>
     <string name="download_minecraft_ui_old">Lịch sử</string>
+    <string name="download_minecraft_ui_april">Cá tháng Tư</string>
     <string name="download_minecraft_ui_refresh">Làm mới</string>
     <string name="download_minecraft_ui_release">Bản phát hành</string>
     <string name="download_minecraft_ui_snapshot">Ảnh chụp nhanh</string>

@@ -55,7 +55,9 @@ android {
         minSdk 26
         targetSdk 34
         // Own version line for QCL; kept above 208 so any earlier test build is an upgrade, never a downgrade.
-        versionCode 345
+        // ★ 346：上一任那次被撤掉的 1.4.5 用的是 345，本次重做直接跳到 346，
+        //   避免"同一个版本号对应两份内容不同、其中一份没测过"的混乱。
+        versionCode 346
         versionName "1.4.5"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
