@@ -421,10 +421,67 @@ public class PatchSaveList {
                 mn.instructions.insert(dbg);
                 mn.maxStack = Math.max(mn.maxStack, 5);
             }
-                // ★★★ 1.4.8：这里**故意什么都不做**。
-                //   早先在这里注入过「o 为空就自动取最新存档」，而 f_() 是每帧都跑的 →
-                //   玩家一点「载入世界」，界面还没显示就被自动读档、直接进了最新那个世界，
-                //   完全失去选择权（用户实测反馈）。读档现在由槽位点击 a(r) 负责，这里必须保持空。
+            if (("f_".equals(mn.name) || "e_".equals(mn.name) || "d_".equals(mn.name)
+                    || "g_".equals(mn.name) || "c_".equals(mn.name)) && "()V".equals(mn.desc)) {
+                // ★★★ 1.4.8：f_()（每帧收尾）里**读"要保存到哪个文件"，让保存真正落盘**。
+                //   游戏的落盘逻辑本来就在 f_() 里：
+                //       if (o != null) { 补 .mclevel → this.a(o) 写盘 → o = null → 关界面 }
+                //   原设计是文件对话框线程 c.f 先把 o 设好；而 run() 已被我们清空（原版会去连
+                //   2010 年那台已关闭的服务器、会卡死）→ 那条路没了 → o 永远是 null →
+                //   玩家点保存什么都不发生（用户实测："点击保存之后没反应"）。
+                //   现在：点保存时（c.p）把目标路径写进系统属性 qcl.savefile，
+                //   这里取出来塞进 this.o，下一帧原版逻辑就会真的写盘。
+                //   ⚠️ 只保留"从属性取目标文件"这一种注入 —— 绝不能再加"o 为空就自动取最新存档"
+                //      （那会抢走玩家的选择权，正是本版修掉的另一个 bug）。
+                InsnList save = new InsnList();
+                LabelNode L_skipSave = new LabelNode();
+                // if (this.o != null) goto skip;
+                save.add(new VarInsnNode(Opcodes.ALOAD, 0));
+                save.add(new FieldInsnNode(Opcodes.GETFIELD, TARGET, "o", "Ljava/io/File;"));
+                save.add(new JumpInsnNode(Opcodes.IFNONNULL, L_skipSave));
+                // if (System.getProperty("qcl.savefile") == null) goto skip;
+                save.add(new LdcInsnNode("qcl.savefile"));
+                save.add(new MethodInsnNode(Opcodes.INVOKESTATIC, "java/lang/System", "getProperty",
+                        "(Ljava/lang/String;)Ljava/lang/String;", false));
+                save.add(new JumpInsnNode(Opcodes.IFNULL, L_skipSave));
+                // this.o = new File(System.getProperty("qcl.savefile"));
+                save.add(new VarInsnNode(Opcodes.ALOAD, 0));
+                save.add(new TypeInsnNode(Opcodes.NEW, "java/io/File"));
+                save.add(new InsnNode(Opcodes.DUP));
+                save.add(new LdcInsnNode("qcl.savefile"));
+                save.add(new MethodInsnNode(Opcodes.INVOKESTATIC, "java/lang/System", "getProperty",
+                        "(Ljava/lang/String;)Ljava/lang/String;", false));
+                save.add(new MethodInsnNode(Opcodes.INVOKESPECIAL, "java/io/File", "<init>",
+                        "(Ljava/lang/String;)V", false));
+                save.add(new FieldInsnNode(Opcodes.PUTFIELD, TARGET, "o", "Ljava/io/File;"));
+                // System.clearProperty("qcl.savefile")  —— 用掉就清，避免反复触发
+                save.add(new LdcInsnNode("qcl.savefile"));
+                save.add(new MethodInsnNode(Opcodes.INVOKESTATIC, "java/lang/System", "clearProperty",
+                        "(Ljava/lang/String;)Ljava/lang/String;", false));
+                save.add(new InsnNode(Opcodes.POP));
+                // 日志
+                save.add(new FieldInsnNode(Opcodes.GETSTATIC, "java/lang/System", "out",
+                        "Ljava/io/PrintStream;"));
+                save.add(new TypeInsnNode(Opcodes.NEW, "java/lang/StringBuilder"));
+                save.add(new InsnNode(Opcodes.DUP));
+                save.add(new MethodInsnNode(Opcodes.INVOKESPECIAL, "java/lang/StringBuilder",
+                        "<init>", "()V", false));
+                save.add(new LdcInsnNode("[QCL-saves] 开始写盘: "));
+                save.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "java/lang/StringBuilder", "append",
+                        "(Ljava/lang/String;)Ljava/lang/StringBuilder;", false));
+                save.add(new VarInsnNode(Opcodes.ALOAD, 0));
+                save.add(new FieldInsnNode(Opcodes.GETFIELD, TARGET, "o", "Ljava/io/File;"));
+                save.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "java/lang/StringBuilder", "append",
+                        "(Ljava/lang/Object;)Ljava/lang/StringBuilder;", false));
+                save.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "java/lang/StringBuilder", "toString",
+                        "()Ljava/lang/String;", false));
+                save.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "java/io/PrintStream", "println",
+                        "(Ljava/lang/String;)V", false));
+                save.add(L_skipSave);
+                mn.instructions.insert(save);
+                mn.maxStack = Math.max(mn.maxStack, 6);
+                System.out.println("   已给 f_() 注入：从 qcl.savefile 取目标文件，让保存真正落盘");
+            }
         }
 
         // ★ 说明：曾经在这里重写 a(r)/f_()，因引入 VerifyError 与卡死已回退；只保留 run() 注入。
@@ -556,7 +613,49 @@ public class PatchSaveList {
                         continue;
                     }
                     InsnList put = new InsnList();
-                    // System.setProperty("qcl.savename", this.k.trim())
+                    // ★★★ 关键：把"要保存到哪个文件"直接设好 —— 这才是真正落盘的关键。
+                    //   游戏的落盘发生在每帧的 f_() 里：
+                    //       if (o != null) { 补 .mclevel → this.a(o) 写盘 → o = null → 关界面 }
+                    //   原设计是文件对话框线程 c.f 先把 o 设好；run() 已被我们清空 → 那条路没了，
+                    //   o 永远是 null → 点保存什么都不发生（用户实测："点保存之后没反应"）。
+                    //   这里在"点保存"时直接算出 saves/<名字>.mclevel 交付给它。
+                    //   ① System.setProperty("qcl.savefile", <绝对路径>) —— 由 f_() 读取后落盘
+                    //      （不能在 c.p 里直接写 c.e.o：编译期类型是 c.p，没有那个字段）
+                    put.add(new LdcInsnNode("qcl.savefile"));
+                    put.add(new TypeInsnNode(Opcodes.NEW, "java/io/File"));
+                    put.add(new InsnNode(Opcodes.DUP));
+                    put.add(new VarInsnNode(Opcodes.ALOAD, 0));
+                    put.add(new FieldInsnNode(Opcodes.GETFIELD, "net/minecraft/client/c/p",
+                            "b", "Lnet/minecraft/client/d;"));
+                    put.add(new FieldInsnNode(Opcodes.GETFIELD, "net/minecraft/client/d",
+                            "z", "Ljava/io/File;"));
+                    put.add(new TypeInsnNode(Opcodes.NEW, "java/lang/StringBuilder"));
+                    put.add(new InsnNode(Opcodes.DUP));
+                    put.add(new MethodInsnNode(Opcodes.INVOKESPECIAL, "java/lang/StringBuilder",
+                            "<init>", "()V", false));
+                    put.add(new LdcInsnNode("saves/"));
+                    put.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "java/lang/StringBuilder", "append",
+                            "(Ljava/lang/String;)Ljava/lang/StringBuilder;", false));
+                    put.add(new VarInsnNode(Opcodes.ALOAD, 0));
+                    put.add(new FieldInsnNode(Opcodes.GETFIELD, "net/minecraft/client/c/p",
+                            "k", "Ljava/lang/String;"));
+                    put.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "java/lang/String", "trim",
+                            "()Ljava/lang/String;", false));
+                    put.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "java/lang/StringBuilder", "append",
+                            "(Ljava/lang/String;)Ljava/lang/StringBuilder;", false));
+                    put.add(new LdcInsnNode(".mclevel"));
+                    put.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "java/lang/StringBuilder", "append",
+                            "(Ljava/lang/String;)Ljava/lang/StringBuilder;", false));
+                    put.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "java/lang/StringBuilder", "toString",
+                            "()Ljava/lang/String;", false));
+                    put.add(new MethodInsnNode(Opcodes.INVOKESPECIAL, "java/io/File", "<init>",
+                            "(Ljava/io/File;Ljava/lang/String;)V", false));
+                    put.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "java/io/File", "getAbsolutePath",
+                            "()Ljava/lang/String;", false));
+                    put.add(new MethodInsnNode(Opcodes.INVOKESTATIC, "java/lang/System", "setProperty",
+                            "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;", false));
+                    put.add(new InsnNode(Opcodes.POP));
+                    //   ② 顺手保留名字（cacio 对话框侧兜底用）
                     put.add(new LdcInsnNode("qcl.savename"));
                     put.add(new VarInsnNode(Opcodes.ALOAD, 0));
                     put.add(new FieldInsnNode(Opcodes.GETFIELD, "net/minecraft/client/c/p",
@@ -566,9 +665,28 @@ public class PatchSaveList {
                     put.add(new MethodInsnNode(Opcodes.INVOKESTATIC, "java/lang/System", "setProperty",
                             "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;", false));
                     put.add(new InsnNode(Opcodes.POP));
+                    //   ③ 自检日志
+                    put.add(new FieldInsnNode(Opcodes.GETSTATIC, "java/lang/System", "out",
+                            "Ljava/io/PrintStream;"));
+                    put.add(new TypeInsnNode(Opcodes.NEW, "java/lang/StringBuilder"));
+                    put.add(new InsnNode(Opcodes.DUP));
+                    put.add(new MethodInsnNode(Opcodes.INVOKESPECIAL, "java/lang/StringBuilder",
+                            "<init>", "()V", false));
+                    put.add(new LdcInsnNode("[QCL-saves] 点保存，目标文件="));
+                    put.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "java/lang/StringBuilder", "append",
+                            "(Ljava/lang/String;)Ljava/lang/StringBuilder;", false));
+                    put.add(new LdcInsnNode("qcl.savefile"));
+                    put.add(new MethodInsnNode(Opcodes.INVOKESTATIC, "java/lang/System", "getProperty",
+                            "(Ljava/lang/String;)Ljava/lang/String;", false));
+                    put.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "java/lang/StringBuilder", "append",
+                            "(Ljava/lang/Object;)Ljava/lang/StringBuilder;", false));
+                    put.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "java/lang/StringBuilder", "toString",
+                            "()Ljava/lang/String;", false));
+                    put.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "java/io/PrintStream", "println",
+                            "(Ljava/lang/String;)V", false));
                     // 插在 aconst_null 之前：不会破坏后面 aload_0 / getfield b / d.a(...) 的栈
                     mn.instructions.insertBefore(anchor, put);
-                    mn.maxStack = Math.max(mn.maxStack, 3);
+                    mn.maxStack = Math.max(mn.maxStack, 6);
                     done++;
                 }
                 if (done > 0) {
