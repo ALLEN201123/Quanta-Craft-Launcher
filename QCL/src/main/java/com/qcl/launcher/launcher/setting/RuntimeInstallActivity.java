@@ -113,7 +113,12 @@ implements View.OnClickListener {
         this.installButton = (Button)this.findViewById(R.id.qcl_runtime_install);
         this.installButton.setOnClickListener((View.OnClickListener)this);
         this.specs.put("lwjgl", new Spec("lwjgl", "app_runtime/pojav", AppManifest.POJAV_LIB_DIR, false, "lwjgl3"));
-        this.specs.put("cacio", new Spec("cacio", "app_runtime/caciocavallo", AppManifest.CACIOCAVALLO_DIR, false, "cacio-shared-1.10-SNAPSHOT.jar"));
+        // ★ 判据从 cacio-shared-1.10-SNAPSHOT.jar 换成 QCL_CACIO_PATCH_V1.txt：
+        //   原来只看 cacio 自带的 jar 在不在 → 老安装一律跳过解压，
+        //   导致我们打进 ResConfHack.jar 的补丁永远装不到设备上（用户实测 1.4.5 依旧 NPE）。
+        //   改用「补丁版本标记」后：老安装没有这个文件 → 会重新解压一次 → 补丁生效；
+        //   已装过补丁的则跳过，保持启动速度。
+        this.specs.put("cacio", new Spec("cacio", "app_runtime/caciocavallo", AppManifest.CACIOCAVALLO_DIR, false, "QCL_CACIO_PATCH_V1.txt"));
         this.specs.put("cacio17", new Spec("cacio17", "app_runtime/caciocavallo17", AppManifest.CACIOCAVALLO17_DIR, false, "cacio-agent.jar"));
         this.specs.put("java8", new Spec("java8", "app_runtime/java/jre8", AppManifest.JAVA_DIR + "/default", true, "bin/java"));
         this.specs.put("java17", new Spec("java17", "app_runtime/java/jre17", AppManifest.JAVA_DIR + "/JRE17", true, "lib/modules"));
