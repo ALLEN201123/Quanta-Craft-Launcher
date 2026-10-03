@@ -21,9 +21,11 @@ import android.widget.Toast;
 import com.qcl.launcher.R;
 import com.qcl.launcher.auth.authlibinjector.AuthlibInjectorServer;
 import com.qcl.launcher.launcher.MainActivity;
+import com.qcl.launcher.launcher.dialogs.LaunchCountDialog;
 import com.qcl.launcher.launcher.download.modloader.ModLoaderDetector;
 import com.qcl.launcher.launcher.launch.check.LaunchTools;
 import com.qcl.launcher.launcher.list.local.game.GameListBean;
+import com.qcl.launcher.launcher.setting.launcher.LauncherSetting;
 import com.qcl.launcher.launcher.uis.universal.setting.right.launcher.ExteriorSettingUI;
 import com.qcl.launcher.manifest.AppManifest;
 import com.qcl.launcher.launcher.setting.InitializeSetting;
@@ -533,8 +535,57 @@ public class MainUI extends BaseUI implements View.OnClickListener, AdapterView.
             Bundle bundle = new Bundle();
             bundle.putString("setting_path",finalPath);
             bundle.putBoolean("test",false);
-            LaunchTools.launch(context,activity,activity.publicGameSetting.currentVersion,bundle);
+            // ★ 1.4.5：启动次数统计 + 里程碑提示（20 / 60 / 80 / 100 …）
+            maybeRemindLaunchCount(() -> LaunchTools.launch(context,activity,activity.publicGameSetting.currentVersion,bundle));
         }
+    }
+
+    /**
+     * ★ 1.4.5：累计启动次数 +1；达到里程碑（20 / 60 / 80 / 100 …）时先弹一次提示，
+     * 无论点「赞助一下」还是「以后再说」，关掉后都会继续启动游戏。
+     * <p>同一个里程碑只弹一次（记在 launcherSetting.lastLaunchPromptAt），不会反复烦玩家。
+     * <p>计数与记录都存在 launcher_setting.json 里，卸载前一直有效。
+     */
+    private void maybeRemindLaunchCount(Runnable afterPrompt) {
+        int count = 1;
+        try {
+            LauncherSetting ls = activity.launcherSetting;
+            if (ls != null) {
+                ls.gameLaunchCount = ls.gameLaunchCount + 1;
+                count = ls.gameLaunchCount;
+                // 计算"已经过了几个 20 次"：20→1、40→2、60→3 …（40 故意不弹，按用户要求 20/60/80/100 的节奏）
+                int milestone = milestoneFor(count);
+                if (milestone > ls.lastLaunchPromptAt) {
+                    ls.lastLaunchPromptAt = milestone;
+                    GsonUtils.saveLauncherSetting(ls, AppManifest.SETTING_DIR + "/launcher_setting.json");
+                    final int shown = count;
+                    LaunchCountDialog dialog = new LaunchCountDialog(context, shown, afterPrompt::run);
+                    dialog.show();
+                    return;
+                }
+                GsonUtils.saveLauncherSetting(ls, AppManifest.SETTING_DIR + "/launcher_setting.json");
+            }
+        } catch (Throwable t) {
+            // 统计出任何问题都不该拦住玩家启动游戏
+            t.printStackTrace();
+        }
+        afterPrompt.run();
+    }
+
+    /**
+     * 里程碑换算：20 次 → 20；60 次 → 60；80 → 80；100 → 100；之后每 +20 一次。
+     * 即：第 1~20 次没有提示，第 20 次弹；21~59 不弹；第 60 次弹；61~79 不弹；
+     * 第 80 次弹；81~99 不弹；第 100 次弹；之后 120 / 140 … 依次。
+     */
+    private static int milestoneFor(int count) {
+        if (count < 20) {
+            return 0;
+        }
+        if (count < 60) {
+            return 20;
+        }
+        // 60 之后按 20 一档：60→60、80→80、100→100、120→120 …
+        return (count / 20) * 20;
     }
 
     @SuppressLint({"SetTextI18n", "UseCompatLoadingForDrawables"})

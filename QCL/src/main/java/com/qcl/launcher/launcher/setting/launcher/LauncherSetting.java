@@ -23,6 +23,15 @@ public class LauncherSetting {
     /** 1.3.7: 主界面是否显示账号人物（默认开） */
     public boolean showAccountModel = true;
     public int uiTheme;
+    /**
+     * ★ 1.4.5：玩家累计启动游戏的次数（每次点「启动游戏」+1，存进 launcher_setting.json）。
+     */
+    public int gameLaunchCount;
+    /**
+     * ★ 1.4.5：上一次弹「启动次数提示」时的里程碑（20 / 60 / 80 / 100 …）。
+     * 用它保证同一个里程碑**只弹一次**，玩家点过就不会反复烦他。
+     */
+    public int lastLaunchPromptAt;
 
     public LauncherSetting(String str, SourceSetting sourceSetting, int i, int i2, boolean z, boolean z2, boolean z3, boolean z4, boolean z5, String str2, String str3, BackgroundSetting backgroundSetting, String str4) {
         this(str, sourceSetting, i, i2, z, z2, z3, z4, z5, str2, str3, backgroundSetting, str4, 0);

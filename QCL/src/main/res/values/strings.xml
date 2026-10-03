@@ -9,6 +9,11 @@
     <string name="dialog_outdated_warning_msg">QCL (Quanta Craft Launcher) is an independent Minecraft Java Edition launcher and is still under active development. If you run into issues or have suggestions, please report them on the QCL GitHub repository.</string>
     <string name="dialog_outdated_warning_hide">Don\'t show again</string>
     <string name="dialog_outdated_warning_positive">Got it</string>
+    <string name="dialog_launch_count_title">You have launched how many times now?</string>
+    <string name="dialog_launch_count_msg">You have launched the game %1$d times.</string>
+    <string name="dialog_launch_count_hint">QCL is a free launcher built by one person in their spare time. If you find it useful, you can buy the author a drink. If not, just tap "Later" — it changes nothing about how the app works.</string>
+    <string name="dialog_launch_count_sponsor">Sponsor</string>
+    <string name="dialog_launch_count_later">Later</string>
 
     <string name="launcher_spinner_text" translatable="false">▲</string>
     <string name="dialog_add_offline_account_uuid" translatable="false">UUID</string>

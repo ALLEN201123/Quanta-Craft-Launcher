@@ -4,6 +4,11 @@
     <string name="dialog_outdated_warning_msg">QCL（量子方块启动器）是独立的 Minecraft Java 版启动器项目，仍在持续开发中。如果你遇到问题或有建议，欢迎到 QCL 的 GitHub 仓库反馈。</string>
     <string name="dialog_outdated_warning_hide">不再显示</string>
     <string name="dialog_outdated_warning_positive">我明白了</string>
+    <string name="dialog_launch_count_title">你已经启动了几次来着？</string>
+    <string name="dialog_launch_count_msg">你已经启动了 %1$d 次游戏。</string>
+    <string name="dialog_launch_count_hint">QCL 是一个人在业余时间做的免费启动器 —— 如果你觉得它好用，可以请作者喝杯饮料；不方便的话点「以后再说」就行，完全不影响使用。</string>
+    <string name="dialog_launch_count_sponsor">赞助一下</string>
+    <string name="dialog_launch_count_later">以后再说</string>
 
     <string name="dialog_unknown_error_title">警告</string>
     <string name="dialog_unknown_error_msg">启动器遇到无法处理的错误，请联系开发者解决。</string>

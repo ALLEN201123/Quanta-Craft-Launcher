@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:padding="15dp"
+    android:layout_width="450dp"
+    android:layout_height="wrap_content">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="@dimen/text_size_big"
+        android:textColor="@color/colorPureBlack"
+        android:textStyle="bold"
+        android:text="@string/dialog_launch_count_title"/>
+
+    <TextView
+        android:id="@+id/launch_count_text"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:textSize="@dimen/text_size_middle"
+        android:textColor="@color/colorPureBlack"
+        android:text="@string/dialog_launch_count_msg"/>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:textSize="@dimen/text_size_small"
+        android:textColor="@color/colorPureBlack"
+        android:text="@string/dialog_launch_count_hint"/>
+
+    <LinearLayout
+        android:layout_marginTop="12dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <View
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_weight="1"/>
+
+        <Button
+            android:id="@+id/launch_count_later"
+            android:singleLine="true"
+            android:textAllCaps="false"
+            android:layout_width="wrap_content"
+            android:minWidth="80dp"
+            android:layout_height="40dp"
+            android:gravity="center"
+            android:text="@string/dialog_launch_count_later"
+            android:textSize="15sp"
+            android:textColor="@color/colorLinkBlue"
+            android:background="@drawable/launcher_button_parent"/>
+
+        <Button
+            android:id="@+id/launch_count_sponsor"
+            android:layout_marginStart="10dp"
+            android:singleLine="true"
+            android:textAllCaps="false"
+            android:layout_width="wrap_content"
+            android:minWidth="80dp"
+            android:layout_height="40dp"
+            android:gravity="center"
+            android:text="@string/dialog_launch_count_sponsor"
+            android:textSize="15sp"
+            android:textColor="@color/colorLinkBlue"
+            android:background="@drawable/launcher_button_parent"/>
+
+    </LinearLayout>
+
+</LinearLayout>
