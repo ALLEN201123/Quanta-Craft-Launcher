@@ -55,10 +55,14 @@ android {
         minSdk 26
         targetSdk 34
         // Own version line for QCL; kept above 208 so any earlier test build is an upgrade, never a downgrade.
-        // ★ 346：上一任那次被撤掉的 1.4.5 用的是 345，本次重做直接跳到 346，
-        //   避免"同一个版本号对应两份内容不同、其中一份没测过"的混乱。
-        versionCode 346
-        versionName "1.4.5"
+        // ★ 348 / 1.4.6：远古版本「保存世界 / 载入世界」**完整修复**版。
+        //   · 保存：玩家在「输入世界名称」界面输的名字现在**真的参与保存**
+        //     （游戏原本把这个名字丢掉：c.p 只用它控制按钮，c.f 又从不 setFile()；
+        //      现由 c.p 补丁把名字存进系统属性，cacio 对话框读取并作为存档文件名）
+        //   · 载入：游戏内列表显示本地存档（带保存时间），点一下真能进世界
+        //   · 7 个受影响的版本各自一份补丁（c/e + d + c/p），不再"匹配不到就套 20100223 补丁"
+        versionCode 348
+        versionName "1.4.6"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }

@@ -109,9 +109,41 @@ class CacioFileDialogPeer extends CacioDialogPeer implements java.awt.peer.FileD
             if (!dir.endsWith(File.separator)) {
                 dir = dir + File.separator;
             }
-            String name = (fd.getMode() == FileDialog.SAVE)
-                    ? pickSaveName(dir)
-                    : pickLoadName(dir);
+            // ★★★ 保存时的文件名优先级（从高到低）：
+            //   1) 玩家在「输入世界名称」界面输入的名字 —— 游戏侧补丁(c.p)把它存进了系统属性 qcl.savename；
+            //      ★ 游戏本身**从来不用**这个名字（c.p 只拿它控制"保存"按钮是否可点，
+            //        而 c.f 开对话框时也从不调 setFile()），所以必须由我们接上，
+            //        否则玩家输的名字白输、存档会被存成"世界2.mclevel"这种新文件。
+            //   2) 对话框已有的名字（fd.getFile()）。
+            //   3) 目录里唯一的 .mclevel（远古版本通常只有一个世界 → 直接沿用，避免"每存一次多一个文件"）。
+            //   4) 最后才自动起名（世界 / 世界2 / …）。
+            String name;
+            if (fd.getMode() == FileDialog.SAVE) {
+                String fromProp = null;
+                try {
+                    fromProp = System.getProperty("qcl.savename");
+                } catch (Throwable ignored) {
+                }
+                String typed = fd.getFile();
+                if (fromProp != null && !fromProp.trim().isEmpty()) {
+                    name = fromProp.trim();
+                    System.out.println("[QCL-cacio] 采用玩家输入的世界名：" + name);
+                } else if (typed != null && !typed.trim().isEmpty()) {
+                    name = typed.trim();
+                    System.out.println("[QCL-cacio] 采用对话框已有名字：" + name);
+                } else {
+                    String only = onlyMcLevelName(dir);
+                    if (only != null) {
+                        name = only;
+                        System.out.println("[QCL-cacio] 目录里只有一个存档，沿用它：" + name);
+                    } else {
+                        name = pickSaveName(dir);
+                        System.out.println("[QCL-cacio] 自动起名：" + name);
+                    }
+                }
+            } else {
+                name = pickLoadName(dir);
+            }
             System.out.println("[QCL-cacio] 替游戏作答：mode="
                     + (fd.getMode() == FileDialog.SAVE ? "保存" : "打开")
                     + " 目录=" + dir + " 文件名=" + name);
@@ -187,6 +219,29 @@ class CacioFileDialogPeer extends CacioDialogPeer implements java.awt.peer.FileD
             i++;
         }
         return name;
+    }
+
+    /**
+     * 目录里如果**只有一个** .mclevel，返回它的完整文件名（含后缀）；否则返回 null。
+     * <p>远古版本通常就一个世界，直接沿用可以让「同一个世界反复保存」不会每存一次多出一个文件。
+     */
+    private static String onlyMcLevelName(String dir) {
+        File[] list = new File(dir).listFiles();
+        if (list == null) {
+            return null;
+        }
+        String found = null;
+        int count = 0;
+        for (File f : list) {
+            if (f.isFile() && f.getName().toLowerCase().endsWith(".mclevel")) {
+                count++;
+                found = f.getName();
+                if (count > 1) {
+                    return null;
+                }
+            }
+        }
+        return count == 1 ? found : null;
     }
 
     /**

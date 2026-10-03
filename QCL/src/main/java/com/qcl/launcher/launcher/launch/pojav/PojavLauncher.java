@@ -612,9 +612,11 @@ public class PojavLauncher {
      * 所以不能合并成一个 jar。
      */
     private static File ensureSavesListJar(Context context, String versionName) {
-        // 该版本有专属补丁就用它，否则退回默认那份（默认那份就是 in-20100223 的）
+        // ★★★ 只认**精确版本名**，绝不兜底到别的版本的补丁！
+        //   历史 bug：原来匹配不到时会退回 qcl_saveslist.jar（那是 in-20100223 的补丁），
+        //   把它套到别的版本上 → 类名相同但方法名/字段类型不同 → VerifyError → 存档界面直接崩。
+        //   现在匹配不到就返回 null（照旧启动，不做任何注入）。
         String asset = "game/qcl_saves_" + versionName + ".jar";
-        String outName = "qcl_saves_" + versionName + ".jar";
         try {
             String[] probe = context.getAssets().list("game");
             boolean has = false;
@@ -627,13 +629,13 @@ public class PojavLauncher {
                 }
             }
             if (!has) {
-                asset = "game/qcl_saveslist.jar";
-                outName = "qcl_saveslist.jar";
+                return null;   // 该版本没有对应补丁 → 不注入
             }
         } catch (Throwable ignored) {
+            return null;
         }
         try {
-            File dst = new File(context.getFilesDir(), outName);
+            File dst = new File(context.getFilesDir(), "qcl_saves_" + versionName + ".jar");
             try (java.io.InputStream in = context.getAssets().open(asset);
                  java.io.FileOutputStream out = new java.io.FileOutputStream(dst)) {
                 byte[] buf = new byte[65536];

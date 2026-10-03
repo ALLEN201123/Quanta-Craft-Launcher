@@ -279,6 +279,94 @@ public class PatchSaveList {
             System.out.println("   !! 没找到每帧收尾方法（f_/e_/d_）");
         }
 
+        // ④ ★★★ 「输入世界名称」界面（c.p）：把玩家输入的名字**存到系统属性**里，
+        //    否则这个名字会被游戏直接丢掉（c.p 只拿它控制"保存"按钮是否可点，然后切回上一屏），
+        //    接着 c.f 开文件对话框时又从不调用 setFile() —— 结果玩家输的名字根本没参与保存，
+        //    存档被存成"世界2.mclevel"这种新文件（用户表现："输名字没用、它自己就保存了"）。
+        //    对话框侧（cacio 补丁）会读这个属性，把它作为存档文件名。
+        //    插在"切回上一屏"之前：aload_0 / getfield b / aconst_null / invokevirtual d.a(...)
+        try {
+            ZipEntry zeP = null;
+            ZipFile zf2 = new ZipFile(jar);
+            try {
+                zeP = zf2.getEntry("net/minecraft/client/c/p.class");
+            } finally {
+                zf2.close();
+            }
+            if (zeP == null) {
+                System.out.println("   注：该版本没有 c/p.class（无「输入世界名称」界面），跳过取名补丁");
+            } else {
+                ClassNode cp;
+                ZipFile zf3 = new ZipFile(jar);
+                try {
+                    InputStream is = zf3.getInputStream(zf3.getEntry("net/minecraft/client/c/p.class"));
+                    cp = new ClassNode();
+                    new ClassReader(is).accept(cp, 0);
+                    is.close();
+                } finally {
+                    zf3.close();
+                }
+                int done = 0;
+                for (MethodNode mn : cp.methods) {
+                    if (!"a".equals(mn.name) || !"(Lnet/minecraft/client/c/r;)V".equals(mn.desc)) {
+                        continue;
+                    }
+                    // 找 aconst_null 后面紧跟 d.a(...) 的那个点
+                    AbstractInsnNode anchor = null;
+                    for (AbstractInsnNode p = mn.instructions.getFirst(); p != null; p = p.getNext()) {
+                        if (p.getOpcode() == Opcodes.ACONST_NULL && p.getNext() != null
+                                && p.getNext() instanceof MethodInsnNode) {
+                            MethodInsnNode mi = (MethodInsnNode) p.getNext();
+                            if ("net/minecraft/client/d".equals(mi.owner) && "a".equals(mi.name)) {
+                                anchor = p;
+                                break;
+                            }
+                        }
+                    }
+                    if (anchor == null) {
+                        continue;
+                    }
+                    InsnList put = new InsnList();
+                    // System.setProperty("qcl.savename", this.k.trim())
+                    put.add(new LdcInsnNode("qcl.savename"));
+                    put.add(new VarInsnNode(Opcodes.ALOAD, 0));
+                    put.add(new FieldInsnNode(Opcodes.GETFIELD, "net/minecraft/client/c/p",
+                            "k", "Ljava/lang/String;"));
+                    put.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "java/lang/String", "trim",
+                            "()Ljava/lang/String;", false));
+                    put.add(new MethodInsnNode(Opcodes.INVOKESTATIC, "java/lang/System", "setProperty",
+                            "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;", false));
+                    put.add(new InsnNode(Opcodes.POP));
+                    // 插在 aconst_null 之前：不会破坏后面 aload_0 / getfield b / d.a(...) 的栈
+                    mn.instructions.insertBefore(anchor, put);
+                    mn.maxStack = Math.max(mn.maxStack, 3);
+                    done++;
+                }
+                if (done > 0) {
+                    File outP = new File(out.getParentFile(), "p.class");
+                    ClassWriter cwP = new ClassWriter(ClassWriter.COMPUTE_FRAMES) {
+                        @Override
+                        protected String getCommonSuperClass(String t1, String t2) {
+                            try {
+                                return super.getCommonSuperClass(t1, t2);
+                            } catch (Throwable t) {
+                                return "java/lang/Object";
+                            }
+                        }
+                    };
+                    cp.accept(cwP);
+                    FileOutputStream fosP = new FileOutputStream(outP);
+                    fosP.write(cwP.toByteArray());
+                    fosP.close();
+                    System.out.println("   已生成取名补丁: " + outP.getAbsolutePath() + "（改了 " + done + " 个方法）");
+                } else {
+                    System.out.println("   !! c/p 里没找到可插入点");
+                }
+            }
+        } catch (Throwable t) {
+            System.out.println("   取名补丁失败（不致命）: " + t);
+        }
+
         ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES) {
             @Override
             protected String getCommonSuperClass(String type1, String type2) {
