@@ -176,6 +176,15 @@ public class PojavLauncher {
                 // 修复 jar 不可用时保持原样启动（画面尺寸退回旧行为），不影响启动
             }
             Vector<String> args = new Vector<String>();
+            // ★★★ 1.4.6：启动前自检远古版本运行环境（caciocavallo）。
+            //   文件缺失时**这里直接补齐**，否则 Tools.getCacioJavaArgs() 会拼出空的
+            //   -Xbootclasspath/p → JVM 报 Unrecognized option 起不来（踩过两次）。
+            try {
+                if (CacioRuntimeCheck.ensure(context, com.qcl.launcher.manifest.AppManifest.CACIOCAVALLO_DIR)) {
+                    Logger.getInstance(context).appendToLog("远古版本运行环境缺失，已自动重新解包");
+                }
+            } catch (Throwable ignoredCacioCheck) {
+            }
             if (qclLwjglXDiag != null) {
                 args.add("-Dqcl.lwjglx=" + qclLwjglXDiag);
             }
