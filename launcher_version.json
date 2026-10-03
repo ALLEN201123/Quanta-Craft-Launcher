@@ -1,17 +1,17 @@
 {
   "latestRelease": {
-    "versionCode": 348,
-    "versionName": "1.4.6",
+    "versionCode": 349,
+    "versionName": "1.4.7",
     "date": "2026-10-03",
     "url": [
-      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.4.6/QCL-release-1.4.6-arm64.apk",
-      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.4.6/QCL-release-1.4.6-arm.apk",
-      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.4.6/QCL-release-1.4.6-x86_64.apk",
-      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.4.6/QCL-release-1.4.6-x86.apk",
-      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.4.6/QCL-release-1.4.6-universal.apk"
+      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.4.7/QCL-release-1.4.7-arm64.apk",
+      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.4.7/QCL-release-1.4.7-arm.apk",
+      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.4.7/QCL-release-1.4.7-x86_64.apk",
+      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.4.7/QCL-release-1.4.7-x86.apk",
+      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.4.7/QCL-release-1.4.7-universal.apk"
     ],
     "netdiskUrl": "",
-    "updateLog": "1.4.6 更新内容：\\n\\n【修复】远古版本（indev / infdev）的「保存世界 / 载入世界」这次完整修好了。1.4.5 只把载入列表修了一半，保存那个名字一直是坏的 —— 本版把它接上了。\\n\\n1. 保存世界：你输入的名字现在真的参与保存。\\n   · 之前：点保存 → 输入世界名称 → 存的却是「世界2.mclevel」这种自己起的名字，你输的名字等于白输，看起来就像「它自己就保存了、根本没让我选」。\\n   · 原因（游戏本身的缺陷）：那个输入界面拿到名字后只用来判断「保存」按钮能不能点，然后就切回上一屏，名字被直接丢掉；紧接着开文件对话框的那段又从来不设置文件名 —— 所以对话框根本不知道你输过什么。\\n   · 现在：对话框优先采用你输入的名字；其次沿用目录里唯一的那个存档（同一个世界反复保存不会多出文件）；最后才自动起名。\\n\\n2. 载入世界：游戏内「载入世界」列出本地存档并带保存时间；点一下真的进入那个世界（已去掉 2010 年那段「只有从官网页面启动才允许载入」的在线校验）。\\n\\n3. 覆盖范围与一个隐患：受影响的 7 个版本现在各自都有一份补丁（in-20100223、inf-20100227-1433、inf-20100313、inf-20100316、inf-20100320、inf-20100321-1857、inf-20100325-1640）。之前补丁匹配不到时会退回去套用 in-20100223 的补丁，而各版本方法名与字段类型不同，会直接让存档界面崩掉 —— 现在只认精确版本，匹配不到就不注入。\\n\\n【本版没做的事，如实列出】\\n· 打开 ESC 菜单再关掉、视角偶发偏移 —— 仍未修（需要一次可复现的日志才能定位）。\\n· 投影工坊的 .litematic 导出按钮仍未实现（.schematic 导出正常）。\\n· 整合包导入支持 MultiMC / HMCL / CurseForge；Modrinth(.mrpack)、MCBBS、服务器整合包仍在补齐中。\\n\\n【关于远古版本的颜色异常：行业共有的天花板】\\n· 成因在第三方渲染器那一层：gl4es / Zink 这类 GL→GLES 转译器共用同一套颜色处理链路，问题出在首帧图形状态建立之后被固化；换任何一款第三方渲染器结果都一样，FCL 等同样基于 gl4es 的启动器也一样。\\n· 这是所有走第三方转译路线的安卓启动器共有的天花板，彻底解决取决于 QCL 的自研渲染器。"
+    "updateLog": "1.4.7 更新内容：\\n\\n【修复】远古版本（indev / infdev）的「保存世界 / 载入世界」这次完整修好了。1.4.5 只把载入列表修了一半，保存那个名字一直是坏的 —— 本版把它接上了。\\n\\n1. 保存世界：你输入的名字现在真的参与保存。\\n   · 之前：点保存 → 输入世界名称 → 存的却是「世界2.mclevel」这种自己起的名字，你输的名字等于白输，看起来就像「它自己就保存了、根本没让我选」。\\n   · 原因（游戏本身的缺陷）：那个输入界面拿到名字后只用来判断「保存」按钮能不能点，然后就切回上一屏，名字被直接丢掉；紧接着开文件对话框的那段又从来不设置文件名 —— 所以对话框根本不知道你输过什么。\\n   · 现在：对话框优先采用你输入的名字；其次沿用目录里唯一的那个存档（同一个世界反复保存不会多出文件）；最后才自动起名。\\n\\n2. 载入世界：游戏内「载入世界」列出本地存档并带保存时间；点一下真的进入那个世界（已去掉 2010 年那段「只有从官网页面启动才允许载入」的在线校验）。\\n\\n3. 覆盖范围与一个隐患：受影响的 7 个版本现在各自都有一份补丁（in-20100223、inf-20100227-1433、inf-20100313、inf-20100316、inf-20100320、inf-20100321-1857、inf-20100325-1640）。之前补丁匹配不到时会退回去套用 in-20100223 的补丁，而各版本方法名与字段类型不同，会直接让存档界面崩掉 —— 现在只认精确版本，匹配不到就不注入。\\n\\n【本版没做的事，如实列出】\\n· 打开 ESC 菜单再关掉、视角偶发偏移 —— 仍未修（需要一次可复现的日志才能定位）。\\n· 投影工坊的 .litematic 导出按钮仍未实现（.schematic 导出正常）。\\n· 整合包导入支持 MultiMC / HMCL / CurseForge；Modrinth(.mrpack)、MCBBS、服务器整合包仍在补齐中。\\n\\n【关于远古版本的颜色异常：行业共有的天花板】\\n· 成因在第三方渲染器那一层：gl4es / Zink 这类 GL→GLES 转译器共用同一套颜色处理链路，问题出在首帧图形状态建立之后被固化；换任何一款第三方渲染器结果都一样，FCL 等同样基于 gl4es 的启动器也一样。\\n· 这是所有走第三方转译路线的安卓启动器共有的天花板，彻底解决取决于 QCL 的自研渲染器。"
   },
   "latestPrerelease": null
 }
