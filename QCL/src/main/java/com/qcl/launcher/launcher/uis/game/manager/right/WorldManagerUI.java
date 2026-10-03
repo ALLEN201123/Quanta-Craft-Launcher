@@ -34,11 +34,14 @@ import com.qcl.launcher.utils.file.FileStringUtils;
 import com.qcl.launcher.utils.file.UriUtils;
 import com.qcl.launcher.utils.gson.GsonUtils;
 import com.qcl.launcher.utils.gson.JsonUtils;
+import com.qcl.launcher.utils.Logging;
 import com.qcl.launcher.utils.platform.Bits;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.logging.Level;
 import java.util.stream.Collectors;
 
 public class WorldManagerUI extends BaseUI implements CompoundButton.OnCheckedChangeListener, View.OnClickListener {
@@ -174,7 +177,26 @@ public class WorldManagerUI extends BaseUI implements CompoundButton.OnCheckedCh
             Version v = gson.fromJson(gameJsonText, Version.class);
             this.version = v.getId();
             allWorldList = new ArrayList<>();
-            allWorldList.addAll(World.getWorlds(new File(saveDir).toPath()).collect(Collectors.toList()));
+            // ★ 1.4.4：远古版本（classic / indev / infdev）的存档位置与新版本不一样 ——
+            //   有时落在游戏目录的 saves/，有时落在**版本目录**的 saves/。
+            //   原来只扫 saveDir 一个地方 → 在游戏里保存完世界，回到存档页却什么都看不到。
+            //   现在三个候选目录全扫一遍，并按路径去重（同一个世界不会被列两次）。
+            java.util.LinkedHashSet<java.nio.file.Path> seen = new java.util.LinkedHashSet<>();
+            List<String> candidates = new ArrayList<>();
+            candidates.add(saveDir);
+            candidates.add(activity.launcherSetting.gameFileDirectory + "/saves");
+            candidates.add(activity.launcherSetting.gameFileDirectory + "/versions/" + versionName + "/saves");
+            for (String dir : candidates) {
+                if (dir == null || seen.contains(new File(dir).toPath().toAbsolutePath())) {
+                    continue;
+                }
+                seen.add(new File(dir).toPath().toAbsolutePath());
+                List<World> found = World.getWorlds(new File(dir).toPath()).collect(Collectors.toList());
+                if (!found.isEmpty()) {
+                    Logging.LOG.log(Level.INFO, "Found " + found.size() + " world(s) in " + dir);
+                }
+                allWorldList.addAll(found);
+            }
             activity.runOnUiThread(() -> {
                 getNeededList();
                 progressBar.setVisibility(View.GONE);

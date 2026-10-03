@@ -101,21 +101,44 @@ public class World {
     }
 
     private void getWorldName(Path levelDat) throws IOException {
-        CompoundTag nbt = parseLevelDat(levelDat);
+        if (!Files.exists(levelDat)) {
+            throw new IOException("Not a valid world since level.dat cannot be found.");
+        }
+
+        // ★ 1.4.4：远古版本（classic / indev / infdev）的 level.dat 与现代格式差别很大
+        //   （可能没有 gzip、根标签不叫 Data、缺 LastPlayed…）。原来这里是"缺标签就抛异常"，
+        //   而 getWorlds() 捕获异常后 Stream.empty() → **该存档被静默丢弃**，
+        //   表现就是"保存完世界也不出现在存档页"。现在改成：解析不出来也照样收录，用目录名兜底。
+        CompoundTag nbt;
+        try {
+            nbt = parseLevelDat(levelDat);
+        } catch (Throwable t) {
+            Logging.LOG.log(Level.INFO, "level.dat unparsable for " + file + ", fall back to folder name");
+            useFolderAsMetadata();
+            return;
+        }
 
         CompoundTag data = nbt.get("Data");
-        if (data == null)
-            throw new IOException("level.dat missing Data");
+        if (data == null) {
+            // 1.2 之前的旧格式：根标签本身就是数据区
+            if (nbt.get("LevelName") instanceof StringTag) {
+                worldName = nbt.<StringTag>get("LevelName").getValue();
+            } else {
+                useFolderAsMetadata();
+                return;
+            }
+            data = nbt;
+        }
 
         if (data.get("LevelName") instanceof StringTag)
             worldName = data.<StringTag>get("LevelName").getValue();
-        else
-            throw new IOException("level.dat missing LevelName");
+        else if (worldName == null)
+            worldName = folderName();
 
         if (data.get("LastPlayed") instanceof LongTag)
             lastPlayed = data.<LongTag>get("LastPlayed").getValue();
         else
-            throw new IOException("level.dat missing LastPlayed");
+            lastPlayed = fileModifiedTime();
 
         gameVersion = null;
         if (data.get("Version") instanceof CompoundTag) {
@@ -123,6 +146,31 @@ public class World {
 
             if (version.get("Name") instanceof StringTag)
                 gameVersion = version.<StringTag>get("Name").getValue();
+        }
+    }
+
+    /** ★ 1.4.4：解析不出 level.dat 时用「文件夹名 + 文件夹修改时间」兜底，保证存档仍出现在列表里。 */
+    private void useFolderAsMetadata() {
+        if (worldName == null || worldName.isEmpty()) {
+            worldName = folderName();
+        }
+        lastPlayed = fileModifiedTime();
+        gameVersion = null;   // 未知版本 → WorldManagerUI 的过滤会把它列进当前版本
+    }
+
+    private String folderName() {
+        Path p = file;
+        if (p != null && p.getFileName() != null) {
+            return p.getFileName().toString();
+        }
+        return "";
+    }
+
+    private long fileModifiedTime() {
+        try {
+            return Files.exists(file) ? Files.getLastModifiedTime(file).toMillis() : 0L;
+        } catch (Throwable t) {
+            return 0L;
         }
     }
 
@@ -188,7 +236,16 @@ public class World {
     }
 
     private static CompoundTag parseLevelDat(Path path) throws IOException {
+        // ★ 1.4.4：远古版本的 level.dat 常常**没有 gzip 压缩**，原来只走 GZIPInputStream 一条路
+        //   → 直接抛异常 → 存档被 getWorlds 丢掉（"保存完世界也不出现在存档页"）。
+        //   现在先试 gzip，失败再按原始 NBT 读。
         try (InputStream is = new BufferedInputStream(new GZIPInputStream(Files.newInputStream(path)))) {
+            Tag nbt = NBTIO.readTag(is);
+            if (nbt instanceof CompoundTag)
+                return (CompoundTag) nbt;
+        } catch (Throwable ignored) {
+        }
+        try (InputStream is = new BufferedInputStream(Files.newInputStream(path))) {
             Tag nbt = NBTIO.readTag(is);
             if (nbt instanceof CompoundTag)
                 return (CompoundTag) nbt;
