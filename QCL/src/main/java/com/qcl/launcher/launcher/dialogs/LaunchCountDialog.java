@@ -22,8 +22,12 @@ import com.qcl.launcher.R;
  */
 public class LaunchCountDialog extends Dialog implements View.OnClickListener {
 
-    /** 作者赞助页（与「关于 → 赞助」用的是同一个地址）。 */
-    public static final String SPONSOR_URL = "https://qcl-sponsor.app.workbuddy.host/";
+    /**
+     * ★ 1.4.5：QCL 官方赞助页（作者朋友重做的新页面，2026-10-03 起启用）。
+     * <p>改这里就够了：设置→赞助、验证弹窗 与 启动次数弹窗 都用同一个地址。
+     * <p>⚠️ 用 https：该站 http 会 302 跳到 https，直连 https 少一跳。
+     */
+    public static final String SPONSOR_URL = "https://qcl5g.de5.net/";
 
     private final OnDismissedListener listener;
     private Button later;

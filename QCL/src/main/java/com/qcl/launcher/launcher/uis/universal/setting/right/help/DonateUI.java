@@ -50,7 +50,10 @@ public class DonateUI extends BaseUI implements View.OnClickListener {
     @Override // android.view.View.OnClickListener
     public void onClick(View view) {
         if (view == this.textView) {
-            this.context.startActivity(new Intent("android.intent.action.VIEW", Uri.parse("https://qcl-sponsor.app.workbuddy.host/")));
+            // ★ 1.4.5：改用 QCL 官方赞助页（作者朋友重做的新页面）；
+            //   与「启动次数提示 → 赞助一下」用的是同一个地址，双处保持一致。
+            this.context.startActivity(new Intent("android.intent.action.VIEW",
+                    Uri.parse(com.qcl.launcher.launcher.dialogs.LaunchCountDialog.SPONSOR_URL)));
         }
     }
 }
