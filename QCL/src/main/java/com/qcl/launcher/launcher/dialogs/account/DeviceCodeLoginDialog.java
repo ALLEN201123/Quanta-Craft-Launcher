@@ -21,7 +21,6 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.Button;
 import android.widget.LinearLayout;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -57,7 +56,6 @@ public class DeviceCodeLoginDialog extends AlertDialog {
 
     private TextView codeView;
     private TextView statusView;
-    private ProgressBar progress;
     /** ★ 内嵌授权页（用户要求：不准跳出浏览器，就在启动器里登）。 */
     private LinearLayout rootLayout;
     private LinearLayout webHolder;
@@ -124,14 +122,11 @@ public class DeviceCodeLoginDialog extends AlertDialog {
         root.addView(webHolder, new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT, 0));
 
-        progress = new ProgressBar(ctx);
-        progress.setIndeterminate(true);
-        LinearLayout progressRow = new LinearLayout(ctx);
-        progressRow.setGravity(Gravity.CENTER);
-        progressRow.setPadding(0, dp(12), 0, dp(4));
-        progressRow.addView(progress);
-        root.addView(progressRow);
-
+        // ★★★ 2026-10-06：**这里原来有一个一直转的圆圈，已删除**。
+        //   用户反馈"微软登录下面为什么有一个圆圈一直转"、"还是没有被移除"。
+        //   那个圈是这个对话框里 new ProgressBar(ctx) + setIndeterminate(true) 加进去的，
+        //   属于"不确定进度"的转圈动画。现在**物理删除**，不再往界面加任何转圈控件，
+        //   进度只用下面的文字状态表达（"正在连接联机服务…"之类），更干净也不再晃眼。
         statusView = new TextView(ctx);
         statusView.setText("正在向微软申请设备码…");
         statusView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13);
@@ -154,15 +149,27 @@ public class DeviceCodeLoginDialog extends AlertDialog {
         closeRow.addView(closeBtn);
         root.addView(closeRow);
 
-        setView(root);
+        // ★★★ 2026-10-06 修复：把整块内容套进 ScrollView 再给全屏高度。
+        //   用户反馈：内嵌授权页一加载出来，整个界面被"顶到下面去了，根本滑不下去"，
+        //   连返回按钮都够不到。
+        //   原因：对话框用的是 WRAP_CONTENT 高度，WebView 又设了 55% 屏高，
+        //   两者叠加超出屏幕，而根布局不是可滚动的 → 下半截直接被裁掉。
+        //   修法：① 根内容换成 ScrollView；② 窗口高度给到屏幕的 92%；
+        //        ③ WebView 高度改成"剩余空间"（根布局 weight 分配），不再固定 55%。
+        android.widget.ScrollView scroll = new android.widget.ScrollView(ctx);
+        scroll.addView(root, new android.widget.FrameLayout.LayoutParams(
+                android.widget.FrameLayout.LayoutParams.MATCH_PARENT,
+                android.widget.FrameLayout.LayoutParams.WRAP_CONTENT));
+        setView(scroll);
         // ★ 允许返回键取消（onBackPressed 里会置 cancelled 并停掉轮询）
         setCancelable(true);
         setOnCancelListener(d -> cancelled = true);
-        // ★ 显式给对话框内容一个宽度，避免某些 ROM 上测量成 0（WebView 就看不见了）
+        // ★ 显式给对话框一个"接近全屏"的尺寸：
+        //   宽度 94% 屏宽、高度 92% 屏高，配合 ScrollView 保证任何内容都够得到。
         android.view.Window w = getWindow();
         if (w != null) {
-            int width = (int) (ctx.getResources().getDisplayMetrics().widthPixels * 0.92f);
-            w.setLayout(width, android.view.ViewGroup.LayoutParams.WRAP_CONTENT);
+            android.util.DisplayMetrics dm = ctx.getResources().getDisplayMetrics();
+            w.setLayout((int) (dm.widthPixels * 0.94f), (int) (dm.heightPixels * 0.92f));
         }
     }
 
@@ -183,7 +190,6 @@ public class DeviceCodeLoginDialog extends AlertDialog {
                     if (cancelled) {
                         return;
                     }
-                    progress.setVisibility(View.GONE);
                     statusView.setText("获取设备码失败：" + msg);
                 });
                 return;
@@ -251,7 +257,6 @@ public class DeviceCodeLoginDialog extends AlertDialog {
             }
             ui.post(() -> {
                 if (!cancelled) {
-                    progress.setVisibility(View.GONE);
                     statusView.setText("设备码已过期，请关闭后重试。");
                 }
             });
@@ -271,7 +276,6 @@ public class DeviceCodeLoginDialog extends AlertDialog {
             if (!msa.doesOwnGame) {
                 ui.post(() -> {
                     if (!cancelled) {
-                        progress.setVisibility(View.GONE);
                         statusView.setText("这个微软账号没有购买 Minecraft Java 版。");
                     }
                 });
@@ -314,7 +318,6 @@ public class DeviceCodeLoginDialog extends AlertDialog {
             final String msg = t.getMessage() == null ? t.toString() : t.getMessage();
             ui.post(() -> {
                 if (!cancelled) {
-                    progress.setVisibility(View.GONE);
                     statusView.setText("登录失败：" + msg);
                 }
             });
@@ -352,8 +355,13 @@ public class DeviceCodeLoginDialog extends AlertDialog {
             webHolder.addView(webView, new LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT));
         }
-        // ★ 用固定高度让 WebView 真正可见（Dialog 里 weight 不可靠，会塌成 0）
-        int h = (int) (getContext().getResources().getDisplayMetrics().heightPixels * 0.55f);
+        // ★ 给 WebView 一个**明确高度**。
+        //   ⚠️ 两个坑都踩过：
+        //     ① 用 weight=1 + height=0 → Dialog 里塌成 0，页面完全看不见；
+        //     ② 用 55% 屏高 + 根布局不可滚动 → 超出屏幕，下半截被裁掉、滑不下去。
+        //   现在：根布局已套 ScrollView（可滚动），这里给一个不超过半屏的固定高度，
+        //   页面本身可上下滑，整个对话框也能滑，返回按钮永远够得到。
+        int h = (int) (getContext().getResources().getDisplayMetrics().heightPixels * 0.45f);
         LinearLayout.LayoutParams lp = (LinearLayout.LayoutParams) webHolder.getLayoutParams();
         lp.height = h;
         webHolder.setLayoutParams(lp);
