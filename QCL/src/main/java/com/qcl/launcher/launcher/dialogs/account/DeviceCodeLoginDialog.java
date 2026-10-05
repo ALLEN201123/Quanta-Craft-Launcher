@@ -140,7 +140,10 @@ public class DeviceCodeLoginDialog extends AlertDialog {
 
         // 底部关闭按钮
         Button closeBtn = new Button(ctx);
-        closeBtn.setText("关闭");
+        // ★★★ 2026-10-06：改成「返回」并支持系统返回键。
+        //   用户反馈：玩家点了登录之后后悔了，想退回去却**退不出来**
+        //   （原来按钮写的是"关闭"，而且 setCancelable(false) 让返回键也失效）。
+        closeBtn.setText("返回");
         closeBtn.setOnClickListener(v -> {
             cancelled = true;
             dismiss();
@@ -152,7 +155,9 @@ public class DeviceCodeLoginDialog extends AlertDialog {
         root.addView(closeRow);
 
         setView(root);
-        setCancelable(false);
+        // ★ 允许返回键取消（onBackPressed 里会置 cancelled 并停掉轮询）
+        setCancelable(true);
+        setOnCancelListener(d -> cancelled = true);
         // ★ 显式给对话框内容一个宽度，避免某些 ROM 上测量成 0（WebView 就看不见了）
         android.view.Window w = getWindow();
         if (w != null) {
