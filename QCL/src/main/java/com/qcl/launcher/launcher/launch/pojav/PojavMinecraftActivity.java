@@ -324,12 +324,113 @@ extends BaseMainActivity {
         super.onPause();
     }
 
+    protected void onResume() {
+        super.onResume();
+        // ★★★ 1.4.8：保活。玩家切到后台时，没有前台服务的进程会被系统很快回收，
+        //   而游戏 JVM 就跑在本进程里 → 游戏直接挂掉、只能重开。
+        try {
+            GameAliveService.start(this);
+        } catch (Throwable t) {
+            Log.w("QCL-alive", "启动保活服务失败: " + t);
+        }
+        // ★★★ 1.4.8：启动游戏内「载入文件…／保存文件…」的文件桥（详见 QclFileBridge）。
+        //   它平时只是每 400ms 看一眼有没有请求文件，没有任何性能影响。
+        try {
+            QclFileBridge.start(this);
+        } catch (Throwable t) {
+            Log.w("QCL-filebridge", "启动文件桥失败: " + t);
+        }
+    }
+
+    protected void onDestroy() {
+        try {
+            QclFileBridge.stop();
+        } catch (Throwable ignored) {
+        }
+        try {
+            GameAliveService.stop(this);
+        } catch (Throwable ignored) {
+        }
+        super.onDestroy();
+    }
+
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
+        // ★★★ 1.4.8：游戏内「载入文件…／保存文件…」按钮的文件桥。
+        //   游戏 JVM 弹不出安卓组件，所以走文件信箱（见 QclFileBridge 的类注释）。
+        if (QclFileBridge.onActivityResult(requestCode, resultCode, data)) {
+            return;
+        }
+        // ★★★ 远古版本的「加载文件…」：游戏里的 cacio 对话框会弹**系统文件选择器**，
+        //     结果回到这里，再由我们把路径交回游戏进程内的 cacio（同一个进程）。
+        if (deliverGamePickedFile(requestCode, resultCode, data)) {
+            return;
+        }
         TerracottaHelper.onActivityResult((Activity)this, requestCode);
         if (this.menuHelper != null) {
             this.menuHelper.onActivityResult(requestCode, resultCode, data);
         }
+    }
+
+    /**
+     * 把"玩家在系统文件选择器里选中的存档文件"交回游戏里的 cacio 对话框。
+     *
+     * <p>为什么要这么绕：cacio 的 AWT 窗口在安卓上没有窗口实体，画不出文件对话框，
+     * 所以改成弹系统选择器；而系统选择器是异步的，结果只能从这里回去。
+     * 游戏进程和本 Activity 是同一个（manifest 里 {@code multiprocess="true"}），
+     * 所以直接用反射调用 cacio 里的静态钩子即可，不需要跨进程通信。
+     *
+     * @return 这次结果是不是文件选择器的（是的话就不再往下传）
+     */
+    private boolean deliverGamePickedFile(int requestCode, int resultCode, @Nullable Intent data) {
+        if (requestCode != 0x0C1F) {
+            return false;
+        }
+        String path = null;
+        try {
+            if (resultCode == Activity.RESULT_OK && data != null) {
+                // ① 我们自己的文件浏览器（LevelFileChooserActivity）直接给绝对路径
+                path = data.getStringExtra("path");
+                // ② 兼容系统选择器返回的 Uri
+                if (path == null && data.getData() != null) {
+                    android.net.Uri uri = data.getData();
+                    if ("file".equals(uri.getScheme())) {
+                        path = uri.getPath();
+                    } else {
+                        path = com.qcl.launcher.utils.file.UriUtils.getRealPathFromUri_AboveApi19(this, uri);
+                    }
+                }
+            }
+        } catch (Throwable t) {
+            Log.w("QCL-import", "解析选择的文件失败: " + t);
+        }
+        try {
+            // 反射调用 cacio 补丁里的静态钩子（它在游戏进程的类加载器里）
+            ClassLoader[] loaders = new ClassLoader[]{
+                    getClassLoader(),
+                    ClassLoader.getSystemClassLoader(),
+                    Thread.currentThread().getContextClassLoader()
+            };
+            Class<?> hook = null;
+            for (ClassLoader cl : loaders) {
+                if (cl == null) {
+                    continue;
+                }
+                try {
+                    hook = Class.forName("sun.awt.peer.cacio.CacioFileDialogPeer$PickerHook", false, cl);
+                    break;
+                } catch (Throwable ignored) {
+                }
+            }
+            if (hook == null) {
+                hook = Class.forName("sun.awt.peer.cacio.CacioFileDialogPeer$PickerHook");
+            }
+            hook.getMethod("deliver", String.class).invoke(null, path);
+            Log.i("QCL-import", "已把选择的文件交回游戏: " + path);
+        } catch (Throwable t) {
+            Log.w("QCL-import", "交回游戏失败（可能是没走选择器那条路）: " + t);
+        }
+        return true;
     }
 
     public void onPostResume() {

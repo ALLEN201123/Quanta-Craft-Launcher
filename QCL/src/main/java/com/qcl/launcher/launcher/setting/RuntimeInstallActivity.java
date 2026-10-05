@@ -121,7 +121,7 @@ implements View.OnClickListener {
         // ★★★ 改补丁内容时**必须换标记名**：设备上已有旧标记就会跳过整包重新解包，
         //   导致新补丁永远不生效（这个坑踩过两次）。
         //   V2：cacio 对话框补丁改成「保存时优先采用玩家输入的世界名」。
-        this.specs.put("cacio", new Spec("cacio", "app_runtime/caciocavallo", AppManifest.CACIOCAVALLO_DIR, false, "QCL_CACIO_PATCH_V2.txt"));
+        this.specs.put("cacio", new Spec("cacio", "app_runtime/caciocavallo", AppManifest.CACIOCAVALLO_DIR, false, "QCL_CACIO_PATCH_V4.txt"));
         this.specs.put("cacio17", new Spec("cacio17", "app_runtime/caciocavallo17", AppManifest.CACIOCAVALLO17_DIR, false, "cacio-agent.jar"));
         this.specs.put("java8", new Spec("java8", "app_runtime/java/jre8", AppManifest.JAVA_DIR + "/default", true, "bin/java"));
         this.specs.put("java17", new Spec("java17", "app_runtime/java/jre17", AppManifest.JAVA_DIR + "/JRE17", true, "lib/modules"));

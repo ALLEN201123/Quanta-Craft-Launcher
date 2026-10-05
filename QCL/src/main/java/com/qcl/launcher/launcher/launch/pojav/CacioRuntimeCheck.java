@@ -23,7 +23,9 @@ public final class CacioRuntimeCheck {
             "ResConfHack.jar",
             "cacio-shared-1.10-SNAPSHOT.jar",
             "cacio-androidnw-1.10-SNAPSHOT.jar",
-            "QCL_CACIO_PATCH_V2.txt",
+            // ★ 每次改了 ResConfHack.jar 内容（例如 1.4.8 加了系统文件选择器支持）
+            //   都要升这个标记，否则设备上会用旧的、不重新解包。
+            "QCL_CACIO_PATCH_V4.txt",
     };
     private static final String ASSET_DIR = "app_runtime/caciocavallo";
 

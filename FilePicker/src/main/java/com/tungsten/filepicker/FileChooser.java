@@ -189,6 +189,11 @@ public class FileChooser extends AppCompatActivity implements OnFileChangedListe
                             chosenItems.add(Uri.fromFile(f));
                             Intent data = new Intent();
                             data.putParcelableArrayListExtra(Constants.SELECTED_ITEMS, chosenItems);
+                            // ★★★ 1.4.8：额外带一份**绝对路径**。
+                            //   原来只给 Uri 列表，调用方要自己走 UriUtils 转换；
+                            //   而游戏内的「载入文件…」文件桥（QclFileBridge）拿到的是
+                            //   Intent，直接读这个 extra 最省事、也最不容易出错。
+                            data.putExtra("path", f.getAbsolutePath());
                             setResult(Activity.RESULT_OK, data);
                             finish();
                         }

@@ -55,13 +55,11 @@ android {
         minSdk 26
         targetSdk 34
         // Own version line for QCL; kept above 208 so any earlier test build is an upgrade, never a downgrade.
-        // ★ 349 / 1.4.7：在 348/1.4.6（远古存档完整修复）基础上再加一道保险 ——
-        //   启动游戏前自检 caciocavallo 运行环境，缺文件就直接从 APK assets 补齐。
-        //   为什么需要：解包只在 RuntimeInstallActivity 里做，而它仅在 KEY_READY=false
-        //   或版本号变化时才跑；文件被删/装了一半时缓存标记还在 → 再也不会补 →
-        //   Tools.getCacioJavaArgs() 拼出空的 -Xbootclasspath/p → JVM 直接起不来。
-        versionCode 349
-        versionName "1.4.7"
+        // ★ 350 / 1.4.8：修「载入世界」**失去选择权**的问题。
+        //   之前每帧收尾方法里被注入了"o 为空就自动取最新存档" → 一点「载入世界」就直接进了最新那个世界，
+        //   玩家根本来不及选。现在去掉自动加载，改成**点哪个槽位读哪个存档**。
+        versionCode 350
+        versionName "1.4.8"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }

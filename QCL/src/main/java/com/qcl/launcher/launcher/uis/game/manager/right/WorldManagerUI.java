@@ -229,7 +229,14 @@ public class WorldManagerUI extends BaseUI implements CompoundButton.OnCheckedCh
         if (view == addWorld) {
             Intent intent = new Intent(context, FileChooser.class);
             intent.putExtra(Constants.SELECTION_MODE, Constants.SELECTION_MODES.SINGLE_SELECTION.ordinal());
-            intent.putExtra(Constants.ALLOWED_FILE_EXTENSIONS, "zip");
+            // ★★★ 1.4.8：以前只允许 "zip"，导致**远古版本（indev/infdev）的单文件存档
+            //   （xxx.mclevel）根本选不了** —— 用户表现就是"导入不了、没法选文件"。
+            //   这里把 .mclevel / .mcworld 也放进来（World 类已支持这两类）：
+            //     .mcworld = 基岩版导出的存档包，.mclevel = 远古版本单文件存档
+            //   ⚠️ 分隔符必须是【分号】—— FileChooser 里是 split(";")，
+            //     传逗号会让整串被当成一个后缀名，结果一个文件都列不出来
+            //     （这正是"选了文件却什么都没有"的根因）。
+            intent.putExtra(Constants.ALLOWED_FILE_EXTENSIONS, "zip;mclevel;mcworld");
             intent.putExtra(Constants.INITIAL_DIRECTORY, new File(Environment.getExternalStorageDirectory().getAbsolutePath()).getAbsolutePath());
             activity.startActivityForResult(intent, PICK_WORLD_REQUEST);
         }

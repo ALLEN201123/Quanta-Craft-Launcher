@@ -119,6 +119,13 @@ class CacioFileDialogPeer extends CacioDialogPeer implements java.awt.peer.FileD
             //   4) 最后才自动起名（世界 / 世界2 / …）。
             String name;
             if (fd.getMode() == FileDialog.SAVE) {
+                // ★ 保存也让玩家自己挑目标文件（挑不到再回退到"输入世界名称"里给的名字）
+                if (tryNativePicker(fd)) {
+                    System.out.println("[QCL-cacio] 保存：已弹出文件浏览器");
+                    super.setVisible(true);
+                    scheduleAutoClose();
+                    return;
+                }
                 String fromProp = null;
                 try {
                     fromProp = System.getProperty("qcl.savename");
@@ -142,6 +149,14 @@ class CacioFileDialogPeer extends CacioDialogPeer implements java.awt.peer.FileD
                     }
                 }
             } else {
+                // ★★ 读取世界：弹系统文件选择器，让玩家自己挑（拿不到再回退到"最新存档"）
+                name = null;
+                if (tryNativePicker(fd)) {
+                    System.out.println("[QCL-cacio] 已用系统文件选择器作答");
+                    super.setVisible(true);
+                    scheduleAutoClose();
+                    return;
+                }
                 name = pickLoadName(dir);
             }
             System.out.println("[QCL-cacio] 替游戏作答：mode="
@@ -159,7 +174,11 @@ class CacioFileDialogPeer extends CacioDialogPeer implements java.awt.peer.FileD
             System.out.println("[QCL-cacio] 作答失败：" + t);
         }
         super.setVisible(true);
-        // 让游戏那边的模态循环正常返回：稍后把对话框收起来。
+        scheduleAutoClose();
+    }
+
+    /** 让游戏那边的模态循环正常返回：稍后把对话框收起来。 */
+    private void scheduleAutoClose() {
         new Thread(new Runnable() {
             public void run() {
                 try {
@@ -176,6 +195,189 @@ class CacioFileDialogPeer extends CacioDialogPeer implements java.awt.peer.FileD
                 }
             }
         }, "qcl-cacio-autoclose").start();
+    }
+
+    /**
+     * ★★ 让玩家自己挑文件：打开启动器自带的文件浏览器（或系统选择器）。
+     *
+     * <p><b>关键：绝对不能在游戏线程里等选择结果。</b>
+     * 这个 setVisible 是在游戏的「文件对话框线程」里被调用的，而**游戏主循环靠主线程跑**；
+     * 一旦在这里阻塞等待，界面就不再刷新、选择结果也回不来，
+     * 最后只能超时回退成"自动选最新存档"（用户看到的还是"它自己就进去了"）。
+     *
+     * <p>所以这里只负责"弹出来"：把本次是保存还是读档记进系统属性，
+     * 选择结果由 {@code PojavMinecraftActivity.onActivityResult} 写进 {@code qcl.pickedfile}，
+     * 游戏侧每帧的 {@code c.e.b()} 会取走并接着做保存/读档。
+     *
+     * @return true 表示已经交给文件浏览器处理（对话框可以收起来了）
+     */
+    private boolean tryNativePicker(FileDialog fd) {
+        // ★★★ 1.4.8 实测结论：**这条路走不通，直接不试。**
+        //   游戏跑在独立 JVM 里，看不到安卓的类（实测日志：
+        //   ClassNotFoundException: android/app/ActivityThread），
+        //   所以游戏进程里无法 startActivityForResult —— 这是 Pojav 架构的硬限制，
+        //   基于 Pojav 的启动器（含 FCL）都只能在启动器自己的界面里选文件。
+        //   要"自己挑存档文件"，请用启动器「存档」页的「导入世界」按钮
+        //   （1.4.8 已支持选 .mclevel / .mcworld）。
+        //   游戏内那个「加载文件…」按钮改成：把手机下载目录里现成的 .mclevel 收进存档目录。
+        if (true) {
+            return false;
+        }
+        if ("1".equals(System.getProperty("qclPickerBusy"))) {
+            // 已经弹过、正在等玩家选择 —— 别再弹第二个
+            return true;
+        }
+        Object activity = null;
+        try {
+            activity = findActivity();
+        } catch (Throwable t) {
+            System.out.println("[QCL-cacio] 找 Activity 失败：" + t);
+        }
+        if (activity == null) {
+            System.out.println("[QCL-cacio] 找不到 Activity，无法弹文件浏览器");
+            return false;
+        }
+        boolean wantSave = fd.getMode() == FileDialog.SAVE;
+        System.setProperty("qclWantSave", wantSave ? "1" : "0");
+        System.setProperty("qclPickerBusy", "1");
+        System.out.println("[QCL-cacio] 弹出文件浏览器（" + (wantSave ? "保存" : "读档") + "）…");
+        if (!launchPicker(activity, null)) {
+            System.setProperty("qclPickerBusy", "0");
+            return false;
+        }
+        return true;
+    }
+
+    /** 选择结果容器：在安卓 UI 线程被填，在游戏线程被读。 */
+    static final class PickerResult implements java.util.concurrent.Callable<String> {
+        volatile String path;
+        private final Object lock = new Object();
+
+        void set(String p) {
+            path = p;
+            synchronized (lock) {
+                lock.notifyAll();
+            }
+        }
+
+        void await(long ms) {
+            long end = System.currentTimeMillis() + ms;
+            synchronized (lock) {
+                while (path == null) {
+                    long left = end - System.currentTimeMillis();
+                    if (left <= 0) {
+                        return;
+                    }
+                    try {
+                        lock.wait(Math.min(left, 1000L));
+                    } catch (InterruptedException ignored) {
+                        return;
+                    }
+                }
+            }
+        }
+
+        /** 给启动器侧 onActivityResult 用：拿到就填进来。 */
+        @Override
+        public String call() {
+            return path;
+        }
+    }
+
+    /** 找到当前 Activity（游戏跑在自己的进程里，用 ActivityThread 反查）。 */
+    private static Object findActivity() throws Exception {
+        Class<?> at = Class.forName("android.app.ActivityThread");
+        Object thread = at.getMethod("currentActivityThread").invoke(null);
+        if (thread == null) {
+            return null;
+        }
+        try {
+            java.lang.reflect.Field f = at.getDeclaredField("mActivities");
+            f.setAccessible(true);
+            Object map = f.get(thread);
+            if (map instanceof java.util.Map) {
+                for (Object rec : ((java.util.Map<?, ?>) map).values()) {
+                    if (rec == null) {
+                        continue;
+                    }
+                    java.lang.reflect.Field af = rec.getClass().getDeclaredField("activity");
+                    af.setAccessible(true);
+                    Object act = af.get(rec);
+                    if (act != null) {
+                        return act;
+                    }
+                }
+            }
+        } catch (Throwable t) {
+            System.out.println("[QCL-cacio] 遍历 mActivities 失败：" + t);
+        }
+        return null;
+    }
+
+    /** 真正弹出文件浏览器。优先用启动器自带的那个（一定有、且只列存档文件）。 */
+    private static boolean launchPicker(Object activity, PickerResult result) {
+        PickerHook.set(result);
+        Class<?> actC;
+        Class<?> intentC;
+        try {
+            actC = Class.forName("android.app.Activity");
+            intentC = Class.forName("android.content.Intent");
+        } catch (Throwable t) {
+            System.out.println("[QCL-cacio] 拿不到 android 类：" + t);
+            PickerHook.set(null);
+            return false;
+        }
+        // ① 启动器自带的文件浏览器：一定能用，而且直接列出 .mclevel
+        try {
+            Object intent = intentC.getConstructor().newInstance();
+            intentC.getMethod("setClassName", String.class, String.class).invoke(intent,
+                    activity.getClass().getPackage().getName(),
+                    "com.qcl.launcher.launcher.launch.pojav.LevelFileChooserActivity");
+            actC.getMethod("startActivityForResult", intentC, int.class)
+                    .invoke(activity, intent, Integer.valueOf(PickerHook.REQUEST_CODE));
+            System.out.println("[QCL-cacio] 已打开内置文件浏览器（LevelFileChooserActivity）");
+            return true;
+        } catch (Throwable t) {
+            System.out.println("[QCL-cacio] 内置文件浏览器打不开，改用系统选择器：" + t);
+        }
+        // ② 兜底：系统文件选择器
+        try {
+            Object intent = intentC.getConstructor(String.class).newInstance("android.intent.action.GET_CONTENT");
+            intentC.getMethod("addCategory", String.class).invoke(intent, "android.intent.category.OPENABLE");
+            intentC.getMethod("setType", String.class).invoke(intent, "*/*");
+            actC.getMethod("startActivityForResult", intentC, int.class)
+                    .invoke(activity, intent, Integer.valueOf(PickerHook.REQUEST_CODE));
+            System.out.println("[QCL-cacio] 已打开系统文件选择器");
+            return true;
+        } catch (Throwable t) {
+            System.out.println("[QCL-cacio] startActivityForResult 失败：" + t);
+            t.printStackTrace();
+            PickerHook.set(null);
+            return false;
+        }
+    }
+
+    /** 让启动器侧的 onActivityResult 能把结果交回来。 */
+    public static final class PickerHook {
+        /** 请求码（和启动器侧约定一致）。 */
+        public static final int REQUEST_CODE = 0x0C1F;
+        private static volatile PickerResult current;
+
+        static void set(PickerResult r) {
+            current = r;
+        }
+
+        /** 启动器侧 onActivityResult 调用它把路径填回来。 */
+        public static void deliver(String path) {
+            PickerResult r = current;
+            if (r != null) {
+                r.set(path);
+            }
+        }
+
+        public static boolean hasPending() {
+            return current != null;
+        }
     }
 
     /** 直接改 visible 字段，绕开 AWT「show() 期间忽略 setVisible」的规则。 */

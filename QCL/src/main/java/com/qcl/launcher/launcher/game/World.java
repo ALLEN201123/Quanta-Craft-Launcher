@@ -263,6 +263,17 @@ public class World {
         }
 
         if (Files.isRegularFile(file)) {
+            // ★★★ 1.4.8：远古版本（indev / infdev）的存档是**单个 .mclevel 文件**，
+            //   不是 zip 包 —— 以前直接丢给 ZipTools 解压，必然失败（用户表现："导入不了"）。
+            //   这里单独处理：直接复制成 saves/<名字>.mclevel，游戏里就能看到并载入。
+            String lower = file.getFileName().toString().toLowerCase();
+            if (lower.endsWith(".mclevel")) {
+                com.qcl.launcher.utils.file.FileUtils.deleteDirectory(worldDir.toString());
+                Path target = savesDir.resolve(name + ".mclevel");
+                Files.createDirectories(savesDir);
+                Files.copy(file, target, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                return;
+            }
             com.qcl.launcher.utils.file.FileUtils.deleteDirectory(AppManifest.SAVES_CACHE_DIR + "/install/world");
             ZipTools.unzipFile(file.toString(),AppManifest.SAVES_CACHE_DIR + "/install/world",false);
             Path cur = new File(AppManifest.SAVES_CACHE_DIR + "/install/world/level.dat").toPath();
