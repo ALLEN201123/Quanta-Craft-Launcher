@@ -40,6 +40,23 @@ public class PatchSaveList {
     private static final String TARGET = "net/minecraft/client/c/e";
     /** TARGET 的 JVM 类型描述符（拼构造器/方法签名用）。 */
     private static final String TARGET_DESC = "Lnet/minecraft/client/c/e;";
+
+    /**
+     * ★★★【2026-10-06 关键】{@code net.minecraft.client.d.d}（地图数据）的**真实描述符**。
+     *
+     * <p>写存档要用它，而**每个版本的地图类都不一样**（实测 javap 结果）：
+     * <pre>
+     *   inf-20100227-1433 / inf-20100316      → Lnet/minecraft/a/a/e;
+     *   inf-20100313     / inf-20100320 / 1857 → Lnet/minecraft/a/a/f;
+     *   in-20100223      / inf-20100325-1640   → Lnet/minecraft/a/a/g;
+     * </pre>
+     * 之前硬编码成 {@code g}，于是其它版本运行时抛 {@code NoSuchFieldError}，
+     * 「保存文件…」写盘失败、界面卡住在"正在保存"。
+     *
+     * <p>本字段由 {@link #detectMapDesc(java.util.zip.ZipFile)} 在打补丁前从
+     * 目标版本的 {@code client/d.class} 里读出来，**不再靠猜**。
+     */
+    private static String MAPS_DESC = "Lnet/minecraft/a/a/g;";
     private static final String NEW_FIELD = "qclSavesLocal";
     private static final String NEW_FIELD_DESC = "[Ljava/lang/String;";
     private static final String LIST_METHOD = "qclListSaves";
@@ -109,6 +126,9 @@ public class PatchSaveList {
             cn = new ClassNode();
             new ClassReader(is).accept(cn, 0);
             is.close();
+            // ★★★【2026-10-06】先探测本版本 client/d.d 的真实描述符再干活。
+            //   每个版本的地图类不同（a/a/e、a/a/f、a/a/g 都有），硬编码必错。
+            detectMapDesc(zf);
         } finally {
             zf.close();
         }
@@ -788,9 +808,9 @@ public class PatchSaveList {
                             "(Lnet/minecraft/client/d;La/b;)V", false));
                     put.add(new VarInsnNode(Opcodes.ALOAD, 0));
                     put.add(new FieldInsnNode(Opcodes.GETFIELD, "net/minecraft/client/c/p", "b", "Lnet/minecraft/client/d;"));
-                    put.add(new FieldInsnNode(Opcodes.GETFIELD, "net/minecraft/client/d", "d", "Lnet/minecraft/a/a/g;"));
+                    put.add(new FieldInsnNode(Opcodes.GETFIELD, "net/minecraft/client/d", "d", MAPS_DESC));
                     put.add(new VarInsnNode(Opcodes.ALOAD, 13));
-                    put.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "net/minecraft/client/f", "a", "(Lnet/minecraft/a/a/g;Ljava/io/OutputStream;)V", false));
+                    put.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "net/minecraft/client/f", "a", "(" + MAPS_DESC + "Ljava/io/OutputStream;)V", false));
                     put.add(new VarInsnNode(Opcodes.ALOAD, 13));
                     put.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "java/io/FileOutputStream", "close", "()V", false));
                     put.add(new FieldInsnNode(Opcodes.GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;"));
@@ -1801,10 +1821,10 @@ public class PatchSaveList {
         c.add(new VarInsnNode(Opcodes.ALOAD, 0));
         c.add(new FieldInsnNode(Opcodes.GETFIELD, TARGET, "b", "Lnet/minecraft/client/d;"));
         c.add(new FieldInsnNode(Opcodes.GETFIELD, "net/minecraft/client/d", "d",
-                "Lnet/minecraft/a/a/g;"));
+                MAPS_DESC));
         c.add(new VarInsnNode(Opcodes.ALOAD, 1));
         c.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "net/minecraft/client/f", "a",
-                "(Lnet/minecraft/a/a/g;Ljava/io/OutputStream;)V", false));
+                "(" + MAPS_DESC + "Ljava/io/OutputStream;)V", false));
         c.add(new VarInsnNode(Opcodes.ALOAD, 1));
         c.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "java/io/FileOutputStream", "close", "()V", false));
         // 日志 + 清掉目标
@@ -2458,5 +2478,48 @@ public class PatchSaveList {
             return new InsnNode(Opcodes.ICONST_0 + v);
         }
         return new IntInsnNode(Opcodes.BIPUSH, v);
+    }
+
+    /**
+     * ★★★【2026-10-06】探测 {@code net.minecraft.client.d.d}（地图数据）的真实描述符。
+     *
+     * <p>为什么必须探测：写存档要调用
+     * {@code new net.minecraft.client.f(client, client.p).a(client.d, out)}，
+     * 而 {@code client.d} 的类型**每个版本都不同**（javap 实测）：
+     * <pre>
+     *   inf-20100227-1433 / inf-20100316       → Lnet/minecraft/a/a/e;
+     *   inf-20100313 / inf-20100320 / 1857     → Lnet/minecraft/a/a/f;
+     *   in-20100223 / inf-20100325-1640        → Lnet/minecraft/a/a/g;
+     * </pre>
+     * 硬编码成 {@code g} 会让其它版本运行时抛 {@code NoSuchFieldError}，
+     * 表现就是「保存文件… 点完之后一直卡在正在保存」。
+     *
+     * <p>做法：打开目标版本的 {@code client/d.class}，找名为 {@code d}、
+     * 描述符形如 {@code Lnet/minecraft/a/a/…;} 的实例字段，把它的描述符记下来。
+     * 找不到就保留默认值并在日志里告警（不致命，那一版的写盘会退化为报错但不崩）。
+     */
+    private static void detectMapDesc(java.util.zip.ZipFile zf) {
+        try {
+            java.util.zip.ZipEntry ze = zf.getEntry("net/minecraft/client/d.class");
+            if (ze == null) {
+                System.out.println("   !! 没有 client/d.class，无法探测地图字段类型");
+                return;
+            }
+            InputStream is = zf.getInputStream(ze);
+            ClassNode dn = new ClassNode();
+            new ClassReader(is).accept(dn, 0);
+            is.close();
+            for (FieldNode fn : dn.fields) {
+                if ("d".equals(fn.name) && fn.desc != null
+                        && fn.desc.startsWith("Lnet/minecraft/a/a/")) {
+                    MAPS_DESC = fn.desc;
+                    System.out.println("   地图字段 client/d.d 的真实类型: " + MAPS_DESC);
+                    return;
+                }
+            }
+            System.out.println("   !! client/d 里没找到地图字段 d（保留默认 " + MAPS_DESC + "）");
+        } catch (Throwable t) {
+            System.out.println("   !! 探测地图字段类型失败（保留默认）: " + t);
+        }
     }
 }

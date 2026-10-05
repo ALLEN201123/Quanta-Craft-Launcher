@@ -111,9 +111,11 @@ public final class MultiplayerDialogHelper {
 
         content.findViewById(R.id.create).setOnClickListener(v -> {
             dialog.dismiss();
+            // ★ 2026-10-06：改成**独立的进度弹窗**（带进度条 + 中文状态），
+            //   就绪后自动关掉并弹邀请码、自动复制 —— 与 FCL 的逻辑一致。
+            //   原来只有一个 Toast，玩家完全看不到进度（用户反馈）。
             TerracottaHelper.host(activity);
-            Toast.makeText(context, "正在创建房间…", Toast.LENGTH_SHORT).show();
-            pollRoom(activity, context, true);
+            TerracottaProgressDialog.show(activity, context, true);
         });
         content.findViewById(R.id.join).setOnClickListener(v -> {
             dialog.dismiss();
@@ -124,8 +126,8 @@ public final class MultiplayerDialogHelper {
                     .setView(input)
                     .setPositiveButton("加入", (d2, i2) -> {
                         TerracottaHelper.join(activity, input.getText().toString());
-                        Toast.makeText(context, "正在加入房间…", Toast.LENGTH_SHORT).show();
-                        pollRoom(activity, context, false);
+                        // ★ 访客同样走独立进度弹窗 + 自动复制地址
+                        TerracottaProgressDialog.show(activity, context, false);
                     })
                     .setNegativeButton("取消", (d2, i2) -> {
                     })

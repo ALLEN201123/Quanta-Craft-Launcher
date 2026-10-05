@@ -93,18 +93,35 @@ implements View.OnClickListener {
         this.purchaseLink.setMovementMethod(LinkMovementMethod.getInstance());
         this.login = (Button)this.findViewById(R.id.login_microsoft);
         this.cancel = (Button)this.findViewById(R.id.cancel_login_microsoft);
+        // ★★★ 2026-10-06：原来的「登录」按钮直接走**设备码流程**。
+        //   为什么改掉 WebView：内嵌 WebView 打开微软授权页在国内网络/部分机型上
+        //   会被微软拦住（提示"此浏览器不安全"或直接空白），玩家根本登不上。
+        //   设备码只要把 8 位码输进任意浏览器就行，不依赖 WebView，成功率高得多。
+        //   注意：**不是再加一个按钮**（用户明确要求"直接整在那个登录上面"），
+        //   而是让原来那个「登录」按钮就干这件事。
         this.progressBar = (ProgressBar)this.findViewById(R.id.login_progress);
+        // ★★★ 2026-10-06 修复：这个进度圈一直在转（用户反馈"下面一个圆圈一直转"）。
+        //   原因：它原本是给 WebView 登录流程用的（点了登录才显示、拿到结果隐藏），
+        //   而登录现在改成设备码弹窗了，这个圈**永远不会被隐藏**，就一直空转。
+        //   已经从布局里**物理删除**该 ProgressBar（用户要求"把那个圆圈给移除了"），
+        //   这里保留 null 判断只是防止别处还引用它时崩溃。
+        if (this.progressBar != null) {
+            this.progressBar.setVisibility(8);
+        }
         this.login.setOnClickListener((View.OnClickListener)this);
         this.cancel.setOnClickListener((View.OnClickListener)this);
     }
 
     public void onClick(View v) {
         if (v == this.login) {
-            Intent i = new Intent(this.getContext(), MicrosoftLoginActivity.class);
-            Bundle bundle = new Bundle();
-            bundle.putBoolean("fullscreen", this.activity.launcherSetting.fullscreen);
-            i.putExtras(bundle);
-            this.activity.startActivityForResult(i, 2000);
+            // ★★★ 2026-10-06：原来的 WebView 登录改成**设备码登录**。
+            //   老代码（留着备查）：
+            //     Intent i = new Intent(this.getContext(), MicrosoftLoginActivity.class);
+            //     Bundle bundle = new Bundle();
+            //     bundle.putBoolean("fullscreen", this.activity.launcherSetting.fullscreen);
+            //     i.putExtras(bundle);
+            //     this.activity.startActivityForResult(i, 2000);
+            new DeviceCodeLoginDialog(this.activity, this.onMicrosoftAccountAddListener).show();
         }
         if (v == this.cancel) {
             this.dismiss();

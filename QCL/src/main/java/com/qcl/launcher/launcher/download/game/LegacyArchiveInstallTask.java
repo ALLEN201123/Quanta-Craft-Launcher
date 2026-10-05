@@ -101,6 +101,8 @@ public class LegacyArchiveInstallTask extends AsyncTask<VersionManifest.Version,
     public static String resolveJarUrl(String infoUrl) throws IOException {
         String info = NetworkUtils.doGet(NetworkUtils.toURL(infoUrl));
         if (info == null) throw new IOException("Empty archive metadata: " + infoUrl);
+
+        // ① Betacraft 归档格式（纯文本，每行 `键: 值`，其中 url: 就是客户端 jar）
         for (String rawLine : info.split("\n")) {
             String line = rawLine.trim();
             if (line.startsWith("url:")) {
@@ -108,6 +110,22 @@ public class LegacyArchiveInstallTask extends AsyncTask<VersionManifest.Version,
                 if (!url.isEmpty()) return url;
             }
         }
+
+        // ② ★ 2026-10-06 新增：官方 launcher 元数据格式（JSON）。
+        //    愚人节 2.0 三个版本（2.0_blue / 2.0_red / 2.0_purple）在官方清单里没有，
+        //    QCL 走 unlisted-versions 归档（zkitefly.github.io/unlisted-versions-of-minecraft），
+        //    那些 .json 是标准 launcher 元数据：客户端 jar 在 downloads.client.url。
+        //    以前只认 ①，所以这三个版本点安装会报「没有它的下载地址」。
+        //    这里做个容错解析（不引 JSON 库，正则取第一个 downloads.client.url，
+        //    注意要跳过 downloads.client_mappings 之类的干扰项）。
+        java.util.regex.Matcher m = java.util.regex.Pattern.compile(
+                "\"client\"\\s*:\\s*\\{[^}]*?\"url\"\\s*:\\s*\"([^\"]+)\"",
+                java.util.regex.Pattern.DOTALL).matcher(info);
+        if (m.find()) {
+            String url = m.group(1).trim();
+            if (!url.isEmpty()) return url;
+        }
+
         throw new IOException("No client url in archive metadata: " + infoUrl);
     }
 

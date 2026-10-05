@@ -81,8 +81,41 @@ public final class TerracottaHelper {
         }
     }
 
+    /**
+     * ★★★ 2026-10-06 关键修复：**主动确保 VPN 权限已拿到**。
+     *
+     * <p>踩过的坑（用户实测）：在游戏里选「我要当房主」之后**完全没有 VPN 授权弹窗**，
+     * 房间也建不起来。原因有两层：
+     * <ol>
+     *   <li>原来只有 {@code initialize()} 里的原生回调才会触发 {@code startVpn()}，
+     *       而 {@code initialize()} 带 {@code if (initialized) return;} ——
+     *       第二次进来直接返回，**回调永远不再发生**，于是永远不申请权限。</li>
+     *   <li>玩家点「我要当房主」时并没有立刻申请权限，而是干等原生层回调，
+     *       回调不来就什么提示都没有。</li>
+     * </ol>
+     * <p>修法：{@code host()} / {@code join()} 里先主动调本方法申请权限
+     * （没授权就弹系统授权框；已授权就直接起 VPN 服务），再去设房间状态。
+     */
+    public static void ensureVpnPermission(final Activity activity) {
+        if (activity == null) {
+            return;
+        }
+        try {
+            activity.runOnUiThread(() -> startVpn(activity));
+        } catch (Throwable t) {
+            // 不在主线程就自己 post 一下
+            try {
+                new android.os.Handler(android.os.Looper.getMainLooper())
+                        .post(() -> startVpn(activity));
+            } catch (Throwable ignored) {
+            }
+        }
+    }
+
     /** 房主：重置到等待状态，原生层会自动生成房间邀请码（room）。 */
     public static void host(Activity activity) {
+        // ★ 先要 VPN 权限（会弹系统授权框），再设房间状态
+        ensureVpnPermission(activity);
         initialize(activity);
         try {
             TerracottaAndroidAPI.setWaiting();
@@ -93,6 +126,8 @@ public final class TerracottaHelper {
 
     /** 访客：填入邀请码加入房间，成功后状态里会带服务器地址（url）。 */
     public static boolean join(Activity activity, String code) {
+        // ★ 同样先要 VPN 权限
+        ensureVpnPermission(activity);
         initialize(activity);
         try {
             TerracottaAndroidAPI.setWaiting();
