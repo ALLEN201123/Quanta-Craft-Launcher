@@ -204,21 +204,14 @@ public class DeviceCodeLoginDialog extends AlertDialog {
                     return;
                 }
                 codeView.setText(dc.userCode);
-                statusView.setText("已自动复制代码，正在打开登录页…");
-                // ★★ 照 FCL 的逻辑，两步都自动做，不需要玩家点任何按钮：
-                //   ① 自动把设备码复制到剪贴板（玩家在内置页面里长按粘贴即可）
-                //   ② 自动在内置 WebView 里打开微软的输码页面
-                try {
-                    ClipboardManager cm = (ClipboardManager) getContext()
-                            .getSystemService(Context.CLIPBOARD_SERVICE);
-                    if (cm != null) {
-                        cm.setPrimaryClip(ClipData.newPlainText("device code", dc.userCode));
-                    }
-                } catch (Throwable ignored) {
-                    // 剪贴板失败不影响流程，码就显示在上面，玩家照样能看
-                }
+                statusView.setText("正在打开登录页…");
+                // ★★★ 2026-10-06：**移除"自动复制设备码"**（用户要求）。
+                //   原来这里会把码写进剪贴板，玩家一进登录界面剪贴板就被占了，
+                //   挺烦人的。现在不碰剪贴板 —— 反正验证码是通过下面这个**预填链接**
+                //   直接带进登录页的（login.live.com/oauth20_remoteconnect.srf?otc=<码>），
+                //   玩家根本不需要粘贴，剪贴板留着给玩家自己用。
                 showWebView();
-                statusView.setText("已自动复制代码 " + dc.userCode + "，请在内置页面里粘贴并确认");
+                statusView.setText("验证码已自动填入登录页，请点「继续」确认");
             });
 
             // 轮询直到成功 / 超时 / 用户关闭

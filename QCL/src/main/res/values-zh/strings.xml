@@ -1177,4 +1177,5 @@
     <string name="exterior_setting_ui_transparent_bg">透明界面背景（关闭恢复灰色）</string>
     <string name="ui_about_hmclpe_main">HMCL-PE 仓库（已归档）</string>
     <string name="ui_about_hmclpe_sub">HMCL-PE 已停止维护并归档。QCL 1.0.x 及以前基于 HMCL-PE 构建，之后为自建启动管线。</string>
+    <string name="dialog_add_microsoft_account_device_code">设备码登录</string>
 </resources>

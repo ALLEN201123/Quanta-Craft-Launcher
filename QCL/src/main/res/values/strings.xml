@@ -964,8 +964,8 @@
     <string name="dialog_add_fast_text_exist">The quick text already exists</string>
     <string name="dialog_add_fast_text_positive">Add</string>
     <string name="dialog_add_fast_text_negative">Cancel</string>
-    <string name="dialog_hin2n_menu_create">Create Session</string>
-    <string name="dialog_hin2n_menu_join">Join</string>
+    <string name="dialog_hin2n_menu_create">创建房间</string>
+    <string name="dialog_hin2n_menu_join">加入房间</string>
     <string name="dialog_hin2n_menu_info">Session Info</string>
     <string name="dialog_hin2n_menu_help">Help</string>
     <string name="dialog_hin2n_menu_in">You have created/joined a room</string>
@@ -1100,4 +1100,5 @@ Multiplayer is powered by Terracotta (by BurningTNT). The multiplayer feature is
     <string name="setting_check_update_none">Already up to date</string>
     <string name="setting_legacy_cn_lang">Legacy version language</string>
     <string name="legacy_cn_lang_cancel">Cancel</string>
+    <string name="dialog_add_microsoft_account_device_code">设备码登录</string>
 </resources>

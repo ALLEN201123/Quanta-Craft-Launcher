@@ -1,0 +1,3 @@
+QCL cacio FileDialog patch, v4
+applies to: cacio-shared-1.10-SNAPSHOT.jar
+changes: v4 = 1.4.8 游戏内文件浏览器（非阻塞）+ 内置 LevelFileChooserActivity

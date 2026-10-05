@@ -135,13 +135,6 @@
             android:layout_width="60dp"
             android:layout_height="40dp">
 
-            <ProgressBar
-                android:visibility="gone"
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:layout_centerInParent="true"
-                android:id="@+id/login_progress"/>
-
             <Button
                 android:singleLine="true"
                 android:textAllCaps="false"

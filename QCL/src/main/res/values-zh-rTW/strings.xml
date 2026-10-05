@@ -992,4 +992,5 @@
     <string name="splash_runtime_arch_unsupported">目前裝置架構（%1$s）沒有打包可用的 Java 執行環境檔案，請改用全架構版本的 QCL。</string>
     <string name="update_checking">正在檢查更新…</string>
     <string name="update_not_exist">目前已是最新版本</string>
+    <string name="dialog_add_microsoft_account_device_code">設備碼登入</string>
 </resources>

@@ -1,0 +1,3 @@
+QCL cacio FileDialog patch, v3
+applies to: cacio-shared-1.10-SNAPSHOT.jar
+changes: v3 = 1.4.8 新增「加载文件…→系统文件选择器」支持（PickerHook/PickerResult）
