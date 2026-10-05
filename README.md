@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="icon.png" width="160" alt="QCL 图标"/>
+  <img src="https://cdn.jsdelivr.net/gh/ALLEN201123/Quanta-Craft-Launcher@main/icon.png" width="160" alt="QCL 图标"/>
 </p>
 
 # QCL · Quanta Craft Launcher
