@@ -506,9 +506,14 @@ SeekBar.OnSeekBarChangeListener {
             HiddenAnimationUtils.newInstance(this.context, (View)this.gameLauncherSetting, (View)this.showGameLauncher, this.gameLauncherSettingHeight).toggle();
         }
         if (v == this.showPojavRendererSetting) {
+            // ★ 1.4.9：这是**全局**游戏设置页 → 必须写全局（perVersion=false）。
+            //   原来调的是 show(activity, pgs, currentVersion, ...)，那个重载语义是
+            //   「写该版本的 qcl.cfg」，于是玩家在全局设置里改渲染器，值却被写进某一个版本的
+            //   独立设置里 → 只有那一个版本变了、其他版本没变（"全局设置形同虚设"）。
             com.qcl.launcher.launcher.launch.RendererPicker.show(this.activity,
                     this.activity.privateGameSetting,
                     this.activity.publicGameSetting.currentVersion,
+                    false,
                     () -> {
                         if (this.currentPojavRenderer != null) {
                             this.currentPojavRenderer.setText((CharSequence)

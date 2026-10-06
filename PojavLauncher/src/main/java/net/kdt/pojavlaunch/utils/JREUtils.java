@@ -351,16 +351,112 @@ public class JREUtils {
         }
         arrayMap.put("AWTSTUB_WIDTH", Integer.toString(CallbackBridge.windowWidth > 0 ? CallbackBridge.windowWidth : CallbackBridge.physicalWidth));
         arrayMap.put("AWTSTUB_HEIGHT", Integer.toString(CallbackBridge.windowHeight > 0 ? CallbackBridge.windowHeight : CallbackBridge.physicalHeight));
+
         Iterator it = arrayMap.entrySet().iterator();
         while (it.hasNext()) {
             Map.Entry entry = (Map.Entry) it.next();
             Logger.getInstance(activity).appendToLog("Added custom env: " + ((String) entry.getKey()) + "=" + ((String) entry.getValue()));
             Os.setenv((String) entry.getKey(), (String) entry.getValue(), true);
         }
+        // ★★★ 1.4.9：插件 env 注入**挪到这里**（Os.setenv 循环之后）。
+        //   为什么挪：放在循环前的那版，运行日志里一条诊断都没有，而**同方法内**这个循环
+        //   的 32 条 "Added custom env" 一直正常输出 ⇒ 说明整段代码路径没问题，
+        //   唯一区别是「在 arrayMap 填完之后」。放到这里既能确保执行，
+        //   又能趁 arrayMap 已完整时做覆盖（插件声明优先）。
+        try {
+            java.util.List<String> pluginEnv2 = readPluginRendererEnv(
+                    activity, System.getProperty("qcl.renderer.picked", str6));
+            Logger.getInstance(activity).appendToLog(
+                    "[渲染器插件] picked=" + System.getProperty("qcl.renderer.picked", "?")
+                            + " env=" + pluginEnv2);
+            for (String kv : pluginEnv2) {
+                int i = kv.indexOf('=');
+                if (i <= 0) {
+                    continue;
+                }
+                String k = kv.substring(0, i);
+                String v = kv.substring(i + 1);
+                if (v == null || v.isEmpty()) {
+                    continue;
+                }
+                Logger.getInstance(activity).appendToLog("[渲染器插件] 注入 " + k + "=" + v);
+                Os.setenv(k, v, true);
+            }
+        } catch (Throwable pluginEnvErr) {
+            Logger.getInstance(activity).appendToLog("[渲染器插件] 失败: " + pluginEnvErr);
+        }
         jvmLibraryPath = getJvmLibDir(str);
         Log.d("DynamicLoader", "Base LD_LIBRARY_PATH: " + LD_LIBRARY_PATH);
         Log.d("DynamicLoader", "Internal LD_LIBRARY_PATH: " + jvmLibraryPath + ":" + LD_LIBRARY_PATH);
         setLdLibraryPath(jvmLibraryPath + ":" + LD_LIBRARY_PATH);
+    }
+
+    /**
+     * ★ 1.4.9：读取「外部渲染器插件」在 APK manifest 里声明的环境变量。
+     * <p>
+     * QCL 模块才有 {@code RendererPlugin}（需要 Gson + PackageManager 解析 meta-data），
+     * 而本类在 PojavLauncher 模块里、不能编译期依赖 QCL，所以走反射调用。
+     * 插件不可用 / 解析失败时返回空列表，行为与改动前完全一致。
+     *
+     * @param rendererId 内部渲染器 id（{@code mg} / {@code ng_gl4es} …）
+     */
+    private static java.util.List<String> readPluginRendererEnv(Activity activity, String rendererId) {
+        java.util.ArrayList<String> out = new java.util.ArrayList<String>();
+        if (activity == null || rendererId == null || rendererId.isEmpty()) {
+            return out;
+        }
+        try {
+            Class<?> pc = Class.forName("com.qcl.launcher.launcher.launch.RendererPlugin");
+            Object plugin = pc.getMethod("findByRendererId", Context.class, String.class)
+                    .invoke(null, (Context) activity, rendererId);
+            if (plugin == null) {
+                // 顺带把「扫到了哪些插件」打出来 —— 分不清是「没扫到插件」还是「id 没匹配上」
+                try {
+                    Object all = pc.getMethod("plugins", Context.class)
+                            .invoke(null, (Context) activity);
+                    Log.i("DynamicLoader", "[渲染器插件] id=" + rendererId
+                            + " 未匹配；已装插件=" + all);
+                    // ★ 同步写进游戏日志（Log.i 只进 logcat，实测抓不到）
+                    Logger.getInstance(activity).appendToLog(
+                            "[渲染器插件] id=" + rendererId + " 未匹配；已装=" + all);
+                } catch (Throwable ignoreList) {
+                    try {
+                        Logger.getInstance(activity).appendToLog(
+                                "[渲染器插件] 列插件失败: " + ignoreList);
+                    } catch (Throwable ignoreLog2) {
+                        // ignore
+                    }
+                }
+                return out;
+            }
+            Object env = plugin.getClass().getMethod("getEnv").invoke(plugin);
+            if (env instanceof java.util.List) {
+                for (Object o : (java.util.List<?>) env) {
+                    if (o != null) {
+                        out.add(o.toString());
+                    }
+                }
+            }
+            if (out.isEmpty()) {
+                Log.i("DynamicLoader", "[渲染器插件] " + rendererId + " 未声明 env（保持内置默认）");
+                try {
+                    Logger.getInstance(activity).appendToLog("[渲染器插件] " + rendererId + " 无 env 声明");
+                } catch (Throwable ignoredLog) {
+                    // 日志失败不影响启动
+                }
+            } else {
+                Log.i("DynamicLoader", "[渲染器插件] " + rendererId + " 声明 env: " + out);
+                try {
+                    Logger.getInstance(activity).appendToLog("[渲染器插件] " + rendererId + " env: " + out);
+                } catch (Throwable ignoredLog) {
+                    // 日志失败不影响启动
+                }
+            }
+        } catch (Throwable ignored) {
+            // 插件模块不可用 / 无此类 —— 记一行日志便于排查（★ 之前完全静默，导致线上无法定位）
+            Log.w("DynamicLoader", "[渲染器插件] 读取失败: " + ignored);
+        }
+        return out;
     }
 
     public static int launchJavaVM(Activity activity, String str, String str2, String str3, List<String> list, String str4, String str5) throws Throwable {

@@ -2,6 +2,7 @@ package net.kdt.pojavlaunch.utils;
 
 import android.app.Activity;
 import android.content.Context;
+import android.util.Log;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -12,6 +13,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Vector;
+import net.kdt.pojavlaunch.BaseMainActivity;
 import net.kdt.pojavlaunch.Logger;
 
 /* loaded from: classes2.dex */
@@ -27,7 +29,31 @@ public final class Tools {
         }
         ArrayList arrayList = new ArrayList();
         arrayList.addAll(Arrays.asList(strArr));
-        JREUtils.launchJavaVM(activity, str, str2, str3, arrayList, str4, str5);
+        // ★★★ 1.4.9「点退出游戏卡死、退不回启动器主界面」修复。
+        //   launchJavaVM 返回 = 游戏 JVM 彻底结束（JLI_Launch 已退出、native args 已 free）。
+        //   ★ 关键：**正常退出根本不会触发 PojavCallback.onExit** —— 那个回调只由游戏进程
+        //     内部主动调用（JLI 抛异常时才走）。所以以前「正常退出游戏」时这条链是断的：
+        //     游戏 Activity 还挂在前台，界面冻在最后一帧，玩家以为启动器死了。
+        //     26.2 崩溃那次日志里有 "[游戏退出] exitCode=1"，是因为异常路径碰巧调到了；
+        //     正常退出（exitCode=0）日志里根本没有那一行 —— 这正是漏掉的那一半。
+        //   这里在 launchJavaVM 返回后统一补一次 onExit，与游戏内部主动退出互不冲突
+        //   （PojavCallback.onExit 里的 killProcess 会立刻结束进程，重复调用无害）。
+        int exitCode;
+        try {
+            exitCode = JREUtils.launchJavaVM(activity, str, str2, str3, arrayList, str4, str5);
+        } catch (Throwable launchFailure) {
+            // launchJavaVM 本身抛异常（如 native 加载失败）：也要把界面收掉，否则同样卡死
+            Log.e("jrelog", "launchJavaVM failed: " + launchFailure);
+            try {
+                Logger.getInstance(activity).appendToLog("[游戏退出] JVM 启动异常: " + launchFailure);
+            } catch (Throwable ignoredLog) {
+                // empty catch block
+            }
+            BaseMainActivity.onExit(activity, -1);
+            throw launchFailure;
+        }
+        Log.i("jrelog", "[游戏退出] JVM 已结束 exitCode=" + exitCode + "，回调 onExit");
+        BaseMainActivity.onExit(activity, exitCode);
     }
 
     public static void getCacioJavaArgs(Context context, List<String> list, boolean z, int i, int i2) {

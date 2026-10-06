@@ -49,6 +49,7 @@ import com.qcl.launcher.launcher.download.babric.BabricInstallTask;
 import com.qcl.launcher.launcher.setting.game.PrivateGameSetting;
 import com.qcl.launcher.utils.gson.GsonUtils;
 import com.qcl.launcher.launcher.download.game.LegacyArchiveInstallTask;
+import com.qcl.launcher.launcher.download.game.LegacyVersionArchive;
 import com.qcl.launcher.launcher.download.game.MinecraftInstallTask;
 import com.qcl.launcher.launcher.download.game.VersionManifest;
 import com.qcl.launcher.launcher.download.liteloader.LiteLoaderInstallTask;
@@ -175,7 +176,12 @@ Handler.Callback {
     }
 
     public void downloadMinecraft() {
-        if ("archive".equals(this.version.type)) {
+        // ★ 1.4.9：原来只认字面量 "archive"，而周快照（11w47a~13w12a）走归档源、
+        //   但 type 被设为 "snapshot"（这样它们才能出现在「测试版」而不是「远古版」里）
+        //   → 点下载会掉进 MinecraftInstallTask，那条路没有 Mojang 元数据可读 → 必然失败。
+        //   现在两种归档类型都走归档安装流程。
+        if (LegacyVersionArchive.TYPE_ARCHIVE.equals(this.version.type)
+                || LegacyVersionArchive.TYPE_SNAPSHOT.equals(this.version.type)) {
             this.downloadArchivedBuild();
             return;
         }

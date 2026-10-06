@@ -677,9 +677,20 @@ SeekBar.OnSeekBarChangeListener {
         // ★★★ 1.1.1：Boat 后端已删除，只有 Pojav 一种后端
         this.launchByPojav.setChecked(true);
         this.currentLauncher.setText(this.context.getText(R.string.game_setting_ui_game_launcher_pojav));
+        // ★ 1.4.9：渲染器显示统一交给 refreshRendererText() —— 它按「本页版本 qcl.cfg 优先、
+        //   否则回落全局」的规则取值，和实际启动时的取值路径完全一致。
+        //   原来这里直接读 setting.pojavLauncherSetting.renderer：
+        //     · 未开独立设置时 setting 来自全局，读的其实是全局值（看不出"这版本没配过"）；
+        //     · 独立设置开着时 setting 是本页 qcl.cfg，但对不上 RendererPicker 切换后的新值
+        //       （因为切换时写的是另一个 versionPath）。
         if (this.currentPojavRenderer != null) {
-            this.currentPojavRenderer.setText((CharSequence)com.qcl.launcher.launcher.launch.RendererPicker
-                    .displayNameOf(setting.pojavLauncherSetting.renderer));
+            if (setting != null && setting.pojavLauncherSetting != null) {
+                this.currentPojavRenderer.setText((CharSequence)
+                        com.qcl.launcher.launcher.launch.RendererPicker
+                                .displayNameOf(setting.pojavLauncherSetting.renderer));
+            } else {
+                refreshRendererText();
+            }
         }
     }
 
@@ -923,23 +934,42 @@ SeekBar.OnSeekBarChangeListener {
     public void onStopTrackingTouch(SeekBar seekBar) {
     }
 
+    /** ★ 当前正在编辑的版本目录绝对路径（本页所有读写都以它为准，不是全局当前版本）。 */
+    private String editingVersionPath() {
+        if (this.versionName == null || this.versionName.isEmpty()) {
+            return null;
+        }
+        return this.activity.launcherSetting.gameFileDirectory + "/versions/" + this.versionName;
+    }
+
     private void showFullRendererDialog() {
         // ★★★ 1.1.3：统一走 RendererPicker —— 与「长按启动按钮」用的是同一个选择器。
         //   原先这里是**自己另拼一份 label**，只有「支持 ≤ x.x」与「⚠不支持当前版本」，
         //   缺少 RendererPicker 才有的「★推荐」「⚠缺少库文件（需自行导入）」以及 mg（MobileGlues）
         //   的安装/放置指引 → 玩家在设置页看到的列表"不齐"。
         //   现在三处入口（主界面长按启动按钮 / 版本设置 / 通用游戏设置）共用同一套列表与提示。
+        //
+        // ★★★ 1.4.9 修复「渲染器没有按版本独立」——本页是**版本独立设置页**，却传了
+        //   全局当前版本（publicGameSetting.currentVersion）当 versionPath。两个后果：
+        //     ① 列表标题/「⚠不支持当前版本」是按**别的版本**判断的，与本页编辑的版本无关；
+        //     ② 更严重：RendererPicker.apply() 依据 versionPath 决定写 qcl.cfg 还是写全局 json。
+        //        传错版本 → 切换被写到**全局**，本页版本实际用的还是旧渲染器，
+        //        玩家看到「切了但进游戏没变」，也就是"渲染器没隔开"。
+        //   现在一律用「本页正在编辑的版本目录」，与本页其它设置（JVM 参数 / 内存 / 游戏目录）
+        //   保存到同一个 qcl.cfg 的行为保持一致。
+        //   刷新显示时也必须重新从 qcl.cfg 读，不能读全局对象，否则界面显示的仍是全局值。
+        final String vPath = editingVersionPath();
+        if (vPath == null) {
+            android.widget.Toast.makeText((android.content.Context) this.activity,
+                    (CharSequence) "未选中版本，无法切换渲染器",
+                    (int) android.widget.Toast.LENGTH_SHORT).show();
+            return;
+        }
         try {
             com.qcl.launcher.launcher.launch.RendererPicker.show(this.activity,
                     this.activity.privateGameSetting,
-                    this.activity.publicGameSetting.currentVersion,
-                    () -> {
-                        if (this.currentPojavRenderer != null) {
-                            this.currentPojavRenderer.setText((CharSequence)
-                                    com.qcl.launcher.launcher.launch.RendererPicker.displayNameOf(
-                                            this.activity.privateGameSetting.pojavLauncherSetting.renderer));
-                        }
-                    });
+                    vPath,
+                    () -> refreshRendererText());
         }
         catch (Throwable e) {
             android.widget.Toast.makeText((android.content.Context) this.activity,
@@ -948,19 +978,24 @@ SeekBar.OnSeekBarChangeListener {
         }
     }
 
-    private void applyRenderer(String id2) {
-        try {
-            this.activity.privateGameSetting.pojavLauncherSetting.renderer = id2;
-            GsonUtils.savePrivateGameSetting(this.activity.privateGameSetting, AppManifest.SETTING_DIR + "/private_game_setting.json");
-            RendererCompat.Info info = RendererCompat.find(id2);
-            if (this.currentPojavRenderer != null && info != null) {
-                this.currentPojavRenderer.setText((CharSequence)info.displayName);
-            }
-            Toast.makeText((Context)this.activity, (CharSequence)("\u6e32\u67d3\u5668\u5df2\u5207\u6362: " + (info != null ? info.displayName : id2)), (int)0).show();
+    /** ★ 从「本页版本的 qcl.cfg（未开独立设置则回落全局）」读出实际生效的渲染器并显示。 */
+    private void refreshRendererText() {
+        if (this.currentPojavRenderer == null) {
+            return;
         }
-        catch (Throwable throwable) {
-            // empty catch block
+        String vPath = editingVersionPath();
+        String id = com.qcl.launcher.launcher.launch.RendererPicker
+                .currentRendererOf(this.activity.privateGameSetting, vPath);
+        if (id == null || id.isEmpty()) {
+            id = com.qcl.launcher.launcher.launch.RendererCompat.defaultRendererId();
         }
+        this.currentPojavRenderer.setText((CharSequence)
+                com.qcl.launcher.launcher.launch.RendererPicker.displayNameOf(id));
     }
+
+    // ★★★ 1.4.9：删除旧的 applyRenderer(String)。
+//   它无任何调用者（死代码），而且实现是**错的** —— 恒定写全局 private_game_setting.json，
+//   正是"渲染器切了但这个版本没生效"的来源之一。现在统一由 RendererPicker.show() +
+//   RendererPicker.apply() 处理（apply 会按 versionPath 决定写 qcl.cfg 还是写全局）。
 }
 

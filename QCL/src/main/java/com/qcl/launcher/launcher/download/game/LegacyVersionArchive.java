@@ -20,6 +20,43 @@ public final class LegacyVersionArchive {
 
     /** Marker type used by the download list so the UI can label archive-only entries. */
     public static final String TYPE_ARCHIVE = "archive";
+    /**
+     * ★ 1.4.9：周快照（11w47a ~ 13w12a 这类 id 形如 {@code 13w16a}）也走归档源
+     *   （Mojang 官方早已删除、Betacraft 有备份），但它们**不是「远古版」**——
+     *   它们本来就是快照，应当出现在「快照版」分类里，
+     *   否则玩家要去「远古版」里翻周快照（用户明确要求）。
+     *   <p>
+     *   ★★ 判定字符下标（这里数错过两次，记清楚）：
+     *       {@code 11w47a} 的字符是 1,1,w,4,7,a
+     *            下标：      0 1 2 3 4 5
+     *       所以 {@code 'w'} 在<b>下标 2</b>，它<b>后面一位（下标 3）是数字</b>。
+     *   · 先前错写成 {@code charAt(1)=='w'} → 74 个周快照一个没命中、全落进「远古版」
+     *     （用户实测："那些快照归档版还是在远古版本里面一个没动"）。
+     *   · 又一度想用 {@code \\d{2}w[a-z]}，但下标 3 是数字不是字母，同样不命中。
+     *   正确条件：<b>前两位是数字 + 下标 2 是 'w' + 下标 3 是数字</b>。
+     *   命中：11w47a / 12w05a / 12w05b / 13w12~-1439
+     *   不误伤：a1.0.14 / b1.8 / rd-132211 / c0.0.13a / in-20100223
+     */
+    public static final String TYPE_SNAPSHOT = "snapshot";
+
+    private static boolean isWeeklySnapshot(String id) {
+        if (id == null || id.length() < 4) {
+            return false;
+        }
+        char c0 = id.charAt(0);
+        char c1 = id.charAt(1);
+        char c2 = id.charAt(2);
+        char c3 = id.charAt(3);
+        return c0 >= '0' && c0 <= '9'
+                && c1 >= '0' && c1 <= '9'
+                && c2 == 'w'
+                && c3 >= '0' && c3 <= '9';
+    }
+
+    private static String typeOf(Entry entry) {
+        String id = entry.id == null ? "" : entry.id;
+        return isWeeklySnapshot(id) ? TYPE_SNAPSHOT : TYPE_ARCHIVE;
+    }
 
     private static final String ASSET_PATH = "legacy_version_archive.json";
 
@@ -69,7 +106,7 @@ public final class LegacyVersionArchive {
                     long stamp = entry.sortTime > 0 ? entry.sortTime
                             : (entry.compileTime > 0 ? entry.compileTime : entry.releaseTime);
                     Date when = stamp > 0 ? new Date(stamp) : null;
-                    result.add(shell.new Version(entry.id, TYPE_ARCHIVE,
+                    result.add(shell.new Version(entry.id, typeOf(entry),
                             entry.infoUrl == null ? "" : entry.infoUrl, when, when));
                 }
             }

@@ -151,6 +151,44 @@ public class DownloadMinecraftUI extends BaseUI implements View.OnClickListener,
                 linkedHashMap.put(version.id, version);
             }
         }
+        // ★ 1.4.9 诊断：周快照必须落在「快照版」分类（type=snapshot）。
+        //   若这里的 type 不是 snapshot，就会被 refresh() 归到「远古版」——
+        //   用户反馈"我让你把快照弄到测试版里，结果还在远古版那里"就是这里出问题。
+        try {
+            int snap = 0;
+            int arch = 0;
+            int weekSnap = 0;
+            String firstWeek = "";
+            String lastWeek = "";
+            String sample = "";
+            // linkedHashMap 是反编译产物（无泛型），values() 只能按 Object 迭代
+            for (Object obj : linkedHashMap.values()) {
+                VersionManifest.Version v = (VersionManifest.Version) obj;
+                String id = v.id == null ? "" : v.id;
+                // 独立复算一遍周快照判定（下标 0/1 数字、下标 2 是 w、下标 3 数字）
+                boolean wk = id.length() >= 4
+                        && id.charAt(0) >= '0' && id.charAt(0) <= '9'
+                        && id.charAt(1) >= '0' && id.charAt(1) <= '9'
+                        && id.charAt(2) == 'w'
+                        && id.charAt(3) >= '0' && id.charAt(3) <= '9';
+                if (wk) {
+                    weekSnap++;
+                    if (firstWeek.isEmpty() || id.compareTo(firstWeek) < 0) firstWeek = id;
+                    if (lastWeek.isEmpty() || id.compareTo(lastWeek) > 0) lastWeek = id;
+                }
+                if (LegacyVersionArchive.TYPE_SNAPSHOT.equals(v.type)) {
+                    snap++;
+                    if (sample.isEmpty()) sample = v.id;
+                } else if (LegacyVersionArchive.TYPE_ARCHIVE.equals(v.type)) {
+                    arch++;
+                }
+            }
+            android.util.Log.i("QCL-DL", "[版本清单] 合计=" + linkedHashMap.size()
+                    + " type=快照:" + snap + " type=远古:" + arch
+                    + " | 周快照判定命中=" + weekSnap
+                    + " 最早=" + firstWeek + " 最晚=" + lastWeek);
+        } catch (Throwable ignored) {
+        }
         final ArrayList arrayList = new ArrayList(linkedHashMap.values());
         VersionManifest.sortNewestFirst(arrayList);
         this.activity.runOnUiThread(new Runnable() { // from class: com.qcl.launcher.launcher.uis.game.download.right.DownloadMinecraftUI$$ExternalSyntheticLambda1
@@ -176,6 +214,36 @@ public class DownloadMinecraftUI extends BaseUI implements View.OnClickListener,
         refresh();
     }
 
+    /**
+     * ★ 2026-06 修正 → 见下方 2026-10-06 注释。
+     * <p>
+     * 判断一个版本 id 是否是「正式版形态」：纯数字 + 点分，如 1 / 1.1 / 1.4.1 / 1.5 / 1.20.6。
+     * 快照一定是「数字+字母」形态（11w47a / 13w16a / 20w07a / 1.20.5-beta.1 里的 beta 那类另有 AprilFools 判定）。
+     *
+     * <p><b>为什么需要它</b>：实测 Mojang 官方 version_manifest_v2 把
+     * {@code 1.3 / 1.4 / 1.4.1 / 1.4.3 / 1.5} 全标成 {@code type=snapshot}，
+     * 只有 1.1、1.2.5 是 release。照抄清单 → 玩家在「测试版」里看到 1.1~1.5（用户实测截图）。
+     * 纯数字版本号一律按正式版归类，符合直觉。
+     */
+    private static boolean isPlainReleaseId(String id) {
+        if (id == null || id.isEmpty()) {
+            return false;
+        }
+        for (int i = 0; i < id.length(); i++) {
+            char c = id.charAt(i);
+            if (c == '.') {
+                if (i == 0 || i == id.length() - 1) {
+                    return false;      // 开头/结尾的点 → 不合法
+                }
+                continue;
+            }
+            if (c < '0' || c > '9') {
+                return false;          // 出现字母（w / beta / rc…）→ 是快照或候选版
+            }
+        }
+        return true;
+    }
+
     private void refresh() {
         if (this.mcList == null) {
             return;
@@ -187,8 +255,16 @@ public class DownloadMinecraftUI extends BaseUI implements View.OnClickListener,
             // ★ 1.4.5：愚人节版优先判定 —— 它们在清单里就是 snapshot，
             //   不先摘出来的话会被"快照版"一起吃进去（用户看不到单独分类）。
             boolean april = AprilFools.isAprilFools(next);
-            boolean equals = "release".equals(next.type);
-            boolean equals2 = "snapshot".equals(next.type);
+            // ★ 2026-10-06 修复（用户实测"测试版里混了 5 个正式版"）
+            //   Mojang 官方清单把 1.1 ~ 1.5 这几个纯数字正式版**标成了 snapshot**
+            //   （实测官方 version_manifest_v2：1.3/1.4/1.4.1/1.4.3/1.5 全是 snapshot，
+            //     只有 1.1、1.2.5 是 release）。照抄清单就会让玩家在"测试版"里
+            //     看到 1.1~1.5，摸不着头脑。
+            //   规则：**id 是纯数字版本号（1 / 1.1 / 1.4.1 / 1.5 …）就一律按正式版归类**，
+            //     快照一定是 11w47a / 13w16a / 20w07a 这种「数字+字母」形态。
+            boolean plainRelease = isPlainReleaseId(next.id);
+            boolean equals = "release".equals(next.type) || plainRelease;
+            boolean equals2 = "snapshot".equals(next.type) && !plainRelease;
             boolean show;
             if (april) {
                 show = this.checkApril.isChecked();

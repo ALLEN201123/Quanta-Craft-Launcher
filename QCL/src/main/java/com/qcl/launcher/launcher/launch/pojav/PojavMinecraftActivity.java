@@ -269,6 +269,23 @@ extends BaseMainActivity {
             }
 
             public void onExit(int code) {
+                // ★★★【2026-10-06 修复 · 用户实测"26.2 点退出游戏卡死"】
+                //   照 FCL 的 GameMenu.onExit：游戏 JVM 一结束就**直接杀掉本进程**，
+                //   玩家下次点开启动器是冷启动，回到主界面。
+                //
+                //   ★ 原来这个回调是**空的** —— 游戏进程退出了，但游戏 Activity 还挂在前台
+                //     （黑屏 / 卡死，玩家以为是启动器死了）。exitCode==0 是正常退出，
+                //     非 0 是异常退出，这里都统一走 killProcess（与 FCL 行为一致）。
+                Log.i("jrelog", "[游戏退出] exitCode=" + code);
+                try {
+                    android.os.Process.killProcess(android.os.Process.myPid());
+                } catch (Throwable t) {
+                    // 兜底：万一杀不掉，至少把界面收掉，别让玩家对着黑屏
+                    try {
+                        PojavMinecraftActivity.this.finish();
+                    } catch (Throwable ignored) {
+                    }
+                }
             }
         };
     }

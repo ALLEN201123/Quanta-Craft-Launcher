@@ -44,9 +44,19 @@
     <!-- ★ Android 11+ 包可见性：外部渲染器（如 MobileGlues / VGPU 插件）通过
          「已安装应用的 nativeLibraryDir」提供 so，需要能查询到这些带启动图标的应用。 -->
     <queries>
+        <!-- ★★★ 1.4.9：外部渲染器插件（RendererPlugin v1/v2 协议）。
+             Android 11+ 包可见性限制下，不显式声明就 getInstalledApplications() 读不到它们，
+             导致 RendererPlugin.plugins() 返回空 → 插件声明的 pojavEnv 全部不注入
+             → MobileGlues 拿不到 LIBGL_ES=3 / MG_COUNT_LAUNCH，26.3 渲染管线崩。
+             QUERY_ALL_PACKAGES 覆盖所有未知插件（Zalith/FCL 生态的渲染器不止 mg 一个）。 -->
         <intent>
             <action android:name="android.intent.action.MAIN" />
         </intent>
+        <package android:name="com.fcl.plugin.mobileglues" />
+        <package android:name="com.movtery.zalithlauncher.v2" />
+        <package android:name="com.movtery.zalithlauncher.v2.debug" />
+        <package android:name="com.tungsten.fcl" />
+        <package android:name="com.fcl.plugin.krypton" />
         <!-- ★ 1.1.4：vivo/iQOO「游戏魔盒」。Android 11+ 的包可见性限制下，
              不声明就 getLaunchIntentForPackage("com.vivo.gamecube") 会返回 null。 -->
         <package android:name="com.vivo.gamecube" />

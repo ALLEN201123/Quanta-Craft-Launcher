@@ -148,9 +148,35 @@ public class MainUI extends BaseUI implements View.OnClickListener, AdapterView.
         startGame.setOnClickListener(this);
         // ★★★ 1.1.1：长按启动按钮 → 选择渲染器（公共选择器，版本设置/全局设置共用同一套）
         startGame.setOnLongClickListener(v -> {
+            // ★ 1.4.9 修复「长按启动切了渲染器，版本设置里不显示 / 全局设置被改」：
+            //   · apply() 现在只在「全局入口」才动内存里的全局对象（版本级入口不碰它），
+            //     所以这里切完**全局设置不会被污染**。
+            //   · 切完要刷新版本设置页的显示 —— 通过 GameManagerUI 让它重读该版本 qcl.cfg。
+            final String vPath = activity.publicGameSetting == null
+                    ? null : activity.publicGameSetting.currentVersion;
             com.qcl.launcher.launcher.launch.RendererPicker.show(activity,
                     activity.privateGameSetting,
-                    activity.publicGameSetting.currentVersion, null);
+                    vPath,
+                    () -> {
+                        // 回主界面后，若游戏管理页开着，刷新它显示的渲染器名。
+                        //   注意不能用 GameManagerUI.onResume() —— 那是「切 UI」的生命周期回调，
+                        //   拿它当刷新用会顺手把页面切走。
+                        //   正确做法：直接让版本设置页重读该版本 qcl.cfg（refresh 里会重读）。
+                        try {
+                            if (activity.uiManager != null
+                                    && activity.uiManager.gameManagerUI != null
+                                    && activity.uiManager.gameManagerUI.gameManagerUIManager != null
+                                    && activity.uiManager.gameManagerUI.gameManagerUIManager.versionSettingUI != null) {
+                                String vName = new java.io.File(vPath == null ? "" : vPath).getName();
+                                if (!vName.isEmpty()) {
+                                    activity.uiManager.gameManagerUI.gameManagerUIManager
+                                            .versionSettingUI.refresh(vName);
+                                }
+                            }
+                        } catch (Throwable ignoredRefresh) {
+                            // 刷新失败不影响设置已保存
+                        }
+                    });
             return true;
         });
     }

@@ -331,7 +331,6 @@ public class PojavLauncher {
                 if (JVMArgs[i].startsWith("-DignoreList") && !JVMArgs[i].endsWith("," + new File(gameLaunchSetting.currentVersion).getName() + ".jar")) {
                     JVMArgs[i] = JVMArgs[i] + "," + new File(gameLaunchSetting.currentVersion).getName() + ".jar";
                 }
-                if (JVMArgs[i].startsWith("-DFabricMcEmu") || JVMArgs[i].startsWith("net.minecraft.client.main.Main")) continue;
                 args.add(JVMArgs[i]);
             }
             if (qclNeed333 || qclNeed341) {
@@ -453,8 +452,15 @@ public class PojavLauncher {
                 com.qcl.launcher.launcher.launch.RendererCompat.Info qclRInfo =
                         com.qcl.launcher.launcher.launch.RendererCompat.find((String) qclEffectiveRenderer);
                 if (qclRInfo == null) {
-                    qclRInfo = com.qcl.launcher.launcher.launch.RendererCompat.find(
-                            com.qcl.launcher.launcher.launch.RendererCompat.defaultRendererId());
+                    // ★★★ 1.4.9 修正：原来这里在「玩家选的 id 查不到」时静默换成
+                    //   defaultRendererId()（原先是 opengles2 / Holy-GL4ES）——
+                    //   玩家明明在设置里选了别的渲染器，进游戏却用另一个，
+                    //   表现为「渲染器切换没生效 / 不完善」，而且很难自查。
+                    //   现在：**绝不替换玩家的选择**。查不到就整段跳过
+                    //   （glname / eglname / libdir 保持未设），让 JREUtils 沿用原逻辑；
+                    //   同时留一行日志便于事后定位。
+                    Log.w("jrelog", "[渲染器] 注册表里找不到 id=" + qclEffectiveRenderer
+                            + "，本次不覆盖 glname/eglname/libdir（不改用其它渲染器）");
                 }
                 if (qclRInfo != null) {
                     String qclLibDir = com.qcl.launcher.launcher.launch.RendererCompat.resolveRendererLibDir(

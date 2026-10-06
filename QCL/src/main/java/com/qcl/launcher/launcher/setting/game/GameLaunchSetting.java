@@ -7,12 +7,18 @@ import com.qcl.launcher.launcher.game.Library;
 import com.qcl.launcher.launcher.game.RuledArgument;
 import com.qcl.launcher.launcher.game.Version;
 import com.qcl.launcher.launcher.launch.LaunchVersion;
+import com.qcl.launcher.launcher.setting.game.child.BoatLauncherSetting;
+import com.qcl.launcher.launcher.setting.game.child.GameDirSetting;
+import com.qcl.launcher.launcher.setting.game.child.JavaSetting;
+import com.qcl.launcher.launcher.setting.game.child.PojavLauncherSetting;
+import com.qcl.launcher.launcher.setting.game.child.RamSetting;
 import com.qcl.launcher.launcher.setting.launcher.LauncherSetting;
 import com.qcl.launcher.manifest.AppManifest;
 import com.qcl.launcher.utils.file.FileStringUtils;
 import com.qcl.launcher.utils.gson.GsonUtils;
 import com.qcl.launcher.utils.gson.JsonUtils;
 import com.qcl.launcher.utils.platform.Bits;
+import com.qcl.launcher.utils.string.StringUtils;
 import java.io.File;
 import java.util.Iterator;
 import net.kdt.pojavlaunch.utils.Architecture;
@@ -141,6 +147,48 @@ public class GameLaunchSetting {
             publicGameSettingFromFile = new PublicGameSetting(new Account(0, "", "", "", "", "", "", "", "", "", "", ""), AppManifest.DEBUG_DIR, "");
         }
         PrivateGameSetting privateGameSettingFromFile = GsonUtils.getPrivateGameSettingFromFile(str);
+        // ★★★ 1.4.9 修复「渲染器切换不完善」的核心：设置来源必须做「版本 → 全局」回落。
+        //   原来只读 str（= 版本目录的 qcl.cfg）：
+        //     · 版本有 qcl.cfg → 只用它，pojavLauncherSetting.renderer 就是它存的值；
+        //     · 版本没有 qcl.cfg → 读回来是 null，下一行直接 NPE（启动崩溃），
+        //       或者在部分路径下拿到非预期对象 → **玩家在全局设置里选的渲染器被无视**，
+        //       表现为「全局明明选了 mg / Krypton，进游戏却是另一个」或「切换没反应」。
+        //   现在：
+        //     ① 版本 qcl.cfg 缺失 / 解析失败 → 回落读全局 private_game_setting.json；
+        //     ② 拿到设置后，若 renderer 为空 → 回落全局的 renderer（再兜底 defaultRendererId()）。
+        //   这与 RendererPicker.apply() 的写入路径（qcl.cfg 优先，否则全局）严格对称。
+        if (privateGameSettingFromFile == null
+                || privateGameSettingFromFile.pojavLauncherSetting == null
+                || StringUtils.isBlank(privateGameSettingFromFile.pojavLauncherSetting.renderer)) {
+            PrivateGameSetting global =
+                    GsonUtils.getPrivateGameSettingFromFile(AppManifest.SETTING_DIR + "/private_game_setting.json");
+            if (global != null) {
+                if (privateGameSettingFromFile == null) {
+                    privateGameSettingFromFile = global;
+                } else {
+                    if (privateGameSettingFromFile.pojavLauncherSetting == null) {
+                        privateGameSettingFromFile.pojavLauncherSetting = global.pojavLauncherSetting;
+                    } else if (StringUtils.isBlank(privateGameSettingFromFile.pojavLauncherSetting.renderer)
+                            && global.pojavLauncherSetting != null) {
+                        // 版本 qcl.cfg 开了独立设置但没存 renderer → 用全局的
+                        privateGameSettingFromFile.pojavLauncherSetting.renderer =
+                                global.pojavLauncherSetting.renderer;
+                    }
+                }
+            }
+            if (privateGameSettingFromFile == null) {
+                // 连全局设置都没有（全新安装 / 文件损坏）：造一份最小可用设置，
+                // 各子对象都必须非 null，否则下面读 gameDirSetting / javaSetting / ramSetting 会 NPE。
+                privateGameSettingFromFile = new PrivateGameSetting(
+                        false, true, true, false, false, false, false,
+                        new JavaSetting(true, "default"), "", "", "",
+                        new GameDirSetting(1, ""),
+                        new BoatLauncherSetting(false, "default", "default"),
+                        new PojavLauncherSetting(true,
+                                com.qcl.launcher.launcher.launch.RendererCompat.defaultRendererId(), "default"),
+                        new RamSetting(0, 0, true), "Default", 1.0f);
+            }
+        }
         if (privateGameSettingFromFile.gameDirSetting.type == 0) {
             str3 = launcherSettingFromFile.gameFileDirectory;
         } else if (privateGameSettingFromFile.gameDirSetting.type == 1) {
@@ -169,6 +217,17 @@ public class GameLaunchSetting {
         String str8 = publicGameSettingFromFile.home;
         if (str5 == null || str5.equals("")) {
             str5 = publicGameSettingFromFile.currentVersion;
+        }
+        // ★ 1.4.9：renderer 最终兜底。上面已做「版本 → 全局」回落，这里只处理
+        //   「三处都没有有效值」的最后一种情况，避免把空串传给 PojavLauncher
+        //   （会让 -Dorg.lwjgl.opengl.libname 等参数全变成空、进而开不出窗口）。
+        if (privateGameSettingFromFile.pojavLauncherSetting == null) {
+            privateGameSettingFromFile.pojavLauncherSetting =
+                    new PojavLauncherSetting(true,
+                            com.qcl.launcher.launcher.launch.RendererCompat.defaultRendererId(), "default");
+        } else if (StringUtils.isBlank(privateGameSettingFromFile.pojavLauncherSetting.renderer)) {
+            privateGameSettingFromFile.pojavLauncherSetting.renderer =
+                    com.qcl.launcher.launcher.launch.RendererCompat.defaultRendererId();
         }
         return new GameLaunchSetting(account, str8, str5, str7, privateGameSettingFromFile.extraJavaFlags, privateGameSettingFromFile.extraMinecraftFlags, str6, privateGameSettingFromFile.boatLauncherSetting.renderer, privateGameSettingFromFile.pojavLauncherSetting.renderer, privateGameSettingFromFile.touchInjector, privateGameSettingFromFile.scaleFactor, launcherSettingFromFile.gameFileDirectory, privateGameSettingFromFile.ramSetting.minRam, privateGameSettingFromFile.ramSetting.maxRam, privateGameSettingFromFile.controlLayout, privateGameSettingFromFile.server, launcherSettingFromFile.fullscreen, privateGameSettingFromFile.log);
     }

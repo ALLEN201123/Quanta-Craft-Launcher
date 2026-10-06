@@ -161,10 +161,29 @@ public final class RendererCompat {
         return false;
     }
 
-    public static final Info[] ALL = {new Info("opengles2", "Holy-GL4ES", "Holy GL4ES (OpenGL 2.1)", "libgl4es_114.so", "libEGL.so", "", "1.21.4", "1.21.4", true, true), new Info("ng_gl4es", "Krypton Wrapper", "Krypton Wrapper (OpenGL 3.1+；官方支持到 26.3-snapshot-3，26.3 正式版请用 MobileGlues)", "libng_gl4es.so", "libEGL.so", "", "26.2", "26.2", true, true), new Info("zink", "Zink", "Kopper Zink (OpenGL 4.6, Mesa zink on Vulkan；支持到 26.3-snapshot-3)", "libglxshim.so", "libEGL_mesa.so", "", "26.2", "26.2", true, true), new Info("opengles3_virgl", "VirGLRenderer", "VirGLRenderer (OpenGL 4.3, Mesa 软渲染；支持到 26.3-snapshot-3)", "libOSMesa_81.so", "libEGL.so", "", "26.2", "26.2", true, true), new Info("opengles3_virgl_osmesa8", "Freedreno", "Freedreno (OpenGL 4.6, 仅高通 adreno616-a660；支持到 26.3-snapshot-3)", "libOSMesa_8.so", "libEGL.so", "", "26.2", "26.2", true, false), new Info("opengles3_vgpu", "VGPU", "VGPU (OpenGL 2.1+)", "libvgpu.so", "libEGL.so", "", "1.16.5", "1.16.5", true, false), new Info("mg", "MobileGlues", "MobileGlues (外部渲染器：需安装官方 MobileGlues 插件 APK。26.3 正式版待 MG 官方支持 QCL)", "libmobileglues.so", "libEGL.so", "", "26.2", "26.2", false, false)};
+    // ★★★★ 2026-10-06 按用户实测反馈重标（截图证据：列表里"全都标着含远古版本"、上限还只有 ≤）
+    //   Info(id, name, displayName, glName, eglName, minMcVer, maxMcVer, displayMax, builtin, recommended)
+    //   · supportRangeText()：min 空 + max 空 → 「支持所有版本」；min 空 + max 有 → 「支持 ≤ X（含远古版本）」；
+    //     min 有 + max 有 → 「支持 min ~ max」（**不再含远古标记**）。
+    //   所以「含远古版本」= 靠 **minMcVer 留空** 来表达的，之前 7 个全留空 ⇒ 全被标成含远古。
+    //   按用户"真实支持情况"重填：
+    //     · Holy-GL4ES / VGPU：远古可用（老 OpenGL 2.x 路线）—— min 留空
+    //     · Krypton Wrapper：**最好的，支持全部版本** —— min/max/displayMax 全留空 ⇒「支持所有版本」
+    //     · Zink / VirGL / Freedreno：实际跑不了 indev/infdev/classic —— min 填 1.8 走区间文案
+    //     · MobileGlues：上限提到 **26.3**（描述里"26.3 正式版待支持"也一并更新）
+    //   recommended：之前 5 个都标 ★推荐，现只保留 Krypton（用户指定的"最好的"）。
+    //     · Krypton Wrapper：**最好的，支持全部历史版本（含远古），但不支持 26.3** ——
+    //       min 留空 ⇒ 保留「含远古版本」；max 填 26.2 ⇒ 不会误导成支持 26.3
+    public static final Info[] ALL = {new Info("opengles2", "Holy-GL4ES", "Holy GL4ES (OpenGL 2.1)", "libgl4es_114.so", "libEGL.so", "", "1.21.4", "1.21.4", true, false), new Info("ng_gl4es", "Krypton Wrapper", "Krypton Wrapper (OpenGL 3.1+；支持所有历史版本含远古，不支持 26.3)", "libng_gl4es.so", "libEGL.so", "", "26.2", "26.2", true, true), new Info("zink", "Zink", "Kopper Zink (OpenGL 4.6, Mesa zink on Vulkan；支持到 26.3-snapshot-3)", "libglxshim.so", "libEGL_mesa.so", "1.8", "26.2", "26.2", true, false), new Info("opengles3_virgl", "VirGLRenderer", "VirGLRenderer (OpenGL 4.3, Mesa 软渲染；支持到 26.3-snapshot-3)", "libOSMesa_81.so", "libEGL.so", "1.8", "26.2", "26.2", true, false), new Info("opengles3_virgl_osmesa8", "Freedreno", "Freedreno (OpenGL 4.6, 仅高通 adreno616-a660；支持到 26.3-snapshot-3)", "libOSMesa_8.so", "libEGL.so", "1.8", "26.2", "26.2", true, false), new Info("opengles3_vgpu", "VGPU", "VGPU (OpenGL 2.1+)", "libvgpu.so", "libEGL.so", "", "1.16.5", "1.16.5", true, false), new Info("mg", "MobileGlues", "MobileGlues (外部渲染器：需安装官方 MobileGlues 插件 APK；支持 1.17 ~ 26.2)", "libmobileglues.so", "libEGL.so", "1.17", "26.2", "26.2", false, false)};
 
     public static String defaultRendererId() {
-        return "opengles2";
+        // ★★★ 1.4.9 修正：原来这里返回 "opengles2"（Holy-GL4ES），但
+        //   InitializeSetting:97 写进全局设置的初始值是 "ng_gl4es"（Krypton Wrapper）。
+        //   两处不一致 → 读不到设置时兜底到 Holy-GL4ES、而界面显示 Krypton，
+        //   玩家切了渲染器却"进游戏还是另一个"（表现为切换没生效）。
+        //   现在兜底与初始值保持一致：**Krypton Wrapper**（也是唯一 builtin 且
+        //   「支持所有历史版本含远古」的渲染器，兜底到它最不容易让游戏开不起来）。
+        return "ng_gl4es";
     }
 
     /* loaded from: classes2.dex */
@@ -247,8 +266,20 @@ public final class RendererCompat {
 
     public static boolean supports(String str, String str2) {
         Info find;
-        if ("auto".equals(str) || (find = find(str)) == null || !find.builtin || isAncient(str2)) {
-            return true;
+        if ("auto".equals(str) || (find = find(str)) == null || !find.builtin) {
+            return true;      // 内置默认（opengles3）不在 ALL 表里 → 视为支持
+        }
+        // ★★★★ 2026-10-06 修复（用户实测"渲染器全都标着支持远古版本"）
+        //   原来这里还有 `|| isAncient(str2)`，等于**远古版本一律 return true** ——
+        //   于是 Zink / VirGL / Freedreno / VGPU / MobileGlues 全都被标成"支持远古版"，
+        //   玩家选了照样跑不起来。
+        //   实际只有两类支持远古版本：
+        //     · opengles3 —— QCL 内置默认，不在 ALL 表里（上面已 return true）
+        //     · opengles2（Holy-GL4ES）—— minMcVer 为空 = 无下限
+        //   照 FCL 的口径（VersionInstallPage/RendererCompat 同一套 min/maxMcVer 判据）：
+        //     minMcVer 为空 ⇒ 全版本支持；否则按区间判，远古版本按"无下限"这一条单独判。
+        if (isAncient(str2)) {
+            return find.minMcVer.isEmpty();
         }
         long parseVer = parseVer(str2);
         if (parseVer == 0) {

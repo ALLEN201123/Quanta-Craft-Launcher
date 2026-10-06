@@ -362,7 +362,7 @@
     <string name="download_minecraft_ui_hint">提示</string>
     <string name="download_minecraft_ui_hint_text">国内镜像下载由 BMCLAPI 提供。点击查看服务说明。官方清单未收录的远古版本，大部分已改为考古社区的归档版（几乎涵盖全部远古版本），可直接安装。</string>
     <string name="download_minecraft_ui_release">正式版</string>
-    <string name="download_minecraft_ui_snapshot">测试版</string>
+    <string name="download_minecraft_ui_snapshot">快照版</string>
     <string name="download_minecraft_ui_old">远古版</string>
     <string name="download_minecraft_ui_april">愚人节版</string>
     <string name="download_minecraft_ui_archive">归档版（几乎涵盖全部远古版本）</string>
