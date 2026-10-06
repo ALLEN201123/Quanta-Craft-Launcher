@@ -57,12 +57,32 @@ public final class RendererPicker {
         return info != null ? info.displayName : id;
     }
 
-    /** 弹出渲染器选择窗口。onChanged 可以为 null。 */
+    /**
+     * 弹出渲染器选择窗口。onChanged 可以为 null。
+     *
+     * @param versionPath 该选择作用于哪个版本目录；传 null / 非目录 = **写全局设置**。
+     *                    ★ 必须传对：这是「渲染器按版本隔开」的唯一开关。
+     *                    · 版本独立设置页 → 传本页正在编辑的版本目录（写 qcl.cfg，仅本版本生效）
+     *                    · 全局游戏设置页   → 传 null（写 private_game_setting.json，所有版本共用）
+     *                    · 主界面长按启动   → 传当前版本目录（等于"只给这个版本改"，符合直觉）
+     */
     public static void show(final Activity activity, final PrivateGameSetting pgs,
                             final String versionPath, final Runnable onChanged) {
+        show(activity, pgs, versionPath, true, onChanged);
+    }
+
+    /**
+     * @param perVersion true = 该选择只作用于 versionPath 指定的版本（写 qcl.cfg）；
+     *                   false = 写全局设置（忽略 versionPath）。
+     *                    全局游戏设置页必须传 false，否则玩家的全局改动会被写进某个版本的 qcl.cfg，
+     *                    结果是「全局设置里改了却只对某一个版本生效」——反向的隔离 bug。
+     */
+    public static void show(final Activity activity, final PrivateGameSetting pgs,
+                            final String versionPath, final boolean perVersion, final Runnable onChanged) {
         try {
             final String mcVer = versionNameOf(versionPath);
-            final String current = currentRendererOf(pgs, versionPath);
+            final String effPath = perVersion ? versionPath : null;
+            final String current = currentRendererOf(pgs, effPath);
             final List<String> labels = new ArrayList<String>();
             final List<String> ids = new ArrayList<String>();
             String nativeDir = activity.getApplicationInfo().nativeLibraryDir;
@@ -92,7 +112,7 @@ public final class RendererPicker {
             }
 
             new AlertDialog.Builder(activity)
-                    .setTitle("选择渲染器（当前版本 " + (mcVer != null ? mcVer : "?") + "）")
+                    .setTitle("选择渲染器" + (perVersion ? "（当前版本 " + (mcVer != null ? mcVer : "?") + "）" : "（全局设置）"))
                     .setItems(labels.toArray(new String[0]), (d, which) -> {
                         final String id = ids.get(which);
                         String warnText = RendererCompat.warningOf(id, mcVer);
@@ -120,13 +140,13 @@ public final class RendererPicker {
                                     .setTitle("渲染器兼容性提示")
                                     .setMessage(warnText)
                                     .setPositiveButton("我就要用这个渲染器", (d2, w2) -> {
-                                        apply(activity, pgs, versionPath, id);
+                                        apply(activity, pgs, effPath, id);
                                         if (onChanged != null) onChanged.run();
                                     })
                                     .setNegativeButton("取消", null)
                                     .show();
                         } else {
-                            apply(activity, pgs, versionPath, id);
+                            apply(activity, pgs, effPath, id);
                             if (onChanged != null) onChanged.run();
                         }
                     })
@@ -141,8 +161,30 @@ public final class RendererPicker {
     /** 写入设置并提示。 */
     public static void apply(Activity activity, PrivateGameSetting pgs, String versionPath, String id) {
         try {
-            // 内存同步（供 onChanged 回调/界面即时显示新值）
-            if (pgs != null && pgs.pojavLauncherSetting != null) {
+            // ★★★ 1.4.9 修复「长按启动按钮切换后，全局设置也被改了 / 版本设置不刷新」
+            //   原来这里**无条件**把 id 写进内存里的全局对象：
+            //       pgs.pojavLauncherSetting.renderer = id;
+            //   `pgs` 是 activity.privateGameSetting —— **全局内存对象**。
+            //   于是：
+            //     · 只要在版本级入口（长按启动按钮 / 版本设置）切一次渲染器，
+            //       全局设置对象就被污染 →「全局游戏设置怎么也变成我切的那个渲染器」；
+            //     · 但真正落盘写的是该版本的 qcl.cfg → 版本设置页读 qcl.cfg 时
+            //       又对不上内存里的值，表现为「版本设置往下滑，渲染器没同步」。
+            //   现在：**只有「全局入口」才动内存里的全局对象**。
+            //   perVersion=false（全局游戏设置页）→ 这里同步，界面即时刷新。
+            //   perVersion=true（版本级入口）→ 绝碰全局对象，界面靠 refreshRendererText()
+            //     重新读 qcl.cfg 显示。
+            PrivateGameSetting target = pgs;
+            String savePath = AppManifest.SETTING_DIR + "/private_game_setting.json";
+            final boolean perVersion;
+            try {
+                // 由调用方决定：show(activity, pgs, versionPath, onChanged) 视为版本级
+                perVersion = versionPath != null && !versionPath.isEmpty()
+                        && new File(versionPath).isDirectory();
+            } catch (Throwable ignoredDir) {
+                return;
+            }
+            if (!perVersion && pgs != null && pgs.pojavLauncherSetting != null) {
                 pgs.pojavLauncherSetting.renderer = id;
             }
             // ★★★ 2026-10-01 修复「独立设置版本切换渲染器不生效」：
@@ -151,25 +193,66 @@ public final class RendererPicker {
             //   此前 apply() 恒写全局 private_game_setting.json → 独立设置版本里切换渲染器
             //   写到了全局、启动却读 qcl.cfg（旧渲染器）→「切回默认，进游戏还是旧渲染器」。
             //   现在保存路径与启动读取路径对齐：qcl.cfg 优先，否则全局。
-            PrivateGameSetting target = pgs;
-            String savePath = AppManifest.SETTING_DIR + "/private_game_setting.json";
-            if (versionPath != null) {
+            //   （target / savePath / perVersion 已在上面声明）
+
+            // ★★★ 1.4.9 新增「按版本真正隔开渲染器」：
+            //   玩家在**版本独立设置页**给某个版本选渲染器，期望的语义是"就这个版本用这个渲染器，
+            //   别动我其他版本"。而旧逻辑在该版本还没开独立设置（无 qcl.cfg / enable=false）时
+            //   会退回写全局 → 于是「A 版本选 Zink」把**所有**版本都改了，B 版本也被带着变，
+            //   表现就是"渲染器根本没按版本隔开"。
+            //   现在：只要带了 versionPath（即来自版本级入口，不是全局设置页），就一律落到该版本的
+            //   qcl.cfg，并**自动打开独立设置开关**（enable=true），这样启动时的读取路径
+            //   （GameManagerUI / MainUI 都是「qcl.cfg 且 enable/forceEnable 才生效」）才认这份值。
+            //   · enable 之前会从全局复制一份作为基线，避免该版本其它设置（JVM 参数/内存/游戏目录）
+            //     变成 null 或默认值。
+            //   · 全局设置页那条入口不传 versionPath 语义（传 null 或非版本目录），保持写全局不变。
+            if (perVersion) {
                 String qclCfg = versionPath + "/qcl.cfg";
-                if (new File(qclCfg).exists()) {
-                    PrivateGameSetting v = GsonUtils.getPrivateGameSettingFromFile(qclCfg);
-                    if (v != null && (v.forceEnable || v.enable)) {
-                        if (v.pojavLauncherSetting == null) {
-                            v.pojavLauncherSetting = new PojavLauncherSetting(true, id, "default");
-                        } else {
-                            v.pojavLauncherSetting.renderer = id;
-                        }
-                        target = v;
-                        savePath = qclCfg;
+                PrivateGameSetting v = GsonUtils.getPrivateGameSettingFromFile(qclCfg);
+                boolean vActive = v != null && (v.forceEnable || v.enable);
+                if (!vActive) {
+                    // 该版本尚未启用独立设置 → 以全局设置为基线新建一份，并打开开关
+                    PrivateGameSetting base = (pgs != null) ? pgs
+                            : GsonUtils.getPrivateGameSettingFromFile(
+                                    AppManifest.SETTING_DIR + "/private_game_setting.json");
+                    if (base != null) {
+                        v = base;
+                    } else {
+                        // 连全局设置都还没有 → 造一份最小可用设置（各子对象都要非 null，
+                        // 否则启动路径读 javaSetting / ramSetting 等会 NPE）
+                        v = new PrivateGameSetting(
+                                false, true, false, false, false, false, false,
+                                new com.qcl.launcher.launcher.setting.game.child.JavaSetting(true, "default"),
+                                "", "", "",
+                                new com.qcl.launcher.launcher.setting.game.child.GameDirSetting(1, ""),
+                                new com.qcl.launcher.launcher.setting.game.child.BoatLauncherSetting(false, "default", "default"),
+                                new PojavLauncherSetting(true, id, "default"),
+                                new com.qcl.launcher.launcher.setting.game.child.RamSetting(0, 0, true),
+                                "default", 0.25f);
                     }
+                    if (v.pojavLauncherSetting == null) {
+                        v.pojavLauncherSetting = new PojavLauncherSetting(true, id, "default");
+                    } else {
+                        v.pojavLauncherSetting.renderer = id;
+                    }
+                    v.forceEnable = false;
+                    v.enable = true;
+                    if (v.gameDirSetting == null) {
+                        // 该版本新建独立设置时，游戏目录默认跟随「版本隔离」（与新装版本一致）
+                        v.gameDirSetting = new com.qcl.launcher.launcher.setting.game.child.GameDirSetting(1, "");
+                    }
+                } else if (v.pojavLauncherSetting == null) {
+                    v.pojavLauncherSetting = new PojavLauncherSetting(true, id, "default");
+                } else {
+                    v.pojavLauncherSetting.renderer = id;
                 }
+                target = v;
+                savePath = qclCfg;
             }
+
             GsonUtils.savePrivateGameSetting(target, savePath);
-            Toast.makeText(activity, "渲染器已切换: " + displayNameOf(id),
+            Toast.makeText(activity, "渲染器已切换: " + displayNameOf(id)
+                            + (savePath.endsWith("qcl.cfg") ? "（仅本版本生效）" : "（全局）"),
                     Toast.LENGTH_SHORT).show();
         } catch (Throwable ignored) {
         }

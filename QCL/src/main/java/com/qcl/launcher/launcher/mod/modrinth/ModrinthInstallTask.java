@@ -141,7 +141,10 @@ public class ModrinthInstallTask extends BaseModpackInstallTask {
                 if (path == null || downloads == null || downloads.isEmpty()) {
                     continue;
                 }
-                File target = new File(gameDir(), path);
+                // ★★★【2026-10-06 修复】必须下到**运行目录**（按版本隔离决定），不能写死 gameDir()：
+                //   开了版本隔离的版本，游戏只读 versions/<name>/mods/ —— 原来下到 .minecraft/mods/
+                //   的结果就是"mod 下了一堆，游戏一个都看不到"（实测 49 个 mod 全躺在错误位置）。
+                File target = new File(runDir(), path);
                 if ((target.isFile() && target.length() > 0) || downloadOne(downloads.get(0).toString(), target)) {
                     ok++;
                 }

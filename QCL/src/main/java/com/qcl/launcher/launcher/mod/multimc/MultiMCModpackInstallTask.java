@@ -376,7 +376,13 @@ public class MultiMCModpackInstallTask extends AsyncTask<Object, Integer, Except
                             manifest == null ? name : manifest.getName(),
                             modpack.getVersion(),
                             overrides);
-            gson().toJson(configuration, Files.newBufferedWriter(configFile.toPath()));
+            // ★【2026-10-06】必须显式 close，否则缓冲区未 flush → 文件被截断
+            java.io.Writer cw = Files.newBufferedWriter(configFile.toPath());
+            try {
+                gson().toJson(configuration, cw);
+            } finally {
+                cw.close();
+            }
             rowDone(configRow);
             reportOverall(70);
 
@@ -892,7 +898,13 @@ public class MultiMCModpackInstallTask extends AsyncTask<Object, Integer, Except
         }
 
         // 写回合并结果
-        gson().toJson(version, Files.newBufferedWriter(jsonFile.toPath()));
+        // ★【2026-10-06】必须显式 close，否则缓冲区未 flush → 版本 json 被截断
+        java.io.Writer vw = Files.newBufferedWriter(jsonFile.toPath());
+        try {
+            gson().toJson(version, vw);
+        } finally {
+            vw.close();
+        }
         return applied;
     }
 

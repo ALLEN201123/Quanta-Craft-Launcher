@@ -136,7 +136,8 @@ public class CurseInstallTask extends BaseModpackInstallTask {
                 String fileName = file.getFileName();
                 URL url = file.getUrl();
                 if (fileName != null && url != null) {
-                    File target = new File(gameDir(), "mods" + File.separator + fileName);
+                    // ★【2026-10-06】按版本隔离决定（原来是写死的 gameDir() → 开隔离的版本看不到 mod）
+                    File target = new File(runDir(), "mods" + File.separator + fileName);
                     if ((target.isFile() && target.length() > 0) || downloadOne(url.toString(), target)) {
                         ok++;
                     }

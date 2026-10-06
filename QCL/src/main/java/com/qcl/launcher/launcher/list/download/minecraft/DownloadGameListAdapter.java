@@ -61,6 +61,14 @@ public class DownloadGameListAdapter extends BaseAdapter {
         if (AprilFools.isAprilFools(version)) {
             return this.context.getString(R.string.download_minecraft_ui_april);
         }
+        // ★ 2026-10-06（用户实测"测试版里混了 1.3/1.4/1.4.1/1.4.3/1.5"）：
+        //   Mojang 官方清单把这几个纯数字正式版标成了 snapshot。
+        //   纯数字 id（1.1 / 1.4.1 / 1.5 …）一律按**正式版**显示，与 DownloadMinecraftUI
+        //   的筛选口径保持一致（那边不勾"正式版"就不会出现在列表里）。
+        String id = version == null ? null : version.id;
+        if (id != null && id.matches("\\d+(\\.\\d+)*")) {
+            return this.context.getString(R.string.download_minecraft_ui_release);
+        }
         return getType(version == null ? "" : version.type);
     }
 

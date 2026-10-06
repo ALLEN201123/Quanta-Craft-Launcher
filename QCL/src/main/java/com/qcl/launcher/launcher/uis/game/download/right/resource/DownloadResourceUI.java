@@ -338,7 +338,12 @@ public class DownloadResourceUI extends BaseDownloadUI implements View.OnClickLi
                 //   于是整合包详情页也冒出一段「模组前置」—— 玩家点的是整合包，看到"模组前置"
                 //   只会困惑（用户原话：「你加在整合包里有个屁用」）。
                 //   resourceType == 0 才是模组（与上面 mcmod 的可见性判断同一口径）。
-                if (resourceType == 0) {
+                // ★★★ 2026-10-06 修正（用户指出）：**模组(0) 和 资源包(2) 都要显示前置** ——
+                //   很多资源包本身依赖模组（Fabric API / OptiFine / Continuity 之类），
+                //   只给模组显示反而不够。真正不该显示前置的是：
+                //     · 整合包(1)：整包安装，它的"依赖"是加载器，不是一个个前置模组
+                //     · 世界(3)  ：跟模组依赖无关
+                if (resourceType == 0 || resourceType == 2) {
                     try {
                         deps = bean.getData().loadDependencies(repository);
                     }

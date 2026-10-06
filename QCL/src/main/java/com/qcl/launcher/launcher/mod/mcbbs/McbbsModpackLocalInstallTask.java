@@ -141,7 +141,13 @@ public class McbbsModpackLocalInstallTask extends BaseModpackInstallTask {
             patch.setLibraries(manifest.getLibraries());
             patch.setPriority(10000);
             Version merged = PatchMerger.mergePatch(base, patch);
-            gson().toJson(merged, Files.newBufferedWriter(jsonFile.toPath()));
+            // ★【2026-10-06】必须显式 close，否则缓冲区未 flush → 版本 json 被截断
+            java.io.Writer jw = Files.newBufferedWriter(jsonFile.toPath());
+            try {
+                gson().toJson(merged, jw);
+            } finally {
+                jw.close();
+            }
             android.util.Log.i("ModpackInstall", "已叠加 mcbbs libraries patch（"
                     + manifest.getLibraries().size() + " 个库）");
         } catch (Throwable t) {
@@ -181,7 +187,8 @@ public class McbbsModpackLocalInstallTask extends BaseModpackInstallTask {
                     URL url = curseFile.getUrl();
                     String fileName = curseFile.getFileName();
                     if (url != null && fileName != null && !fileName.isEmpty()) {
-                        File target = new File(gameDir(), "mods" + File.separator + fileName);
+                        // ★【2026-10-06】按版本隔离决定（原来是写死的 gameDir()）
+                        File target = new File(runDir(), "mods" + File.separator + fileName);
                         if ((target.isFile() && target.length() > 0) || downloadOne(url.toString(), target)) {
                             ok++;
                         }

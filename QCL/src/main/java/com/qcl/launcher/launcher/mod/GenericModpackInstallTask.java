@@ -71,10 +71,11 @@ public class GenericModpackInstallTask extends BaseModpackInstallTask {
                     ".minecraft/", "client-overrides/", "overrides/", "minecraft/");
             if (prefixes.isEmpty()) {
                 // 什么都没有：整包解到游戏目录，尽力导入
-                android.util.Log.i("ModpackInstall", "没有识别出 .minecraft / overrides，整包解到游戏目录");
-                extractDirectory(zip, "", gameDir(), row, null);
+                android.util.Log.i("ModpackInstall", "没有识别出 .minecraft / overrides，整包解到运行目录");
+                // ★【2026-10-06】按版本隔离决定（原来是写死的 gameDir()）
+                extractDirectory(zip, "", runDir(), row, null);
             } else {
-                extractPrefixes(zip, prefixes, gameDir(), row, null);
+                extractPrefixes(zip, prefixes, runDir(), row, null);
             }
         }
         rowDone(row);

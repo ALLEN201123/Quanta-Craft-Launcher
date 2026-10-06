@@ -6,6 +6,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.qcl.launcher.launcher.MainActivity;
+import com.qcl.launcher.manifest.AppManifest;
 import com.qcl.launcher.launcher.download.PatchMerger;
 import com.qcl.launcher.launcher.download.game.LegacyArchiveInstallTask;
 import com.qcl.launcher.launcher.download.game.LegacyVersionArchive;
@@ -234,6 +235,54 @@ public abstract class BaseModpackInstallTask extends AsyncTask<Object, Integer, 
     /** 游戏目录（.minecraft 根） */
     protected File gameDir() {
         return new File(activity.launcherSetting.gameFileDirectory);
+    }
+
+    /**
+     * ★★★【2026-10-06 修复 · 用户实测"整合包 mod 一个都没生效"】
+     *
+     * <p>版本的「**运行目录**」—— 必须按**该版本自己的版本隔离设置**决定，照 FCL 的
+     * {@code DefaultGameRepository.getRunDirectory(version)}：
+     * <ul>
+     *   <li>{@code gameDirSetting.type == 0} → 游戏根目录（未开隔离）</li>
+     *   <li>{@code gameDirSetting.type == 1} → **版本目录** {@code versions/&lt;name&gt;/}（开了隔离）</li>
+     *   <li>其它 → 玩家自定义的路径 {@code path}</li>
+     * </ul>
+     *
+     * <p><b>为什么必须这样</b>：整合包安装（overrides 解包、manifest 里的 mods 下载）之前一律
+     * 写死到 {@link #gameDir()}（游戏根目录）。但对**开了版本隔离**的版本，游戏只读
+     * {@code versions/&lt;name&gt;/} —— 实测现象：
+     * {@code .minecraft/mods} 里躺着 49 个 mod，而 {@code versions/&lt;name&gt;/mods} 是空的，
+     * 游戏启动日志只有 "Loading 4 mods"（全是加载器自带的），玩家看到的就是"一堆模组没装上"。
+     *
+     * <p>取设置的方式与 {@code FabricAPIInstallTask} 一致：优先读该版本目录下的 {@code qcl.cfg}，
+     * 读不到再退回全局私有设置。
+     */
+    protected File runDir() {
+        try {
+            String root = activity.launcherSetting.gameFileDirectory;
+            String vdir = root + File.separator + "versions" + File.separator + name;
+            // ★★★ 照 GameManagerUI.getGameDir（全局游戏设置里的「版本隔离」）：
+            //   版本目录下的 qcl.cfg 若存在且「强制开启」或「开启」→ 用版本自己的设置；
+            //   否则一律用全局 AppManifest.SETTING_DIR/private_game_setting.json。
+            String settingPath = vdir + File.separator + "qcl.cfg";
+            boolean useVersionCfg = new File(settingPath).exists()
+                    && GsonUtils.getPrivateGameSettingFromFile(settingPath) != null
+                    && (GsonUtils.getPrivateGameSettingFromFile(settingPath).forceEnable
+                        || GsonUtils.getPrivateGameSettingFromFile(settingPath).enable);
+            String finalSettingPath = useVersionCfg
+                    ? settingPath
+                    : AppManifest.SETTING_DIR + "/private_game_setting.json";
+            PrivateGameSetting s = GsonUtils.getPrivateGameSettingFromFile(finalSettingPath);
+            if (s != null && s.gameDirSetting != null) {
+                File d = new File(PrivateGameSetting.getGameDir(root, vdir, s.gameDirSetting));
+                //noinspection ResultOfMethodCallIgnored
+                d.mkdirs();
+                return d;
+            }
+        } catch (Throwable t) {
+            android.util.Log.w("ModpackInstall", "读取版本隔离设置失败，退回游戏根目录", t);
+        }
+        return gameDir();
     }
 
     protected File versionDir(String versionName) {
@@ -720,7 +769,18 @@ public abstract class BaseModpackInstallTask extends AsyncTask<Object, Integer, 
             throw new IOException("版本 json 无法解析: " + jsonFile);
         }
         Version merged = PatchMerger.mergePatch(base, patch);
-        gson().toJson(merged, Files.newBufferedWriter(jsonFile.toPath()));
+        // ★★★【2026-10-06 修复 · 用户实测"下载整合包装完就崩"】
+        //   `Files.newBufferedWriter(...)` 必须**显式 close**！
+        //   Gson.toJson(obj, Writer) 只负责往里写、**不会 flush/close 我们传进去的流**；
+        //   带着未 flush 的缓冲直接丢弃 → 版本 json 被截断在缓冲区边界
+        //   （实测坏文件正好 98304 字节 = 96KB），下次解析就抛
+        //   JsonSyntaxException / EOFException: End of input … → "装完整合包刷新版本列表就崩"。
+        java.io.Writer w = Files.newBufferedWriter(jsonFile.toPath());
+        try {
+            gson().toJson(merged, w);
+        } finally {
+            w.close();
+        }
         android.util.Log.i("ModpackInstall", "已把加载器 " + patchId + " " + patchVersion + " 合进版本 json");
     }
 
@@ -791,7 +851,13 @@ public abstract class BaseModpackInstallTask extends AsyncTask<Object, Integer, 
         ModpackConfiguration<ModpackManifest> configuration =
                 new ModpackConfiguration<ModpackManifest>(manifest, type,
                         pkgName == null ? name : pkgName, pkgVersion, overrides);
-        gson().toJson(configuration, Files.newBufferedWriter(configFile.toPath()));
+        // ★【2026-10-06】同样必须显式 close：Gson 不会 flush 它收到的 Writer
+        java.io.Writer cw = Files.newBufferedWriter(configFile.toPath());
+        try {
+            gson().toJson(configuration, cw);
+        } finally {
+            cw.close();
+        }
     }
 
     /** 把这个版本的「不检查游戏文件」打开（只作用于这一个版本） */
@@ -848,7 +914,8 @@ public abstract class BaseModpackInstallTask extends AsyncTask<Object, Integer, 
                 android.util.Log.i("ModpackInstall", "整合包里没有 overrides 目录，跳过");
                 return new ArrayList<ModpackConfiguration.FileInformation>();
             }
-            return extractPrefixes(zip, prefixes, gameDir(), row, null);
+            // ★【2026-10-06】按**版本隔离设置**决定解到哪（原来是写死的 gameDir()）
+            return extractPrefixes(zip, prefixes, runDir(), row, null);
         }
     }
 
@@ -944,7 +1011,13 @@ public abstract class BaseModpackInstallTask extends AsyncTask<Object, Integer, 
             }
             patch.setId(patchId).setPriority(priority);
             Version merged = PatchMerger.mergePatch(base, patch);
-            gson().toJson(merged, Files.newBufferedWriter(jsonFile.toPath()));
+            // ★★★【2026-10-06 修复】同上：必须显式 close，否则版本 json 会被截断（缓冲区没 flush）
+            java.io.Writer w = Files.newBufferedWriter(jsonFile.toPath());
+            try {
+                gson().toJson(merged, w);
+            } finally {
+                w.close();
+            }
             return true;
         } catch (Throwable t) {
             android.util.Log.w("ModpackInstall", "patch 合并失败（已跳过，不阻断导入）", t);

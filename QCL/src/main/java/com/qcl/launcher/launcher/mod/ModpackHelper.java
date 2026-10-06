@@ -76,7 +76,16 @@ public final class ModpackHelper {
                     ServerModpackProvider.INSTANCE}) {
                 try {
                     return provider.readManifest(zipFile, file, charset);
-                } catch (Exception ignored) {
+                } catch (Exception e) {
+                    // ★★★【2026-10-06 修复 · 用户实测"整合包 mod 一个都没下载"】
+                    //   原来是 `catch (Exception ignored) {}` —— **静默吞掉一切异常**。
+                    //   后果：某个 provider（例如 Modrinth）解析失败时，代码会默默继续试下一个，
+                    //   全失败后抛出 UnsupportedModpackException，上层于是**降级到兜底任务**
+                    //   （GenericModpackInstallTask 只装游戏本体、不下载 mods）——
+                    //   用户看到的就是"只装了个游戏版本，一堆模组没下"，而日志里干干净净。
+                    //   现在把真实异常打出来，这类问题才能查。
+                    android.util.Log.w("ModpackInstall",
+                            "provider " + provider.getName() + " 解析 manifest 失败（继续试下一个）", e);
                 }
             }
         } catch (IOException ignored) {

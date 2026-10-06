@@ -27,7 +27,7 @@ public class LaunchCountDialog extends Dialog implements View.OnClickListener {
      * <p>改这里就够了：设置→赞助、验证弹窗 与 启动次数弹窗 都用同一个地址。
      * <p>⚠️ 用 https：该站 http 会 302 跳到 https，直连 https 少一跳。
      */
-    public static final String SPONSOR_URL = "https://qcl5g.de5.net/";
+    public static final String SPONSOR_URL = "https://qcl-sponsor.app.workbuddy.host/";
 
     private final OnDismissedListener listener;
     private Button later;

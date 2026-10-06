@@ -226,102 +226,26 @@ public class LaunchVersion {
         return this.minecraftPath + str8 + str3;
     }
 
-    public String[] getJVMArguments(GameLaunchSetting gameLaunchSetting) {
-        String str;
-        StringBuilder sb = new StringBuilder();
-        Arguments arguments = this.arguments;
-        if (arguments == null || arguments.jvm == null) {
-            return new String[0];
-        }
-        for (Object obj : this.arguments.jvm) {
-            if (obj instanceof String) {
-                String str2 = (String) obj;
-                if (!str2.startsWith("-Djava.library.path") && !str2.startsWith("-cp") && !str2.startsWith("${classpath}")) {
-                    sb.append(obj.toString()).append(" ");
-                }
-            }
-        }
-        String str3 = "";
+    /**
+     * 把一个参数模板里的 ${...} 占位符替换掉。
+     * ★★★ 1.4.9 整合包崩溃修复的核心：原实现是「先按空格 join 全部参数、再 split(" ")」，
+     * 会把**含空格的单条参数**撕成几片。Fabulously Optimized 这类 Fabric 整合包的
+     * arguments.jvm 里有 "-DFabricMcEmu= net.minecraft.client.main.Main "（值本身带空格，
+     * 用来告诉 Fabric 要替换掉哪个主类），撕开后 net.minecraft.client.main.Main 变成一个
+     * 裸的独立 argv 项，正好落在 JVM 判定「第一个非选项参数 = 主类」的位置之前 →
+     * 后面的 -cp / 主类 全被当成它的命令行参数，classpath 没生效 →
+     * "Could not find or load main class"（类名为空）。
+     * 所以这里改成**按数组元素逐个渲染**，一个 json 元素 = 一个 argv 项，内部空格原样保留。
+     *
+     * @return 渲染后的参数；渲染结果为空串时返回 null（表示该参数作废）
+     */
+    private String renderArgument(String str, GameLaunchSetting s) {
+        StringBuilder sb = new StringBuilder(str);
         boolean z = false;
-        int i = 0;
-        for (int i2 = 0; i2 < sb.length(); i2++) {
-            if (!z) {
-                if (sb.charAt(i2) != '$') {
-                    str3 = str3 + sb.charAt(i2);
-                } else {
-                    int i3 = i2 + 1;
-                    if (i3 >= sb.length() || sb.charAt(i3) != '{') {
-                        str3 = str3 + sb.charAt(i2);
-                    } else {
-                        z = true;
-                        i = i2;
-                    }
-                }
-            } else if (sb.charAt(i2) == '}') {
-                String substring = sb.substring(i + 2, i2);
-                if (substring.equals("version_name")) {
-                    str = this.id;
-                } else if (substring.equals("launcher_name")) {
-                    str = LAUNCHER_NAME;
-                } else if (substring.equals("launcher_version")) {
-                    str = LAUNCHER_VERSION;
-                } else if (substring.equals("version_type")) {
-                    str = LAUNCHER_NAME;
-                } else if (substring.equals("assets_index_name")) {
-                    AssetsIndex assetsIndex = this.assetIndex;
-                    if (assetsIndex != null) {
-                        str = assetsIndex.id;
-                    } else {
-                        str = this.assets;
-                    }
-                } else if (substring.equals("game_directory")) {
-                    str = gameLaunchSetting.game_directory;
-                } else if (substring.equals("assets_root") || substring.equals("game_assets")) {
-                    str = gameLaunchSetting.gameFileDirectory + "/assets";
-                } else if (substring.equals("user_properties")) {
-                    str = "{}";
-                } else if (substring.equals("auth_player_name")) {
-                    str = gameLaunchSetting.account.auth_player_name;
-                } else if (substring.equals("auth_session")) {
-                    str = gameLaunchSetting.account.auth_session;
-                } else if (substring.equals("auth_uuid")) {
-                    str = gameLaunchSetting.account.auth_uuid;
-                } else if (substring.equals("auth_access_token")) {
-                    str = gameLaunchSetting.account.auth_access_token;
-                } else if (substring.equals("user_type")) {
-                    str = gameLaunchSetting.account.user_type;
-                } else if (substring.equals("primary_jar_name")) {
-                    str = new File(gameLaunchSetting.currentVersion).getName() + ".jar";
-                } else if (substring.equals("library_directory")) {
-                    str = gameLaunchSetting.gameFileDirectory + "/libraries";
-                } else {
-                    str = substring.equals("classpath_separator") ? ":" : "";
-                }
-                str3 = str3 + str;
-                z = false;
-            }
-        }
-        return str3.split(" ");
-    }
-
-    public String[] getMinecraftArguments(GameLaunchSetting gameLaunchSetting, boolean z) {
-        Arguments arguments;
-        String str;
-        StringBuilder sb = new StringBuilder();
-        if (z) {
-            for (Object obj : this.arguments.game) {
-                if (obj instanceof String) {
-                    sb.append(obj.toString()).append(" ");
-                }
-            }
-        } else {
-            sb = new StringBuilder(this.minecraftArguments);
-        }
-        boolean z2 = false;
         int i = 0;
         String str2 = "";
         for (int i2 = 0; i2 < sb.length(); i2++) {
-            if (!z2) {
+            if (!z) {
                 if (sb.charAt(i2) != '$') {
                     str2 = str2 + sb.charAt(i2);
                 } else {
@@ -329,62 +253,143 @@ public class LaunchVersion {
                     if (i3 >= sb.length() || sb.charAt(i3) != '{') {
                         str2 = str2 + sb.charAt(i2);
                     } else {
-                        z2 = true;
+                        z = true;
                         i = i2;
                     }
                 }
             } else if (sb.charAt(i2) == '}') {
-                String substring = sb.substring(i + 2, i2);
-                if (substring.equals("version_name")) {
-                    str = this.id;
-                } else if (substring.equals("launcher_name")) {
-                    str = LAUNCHER_NAME;
-                } else if (substring.equals("launcher_version")) {
-                    str = LAUNCHER_VERSION;
-                } else if (substring.equals("version_type")) {
-                    str = LAUNCHER_NAME;
-                } else if (substring.equals("assets_index_name")) {
-                    AssetsIndex assetsIndex = this.assetIndex;
-                    if (assetsIndex != null) {
-                        str = assetsIndex.id;
-                    } else {
-                        str = this.assets;
-                    }
-                } else if (substring.equals("game_directory")) {
-                    str = gameLaunchSetting.game_directory;
-                } else if (substring.equals("assets_root") || substring.equals("game_assets")) {
-                    str = gameLaunchSetting.gameFileDirectory + "/assets";
-                } else if (substring.equals("user_properties")) {
-                    str = "{}";
-                } else if (substring.equals("auth_player_name")) {
-                    str = gameLaunchSetting.account.auth_player_name;
-                } else if (substring.equals("auth_session")) {
-                    str = gameLaunchSetting.account.auth_session;
-                } else if (substring.equals("auth_uuid")) {
-                    str = gameLaunchSetting.account.auth_uuid;
-                } else if (substring.equals("auth_access_token")) {
-                    str = gameLaunchSetting.account.auth_access_token;
-                } else if (substring.equals("user_type")) {
-                    str = gameLaunchSetting.account.user_type;
-                } else if (substring.equals("primary_jar_name")) {
-                    str = new File(gameLaunchSetting.currentVersion).getName() + ".jar";
-                } else if (substring.equals("library_directory")) {
-                    str = gameLaunchSetting.gameFileDirectory + "/libraries";
-                } else {
-                    str = substring.equals("classpath_separator") ? ":" : "";
-                }
-                str2 = str2 + str;
-                z2 = false;
+                str2 = str2 + renderPlaceholder(sb.substring(i + 2, i2), s);
+                z = false;
             }
         }
-        if (!z && (arguments = this.arguments) != null && arguments.game != null) {
-            for (Object obj2 : this.arguments.game) {
+        return str2.isEmpty() ? null : str2;
+    }
+
+    /** 占位符取值的统一入口；未识别的占位符返回空串（保持旧行为）。 */
+    private String renderPlaceholder(String substring, GameLaunchSetting s) {
+        if (substring.equals("version_name")) {
+            return this.id == null ? "" : this.id;
+        }
+        if (substring.equals("launcher_name")) {
+            return LAUNCHER_NAME;
+        }
+        if (substring.equals("launcher_version")) {
+            return LAUNCHER_VERSION == null ? "" : LAUNCHER_VERSION;
+        }
+        if (substring.equals("version_type")) {
+            return LAUNCHER_NAME;
+        }
+        if (substring.equals("assets_index_name")) {
+            AssetsIndex assetsIndex = this.assetIndex;
+            if (assetsIndex != null) {
+                return assetsIndex.id == null ? "" : assetsIndex.id;
+            }
+            return this.assets == null ? "" : this.assets;
+        }
+        if (s == null) {
+            return substring.equals("classpath_separator") ? ":" : "";
+        }
+        if (substring.equals("game_directory")) {
+            return s.game_directory;
+        }
+        if (substring.equals("assets_root") || substring.equals("game_assets")) {
+            return s.gameFileDirectory + "/assets";
+        }
+        if (substring.equals("user_properties")) {
+            return "{}";
+        }
+        if (substring.equals("auth_player_name")) {
+            return s.account.auth_player_name;
+        }
+        if (substring.equals("auth_session")) {
+            return s.account.auth_session;
+        }
+        if (substring.equals("auth_uuid")) {
+            return s.account.auth_uuid;
+        }
+        if (substring.equals("auth_access_token")) {
+            return s.account.auth_access_token;
+        }
+        if (substring.equals("user_type")) {
+            return s.account.user_type;
+        }
+        if (substring.equals("primary_jar_name")) {
+            return new File(s.currentVersion).getName() + ".jar";
+        }
+        if (substring.equals("library_directory")) {
+            return s.gameFileDirectory + "/libraries";
+        }
+        return substring.equals("classpath_separator") ? ":" : "";
+    }
+
+    public String[] getJVMArguments(GameLaunchSetting gameLaunchSetting) {
+        ArrayList<String> out = new ArrayList<>();
+        Arguments arguments = this.arguments;
+        if (arguments == null || arguments.jvm == null) {
+            return new String[0];
+        }
+        for (Object obj : arguments.jvm) {
+            // 带 rules 的条目是对象而非字符串 —— 原实现也是直接忽略（移动端没有 features 上下文）
+            if (!(obj instanceof String)) {
+                continue;
+            }
+            String raw = (String) obj;
+            // ★ 这三个由启动器自己提供，绝不能从 json 里取：
+            //   -cp / ${classpath}      → PojavLauncher 用自己拼好的 classPath（含 lwjgl 桥接 jar）
+            //   -Djava.library.path     → PojavLauncher 用算好的 natives 目录
+            if (raw.startsWith("-Djava.library.path") || raw.startsWith("-cp") || raw.startsWith("${classpath}")) {
+                continue;
+            }
+            String rendered = renderArgument(raw, gameLaunchSetting);
+            if (rendered != null) {
+                out.add(rendered);
+            }
+        }
+        return out.toArray(new String[0]);
+    }
+
+    public String[] getMinecraftArguments(GameLaunchSetting gameLaunchSetting, boolean z) {
+        ArrayList<String> out = new ArrayList<>();
+        Arguments arguments = this.arguments;
+        if (z) {
+            // 高版本（1.13+）：arguments.game 是数组，逐元素渲染，元素内部空格原样保留
+            if (arguments == null || arguments.game == null) {
+                return new String[0];
+            }
+            for (Object obj : arguments.game) {
+                // 带 rules 的条目是对象而非字符串 —— 原实现也是直接忽略（移动端无 features 上下文）
+                if (!(obj instanceof String)) {
+                    continue;
+                }
+                String rendered = renderArgument((String) obj, gameLaunchSetting);
+                if (rendered != null) {
+                    out.add(rendered);
+                }
+            }
+            return out.toArray(new String[0]);
+        }
+        // 低版本：只有一个 minecraftArguments 整串（本身就按空格分隔），仍走逐元素渲染
+        String mcArgs = this.minecraftArguments == null ? "" : this.minecraftArguments;
+        String renderedMc = renderArgument(mcArgs, gameLaunchSetting);
+        if (renderedMc != null) {
+            for (String part : renderedMc.split(" ")) {
+                if (!part.isEmpty()) {
+                    out.add(part);
+                }
+            }
+        }
+        // 旧行为：低版本 json 里 arguments.game 的内容也会被追加（不加空格）
+        if (arguments != null && arguments.game != null) {
+            for (Object obj2 : arguments.game) {
                 if (obj2 instanceof String) {
-                    str2 = str2 + " " + obj2.toString();
+                    String rendered2 = renderArgument((String) obj2, gameLaunchSetting);
+                    if (rendered2 != null) {
+                        out.add(rendered2);
+                    }
                 }
             }
         }
-        return str2.split(" ");
+        return out.toArray(new String[0]);
     }
 
     public List<String> getLibraries() {
