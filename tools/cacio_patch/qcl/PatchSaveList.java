@@ -318,6 +318,30 @@ public class PatchSaveList {
                     "()Ljava/lang/String;", false));
             apply.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "java/lang/StringBuilder", "append",
                     "(Ljava/lang/String;)Ljava/lang/StringBuilder;", false));
+            // ★【2026-10-06 诊断】把 o 的两个候选来源一起打出来，定位"谁把 o 设上了"：
+            //   prop    = System.getProperty("qcl.savefile")（保存流程用，c.p 写、f_() 读）
+            //   pending = qclPending（启动器侧"选文件"用）
+            //   pick    = qclWantSave（是否处于玩家主动请求状态）
+            apply.add(new LdcInsnNode(" | prop="));
+            apply.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "java/lang/StringBuilder", "append",
+                    "(Ljava/lang/String;)Ljava/lang/StringBuilder;", false));
+            apply.add(new LdcInsnNode("qcl.savefile"));
+            apply.add(new MethodInsnNode(Opcodes.INVOKESTATIC, "java/lang/System", "getProperty",
+                    "(Ljava/lang/String;)Ljava/lang/String;", false));
+            apply.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "java/lang/StringBuilder", "append",
+                    "(Ljava/lang/String;)Ljava/lang/StringBuilder;", false));
+            apply.add(new LdcInsnNode(" | pending="));
+            apply.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "java/lang/StringBuilder", "append",
+                    "(Ljava/lang/String;)Ljava/lang/StringBuilder;", false));
+            apply.add(new FieldInsnNode(Opcodes.GETSTATIC, TARGET, PENDING_FIELD, "Ljava/io/File;"));
+            apply.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "java/lang/StringBuilder", "append",
+                    "(Ljava/lang/Object;)Ljava/lang/StringBuilder;", false));
+            apply.add(new LdcInsnNode(" | pick="));
+            apply.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "java/lang/StringBuilder", "append",
+                    "(Ljava/lang/String;)Ljava/lang/StringBuilder;", false));
+            apply.add(new FieldInsnNode(Opcodes.GETSTATIC, TARGET, "qclWantSave", "Z"));
+            apply.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "java/lang/StringBuilder", "append",
+                    "(Z)Ljava/lang/StringBuilder;", false));
             apply.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "java/lang/StringBuilder", "toString",
                     "()Ljava/lang/String;", false));
             apply.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "java/io/PrintStream", "println",
@@ -325,44 +349,98 @@ public class PatchSaveList {
             apply.add(L_dbgO);
             apply.add(new VarInsnNode(Opcodes.ALOAD, 0));
             apply.add(new FieldInsnNode(Opcodes.GETFIELD, TARGET, "o", "Ljava/io/File;"));
-            // 【★关键修复】在 f_() 里也做一次名字清洗兜底：
-            //   如果 o 的名字里含 "  -  "（说明是槽位显示文字被误传进来），
-            //   就地改成"去掉时间戳 + 去非法字符"的干净名字再写盘。
-            //   这样即使别的入口塞了脏名字进来，也不会让安卓写盘失败、游戏崩溃。
+            // ★★★【2026-10-06 修复 · 用户实测崩溃】原实现只把 "  -  " **删掉**、没有截断：
+            //     "ush  -  10-05 23:56" → "ush10-05_23:56.mclevel"
+            //   这个路径当然不存在 → 原版读档抛 FileNotFoundException 崩主线程。
+            //   现象：保存一次后再进「载入世界」必崩（日志 c.e.a → c.e.f_）。
+            //   现在改成三件事：
+            //     ① 截断到 "  -  " **之前**（拿到真正的世界名）
+            //     ② 去非法字符 + 补 .mclevel 后缀
+            //     ③ ★只有**真实存在**的文件才保留；否则把 o 清空 ——
+            //        绝不让脏/不存在的路径进入原版 f_() 的读档代码。
             LabelNode L_fCleanDone = new LabelNode();
+            LabelNode L_fNoTs = new LabelNode();
+            LabelNode L_fHasSuf = new LabelNode();
+            LabelNode L_fNotFile = new LabelNode();
+            // if (o == null) skip
             apply.add(new JumpInsnNode(Opcodes.IFNULL, L_fCleanDone));
+            // String fn = o.getName();
             apply.add(new VarInsnNode(Opcodes.ALOAD, 0));
             apply.add(new FieldInsnNode(Opcodes.GETFIELD, TARGET, "o", "Ljava/io/File;"));
             apply.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "java/io/File", "getName",
                     "()Ljava/lang/String;", false));
+            apply.add(new VarInsnNode(Opcodes.ASTORE, 5));
+            // int idx = fn.indexOf("  -  "); if (idx < 0) goto L_fNoTs;
+            apply.add(new VarInsnNode(Opcodes.ALOAD, 5));
             apply.add(new LdcInsnNode("  -  "));
             apply.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "java/lang/String", "indexOf",
                     "(Ljava/lang/String;)I", false));
-            apply.add(new JumpInsnNode(Opcodes.IFLT, L_fCleanDone));
-            // 有脏名字 → 用干净名字重建 o（放在同目录下）
-            apply.add(new VarInsnNode(Opcodes.ALOAD, 0));
+            apply.add(new VarInsnNode(Opcodes.ISTORE, 6));
+            apply.add(new VarInsnNode(Opcodes.ILOAD, 6));
+            apply.add(new JumpInsnNode(Opcodes.IFLT, L_fNoTs));
+            // fn = fn.substring(0, idx);          ← ★ 关键：截断，而不是删分隔符
+            apply.add(new VarInsnNode(Opcodes.ALOAD, 5));
+            apply.add(new InsnNode(Opcodes.ICONST_0));
+            apply.add(new VarInsnNode(Opcodes.ILOAD, 6));
+            apply.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "java/lang/String", "substring",
+                    "(II)Ljava/lang/String;", false));
+            apply.add(new VarInsnNode(Opcodes.ASTORE, 5));
+            apply.add(L_fNoTs);
+            // fn = fn.trim();
+            apply.add(new VarInsnNode(Opcodes.ALOAD, 5));
+            apply.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "java/lang/String", "trim",
+                    "()Ljava/lang/String;", false));
+            apply.add(new VarInsnNode(Opcodes.ASTORE, 5));
+            // 把会害死安卓文件系统的字符全部换成下划线
+            String[][] fBad = {
+                {" ", "_"}, {"/", "_"}, {"\\\\", "_"}, {":", "_"},
+                {"*", "_"}, {"?", "_"}, {"\\\"", "_"}, {"<", "_"},
+                {">", "_"}, {"|", "_"},
+            };
+            for (String[] fbp : fBad) {
+                apply.add(new VarInsnNode(Opcodes.ALOAD, 5));
+                apply.add(new LdcInsnNode(fbp[0]));
+                apply.add(new LdcInsnNode(fbp[1]));
+                apply.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "java/lang/String", "replace",
+                        "(Ljava/lang/CharSequence;Ljava/lang/CharSequence;)Ljava/lang/String;", false));
+                apply.add(new VarInsnNode(Opcodes.ASTORE, 5));
+            }
+            // if (!fn.toLowerCase().endsWith(".mclevel")) fn = fn + ".mclevel";
+            apply.add(new VarInsnNode(Opcodes.ALOAD, 5));
+            apply.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "java/lang/String", "toLowerCase",
+                    "()Ljava/lang/String;", false));
+            apply.add(new LdcInsnNode(".mclevel"));
+            apply.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "java/lang/String", "endsWith",
+                    "(Ljava/lang/String;)Z", false));
+            apply.add(new JumpInsnNode(Opcodes.IFNE, L_fHasSuf));
+            apply.add(new VarInsnNode(Opcodes.ALOAD, 5));
+            apply.add(new LdcInsnNode(".mclevel"));
+            apply.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "java/lang/String", "concat",
+                    "(Ljava/lang/String;)Ljava/lang/String;", false));
+            apply.add(new VarInsnNode(Opcodes.ASTORE, 5));
+            apply.add(L_fHasSuf);
+            // File nf = new File(o.getParentFile(), fn);
             apply.add(new TypeInsnNode(Opcodes.NEW, "java/io/File"));
             apply.add(new InsnNode(Opcodes.DUP));
             apply.add(new VarInsnNode(Opcodes.ALOAD, 0));
             apply.add(new FieldInsnNode(Opcodes.GETFIELD, TARGET, "o", "Ljava/io/File;"));
             apply.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "java/io/File", "getParentFile",
                     "()Ljava/io/File;", false));
-            apply.add(new VarInsnNode(Opcodes.ALOAD, 0));
-            apply.add(new FieldInsnNode(Opcodes.GETFIELD, TARGET, "o", "Ljava/io/File;"));
-            apply.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "java/io/File", "getName",
-                    "()Ljava/lang/String;", false));
-            apply.add(new LdcInsnNode("  -  "));
-            apply.add(new LdcInsnNode(""));
-            apply.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "java/lang/String", "replace",
-                    "(Ljava/lang/CharSequence;Ljava/lang/CharSequence;)Ljava/lang/String;", false));
-            apply.add(new LdcInsnNode(" "));
-            apply.add(new LdcInsnNode("_"));
-            apply.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "java/lang/String", "replace",
-                    "(Ljava/lang/CharSequence;Ljava/lang/CharSequence;)Ljava/lang/String;", false));
-            apply.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "java/lang/String", "trim",
-                    "()Ljava/lang/String;", false));
+            apply.add(new VarInsnNode(Opcodes.ALOAD, 5));
             apply.add(new MethodInsnNode(Opcodes.INVOKESPECIAL, "java/io/File", "<init>",
                     "(Ljava/io/File;Ljava/lang/String;)V", false));
+            apply.add(new VarInsnNode(Opcodes.ASTORE, 7));
+            // if (nf.isFile()) o = nf; else o = null;   ← ★ 不存在就清空，绝不硬 open
+            apply.add(new VarInsnNode(Opcodes.ALOAD, 7));
+            apply.add(new MethodInsnNode(Opcodes.INVOKEVIRTUAL, "java/io/File", "isFile", "()Z", false));
+            apply.add(new JumpInsnNode(Opcodes.IFEQ, L_fNotFile));
+            apply.add(new VarInsnNode(Opcodes.ALOAD, 0));
+            apply.add(new VarInsnNode(Opcodes.ALOAD, 7));
+            apply.add(new FieldInsnNode(Opcodes.PUTFIELD, TARGET, "o", "Ljava/io/File;"));
+            apply.add(new JumpInsnNode(Opcodes.GOTO, L_fCleanDone));
+            apply.add(L_fNotFile);
+            apply.add(new VarInsnNode(Opcodes.ALOAD, 0));
+            apply.add(new InsnNode(Opcodes.ACONST_NULL));
             apply.add(new FieldInsnNode(Opcodes.PUTFIELD, TARGET, "o", "Ljava/io/File;"));
             apply.add(L_fCleanDone);
             // ★★★★★【2026-10-05 终极修复】在**保存界面**里，直接把 o 清空，
@@ -388,6 +466,8 @@ public class PatchSaveList {
             apply.add(L_notSaveScreen);
             mn.instructions.insert(apply);
             mn.maxStack = Math.max(mn.maxStack, 6);
+            // ★ 新增的名字清洗逻辑用到局部变量槽 5/6/7，必须保证 maxLocals 足够
+            mn.maxLocals = Math.max(mn.maxLocals, 10);
             System.out.println("   已在 " + mn.name + "() 开头插入 qclApplyPending()");
             break;
         }
@@ -500,10 +580,27 @@ public class PatchSaveList {
                 //   下次一进「保存世界」就被当成"待保存目标"**自动保存到上一个槽位**，
                 //   而不是等玩家点槽位（用户反馈："保存完存档后点ESC再点保存世界，
                 //   会直接自动保存到刚才那个槽位，不让我重新选"）。
-                //   界面刚创建时清掉它，等于每次进界面都是干净状态。
+                //   ★★★【2026-10-06 修复】光清 o 还不够 —— 必须把"会重新给 o 赋值"的残留
+                //     一并清掉。现象（用户实测）：保存一次后，再点「载入世界」**直接自动载入**、
+                //     失去选择权；以及保存后进载入界面报 FileNotFoundException。
+                //     机制：f_()（每帧）里有两条路会重新设 o ——
+                //       ① System.getProperty("qcl.savefile")（c.p 保存流程留下的）
+                //       ② qclPending（启动器侧"选文件"留下的）
+                //     只要有一个残留，进载入界面的第一帧 f_() 就把 o 设上 → 原版 f_() 直接读档。
+                //     这里在"刚进界面"这个唯一干净的时机把它们全部清空。
                 fill.add(new VarInsnNode(Opcodes.ALOAD, 0));
                 fill.add(new InsnNode(Opcodes.ACONST_NULL));
                 fill.add(new FieldInsnNode(Opcodes.PUTFIELD, TARGET, "o", "Ljava/io/File;"));
+                fill.add(new LdcInsnNode("qcl.savefile"));
+                fill.add(new MethodInsnNode(Opcodes.INVOKESTATIC, "java/lang/System", "clearProperty",
+                        "(Ljava/lang/String;)Ljava/lang/String;", false));
+                fill.add(new InsnNode(Opcodes.POP));
+                fill.add(new InsnNode(Opcodes.ACONST_NULL));
+                fill.add(new FieldInsnNode(Opcodes.PUTSTATIC, TARGET, PENDING_FIELD, "Ljava/io/File;"));
+                fill.add(new InsnNode(Opcodes.ICONST_0));
+                fill.add(new FieldInsnNode(Opcodes.PUTSTATIC, TARGET, "qclWantSave", "Z"));
+                fill.add(new InsnNode(Opcodes.ICONST_0));
+                fill.add(new FieldInsnNode(Opcodes.PUTSTATIC, TARGET, "qclPickerBusy", "Z"));
                 if (lastRet != null) {
                     mn.instructions.insertBefore(lastRet, fill);
                 } else {

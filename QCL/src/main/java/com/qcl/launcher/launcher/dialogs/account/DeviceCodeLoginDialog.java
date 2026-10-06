@@ -147,29 +147,47 @@ public class DeviceCodeLoginDialog extends AlertDialog {
         closeRow.setGravity(Gravity.END);
         closeRow.setPadding(0, dp(10), 0, 0);
         closeRow.addView(closeBtn);
-        root.addView(closeRow);
 
-        // ★★★ 2026-10-06 修复：把整块内容套进 ScrollView 再给全屏高度。
-        //   用户反馈：内嵌授权页一加载出来，整个界面被"顶到下面去了，根本滑不下去"，
-        //   连返回按钮都够不到。
-        //   原因：对话框用的是 WRAP_CONTENT 高度，WebView 又设了 55% 屏高，
-        //   两者叠加超出屏幕，而根布局不是可滚动的 → 下半截直接被裁掉。
-        //   修法：① 根内容换成 ScrollView；② 窗口高度给到屏幕的 92%；
-        //        ③ WebView 高度改成"剩余空间"（根布局 weight 分配），不再固定 55%。
+        // ★★★【2026-10-06 二次修复 · 用户实测 vivo 小屏仍点不到】
+        //   上一版虽然套了 ScrollView，但「返回」按钮**仍在可滚动内容里**（root 内），
+        //   一进登录页按钮就被顶出屏幕，而且竖滑手势会被 WebView 吃掉 →
+        //   手机永远点不到按钮（电脑屏大所以看不出来）。
+        //   现在改成经典的两段式：
+        //     ┌──────────────┐
+        //     │ ScrollView   │ weight=1，占满剩余高度（内容可滚）
+        //     ├──────────────┤
+        //     │ 按钮行(固定)  │ 不参与滚动，永远停在底部可见
+        //     └──────────────┘
+        //   这样无论屏幕多小，按钮都不需要滑动就能点到。
+        LinearLayout shell = new LinearLayout(ctx);
+        shell.setOrientation(LinearLayout.VERTICAL);
+
         android.widget.ScrollView scroll = new android.widget.ScrollView(ctx);
+        scroll.setFillViewport(true);
         scroll.addView(root, new android.widget.FrameLayout.LayoutParams(
                 android.widget.FrameLayout.LayoutParams.MATCH_PARENT,
                 android.widget.FrameLayout.LayoutParams.WRAP_CONTENT));
-        setView(scroll);
+        shell.addView(scroll, new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f));
+        shell.addView(closeRow);
+
+        setView(shell);
         // ★ 允许返回键取消（onBackPressed 里会置 cancelled 并停掉轮询）
         setCancelable(true);
         setOnCancelListener(d -> cancelled = true);
         // ★ 显式给对话框一个"接近全屏"的尺寸：
-        //   宽度 94% 屏宽、高度 92% 屏高，配合 ScrollView 保证任何内容都够得到。
+        //   宽度 94% 屏宽、高度 92% 屏高，保证小屏也有足够空间。
         android.view.Window w = getWindow();
         if (w != null) {
             android.util.DisplayMetrics dm = ctx.getResources().getDisplayMetrics();
             w.setLayout((int) (dm.widthPixels * 0.94f), (int) (dm.heightPixels * 0.92f));
+            // ★★★【2026-10-06 修复 · 用户实测"手机上打不开输入框"】
+            //   内嵌 WebView 里要输微软账号/密码，必须让软键盘能弹出来并把布局顶上去。
+            //   原来 Dialog 完全没配输入法 → 点输入框毫无反应（电脑上因为用物理键盘看不出来）。
+            //   ADJUST_RESIZE：键盘弹出时把窗口高度压缩，而不是盖住输入框；
+            //   STATE_VISIBLE ：进入登录页时主动允许显示输入法。
+            w.setSoftInputMode(android.view.WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE
+                    | android.view.WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
         }
     }
 
@@ -337,6 +355,24 @@ public class DeviceCodeLoginDialog extends AlertDialog {
             s.setJavaScriptEnabled(true);
             s.setDomStorageEnabled(true);
             s.setCacheMode(WebSettings.LOAD_NO_CACHE);
+            // ★★★【2026-10-06 修复】让 WebView 里的输入框能唤起软键盘。
+            //   原来这个 WebView 完全没配输入法相关的东西：不可聚焦、也没人唤起输入法，
+            //   于是手机上点账号/密码输入框**毫无反应**（用户实测"打不开手机输入框"）。
+            //   电脑上因为用物理键盘，看不出来这个毛病。
+            webView.setFocusable(true);
+            webView.setFocusableInTouchMode(true);
+            webView.setOnTouchListener((v, ev) -> {
+                if (ev.getAction() == android.view.MotionEvent.ACTION_UP) {
+                    v.requestFocus();
+                    android.view.inputmethod.InputMethodManager imm =
+                            (android.view.inputmethod.InputMethodManager)
+                                    ctx.getSystemService(Context.INPUT_METHOD_SERVICE);
+                    if (imm != null) {
+                        imm.showSoftInput(v, android.view.inputmethod.InputMethodManager.SHOW_IMPLICIT);
+                    }
+                }
+                return false;   // 不吞事件：页面照常滚动 / 点按钮
+            });
             webView.setWebViewClient(new WebViewClient() {
                 @Override
                 public boolean shouldOverrideUrlLoading(WebView view, String url) {

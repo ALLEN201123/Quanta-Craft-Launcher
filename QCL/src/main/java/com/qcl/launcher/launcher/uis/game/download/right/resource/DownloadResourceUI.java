@@ -287,7 +287,10 @@ public class DownloadResourceUI extends BaseDownloadUI implements View.OnClickLi
         //      优先只放加载器也匹配的那几个文件；一个都没匹配上就退回整组。
         this.recommendedKey = null;
         try {
-            String mcv = SettingUtils.getCurrentGameVersion(activity);
+            // ★ 2026-10-06（用户要求）：「推荐的版本」这一组**只给 模组(0) / 资源包(2) / 世界(3)**，
+            //   整合包(1) 不要 —— 整合包是整包安装，不存在"适配你现在玩的这个版本"这种概念，
+            //   给它插一组"推荐的版本"只会让人看不懂。
+            String mcv = resourceType == 1 ? null : SettingUtils.getCurrentGameVersion(activity);
             if (mcv != null && !mcv.isEmpty() && classifiedVersions.keys().contains(mcv)) {
                 List<RemoteMod.Version> matched =
                         new ArrayList<>((List<RemoteMod.Version>) classifiedVersions.get(mcv));
@@ -330,11 +333,20 @@ public class DownloadResourceUI extends BaseDownloadUI implements View.OnClickLi
                 // ★★★ 1.2.5：依赖拉不到**不该**让整页「版本列表加载失败」——
                 //   依赖单独兜一层，失败就当没有依赖，版本列表照常显示。
                 List<RemoteMod> deps;
-                try {
-                    deps = bean.getData().loadDependencies(repository);
-                }
-                catch (Throwable t) {
-                    t.printStackTrace();
+                // ★★★ 2026-10-06 修复（用户实测）：前置（依赖）**只在「模组」详情页显示**。
+                //   这个详情页是 模组 / 整合包 / 资源包 / 世界 **共用**的，原来无条件拉依赖，
+                //   于是整合包详情页也冒出一段「模组前置」—— 玩家点的是整合包，看到"模组前置"
+                //   只会困惑（用户原话：「你加在整合包里有个屁用」）。
+                //   resourceType == 0 才是模组（与上面 mcmod 的可见性判断同一口径）。
+                if (resourceType == 0) {
+                    try {
+                        deps = bean.getData().loadDependencies(repository);
+                    }
+                    catch (Throwable t) {
+                        t.printStackTrace();
+                        deps = new ArrayList<>();
+                    }
+                } else {
                     deps = new ArrayList<>();
                 }
                 this.dependencies = new ArrayList<>(deps);

@@ -11,6 +11,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import com.qcl.launcher.launcher.dialogs.EditDownloadNameDialog;
+import com.qcl.launcher.launcher.dialogs.ModpackDownloadDialog;
 import com.qcl.launcher.launcher.mod.RemoteMod;
 import com.qcl.launcher.launcher.uis.game.download.right.resource.DownloadResourceUI;
 import com.qcl.launcher.manifest.AppManifest;
@@ -142,8 +143,17 @@ public class ModVersionAdapter extends BaseAdapter {
         this.ui.selectedVersion = this.list.get(i);
         if (this.ui.resourceType == 0 || this.ui.resourceType == 2) {
             new EditDownloadNameDialog(this.context, this.ui, this.list.get(i), true, null).show();
+            return;
         }
-        int i2 = this.ui.resourceType;
+        // ★★★ 2026-10-06 新增：**整合包（resourceType == 1）**。
+        //   原来这里只处理 0/2/3，整合包落空 → 用户实测「点版本没反应、下载框根本不弹」。
+        //   整合包不是"下个文件丢进 mods/"，而是「下载整包 zip → 整包装出一个新版本」，
+        //   所以走专门的 ModpackDownloadDialog（照 FCL 的 ModpackInstaller 流程：
+        //   下载 → 交给 InstallPackageUI 按 manifest 分发安装）。
+        if (this.ui.resourceType == 1) {
+            ModpackDownloadDialog.show(this.context, this.ui, this.list.get(i));
+            return;
+        }
         if (this.ui.resourceType == 3) {
             Intent intent = new Intent(this.context, (Class<?>) FolderChooser.class);
             intent.putExtra("SELECTION_MODE", Constants.SELECTION_MODES.SINGLE_SELECTION.ordinal());

@@ -58,8 +58,11 @@ android {
         // ★ 350 / 1.4.8：修「载入世界」**失去选择权**的问题。
         //   之前每帧收尾方法里被注入了"o 为空就自动取最新存档" → 一点「载入世界」就直接进了最新那个世界，
         //   玩家根本来不及选。现在去掉自动加载，改成**点哪个槽位读哪个存档**。
-        versionCode 350
-        versionName "1.4.8"
+        // ★ 351 / 1.4.9：修「保存一次后再进载入世界必崩」——
+        //   f_() 的名字清洗只删 "  -  " 没截断 → "ush10-05_23:56.mclevel" → FileNotFoundException。
+        //   改为截断 + 去非法字符 + 补后缀 + **文件不存在就清空 o**（绝不把脏路径交给原版读档）。
+        versionCode 351
+        versionName "1.4.9"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }

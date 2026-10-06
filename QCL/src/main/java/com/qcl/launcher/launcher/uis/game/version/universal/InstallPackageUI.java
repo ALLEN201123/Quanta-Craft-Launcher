@@ -24,10 +24,21 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.SimpleItemAnimator;
 
 import com.qcl.launcher.launcher.list.install.DownloadTaskListAdapter;
+import com.qcl.launcher.launcher.mod.BaseModpackInstallTask;
+import com.qcl.launcher.launcher.mod.GenericModpackInstallTask;
 import com.qcl.launcher.launcher.mod.ManuallyCreatedModpackException;
 import com.qcl.launcher.launcher.mod.Modpack;
 import com.qcl.launcher.launcher.mod.ModpackHelper;
+import com.qcl.launcher.launcher.mod.ModpackManifest;
 import com.qcl.launcher.launcher.mod.UnsupportedModpackException;
+import com.qcl.launcher.launcher.mod.curse.CurseInstallTask;
+import com.qcl.launcher.launcher.mod.curse.CurseManifest;
+import com.qcl.launcher.launcher.mod.qclpack.QclModpackInstallTask;
+import com.qcl.launcher.launcher.mod.qclpack.QclModpackManifest;
+import com.qcl.launcher.launcher.mod.mcbbs.McbbsModpackLocalInstallTask;
+import com.qcl.launcher.launcher.mod.mcbbs.McbbsModpackManifest;
+import com.qcl.launcher.launcher.mod.modrinth.ModrinthInstallTask;
+import com.qcl.launcher.launcher.mod.modrinth.ModrinthManifest;
 import com.qcl.launcher.launcher.mod.multimc.MultiMCInstanceConfiguration;
 import com.qcl.launcher.launcher.mod.multimc.MultiMCModpackInstallTask;
 import com.qcl.launcher.launcher.uis.tools.BaseUI;
@@ -168,12 +179,28 @@ public class InstallPackageUI extends BaseUI implements View.OnClickListener {
                 } catch (UnsupportedModpackException | IOException e) {
                     e.printStackTrace();
                     modpack = null;
+                    // ★ 1.5.0：**不再弹「不支持」并回退**。
+                    //   未知格式也要尽力导入（直接解压），所以照常进入安装界面，
+                    //   由 GenericModpackInstallTask 按 zip 内容挑目标目录解包。
                     activity.runOnUiThread(() -> {
-                        activity.backToLastUI();
+                        selectLayout.setVisibility(View.GONE);
+                        installLayout.setVisibility(View.VISIBLE);
+                        progressBar.setVisibility(View.GONE);
+                        pathText.setText(path);
+                        nameText.setText(new File(path).getName());
+                        versionText.setText("");
+                        authorText.setText("");
+                        editName.setText(FileUtils.getNameWithoutExtension(new File(path)));
                         AlertDialog.Builder builder = new AlertDialog.Builder(context);
-                        builder.setTitle(context.getString(R.string.dialog_package_not_support_title));
-                        builder.setMessage(context.getString(R.string.dialog_package_not_support_msg));
-                        builder.setPositiveButton(context.getString(R.string.dialog_package_not_support_exit), null);
+                        builder.setTitle("未识别的整合包格式");
+                        builder.setMessage("这个压缩包不是已知的整合包格式"
+                                + "（Curse / Modrinth / MCBBS / HMCL / MultiMC）。\n\n"
+                                + "启动器仍会按通用方式尽力导入：把包里的 .minecraft / overrides / "
+                                + "minecraft 目录内容直接解压到游戏目录或版本目录。\n"
+                                + "如果包里本来就带完整的游戏目录，这样也能用。");
+                        builder.setPositiveButton("继续导入", null);
+                        builder.setNegativeButton(android.R.string.cancel,
+                                (dialogInterface, i) -> activity.backToLastUI());
                         builder.create().show();
                     });
                 }
@@ -210,14 +237,51 @@ public class InstallPackageUI extends BaseUI implements View.OnClickListener {
     }
 
     /**
-     * ★ 1.2.3：这里原来是空的 —— 按钮接好了、清单也读出来了，
-     * 但点「安装」什么都不发生。这就是「导入整合包没反应 / 导入完启动崩」的入口。
+     * ★ 1.5.0：按格式分发到对应的安装任务。**非 MultiMC 不再拒绝。**
      *
-     * 现在接上 MultiMC / Prism 的真实安装任务
-     * （其它提供器 Curse / Modrinth / MCBBS / HMCL 的 InstallTask 目前还是空壳，先明确提示）
+     * 原来修好 MultiMC 之后，这里只认 MultiMCInstanceConfiguration，
+     * 其它格式一律弹「目前只支持 MultiMC / Prism」并 return —— 这就是用户说的
+     * 「选择其他整合包格式就不让导入了」。现在：
+     *   MultiMCInstanceConfiguration → MultiMCModpackInstallTask（原逻辑原封不动）
+     *   CurseManifest                → CurseInstallTask
+     *   ModrinthManifest             → ModrinthInstallTask
+     *   McbbsModpackManifest         → McbbsModpackLocalInstallTask
+     *   QclModpackManifest          → QclModpackInstallTask
+     *   其它 / 没有 manifest          → GenericModpackInstallTask（按 zip 内容尽力解压导入）
      */
+    /**
+     * ★ 2026-10-06 新增：供「下载页」把**下载好的整合包 zip** 直接复用本页的安装流程。
+     *
+     * <p>为什么加这个方法：下载页点整合包版本 → 下载 zip（DownloadDialog）→ 下载完成后
+     * 必须走与「本地导入」**完全相同**的安装逻辑（按 manifest 分发到
+     * MultiMC / Curse / Modrinth / MCBBS / QCL / 兜底）。与其在下载页再抄一份，
+     * 不如把 zip 交回这里，复用同一套分发代码与同一个任务列表 UI。
+     *
+     * <p>照 FCL 的做法：FCL 是 {@code ModpackInstaller.installModpack(...)} 统一收口；
+     * QCL 没有那层封装，就用本页作为收口。
+     */
+    public void installDownloadedZip(File zip, String targetName) {
+        if (zip == null || !zip.isFile()) {
+            return;
+        }
+        this.selectedPath = zip.getAbsolutePath();
+        this.modpack = null;
+        try {
+            this.modpack = ModpackHelper.readModpackManifest(zip.toPath(),
+                    ZipTools.findSuitableEncoding(zip.toPath()));
+        } catch (Throwable ignored) {
+            // 解析失败也照样往下走：会落到 GenericModpackInstallTask 尽力导入，绝不拒绝
+        }
+        if (targetName != null && !StringUtils.isBlank(targetName)) {
+            editName.setText(targetName);
+        } else {
+            editName.setText(FileUtils.getNameWithoutExtension(zip));
+        }
+        startInstall();
+    }
+
     private void startInstall() {
-        if (modpack == null || selectedPath == null) {
+        if (selectedPath == null) {
             activity.backToLastUI();
             return;
         }
@@ -227,17 +291,6 @@ public class InstallPackageUI extends BaseUI implements View.OnClickListener {
             new AlertDialog.Builder(context)
                     .setTitle(context.getString(R.string.install_package_ui_title))
                     .setMessage("整合包名字不能为空。")
-                    .setPositiveButton(android.R.string.ok, null)
-                    .create().show();
-            return;
-        }
-
-        if (!(modpack.getManifest() instanceof MultiMCInstanceConfiguration)) {
-            new AlertDialog.Builder(context)
-                    .setTitle(context.getString(R.string.install_package_ui_title))
-                    .setMessage("目前只支持 **MultiMC / Prism Launcher** 的整合包导入。\n\n"
-                            + "CurseForge / Modrinth / MCBBS / HMCL 这几种的安装逻辑在 QCL 里还没接通，"
-                            + "先用手动解压的方式吧。")
                     .setPositiveButton(android.R.string.ok, null)
                     .create().show();
             return;
@@ -269,45 +322,83 @@ public class InstallPackageUI extends BaseUI implements View.OnClickListener {
                 .create();
         installDialog.show();
 
-        // 任务要靠 Activity 拿游戏目录（MultiMCModpackProvider 那边 new 的时候没有 context）
+        // 任务要靠 Activity 拿游戏目录（提供器 new 的时候没有 context）
         MultiMCModpackInstallTask.setActivity(activity);
+        BaseModpackInstallTask.setActivity(activity);
 
-        MultiMCModpackInstallTask task = new MultiMCModpackInstallTask(
-                activity,
-                new File(selectedPath),
-                modpack,
-                (MultiMCInstanceConfiguration) modpack.getManifest(),
-                targetName,
-                installTaskAdapter);   // ★ 任务通过它一行一行上报进度
-        task.setListener(new MultiMCModpackInstallTask.ProgressListener() {
+        final File zipFile = new File(selectedPath);
+        final ModpackManifest manifest = modpack == null ? null : modpack.getManifest();
+
+        // ---- MultiMC / Prism：原有任务原封不动 ----
+        if (manifest instanceof MultiMCInstanceConfiguration) {
+            MultiMCModpackInstallTask task = new MultiMCModpackInstallTask(
+                    activity, zipFile, modpack, (MultiMCInstanceConfiguration) manifest,
+                    targetName, installTaskAdapter);
+            task.setListener(new MultiMCModpackInstallTask.ProgressListener() {
+                @Override
+                public void onProgress(int percent) {
+                    // 有任务列表时进度在列表里逐行体现，这里不再另开进度条
+                }
+
+                @Override
+                public void onFinished(Exception error) {
+                    finishInstall(error, targetName);
+                }
+            });
+            task.execute();
+            return;
+        }
+
+        // ---- 其它格式：分发到各自的真实安装任务 ----
+        BaseModpackInstallTask task;
+        if (manifest instanceof CurseManifest) {
+            task = new CurseInstallTask(activity, zipFile, modpack, (CurseManifest) manifest,
+                    targetName, installTaskAdapter);
+        } else if (manifest instanceof ModrinthManifest) {
+            task = new ModrinthInstallTask(activity, zipFile, modpack, (ModrinthManifest) manifest,
+                    targetName, installTaskAdapter);
+        } else if (manifest instanceof McbbsModpackManifest) {
+            task = new McbbsModpackLocalInstallTask(activity, zipFile, modpack,
+                    (McbbsModpackManifest) manifest, targetName, installTaskAdapter);
+        } else if (manifest instanceof QclModpackManifest) {
+            task = new QclModpackInstallTask(activity, zipFile, modpack, targetName, installTaskAdapter);
+        } else {
+            // 未知 / 没有 manifest：也尽力导入，绝不拒绝
+            task = new GenericModpackInstallTask(activity, zipFile, modpack, targetName, installTaskAdapter);
+        }
+        task.setListener(new BaseModpackInstallTask.ProgressListener() {
             @Override
             public void onProgress(int percent) {
-                // 有任务列表时进度在列表里逐行体现，这里不再另开进度条
             }
 
             @Override
             public void onFinished(Exception error) {
-                if (installDialog != null && installDialog.isShowing()) {
-                    installDialog.dismiss();
-                }
-                installDialog = null;
-                installTaskAdapter = null;
-
-                if (error == null) {
-                    Toast.makeText(context, "整合包安装完成：" + targetName, Toast.LENGTH_LONG).show();
-                    // 新版本要出现在版本列表里
-                    activity.uiManager.versionListUI.refreshVersionList();
-                    activity.backToLastUI();
-                } else {
-                    error.printStackTrace();
-                    new AlertDialog.Builder(context)
-                            .setTitle("整合包安装失败")
-                            .setMessage(String.valueOf(error.getMessage()))
-                            .setPositiveButton(android.R.string.ok, null)
-                            .create().show();
-                }
+                finishInstall(error, targetName);
             }
         });
         task.execute();
+    }
+
+    /** 安装收尾（成功与失败都走这里，供各格式任务共用） */
+    private void finishInstall(Exception error, String targetName) {
+        if (installDialog != null && installDialog.isShowing()) {
+            installDialog.dismiss();
+        }
+        installDialog = null;
+        installTaskAdapter = null;
+
+        if (error == null) {
+            Toast.makeText(context, "整合包安装完成：" + targetName, Toast.LENGTH_LONG).show();
+            // 新版本要出现在版本列表里
+            activity.uiManager.versionListUI.refreshVersionList();
+            activity.backToLastUI();
+        } else {
+            error.printStackTrace();
+            new AlertDialog.Builder(context)
+                    .setTitle("整合包安装失败")
+                    .setMessage(String.valueOf(error.getMessage()))
+                    .setPositiveButton(android.R.string.ok, null)
+                    .create().show();
+        }
     }
 }

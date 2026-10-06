@@ -438,7 +438,7 @@ public final class LegacyChinesePack {
             //   .jar.orig 保留为「首次注入时的纯原版备份」，供玩家手动恢复纯净版。
             final File srcJar = jar;
             // \u2605 1.3.7\uff1aAlpha \u7ec4\u7684\u300c\u754c\u9762\u7ffb\u8bd1\u7c7b\u300d\u4f1a\u8986\u76d6\u540c\u540d\u6761\u76ee \u2014\u2014 \u590d\u5236\u9636\u6bb5\u5148\u8df3\u8fc7\uff0c\u907f\u514d\u91cd\u590d\u6761\u76ee\u5f02\u5e38
-            final String trJarName = (extra != null)
+            final String trJarName = (extra != null || v10v)
                     ? ("cn_a1v_" + versionId.replaceAll("[^A-Za-z0-9]", "_") + "_tr.jar")
                     : null;
             final java.util.Set<String> trSet = (trJarName != null)
@@ -496,13 +496,18 @@ public final class LegacyChinesePack {
                 if ("cn_b13demo".equals(extra[1])) {
                     writeAsset(context, "cn_b13demo/ei.class", "ei.class", zout);
                 }
-                // ★ 1.3.7：Alpha 组额外注入「界面翻译类」，目录 = <组名>_tr/
-                if (trJarName != null) writeAssetJar(context, trJarName, zout);
             } else {
                 writeAsset(context, ASSET_DIR + "/sj.class", "sj.class", zout);
                 writeAsset(context, ASSET_DIR + "/co.class", "co.class", zout);
                 writeAsset(context, ASSET_DIR + "/QclLangScreen.class", "QclLangScreen.class", zout);
             }
+            // ★★★【2026-10-06 修复】「界面翻译类」jar（cn_a1v_<版本>_tr.jar）必须写在**所有分支之外**。
+            //   原来这一行只挂在 `extra != null` 分支里 —— 1.0 走的是 `v10v` 分支，
+            //   于是：上面第 457 行已经因为 trJarName != null 把同名的原版类**跳过了**，
+            //   而这里又不写 tr.jar → 56 个类凭空消失 →
+            //   启动直接崩：ClassNotFoundException: net.minecraft.client.Minecraft
+            //   （Caused by: NPE at LaunchClassLoader.findClass —— 就是找不到那个 class 条目）
+            if (trJarName != null) writeAssetJar(context, trJarName, zout);
             // 字符表 + 官方中文点阵
             writeAsset(context, ASSET_DIR + "/font.txt", "font.txt", zout);
             writeAsset(context, ASSET_DIR + "/font/glyph_sizes.bin", "font/glyph_sizes.bin", zout);

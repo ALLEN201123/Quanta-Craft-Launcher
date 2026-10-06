@@ -9,7 +9,7 @@ import android.os.AsyncTask;
 import com.google.gson.JsonParseException;
 import com.google.gson.reflect.TypeToken;
 import com.qcl.launcher.launcher.mod.curse.CurseModpackProvider;
-import com.qcl.launcher.launcher.mod.hmcl.HMCLModpackProvider;
+import com.qcl.launcher.launcher.mod.qclpack.QclModpackProvider;
 import com.qcl.launcher.launcher.mod.mcbbs.McbbsModpackProvider;
 import com.qcl.launcher.launcher.mod.modrinth.ModrinthModpackProvider;
 import com.qcl.launcher.launcher.mod.multimc.MultiMCModpackProvider;
@@ -50,7 +50,7 @@ public final class ModpackHelper {
             pair(ModrinthModpackProvider.INSTANCE.getName(), ModrinthModpackProvider.INSTANCE),
             pair(MultiMCModpackProvider.INSTANCE.getName(), MultiMCModpackProvider.INSTANCE),
             pair(ServerModpackProvider.INSTANCE.getName(), ServerModpackProvider.INSTANCE),
-            pair(HMCLModpackProvider.INSTANCE.getName(), HMCLModpackProvider.INSTANCE)
+            pair(QclModpackProvider.INSTANCE.getName(), QclModpackProvider.INSTANCE)
     );
 
     @Nullable
@@ -71,7 +71,7 @@ public final class ModpackHelper {
                     McbbsModpackProvider.INSTANCE,
                     CurseModpackProvider.INSTANCE,
                     ModrinthModpackProvider.INSTANCE,
-                    HMCLModpackProvider.INSTANCE,
+                    QclModpackProvider.INSTANCE,
                     MultiMCModpackProvider.INSTANCE,
                     ServerModpackProvider.INSTANCE}) {
                 try {
