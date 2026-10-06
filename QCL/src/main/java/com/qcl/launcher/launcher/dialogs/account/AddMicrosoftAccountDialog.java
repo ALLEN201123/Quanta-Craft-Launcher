@@ -114,14 +114,19 @@ implements View.OnClickListener {
 
     public void onClick(View v) {
         if (v == this.login) {
-            // ★★★ 2026-10-06：原来的 WebView 登录改成**设备码登录**。
-            //   老代码（留着备查）：
-            //     Intent i = new Intent(this.getContext(), MicrosoftLoginActivity.class);
-            //     Bundle bundle = new Bundle();
-            //     bundle.putBoolean("fullscreen", this.activity.launcherSetting.fullscreen);
-            //     i.putExtras(bundle);
-            //     this.activity.startActivityForResult(i, 2000);
-            new DeviceCodeLoginDialog(this.activity, this.onMicrosoftAccountAddListener).show();
+            // ★★★【2026-10-07 恢复 1.4.7 原实现】用户真机实测「设备码对话框」版不可用：
+            //   在对话框里塞 WebView 导致（a）手指拖动被外层 ScrollView 抢走、页面滑不动，
+            //   （b）WebView 里的账号/密码输入框在国产 ROM 上弹不出软键盘（字号 16px 阈值 +
+            //   焦点在页面内部 + SPA 重建 DOM 后 focus 丢失），连试三版补丁都没解决。
+            //   ★ 1.4.7 的做法是**独立全屏 Activity**（R.id.web_view 占满屏、沉浸式、无
+            //     ScrollView 包裹、无按钮行）—— MicrosoftLoginActivity 与布局**至今未被改动过**
+            //     （`git diff origin/1.4.7 HEAD -- MicrosoftLoginActivity.java` 为空），
+            //     所以这里直接恢复原来的调用即可。
+            Intent i = new Intent(this.getContext(), MicrosoftLoginActivity.class);
+            Bundle bundle = new Bundle();
+            bundle.putBoolean("fullscreen", this.activity.launcherSetting.fullscreen);
+            i.putExtras(bundle);
+            this.activity.startActivityForResult(i, 2000);
         }
         if (v == this.cancel) {
             this.dismiss();
@@ -144,7 +149,9 @@ implements View.OnClickListener {
                 String code = data.getQueryParameter("code");
                 new Thread(() -> {
                     this.handler.post(() -> {
-                        this.progressBar.setVisibility(0);
+                        // ★ 2026-10-07：进度圈已从布局里物理移除，progressBar 为 null，
+                        //   这里必须判空（Android 16 真机上必崩）。
+                        if (this.progressBar != null) this.progressBar.setVisibility(0);
                         this.login.setVisibility(8);
                         this.cancel.setEnabled(false);
                     });
@@ -187,7 +194,7 @@ implements View.OnClickListener {
                         e.printStackTrace();
                     }
                     this.handler.post(() -> {
-                        this.progressBar.setVisibility(8);
+                        if (this.progressBar != null) this.progressBar.setVisibility(8);
                         this.login.setVisibility(0);
                         this.cancel.setEnabled(true);
                     });

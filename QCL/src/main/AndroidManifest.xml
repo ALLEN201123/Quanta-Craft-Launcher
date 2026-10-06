@@ -120,6 +120,7 @@
         <activity
             android:name=".auth.microsoft.MicrosoftLoginActivity"
             android:screenOrientation="sensorLandscape"
+            android:windowSoftInputMode="adjustResize"
             android:theme="@style/Theme.HelloMinecraftLauncherPocketEdition"/>
         <activity
             android:name=".control.ControlPatternActivity"
