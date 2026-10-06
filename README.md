@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://cdn.jsdelivr.net/gh/ALLEN201123/Quanta-Craft-Launcher@1.4.8/icon.png" width="160" alt="QCL 图标"/>
+  <img src="https://cdn.jsdelivr.net/gh/ALLEN201123/Quanta-Craft-Launcher@1.1.3/icon.png" width="160" alt="QCL 图标"/>
 </p>
 
 # QCL · Quanta Craft Launcher
@@ -175,7 +175,7 @@ QCL 自己写的是**窗口 / Surface / EGL 上下文 / 输入桥 / 帧节奏**�
 **每个版本改了什么，都在 GitHub Releases 里，README 不逐版记录：**
 
 - 全部版本：https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases
-- 当前版本：**1.4.3**（versionCode 343）
+- 当前版本：**1.1.3**（versionCode 313）
 
 > 建议先按下面这张表判断自己关心的问题是在哪一版修的，直接查对应 Release 的说明：
 >
