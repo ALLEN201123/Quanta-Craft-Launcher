@@ -1,17 +1,16 @@
 {
   "latestRelease": {
-    "versionCode": 350,
-    "versionName": "1.4.8",
-    "date": "2026-10-06",
+    "versionCode": 351,
+    "versionName": "1.4.9",
+    "date": "2026-10-07",
     "url": [
-      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.4.8/QCL-release-1.4.8-universal.apk",
-      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.4.8/QCL-release-1.4.8-arm64.apk",
-      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.4.8/QCL-release-1.4.8-arm.apk",
-      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.4.8/QCL-release-1.4.8-x86_64.apk",
-      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.4.8/QCL-release-1.4.8-x86.apk"
+      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.4.9/QCL-release-1.4.9-universal.apk",
+      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.4.9/QCL-release-1.4.9-arm64.apk",
+      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.4.9/QCL-release-1.4.9-arm.apk",
+      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.4.9/QCL-release-1.4.9-x86_64.apk",
+      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.4.9/QCL-release-1.4.9-x86.apk"
     ],
     "netdiskUrl": "https://pan.quark.cn/s/f2c26c4fb66f",
-    "updateLog": "1.4.8 重大更新：远古版本存档系统全面重建 + 微软设备码登录 + 陶瓦联机完善\\n\\n★★★ 先说明 1.4.6 / 1.4.7：这两个是**纯属废物的过渡版本，一点用没有**，\\n发布的包存在存档界面点不开、保存无效等问题，请直接忽略并升级到 1.4.8。\\n\\n【远古版本（classic / indev / infdev）存档系统全面重建】\\n· 点「载入世界」现在能列出已保存的存档（5 个槽位），空槽位、\\n  「加载文件…」、「取消」全部可点。\\n· 空槽位 → 输入世界名称 → 保存：与原版跳转一致，并且点「保存」立刻落盘。\\n· 「保存文件…」可以选择手机里的任意目录，把世界导出成 .mclevel 文件；\\n  导出后会在提示里给完整路径。\\n· 可以载入从网上下的 .mclevel 存档文件，也可以选择手机文件夹里的世界。\\n· 存档名会做清洗（去掉时间戳、空格与冒号等安卓不允许的字符），\\n  不会再出现「保存后崩溃」。\\n\\n【微软账号登录：改用设备码（Device Code）】\\n· 不再依赖内嵌 WebView 打开授权页（国内网络/部分机型会被微软拦成空白）。\\n· 点「登录」直接拿 8 位设备码，验证码**自动填入**内置登录页，\\n  点一下「继续」就完成，全程在启动器里，不用跳浏览器。\\n· 加了「返回」按钮，随时可以退出。\\n· 移除了登录界面一直空转的进度圈。\\n\\n【陶瓦（Terracotta）联机完善】\\n· 修「选创建房间后没有 VPN 授权弹窗」：现在会正常弹系统授权框。\\n· 创建/加入房间都有独立进度弹窗，进度条 + 中文状态\\n  （正在扫描局域网 / 正在连接房主 / 正在建立通道…）。\\n· 就绪后自动弹出邀请码（房主）或服务器地址（访客），并自动复制到剪贴板。\\n\\n【下载页】\\n· 愚人节分类补上 2013 年的 2.0 三个版本：2.0_blue / 2.0_red / 2.0_purple，\\n  可直接安装。\\n\\n【保活 · 防杀后台】\\n· 额外加了一个「防杀后台」：游戏运行期间挂一条常驻的**前台服务**，\\n  这样你切出去回消息、看视频，再切回来**游戏还在**，\\n  不会被安卓或省电策略当成后台垃圾清掉、逼你重新启动。\\n· 顺手修了一个隐形 bug：Android 14 以上不声明前台服务类型的话，\\n  保活会被系统**静默拒绝**（看日志才知道），表现就是「切后台一会儿回来游戏没了」。\\n  现在类型和权限都补齐了，保活真正生效。\\n\\n【仍未解决 / 已知】\\n· 六个 infdev 版本（inf-20100227-1433 / inf-20100313 / inf-20100316 /\\n  inf-20100320 / inf-20100321-1857 / inf-20100325-1640）的存档补丁\\n  只做了字节码校验，**未在设备上逐个实测**；in-20100223 已实测通过。\\n· 陶瓦（Terracotta）联机的本轮改动（VPN 授权申请、进度弹窗、自动复制）\\n  **未经真机实测** —— 需要两台设备才能真正验证连通性，本版只验证了编译与逻辑。\\n· 微软设备码登录：取码与轮询通道已单独实测通过（能拿到 8 位码、\\n  未确认时正确返回 authorization_pending），但**完整登录到出账号的整条链路\\n  需要真人输微软账号密码**，本轮未走完。\\n· 部分远古版本（1.0 等）中文翻译仍不全。\\n· 投影工坊的 .litematic 导出按钮。\\n· 整合包导入支持 MultiMC / HMCL / CurseForge，Modrinth(.mrpack)、MCBBS、\\n  服务器整合包仍在补齐。"
-  },
-  "latestPrerelease": null
+    "updateLog": "1.4.9：远古中文真补齐了（294 个硬编码翻译 key）+ 整合包全格式落地 + 渲染器按版本独立\n\n【远古中文】之前说\"翻译了\"其实只做了一半。漏掉的是最关键的一类：翻译 key 硬编码在字节码常量池里（deathScreen.respawn / options.renderDistance.normal / gui.toMenu…），游戏查不到语言表就把 key 本身显示出来，所以界面全是英文。\n· 实测扫出 294 个这类 key，一个都不在映射表里 → 全部按官方译法补齐（映射表 823 → 1117 条），重跑 127 个版本（改 7672 个 class、40333 处字符串），翻译资产 123 → 170 个。\n· 漏扫原因：indev/infdev/Classic 的游戏类在 net/minecraft/** 下，扫描器把 net/ 整包当第三方库排除了。以 in-20100223 为例漏掉 29 个 class（Generate new level... / Options... / Game over!…），修正后残留归零。\n· 另一原因：中文注入标记只记「语言 + versionCode」，本次 versionCode 没变 → 老标记仍匹配 → 整个注入被跳过，新译文一次都没进过游戏 jar。现在标记里加入翻译资产指纹，资产一变就自动重注入。\n\n【整合包】mod 与配置按版本隔离落到 versions/<版本>/（实测 148 个 mod 全部到位）；下载页点版本即可下载并自动安装，覆盖 Curse / Modrinth / MultiMC / MCBBS / QCL 五种格式；26.x 的 patches 新格式现在会被正确应用。实测 Fabulously Optimized 整合包正常启动（Loading 148 mods）。\n\n【渲染器】按版本独立了——某个版本换渲染器只影响它自己，不再污染全局设置；修掉「查不到渲染器就静默换成另一个」的行为（以前\"切了没反应\"就是它）；外部渲染器插件（MobileGlues）现在会按插件自己声明的方式注入环境变量。\n\n【退出游戏】正常退出时补上收尾回调，不再卡在最后一帧退不回主界面。\n\n【体积】单架构包 336 MB → 241~288 MB（arm64 真机 261 MB）：按架构裁掉用不到的 natives 与 JRE 分包。再往下压需改成运行时下载原生库，要动启动流程，放到 1.5.0。\n\n【这次没做，都留给 1.5.0】① Minecraft 26.3 与 Vulkan 检测——官方 26.3 对着色器要求更严格，部分设备需要 Vulkan，本版本请用 26.2 及以下；② 界面与背景图重构（有玩家反馈偏旧）。"
+  }
 }
