@@ -132,8 +132,17 @@ android {
             "x86": "x86", "x86_64": "x86_64",
         ].get(arch)
         if (keepAbi == null) return
-        // armeabi-v7a 是 prepare341() 的回退目标，任何情况下都必须保留
-        def keepList = [keepAbi, "armeabi-v7a"] as Set
+        // ★★★【2026-10-07 修正】原来这里是 `[keepAbi, "armeabi-v7a"]`，
+        //   注释写着「armeabi-v7a 是 prepare341() 的回退目标，任何情况下都必须保留」。
+        //   ★ 实测证明这条规则是**多余的**，而且让每个包白胖 34~55 MB：
+        //     · `Architecture.getInstalledAbiArchitecture()` 读的是
+        //       **`ApplicationInfo.primaryCpuAbi`** = 这个 APK **装成的 ABI**（由 `lib/` 决定）。
+        //     · `RuntimeInstallActivity:377` 也只看 `bin-<this.arch>.tar.xz`，
+        //       而 `this.arch` 同样来自设备上安装的 ABI。
+        //     ⇒ arm64 包（lib/ 只有 arm64-v8a）永远只会用 arm64-v8a 的 natives 与 bin-arm64；
+        //       它自带的那份 armeabi-v7a 是**死重**（连 lib/ 里都没有 32 位 so，想跑 32 位也跑不起来）。
+        //   实测冗余（压缩后）：arm64 34.1 MB / x86_64 55.4 MB / x86 55.4 MB / arm 21.4 MB。
+        def keepList = [keepAbi] as Set
         def knownAbi = ["armeabi-v7a", "arm64-v8a", "x86", "x86_64"]
         def taskName = variant.name.capitalize()
         mergeAssetsProvider.configure { assetsTask ->
@@ -165,8 +174,13 @@ android {
                 }
                 // ② natives：lwjgl341 / lwjgl333 / jna 下的架构子目录
                 //   ★ 只删名字在 knownAbi 里的目录，未知目录一律不动
+                //   ★★【2026-10-07 修正路径】原来这里写的是 `app_runtime/jna` ——
+                //     **这个目录根本不存在**，真正的 jna 在 `app_runtime/lwjgl333/jna`。
+                //     所以 x86 / x86_64 的 libjnidispatch.so 一直没被裁掉（每个包白带 0.24 MB，
+                //     且清单还会误报"未找到"）。这里两个路径都写上，将来挪位置也不会漏。
                 ["app_runtime/lwjgl341/natives",
                  "app_runtime/lwjgl333/natives",
+                 "app_runtime/lwjgl333/jna",
                  "app_runtime/jna"].each { String rel ->
                     def nr = new File(root, rel)
                     if (!nr.isDirectory()) return
