@@ -100,11 +100,13 @@ implements View.OnClickListener {
         //   注意：**不是再加一个按钮**（用户明确要求"直接整在那个登录上面"），
         //   而是让原来那个「登录」按钮就干这件事。
         this.progressBar = (ProgressBar)this.findViewById(R.id.login_progress);
-        // ★★★ 2026-10-06 修复：这个进度圈一直在转（用户反馈"下面一个圆圈一直转"）。
-        //   原因：它原本是给 WebView 登录流程用的（点了登录才显示、拿到结果隐藏），
-        //   而登录现在改成设备码弹窗了，这个圈**永远不会被隐藏**，就一直空转。
-        //   已经从布局里**物理删除**该 ProgressBar（用户要求"把那个圆圈给移除了"），
-        //   这里保留 null 判断只是防止别处还引用它时崩溃。
+        // ★★★【2026-10-07 恢复 1.4.7 的「登录转圈」】
+        //   历史：10-06 登录改成「设备码」流程时，这个圈永远不会被隐藏、一直空转
+        //        （用户反馈"下面一个圆圈一直转"）→ 当时把它**从布局里物理删掉了**。
+        //   现在登录已经**改回 1.4.7 的独立全屏授权页**，这个圈的语义就恢复了：
+        //        点「登录」→ 显示圈 + 隐藏按钮（见 login()）
+        //        → 授权返回后再隐藏圈、显示按钮。
+        //   ⇒ 布局里的 ProgressBar 已按 1.4.7 恢复；这里初始隐藏一次。
         if (this.progressBar != null) {
             this.progressBar.setVisibility(8);
         }
@@ -149,8 +151,8 @@ implements View.OnClickListener {
                 String code = data.getQueryParameter("code");
                 new Thread(() -> {
                     this.handler.post(() -> {
-                        // ★ 2026-10-07：进度圈已从布局里物理移除，progressBar 为 null，
-                        //   这里必须判空（Android 16 真机上必崩）。
+                        // ★ 2026-10-07：进度圈已按 1.4.7 恢复到布局里，这里显示它、隐藏按钮
+                        //   （保留判空，防止布局被改时崩）
                         if (this.progressBar != null) this.progressBar.setVisibility(0);
                         this.login.setVisibility(8);
                         this.cancel.setEnabled(false);

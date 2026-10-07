@@ -135,6 +135,22 @@
             android:layout_width="60dp"
             android:layout_height="40dp">
 
+            <!-- ★★★【2026-10-07 恢复 1.4.7 的「登录转圈」】
+                 1.4.9 一度把它物理删掉（当时登录改成了设备码流程，这个圈永远不会被隐藏、
+                 一直空转，用户反馈"下面一个圆圈一直转"）。
+                 现在登录已经**改回 1.4.7 的独立全屏授权页**，
+                 这个圈就该回来了 —— 它的语义正是 1.4.7 的用法：
+                   点「登录」→ 显示此圈 + 隐藏按钮（见 AddMicrosoftAccountDialog.login()）
+                   → 授权回来后再隐藏圈、显示按钮。
+                 ★ 位置照 1.4.7：与按钮叠在同一个 RelativeLayout 里、居中、初始 gone，
+                   按钮盖在上面（relative 后声明的在上层）。 -->
+            <ProgressBar
+                android:visibility="gone"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_centerInParent="true"
+                android:id="@+id/login_progress"/>
+
             <Button
                 android:singleLine="true"
                 android:textAllCaps="false"
