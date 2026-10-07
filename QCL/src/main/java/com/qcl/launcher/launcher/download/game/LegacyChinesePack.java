@@ -438,18 +438,26 @@ public final class LegacyChinesePack {
             //   .jar.orig 保留为「首次注入时的纯原版备份」，供玩家手动恢复纯净版。
             final File srcJar = jar;
             // \u2605 1.3.7\uff1aAlpha \u7ec4\u7684\u300c\u754c\u9762\u7ffb\u8bd1\u7c7b\u300d\u4f1a\u8986\u76d6\u540c\u540d\u6761\u76ee \u2014\u2014 \u590d\u5236\u9636\u6bb5\u5148\u8df3\u8fc7\uff0c\u907f\u514d\u91cd\u590d\u6761\u76ee\u5f02\u5e38
-            final String trJarName =
-                    "cn_a1v_" + versionId.replaceAll("[^A-Za-z0-9]", "_") + "_tr.jar";
-            // ★★★ 1.4.9：不再用 `(extra != null || v10v)` 限定注入范围。
-            //   EXTRA_PACKS 只覆盖 **Alpha（a1.x）** + 少量特例 ⇒ indev / infdev / Classic /
-            //   c0.30 / b1.6 / b1.7 / b1.8 / b1.9 全部 extra==null → 旧逻辑 trJarName=null
-            //   → 我们做的 170 个 cn_a1v_*_tr.jar 里，上百个**从没被写进游戏 jar**。
-            //   现在：**只要该版本的翻译资产存在就注入**；不存在时 trEntryNames 返回空集，
-            //   trSet 为空 → 复制阶段照旧走原版条目，行为与旧逻辑完全一致（不会出错）。
-            final java.util.Set<String> trSet = trEntryNames(context, trJarName);
-            if (trSet.isEmpty()) {
-                android.util.Log.i(TAG, "[远古中文] 无翻译资产，跳过译文注入: " + trJarName);
-            }
+            // ★★★【2026-10-07 回退 + 保留 1.0 修复】
+            //   ★ 这里**必须**是 `(extra != null || v10v)`，绝不能改成无条件注入！
+            //   1.4.9 一度写成 `"cn_a1v_"+id+"_tr.jar"`（无条件），后果：
+            //     · 所有版本（indev / infdev / Classic / b1.6 / b1.7 / b1.8 / b1.9 …）
+            //       都被塞进**为 Alpha 组生成的翻译 jar**
+            //     · 那些 jar 里的类名/结构跟这些版本**对不上**
+            //     · 用户实测 in-20100223：**点「载入世界」直接崩**
+            //         ArrayIndexOutOfBoundsException: 36733
+            //           at net.minecraft.client.c.j.a
+            //           at net.minecraft.client.c.k.a
+            //           at net.minecraft.client.c.e.a
+            //   1.4.8 的正确行为：**只给 Alpha 组（EXTRA_PACKS）和 1.0 注入**，
+            //   其余版本保持纯原版（英文）↔ 也就**不会崩**。
+            //   `|| v10v` 是 1.0 的修复（让 1.0 也能注入），保留。
+            final String trJarName = (extra != null || v10v)
+                    ? ("cn_a1v_" + versionId.replaceAll("[^A-Za-z0-9]", "_") + "_tr.jar")
+                    : null;
+            final java.util.Set<String> trSet = (trJarName != null)
+                    ? trEntryNames(context, trJarName)
+                    : java.util.Collections.<String>emptySet();
             // ★ 1.3.6：改用 ZipFile（随机访问 / 读中央目录）而不是 ZipInputStream（流式）——
             //   后者遇到某些 jar（如 b1.3-pcgamer_demo 这种特殊打包）会提前返回 null，
             //   导致「原版条目一个都没复制」→ jar 只剩补丁内容 → 游戏 ClassNotFoundException ✗
@@ -502,17 +510,20 @@ public final class LegacyChinesePack {
                 if ("cn_b13demo".equals(extra[1])) {
                     writeAsset(context, "cn_b13demo/ei.class", "ei.class", zout);
                 }
+                // ★ 1.3.7：Alpha 组额外注入「界面翻译类」，目录 = <组名>_tr/
             } else {
                 writeAsset(context, ASSET_DIR + "/sj.class", "sj.class", zout);
                 writeAsset(context, ASSET_DIR + "/co.class", "co.class", zout);
                 writeAsset(context, ASSET_DIR + "/QclLangScreen.class", "QclLangScreen.class", zout);
             }
-            // ★★★【2026-10-06 修复】「界面翻译类」jar（cn_a1v_<版本>_tr.jar）必须写在**所有分支之外**。
-            //   原来这一行只挂在 `extra != null` 分支里 —— 1.0 走的是 `v10v` 分支，
-            //   于是：上面第 457 行已经因为 trJarName != null 把同名的原版类**跳过了**，
-            //   而这里又不写 tr.jar → 56 个类凭空消失 →
-            //   启动直接崩：ClassNotFoundException: net.minecraft.client.Minecraft
-            //   （Caused by: NPE at LaunchClassLoader.findClass —— 就是找不到那个 class 条目）
+            // ★★★【2026-10-06 修复，★ 1.4.8 缺失、必须保留】「界面翻译类」jar 写在这里：
+            //   `cn_a1v_<版本>_tr.jar` 必须写在**所有 if-else 分支之外**。
+            //   原因：上面复制原版条目时，凡是 `trSet` 里的类都被**跳过**了（由 tr.jar 提供）；
+            //   若这一行只挂在 `extra != null` 分支里，那么走 `v10v`（1.0）分支时：
+            //     · 原版里那些类已被跳过
+            //     · 这里又不写 tr.jar → **56 个类凭空消失**
+            //     → 启动直接崩 ClassNotFoundException: net.minecraft.client.Minecraft
+            //   （原位置：`} else if (extra != null) {` 分支内部）
             if (trJarName != null) writeAssetJar(context, trJarName, zout);
             // 字符表 + 官方中文点阵
             writeAsset(context, ASSET_DIR + "/font.txt", "font.txt", zout);
@@ -646,22 +657,10 @@ public final class LegacyChinesePack {
         //   否则老用户升级 APK 后，已打补丁的版本 jar 里还是旧补丁类，
         //   （1.3.4 的「标签: 值」按钮乱码就是：类修了但 jar 不更新）✓
         //   旧标记只有语言（无竖线）→ 比较必然不等 → 升级后自动重打一次 ✓
-        // ★★★ 1.4.9：标记里加入「翻译资产指纹」，否则改了 cn_a1v_*_tr.jar 也不会重注入。
-        //   原来标记只带 versionCode：本次 1.4.9 的 versionCode 仍是 351（没升号），
-        //   而我们把170 个翻译 asset 全换了新内容（127 版本 / 40333 处替换），
-        //   老标记 `zh_CN|351` 依然与 expect 相等 → applyIfNeeded 直接 return true
-        //   → **新翻译根本没进游戏jar**，玩家看到的就是「还是有英文残留」。
-        //   （用户原话：「你没有删注入标记啊，他不会重新注入了」—— 正是这个 bug。）
-        //
-        //   指纹取「assets 目录下所有 cn_a1v_*_tr.jar 的 文件名 + 大小 + 修改时间」，
-        //   任何一个 asset 变了/增删，指纹就变 → 自动重注入一次。
-        //   不用内容哈希：170 个 jar 全量读会拖慢启动，size+mtime 足够灵敏。
-        String expect = want + "|" + apkVersionCode(context) + "|" + cnAssetFingerprint(context);
+        String expect = want + "|" + apkVersionCode(context);
         if (expect.equals(appliedLang(versionDir))) {
-            return true;   // 同一语言 + 同一启动器版本 + 同一套翻译资产，跳过
+            return true;   // 同一语言 + 同一启动器版本，跳过
         }
-        Log.i(TAG, "重新注入中文包: " + versionId + "（标记 " + appliedLang(versionDir)
-                + " -> " + expect + "）");
         boolean ok = apply(context, versionDir, versionId, want);
         if (ok) {
             try {
@@ -673,82 +672,6 @@ public final class LegacyChinesePack {
         }
         return ok;
     }
-
-    /**
-     * ★ 1.4.9：翻译资产指纹 = {@code cn_a1v_*_tr.jar} 的「名字 + 条目数 + 总字节」拼起来再哈希。
-     * <p>
-     * 只读每个 asset 的 zip 目录（不读条目内容），170 个文件开销很小；
-     * 结果缓存 30 秒，避免每次进游戏都算。
-     * <p>
-     * ★ 不用 {@code AssetFileDescriptor.getParcelFileDescriptor()}—— APK 未安装时
-     * 那会抛 {@code FileNotFoundException}（assets 走的是 zip 内条目，不是真实文件）。
-     */
-    private static String cnAssetFingerprint(Context context) {
-        try {
-            long now = System.currentTimeMillis();
-            if (now - fpCacheAt < 30000L && fpCache != null && !fpCache.isEmpty()) {
-                return fpCache;
-            }
-            java.util.List<String> items = new java.util.ArrayList<String>();
-            String[] names = listCnAssets(context);
-            java.util.Arrays.sort(names);
-            for (String f : names) {
-                java.util.zip.ZipInputStream in = null;
-                try {
-                    in = new java.util.zip.ZipInputStream(context.getAssets().open(f));
-                    long sum = 0;
-                    int n = 0;
-                    java.util.zip.ZipEntry e;
-                    while ((e = in.getNextEntry()) != null) {
-                        if (!e.isDirectory()) {
-                            sum += e.getSize();
-                            n++;
-                        }
-                    }
-                    items.add(f + ":" + n + ":" + sum);
-                } catch (Throwable ignored) {
-                    items.add(f + ":?");
-                } finally {
-                    if (in != null) {
-                        try { in.close(); } catch (Throwable ignored) { }
-                    }
-                }
-            }
-            java.security.MessageDigest md = java.security.MessageDigest.getInstance("MD5");
-            byte[] d = md.digest(items.toString().getBytes("UTF-8"));
-            StringBuilder sb = new StringBuilder();
-            for (int i = 0; i < 8 && i < d.length; i++) {
-                int v = d[i] & 0xFF;
-                if (v < 16) sb.append('0');
-                sb.append(Integer.toHexString(v));
-            }
-            fpCache = sb.toString();
-            fpCacheAt = now;
-            return fpCache;
-        } catch (Throwable t) {
-            return "0";
-        }
-    }
-
-    /** 列出 assets 根下所有 {@code cn_a1v_*_tr.jar} 的名字。 */
-    private static String[] listCnAssets(Context context) {
-        java.util.List<String> out = new java.util.ArrayList<String>();
-        try {
-            String[] files = context.getAssets().list("");
-            if (files != null) {
-                for (String f : files) {
-                    if (f != null && f.startsWith("cn_a1v_") && f.endsWith("_tr.jar")) {
-                        out.add(f);
-                    }
-                }
-            }
-        } catch (Throwable ignored) {
-        }
-        return out.toArray(new String[0]);
-    }
-
-    private static String fpCache = null;
-    private static long fpCacheAt = 0L;
 
     /** 当前 APK 的 versionCode，写进补丁标记 —— 启动器升级后强制重注入 ✓ */
     private static String apkVersionCode(Context context) {
