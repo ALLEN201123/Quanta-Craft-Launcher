@@ -361,6 +361,27 @@ public class MainUI extends BaseUI implements View.OnClickListener, AdapterView.
             } catch (Throwable ignoredViewer) {
             }
             skinViewer.setVisibility(showModelCfg ? View.VISIBLE : View.GONE);
+            // ★★★ 1.5.0 修复（用户实测「切页面再回主界面，人物会消失」）：
+            //   onStop() 里把 accountModelView 整个隐藏了，而 TextureView 一旦停止渲染
+            //   不会自己恢复显示 —— 光 onResume 不够，**必须重新走一遍纹理绑定**才会在屏幕上出现。
+            //   refreshAccountModel() → showModel() → gltfRenderer.updateTexture(...)。
+            if (showModelCfg) {
+                try {
+                    if (gltfRenderer == null || skinViewer == null) {
+                        setupAccountModel();
+                    }
+                    refreshAccountModel();
+                } catch (Throwable ignoredRefresh) {
+                    // 恢复失败也别把主界面搞崩
+                }
+            }
+        } else {
+            // glTF 视图还没建（首次进入）→ 走老路径建一次
+            try {
+                setupAccountModel();
+                refreshAccountModel();
+            } catch (Throwable ignoredFirst) {
+            }
         }
         if (!showModelCfg && accountModelView != null) {
             accountModelView.setVisibility(View.GONE);
@@ -714,10 +735,14 @@ public class MainUI extends BaseUI implements View.OnClickListener, AdapterView.
         if (accountModelContainer == null) {
             return;
         }
-        if (skinRenderer == null) {
-            // First attempt may have failed before the view existed; try once more.
+        // ★★★★★ 1.5.0 修复（用户实测「切页面再回主界面，人物会消失」的真凶）：
+        //   这个守卫原本只看**老**字段 skinRenderer（GameCharacter）。主界面换成 glTF 后，
+        //   skinRenderer 永远是 null ⇒ 这里每次都"再试一次并 return" ⇒
+        //   refreshAccountModel 提前退出、showModel 从不执行 ⇒ 人物再也不出现。
+        //   ⇒ 改成判断「glTF 或老管线，任一可用即可」，两者都没有才真的放弃。
+        if (gltfRenderer == null && skinRenderer == null) {
             setupAccountModel();
-            if (skinRenderer == null) {
+            if (gltfRenderer == null && skinRenderer == null) {
                 return;
             }
         }
@@ -741,9 +766,9 @@ public class MainUI extends BaseUI implements View.OnClickListener, AdapterView.
                 hideModel();
                 return;
             }
-            accountModelView.setVisibility(View.VISIBLE);
-            skinRenderer.mCharacter = new GameCharacter(true);
-            skinRenderer.updateTexture(skin, null);
+            // ★ 1.5.0：统一交给 showModel，这样**微软账户的纹理/模型也会跟着换**
+            //   （微软与离线、Mojang 共用同一条路径，只是皮肤来源不同）。
+            showModel(skin, null, false);
         } catch (Throwable t) {
             t.printStackTrace();
         }

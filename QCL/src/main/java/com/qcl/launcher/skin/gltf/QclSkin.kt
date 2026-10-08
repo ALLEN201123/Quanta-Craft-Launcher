@@ -66,8 +66,15 @@ class QclSkin(val originalTexture: Bitmap,
         }
 
         /**
-         * slim（细臂）检测：看右臂那几列的不透明像素宽度。
-         * ★ 与 FCL 口径一致：宽 ≥ 4 视为 classic（粗臂），否则 slim。
+         * slim（细臂）检测：看右臂区域里**不透明**的列数。
+         *
+         * ★★ 修正（用户实测「离线账号是史蒂夫却显示成艾利克斯」）：
+         *   MC 的右臂贴图区是 x=46..49（4 列）。
+         *   · classic（史蒂夫）：4 列基本都有不透明像素 ⇒ solid 应为 4
+         *   · slim（艾利克斯）  ：只有 3 列 ⇒ solid = 3
+         *   原判定 `solid <= 3 ⇒ slim` 在**边界**上会把"扫到 3 列的史蒂夫"误判成 slim
+         *   ⇒ 人物手臂直接换成艾利克斯那套细模型。改成 **只有 ≤2 才算 slim**，
+         *   宁可把个别真 slim 当 classic（手臂略粗），也不要错把史蒂夫变成艾利克斯。
          */
         @JvmStatic
         fun isSlimArms(bitmap: Bitmap): Boolean {
@@ -88,8 +95,8 @@ class QclSkin(val originalTexture: Bitmap,
                     }
                 }
             }
-            // 右臂有效列数 ≤3 ⇒ slim
-            return solid <= 3
+            // ★ 只有 ≤2 列不透明才判 slim（classic=4 / slim=3，阈值卡在两者之间）
+            return solid <= 2
         }
     }
 }

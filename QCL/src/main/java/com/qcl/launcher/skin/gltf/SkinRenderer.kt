@@ -345,7 +345,19 @@ class SkinRenderer(context: Context) {
 
         private val FOV_TAN = tan(Math.toRadians(FOV / 2.0)).toFloat()
 
-        private fun defaultSkin(): Bitmap =
-            BitmapFactory.decodeStream(SkinRenderer::class.java.getResourceAsStream("/assets/img/alex.png"))
+        /**
+         * ★ 1.5.0 修正（用户实测「离线账号是史蒂夫，却显示成艾利克斯」）：
+         * FCL 原版这里写死读 `/assets/img/alex.png` ⇒ 兜底贴图永远是**艾利克斯**。
+         * QCL 的 `assets/img/` 里确实有 `steve.png`，改为优先用它，
+         * 读不到再退回 alex（保证任何情况下都有贴图，不会"贴图丢失=空人"）。
+         */
+        private fun defaultSkin(): Bitmap? {
+            val sm = SkinRenderer::class.java.getResourceAsStream("/assets/img/steve.png")
+            if (sm != null) {
+                BitmapFactory.decodeStream(sm)?.let { return it }
+            }
+            return SkinRenderer::class.java.getResourceAsStream("/assets/img/alex.png")
+                ?.let { BitmapFactory.decodeStream(it) }
+        }
     }
 }
