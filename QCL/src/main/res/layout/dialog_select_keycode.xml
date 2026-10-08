@@ -4,7 +4,7 @@
     xmlns:qcl="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical"
     android:paddingTop="20dp"
-    android:background="@color/colorPureWhite"
+    android:background="@color/qcl_dialog_night_bg"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content">
 

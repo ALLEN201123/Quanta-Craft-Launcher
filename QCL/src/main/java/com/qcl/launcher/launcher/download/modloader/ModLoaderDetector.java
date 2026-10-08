@@ -153,6 +153,41 @@ public final class ModLoaderDetector {
      * @param versionDir 版本目录
      * @return 图标资源 id；0 = 没装任何加载器（调用方自己用草方块兜底）
      */
+    /**
+     * ★★★ 1.5.0：**是不是远古版本**（用户要求「远古版本 / 归档版本统一使用原石图标」）。
+     *
+     * <p>按版本名判断（QCL 的远古版本名就是这几种前缀，与 {@code LegacyVersionArchive} /
+     * {@code LegacyChinesePack} 里的口径一致）：
+     * <ul>
+     *   <li>{@code rd-xxx}                  —— Pre-Classic（RubyDung 时代）</li>
+     *   <li>{@code c0.x} / {@code c1.x}     —— Classic</li>
+     *   <li>{@code in-xxx}                  —— Indev</li>
+     *   <li>{@code inf-xxx}                 —— Infdev</li>
+     *   <li>{@code a1.x}                    —— Alpha</li>
+     *   <li>{@code b1.x}                    —— Beta</li>
+     * </ul>
+     * 归档版本（周快照之外的远古归档）名字同样是这些前缀 ⇒ 一并命中。
+     *
+     * @param versionName 版本名（目录名），可为 null
+     * @return true = 远古版本，应统一用原石立方体图标 {@code R.drawable.ic_cobble}
+     */
+    public static boolean isLegacyVersion(String versionName) {
+        if (versionName == null) {
+            return false;
+        }
+        String n = versionName.trim().toLowerCase(java.util.Locale.ROOT);
+        if (n.isEmpty()) {
+            return false;
+        }
+        // ★★★ 口径与 VersionSettingUI.isAncientVersion **完全一致** ——
+        //   两处判定必须同源，否则同一个版本在列表和设置页会显示两个不同图标。
+        //   inf*（Infdev）· in-*（Indev）· a*（Alpha）· b*（Beta）· c0.*（Classic）
+        //   · pc-*（Pre-Classic）· rd*（Pre-Classic / RubyDung 时代）· 含 infdev 字样
+        return n.startsWith("inf") || n.startsWith("in-") || n.startsWith("a") || n.startsWith("b")
+                || n.startsWith("c0.") || n.startsWith("pc-") || n.startsWith("rd")
+                || n.contains("infdev");
+    }
+
     public static int iconRes(File versionDir) {
         try {
             String loader = detect(versionDir);

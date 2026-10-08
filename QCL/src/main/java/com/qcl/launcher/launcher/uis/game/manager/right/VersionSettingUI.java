@@ -565,7 +565,11 @@ SeekBar.OnSeekBarChangeListener {
             }
             Integer li = loaderIconFor(new File(this.activity.launcherSetting.gameFileDirectory
                     + "/versions/" + this.versionName));
-            this.icon.setBackground(this.context.getDrawable(li != null ? li : R.drawable.ic_grass));
+            // ★★★ 1.5.0：**远古版本 / 归档版本统一用原石立方体图标**（用户指定）。
+            //   判定复用本类已有的 isAncientVersion（与 ModLoaderDetector.isLegacyVersion 同口径）。
+            int fallbackIcon = isAncientVersion(this.versionName)
+                    ? R.drawable.ic_cobble : R.drawable.ic_grass;
+            this.icon.setBackground(this.context.getDrawable(li != null ? li : fallbackIcon));
         }
         PrivateGameSetting setting = this.privateGameSetting == null ? this.activity.privateGameSetting : this.privateGameSetting;
         // ★ 1.2.3：远古版本自动预填 JVM 参数到「版本设置 → Java/虚拟机」框里（玩家可随意改）。
@@ -739,7 +743,11 @@ SeekBar.OnSeekBarChangeListener {
             }
             Integer li = loaderIconFor(new File(this.activity.launcherSetting.gameFileDirectory
                     + "/versions/" + this.versionName));
-            this.icon.setBackground(this.context.getDrawable(li != null ? li : R.drawable.ic_grass));
+            // ★★★ 1.5.0：**远古版本 / 归档版本统一用原石立方体图标**（用户指定）。
+            //   判定复用本类已有的 isAncientVersion（与 ModLoaderDetector.isLegacyVersion 同口径）。
+            int fallbackIcon = isAncientVersion(this.versionName)
+                    ? R.drawable.ic_cobble : R.drawable.ic_grass;
+            this.icon.setBackground(this.context.getDrawable(li != null ? li : fallbackIcon));
         }
         if (v == this.switchToGlobalSetting) {
             this.activity.uiManager.switchMainUI(this.activity.uiManager.settingUI);

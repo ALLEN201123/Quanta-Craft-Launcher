@@ -97,8 +97,11 @@ public class VersionSpinnerAdapter extends BaseAdapter {
                     ? (gameListBean.iconPath.equals("") ? null : new File(gameListBean.iconPath).getParentFile())
                     : new File(this.gameFileDirectory + "/versions/" + gameListBean.name);
             int loaderIcon = ModLoaderDetector.iconRes(versionDir);
+            // ★★★ 1.5.0：**远古版本统一用原石立方体图标**（用户指定）—— 下拉列表里也一致
+            int fallback = ModLoaderDetector.isLegacyVersion(gameListBean.name)
+                    ? R.drawable.ic_cobble : R.drawable.ic_grass;
             viewHolder.icon.setBackground(this.context.getDrawable(
-                    loaderIcon != 0 ? loaderIcon : R.drawable.ic_grass));
+                    loaderIcon != 0 ? loaderIcon : fallback));
         }
         viewHolder.name.setText(gameListBean.name);
         viewHolder.version.setText(gameListBean.version);

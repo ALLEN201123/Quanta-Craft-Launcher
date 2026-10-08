@@ -28,4 +28,24 @@
          ★ 另外容器已加 clipChildren / clipToPadding：即使极端比例下计算有偏差，
            也只会裁掉模型边缘，**绝不会画到容器外面去**。 -->
     <dimen name="qcl_account_model_height">200dp</dimen>
+
+    <!-- ★★★ 1.5.0：版本列表**顶排按钮**与**左侧导航栏**的尺寸（用户要求
+         「按钮要适应屏幕比例，屏幕大按钮就大、屏幕小按钮也要变小，且始终在屏幕可见范围内」）。
+
+         为什么必须分档 + 均分宽度：
+           · 原来顶排是 HorizontalScrollView + 每个按钮 wrap_content（定宽 padding）⇒
+             窄屏上只能看到前 1~2 个，其余**滑到屏幕外面**去了（用户实测指出）；
+           · 现在顶排改为 LinearLayout 均分（每个按钮 layout_width=0dp + layout_weight=1）
+             ⇒ 屏幕多宽就均分成几份，**永远不会超出屏幕**；
+           · 再配合这里的分档：小屏自动用更小的图标/字号/内边距，避免按钮内文字被挤没。
+
+         档位：默认（sw<360dp 小屏）· values-sw360dp（主流手机）· values-sw600dp（平板/大屏） -->
+    <dimen name="qcl_topbtn_icon">16dp</dimen>
+    <dimen name="qcl_topbtn_text">10sp</dimen>
+    <dimen name="qcl_topbtn_pad_h">4dp</dimen>
+    <dimen name="qcl_topbtn_pad_v">6dp</dimen>
+
+    <!-- 左侧常驻导航栏：每项图标尺寸 + 每项内边距（栏宽同样随屏幕变，见 new_left_nav 的 match_parent） -->
+    <dimen name="qcl_nav_icon">26dp</dimen>
+    <dimen name="qcl_nav_pad">4dp</dimen>
 </resources>

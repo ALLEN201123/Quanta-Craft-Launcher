@@ -28,6 +28,12 @@ public class IconPickerDialog extends Dialog {
     }
 
     private static final int[] ICONS = {
+            // ★★★ 1.5.0：**QCL 自己的等距立方体方块图标**（用户要求"把剩余的箱子、立方体之类的图标全加进去"）。
+            //   这些是 150x150 的 3D 立方体渲染图，风格与启动器其余地方一致，原来漏了没进选择器。
+            //   ★ ic_cobble = 原石立方体 —— **远古版本 / 归档版本统一用它**（用户指定）。
+            R.drawable.ic_grass, R.drawable.ic_cobble, R.drawable.ic_chest,
+            R.drawable.ic_furnace, R.drawable.ic_command_block, R.drawable.ic_bookshelf,
+            // MultiMC 全套 24 个实例图标
             R.drawable.ic_mm_brick, R.drawable.ic_mm_chicken, R.drawable.ic_mm_creeper, R.drawable.ic_mm_diamond, R.drawable.ic_mm_dirt, R.drawable.ic_mm_enderpearl, R.drawable.ic_mm_flame, R.drawable.ic_mm_ftb_glow, R.drawable.ic_mm_ftb_logo, R.drawable.ic_mm_gear, R.drawable.ic_mm_gold, R.drawable.ic_mm_grass, R.drawable.ic_mm_herobrine, R.drawable.ic_mm_infinity, R.drawable.ic_mm_iron, R.drawable.ic_mm_magitech, R.drawable.ic_mm_meat, R.drawable.ic_mm_netherstar, R.drawable.ic_mm_planks, R.drawable.ic_mm_skeleton, R.drawable.ic_mm_squarecreeper, R.drawable.ic_mm_steve, R.drawable.ic_mm_stone, R.drawable.ic_mm_tnt,
             // 加载器 logo
             R.drawable.ic_forge, R.drawable.ic_neoforge, R.drawable.ic_fabric,
@@ -53,17 +59,27 @@ public class IconPickerDialog extends Dialog {
         LinearLayout root = new LinearLayout(getContext());
         root.setOrientation(LinearLayout.VERTICAL);
         root.setPadding(p, p, p, p);
+        // ★★★ 1.5.0：底板跟随**昼夜主题**（用户实测：「自定义选择图标里面的背景为什么是
+        //   白色的？没有根据时间变化吗？」）。
+        //   根因：这个对话框是**纯代码构建**的，root 从来没设过背景 ⇒ 露出 Dialog 的默认白底，
+        //   夜间模式下就是一大片白、刺眼。
+        //   ⇒ 用与版本列表同款的**半透明昼夜底** @drawable/qcl_dialog_gray
+        //     （日间 #9EEDEDED 近白 / 夜间 #9E171C22 深色），壁纸能透上来。
+        root.setBackgroundResource(R.drawable.qcl_dialog_gray);
 
         TextView title = new TextView(getContext());
         title.setText("选择版本图标");
         title.setTextSize(16);
         title.setPadding(0, 0, 0, (int) (8 * d));
+        // ★ 文字色同样昼夜成对翻转，否则夜间是"深底黑字"看不见
+        title.setTextColor(getContext().getResources().getColor(R.color.qcl_nav_text_primary));
         root.addView(title);
 
         TextView hint = new TextView(getContext());
-        hint.setText("MultiMC 实例图标 + 加载器 logo（点一下直接用）");
+        hint.setText("立方体方块 + MultiMC 实例图标 + 加载器 logo（点一下直接用）");
         hint.setTextSize(13);
         hint.setPadding(0, 0, 0, (int) (8 * d));
+        hint.setTextColor(getContext().getResources().getColor(R.color.qcl_nav_text_secondary));
         root.addView(hint);
 
         GridView grid = new GridView(getContext());
@@ -119,6 +135,11 @@ public class IconPickerDialog extends Dialog {
         setContentView(root);
         Window w = getWindow();
         if (w != null) {
+            // ★★★ 1.5.0：把 Dialog **窗口本身**的背景设为透明 ——
+            //   只给 root 设底板还不够，窗口默认的白色方角会从圆角底板四周露出来
+            //   （用户看到的"背景是白色的"就是这层）。
+            w.setBackgroundDrawable(
+                    new android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT));
             android.util.DisplayMetrics dm = getContext().getResources().getDisplayMetrics();
             w.setLayout(ViewGroup.LayoutParams.MATCH_PARENT,
                     (int) (dm.heightPixels * 0.85));

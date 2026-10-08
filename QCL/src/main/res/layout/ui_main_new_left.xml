@@ -42,11 +42,11 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:layout_marginEnd="6dp"
-            android:padding="6dp">
+            android:padding="@dimen/qcl_nav_pad">
 
             <ImageView
-                android:layout_width="30dp"
-                android:layout_height="30dp"
+                android:layout_width="@dimen/qcl_nav_icon"
+                android:layout_height="@dimen/qcl_nav_icon"
                 android:layout_gravity="center"
                 android:id="@+id/current_version_icon"
                 android:background="@drawable/ic_qcl_version_setting_white"/>
@@ -103,12 +103,12 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:layout_marginEnd="6dp"
-            android:padding="6dp">
+            android:padding="@dimen/qcl_nav_pad">
 
             <ImageView
                 android:id="@+id/version_list_icon"
-                android:layout_width="30dp"
-                android:layout_height="30dp"
+                android:layout_width="@dimen/qcl_nav_icon"
+                android:layout_height="@dimen/qcl_nav_icon"
                 android:layout_gravity="center"
                 android:background="@drawable/ic_qcl_version_list_white"/>
 
@@ -124,12 +124,12 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:layout_marginEnd="6dp"
-            android:padding="6dp">
+            android:padding="@dimen/qcl_nav_pad">
 
             <ImageView
                 android:id="@+id/download_icon"
-                android:layout_width="30dp"
-                android:layout_height="30dp"
+                android:layout_width="@dimen/qcl_nav_icon"
+                android:layout_height="@dimen/qcl_nav_icon"
                 android:layout_gravity="center"
                 android:background="@drawable/ic_qcl_download_white"/>
 
@@ -145,12 +145,12 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:layout_marginEnd="6dp"
-            android:padding="6dp">
+            android:padding="@dimen/qcl_nav_pad">
 
             <ImageView
                 android:id="@+id/lab_icon"
-                android:layout_width="30dp"
-                android:layout_height="30dp"
+                android:layout_width="@dimen/qcl_nav_icon"
+                android:layout_height="@dimen/qcl_nav_icon"
                 android:layout_gravity="center"
                 android:background="@drawable/ic_qcl_lab_white"/>
 
@@ -166,14 +166,39 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:layout_marginEnd="6dp"
-            android:padding="6dp">
+            android:padding="@dimen/qcl_nav_pad">
 
             <ImageView
                 android:id="@+id/multiplayer_icon"
                 android:layout_gravity="center"
-                android:layout_width="30dp"
-                android:layout_height="30dp"
+                android:layout_width="@dimen/qcl_nav_icon"
+                android:layout_height="@dimen/qcl_nav_icon"
                 android:background="@drawable/ic_qcl_multiplayer_white"/>
+
+        </LinearLayout>
+
+        <!-- ★★★ 1.5.0：**主界面（首页）按钮** —— 点一下**直接回到主界面**。
+             （用户要求：加在左侧栏「设置」的**上面**；图标取自图标库 ic_baseline_home_white）
+             ★ 与最底部的「返回」（start_ui_home）区分开：
+                 · 本按钮 = 一步回主界面（清空页面栈，照 MainActivity.backToHome）
+                 · 返回按钮 = 出栈退一层（照 FCL 的 uiManager.onBackPressed 语义） -->
+        <LinearLayout
+            android:background="@drawable/qcl_button_gray"
+            android:focusable="true"
+            android:clickable="true"
+            android:id="@+id/start_ui_home_page"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginEnd="6dp"
+            android:padding="@dimen/qcl_nav_pad">
+
+            <ImageView
+                android:id="@+id/home_page_icon"
+                android:layout_gravity="center"
+                android:layout_width="@dimen/qcl_nav_icon"
+                android:layout_height="@dimen/qcl_nav_icon"
+                android:background="@drawable/ic_baseline_home_white"/>
 
         </LinearLayout>
 
@@ -186,13 +211,13 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:padding="6dp">
+            android:padding="@dimen/qcl_nav_pad">
 
             <ImageView
                 android:id="@+id/setting_icon"
                 android:layout_gravity="center"
-                android:layout_width="30dp"
-                android:layout_height="30dp"
+                android:layout_width="@dimen/qcl_nav_icon"
+                android:layout_height="@dimen/qcl_nav_icon"
                 android:background="@drawable/ic_qcl_setting_white"/>
 
         </LinearLayout>
@@ -210,13 +235,13 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:padding="6dp">
+            android:padding="@dimen/qcl_nav_pad">
 
             <ImageView
                 android:id="@+id/home_icon"
                 android:layout_gravity="center"
-                android:layout_width="30dp"
-                android:layout_height="30dp"
+                android:layout_width="@dimen/qcl_nav_icon"
+                android:layout_height="@dimen/qcl_nav_icon"
                 android:background="@drawable/ic_baseline_arrow_white"/>
 
         </LinearLayout>

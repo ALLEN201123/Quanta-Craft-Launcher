@@ -83,7 +83,10 @@ public class DownloadGameListAdapter extends BaseAdapter {
         if (str.equals("snapshot") || str.equals("pending") || str.equals("unobfuscated")) {
             return this.context.getDrawable(R.drawable.ic_command);
         }
-        return this.context.getDrawable(R.drawable.ic_command_block);
+        // ★★★ 1.5.0：走不到上面几支的就是**远古版**（见 DownloadMinecraftUI 的分类口径：
+        //   RELEASE→正式版；PENDING/UNOBFUSCATED/SNAPSHOT→快照版；**其余→远古版**）。
+        //   用户要求「远古版本统一使用原石立方体图标」，所以这里从命令方块换成原石。
+        return this.context.getDrawable(R.drawable.ic_cobble);
     }
 
     public DownloadGameListAdapter(Context context, MainActivity mainActivity, ArrayList<VersionManifest.Version> arrayList) {

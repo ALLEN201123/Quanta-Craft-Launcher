@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical"
-    android:background="@color/colorPureWhite"
+    android:background="@color/qcl_dialog_night_bg"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
     <LinearLayout
-        android:background="@color/colorPureWhite"
+        android:background="@color/qcl_dialog_night_bg"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal">
@@ -16,7 +16,7 @@
             android:layout_width="0dp"
             android:layout_height="40dp"
             android:layout_weight="1"
-            android:background="@color/colorPureWhite"
+            android:background="@color/qcl_dialog_night_bg"
             android:text="@string/dialog_add_view_type_button"
             android:textColor="@color/colorPureBlack"
             android:textSize="15sp"
@@ -2591,7 +2591,7 @@
     </ScrollView>
 
     <LinearLayout
-        android:background="@color/colorPureWhite"
+        android:background="@color/qcl_dialog_night_bg"
         android:padding="5dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

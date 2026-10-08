@@ -5,4 +5,12 @@
 <resources>
     <dimen name="qcl_right_panel_width">250dp</dimen>
     <dimen name="qcl_account_model_height">260dp</dimen>
+
+    <!-- 主流手机档：顶排按钮与左栏图标比小屏档略大（详见 values/dimen.xml 里的说明） -->
+    <dimen name="qcl_topbtn_icon">20dp</dimen>
+    <dimen name="qcl_topbtn_text">12sp</dimen>
+    <dimen name="qcl_topbtn_pad_h">8dp</dimen>
+    <dimen name="qcl_topbtn_pad_v">8dp</dimen>
+    <dimen name="qcl_nav_icon">30dp</dimen>
+    <dimen name="qcl_nav_pad">6dp</dimen>
 </resources>

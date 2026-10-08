@@ -483,13 +483,22 @@ implements View.OnClickListener {
     public void backToLastUI() {
         if (this.isLoaded) {
             if (this.uiManager.currentUI == this.uiManager.mainUI) {
-                this.backToDeskTop();
-            } else {
-                this.uiManager.uis.get(this.uiManager.uis.size() - 1).onStop();
-                this.uiManager.uis.remove(this.uiManager.uis.size() - 1);
-                this.uiManager.currentUI = this.uiManager.uis.get(this.uiManager.uis.size() - 1);
-                this.uiManager.uis.get(this.uiManager.uis.size() - 1).onStart();
+                // ★★★ 1.5.0 修复（用户对照 FCL 后指出"返回按钮逻辑不准确"）：
+                //   **已经在主界面就什么都不做**，绝不退出启动器。
+                //
+                //   FCL 的链路：返回按钮 → uiManager.onBackPressed() → currentUI.onBackPressed()，
+                //   而 FCLBaseUI.onBackPressed() 在 defaultBackEvent 为空时是**空实现**
+                //   ⇒ FCL 在主界面上点返回是**没有动作**的。
+                //
+                //   原来这里调 backToDeskTop()：左栏返回按钮是**常驻**的，主界面上它也在那儿，
+                //   点一下就把整个启动器退到桌面（用户原话"不能整这样的逻辑"）。
+                //   ★ 系统返回键（onBackPressed → backToLastUI）同样不再退出主界面。
+                return;
             }
+            this.uiManager.uis.get(this.uiManager.uis.size() - 1).onStop();
+            this.uiManager.uis.remove(this.uiManager.uis.size() - 1);
+            this.uiManager.currentUI = this.uiManager.uis.get(this.uiManager.uis.size() - 1);
+            this.uiManager.uis.get(this.uiManager.uis.size() - 1).onStart();
         }
     }
 

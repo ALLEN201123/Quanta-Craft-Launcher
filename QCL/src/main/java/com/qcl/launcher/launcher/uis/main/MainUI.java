@@ -68,6 +68,13 @@ public class MainUI extends BaseUI implements View.OnClickListener, AdapterView.
      *  ★ 是**层级式返回**（backToLastUI：出栈一层），不是一键回主页。
      *  旧排版没有这个控件 → findViewById 返回 null，切页时判空即可。 */
     private LinearLayout startHomeUI;
+    /**
+     * ★ 1.5.0：左侧栏**主界面按钮**（在「设置」上面，图标 = 图标库 ic_baseline_home_white）。
+     * 点一下**一步回到主界面**（走 {@code MainActivity.backToHome()}，会清空页面栈）。
+     * ★ 与 {@link #startHomeUI}（最底部的「返回」，出栈退一层）是两个不同的东西。
+     * ★ 旧排版没有这个控件 → findViewById 返回 null，切页时判空即可。
+     */
+    private LinearLayout startHomePageUI;
 
     private LinearLayout startGame;
     private TextView launchVersionText;
@@ -137,6 +144,7 @@ public class MainUI extends BaseUI implements View.OnClickListener, AdapterView.
         startLabUI = activity.findViewById(R.id.start_ui_lab);
         // ★ 1.5.0 新排版独有：「回主界面」按钮（旧排版为 null）
         startHomeUI = activity.findViewById(R.id.start_ui_home);
+        startHomePageUI = activity.findViewById(R.id.start_ui_home_page);
 
         startGame = activity.findViewById(R.id.launcher_play_button);
         launchVersionText = activity.findViewById(R.id.launch_version_text);
@@ -333,7 +341,12 @@ public class MainUI extends BaseUI implements View.OnClickListener, AdapterView.
                         } else {
                             versionIcon.setBackground(context.getDrawable(R.drawable.ic_qcl_version_setting_white));
                             if (launchVersionIcon != null) {
-                                launchVersionIcon.setBackground(context.getDrawable(R.drawable.ic_grass));
+                                // ★★★ 1.5.0：**远古版本统一用原石立方体图标**（用户指定），
+                                //   其余保持草方块。当前版本名见上面的 currentVersion.name。
+                                int iconRes = com.qcl.launcher.launcher.download.modloader
+                                        .ModLoaderDetector.isLegacyVersion(currentVersion == null ? null : currentVersion.name)
+                                        ? R.drawable.ic_cobble : R.drawable.ic_grass;
+                                launchVersionIcon.setBackground(context.getDrawable(iconRes));
                             }
                         }
                     }
@@ -769,6 +782,12 @@ public class MainUI extends BaseUI implements View.OnClickListener, AdapterView.
         //     ⇒ 这里先判：已经**在**主界面就**什么都不做**（既不退也不退出），
         //       只有在二级页面时才真正出栈一层。
         //     （系统返回键走的是 MainActivity.onBackPressed，行为不变。）
+        // ★★★ 1.5.0：左侧栏**主界面按钮**（在「设置」上面）→ **一步回到主界面**。
+        //   走 MainActivity.backToHome()：switchMainUI(mainUI) + 清空页面栈，
+        //   与下面「返回」按钮的"出栈退一层"是两种不同行为。
+        else if (startHomePageUI != null && v == startHomePageUI){
+            activity.backToHome();
+        }
         else if (startHomeUI != null && v == startHomeUI){
             if (activity.uiManager == null || activity.uiManager.mainUI == null) {
                 return;
@@ -882,10 +901,14 @@ public class MainUI extends BaseUI implements View.OnClickListener, AdapterView.
                 versionIcon.setBackground(d);
                 if (launchVersionIcon != null) launchVersionIcon.setBackground(d);
             } else {
-                // ★ 1.5.0 兜底分工：左栏用图标库方块，启动按钮上方仍用草方块
+                // ★ 1.5.0 兜底分工：左栏用图标库方块；启动按钮上方按版本类型取图标 ——
+                //   ★ 远古版本 → 原石立方体（用户指定），其余 → 草方块
                 versionIcon.setBackground(context.getDrawable(R.drawable.ic_qcl_version_setting_white));
                 if (launchVersionIcon != null) {
-                    launchVersionIcon.setBackground(context.getDrawable(R.drawable.ic_grass));
+                    String pickedName = ((GameListBean) versionSpinnerAdapter.getItem(position)).name;
+                    int res = com.qcl.launcher.launcher.download.modloader.ModLoaderDetector
+                            .isLegacyVersion(pickedName) ? R.drawable.ic_cobble : R.drawable.ic_grass;
+                    launchVersionIcon.setBackground(context.getDrawable(res));
                 }
             }
         }

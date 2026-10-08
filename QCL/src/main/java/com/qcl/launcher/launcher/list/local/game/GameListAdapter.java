@@ -153,6 +153,11 @@ public class GameListAdapter extends BaseAdapter {
         if (!this.list.get(i).iconPath.equals("") && new File(this.list.get(i).iconPath).exists()) {
             // ★ 1.2.9：改成异步加载 + 缓存（以前是主线程读文件解码，滚动会卡）
             LocalIconLoader.loadBackground(viewHolder.icon, this.list.get(i).iconPath);
+        } else if (com.qcl.launcher.launcher.download.modloader.ModLoaderDetector
+                .isLegacyVersion(this.list.get(i).name)) {
+            // ★★★ 1.5.0：**远古版本 / 归档版本统一用原石立方体图标**（用户指定）。
+            //   优先级：自定义图标 > 远古版本原石 > 加载器 logo > 草方块。
+            viewHolder.icon.setBackground(this.context.getDrawable(R.drawable.ic_cobble));
         } else {
             // ★ 1.2.3：FCL 同款 —— 装了哪个加载器就显示哪个的图标
             Integer li = loaderIconFor(new File(this.activity.launcherSetting.gameFileDirectory
