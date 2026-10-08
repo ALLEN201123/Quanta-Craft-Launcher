@@ -92,6 +92,13 @@ public class MainUI extends BaseUI implements View.OnClickListener, AdapterView.
 
     private LinearLayout accountModelView;
     private FrameLayout accountModelContainer;
+
+    // ★★★★★ 1.5.0：主界面人物改用 **FCL 的 glTF 管线**（真正的骨骼动画 + 待机随机变体）。
+    //   老字段（skinGLSurfaceView / skinRenderer / GameCharacter）**保留但不再用于主界面** ——
+    //   皮肤编辑器等仍用它们，这里只把主界面的人物换成 FCL 那一套。
+    private com.qcl.launcher.skin.gltf.SkinViewer skinViewer;
+    private com.qcl.launcher.skin.gltf.SkinRenderer gltfRenderer;
+
     private SkinGLSurfaceView skinGLSurfaceView;
     private MinecraftSkinRenderer skinRenderer;
     public TextView accountName;
@@ -345,7 +352,15 @@ public class MainUI extends BaseUI implements View.OnClickListener, AdapterView.
         }
         if (skinGLSurfaceView != null) {
             skinGLSurfaceView.onResume();
-            skinGLSurfaceView.setVisibility(showModelCfg ? View.VISIBLE : View.GONE);
+            skinGLSurfaceView.setVisibility(View.GONE);   // ★ 主界面已改用 glTF，老视图只给皮肤编辑器用
+        }
+        // ★ 1.5.0：glTF 人物随主界面 onResume 恢复渲染
+        if (skinViewer != null) {
+            try {
+                skinViewer.onResume();
+            } catch (Throwable ignoredViewer) {
+            }
+            skinViewer.setVisibility(showModelCfg ? View.VISIBLE : View.GONE);
         }
         if (!showModelCfg && accountModelView != null) {
             accountModelView.setVisibility(View.GONE);
@@ -590,10 +605,56 @@ public class MainUI extends BaseUI implements View.OnClickListener, AdapterView.
     }
 
     /**
-     * Builds the persistent 3D character shown in the middle of the launcher, reusing the same
-     * skin renderer the offline-skin editor already uses.
+     * Builds the persistent 3D character shown in the middle of the launcher.
+     *
+     * <p>★ 1.5.0：主界面人物**改用 FCL 的 glTF 管线**（classic-player.gltf / slim-player.gltf），
+     * 因此能拿到真正的骨骼待机动画（{@code idle} + {@code idle_sub_1/2/3} 随机插播）、
+     * 以及跟手旋转（{@code rotateStep}）与缩放（{@code setScale}）。
+     * 老 {@link #skinGLSurfaceView}/{@link #skinRenderer}（GameCharacter）**保留给皮肤编辑器**，
+     * 主界面不再使用。
      */
     private void setupAccountModel() {
+        if (accountModelView == null || skinViewer != null) {
+            return;
+        }
+        try {
+            gltfRenderer = new com.qcl.launcher.skin.gltf.SkinRenderer(context);
+            skinViewer = new com.qcl.launcher.skin.gltf.SkinViewer(context);
+            accountModelView.addView(skinViewer,
+                    new android.widget.LinearLayout.LayoutParams(
+                            android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                            android.widget.LinearLayout.LayoutParams.MATCH_PARENT));
+            skinViewer.setRenderer(gltfRenderer, context.getResources().getDisplayMetrics().density);
+            // ★ 恢复玩家上次选的动画（FCL 同款持久化；未选过就是基础待机 idle）
+            try {
+                gltfRenderer.playAnimation(
+                        com.qcl.launcher.skin.gltf.SkinAnimations.restore(context));
+            } catch (Throwable ignoredAnim) {
+                // 读不到就用默认
+            }
+            // ★ 人物大小：**用 FCL 的原值**（scale 默认 1.0，配 ZOOM=0.9）。
+            //   ★ 之前我按"短边 dp/360"自己算，那是 GameCharacter 时代的思路，
+            //     在 glTF 管线里语义不对（glTF 的大小由 cameraDistance 决定）⇒ 人物显得过小。
+            //   用户可直接**双指捏合**放大/缩小（SkinViewer 已实现，范围 0.7~2.0）。
+            try {
+                gltfRenderer.setScale(1.0f);
+            } catch (Throwable ignoredScale) {
+            }
+        } catch (Throwable t) {
+            t.printStackTrace();
+        }
+        // 老的人物视图若已创建则隐藏（皮肤编辑器仍会用到它）
+        if (skinGLSurfaceView != null) {
+            skinGLSurfaceView.setVisibility(View.GONE);
+        }
+    }
+
+    /**
+     * ★ 1.5.0：主界面人物的兜底创建（旧版逻辑，保留以防 glTF 初始化失败）。
+     * @deprecated 主界面已改用 glTF 管线，此方法只服务皮肤编辑器。
+     */
+    @Deprecated
+    private void setupLegacyAccountModel() {
         if (accountModelView == null || skinGLSurfaceView != null) {
             return;
         }
@@ -809,10 +870,31 @@ public class MainUI extends BaseUI implements View.OnClickListener, AdapterView.
             hideModel();
             return;
         }
+        // ★★★★★ 1.5.0：**纹理实时更新**（用户要求"换皮肤显示也跟着换"）。
+        //   glTF 管线自己会做皮肤归一化（旧 64×32 转换 + slim 检测），并**自动切模型**。
+        //   离线 / 微软 / Mojang / 外置认证 全部走这里，所以换账户类型也会跟着换纹理与模型。
+        if (gltfRenderer != null && skinViewer != null) {
+            try {
+                accountModelView.setVisibility(View.VISIBLE);
+                if (skinGLSurfaceView != null) {
+                    skinGLSurfaceView.setVisibility(View.GONE);
+                }
+                skinViewer.setVisibility(View.VISIBLE);
+                gltfRenderer.updateTexture(skin, cape, slim);
+                return;
+            } catch (Throwable t) {
+                t.printStackTrace();
+            }
+        }
+        // 兜底：glTF 不可用时仍走老的 GameCharacter，保证人物不消失
         try {
+            if (skinGLSurfaceView == null) {
+                setupLegacyAccountModel();
+            }
             accountModelView.setVisibility(View.VISIBLE);
-            skinRenderer.mCharacter = new GameCharacter(slim);
-            // The renderer only draws a cape when it is a 64x32 texture.
+            if (skinRenderer != null) {
+                skinRenderer.mCharacter = new GameCharacter(slim);
+            }
             Bitmap usableCape = (cape != null && cape.getWidth() == 64 && cape.getHeight() == 32) ? cape : null;
             skinRenderer.updateTexture(skin, usableCape);
         } catch (Throwable t) {
@@ -834,6 +916,15 @@ public class MainUI extends BaseUI implements View.OnClickListener, AdapterView.
         if (skinGLSurfaceView != null) {
             skinGLSurfaceView.onPause();
             skinGLSurfaceView.setVisibility(View.GONE);
+        }
+        // ★ 1.5.0：glTF 人物（TextureView + EGL）同样要 onPause 并隐藏，
+        //   否则换页后画面会残留在上层遮住别的界面（同老 GLSurfaceView 的坑）。
+        if (skinViewer != null) {
+            try {
+                skinViewer.onPause();
+            } catch (Throwable ignoredViewer) {
+            }
+            skinViewer.setVisibility(View.GONE);
         }
         if (accountModelView != null) {
             accountModelView.setVisibility(View.GONE);

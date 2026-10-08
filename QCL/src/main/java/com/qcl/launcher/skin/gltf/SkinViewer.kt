@@ -13,7 +13,6 @@ import android.view.Choreographer
 import android.view.MotionEvent
 import android.view.TextureView
 import android.view.ViewConfiguration
-import android.util.Log
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import kotlin.math.sqrt

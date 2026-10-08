@@ -54,14 +54,23 @@ object SkinAnimations {
     private const val PREF = "qcl_skin_anim"
     private const val KEY = "animation_id"
 
+    private val prefsHolder = java.util.concurrent.atomic.AtomicReference<SharedPreferences?>(null)
+
+    private fun prefs(ctx: Context): SharedPreferences {
+        prefsHolder.get()?.let { return it }
+        val p = ctx.applicationContext.getSharedPreferences(PREF, Context.MODE_PRIVATE)
+        prefsHolder.set(p)
+        return p
+    }
+
     /** 读上次选择的动画（同步；读不到或非法都回默认待机）。 */
+    @JvmStatic
     fun restore(ctx: Context): String =
-        validId(ctx.applicationContext.getSharedPreferences(PREF, Context.MODE_PRIVATE)
-            .getString(KEY, DEFAULT_ID) ?: DEFAULT_ID)
+        validId(prefs(ctx).getString(KEY, DEFAULT_ID) ?: DEFAULT_ID)
 
     /** 保存当前动画为下次启动的选择。 */
+    @JvmStatic
     fun save(ctx: Context, id: String) {
-        ctx.applicationContext.getSharedPreferences(PREF, Context.MODE_PRIVATE)
-            .edit().putString(KEY, validId(id)).apply()
+        prefs(ctx).edit().putString(KEY, validId(id)).apply()
     }
 }

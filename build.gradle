@@ -6,6 +6,9 @@ buildscript {
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:7.2.2'
+        // ★ 1.5.0：主界面人物改用 FCL 的 glTF 管线（skin/gltf/*.kt），需要 Kotlin 支持。
+        //   AGP 7.2.2 与 Kotlin Gradle Plugin 1.8.22 兼容。
+        classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:1.8.22'
 
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files

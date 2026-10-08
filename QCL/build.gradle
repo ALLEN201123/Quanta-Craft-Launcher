@@ -1,5 +1,7 @@
 plugins {
     id 'com.android.application'
+    // ★ 1.5.0：glTF 人物管线（skin/gltf/*.kt，照搬 FCL）需要 Kotlin。
+    id 'org.jetbrains.kotlin.android'
 }
 
 android {
@@ -89,6 +91,10 @@ android {
         }
     }
     compileOptions {
+    kotlinOptions {
+        jvmTarget = '1.8'
+    }
+
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
