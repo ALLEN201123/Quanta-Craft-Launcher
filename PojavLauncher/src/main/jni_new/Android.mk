@@ -1,6 +1,22 @@
 LOCAL_PATH := $(call my-dir)
 HERE_PATH := $(LOCAL_PATH)
 
+# ★★★★★ 1.5.0：**-DADRENO_POSSIBLE**（照 FCL CMakeLists.txt:17-20）
+#   FCL：`if (${ANDROID_ABI} STREQUAL "arm64-v8a") add_definitions(-DADRENO_POSSIBLE) endif ()`
+#   为什么至关重要（QCL 之前踩的最大的坑）：
+#     · egl_bridge.c 里 `loadTurnipVulkan()` 与 `load_vulkan()` 中加载 Turnip 的那段
+#       **整段被 `#ifdef ADRENO_POSSIBLE` 包着**；
+#     · QCL 的 Android.mk **从来没定义过这个宏** ⇒ 预处理器把那段代码**整段剔除**
+#       ⇒ `loadTurnipVulkan()` 从未进入二进制、`libvulkan_freedreno.so` 永远用不上
+#       ⇒ 无硬件 Vulkan 的设备只能回落 OpenGL ⇒ 26.3+ 除零崩溃。
+#   只在 arm64-v8a 定义：Turnip 的 so（libvulkan_freedreno.so，10MB）只随 arm64 打包，
+#   其它架构定义了也加载不到，白占体积。
+#   ★ 用 TARGET_ARCH_ABI（= arm64-v8a）而不是 TARGET_ARCH（= arm64）——
+#     上一版写成 TARGET_ARCH 导致条件永不成立，宏没定义、Turnip 依旧被剔除。
+ifeq ($(TARGET_ARCH_ABI),arm64-v8a)
+    ADRENO_FLAG := -DADRENO_POSSIBLE
+endif
+
 include $(CLEAR_VARS)
 # 1.1.1：bytehook 预编译库（bytedance），供 SDL3 native hooks 链接（BYTEHOOK_CALL_PREV 等宏）。
 LOCAL_MODULE := bytehook
@@ -58,7 +74,49 @@ LOCAL_C_INCLUDES := \
     $(LOCAL_PATH)/androidnsbypass/liblinkernsbypass_compat \
     $(LOCAL_PATH)/bytehook \
     $(LOCAL_PATH)/native_hooks
+LOCAL_CFLAGS := -fvisibility=default $(ADRENO_FLAG)
+# ★★★★★ 1.5.0：arm64 时补链 EGL / GLESv2（照 FCL CMakeLists.txt:182-189）
+#   `checkAdrenoGraphics()`（在 ADRENO_POSSIBLE 块里）**直接调用** eglGetDisplay / eglInitialize /
+#   eglChooseConfig / eglCreateContext / eglTerminate / glGetString —— 这些是真实的库符号，
+#   必须显式链接。原先没定义 ADRENO_POSSIBLE 时那段代码被剔除，所以一直没暴露这个需求；
+#   一旦按 FCL 定义了宏，不补这两个库就会 ld.lld 报
+#   `undefined symbol: eglGetDisplay / eglInitialize / ...`。
+ifeq ($(TARGET_ARCH_ABI),arm64-v8a)
+    LOCAL_LDLIBS += -lEGL -lGLESv2
+endif
+include $(BUILD_SHARED_LIBRARY)
+
+# ===== ★★★ 1.5.0：liblinkerhook —— Turnip Vulkan 驱动加载器（移植自 FCL）=====
+# 作用：拦截 libvulkan 加载器的 android_dlopen_ext，让它把 libvulkan_freedreno.so（Turnip，Mesa 的
+#      Vulkan 驱动）加载进来。**没有它，包里带的 Turnip 永远用不上**，26.3+ 就只能回落 OpenGL →
+#      DeviceLimits.minUniformOffsetAlignment() 返回 0 → Mth.roundToward 除零崩溃。
+# 原理：egl_bridge.c 的 loadTurnipVulkan() 先建一个隔离 namespace，把本库 dlopen 进去（符号先进
+#      符号表），随后系统 libvulkan.so 解析 android_dlopen_ext 时就会命中我们的实现。
+# ★ 必须**独立成 so**（不能并进 pojavexec）：要靠 -z global 让符号在 namespace 内优先于 linker 解析。
+# ★ androidnsbypass 的 5 个源文件在这里**再编一份**（QCL 没有独立的 libandroidnsbypass.so），
+#   与 pojavexec 里那份互不干扰，各自定义符号。
+include $(CLEAR_VARS)
+LOCAL_MODULE := linkerhook
+LOCAL_SRC_FILES := \
+    driver_helper/internal_android_dlopen_hook/turnip/hook.c \
+    androidnsbypass/android_linker_ns.cpp \
+    androidnsbypass/elf_soname_patcher.c \
+    androidnsbypass/nsbypass.c \
+    androidnsbypass/nsbypass_dlfcn.c \
+    androidnsbypass/utils.c
+LOCAL_C_INCLUDES := \
+    $(LOCAL_PATH) \
+    $(LOCAL_PATH)/androidnsbypass \
+    $(LOCAL_PATH)/androidnsbypass/include \
+    $(LOCAL_PATH)/androidnsbypass/include/androidnsbypass \
+    $(LOCAL_PATH)/androidnsbypass/include/fasthook \
+    $(LOCAL_PATH)/androidnsbypass/include/linkernsbypass_compat \
+    $(LOCAL_PATH)/androidnsbypass/liblinkernsbypass_compat \
+    $(LOCAL_PATH)/driver_helper/internal_android_dlopen_hook/turnip
 LOCAL_CFLAGS := -fvisibility=default
+LOCAL_CPPFLAGS := -std=c++17 -fvisibility=default -Wno-unused-parameter
+LOCAL_LDFLAGS := -Wl,-z,global
+LOCAL_LDLIBS := -llog -ldl
 include $(BUILD_SHARED_LIBRARY)
 
 include $(CLEAR_VARS)

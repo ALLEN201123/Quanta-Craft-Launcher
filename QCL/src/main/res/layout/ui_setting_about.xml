@@ -198,7 +198,7 @@
                 <ImageView
                     android:layout_width="30dp"
                     android:layout_height="30dp"
-                    android:background="@drawable/ic_java"
+                    android:background="@drawable/ic_pojav"
                     android:layout_gravity="center"/>
 
                 <LinearLayout
@@ -246,7 +246,7 @@
                 <ImageView
                     android:layout_width="30dp"
                     android:layout_height="30dp"
-                    android:background="@drawable/ic_mm_brick"
+                    android:background="@drawable/ic_terracotta"
                     android:layout_gravity="center"/>
 
                 <LinearLayout

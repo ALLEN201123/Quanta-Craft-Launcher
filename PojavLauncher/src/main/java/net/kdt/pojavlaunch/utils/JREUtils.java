@@ -294,6 +294,30 @@ public class JREUtils {
         String qclEglName = System.getProperty("qcl.renderer.eglname", "");
         String qclLibDir = System.getProperty("qcl.renderer.libdir", "");
 
+        // ★★★ 1.5.0：**DRIVER_PATH** —— Turnip（libvulkan_freedreno.so，Mesa 的 Vulkan 驱动）的目录。
+        //   这是让 26.3+ 能在「无硬件 Vulkan」的设备上跑起来的关键：
+        //     · egl_bridge.c 的 loadTurnipVulkan() 先 dlopen「liblinkerhook.so」到 vulkanLoaderNs，
+        //       而 liblinkerhook.so 拦截 android_dlopen_ext 后用 **getenv("DRIVER_PATH")**
+        //       去定位 libvulkan_freedreno.so（照 FCL 的 FCLauncher.java:203
+        //       `envMap.put("DRIVER_PATH", DriverPlugin.getSelected().getPath())`）。
+        //     · 不设这个变量 ⇒ 即使 so 打包了、hook 装上了，**Turnip 永远找不到**。
+        //   Turnip 随 APK 打在 nativeLibraryDir（libvulkan_freedreno.so），故用 nativeLibraryDir；
+        //   若外部渲染器插件目录里有同名 so，也一并写进去（LD_LIBRARY_PATH 风格，冒号分隔）。
+        //   ★ 限制（与 FCL 一致）：loadTurnipVulkan() 开头 `if (!checkAdrenoGraphics()) return NULL;`
+        //     ⇒ **目前只对高通 Adreno 生效**；其他 GPU 仍会回落 OpenGL。
+        try {
+            String nativeDir = activity.getApplicationInfo().nativeLibraryDir;
+            if (nativeDir != null && !nativeDir.isEmpty()) {
+                StringBuilder drv = new StringBuilder(nativeDir);
+                if (qclLibDir != null && !qclLibDir.isEmpty() && !qclLibDir.equals(nativeDir)) {
+                    drv.append(':').append(qclLibDir);
+                }
+                arrayMap.put("DRIVER_PATH", drv.toString());
+            }
+        } catch (Throwable ignoredDriverPath) {
+            // 取不到 nativeLibraryDir 就不设，liblinkerhook 会自己报错，不影响启动
+        }
+
         // 1) POJAVEXEC_EGL：所有渲染器一律设置（渲染器自带 EGL 用其名，否则系统 libEGL.so）
         if (arrayMap.get("POJAVEXEC_EGL") == null) {
             arrayMap.put("POJAVEXEC_EGL",
