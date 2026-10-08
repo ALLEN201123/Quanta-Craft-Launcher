@@ -17,6 +17,35 @@
         <item name="android:windowFullscreen">true</item>
         <item name="android:windowTranslucentNavigation">true</item>
         <!-- Customize your theme here. -->
+        <!-- ★★★ 1.5.0：给系统 AlertDialog 指定主题（浅色态）。
+             背景：工程里 49 处直接用 `new android.app.AlertDialog.Builder(context)`。
+             ★ 实测教训：`android.app.AlertDialog` 读的是**平台属性 `android:alertDialogTheme`**，
+               而不是 AppCompat 的 `alertDialogTheme`（无前缀）。只写后者，对话框
+               完全不吃这个主题 → 夜间依旧白底 + 白字（用户实测「只看到一片白、没有字」）。
+             ⇒ 两个属性都要给：`android:alertDialogTheme` 管 android.app 版本，
+               `alertDialogTheme` 管 androidx AppCompat 版本。 -->
+        <item name="android:alertDialogTheme" tools:targetApi="l">@style/QCLDialogTheme</item>
+        <item name="alertDialogTheme">@style/QCLDialogTheme</item>
+    </style>
+
+    <!-- ★★★ 1.5.0：系统 AlertDialog 的**浅色**主题（白天用）。
+         直接继承 AppCompat 自带的浅色 AlertDialog，行为与原来完全一致。 -->
+    <style name="QCLDialogTheme" parent="Theme.AppCompat.Light.Dialog.Alert">
+        <item name="colorAccent">@color/colorAccent</item>
+        <item name="android:textColorPrimary">@color/colorPureBlack</item>
+        <item name="android:textColorSecondary">@color/colorLightWhite</item>
+    </style>
+
+    <!-- ★★★ 1.5.0：启动入口专用主题 —— 消除「进主界面之前闪一下白屏」。
+         根因：RuntimeInstallActivity 是 LAUNCHER 入口，缓存命中时它会开一帧再跳 MainActivity。
+         它的布局根背景是 ?android:attr/colorBackground（Light 主题下 = 近白色），
+         而 windowBackground 没设 → 窗口底色同样走 AppCompat.Light 的白，
+         于是在「窗口创建 → 布局 inflate 完成」这段空窗期，玩家看到的就是一片白。
+         解法：把 windowBackground 直接设成启动器背景图 —— 窗口从第一帧起就是背景图，
+         缓存的图与主界面一致，跳转时视觉连续，白屏彻底消失。
+         注意只给启动入口用（不改全局主题），避免影响游戏界面等其它 Activity。 -->
+    <style name="Theme.QCL.Boot" parent="Theme.HelloMinecraftLauncherPocketEdition">
+        <item name="android:windowBackground">@drawable/ic_background_classic</item>
     </style>
 
     <style name="MenuStyle" parent="Widget.AppCompat.PopupMenu">

@@ -1,188 +1,343 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:visibility="invisible"
+<!-- ★ 1.5.0：多人联机页照 FCL 的 ui_multiplayer.xml 重做（不再是「一个白色小弹窗」）。
+     结构：左侧 30% 竖排导航（关于 Terracotta / 房主教程 / 房客教程 / 反馈 / 关于 EasyTier）
+           + 右侧内容区（主设置 / 房主教程正文 / 房客教程正文，三者互斥显示）。
+     全部配色走 colorPureBlack / qcl_panel_gray，夜间模式会自动翻成深底白字。 -->
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/ui_multi_player"
+    android:visibility="invisible"
     android:background="@color/launcher_ui_background"
-    android:orientation="vertical"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:padding="10dp">
 
-    <HorizontalScrollView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:scrollbars="none">
+    <!-- ==================== 左栏：导航（30%） ==================== -->
+    <LinearLayout
+        android:id="@+id/mp_left"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintWidth_percent="0.3">
 
-        <LinearLayout
+        <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:paddingStart="12dp"
-            android:paddingEnd="12dp"
-            android:paddingTop="8dp"
-            android:paddingBottom="8dp"
-            android:orientation="horizontal">
+            android:layout_marginStart="10dp"
+            android:layout_marginEnd="10dp"
+            android:singleLine="true"
+            android:text="@string/terracotta"
+            android:textColor="@color/colorPureBlack"
+            android:textSize="@dimen/text_size_middle"/>
 
-            <LinearLayout
-                android:layout_height="72dp"
-                android:minWidth="84dp"
-                android:layout_marginStart="12dp"
-                android:gravity="center"
-                android:padding="10dp"
-                android:background="@drawable/launcher_button_parent"
-                android:focusable="true"
-                android:clickable="true"
-                android:id="@+id/launch_game_from_multiplayer"
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginStart="10dp"
+            android:layout_marginTop="5dp"
+            android:layout_marginEnd="10dp"
+            android:background="@color/colorGray"/>
+
+        <!-- 关于 Terracotta（主设置面板） -->
+        <LinearLayout
+            android:id="@+id/about_terracotta"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/qcl_button_gray"
+            android:clickable="true"
+            android:focusable="true"
+            android:orientation="horizontal"
+            android:padding="10dp">
+
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:layout_gravity="center"
+                android:background="@drawable/ic_outline_settings_black"/>
+
+            <TextView
                 android:layout_width="wrap_content"
-                android:orientation="vertical">
-
-                <ImageView
-                    android:layout_gravity="center_horizontal"
-                    android:layout_width="22dp"
-                    android:layout_height="22dp"
-                    android:background="@drawable/ic_baseline_launch_black"/>
-
-                <TextView
-                    android:layout_marginTop="6dp"
-                    android:gravity="center_horizontal"
-                    android:singleLine="true"
-                    android:layout_gravity="center_horizontal"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/multi_player_ui_launch"
-                    android:textSize="14sp"
-                    android:textColor="@color/colorPureBlack"/>
-
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_height="72dp"
-                android:minWidth="84dp"
-                android:layout_marginStart="8dp"
-                android:gravity="center"
-                android:padding="10dp"
-                android:background="@drawable/launcher_button_parent"
-                android:focusable="true"
-                android:clickable="true"
-                android:id="@+id/create_multiplayer_community"
-                android:layout_width="wrap_content"
-                android:orientation="vertical">
-
-                <ImageView
-                    android:layout_gravity="center_horizontal"
-                    android:layout_width="22dp"
-                    android:layout_height="22dp"
-                    android:background="@drawable/ic_outline_add_black"/>
-
-                <TextView
-                    android:layout_marginTop="6dp"
-                    android:gravity="center_horizontal"
-                    android:singleLine="true"
-                    android:layout_gravity="center_horizontal"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/multi_player_ui_create"
-                    android:textSize="14sp"
-                    android:textColor="@color/colorPureBlack"/>
-
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_height="72dp"
-                android:minWidth="84dp"
-                android:layout_marginStart="8dp"
-                android:gravity="center"
-                android:padding="10dp"
-                android:background="@drawable/launcher_button_parent"
-                android:focusable="true"
-                android:clickable="true"
-                android:id="@+id/join_multiplayer_community"
-                android:layout_width="wrap_content"
-                android:orientation="vertical">
-
-                <ImageView
-                    android:layout_gravity="center_horizontal"
-                    android:layout_width="22dp"
-                    android:layout_height="22dp"
-                    android:background="@drawable/ic_outline_join_black"/>
-
-                <TextView
-                    android:layout_marginTop="6dp"
-                    android:gravity="center_horizontal"
-                    android:singleLine="true"
-                    android:layout_gravity="center_horizontal"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/multi_player_ui_join"
-                    android:textSize="14sp"
-                    android:textColor="@color/colorPureBlack"/>
-
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_height="72dp"
-                android:minWidth="84dp"
-                android:layout_marginStart="8dp"
-                android:gravity="center"
-                android:padding="10dp"
-                android:background="@drawable/launcher_button_parent"
-                android:focusable="true"
-                android:clickable="true"
-                android:id="@+id/multiplayer_help"
-                android:layout_width="wrap_content"
-                android:orientation="vertical">
-
-                <ImageView
-                    android:layout_gravity="center_horizontal"
-                    android:layout_width="22dp"
-                    android:layout_height="22dp"
-                    android:background="@drawable/ic_outline_help_outline_black"/>
-
-                <TextView
-                    android:layout_marginTop="6dp"
-                    android:gravity="center_horizontal"
-                    android:singleLine="true"
-                    android:layout_gravity="center_horizontal"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/multi_player_ui_help"
-                    android:textSize="14sp"
-                    android:textColor="@color/colorPureBlack"/>
-
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_height="72dp"
-                android:minWidth="84dp"
-                android:layout_marginStart="8dp"
-                android:gravity="center"
-                android:padding="10dp"
-                android:background="@drawable/launcher_button_parent"
-                android:focusable="true"
-                android:clickable="true"
-                android:id="@+id/multiplayer_feedback"
-                android:layout_width="wrap_content"
-                android:orientation="vertical">
-
-                <ImageView
-                    android:layout_gravity="center_horizontal"
-                    android:layout_width="22dp"
-                    android:layout_height="22dp"
-                    android:background="@drawable/ic_outline_feedback_black"/>
-
-                <TextView
-                    android:layout_marginTop="6dp"
-                    android:gravity="center_horizontal"
-                    android:singleLine="true"
-                    android:layout_gravity="center_horizontal"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/multi_player_ui_feedback"
-                    android:textSize="14sp"
-                    android:textColor="@color/colorPureBlack"/>
-
-            </LinearLayout>
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginStart="10dp"
+                android:singleLine="true"
+                android:text="@string/terracotta_terracotta"
+                android:textColor="@color/colorPureBlack"
+                android:textSize="@dimen/text_size_middle"/>
 
         </LinearLayout>
 
-    </HorizontalScrollView>
+        <!-- 房主教程 -->
+        <LinearLayout
+            android:id="@+id/host_tutorial"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/qcl_button_gray"
+            android:clickable="true"
+            android:focusable="true"
+            android:orientation="horizontal"
+            android:padding="10dp">
 
-</LinearLayout>
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:layout_gravity="center"
+                android:background="@drawable/ic_baseline_server_black"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginStart="10dp"
+                android:singleLine="true"
+                android:text="@string/terracotta_tutorial_host_btn"
+                android:textColor="@color/colorPureBlack"
+                android:textSize="@dimen/text_size_middle"/>
+
+        </LinearLayout>
+
+        <!-- 房客教程 -->
+        <LinearLayout
+            android:id="@+id/guest_tutorial"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/qcl_button_gray"
+            android:clickable="true"
+            android:focusable="true"
+            android:orientation="horizontal"
+            android:padding="10dp">
+
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:layout_gravity="center"
+                android:background="@drawable/ic_baseline_person_black"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginStart="10dp"
+                android:singleLine="true"
+                android:text="@string/terracotta_tutorial_guest_btn"
+                android:textColor="@color/colorPureBlack"
+                android:textSize="@dimen/text_size_middle"/>
+
+        </LinearLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"/>
+
+        <!-- 填写反馈表 -->
+        <LinearLayout
+            android:id="@+id/terracotta_feedback"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/qcl_button_gray"
+            android:clickable="true"
+            android:focusable="true"
+            android:orientation="horizontal"
+            android:padding="10dp">
+
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:layout_gravity="center"
+                android:background="@drawable/ic_outline_feedback_black"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginStart="10dp"
+                android:singleLine="true"
+                android:text="@string/terracotta_feedback_title"
+                android:textColor="@color/colorPureBlack"
+                android:textSize="@dimen/text_size_middle"/>
+
+        </LinearLayout>
+
+        <!-- 关于 EasyTier -->
+        <LinearLayout
+            android:id="@+id/about_easytier"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/qcl_button_gray"
+            android:clickable="true"
+            android:focusable="true"
+            android:orientation="horizontal"
+            android:padding="10dp">
+
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:layout_gravity="center"
+                android:background="@drawable/ic_baseline_earth_black"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginStart="10dp"
+                android:singleLine="true"
+                android:text="@string/terracotta_easytier"
+                android:textColor="@color/colorPureBlack"
+                android:textSize="@dimen/text_size_middle"/>
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <!-- ==================== 右侧：主设置面板 ==================== -->
+    <ScrollView
+        android:id="@+id/multiplayer_layout_settings"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_marginStart="10dp"
+        android:scrollbars="none"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/mp_left">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/qcl_button_gray"
+                android:orientation="vertical"
+                android:paddingStart="10dp"
+                android:paddingEnd="10dp">
+
+                <androidx.appcompat.widget.SwitchCompat
+                    android:id="@+id/enable_multiplayer"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:text="@string/terracotta_enable"
+                    android:textColor="@color/colorPureBlack"
+                    android:textSize="@dimen/text_size_middle"/>
+
+                <LinearLayout
+                    android:id="@+id/extra_layout"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:visibility="gone"
+                    android:orientation="vertical">
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:background="@color/colorGray"/>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:paddingTop="8dp"
+                        android:paddingBottom="8dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center"
+                            android:singleLine="true"
+                            android:text="@string/terracotta_export_log_share"
+                            android:textColor="@color/colorPureBlack"
+                            android:textSize="@dimen/text_size_middle"/>
+
+                        <View
+                            android:layout_width="0dp"
+                            android:layout_height="0dp"
+                            android:layout_weight="1"/>
+
+                        <Button
+                            android:id="@+id/export_log"
+                            android:layout_width="wrap_content"
+                            android:layout_height="40dp"
+                            android:layout_gravity="center"
+                            android:background="@drawable/launcher_button_blue"
+                            android:minWidth="0dp"
+                            android:paddingStart="14dp"
+                            android:paddingEnd="14dp"
+                            android:text="@string/action_share"
+                            android:textColor="@color/colorPureWhite"
+                            android:textSize="@dimen/text_size_middle"/>
+
+                    </LinearLayout>
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:background="@drawable/qcl_button_gray"
+                android:lineSpacingExtra="3dp"
+                android:padding="10dp"
+                android:text="@string/terracotta_confirm"
+                android:textColor="@color/colorPureBlack"
+                android:textSize="@dimen/text_size_small"/>
+
+        </LinearLayout>
+
+    </ScrollView>
+
+    <!-- ==================== 右侧：房主教程 ==================== -->
+    <ScrollView
+        android:id="@+id/tutorial_text_host"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_marginStart="10dp"
+        android:scrollbars="none"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/mp_left">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/qcl_button_gray"
+            android:lineSpacingExtra="3dp"
+            android:padding="10dp"
+            android:text="@string/terracotta_tutorial_host"
+            android:textColor="@color/colorPureBlack"
+            android:textSize="@dimen/text_size_small"/>
+
+    </ScrollView>
+
+    <!-- ==================== 右侧：房客教程 ==================== -->
+    <ScrollView
+        android:id="@+id/tutorial_text_guest"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_marginStart="10dp"
+        android:scrollbars="none"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/mp_left">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/qcl_button_gray"
+            android:lineSpacingExtra="3dp"
+            android:padding="10dp"
+            android:text="@string/terracotta_tutorial_guest"
+            android:textColor="@color/colorPureBlack"
+            android:textSize="@dimen/text_size_small"/>
+
+    </ScrollView>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

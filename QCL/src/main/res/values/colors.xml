@@ -1,13 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#6E6E6E</color>
+    <!-- ★★★ 1.5.0：默认主题色 → 斑驳森林（Pale Garden）水体色 #556980。
+         依据：Minecraft Wiki 斑驳森林官方配色 water fog color = #556980；
+         与 1.5.0 新昼夜背景（黑夜图主色 #0F1F27 深青、白天图暖褐红橙）同色系/互为补色，
+         比原来的中性灰 #6E6E6E（像"没配置"）更有辨识度。
+         注意：colorAccent 是默认主题色的真正来源（ExteriorSettingUI.getThemeColor 的 fallback），
+         存量用户配置里存的是 "DEFAULT" 字符串 → 会自动跟着变，无需迁移。 -->
+    <color name="colorPrimary">#556980</color>
     <color name="colorSecondary">#283593</color>
     <color name="colorThird">#43A047</color>
     <color name="colorForth">#E67E22</color>
     <color name="colorFifth">#9C27B0</color>
     <color name="colorSixth">#B71C1C</color>
     <color name="colorPrimaryDark">#CB4A4A4A</color>
-    <color name="colorAccent">#6E6E6E</color>
+    <color name="colorAccent">#556980</color>
 
     <color name="colorTransparent">#00FFFFFF</color>
     <color name="colorPureWhite">#FFFFFF</color>
@@ -40,4 +46,8 @@
     <color name="launcher_ui_background">#00000000</color>
     <color name="launcher_ui_background_light">#BCE6E6E6</color>
     <color name="colorPressed">#BDBDBD</color>
+
+    <!-- ★ 1.5.0：对话框面板底色。浅色态 = 白；夜间在 values-night 里覆盖为实心深色。
+         必须两个目录都有同名定义，否则某个模式下会找不到资源。 -->
+    <color name="qcl_dialog_night_bg">#FFFFFFFF</color>
 </resources>

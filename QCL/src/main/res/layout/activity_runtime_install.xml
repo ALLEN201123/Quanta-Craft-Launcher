@@ -23,16 +23,16 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="?android:attr/colorBackground">
+    android:background="@drawable/ic_background_classic">
 
     <TextView
         android:id="@+id/qcl_runtime_title"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/colorPureWhite"
+        android:background="@color/qcl_panel_gray"
         android:padding="10dp"
         android:text="@string/splash_title"
-        android:textColor="#FF000000"
+        android:textColor="@color/colorPureBlack"
         android:textSize="16sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -71,7 +71,8 @@
                         android:layout_height="wrap_content"
                         android:layout_gravity="center"
                         android:text="@string/splash_runtime_lwjgl"
-                        android:textSize="15sp" />
+                        android:textSize="15sp"
+                        android:textColor="@color/colorPureBlack" />
 
                     <View
                         android:layout_width="0dp"
@@ -106,7 +107,8 @@
                     android:paddingEnd="10dp"
                     android:paddingBottom="6dp"
                     android:textSize="12sp"
-                    android:visibility="gone" />
+                    android:visibility="gone"
+                        android:textColor="@color/colorPureBlack" />
             </LinearLayout>
 
             <View
@@ -131,7 +133,8 @@
                         android:layout_height="wrap_content"
                         android:layout_gravity="center"
                         android:text="@string/splash_runtime_cacio"
-                        android:textSize="15sp" />
+                        android:textSize="15sp"
+                        android:textColor="@color/colorPureBlack" />
 
                     <View
                         android:layout_width="0dp"
@@ -166,7 +169,8 @@
                     android:paddingEnd="10dp"
                     android:paddingBottom="6dp"
                     android:textSize="12sp"
-                    android:visibility="gone" />
+                    android:visibility="gone"
+                        android:textColor="@color/colorPureBlack" />
             </LinearLayout>
 
             <View
@@ -191,7 +195,8 @@
                         android:layout_height="wrap_content"
                         android:layout_gravity="center"
                         android:text="@string/splash_runtime_cacio17"
-                        android:textSize="15sp" />
+                        android:textSize="15sp"
+                        android:textColor="@color/colorPureBlack" />
 
                     <View
                         android:layout_width="0dp"
@@ -226,7 +231,8 @@
                     android:paddingEnd="10dp"
                     android:paddingBottom="6dp"
                     android:textSize="12sp"
-                    android:visibility="gone" />
+                    android:visibility="gone"
+                        android:textColor="@color/colorPureBlack" />
             </LinearLayout>
 
             <View
@@ -251,7 +257,8 @@
                         android:layout_height="wrap_content"
                         android:layout_gravity="center"
                         android:text="@string/splash_runtime_java8"
-                        android:textSize="15sp" />
+                        android:textSize="15sp"
+                        android:textColor="@color/colorPureBlack" />
 
                     <View
                         android:layout_width="0dp"
@@ -286,7 +293,8 @@
                     android:paddingEnd="10dp"
                     android:paddingBottom="6dp"
                     android:textSize="12sp"
-                    android:visibility="gone" />
+                    android:visibility="gone"
+                        android:textColor="@color/colorPureBlack" />
             </LinearLayout>
 
             <View
@@ -311,7 +319,8 @@
                         android:layout_height="wrap_content"
                         android:layout_gravity="center"
                         android:text="@string/splash_runtime_java17"
-                        android:textSize="15sp" />
+                        android:textSize="15sp"
+                        android:textColor="@color/colorPureBlack" />
 
                     <View
                         android:layout_width="0dp"
@@ -346,7 +355,8 @@
                     android:paddingEnd="10dp"
                     android:paddingBottom="6dp"
                     android:textSize="12sp"
-                    android:visibility="gone" />
+                    android:visibility="gone"
+                        android:textColor="@color/colorPureBlack" />
             </LinearLayout>
 
             <View
@@ -371,7 +381,8 @@
                         android:layout_height="wrap_content"
                         android:layout_gravity="center"
                         android:text="@string/splash_runtime_java21"
-                        android:textSize="15sp" />
+                        android:textSize="15sp"
+                        android:textColor="@color/colorPureBlack" />
 
                     <View
                         android:layout_width="0dp"
@@ -406,7 +417,8 @@
                     android:paddingEnd="10dp"
                     android:paddingBottom="6dp"
                     android:textSize="12sp"
-                    android:visibility="gone" />
+                    android:visibility="gone"
+                        android:textColor="@color/colorPureBlack" />
             </LinearLayout>
 
             <View
@@ -431,7 +443,8 @@
                         android:layout_height="wrap_content"
                         android:layout_gravity="center"
                         android:text="@string/splash_runtime_java25"
-                        android:textSize="15sp" />
+                        android:textSize="15sp"
+                        android:textColor="@color/colorPureBlack" />
 
                     <View
                         android:layout_width="0dp"
@@ -466,7 +479,8 @@
                     android:paddingEnd="10dp"
                     android:paddingBottom="6dp"
                     android:textSize="12sp"
-                    android:visibility="gone" />
+                    android:visibility="gone"
+                        android:textColor="@color/colorPureBlack" />
             </LinearLayout>
 
             <View
@@ -491,7 +505,8 @@
                         android:layout_height="wrap_content"
                         android:layout_gravity="center"
                         android:text="@string/splash_runtime_jna"
-                        android:textSize="15sp" />
+                        android:textSize="15sp"
+                        android:textColor="@color/colorPureBlack" />
 
                     <View
                         android:layout_width="0dp"
@@ -526,7 +541,8 @@
                     android:paddingEnd="10dp"
                     android:paddingBottom="6dp"
                     android:textSize="12sp"
-                    android:visibility="gone" />
+                    android:visibility="gone"
+                        android:textColor="@color/colorPureBlack" />
             </LinearLayout>
 
             <View
@@ -551,7 +567,8 @@
                         android:layout_height="wrap_content"
                         android:layout_gravity="center"
                         android:text="@string/splash_runtime_sdl"
-                        android:textSize="15sp" />
+                        android:textSize="15sp"
+                        android:textColor="@color/colorPureBlack" />
 
                     <View
                         android:layout_width="0dp"
@@ -586,7 +603,8 @@
                     android:paddingEnd="10dp"
                     android:paddingBottom="6dp"
                     android:textSize="12sp"
-                    android:visibility="gone" />
+                    android:visibility="gone"
+                        android:textColor="@color/colorPureBlack" />
             </LinearLayout>
 
         </LinearLayout>
@@ -612,7 +630,8 @@
         android:textSize="14sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@id/qcl_runtime_split"
-        app:layout_constraintTop_toBottomOf="@id/qcl_runtime_title" />
+        app:layout_constraintTop_toBottomOf="@id/qcl_runtime_title"
+                        android:textColor="@color/colorPureBlack" />
 
     <!--
       ========== 启动准备进度区（1.1.0）==========
@@ -639,7 +658,8 @@
             android:layout_height="wrap_content"
             android:ellipsize="end"
             android:maxLines="2"
-            android:textSize="13sp" />
+            android:textSize="13sp"
+                        android:textColor="@color/colorPureBlack" />
 
         <ProgressBar
             android:id="@+id/loading_progress_bar"
@@ -653,7 +673,8 @@
             android:id="@+id/loading_progress_text"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textSize="12sp" />
+            android:textSize="12sp"
+                        android:textColor="@color/colorPureBlack" />
     </LinearLayout>
 
     <Button

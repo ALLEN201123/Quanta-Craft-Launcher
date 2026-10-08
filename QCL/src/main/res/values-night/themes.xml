@@ -1,21 +1,68 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
+    <!-- ★★★ 1.5.0：**夜间模式主题**（用户要求「全应用主题配色也都用系统夜间模式的」）。
+         与 values/themes.xml 同名同结构，只在系统夜间模式下生效。
+         关键：把 Light 主题里"默认近白"的那几个窗口属性改成深色。 -->
     <style name="Theme.HelloMinecraftLauncherPocketEdition" parent="Theme.AppCompat.Light.NoActionBar">
-        <!-- Primary brand color. -->
+        <!-- Primary brand color：斑驳森林色在深浅底上都成立，保持不变 -->
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryVariant">@color/colorPrimary</item>
         <item name="colorOnPrimary">@color/colorPrimary</item>
-        <!-- Secondary brand color. -->
         <item name="colorSecondary">@color/colorPrimary</item>
         <item name="colorSecondaryVariant">@color/colorPrimary</item>
         <item name="colorOnSecondary">@color/colorPrimary</item>
-        <!-- Status bar color. -->
         <item name="android:statusBarColor" tools:targetApi="l">@color/colorPrimary</item>
         <item name="colorAccent">@color/colorAccent</item>
         <item name="android:windowNoTitle">true</item>
         <item name="android:windowContentOverlay">@null</item>
         <item name="android:windowFullscreen">true</item>
         <item name="android:windowTranslucentNavigation">true</item>
-        <!-- Customize your theme here. -->
+        <!-- ★★ 夜间：窗口底色改成深色，避免对话框/二级页面在窗口创建那一瞬闪白 -->
+        <item name="android:windowBackground">@color/qcl_panel_gray</item>
+        <item name="android:colorBackground">@color/qcl_panel_gray</item>
+        <item name="android:textColorPrimary">@color/colorPureBlack</item>
+        <item name="android:textColorSecondary">@color/colorLightWhite</item>
+        <item name="android:textColorHint">@color/colorLightWhite</item>
+        <!-- ★★★ 1.5.0：系统 AlertDialog 的**夜间**主题 —— 深底浅字。
+             修用户实测的「进多人联机只看到一片白、没有字」（白底+白字）。
+             ★★ `android.app.AlertDialog` 只认平台属性 `android:alertDialogTheme`，
+                必须**两个都写**（另一个给 androidx AppCompat 版）。 -->
+        <item name="android:alertDialogTheme" tools:targetApi="l">@style/QCLDialogTheme</item>
+        <item name="alertDialogTheme">@style/QCLDialogTheme</item>
+    </style>
+
+    <!-- ★★★ 1.5.0：系统 AlertDialog 的主题（**夜间**版）。
+         ★★ 为什么不能只靠 `Theme.AppCompat.DayNight.Dialog.Alert`：
+           本工程的宿主主题 `Theme.HelloMinecraftLauncherPocketEdition` 父主题是
+           **固定 Light**（`Theme.AppCompat.Light.NoActionBar`），Dialog 通过
+           `alertDialogTheme` 继承下来的 context 仍是 Light 系 → DayNight 父主题
+           在部分 ROM/API 上仍解析成浅色面板（实测：对话框纯白底）。
+         ⇒ 这里**显式钉死窗口与面板的深色**，不依赖父主题的 DayNight 判断。
+           文字色用 colorPureBlack（本目录里已翻成 #FFFFFF）。 -->
+    <style name="QCLDialogTheme" parent="Theme.AppCompat.Light.Dialog.Alert">
+        <item name="colorAccent">@color/colorAccent</item>
+        <item name="android:textColorPrimary">@color/colorPureBlack</item>
+        <item name="android:textColorSecondary">@color/colorLightWhite</item>
+        <!-- ★ 深色面板：windowBackground 决定 Dialog 卡片底色 -->
+        <item name="android:windowBackground">@color/qcl_dialog_night_bg</item>
+        <item name="android:colorBackground">@color/qcl_dialog_night_bg</item>
+        <!-- ★ 按钮文字用主题色，避免浅色按钮字在深底上消失 -->
+        <item name="android:textColorPrimaryInverse">@color/colorPureBlack</item>
+        <item name="android:textColorAlertDialogListItem">@color/colorPureBlack</item>
+        <item name="colorControlNormal">@color/colorLinkBlue</item>
+        <item name="colorControlActivated">@color/colorLinkBlue</item>
+    </style>
+    <!-- ★ 夜间：Dialog 专用深色（上面 QCLDialogTheme 在 values/ 里是 Light 父主题，
+         这里用同名覆盖为 DayNight 父主题 —— 资源限定符保证夜间取这一份）。 -->
+
+    <!-- ★★★ 1.5.0：启动入口专用主题。
+         夜间模式下用**黑夜背景图**（与主界面默认背景一致），跳转时视觉连续、不闪白。 -->
+    <style name="Theme.QCL.Boot" parent="Theme.HelloMinecraftLauncherPocketEdition">
+        <item name="android:windowBackground">@drawable/ic_background_classic</item>
+    </style>
+
+    <!-- ★ 弹窗菜单文字：夜间用浅色（MenuStyle 在 values/themes.xml） -->
+    <style name="MenuTextStyle">
+        <item name="android:textColor">@color/colorPureBlack</item>
+        <item name="android:textSize">11sp</item>
     </style>
 </resources>

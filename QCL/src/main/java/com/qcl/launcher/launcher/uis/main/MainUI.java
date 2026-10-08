@@ -8,6 +8,7 @@ import android.graphics.Color;
 import android.graphics.PixelFormat;
 import android.opengl.GLSurfaceView;
 import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.AdapterView;
@@ -63,9 +64,21 @@ public class MainUI extends BaseUI implements View.OnClickListener, AdapterView.
     // ★ 1.4.1：实验室入口（自 1.4.0 朋友源码包合并）
     // ★ 1.5.0：原来的 startLobbyUI（大厅）已整体移除（用户："没有实际用处"）。
     private LinearLayout startLabUI;
+    /** ★ 1.5.0 新排版独有：左侧导航最底部的「返回上一层」按钮（照 FCL 的 back）。
+     *  ★ 是**层级式返回**（backToLastUI：出栈一层），不是一键回主页。
+     *  旧排版没有这个控件 → findViewById 返回 null，切页时判空即可。 */
+    private LinearLayout startHomeUI;
 
     private LinearLayout startGame;
     private TextView launchVersionText;
+    /** ★ 1.5.0：启动区版本行左边的**版本图标**（随加载器自动切换：草方块 / 原版 / Forge / Fabric…）。
+     *  ★★ 注意是全工程的**独立 id**（{@code launch_version_icon}）——
+     *  左侧导航已有一个 {@code current_version_icon}，绝不能复用（id 重复会让
+     *  findViewById 只返回第一个 → 两处图标不同步）。 */
+    private ImageView launchVersionIcon;
+    /** ★ 1.5.0：版本行（版本图标 + 版本名）整体 —— 点它进版本列表。
+     *  ★ 原来这里是「三条杠」按钮，用户要求整个移除，改为点整行进列表（旧排版为 null）。 */
+    private LinearLayout launchVersionRow;
 
     public ImageView accountSkinFace;
     public ImageView accountSkinHat;
@@ -80,6 +93,16 @@ public class MainUI extends BaseUI implements View.OnClickListener, AdapterView.
     private ImageView versionIcon;
     private LinearLayout noVersionAlert;
     private TextView currentVersionText;
+
+    // ★ 1.5.0：主界面公告栏（照 FCL ui_main.xml 的 announcement_container）。
+    //   默认 gone，只有拉到「该显示」的公告时才点亮。旧排版没有这几个控件 → 全为 null，判空即可。
+    private LinearLayout announcementContainer;
+    private TextView announcementTitle;
+    private TextView announcementText;
+    private TextView announcementDate;
+    private LinearLayout announcementHide;
+    /** 当前正在展示的那条公告（点隐藏时要记它的 id）。 */
+    private Announcement currentAnnouncement;
 
     private VersionSpinnerAdapter versionSpinnerAdapter;
 
@@ -112,9 +135,31 @@ public class MainUI extends BaseUI implements View.OnClickListener, AdapterView.
         startSettingUI = activity.findViewById(R.id.start_ui_setting);
         // ★ 1.4.1 新增入口（★ 1.5.0：「大厅」已移除，只剩实验室）
         startLabUI = activity.findViewById(R.id.start_ui_lab);
+        // ★ 1.5.0 新排版独有：「回主界面」按钮（旧排版为 null）
+        startHomeUI = activity.findViewById(R.id.start_ui_home);
 
         startGame = activity.findViewById(R.id.launcher_play_button);
         launchVersionText = activity.findViewById(R.id.launch_version_text);
+        // ★ 1.5.0 新排版独有：版本行图标 + 进版本列表按钮（旧排版没有 → 为 null，下面统一判空）
+        launchVersionIcon = activity.findViewById(R.id.launch_version_icon);
+        // ★ 1.5.0 新排版独有：版本行（版本图标 + 版本名）。点它进版本列表；旧排版没有 → 为 null。
+        launchVersionRow = activity.findViewById(R.id.launch_version_row);
+        if (launchVersionRow != null) {
+            launchVersionRow.setOnClickListener(v -> {
+                // ★ 1.5.0：**没有任何版本时 → 跳下载页**（让玩家去装版本），
+                //   有版本时 → 跳版本列表（用户："直接点那个版本显示就能进"）。
+                String cur = activity.publicGameSetting == null
+                        ? "" : activity.publicGameSetting.currentVersion;
+                boolean noVersion = cur == null || cur.trim().isEmpty();
+                if (noVersion) {
+                    if (activity.uiManager != null && activity.uiManager.downloadUI != null) {
+                        activity.uiManager.switchMainUI(activity.uiManager.downloadUI);
+                    }
+                } else if (activity.uiManager != null && activity.uiManager.versionListUI != null) {
+                    activity.uiManager.switchMainUI(activity.uiManager.versionListUI);
+                }
+            });
+        }
 
         accountSkinFace = activity.findViewById(R.id.account_skin_face);
         accountSkinHat = activity.findViewById(R.id.account_skin_hat);
@@ -127,6 +172,17 @@ public class MainUI extends BaseUI implements View.OnClickListener, AdapterView.
         versionIcon = activity.findViewById(R.id.current_version_icon);
         noVersionAlert = activity.findViewById(R.id.no_version_alert_text);
         currentVersionText = activity.findViewById(R.id.current_version_name_text);
+
+        // ★ 1.5.0：公告栏（新排版独有；旧排版为 null，后面统一判空）
+        announcementContainer = activity.findViewById(R.id.announcement_container);
+        announcementTitle = activity.findViewById(R.id.announcement_title);
+        announcementText = activity.findViewById(R.id.announcement_text);
+        announcementDate = activity.findViewById(R.id.announcement_date);
+        announcementHide = activity.findViewById(R.id.announcement_hide);
+        if (announcementContainer != null) {
+            // 先藏起来，等公告拉取结果回来再决定显不显示 —— 避免「闪一下空卡片」。
+            announcementContainer.setVisibility(View.GONE);
+        }
 
         //icon
         versionListIcon = activity.findViewById(R.id.version_list_icon);
@@ -142,8 +198,16 @@ public class MainUI extends BaseUI implements View.OnClickListener, AdapterView.
         startSettingUI.setOnClickListener(this);
         // ★ 1.4.1 新增入口（★ 1.5.0：「大厅」已移除，只剩实验室）
         startLabUI.setOnClickListener(this);
+        // ★ 1.5.0 新排版独有：左侧导航底部「回主界面」按钮（旧排版为 null → 跳过）
+        if (startHomeUI != null) {
+            startHomeUI.setOnClickListener(this);
+        }
 
         startGame.setOnClickListener(this);
+        // ★ 1.5.0：公告栏「隐藏」按钮 —— 记住这条公告 id，以后不再显示（新排版独有）
+        if (announcementHide != null) {
+            announcementHide.setOnClickListener(v -> hideAnnouncement());
+        }
         // ★★★ 1.1.1：长按启动按钮 → 选择渲染器（公共选择器，版本设置/全局设置共用同一套）
         startGame.setOnLongClickListener(v -> {
             // ★ 1.4.9 修复「长按启动切了渲染器，版本设置里不显示 / 全局设置被改」：
@@ -226,34 +290,173 @@ public class MainUI extends BaseUI implements View.OnClickListener, AdapterView.
                     GsonUtils.savePublicGameSetting(activity.publicGameSetting, AppManifest.SETTING_DIR + "/public_game_setting.json");
                 }
                 versionSpinnerAdapter = new VersionSpinnerAdapter(context,gameList,activity.launcherSetting.gameFileDirectory);
+                // ★★★ 1.5.0：新排版（ui_main_new.xml）**已移除**启动按钮旁的三角符号版本选择，
+                //   这里 findViewById 会返回 null —— 必须判空，否则启动器一进主界面就 NPE。
+                //   旧排版（ui_main.xml）仍有该 spinner，所以逻辑保留、按 null 分叉。
                 Spinner gameVersionSpinner = activity.findViewById(R.id.launcher_spinner_version);
-                gameVersionSpinner.setAdapter(versionSpinnerAdapter);
-                gameVersionSpinner.setSelection(versionSpinnerAdapter.getPosition(currentVersion));
-                gameVersionSpinner.setOnItemSelectedListener(this);
+                if (gameVersionSpinner != null) {
+                    gameVersionSpinner.setAdapter(versionSpinnerAdapter);
+                    gameVersionSpinner.setSelection(versionSpinnerAdapter.getPosition(currentVersion));
+                    gameVersionSpinner.setOnItemSelectedListener(this);
+                }
                 if (!currentVersion.name.equals("")){
-                    noVersionAlert.setVisibility(View.GONE);
-                    currentVersionText.setVisibility(View.VISIBLE);
-                    currentVersionText.setText(currentVersion.name);
+                    // ★★★ 1.5.0 新排版（纯图标入口）：no_version_alert_text /
+                    //   current_version_name_text 在布局里是 gone，**绝不能在这里被点亮**，
+                    //   否则左侧导航会冒出文字、破坏「全屋只留图标」。
+                    //   判据：新排版独有控件 start_ui_home（左栏返回按钮）存在 → 走纯图标分支。
+                    //   ★ 原来用 launch_version_list_button 判断，但它（三条杠）已被用户要求删除，
+                    //   所以改挂到 start_ui_home 上。
+                    boolean iconOnly = startHomeUI != null;
+                    if (!iconOnly) {
+                        noVersionAlert.setVisibility(View.GONE);
+                        currentVersionText.setVisibility(View.VISIBLE);
+                        currentVersionText.setText(currentVersion.name);
+                    }
                     launchVersionText.setText(currentVersion.name);
+                    // ★ 1.5.0 图标分工（用户明确）：
+                    //   · versionIcon（左侧导航第一格）→ 兜底换成**图标库的方块**；
+                    //   · launchVersionIcon（启动按钮上方的版本显示）→ 兜底仍是草方块。
+                    //   两处的「版本图标自动切换」都保留：有版本自带图标就用自带的，
+                    //   没有就走加载器图标（Forge/Fabric…），都没有才用各自的兜底图。
                     if (!currentVersion.iconPath.equals("") && new File(currentVersion.iconPath).exists()) {
-                        versionIcon.setBackground(DrawableUtils.getDrawableFromFile(currentVersion.iconPath));
+                        Drawable d = DrawableUtils.getDrawableFromFile(currentVersion.iconPath);
+                        versionIcon.setBackground(d);
+                        if (launchVersionIcon != null) launchVersionIcon.setBackground(d);
                     }
                     else {
                         Integer li = loaderIconFor(new File(activity.launcherSetting.gameFileDirectory
                                 + "/versions/" + currentVersion.name));
-                        versionIcon.setBackground(context.getDrawable(li != null ? li : R.drawable.ic_grass));
+                        if (li != null) {
+                            Drawable d = context.getDrawable(li);
+                            versionIcon.setBackground(d);
+                            if (launchVersionIcon != null) launchVersionIcon.setBackground(d);
+                        } else {
+                            versionIcon.setBackground(context.getDrawable(R.drawable.ic_qcl_version_setting_white));
+                            if (launchVersionIcon != null) {
+                                launchVersionIcon.setBackground(context.getDrawable(R.drawable.ic_grass));
+                            }
+                        }
                     }
                 }
                 else {
-                    noVersionAlert.setVisibility(View.VISIBLE);
-                    currentVersionText.setVisibility(View.GONE);
+                    boolean iconOnly = startHomeUI != null;
+                    if (!iconOnly) {
+                        noVersionAlert.setVisibility(View.VISIBLE);
+                        currentVersionText.setVisibility(View.GONE);
+                    }
                     launchVersionText.setText(context.getString(R.string.launcher_button_current_version));
-                    versionIcon.setBackground(context.getDrawable(R.drawable.ic_grass));
+                    // 没有任何版本：左栏用图标库方块，启动按钮上方仍是草方块（用户要求）
+                    versionIcon.setBackground(context.getDrawable(R.drawable.ic_qcl_version_setting_white));
+                    if (launchVersionIcon != null) {
+                        launchVersionIcon.setBackground(context.getDrawable(R.drawable.ic_grass));
+                    }
                 }
             });
         }).start();
 
         refreshAccount();
+        // ★ 1.5.0：每次回主界面刷一次公告（新排版独有；旧排版没有 announcementContainer → 直接返回）
+        loadAnnouncement();
+    }
+
+    // ============================ ★ 1.5.0 公告栏（照 FCL） ============================
+
+    /**
+     * 读公告并决定显不显示。数据源优先级：
+     * <ol>
+     *   <li>{@code assets/announcement.json}（内置，永远可用）</li>
+     * </ol>
+     * 解析失败 / 没有该显示的内容 → 隐藏公告栏，**静默处理**（公告坏了绝不能影响主界面）。
+     *
+     * <p>★ 关闭必须在后台线程做 IO，结果回主线程 setText（沿用本文件既有习惯）。
+     */
+    private void loadAnnouncement() {
+        if (announcementContainer == null) {
+            return;
+        }
+        final int versionCode = getAppVersionCode();
+        new Thread(() -> {
+            final ArrayList<Announcement> list;
+            try {
+                String json = readAssetText(Announcement.ASSET_NAME);
+                list = Announcement.parseList(json);
+            } catch (Throwable t) {
+                activity.runOnUiThread(() -> {
+                    if (announcementContainer != null) {
+                        announcementContainer.setVisibility(View.GONE);
+                    }
+                });
+                return;
+            }
+            activity.runOnUiThread(() -> applyAnnouncement(list, versionCode));
+        }, "qcl-announcement").start();
+    }
+
+    /** 读 assets 里的文本文件（QCL 的 FileUtils 没有现成方法，这里自己读）。 */
+    private String readAssetText(String name) throws IOException {
+        try (java.io.InputStream is = context.getAssets().open(name)) {
+            java.io.ByteArrayOutputStream bos = new java.io.ByteArrayOutputStream();
+            byte[] buf = new byte[8192];
+            int n;
+            while ((n = is.read(buf)) > 0) {
+                bos.write(buf, 0, n);
+            }
+            return new String(bos.toByteArray(), java.nio.charset.StandardCharsets.UTF_8);
+        }
+    }
+
+    /** 当前 APK 的 versionCode（公告按它判断 minVersion/maxVersion）。取不到就返回 0。 */
+    private int getAppVersionCode() {
+        try {
+            android.content.pm.PackageInfo info = context.getPackageManager()
+                    .getPackageInfo(context.getPackageName(), 0);
+            return info.versionCode;
+        } catch (Throwable t) {
+            return 0;
+        }
+    }
+
+    private void applyAnnouncement(ArrayList<Announcement> list, int versionCode) {
+        if (announcementContainer == null) {
+            return;
+        }
+        Announcement picked = null;
+        if (list != null) {
+            for (Announcement a : list) {
+                if (a != null && a.shouldDisplay(context, versionCode)) {
+                    picked = a;
+                    break;
+                }
+            }
+        }
+        if (picked == null) {
+            currentAnnouncement = null;
+            announcementContainer.setVisibility(View.GONE);
+            return;
+        }
+        currentAnnouncement = picked;
+        if (announcementTitle != null) {
+            announcementTitle.setText(picked.getDisplayTitle(context));
+        }
+        if (announcementText != null) {
+            announcementText.setText(picked.getDisplayContent(context));
+        }
+        if (announcementDate != null) {
+            announcementDate.setText(picked.getDate());
+        }
+        CustomAnimationUtils.showViewFromLeft(announcementContainer, activity, context, false);
+        announcementContainer.setVisibility(View.VISIBLE);
+    }
+
+    /** 玩家点「隐藏」→ 记下 id + 收起公告栏。 */
+    private void hideAnnouncement() {
+        if (currentAnnouncement != null) {
+            currentAnnouncement.hide(context);
+        }
+        currentAnnouncement = null;
+        if (announcementContainer != null) {
+            announcementContainer.setVisibility(View.GONE);
+        }
     }
 
     @SuppressLint("UseCompatLoadingForDrawables")
@@ -535,7 +738,9 @@ public class MainUI extends BaseUI implements View.OnClickListener, AdapterView.
             activity.uiManager.switchMainUI(activity.uiManager.downloadUI);
         }
         if (v == startMultiPlayerUI){
-            com.qcl.launcher.launcher.terracotta.MultiplayerDialogHelper.showEnable(activity, context);
+            // ★ 1.5.0：不再弹那个白底白字的小 AlertDialog，改跳**完整的二级页面**
+            //   （照 FCL 的 MultiplayerUI：左栏导航 + 右侧内容区 + 房主/房客教程）。
+            activity.uiManager.switchMainUI(activity.uiManager.multiplayerUI);
         }
         if (v == startSettingUI){
             activity.uiManager.switchMainUI(activity.uiManager.settingUI);
@@ -544,7 +749,23 @@ public class MainUI extends BaseUI implements View.OnClickListener, AdapterView.
         if (v == startLabUI){
             activity.uiManager.switchMainUI(activity.uiManager.labUI);
         }
+        // ★ 1.5.0 新排版独有：左侧导航底部「返回上一层」→ **层级式返回**（backToLastUI：出栈一层）。
+        //   ★ 用户明确要求：不是一键回主页，而是"退一层、再退一层，一直退到主界面"。
+        if (startHomeUI != null && v == startHomeUI){
+            activity.backToLastUI();
+        }
         if (v == startGame){
+            // ★★★ 1.5.0：**没有任何版本时，点「启动游戏」不启动，直接跳下载页**。
+            //   判据用 currentVersion 是否为空 —— 这是 onStart() 里唯一可靠的"有没有版本"信号：
+            //   有版本时它会被写成 "<游戏目录>/versions/<版本名>"，一个都没有时保持 ""。
+            //   （用 noVersionAlert 的可见性判断不可靠：新排版里那个标题是 gone，永远是 GONE。）
+            String cur = activity.publicGameSetting == null ? "" : activity.publicGameSetting.currentVersion;
+            if (cur == null || cur.trim().isEmpty()) {
+                if (activity.uiManager != null && activity.uiManager.downloadUI != null) {
+                    activity.uiManager.switchMainUI(activity.uiManager.downloadUI);
+                }
+                return;
+            }
             String settingPath = activity.publicGameSetting.currentVersion + "/qcl.cfg";
             String finalPath;
             if (new File(settingPath).exists() && GsonUtils.getPrivateGameSettingFromFile(settingPath) != null && (GsonUtils.getPrivateGameSettingFromFile(settingPath).forceEnable || GsonUtils.getPrivateGameSettingFromFile(settingPath).enable)) {
@@ -617,10 +838,13 @@ public class MainUI extends BaseUI implements View.OnClickListener, AdapterView.
             activity.uiManager.settingUI.settingUIManager.universalGameSettingUI.gameDirText.setText(activity.launcherSetting.gameFileDirectory + "/versions/" + ((GameListBean) versionSpinnerAdapter.getItem(position)).name);
         }
         GsonUtils.savePublicGameSetting(activity.publicGameSetting, AppManifest.SETTING_DIR + "/public_game_setting.json");
+        // ★ 1.5.0：新排版左侧「当前版本」入口是纯图标，这个 TextView 是 gone —— 照样 setText 无害。
         currentVersionText.setText(((GameListBean) versionSpinnerAdapter.getItem(position)).name);
         launchVersionText.setText(((GameListBean) versionSpinnerAdapter.getItem(position)).name);
         if (!((GameListBean) versionSpinnerAdapter.getItem(position)).iconPath.equals("") && new File(((GameListBean) versionSpinnerAdapter.getItem(position)).iconPath).exists()) {
-            versionIcon.setBackground(DrawableUtils.getDrawableFromFile(((GameListBean) versionSpinnerAdapter.getItem(position)).iconPath));
+            Drawable d = DrawableUtils.getDrawableFromFile(((GameListBean) versionSpinnerAdapter.getItem(position)).iconPath);
+            versionIcon.setBackground(d);
+            if (launchVersionIcon != null) launchVersionIcon.setBackground(d);
         }
         else {
             // ★★★ 1.2.5 修：这里原来跟 VersionSpinnerAdapter 一样按「version 有没有逗号」
@@ -628,7 +852,17 @@ public class MainUI extends BaseUI implements View.OnClickListener, AdapterView.
             //   和版本设置页的加载器 logo 不一致。统一走 loaderIconFor。
             Integer li = loaderIconFor(new File(activity.launcherSetting.gameFileDirectory
                     + "/versions/" + ((GameListBean) versionSpinnerAdapter.getItem(position)).name));
-            versionIcon.setBackground(context.getDrawable(li != null ? li : R.drawable.ic_grass));
+            if (li != null) {
+                Drawable d = context.getDrawable(li);
+                versionIcon.setBackground(d);
+                if (launchVersionIcon != null) launchVersionIcon.setBackground(d);
+            } else {
+                // ★ 1.5.0 兜底分工：左栏用图标库方块，启动按钮上方仍用草方块
+                versionIcon.setBackground(context.getDrawable(R.drawable.ic_qcl_version_setting_white));
+                if (launchVersionIcon != null) {
+                    launchVersionIcon.setBackground(context.getDrawable(R.drawable.ic_grass));
+                }
+            }
         }
         changeIcon(versionIcon,themePath,"versionIcon");
     }

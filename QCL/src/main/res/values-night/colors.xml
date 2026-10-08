@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ★★★ 1.5.0：**夜间模式配色**（用户要求「全应用主题配色也都用系统夜间模式的」）。
+
+     机制：Android 资源限定符 —— 手机系统处于深色/夜间模式时，
+     同名颜色优先取本目录（values-night）的值，浅色模式则取 values/colors.xml。
+     ⇒ **只改这一处，120+ 个布局里所有引用全部自动变**，不用动任何布局文件。
+
+     ★★★ 铁律：**面板底色与它上面的文字色必须成对翻转**
+       · 浅色态：面板 qcl_panel_gray(#C8EDEDED 近白) ↔ 文字 colorPureBlack(#000000 黑)
+       · 夜间态：面板 → 深色              ↔ 文字 → 白色
+       只翻一个就会出现「深底黑字」/「白底白字」→ 玩家根本看不见
+       （用户特别强调：版本文字、数字之类绝不能看不见）。
+
+     ★ 保持不变的：主题色 colorPrimary / colorAccent（斑驳森林 #556980 在深浅底上都成立）、
+       纯白 colorPureWhite（白色图标 / 白色描边用，本来就在深底上）。 -->
+<resources>
+    <!-- ================= 面板 / 背景（成对翻转的「底」） ================= -->
+    <!-- 浅色：近白半透明 #C8EDEDED / #C0E3E3E3；夜间：深色半透明 -->
+    <color name="qcl_panel_gray">#E61A1F26</color>
+    <color name="qcl_panel_gray_alt">#E61F252D</color>
+    <!-- 浅色：近白 #BCE6E6E6；夜间：深色 -->
+    <color name="launcher_ui_background_light">#E6171C22</color>
+    <color name="launcher_ui_background">#00000000</color>
+
+    <!-- ================= 文字（成对翻转的「字」） ================= -->
+    <!-- ★★★ 这一行是全局最关键的一处：946 个布局引用它当"正文黑字"。
+         夜间背景变深后如果还是 #000000 就完全看不见了 → 必须翻白。 -->
+    <color name="colorPureBlack">#FFFFFFFF</color>
+    <!-- 浅色态用它当"次要黑字/图标"，夜间翻成浅白 -->
+    <color name="colorLightWhite">#B3FFFFFF</color>
+    <color name="colorPureWhite">#FFFFFFFF</color>
+
+    <!-- ================= 灰阶（底 / 分隔 / 次级面板） ================= -->
+    <!-- colorWhiteGray 浅色态是 #E3E3E3（浅灰底）→ 夜间变深灰 -->
+    <color name="colorWhiteGray">#2A3138</color>
+    <!-- colorLightGray 浅色态是 #0D000000（极浅黑蒙层）→ 夜间用极浅白蒙层 -->
+    <color name="colorLightGray">#1AFFFFFF</color>
+    <!-- colorGray 浅色态 #1A000000 → 夜间反相 -->
+    <color name="colorGray">#33FFFFFF</color>
+    <color name="colorDarkGray">#40000000</color>
+    <color name="colorShallowWhite">#40FFFFFF</color>
+
+    <!-- ================= 链接色（深底上要更亮才看得清） ================= -->
+    <color name="colorLinkBlue">#3DD6C0</color>
+    <color name="colorLinkBlueDark">#8FE7DA</color>
+    <color name="colorTextBlue">#C9EFFF</color>
+
+    <!-- ================= 交互态 ================= -->
+    <!-- 浅色态按压是 #BDBDBD（中灰，压在浅底上）→ 夜间压在深底上要更深 -->
+    <color name="colorPressed">#4D5A6672</color>
+
+    <!-- ================= 对话框（必须**不透明**） ================= -->
+    <!-- ★★ 对话框是在「另一个窗口」里绘制的，底下是我们半透明的页面；
+         底绝不能也用半透明色，否则会透出后面的画面、字看不清 → 用实心深色。 -->
+    <color name="qcl_dialog_night_bg">#FF1A1F26</color>
+</resources>

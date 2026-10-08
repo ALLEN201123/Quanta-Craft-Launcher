@@ -59,10 +59,11 @@
     <string name="menu_settings_performance_mode">持续性能模式</string>
     <string name="launcher_scroll_setting">设置</string>
     <string name="launcher_button_launch">启动游戏</string>
-    <string name="launcher_button_current_version">没有游戏版本</string>
+    <string name="launcher_button_current_version">没有任何版本</string>
 
     <string name="launch_check_dialog_title">启动游戏</string>
     <string name="launch_check_dialog_java">检测 Java 版本</string>
+    <string name="launch_check_dialog_vulkan">检测 Vulkan 支持</string>
     <string name="launch_check_dialog_lib">处理游戏依赖</string>
     <string name="launch_check_dialog_login">登录</string>
     <string name="launch_check_dialog_launch">等待游戏启动</string>
@@ -192,9 +193,9 @@
     <string name="dialog_select_profile_title">选择一个角色</string>
     <string name="dialog_select_profile_cancel">取消</string>
 
-    <string name="item_account_type_offline">离线模式</string>
-    <string name="item_account_type_mojang">Mojang 账户</string>
-    <string name="item_account_type_microsoft">微软登录</string>
+    <string name="item_account_type_offline">离线账号</string>
+    <string name="item_account_type_mojang">正版账号</string>
+    <string name="item_account_type_microsoft">正版账号</string>
     <string name="item_account_type_auth_lib">外置登录 (authlib-injector)</string>
     <string name="item_account_type_nide_8_auth">外置登录 (nide8auth)</string>
     <string name="item_account_login_server">认证服务器:</string>
@@ -788,8 +789,9 @@
     <string name="exterior_setting_ui_layout_restart">重启启动器后新排版才会生效</string>
     <string name="exterior_setting_ui_full_screen">忽略刘海屏</string>
     <string name="exterior_setting_ui_bg_title">背景地址</string>
-    <string name="exterior_setting_ui_bg_default">默认</string>
-    <string name="exterior_setting_ui_bg_classic">经典</string>
+    <string name="exterior_setting_ui_bg_default">默认（按时间自动切换昼夜）</string>
+    <string name="exterior_setting_ui_bg_classic">黑夜</string>
+    <string name="exterior_setting_ui_bg_day">白天</string>
     <string name="exterior_setting_ui_bg_custom">自定义</string>
     <string name="exterior_setting_ui_bg_online">网络</string>
 
@@ -1182,4 +1184,50 @@
     <string name="ui_about_hmclpe_main">HMCL-PE 仓库（已归档）</string>
     <string name="ui_about_hmclpe_sub">HMCL-PE 已停止维护并归档。QCL 1.0.x 及以前基于 HMCL-PE 构建，之后为自建启动管线。</string>
     <string name="dialog_add_microsoft_account_device_code">设备码登录</string>
+
+    <!-- ★ 1.5.0 新增：Vulkan 检测与引导（Minecraft 26.2+ 需要 Vulkan 渲染后端） -->
+    <string name="vulkan_check_title">Vulkan 检测</string>
+    <string name="vulkan_check_failed">此设备不支持 Vulkan。</string>
+    <string name="vulkan_check_support_all">此设备支持 Minecraft %s 及以上的 Vulkan 渲染。</string>
+    <string name="vulkan_check_support_none">此设备不满足 Minecraft 26.2+ 的 Vulkan 渲染要求。</string>
+    <string name="vulkan_check_support_partial">此设备仅部分 Minecraft 版本支持 Vulkan。</string>
+    <string name="vulkan_check_versions">版本支持情况</string>
+    <string name="vulkan_check_version_range">%s</string>
+    <string name="vulkan_check_profile_support">支持</string>
+    <string name="vulkan_check_profile_unsupport">不支持</string>
+    <string name="vulkan_check_version">Vulkan 版本：%s</string>
+    <string name="vulkan_check_level">硬件等级：%s</string>
+    <string name="vulkan_check_extensions">必需的扩展</string>
+    <string name="vulkan_check_features">必需的功能</string>
+    <string name="vulkan_check_item_name">%s</string>
+    <string name="vulkan_check_item_name_missing">%s（缺失）</string>
+    <string name="vulkan_check_dep_required">必需版本：%s</string>
+    <string name="vulkan_check_dep_optional">可选版本：%s</string>
+    <string name="vulkan_check_confirm">确定</string>
+    <string name="vulkan_check_blocked_title">不支持 Vulkan</string>
+    <string name="vulkan_check_blocked_message">Minecraft %1$s 需要 Vulkan 渲染后端，而此设备无法提供（Vulkan 版本：%2$s，硬件等级：%3$s）。\n\n缺失的必需项：%4$s\n\n请改用 Minecraft 26.2 及以下版本，或更换设备。</string>
+    <string name="vulkan_check_blocked_continue">仍然启动</string>
+    <string name="vulkan_check_blocked_cancel">换一个版本</string>
+    <string name="vulkan_check_detail">详情</string>
+    <!-- ★ 1.5.0：主界面公告栏（照 FCL 的 announcement） -->
+    <string name="qcl_announcement">公告</string>
+    <string name="qcl_announcement_hide">隐藏</string>
+
+    <!-- ★ 1.5.0：多人联机（Terracotta | 陶瓦联机）二级页面，照 FCL 的 ui_multiplayer 重做 -->
+    <string name="terracotta">多人联机</string>
+    <string name="terracotta_terracotta">Terracotta | 陶瓦联机</string>
+    <string name="terracotta_enable">启用多人联机</string>
+    <string name="terracotta_easytier">关于 EasyTier</string>
+    <string name="terracotta_feedback_title">填写反馈表</string>
+    <string name="terracotta_tutorial_host_btn">房主教程</string>
+    <string name="terracotta_tutorial_guest_btn">房客教程</string>
+    <string name="action_share">分享</string>
+    <string name="terracotta_export_log_share">分享联机核心日志</string>
+    <string name="terracotta_export_log_share_null">未找到联机核心日志，请先在游戏内联机菜单导出日志</string>
+    <string name="terracotta_export_log_failed">无法导出日志</string>
+    <string name="terracotta_confirm">用户须知\n\n陶瓦联机是第三方开源自由软件，您在使用过程中所遇到的问题请通过相关渠道进行反馈。\n陶瓦联机使用 P2P 技术，联机成功后房间内用户之间将直接连接，不会使用第三方服务器对您的流量进行转发。最终联机体验和参与联机者的网络情况有较大关系。\n在多人联机全过程中，您必须严格遵守您所在国家与地区的全部法律法规。</string>
+    <string name="terracotta_tutorial_host">房主使用方法：\n\n - 在启动器多人联机主页阅读用户须知后启用联机功能\n - 启动游戏，在游戏内的联机菜单中找到联机模块并打开\n - 点击“我想当房主”，扫描游戏端口\n - 进入存档，在游戏暂停菜单中打开“对局域网开放”选项\n - 若弹出提示要求申请 VPN 权限，请授予，否则无法正常使用\n - 稍等片刻将自动复制邀请码，若没有自动复制，也可以前往联机菜单复制\n - 将邀请码发送给你的伙伴\n\n注意事项：\n\n - 该软件支持离线账户\n - 该软件支持与 HMCL 和 PCL CE 等支持 Scaffolding 协议的软件互联</string>
+    <string name="terracotta_tutorial_guest">房客使用方法：\n\n - 在启动器多人联机主页阅读用户须知后启用联机功能\n - 启动游戏，在游戏内的联机菜单中找到联机模块并打开\n - 点击“我想当房客”，在输入框内输入房主提供的邀请码，并耐心等待\n - 若弹出提示要求申请 VPN 权限，请授予，否则无法正常使用\n - 显示已加入房间后，在游戏主界面选择多人游戏并刷新，双击进入陶瓦联机大厅\n\n注意事项：\n\n - 该软件支持离线账户\n - 该软件支持与 HMCL 和 PCL CE 等支持 Scaffolding 协议的软件互联\n - 使用备用服务器地址加入游戏时，不支持离线账户，自行解决</string>
+    <string name="qcl_multiplayer_agree">我已知悉并同意</string>
+    <string name="qcl_cancel">取消</string>
 </resources>

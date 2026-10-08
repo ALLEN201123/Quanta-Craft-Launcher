@@ -130,6 +130,7 @@
     <string name="launcher_button_current_version">No Instances</string>
     <string name="launch_check_dialog_title">Launch Game</string>
     <string name="launch_check_dialog_java">Checking Java version</string>
+    <string name="launch_check_dialog_vulkan">Checking Vulkan support</string>
     <string name="launch_check_dialog_lib">Resolving dependencies</string>
     <string name="launch_check_dialog_login">Logging in</string>
     <string name="launch_check_dialog_launch">Waiting for the game to launch</string>
@@ -767,8 +768,9 @@
     <string name="exterior_setting_ui_layout_restart">Restart the launcher to apply the new layout</string>
     <string name="exterior_setting_ui_full_screen">Ignore notch</string>
     <string name="exterior_setting_ui_bg_title">Background Image</string>
-    <string name="exterior_setting_ui_bg_default">Default</string>
-    <string name="exterior_setting_ui_bg_classic">Classic</string>
+    <string name="exterior_setting_ui_bg_default">Default (auto day/night)</string>
+    <string name="exterior_setting_ui_bg_classic">Night</string>
+    <string name="exterior_setting_ui_bg_day">Day</string>
     <string name="exterior_setting_ui_bg_custom">Custom</string>
     <string name="exterior_setting_ui_bg_online">From URL</string>
     <string name="dialog_color_selector_title">Color Selector</string>
@@ -1105,4 +1107,50 @@ Multiplayer is powered by Terracotta (by BurningTNT). The multiplayer feature is
     <string name="setting_legacy_cn_lang">Legacy version language</string>
     <string name="legacy_cn_lang_cancel">Cancel</string>
     <string name="dialog_add_microsoft_account_device_code">设备码登录</string>
+
+    <!-- ★ 1.5.0 新增：Vulkan 检测与引导（Minecraft 26.2+ 需要 Vulkan 渲染后端） -->
+    <string name="vulkan_check_title">Vulkan Check</string>
+    <string name="vulkan_check_failed">Vulkan is not available on this device.</string>
+    <string name="vulkan_check_support_all">This device supports Vulkan for Minecraft %s and later.</string>
+    <string name="vulkan_check_support_none">This device does not support the Vulkan requirements of Minecraft 26.2+.</string>
+    <string name="vulkan_check_support_partial">This device only supports Vulkan for some Minecraft versions.</string>
+    <string name="vulkan_check_versions">Version support</string>
+    <string name="vulkan_check_version_range">%s</string>
+    <string name="vulkan_check_profile_support">Supported</string>
+    <string name="vulkan_check_profile_unsupport">Not supported</string>
+    <string name="vulkan_check_version">Vulkan version: %s</string>
+    <string name="vulkan_check_level">Hardware level: %s</string>
+    <string name="vulkan_check_extensions">Required extensions</string>
+    <string name="vulkan_check_features">Required features</string>
+    <string name="vulkan_check_item_name">%s</string>
+    <string name="vulkan_check_item_name_missing">%s (missing)</string>
+    <string name="vulkan_check_dep_required">Required in: %s</string>
+    <string name="vulkan_check_dep_optional">Optional in: %s</string>
+    <string name="vulkan_check_confirm">OK</string>
+    <string name="vulkan_check_blocked_title">Vulkan unsupported</string>
+    <string name="vulkan_check_blocked_message">Minecraft %1$s requires a Vulkan renderer backend that this device cannot provide (Vulkan version: %2$s, hardware level: %3$s).\n\nMissing required items: %4$s\n\nPlease play Minecraft 26.2 or older, or use another device.</string>
+    <string name="vulkan_check_blocked_continue">Launch anyway</string>
+    <string name="vulkan_check_blocked_cancel">Choose another version</string>
+    <string name="vulkan_check_detail">Details</string>
+    <!-- ★ 1.5.0：主界面公告栏（照 FCL 的 announcement） -->
+    <string name="qcl_announcement">Announcement</string>
+    <string name="qcl_announcement_hide">Hide</string>
+
+    <!-- ★ 1.5.0：多人联机（Terracotta | 陶瓦联机）二级页面，照 FCL 的 ui_multiplayer 重做 -->
+    <string name="terracotta">Multiplayer</string>
+    <string name="terracotta_terracotta">Terracotta | Multiplayer</string>
+    <string name="terracotta_enable">Enable multiplayer</string>
+    <string name="terracotta_easytier">About EasyTier</string>
+    <string name="terracotta_feedback_title">Fill in the feedback form</string>
+    <string name="terracotta_tutorial_host_btn">Host tutorial</string>
+    <string name="terracotta_tutorial_guest_btn">Guest tutorial</string>
+    <string name="action_share">Share</string>
+    <string name="terracotta_export_log_share">Share multiplayer core log</string>
+    <string name="terracotta_export_log_share_null">No multiplayer core log found. Please export it from the in-game multiplayer menu first.</string>
+    <string name="terracotta_export_log_failed">Failed to export the log</string>
+    <string name="terracotta_confirm">User notice\n\nTerracotta is third-party free and open-source software. If you run into any problem while using it, please report it through the relevant channels.\nTerracotta uses P2P technology. Once a room is established, the players inside it connect directly, and no third-party server relays your traffic. The final experience depends largely on the network conditions of all participants.\nDuring the whole multiplayer session you must strictly comply with all applicable laws and regulations of your country and region.</string>
+    <string name="terracotta_tutorial_host">Host usage:\n\n - Read the user notice on the launcher multiplayer page, then enable multiplayer\n - Launch the game, open the multiplayer module in the in-game menu\n - Tap \"I want to be the host\" and scan the game port\n - Enter your world and open \"Open to LAN\" in the pause menu\n - If asked for VPN permission, grant it, otherwise multiplayer will not work\n - After a moment the invite code is copied automatically; if not, copy it from the multiplayer menu\n - Send the invite code to your friends\n\nNotes:\n\n - Offline accounts are supported\n - Interoperates with HMCL, PCL CE and other Scaffolding-compatible software</string>
+    <string name="terracotta_tutorial_guest">Guest usage:\n\n - Read the user notice on the launcher multiplayer page, then enable multiplayer\n - Launch the game, open the multiplayer module in the in-game menu\n - Tap \"I want to be a guest\", paste the invite code from the host and wait patiently\n - If asked for VPN permission, grant it, otherwise multiplayer will not work\n - Once it shows the room is joined, go to the game main menu, choose Multiplayer, refresh and enter the Terracotta lobby\n\nNotes:\n\n - Offline accounts are supported\n - Interoperates with HMCL, PCL CE and other Scaffolding-compatible software\n - Offline accounts are NOT supported when joining through the fallback server address</string>
+    <string name="qcl_multiplayer_agree">I have read and agree</string>
+    <string name="qcl_cancel">Cancel</string>
 </resources>
