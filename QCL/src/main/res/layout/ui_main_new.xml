@@ -1,450 +1,141 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- ★★★ 1.5.0 新排版（玩家可在「设置 → 外观 → 排版」里切回旧排版 ui_main.xml）。
 
-     设计目标（用户明确要求）：
-       · 入口从「顶部横排」改成「**左侧竖向导航条**」——顶部横排在手机横屏上 6 个入口挤成一排、
-         还得靠 HorizontalScrollView 左右滑，很难用；竖排在 900px 高的屏上完全放得下。
-       · **中间那块必须留给「持续人物显示」**（account_model_container 里的 SkinGLSurfaceView，
-         每帧转动的 3D 账号人物），绝不能像上一版草图那样拿卡片把它盖住。
-         所以结构是「左导航 ＋ 右侧主区」，主区里人物仍然拿 weight=1 吃掉全部剩余高度。
-       · 底部「启动游戏」由 200dp 居中改**通栏**（占满右侧主区宽度）。
-       · 左侧导航条用**竖向 ScrollView** 兜底 —— 小屏 / 窄比例时入口会超出屏幕高度，
-         滚一下就能点到，不会有按钮够不着。
+     ★★★ 结构按「照 FCL」重构（2026-10-08 第二批）：
+       · **左侧常驻导航条** → `ui_main_new_left.xml`（新排版时 inflate 到 activity_main
+         顶层的 new_left_nav_host，切二级页面**不消失**；旧排版完全不受影响）。
+       · **右侧常驻栏**（账号卡片 + 版本行 + 启动按钮）→ `ui_main_new_right.xml`
+         （同理挂 activity_main 顶层，切页面也常驻）。
+       · **本文件 = 中间内容区**：照 FCL `ui_main.xml` 的样子 ——
+         **公告卡片在左（约 52% 宽）+ 3D 人物在右（约 48% 宽，垂直居中）**，
+         两者**左右并排、互不遮挡**（FCL 就是公告 40% / 人物 50% 并排）。
 
-     ★ 本文件与 ui_main.xml 的 **id 集合完全一致（27 个）**，
-       因为 MainUI.java 及别处都是按 id 找控件的 —— 只改外层排布，控件一个不加不减。 -->
+     ★ 剩余 id 全部由 MainUI 按 id 查找绑定，一个都不能少：
+       ui_main / account_model_container / account_model_view /
+       announcement_container / announcement_title / announcement_text /
+       announcement_date / announcement_hide -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/ui_main"
     android:visibility="invisible"
     android:orientation="horizontal"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:padding="10dp">
 
-    <!-- ★★ 新排版：左侧竖向导航条。
-         ★★★ 必须用**竖向 ScrollView**（不是 HorizontalScrollView）——
-           里面是竖排的入口按钮，横滚容器根本滚不动它。
-           小屏 / 窄边比（比如 4:3、或开了状态栏后可用高度不足）时，
-           入口加起来会超出屏幕高度 → 靠这里的竖向滚动兜住，**绝不能有按钮点不到**。
-           宽度 wrap（取最宽那条按钮），高度吃满。 -->
-    <ScrollView
-        android:background="@color/qcl_gray_translucent_bar"
-        android:scrollbars="vertical"
-        android:fillViewport="true"
-        android:layout_width="wrap_content"
-        android:layout_height="match_parent">
+    <!-- ★★★ 公告卡片（照 FCL announcement_container）：
+         标题「公告」+ 可滚动正文（可点链接）+ 更新时间 + 「隐藏」按钮。
+         ★ 没公告时整体 GONE（MainUI 控制），人物会自动回到中间。
+         ★ 宽度 0dp + weight=1.05 与人物区（weight=0.95）大致 52:48 分。 -->
+    <LinearLayout
+        android:id="@+id/announcement_container"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1.05"
+        android:visibility="gone"
+        android:orientation="vertical">
 
         <LinearLayout
+            android:background="@drawable/qcl_button_gray"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
             android:orientation="vertical"
-            android:paddingLeft="6dp"
-            android:paddingRight="6dp"
-            android:paddingTop="6dp"
-            android:paddingBottom="6dp"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content">
+            android:padding="2dp">
 
-
-            <!-- 1. 玩家账户（含头像） -->
-            <LinearLayout
-                android:background="@drawable/qcl_button_gray"
-                android:focusable="true"
-                android:clickable="true"
-                android:id="@+id/start_ui_account"
+            <TextView
+                android:id="@+id/announcement_title"
+                android:singleLine="true"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_marginEnd="6dp"
-                android:padding="6dp">
+                android:layout_gravity="center"
+                android:padding="10dp"
+                android:text="@string/qcl_announcement"
+                android:textColor="@color/colorPureWhite"
+                android:textSize="16sp"/>
 
-                <RelativeLayout
-                    android:layout_gravity="center"
-                    android:layout_width="26dp"
-                    android:layout_height="26dp">
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="#33FFFFFF"/>
 
-                    <ImageView
-                        android:layout_width="26.6666dp"
-                        android:layout_height="26.6666dp"
-                        android:id="@+id/account_skin_face"
-                        android:src="@drawable/ic_steve"
-                        android:layout_centerInParent="true" />
+            <ScrollView
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1">
 
-                    <ImageView
-                        android:id="@+id/account_skin_hat"
-                        android:layout_width="26dp"
-                        android:layout_height="26dp" />
-
-                </RelativeLayout>
-
-                <LinearLayout
-                    android:layout_width="wrap_content"
+                <TextView
+                    android:id="@+id/announcement_text"
+                    android:autoLink="web"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:orientation="vertical">
+                    android:padding="10dp"
+                    android:textColor="@color/colorLightWhite"
+                    android:textColorLink="#77FF00"
+                    android:textSize="@dimen/text_size_small"/>
 
-                    <TextView
-                        android:singleLine="true"
-                        android:id="@+id/account_name_text"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="6dp"
-                        android:text="@string/launcher_scroll_account_name"
-                        android:textColor="@color/colorPureWhite"
-                        android:textSize="@dimen/text_size_middle"/>
+            </ScrollView>
 
-                    <TextView
-                        android:singleLine="true"
-                        android:id="@+id/account_state_text"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="6dp"
-                        android:text="@string/launcher_scroll_account_state"
-                        android:textColor="@color/colorLightWhite"
-                        android:textSize="@dimen/text_size_small"/>
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="#33FFFFFF"/>
 
-                </LinearLayout>
-
-            </LinearLayout>
-
-            <!-- 2. 当前版本 -->
-            <LinearLayout
-                android:background="@drawable/qcl_button_gray"
-                android:focusable="true"
-                android:id="@+id/start_ui_game_manager"
-                android:clickable="true"
+            <TextView
+                android:id="@+id/announcement_date"
+                android:singleLine="true"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_marginEnd="6dp"
-                android:padding="6dp">
-
-                <ImageView
-                    android:layout_width="26dp"
-                    android:layout_height="26dp"
-                    android:layout_gravity="center"
-                    android:id="@+id/current_version_icon"
-                    android:background="@drawable/ic_grass"/>
-
-                <LinearLayout
-                    android:id="@+id/no_version_alert_text"
-                    android:layout_width="wrap_content"
-                    android:layout_height="26dp"
-                    android:layout_gravity="center"
-                    android:orientation="vertical">
-
-                    <TextView
-                        android:singleLine="true"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="6dp"
-                        android:text="@string/launcher_scroll_game_manager"
-                        android:textColor="@color/colorPureWhite"
-                        android:textSize="@dimen/text_size_middle"/>
-
-                    <TextView
-                        android:singleLine="true"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="6dp"
-                        android:text="@string/launcher_scroll_game_none"
-                        android:textColor="@color/colorLightWhite"
-                        android:textSize="@dimen/text_size_small"/>
-
-                </LinearLayout>
-
-                <TextView
-                    android:singleLine="true"
-                    android:visibility="gone"
-                    android:layout_width="wrap_content"
-                    android:layout_height="26dp"
-                    android:layout_gravity="center"
-                    android:gravity="center"
-                    android:layout_marginStart="6dp"
-                    android:id="@+id/current_version_name_text"
-                    android:textColor="@color/colorPureWhite"
-                    android:textSize="@dimen/text_size_middle"/>
-
-            </LinearLayout>
-
-            <!-- 3. 版本列表 -->
-            <LinearLayout
-                android:background="@drawable/qcl_button_gray"
-                android:focusable="true"
-                android:id="@+id/start_ui_version_list"
-                android:clickable="true"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_marginEnd="6dp"
-                android:padding="6dp">
-
-                <ImageView
-                    android:id="@+id/version_list_icon"
-                    android:layout_width="26dp"
-                    android:layout_height="26dp"
-                    android:layout_gravity="center"
-                    android:background="@drawable/ic_qcl_version_list_white"/>
-
-                <TextView
-                    android:singleLine="true"
-                    android:layout_width="wrap_content"
-                    android:layout_height="26dp"
-                    android:layout_gravity="center"
-                    android:gravity="center"
-                    android:layout_marginStart="6dp"
-                    android:text="@string/launcher_scroll_version_list"
-                    android:textColor="@color/colorPureWhite"
-                    android:textSize="@dimen/text_size_middle"/>
-
-            </LinearLayout>
-
-            <!-- 4. 下载 -->
-            <LinearLayout
-                android:background="@drawable/qcl_button_gray"
-                android:focusable="true"
-                android:id="@+id/start_ui_download"
-                android:clickable="true"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_marginEnd="6dp"
-                android:padding="6dp">
-
-                <ImageView
-                    android:id="@+id/download_icon"
-                    android:layout_width="26dp"
-                    android:layout_height="26dp"
-                    android:layout_gravity="center"
-                    android:background="@drawable/ic_qcl_download_white"/>
-
-                <TextView
-                    android:singleLine="true"
-                    android:layout_width="wrap_content"
-                    android:layout_height="26dp"
-                    android:layout_gravity="center"
-                    android:gravity="center"
-                    android:layout_marginStart="6dp"
-                    android:text="@string/launcher_scroll_download"
-                    android:textColor="@color/colorPureWhite"
-                    android:textSize="@dimen/text_size_middle"/>
-
-            </LinearLayout>
-
-
-            <!-- ★ 1.5.0：原「5. 大厅」入口（新闻 / 新发布模组 / 版本日历）已整体移除
-                 （用户："没有实际用处"）。配套改动：LobbyUI 类、ui_lobby.xml、
-                 activity_main 里的 include、UIManager 的 lobbyUI 字段、
-                 以及 launcher_scroll_lobby / strings_lobby.xml 全部删掉。 -->
-
-            <!-- 6. 实验室（★1.4.1 新增：多彩文字 / 种子 / 配方 / 数据包 / 投影工坊） -->
-            <LinearLayout
-                android:background="@drawable/qcl_button_gray"
-                android:focusable="true"
-                android:id="@+id/start_ui_lab"
-                android:clickable="true"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_marginEnd="6dp"
-                android:padding="6dp">
-
-                <ImageView
-                    android:id="@+id/lab_icon"
-                    android:layout_width="26dp"
-                    android:layout_height="26dp"
-                    android:layout_gravity="center"
-                    android:background="@drawable/ic_command_block"/>
-
-                <TextView
-                    android:singleLine="true"
-                    android:layout_width="wrap_content"
-                    android:layout_height="26dp"
-                    android:layout_gravity="center"
-                    android:gravity="center"
-                    android:layout_marginStart="6dp"
-                    android:text="@string/launcher_scroll_lab"
-                    android:textColor="@color/colorPureWhite"
-                    android:textSize="@dimen/text_size_middle"/>
-
-            </LinearLayout>
-
-            <!-- 7. 多人游戏（沿用原有隐藏状态） -->
-            <LinearLayout
-                android:background="@drawable/qcl_button_gray"
-                android:focusable="true"
-                android:id="@+id/start_ui_multi_player"
-                android:clickable="true"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_marginEnd="6dp"
-                android:padding="6dp">
-
-                <ImageView
-                    android:id="@+id/multiplayer_icon"
-                    android:layout_gravity="center"
-                    android:layout_width="26dp"
-                    android:layout_height="26dp"
-                    android:background="@drawable/ic_qcl_multiplayer_white"/>
-
-                <TextView
-                    android:singleLine="true"
-                    android:layout_width="wrap_content"
-                    android:layout_height="26dp"
-                    android:layout_gravity="center"
-                    android:gravity="center"
-                    android:layout_marginStart="6dp"
-                    android:text="@string/launcher_scroll_multi_player"
-                    android:textColor="@color/colorPureWhite"
-                    android:textSize="@dimen/text_size_middle"/>
-
-            </LinearLayout>
-
-            <!-- 8. 设置 -->
-            <LinearLayout
-                android:background="@drawable/qcl_button_gray"
-                android:focusable="true"
-                android:id="@+id/start_ui_setting"
-                android:clickable="true"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:padding="6dp">
-
-                <ImageView
-                    android:id="@+id/setting_icon"
-                    android:layout_gravity="center"
-                    android:layout_width="26dp"
-                    android:layout_height="26dp"
-                    android:background="@drawable/ic_qcl_setting_white"/>
-
-                <TextView
-                    android:singleLine="true"
-                    android:layout_width="wrap_content"
-                    android:layout_height="26dp"
-                    android:layout_gravity="center"
-                    android:gravity="center"
-                    android:layout_marginStart="6dp"
-                    android:text="@string/launcher_scroll_setting"
-                    android:textColor="@color/colorPureWhite"
-                    android:textSize="@dimen/text_size_middle"/>
-
-            </LinearLayout>
+                android:layout_gravity="center"
+                android:padding="10dp"
+                android:textColor="@color/colorLightWhite"
+                android:textSize="@dimen/text_size_small"/>
 
         </LinearLayout>
 
-    </ScrollView>
+        <!-- 「隐藏」按钮（照 FCL 的 hide）——点掉后记进设置，下次不再自动弹 -->
+        <LinearLayout
+            android:id="@+id/announcement_hide"
+            android:background="@drawable/qcl_button_gray"
+            android:focusable="true"
+            android:clickable="true"
+            android:layout_marginTop="8dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:paddingTop="10dp"
+            android:paddingBottom="10dp"
+            android:orientation="horizontal">
 
-    <!-- ★ 新排版：右侧主区 —— 0dp + weight=1，吃掉除左侧导航条以外的全部宽度 -->
-    <LinearLayout
-        android:layout_width="0dp"
-        android:layout_height="match_parent"
-        android:layout_weight="1"
-        android:orientation="vertical">
+            <TextView
+                android:singleLine="true"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/qcl_announcement_hide"
+                android:textColor="@color/colorPureWhite"
+                android:textSize="@dimen/text_size_middle"/>
 
-    <!-- 中间：持续显示当前账号的 3D 人物
-         （★ 这就是「持续人物显示」，新排版里位置不变、尺寸不变，绝对不会被盖住） -->
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <!-- ★ 3D 人物区（照 FCL 的 SkinViewer：占约 48% 宽、垂直居中）。
+         ★ 公告显示时它在右边；公告 GONE 时它自动扩张到整个中间区
+         （因为公告那个 LinearLayout 是 GONE，不参与 weight 分配）。 -->
     <FrameLayout
         android:id="@+id/account_model_container"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1">
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="0.95"
+        android:clipChildren="true"
+        android:clipToPadding="true">
 
         <LinearLayout
             android:id="@+id/account_model_view"
             android:layout_width="match_parent"
-            android:layout_height="320dp"
+            android:layout_height="@dimen/qcl_account_model_height"
             android:layout_gravity="center"
             android:orientation="vertical"/>
 
     </FrameLayout>
-
-    <!-- 底部：启动游戏按钮，屏幕水平居中 -->
-    <RelativeLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:paddingBottom="24dp">
-
-        <!-- ★ 新排版：启动按钮由 200dp 居中改成「通栏」（占满右侧主区宽度） -->
-        <LinearLayout
-            android:tag="tint_accent_color"
-            android:id="@+id/launcher_play_button"
-            android:focusable="true"
-            android:clickable="true"
-            android:background="@drawable/launcher_button_transparent"
-            android:layout_width="match_parent"
-            android:layout_marginStart="12dp"
-            android:layout_marginEnd="12dp"
-            android:layout_height="55dp"
-            android:layout_centerHorizontal="true"
-            android:orientation="horizontal">
-
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_weight="1"
-                android:layout_height="match_parent"
-                android:weightSum="2"
-                android:paddingTop="9dp"
-                android:paddingBottom="9dp"
-                android:orientation="vertical">
-
-                <TextView
-                    android:singleLine="true"
-                    android:layout_weight="1"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:text="@string/launcher_button_launch"
-                    android:textSize="14sp"
-                    android:textColor="@color/colorPureWhite"/>
-
-                <TextView
-                    android:paddingLeft="7dp"
-                    android:paddingRight="7dp"
-                    android:id="@+id/launch_version_text"
-                    android:ellipsize="end"
-                    android:layout_weight="1"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:singleLine="true"
-                    android:text="@string/launcher_button_current_version"
-                    android:textSize="@dimen/text_size_small"
-                    android:textColor="@color/colorPureWhite"/>
-
-            </LinearLayout>
-
-            <View
-                android:layout_width="1dp"
-                android:layout_height="match_parent"
-                android:background="@color/colorTransparent"/>
-
-            <RelativeLayout
-                android:layout_width="20dp"
-                android:layout_height="match_parent">
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:gravity="center"
-                    android:text="@string/launcher_spinner_text"
-                    android:textColor="#80FFFFFF"
-                    android:textSize="8sp"/>
-
-                <androidx.appcompat.widget.AppCompatSpinner
-                    android:overlapAnchor="false"
-                    android:popupBackground="@android:color/transparent"
-                    android:spinnerMode="dropdown"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:background="@color/colorTransparent"
-                    android:id="@+id/launcher_spinner_version"/>
-
-            </RelativeLayout>
-
-        </LinearLayout>
-
-    </RelativeLayout>
-
-    </LinearLayout>
-    <!-- ★ 新排版：右侧主区结束（account_model_container + 启动按钮都在它里面） -->
 
 </LinearLayout>

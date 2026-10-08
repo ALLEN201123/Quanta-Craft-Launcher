@@ -3,4 +3,29 @@
     <dimen name="text_size_small">10sp</dimen>
     <dimen name="text_size_middle">13sp</dimen>
     <dimen name="text_size_big">20sp</dimen>
+
+    <!-- ★★★ 1.5.0：新排版右侧面板宽度（用户要求「不管屏幕多大/多小，按钮都要全部显示」）。
+         为什么不能写死一个值：右栏是**固定 dp 宽度**（父容器 new_right_panel_host 是
+         wrap_content，所以根布局的 layout_width 直接生效）。写死 250dp 的话：
+           · 小屏手机（如 320dp 宽）→ 右栏 + 左栏挤满，二级页面内容区几乎没空间；
+           · 平板 / 横屏大屏 → 右栏显得过窄、启动按钮很小。
+         ⇒ 用 **smallestWidth 资源限定符**分档（系统按屏幕最小边自动挑）：
+           · 默认（sw < 360dp，小屏手机）：210dp
+           · values-sw360dp（主流手机）：250dp
+           · values-sw600dp（平板 / 大屏）：320dp
+         ★ 每一档都保证「左栏 + 右栏 + 中间内容区」三者不重叠、不溢出屏幕。
+         ★ 垂直方向不用分档：整块内容约 210dp 高（头像 52 + 文字 + 启动区 + 底部按钮），
+           远小于任何可用高度，且 gravity=end|bottom 从底部往上堆，不会顶出屏幕。 -->
+    <dimen name="qcl_right_panel_width">210dp</dimen>
+
+    <!-- ★★★ 1.5.0：3D 人物模型（SkinViewer）的显示高度。
+         为什么不能写死 320dp：它是一个 **GLSurfaceView**，而且 Java 侧
+         `setZOrderOnTop(true)` + `holder.setFormat(TRANSLUCENT)` → 画在**最上层**。
+         写死 320dp 时，一旦屏幕可用高度不足（小屏手机 / 横屏 / 分屏），
+         模型区就会**溢出容器、盖住下方的公告栏和右下角的启动按钮**（用户实测指出）。
+         ⇒ 与右栏同款处理：按 smallestWidth 分档，每一档都保证「模型 + 公告 + 右栏」互不重叠：
+           · 默认（小屏）：200dp  · sw360dp：260dp  · sw600dp（平板）：330dp
+         ★ 另外容器已加 clipChildren / clipToPadding：即使极端比例下计算有偏差，
+           也只会裁掉模型边缘，**绝不会画到容器外面去**。 -->
+    <dimen name="qcl_account_model_height">200dp</dimen>
 </resources>

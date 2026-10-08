@@ -20,8 +20,31 @@ public class LauncherSetting {
     public int maxDownloadTask;
     public String panelColor;
     public boolean transBar;
-    /** 1.3.7: 主界面是否显示账号人物（默认开） */
-    public boolean showAccountModel = true;
+    /**
+     * ★ 1.3.7 / ★★★ 1.5.0 改默认值：主界面是否显示账号人物。
+     *
+     * <p>★ 用户明确要求：**默认关闭**（原来默认开）。
+     * 关闭时主界面不显示 3D 人物，「人物动作」选择项也随之不可用。
+     *
+     * <p>★ Gson 反序列化走 Unsafe 分配 → **字段初始值不执行**，
+     * 所以老玩家的 launcher_setting.json 里没这个键时读出来就是 `false`（= 关闭），
+     * 恰好就是我们要的默认行为，不需要额外加 chosen 标记。
+     * 已在设置里手动开过的玩家 json 里存的是 `true`，不受影响。
+     */
+    public boolean showAccountModel = false;
+    /**
+     * ★★★ 1.5.0：3D 人物的**动作**（用户：「目前只有走路动作，能不能添加更多」）。
+     *
+     * <p>取值见 {@link com.qcl.launcher.skin.MinecraftSkinRenderer} 的 ANIM_* 常量：
+     * 0=站立 1=走路 2=跑步 3=旋转 4=挥手。
+     *
+     * <p>★ 用户明确要求：**默认关闭**（= 站立不动，不再一直走路）。
+     * 所以默认值取 {@code ANIM_IDLE(0)} 而不是原来的走路。
+     *
+     * <p>★ Gson 走 Unsafe 分配 → 字段初始值不执行，老配置读出来是 0 = 站立，
+     * 恰好就是我们要的默认值，不需要额外的 chosen 标记。
+     */
+    public int accountModelAnim = 0;
     /**
      * ★★★ 1.5.0：**排版风格**。0 = 旧排版（顶部横排入口），1 = 新排版（左侧竖向导航）。
      *

@@ -506,6 +506,12 @@ public class MainUI extends BaseUI implements View.OnClickListener, AdapterView.
         }
         try {
             skinRenderer = new MinecraftSkinRenderer(context, R.drawable.skin_alex, true);
+            // ★★★ 1.5.0：套用玩家在「设置 → 外观 → 人物动作」里选的动作。
+            //   默认 ANIM_IDLE（站立不动）—— 用户要求默认不再一直走路。
+            int anim = activity.launcherSetting == null
+                    ? MinecraftSkinRenderer.ANIM_IDLE
+                    : activity.launcherSetting.accountModelAnim;
+            skinRenderer.setAnimMode(anim);
             skinGLSurfaceView = new SkinGLSurfaceView(context);
             skinGLSurfaceView.setEGLConfigChooser(8, 8, 8, 8, 16, 0);
             skinGLSurfaceView.getHolder().setFormat(PixelFormat.TRANSLUCENT);
@@ -749,9 +755,24 @@ public class MainUI extends BaseUI implements View.OnClickListener, AdapterView.
         if (v == startLabUI){
             activity.uiManager.switchMainUI(activity.uiManager.labUI);
         }
-        // ★ 1.5.0 新排版独有：左侧导航底部「返回上一层」→ **层级式返回**（backToLastUI：出栈一层）。
+        // ★★★ 1.5.0 新排版独有：左侧导航底部「返回上一层」→ **层级式返回**（backToLastUI：出栈一层）。
         //   ★ 用户明确要求：不是一键回主页，而是"退一层、再退一层，一直退到主界面"。
+        //
+        //   ★★★ 修复（用户实测）：「在主界面点它 → 直接退出游戏（启动器）」。
+        //     根因在 MainActivity.backToLastUI()：
+        //       if (uiManager.currentUI == uiManager.mainUI) { backToDeskTop(); }   ← 直接回桌面！
+        //     左栏是**常驻**的，主界面上它也在那儿，一点就命中这个分支 → 整个启动器被退出。
+        //     ⇒ 这里先判：已经**在**主界面就**什么都不做**（既不退也不退出），
+        //       只有在二级页面时才真正出栈一层。
+        //     （系统返回键走的是 MainActivity.onBackPressed，行为不变。）
         if (startHomeUI != null && v == startHomeUI){
+            if (activity.uiManager == null || activity.uiManager.mainUI == null) {
+                return;
+            }
+            // 已经在主界面 → 无处可退，直接忽略（绝不 backToDeskTop）
+            if (activity.uiManager.currentUI == activity.uiManager.mainUI) {
+                return;
+            }
             activity.backToLastUI();
         }
         if (v == startGame){

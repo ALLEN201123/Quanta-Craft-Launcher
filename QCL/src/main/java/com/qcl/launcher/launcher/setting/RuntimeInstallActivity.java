@@ -98,8 +98,32 @@ implements View.OnClickListener {
     @SuppressLint(value={"SetTextI18n"})
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        this.setContentView(R.layout.activity_runtime_install);
         AppManifest.initializeManifest((Context)this);
+
+        // ★★★ 1.5.0：**缓存命中就直接跳转，不画安装页**（用户：「每次进去都要闪一下」）。
+        //
+        // 旧流程的问题：本 Activity 是 LAUNCHER 入口，setContentView() 会**先把安装页画出来**，
+        // 之后 requestPermission() → init() → 命中缓存 → 才 runOnUiThread(enterLauncher)。
+        // ⇒ 即使运行环境早就装齐，玩家也**必然看到安装页闪一下**；
+        //   而且缓存命中路径里还有 controlSyncThread.join(3000L)，最坏要白等 3 秒。
+        //
+        // 新流程：判断放在 setContentView **之前** ——
+        //   · 命中 → 直接 enterLauncher() + finish()，**界面一帧都不画**；
+        //   · 未命中 → 才走原来的完整流程（画界面、要权限、逐项校验）。
+        //
+        // ★ 控件绑定（items.put / findViewById）全部**下沉到原位置**，跳转路径不碰它们，
+        //   所以不用判空、也没有 NPE 风险。
+        // ★ 权限检查不跳过：那些 spec 要读的是 App 私有目录 + 外部存储；
+        //   缓存是上一轮「全部装齐 + 校验通过」后写的，说明权限当时就已经有了。
+        //   若玩家在新系统上撤销了权限，isRuntimeReadyCached() 里 catch 到异常会返回 false
+        //   → 自然回落到完整流程重新要权限。安全。
+        if (this.isRuntimeReadyCached()) {
+            this.println("[QCL_RUNTIME] 缓存命中（在 setContentView 之前判定）→ 直接进主界面，不显示安装页");
+            this.enterLauncher();
+            return;
+        }
+
+        this.setContentView(R.layout.activity_runtime_install);
         this.arch = RuntimeInstallActivity.deviceArchName();
         this.items.put("lwjgl", new Item((ImageView)this.findViewById(R.id.qcl_lwjgl_state), (ProgressBar)this.findViewById(R.id.qcl_lwjgl_progress), (TextView)this.findViewById(R.id.qcl_lwjgl_detail)));
         this.items.put("cacio", new Item((ImageView)this.findViewById(R.id.qcl_cacio_state), (ProgressBar)this.findViewById(R.id.qcl_cacio_progress), (TextView)this.findViewById(R.id.qcl_cacio_detail)));
@@ -216,11 +240,15 @@ implements View.OnClickListener {
                 com.qcl.launcher.launcher.setting.InstallLauncherFile.syncDefaultControl(getApplicationContext()));
         controlSyncThread.start();
         if (this.isRuntimeReadyCached()) {
+            // ★ 1.5.0：这里现在几乎是**不可达**的分支 —— onCreate 里已经在 setContentView
+            //   之前判过一次，命中就直接跳走了。保留它只为兜底
+            //   （万一权限刚被授予、或 AppManifest 刚初始化完才满足条件）。
+            //   join 从 3000ms 降到 300ms：旧值会让玩家在这个"闪一下"的页面上干等 3 秒。
             try {
-                controlSyncThread.join(3000L);
+                controlSyncThread.join(300L);
             } catch (InterruptedException ignored) {
             }
-            this.println("[QCL_RUNTIME] \u7f13\u5b58\u547d\u4e2d\uff08ready + appVersion + runtimeVersion \u5168\u5bf9\uff09\u2192 \u76f4\u63a5\u8fdb\u4e3b\u754c\u9762");
+            this.println("[QCL_RUNTIME] 缓存命中（init 阶段的兜底分支）→ 直接进主界面");
             this.runOnUiThread(this::enterLauncher);
             return;
         }

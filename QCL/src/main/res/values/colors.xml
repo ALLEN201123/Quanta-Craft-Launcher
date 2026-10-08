@@ -50,4 +50,37 @@
     <!-- ★ 1.5.0：对话框面板底色。浅色态 = 白；夜间在 values-night 里覆盖为实心深色。
          必须两个目录都有同名定义，否则某个模式下会找不到资源。 -->
     <color name="qcl_dialog_night_bg">#FFFFFFFF</color>
+
+    <!-- ★★★ 1.5.0：**新排版左右栏底板**（用户要求「日间模式下图标/文字不再糊在壁纸上」）。
+         背景：左侧导航栏与右侧面板原先完全没有底板（qcl_button_gray 是全透明，
+         qcl_gray_translucent_bar 也是 #00000000），图标直接浮在动态壁纸上：
+         · 夜间壁纸暗 → 白色图标清晰；
+         · 日间壁纸亮 → 白图标 + 深色文字全糊，基本看不清。
+         ⇒ 加一层**半透明**底板：既保证对比度，又让壁纸透上来（不破坏动态背景观感）。
+         ★ 昼夜成对：日间浅色板 + 深色图标/文字 ↔ 夜间深色板 + 白色图标/文字。
+         不透明度取 B3(70%)：既能压住壁纸亮部，又不至于把壁纸盖死。 -->
+    <color name="qcl_nav_panel_bg">#B3EDEDED</color>
+    <!-- 同色系按下态（比常态略深，压在浅底上有反馈） -->
+    <color name="qcl_nav_panel_bg_pressed">#CCD8D8D8</color>
+    <!-- ★★★ 1.5.0：**右侧账号卡片 / 版本行的文字色**（昼夜成对翻转）。
+         原先用 colorPureWhite / colorLightWhite —— 这两个在日间模式下都是白色系，
+         压在明亮壁纸上完全看不见（用户实测指出）。这里另立一对专用色：
+           · 日间：近黑（#E6000000 / #99000000）
+           · 夜间：白色（#FFFFFFFF / #B3FFFFFF），见 values-night。
+         为什么不直接复用 colorPureBlack？因为 colorPureBlack 被 946 个布局当正文色，
+         语义太泛；这里要的是「跟着底板翻转的次级文字色」，单独立名更清晰、也不会误伤别处。 -->
+    <color name="qcl_nav_text_primary">#E6000000</color>
+    <color name="qcl_nav_text_secondary">#99000000</color>
+    <!-- ★★★ 1.5.0：右侧「启动区块」底板（照 FCL start 区块的观感）。
+         极淡、圆角，只用来提升昼夜两态下的文字对比度，不做成明显卡片。
+         日间：淡白（把亮壁纸压亮，深色字清晰）；夜间见 values-night。 -->
+    <color name="qcl_launch_block_bg">#4DFFFFFF</color>
+
+    <!-- ★★★ 1.5.0：**版本列表容器底**（用户：「进版本列表全是白的，没有半透明」）。
+         原先 `qcl_dialog_gray` 是**不透明**的 #E6E9E9E9，把动态壁纸整个盖死 →
+         日间看就是一大片"白"（其实是浅灰），且完全不透。
+         现在改成昼夜成对的**半透明**色（约 62%），既保证列表项文字可读，
+         又让壁纸透上来（与其余页面的半透明风格统一）。
+         日间：近白半透明；夜间：深色半透明（见 values-night）。 -->
+    <color name="qcl_version_list_bg">#9EEDEDED</color>
 </resources>

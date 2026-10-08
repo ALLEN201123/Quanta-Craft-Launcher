@@ -53,4 +53,19 @@
     <!-- ★★ 对话框是在「另一个窗口」里绘制的，底下是我们半透明的页面；
          底绝不能也用半透明色，否则会透出后面的画面、字看不清 → 用实心深色。 -->
     <color name="qcl_dialog_night_bg">#FF1A1F26</color>
+
+    <!-- ================= 新排版左右栏底板（半透明，昼夜成对） ================= -->
+    <!-- 日间 values/ = #B3EDEDED（浅灰板 + 深色图标/文字）→ 夜间翻成深色板。
+         白色图标与 colorPureBlack(已翻白) 的文字压在深色板上都清晰。 -->
+    <color name="qcl_nav_panel_bg">#B3171C22</color>
+    <!-- 按下态（夜间） -->
+    <color name="qcl_nav_panel_bg_pressed">#CC0B0E12</color>
+    <!-- 账号卡片 / 版本行的文字色：日间近黑 → 夜间翻白 -->
+    <color name="qcl_nav_text_primary">#FFFFFFFF</color>
+    <color name="qcl_nav_text_secondary">#B3FFFFFF</color>
+    <!-- 右侧「启动区块」底板：日间淡白 → 夜间淡黑（把壁纸压暗，白色字清晰） -->
+    <color name="qcl_launch_block_bg">#59000000</color>
+
+    <!-- 版本列表容器底：日间近白半透明 → 夜间深色半透明 -->
+    <color name="qcl_version_list_bg">#9E171C22</color>
 </resources>

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ★ 1.5.0：平板 / 大屏（最小边 ≥ 600dp）的右栏宽度。
+     屏幕大 → 给右栏更多空间，启动按钮更像 FCL 的大按钮。
+     详见 values/dimen.xml 里的说明。 -->
+<resources>
+    <dimen name="qcl_right_panel_width">320dp</dimen>
+    <dimen name="qcl_account_model_height">330dp</dimen>
+</resources>

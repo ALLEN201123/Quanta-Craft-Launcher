@@ -665,6 +665,15 @@
     <string name="setting_ui_launcher">Launcher</string>
     <string name="setting_ui_universal">General</string>
     <string name="exterior_setting_show_account_model">Show account character on main screen</string>
+    <!-- ★ 1.5.0：3D 人物动作选择 -->
+    <string name="exterior_setting_account_model_anim">Character animation</string>
+    <string-array name="account_model_anim_entries">
+        <item>Stand</item>
+        <item>Walk</item>
+        <item>Run</item>
+        <item>Spin</item>
+        <item>Wave</item>
+    </string-array>
     <string name="setting_ui_exterior">Appearance</string>
     <string name="setting_ui_download">Download</string>
     <string name="setting_ui_help">Help</string>

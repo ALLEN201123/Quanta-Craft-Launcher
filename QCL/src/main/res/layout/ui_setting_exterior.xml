@@ -53,33 +53,17 @@
                         android:layout_height="0dp"
                         android:layout_weight="1"/>
 
-                    <LinearLayout
+                    <!-- ★★★ 1.5.0 用户要求：主题色入口改成**下拉框**（原来是"色块+十六进制"小按钮）。
+                         点开列出预设配色，选一个即可全局应用。
+                         ★ id 保留 select_theme（ExteriorSettingUI.onClick 里按它分叉），
+                           改为 Spinner 后由 OnItemSelectedListener 处理选择。 -->
+                    <Spinner
                         android:id="@+id/select_theme"
-                        android:padding="6dp"
-                        android:layout_width="120dp"
-                        android:layout_height="28dp"
+                        android:layout_width="130dp"
+                        android:layout_height="32dp"
                         android:layout_gravity="center"
-                        android:clickable="true"
-                        android:focusable="true"
                         android:background="@drawable/launcher_button_gray"
-                        android:orientation="horizontal">
-
-                        <View
-                            android:layout_marginStart="6dp"
-                            android:layout_width="16dp"
-                            android:layout_height="16dp"
-                            android:id="@+id/theme_color_view"/>
-
-                        <TextView
-                            android:singleLine="true"
-                            android:layout_width="match_parent"
-                            android:layout_height="16dp"
-                            android:id="@+id/theme_color_text"
-                            android:textColor="@color/colorPureBlack"
-                            android:textSize="@dimen/text_size_small"
-                            android:gravity="center"/>
-
-                    </LinearLayout>
+                        android:spinnerMode="dropdown"/>
 
                 </LinearLayout>
 
@@ -125,7 +109,86 @@
                             android:layout_width="match_parent"
                             android:layout_height="16dp"
                             android:id="@+id/panel_color_text"
-                            android:textColor="@color/colorPureBlack"
+                            android:textColor="#FFFFFFFF"
+                            android:background="#80000000"
+                            android:textSize="@dimen/text_size_small"
+                            android:gravity="center"/>
+
+                    </LinearLayout>
+
+                </LinearLayout>
+
+                <!-- ★★★ 1.5.0 用户要求：下拉框**下面显示两个自定义色块**
+                     （主题色色块 + 面板色色块）。点任一个 → 打开调色板自定义。 -->
+                <LinearLayout
+                    android:paddingStart="15dp"
+                    android:paddingEnd="15dp"
+                    android:paddingBottom="15dp"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <LinearLayout
+                        android:id="@+id/custom_theme_block"
+                        android:focusable="true"
+                        android:clickable="true"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:layout_height="44dp"
+                        android:layout_marginEnd="6dp"
+                        android:orientation="vertical"
+                        android:gravity="center"
+                        android:background="@drawable/launcher_button_gray">
+
+                        <View
+                            android:id="@+id/theme_color_view"
+                            android:layout_width="match_parent"
+                            android:layout_height="0dp"
+                            android:layout_weight="1"
+                            android:layout_margin="4dp"/>
+
+                        <TextView
+                            android:singleLine="true"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:id="@+id/theme_color_text"
+                            android:textColor="#FFFFFFFF"
+                            android:background="#80000000"
+                            android:paddingLeft="4dp"
+                            android:paddingRight="4dp"
+                            android:textSize="@dimen/text_size_small"
+                            android:gravity="center"/>
+
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/custom_panel_block"
+                        android:focusable="true"
+                        android:clickable="true"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:layout_height="44dp"
+                        android:layout_marginStart="6dp"
+                        android:orientation="vertical"
+                        android:gravity="center"
+                        android:background="@drawable/launcher_button_gray">
+
+                        <View
+                            android:id="@+id/panel_color_block_view"
+                            android:layout_width="match_parent"
+                            android:layout_height="0dp"
+                            android:layout_weight="1"
+                            android:layout_margin="4dp"/>
+
+                        <TextView
+                            android:singleLine="true"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:id="@+id/panel_color_block_text"
+                            android:textColor="#FFFFFFFF"
+                            android:background="#80000000"
+                            android:paddingLeft="4dp"
+                            android:paddingRight="4dp"
                             android:textSize="@dimen/text_size_small"
                             android:gravity="center"/>
 
@@ -224,6 +287,46 @@
                         android:layout_height="wrap_content"
                         android:id="@+id/switch_show_account_model"
                         tools:ignore="UseSwitchCompatOrMaterialXml" />
+
+                </LinearLayout>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1px"
+                    android:background="@color/colorDarkGray"/>
+
+                <!-- ★★★ 1.5.0：3D 人物的**动作**选择（用户：「只有走路动作，能不能添加更多」）。
+                     · 只在「显示人物模型」打开时才有意义 → Java 侧会跟着显隐这整行。
+                     · 5 个动作：站立 / 走路 / 跑步 / 旋转 / 挥手。
+                     · 用 Spinner（与主题色下拉同款，工程里已有 ThemeColorSpinnerAdapter 那套写法）。 -->
+                <LinearLayout
+                    android:id="@+id/account_model_anim_row"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:padding="15dp">
+
+                    <TextView
+                        android:singleLine="true"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/exterior_setting_account_model_anim"
+                        android:textColor="@color/colorPureBlack"
+                        android:textSize="@dimen/text_size_middle"
+                        android:layout_gravity="center"/>
+
+                    <View
+                        android:layout_width="0dp"
+                        android:layout_height="0dp"
+                        android:layout_weight="1"/>
+
+                    <Spinner
+                        android:id="@+id/spinner_account_model_anim"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:entries="@array/account_model_anim_entries"
+                        android:minWidth="120dp"/>
 
                 </LinearLayout>
 
@@ -376,6 +479,19 @@
                     android:textSize="@dimen/text_size_middle"
                     android:textColor="@color/colorPureBlack"
                     android:id="@+id/select_bg_classic"/>
+
+                <!-- ★ 1.5.0 新增：白天背景（固定显示白天图）。与「黑夜」成对，
+                     上面「默认」则按现实时间在两者之间自动切换。 -->
+                <RadioButton
+                    android:singleLine="true"
+                    android:tag="tint_accent_color"
+                    android:layout_margin="5dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/exterior_setting_ui_bg_day"
+                    android:textSize="@dimen/text_size_middle"
+                    android:textColor="@color/colorPureBlack"
+                    android:id="@+id/select_bg_day"/>
 
                 <LinearLayout
                     android:layout_margin="5dp"

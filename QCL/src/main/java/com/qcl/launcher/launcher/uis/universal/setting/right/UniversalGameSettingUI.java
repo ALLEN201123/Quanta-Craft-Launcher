@@ -75,9 +75,11 @@ CompoundButton.OnCheckedChangeListener,
 SeekBar.OnSeekBarChangeListener {
     public LinearLayout universalGameSettingUI;
     public static final int PICK_GAME_DIR_REQUEST = 1500;
-    private LinearLayout isolateAlertLayout;
-    private TextView isolateAlertText;
-    private TextView switchToIsolateSetting;
+    // ★★★ 1.5.0：版本隔离「警告」块的三个控件（isolateAlertLayout / isolateAlertText /
+    //   switchToIsolateSetting）已随布局一起删除。
+    //   ★ 这里**不能只判空**——R.id.isolate_alert_* 在布局里没了之后，R 类根本不会生成
+    //     这几个常量，写 `R.id.isolate_alert_layout` 会直接**编译失败（找不到符号）**。
+    //   ⇒ 字段和所有引用一并移除（这是 1.5.0 实测踩到的坑）。
     private LinearLayout showJavaSetting;
     private TextView javaPathText;
     private ImageView showJava;
@@ -138,10 +140,8 @@ SeekBar.OnSeekBarChangeListener {
     public void onCreate() {
         super.onCreate();
         this.universalGameSettingUI = (LinearLayout)this.activity.findViewById(R.id.ui_setting_global_game);
-        this.isolateAlertLayout = (LinearLayout)this.activity.findViewById(R.id.isolate_alert_layout);
-        this.isolateAlertText = (TextView)this.activity.findViewById(R.id.isolate_alert_text);
-        this.switchToIsolateSetting = (TextView)this.activity.findViewById(R.id.switch_to_isolate_setting);
-        this.switchToIsolateSetting.setOnClickListener((View.OnClickListener)this);
+        // ★★★ 1.5.0：版本隔离「警告」块已按用户要求移除 → 上面三行 findViewById 一并删除
+        //   （R.id.isolate_alert_* 已不存在，留着会编译失败）。
         this.showJavaSetting = (LinearLayout)this.activity.findViewById(R.id.show_java_selector);
         this.javaPathText = (TextView)this.activity.findViewById(R.id.java_path_text);
         this.showJava = (ImageView)this.activity.findViewById(R.id.show_java);
@@ -389,7 +389,8 @@ SeekBar.OnSeekBarChangeListener {
     }
 
     public void refresh() {
-        this.isolateAlertLayout.setVisibility(8);
+        // ★ 1.5.0：原来这里只有一句 isolateAlertLayout.setVisibility(8)；
+        //   警告块整体移除后该控件已不存在，此方法不再有任何需要刷新的内容。
     }
 
     private void buildRuntimeBitSelector() {
@@ -491,11 +492,9 @@ SeekBar.OnSeekBarChangeListener {
 
     @SuppressLint(value={"SetTextI18n"})
     public void onClick(View v) {
-        if (v == this.switchToIsolateSetting) {
-            this.activity.uiManager.gameManagerUI.versionName = this.activity.publicGameSetting.currentVersion.substring(this.activity.publicGameSetting.currentVersion.lastIndexOf("/") + 1);
-            this.activity.uiManager.switchMainUI(this.activity.uiManager.gameManagerUI);
-            this.activity.uiManager.gameManagerUI.gameManagerUIManager.switchGameManagerUIs(this.activity.uiManager.gameManagerUI.gameManagerUIManager.versionSettingUI);
-        }
+        // ★★★ 1.5.0：原来这里是「点警告块里的『跳转到版本隔离设置』」分支，
+        //   警告块整体移除后该控件不存在 → 这个分支一并删除。
+        //   （想进版本设置还有别的入口：版本列表 → 点版本 → 版本设置。）
         if (v == this.showJavaSetting || v == this.showJava) {
             HiddenAnimationUtils.newInstance(this.context, (View)this.javaSetting, (View)this.showJava, this.javaSettingHeight).toggle();
         }

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ★★★ 1.5.0：新排版右侧「启动区块」底板（照 FCL 的 start 区块观感）。
+
+     为什么需要它：FCL 用 ThemeEngine 给文字自动算高对比色，所以它敢把
+     「启动游戏 + 版本名」直接浮在壁纸上。QCL 没有这套引擎，只有昼夜二态色，
+     于是字是黑/白二选一 —— 压在**明亮的白天壁纸**（樱花图，亮橙/亮粉）上就糊了。
+
+     解决：给这一块加一层**极淡**的底（不是明显卡片，用户嫌卡片难看）：
+       · 日间 values/ ：淡白  #4DFFFFFF（30%）→ 把壁纸压亮，深色字清晰
+       · 夜间 values-night/ ：淡黑 #59000000（35%）→ 把壁纸压暗，白色字清晰
+     ★ 用圆角 12dp，边角柔和、不显"卡片感"。
+     ★ ripple 保留按下反馈。 -->
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="@color/colorLightWhite">
+
+    <item>
+        <shape android:shape="rectangle">
+            <corners android:radius="12dp"/>
+            <solid android:color="@color/qcl_launch_block_bg"/>
+        </shape>
+    </item>
+
+</ripple>

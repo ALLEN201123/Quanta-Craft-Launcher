@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ★ 1.5.0：主流手机（最小边 ≥ 360dp）的右栏宽度。
+     与 values/dimen.xml 的 qcl_right_panel_width 同档位，这里给更宽的值。
+     详见 values/dimen.xml 里的说明。 -->
+<resources>
+    <dimen name="qcl_right_panel_width">250dp</dimen>
+    <dimen name="qcl_account_model_height">260dp</dimen>
+</resources>
