@@ -928,7 +928,6 @@
     <string name="drawer_custom_menu_add_view">dodaj</string>
     <string name="dialog_hin2n_help_text">Prvo morate da pokrenete igru, unesete arhivu kao onlajn svet, a zatim jela u igri Izaberite opciju otvaranja za LAN, zapamtite broj porta, a zatim otvorite QCL Control Panel, otvorite onlajn modula, kliknite da biste kreirali sobu, potvrdite prikazani broj porta i obiđite. Scena će biti dosledna, a zatim potvrdite sobu i otvorite sobu. Nakon što se soba otvori, moći ćete da kliknete na informacije o sobi Da biste videli svoj pozivni kod i IP+port, potrebno je da ih pošaljete svom onlajn partneru. Napomena Znači, nemojte reći šifru pozivnice, ip, port da kažete bilo kom strancu.\n\nČlan plejera: Morate da zamolite igrača domaćina da zatraži kod za pozivnicu i IP+port, a zatim otvorite HMCL-PE kontrolu panel, uključite meni modula na mreži, kliknite da biste se pridružili prostoriji, unesite svoj pozivni kod, kliknite Samo odredi, započnite sledeću igru, dodajte server u sektor igre za više igrača i poslužite Ime servisnog uređaja je proizvoljno, a adresa servera se popunjava u IP+portu koji je obezbedio vlasnik kuće, a server se može dodati.</string>
     <string name="drawer_custom_menu_warn">Prvo morate da kreirate ili izaberete podizgled</string>
-    <string name="feedback_ui_join_discord">Pridruži nam se na Discord-u</string>
     <!-- ★ 1.5.0：公告栏 -->
     <string name="qcl_announcement">Obaveštenje</string>
     <string name="qcl_announcement_hide">Sakrij</string>

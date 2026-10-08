@@ -75,7 +75,15 @@ public class InitializeSetting {
         }
         // ★ 1.3.4：新用户默认背景改为「经典图片」（type 1）
         //   原为 type 0（动态轮播）；动态轮播已挪到「网络」选项，见 ExteriorSettingUI
-        LauncherSetting launcherSetting = new LauncherSetting(AppManifest.DEFAULT_GAME_DIR, new SourceSetting(true, 1, 0), 0, 64, false, true, false, false, false, "DEFAULT", "DEFAULT", new BackgroundSetting(1, "", ""), AppManifest.DEFAULT_CACHE_DIR);
+        // ★★★ 1.5.0：默认下载源改为**官方**（用户要求「默认改成使用官方下载源」）。
+        //   SourceSetting(autoSelect, autoSourceType, fixSourceType)：
+        //     · 原值 (true, 1, 0) ⇒ autoSelect=true 时 getSource() 返回 autoSourceType=1
+        //       = DOWNLOAD_URL_SOURCE_BMCLAPI（BMCLAPI 镜像）—— 所以以前默认**不是**官方源；
+        //     · 现值 (true, 0, 0) ⇒ autoSourceType=0 = DOWNLOAD_URL_SOURCE_OFFICIAL，
+        //       手动指定的 fixSourceType 本来就是 0（官方），两者现在一致。
+        //   ★ 只改**全新安装**的默认值；已在用 BMCLAPI 的玩家其 settings.json 里已存了旧值，
+        //     不受影响（可在「设置 → 下载源」里改回来）。
+        LauncherSetting launcherSetting = new LauncherSetting(AppManifest.DEFAULT_GAME_DIR, new SourceSetting(true, 0, 0), 0, 64, false, true, false, false, false, "DEFAULT", "DEFAULT", new BackgroundSetting(1, "", ""), AppManifest.DEFAULT_CACHE_DIR);
         GsonUtils.saveLauncherSetting(launcherSetting, AppManifest.SETTING_DIR + "/launcher_setting.json");
         return launcherSetting;
     }

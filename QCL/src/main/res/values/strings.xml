@@ -798,7 +798,6 @@
     <string name="download_setting_ui_download_num">Threads</string>
     <string name="download_setting_ui_download_alert">Information</string>
     <string name="download_setting_ui_download_alert_text">Too many threads may cause your system to freeze, and your download speed may be affected by your ISP and download servers. It is not always the case that more threads increase your download speed.</string>
-    <string name="feedback_ui_join_discord">Join Discord</string>
     <string name="feedback_ui_github_issues">Go to Github</string>
     <string name="donate_ui_text">QCL (Quanta Craft Launcher) is a free, libre and open source Minecraft launcher. Your sponsorship helps this project grow. Click here for more information.</string>
     <string name="dialog_manage_controller_title">Manage Touch Layout Pattern</string>

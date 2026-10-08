@@ -44,6 +44,14 @@ public class Announcement {
     /** 隐藏过的公告 id 存这里（FCL 用的同一个 key 名）。 */
     private static final String PREF_NAME = "launcher";
     private static final String PREF_KEY_IGNORE = "ignore_announcement";
+    /**
+     * ★ 1.5.0：隐藏时**同时**记住当时那条公告的「内容指纹」。
+     *
+     * <p>为什么需要：只记 id 的话，只要 id 不变，官方把公告内容改了，玩家也**永远看不到**。
+     * <p>指纹变了 ⇒ 官方改过这条公告 ⇒ 视为**新公告**，隐藏失效、公告重新出现；
+     * 玩家想再藏一次，需要重新点「隐藏」—— 这正是用户要求的行为。
+     */
+    private static final String PREF_KEY_IGNORE_SIG = "ignore_announcement_sig";
 
     private final int id;
     private final boolean significant;
@@ -177,16 +185,51 @@ public class Announcement {
         if (versionCode < minVersion || versionCode > maxVersion) {
             return false;
         }
-        return getIgnoredId(context) != id;
+        if (getIgnoredId(context) != id) {
+            return true;
+        }
+        // ★★★ 1.5.0：id 相同但**内容指纹不同** ⇒ 官方更新过这条公告 ⇒ 隐藏失效、重新出现。
+        //   （老版本只比 id，会导致"公告更新了玩家却永远看不到"。）
+        return !String.valueOf(contentSignature()).equals(getIgnoredSignature(context));
     }
 
-    /** 玩家点「隐藏」→ 记住这条公告的 id，以后不再显示。 */
+    /**
+     * 本条公告的**内容指纹**（语言无关）：把 date + 所有 title/content 文本块按顺序混进一个 hash。
+     * 官方改了任何一句话 ⇒ 指纹变 ⇒ 玩家之前点的「隐藏」作废。
+     */
+    private int contentSignature() {
+        int h = date == null ? 0 : date.hashCode();
+        if (title != null) {
+            for (Content c : title) {
+                if (c != null && c.getText() != null) {
+                    h = h * 31 + c.getText().hashCode();
+                }
+            }
+        }
+        if (content != null) {
+            for (Content c : content) {
+                if (c != null && c.getText() != null) {
+                    h = h * 31 + c.getText().hashCode();
+                }
+            }
+        }
+        return h;
+    }
+
+    /** 玩家点「隐藏」→ 记住这条公告的 id **和内容指纹**，以后不再显示（直到官方更新它）。 */
     public void hide(Context context) {
-        prefs(context).edit().putInt(PREF_KEY_IGNORE, id).apply();
+        prefs(context).edit()
+                .putInt(PREF_KEY_IGNORE, id)
+                .putString(PREF_KEY_IGNORE_SIG, String.valueOf(contentSignature()))
+                .apply();
     }
 
     private static int getIgnoredId(Context context) {
         return prefs(context).getInt(PREF_KEY_IGNORE, -1);
+    }
+
+    private static String getIgnoredSignature(Context context) {
+        return prefs(context).getString(PREF_KEY_IGNORE_SIG, "");
     }
 
     private static SharedPreferences prefs(Context context) {

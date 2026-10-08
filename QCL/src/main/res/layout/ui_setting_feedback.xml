@@ -16,35 +16,10 @@
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
-            <LinearLayout
-                android:padding="15dp"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:background="@drawable/launcher_view_light_gray">
-
-                <TextView
-                    android:singleLine="true"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:text="@string/feedback_ui_join_discord"
-                    android:textSize="@dimen/text_size_middle"
-                    android:textColor="@color/colorPureBlack"/>
-
-                <View
-                    android:layout_width="0dp"
-                    android:layout_height="0dp"
-                    android:layout_weight="1"/>
-
-                <ImageButton
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:id="@+id/join_discord"
-                    android:background="@drawable/ic_baseline_jump_black"
-                    android:layout_gravity="center"/>
-
-            </LinearLayout>
+            <!-- ★★★ 1.5.0：移除「加入 Discord」整行（用户明确要求）。
+                 这是 **HMCL PE 遗留**的 Discord 邀请（discord.gg/zeMNy8Wdgd），
+                 QCL 并没有自己的 Discord，留着只会让玩家加错群。
+                 反馈入口保留下面那一条 —— GitHub Issues（QCL 自己的仓库）。 -->
 
             <LinearLayout
                 android:padding="15dp"

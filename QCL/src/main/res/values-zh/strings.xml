@@ -1119,7 +1119,6 @@
     <string name="ui_about_github_main">所有通过 Issues、赞助等方式参与本项目的贡献者</string>
     <string name="ui_about_github_sub">感谢各位的建议、bug 反馈及赞助</string>
     <string name="dialog_create_community_error">无法检测游戏端口号，你需启动游戏并在游戏内打开 对局域网开放 选项方能启动联机！</string>
-    <string name="feedback_ui_join_discord">加入官方 Discord</string>
     <string name="loading_hint_java_21">正在检查 Java 21…</string>
     <string name="loading_hint_java_25">正在检查 Java 25…</string>
     <string name="loading_hint_java_patching">正在优化运行环境…</string>

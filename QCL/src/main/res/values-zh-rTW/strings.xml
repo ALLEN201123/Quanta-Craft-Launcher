@@ -959,7 +959,6 @@
     <string name="ui_about_mcmod_sub">提供 Mod 中文名映射表與 Mod 百科</string>
     <string name="ui_about_github_main">所有通過 Issues、讚助等方式參與本項目的貢獻者</string>
     <string name="ui_about_github_sub">感謝各位的建議、bug 反饋及讚助</string>
-    <string name="feedback_ui_join_discord">加入官方 Discord</string>
 
     <string name="loading_hint_java_21">正在檢查 Java 21…</string>
     <string name="loading_hint_java_25">正在檢查 Java 25…</string>

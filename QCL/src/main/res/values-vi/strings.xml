@@ -929,7 +929,6 @@
     <string name="world_menu_export">Thế giới xuất khẩu</string>
     <string name="world_menu_manage">Quản lý Datapacks</string>
     <string name="world_menu_open_dir">Tiết lộ trong Explorer</string>
-    <string name="feedback_ui_join_discord">Tham gia Discord</string>
     <!-- ★ 1.5.0：公告栏 -->
     <string name="qcl_announcement">Thông báo</string>
     <string name="qcl_announcement_hide">Ẩn</string>
