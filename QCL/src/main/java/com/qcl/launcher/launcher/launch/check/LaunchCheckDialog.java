@@ -338,27 +338,24 @@ public class LaunchCheckDialog extends Dialog implements View.OnClickListener, H
             com.qcl.launcher.launcher.launch.vulkan.VulkanSupport support =
                     new com.qcl.launcher.launcher.launch.vulkan.VulkanSupport(caps);
             boolean ok = caps.isSupported() && support.isVersionSupported(this.launchVersion);
-            if (ok) {
-                this.vulkan = true;
-                if (this.vulkanState != null) {
-                    this.vulkanState.setBackground(
-                            this.getContext().getDrawable(R.drawable.ic_baseline_done_white));
-                }
-                appendLog(getContext().getString(R.string.launch_check_dialog_vulkan)
-                        + " ... OK (Vulkan " + caps.versionString() + ")");
-                checkState();
-                return;
-            }
-            // 不达标：标红 + 拦住 + 给出原因与出口
-            this.vulkan = false;
+            // ★★★★★ 1.5.0（用户实测「检测逻辑的弹窗根本没有弹出来」）：
+            //   原来 `ok == true` 就直接 `return` 放行，玩家什么都不知道，
+            //   结果后面照样崩（判定通过 ≠ 实际能用：系统属性填了不代表 Turnip/后端真的就绪）。
+            //   ⇒ 26.2+ 一律**弹窗告知后端实况**，让玩家知情并可选择：
+            //       「仍要启动」= 按现状继续；「强制 Vulkan」= 把 preferredGraphicsBackend 钉死再走；
+            //       「取消」= 回版本列表。
+            this.vulkan = true;   // 默认不阻断；玩家在弹窗里显式选择
             if (this.vulkanState != null) {
                 this.vulkanState.setBackground(
-                        this.getContext().getDrawable(R.drawable.ic_baseline_close_white));
+                        ok ? this.getContext().getDrawable(R.drawable.ic_baseline_done_white)
+                           : this.getContext().getDrawable(R.drawable.ic_baseline_close_white));
             }
             appendLog(getContext().getString(R.string.launch_check_dialog_vulkan)
-                    + " ... FAILED (Vulkan " + caps.versionString()
-                    + ", level " + caps.hardwareLevel + ")");
-            showVulkanBlocked(caps, support);
+                    + " ... " + (ok ? "OK (Vulkan " + caps.versionString() + ")"
+                                    : "UNKNOWN (Vulkan " + caps.versionString()
+                                      + ", level " + caps.hardwareLevel + ")"));
+            showVulkanNotice(caps, support, ok);
+            checkState();
         } catch (Throwable t) {
             // 任何异常都放行，绝不误拦玩家
             this.vulkan = true;
@@ -370,6 +367,94 @@ public class LaunchCheckDialog extends Dialog implements View.OnClickListener, H
             checkState();
         }
     }
+
+    /**
+     * ★ 1.5.0：26.2+ 启动**必定**弹一次后端实况（无论判定通过与否）。
+     *
+     * <p>存在的意义：判定"通过"不等于实际能跑（系统属性 vs 真实加载能力 vs MC 是否降级），
+     * 玩家在没有提示的情况下崩溃是最糟的体验。三个出口：
+     * <ul>
+     *   <li><b>仍要启动</b>：按当前状态继续（判定通过时的默认行为）；</li>
+     *   <li><b>强制 Vulkan</b>：把该版本 options.txt 的 preferredGraphicsBackend 钉成 vulkan 再启动，
+     *       这是绕开「MC 因上次崩溃而永久降级 OpenGL」的唯一手段；</li>
+     *   <li><b>取消</b>：中止启动。</li>
+     * </ul>
+     */
+    private void showVulkanNotice(final com.qcl.launcher.launcher.launch.vulkan.VulkanCapabilities caps,
+                                  final com.qcl.launcher.launcher.launch.vulkan.VulkanSupport support,
+                                  final boolean ok) {
+        // ★★★★★ 1.5.0 修正（用户实测「弹窗打死也弹不出来」）：
+        //   我原先是在 onCreate() → startCheckTasks() 里直接弹 —— 那个时机
+        //   **本对话框自己还没 show()**，新建的 AlertDialog 拿不到父窗口 token，
+        //   结果**永远弹不出来**（用户点启动看到的就是"什么提示都没有"）。
+        //   ⇒ 改成：先记下内容，等本对话框真正显示后再延迟弹。
+        final String src = com.qcl.launcher.launcher.launch.vulkan.VulkanChecker.getVulkanSourceSafe();
+        final String msg = "本版本（" + this.launchVersion + "）需要 Vulkan 图形后端。\n"
+                + "检测结果：" + (ok ? "系统报告支持 Vulkan " + caps.versionString()
+                                    : "**未能确认**（Vulkan " + caps.versionString()
+                                      + " / level " + (caps.hardwareLevel < 0 ? "?" : caps.hardwareLevel) + "）")
+                + "\n加载器：" + ("turnip".equals(src) ? "自带 Turnip"
+                                    : "system".equals(src) ? "系统 libvulkan.so"
+                                    : ("none".equals(src) ? "尚未加载" : src))
+                + "\n\n若启动后崩溃，多半是 Minecraft 沿用了上次的降级设置，"
+                + "可点「强制 Vulkan 后启动」重试。";
+        final Runnable show = new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    if (LaunchCheckDialog.this.activity == null
+                            || LaunchCheckDialog.this.activity.isFinishing()) {
+                        return;
+                    }
+                    AlertDialog.Builder b = new AlertDialog.Builder(LaunchCheckDialog.this.activity);
+                    b.setTitle(R.string.launch_check_dialog_vulkan);
+                    b.setMessage(msg);
+                    b.setCancelable(false);
+                    b.setPositiveButton("强制 Vulkan 后启动", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface d, int w) {
+                            try {
+                                String r = com.qcl.launcher.launcher.launch.GpuBackendSelector
+                                        .forceVulkan(LaunchCheckDialog.this.activity,
+                                                LaunchCheckDialog.this.launchVersion);
+                                LaunchCheckDialog.this.appendLog("[图形后端] 已强制 Vulkan：" + r);
+                            } catch (Throwable ignored) {
+                            }
+                            LaunchCheckDialog.this.vulkan = true;
+                            LaunchCheckDialog.this.checkState();
+                        }
+                    });
+                    b.setNeutralButton("取消", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface d, int w) {
+                            LaunchCheckDialog.this.vulkan = true;
+                            try {
+                                LaunchCheckDialog.this.cancel();
+                            } catch (Throwable ignoredCancel) {
+                            }
+                        }
+                    });
+                    b.setNegativeButton("仍要启动", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface d, int w) {
+                            LaunchCheckDialog.this.vulkan = true;
+                            LaunchCheckDialog.this.checkState();
+                        }
+                    });
+                    b.show();
+                } catch (Throwable ignored) {
+                    // 弹不出来也不阻断
+                }
+            }
+        };
+        // 延迟一点，确保本对话框已获得窗口焦点
+        try {
+            new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(show, 600L);
+        } catch (Throwable ignored) {
+            show.run();
+        }
+    }
+
 
     /** 检测不合格时的拦截弹窗：说明原因，允许「仍然启动」或「换版本」。 */
     private void showVulkanBlocked(final com.qcl.launcher.launcher.launch.vulkan.VulkanCapabilities caps,

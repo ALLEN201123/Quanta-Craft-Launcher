@@ -470,6 +470,22 @@ Java_com_qcl_launcher_launcher_launch_vulkan_VulkanChecker_nativeGetVulkanSource
     return (*env)->NewStringUTF(env, qclGetVulkanSource());
 }
 
+/**
+ * ★ 1.5.0：真正 dlopen 一次系统 libvulkan.so，返回是否成功。
+ *   比"看文件存不存在"更准（MuMu 上 /system/lib64/libvulkan.so 确实在，dlopen 也能成功）。
+ *   用于 VulkanChecker 的兜底判定：系统属性没填但实际能加载 ⇒ 仍应判定为"支持 Vulkan"。
+ *   ★ 用 RTLD_LAZY|RTLD_LOCAL 且**不调任何函数**，只是确认加载器可被 dlopen。
+ */
+JNIEXPORT jboolean JNICALL
+Java_com_qcl_launcher_launcher_launch_vulkan_VulkanChecker_nativeVulkanLoaderLoads(JNIEnv *env, jclass thiz) {
+    void *h = dlopen("libvulkan.so", RTLD_LAZY | RTLD_LOCAL);
+    if (h != NULL) {
+        dlclose(h);
+        return JNI_TRUE;
+    }
+    return JNI_FALSE;
+}
+
 EXTERNAL_API JNIEXPORT jlong JNICALL
 Java_org_lwjgl_vulkan_VK_getVulkanDriverHandle(ABI_COMPAT JNIEnv *env, ABI_COMPAT jclass thiz) {
     printf("EGLBridge: LWJGL-side Vulkan loader requested the Vulkan handle\n");

@@ -47,17 +47,67 @@ public class MinecraftSkinRenderer implements GLSurfaceView.Renderer {
     public static final int ANIM_RUN = 2;
     public static final int ANIM_SPIN = 3;
     public static final int ANIM_WAVE = 4;
-    private int animMode = ANIM_WALK;
+    /** ★ 1.5.0：待机变体 3（点头），凑齐 FCL 的 idle_sub_1/2/3 三个变体。 */
+    public static final int ANIM_NOD = 5;
+
+    /** ★ 1.5.0：待机变体池（对齐 FCL 的 `SkinAnimations.variantIds` = idle_sub_1/2/3）。 */
+    private static final int[] IDLE_VARIANTS = {ANIM_WAVE, ANIM_SPIN, ANIM_NOD};
+    /** ★ 1.5.0：变体插播间隔下限 8 秒（照 FCL `IDLE_VARIANT_INTERVAL_MIN = 8f`）。 */
+    private static final long IDLE_VARIANT_MIN_MS = 8000L;
+    /** ★ 1.5.0：随机浮动 7 秒 ⇒ 实际 8~15 秒（照 FCL `IDLE_VARIANT_INTERVAL_RANGE = 7f`）。 */
+    private static final long IDLE_VARIANT_RANGE_MS = 7000L;
+    /** ★ 1.5.0：单个变体播多久就回待机（照 FCL「播完一轮回基础待机」）。 */
+    private static final long IDLE_VARIANT_DUR_MS = 2600L;
+
+    /** ★ 1.5.0：玩家手动选择的动作；只有它等于 ANIM_IDLE 时才插播变体（照 FCL）。 */
+    private int userAnimMode = ANIM_IDLE;
+    /** ★ 1.5.0：当前实际播的动作（可能是插播中的变体）。 */
+    private int playAnimMode = ANIM_IDLE;
+    /** ★ 1.5.0：待机计时与变体状态（对齐 FCL 的 variant / idleTimer / lastVariant）。 */
+    private int curIdleVariant = -1;
+    private int lastIdleVariant = -1;
+    private long idleAccumMs = 0L;
+    private long variantStartMs = 0L;
+    private long lastFrameMs = 0L;
+    private final java.util.Random idleRandom = new java.util.Random();
+
+    /**
+     * ★ 1.5.0：**默认改为待机**（原来是 ANIM_WALK）。
+     * 用户实测「一直走路」观感不对；FCL 默认也是 idle（基础待机），
+     * 动作变化由「待机随机变体」提供，而不是一直走。
+     */
+    private int animMode = ANIM_IDLE;
 
     public void setAnimMode(int mode) {
-        if (mode < ANIM_IDLE || mode > ANIM_WAVE) {
+        if (mode < ANIM_IDLE || mode > ANIM_NOD) {
             return;
         }
+        this.userAnimMode = mode;
         this.animMode = mode;
+        // 玩家手动切换动作 ⇒ 打断插播并复位计时（照 FCL playAnimation 的处理）
+        this.curIdleVariant = -1;
+        this.idleAccumMs = 0L;
     }
 
     public int getAnimMode() {
-        return this.animMode;
+        return this.userAnimMode;
+    }
+
+    /**
+     * ★ 1.5.0：挑一个待机变体索引，**排除上一次**（照 FCL
+     * {@code SkinAnimations.variantIds.filter { it != lastVariant }.randomOrNull()}）。
+     */
+    private int pickIdleVariantExcept(int except) {
+        if (IDLE_VARIANTS.length <= 1) {
+            return IDLE_VARIANTS.length - 1;
+        }
+        int idx;
+        int guard = 0;
+        do {
+            idx = idleRandom.nextInt(IDLE_VARIANTS.length);
+            guard++;
+        } while (idx == except && guard < 8);
+        return idx;
     }
 
     public void setBackgroundColor(float r, float g, float b, float a) {
@@ -118,9 +168,40 @@ public class MinecraftSkinRenderer implements GLSurfaceView.Renderer {
         }
         GameCharacter gameCharacter = this.mCharacter;
         if (gameCharacter != null) {
-            // ★★★ 1.5.0：按 animMode 驱动动作（原来是写死的「跑步摆臂」）。
-            long t = SystemClock.uptimeMillis();
-            switch (this.animMode) {
+            // ★★★★★ 1.5.0：**待机随机变体状态机**（照 FCL `GltfPlayerModel.update` 完整搬过来）
+            //   FCL 原版规则：① 基础待机累计到 [8,15) 秒随机点 ⇒ 挑一个变体插播（**排除上一次**）；
+            //   ② 变体播完一轮 ⇒ 回基础待机；③ 玩家手动选的动作 ⇒ 不插播、计时归零。
+            long now = SystemClock.uptimeMillis();
+            long delta = (lastFrameMs == 0L) ? 16L : (now - lastFrameMs);
+            if (delta < 0L || delta > 500L) {
+                delta = 16L;   // 首帧 / 从后台切回来，别让计时跳一大截
+            }
+            lastFrameMs = now;
+            if (userAnimMode == ANIM_IDLE) {
+                if (curIdleVariant < 0) {
+                    idleAccumMs += delta;
+                    long interval = IDLE_VARIANT_MIN_MS
+                            + (long) (idleRandom.nextFloat() * (float) IDLE_VARIANT_RANGE_MS);
+                    if (idleAccumMs >= interval) {
+                        int idx = pickIdleVariantExcept(lastIdleVariant);
+                        if (idx >= 0) {
+                            curIdleVariant = idx;
+                            lastIdleVariant = idx;
+                            variantStartMs = now;
+                        }
+                        idleAccumMs = 0L;
+                    }
+                } else if (now - variantStartMs >= IDLE_VARIANT_DUR_MS) {
+                    curIdleVariant = -1;   // 这一轮播完 → 回基础待机
+                    idleAccumMs = 0L;
+                }
+            } else {
+                idleAccumMs = 0L;
+            }
+            playAnimMode = (curIdleVariant >= 0) ? IDLE_VARIANTS[curIdleVariant] : userAnimMode;
+            // ★★★ 1.5.0：按实际要播的动作驱动（原为 this.animMode）
+            long t = now;
+            switch (playAnimMode) {
                 case ANIM_IDLE: {
                     // 站立：四肢归位 + 极缓的上下浮动（呼吸感），不摆臂
                     gameCharacter.SetRunning(false);
@@ -156,10 +237,20 @@ public class MinecraftSkinRenderer implements GLSurfaceView.Renderer {
                     gameCharacter.setZRotation((int) (Math.sin(t / 420.0d) * 1.5d));
                     break;
                 }
+                case ANIM_NOD: {
+                    // ★ 1.5.0 新增：点头（对应 FCL 的 idle_sub_3）—— 身体前后点 + 呼吸
+                    gameCharacter.SetRunning(false);
+                    gameCharacter.setWalkSwing(0.0f);
+                    gameCharacter.setYRotation((int) (Math.sin(t / 900.0d) * 2.0d));
+                    gameCharacter.setZRotation((int) (Math.sin(t / 340.0d) * 5.0d));
+                    break;
+                }
                 default: {
-                    // 走路（默认，与改动前完全一致：幅度 22、周期 260ms）
+                    // ★ 走路：摆幅由 22 → **45**（用户实测「只会迈开一只脚一只手」）。
+                    //   GameCharacter.setWalkSwing 里左腿/右臂=-f、右腿/左臂=+f（对侧），
+                    //   逻辑本身没错；问题是 **22° 幅度太小**，在人物框里几乎看不出在迈步。
                     gameCharacter.SetRunning(true);
-                    gameCharacter.setWalkSwing((float) (Math.sin(t / 260.0d) * 22.0d));
+                    gameCharacter.setWalkSwing((float) (Math.sin(t / 260.0d) * 45.0d));
                     gameCharacter.setYRotation(0);
                     break;
                 }

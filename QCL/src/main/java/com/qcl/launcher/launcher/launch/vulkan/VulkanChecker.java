@@ -61,6 +61,23 @@ public final class VulkanChecker {
         }
     }
 
+    /**
+     * ★ 1.5.0：**只返回系统属性里明确报的** Vulkan 版本号（不走"看到 libvulkan.so 就算支持"的兜底）。
+     *
+     * <p>用于「要不要**自动**钉 Vulkan」这个决策：属性读不到 = 不确定 ⇒ **不自动钉**，
+     * 改成在启动弹窗里让玩家知情后自己选。宁可让人多按一次，也不要替他猜错。
+     *
+     * @return 版本号（0 表示系统属性没报，即"不确定"）
+     */
+    public static int systemReportedVersion(Context context) {
+        try {
+            PackageManager pm = context.getPackageManager();
+            return featureVersion(pm, FEATURE_VULKAN_VERSION, 0);
+        } catch (Throwable t) {
+            return 0;
+        }
+    }
+
     /** 采集设备 Vulkan 能力；设备不支持 Vulkan 时返回一个 apiVersionRaw=0 的对象（不会返回 null）。 */
     public static VulkanCapabilities check(Context context) {
         int version = 0;
@@ -76,9 +93,58 @@ public final class VulkanChecker {
         } catch (Throwable t) {
             // 任何反射/系统接口异常都不该让启动器崩：退化为「不支持 Vulkan」
         }
+        // ★★★★★ 1.5.0 修复（模拟器实测发现的致命缺陷）：
+        //   **只读系统属性会误判**。实测 MuMu：`/system/lib64/libvulkan.so` 明明存在（177232B）、
+        //   游戏里 `OSMDroid: loaded vulkan, ptr=0x...` 也确实拿到了句柄，
+        //   但 `pm list features` 里**没有** Vulkan 特性、`android.hardware.vulkan.version` 也是空
+        //   ⇒ 原逻辑判 apiVersionRaw=0「不支持」⇒ 不钉后端 ⇒ MC 自己选 OpenGL ⇒ 26.3 除零崩。
+        //   ⇒ 补一条**兜底**：属性读不到时，去看系统里到底有没有 Vulkan 加载器。
+        //   （很多 ROM / 模拟器 / 魔改机都不填这个属性，但 Vulkan 是能用的。）
+        if (version == 0 && hasSystemVulkanLoader()) {
+            // 保守给一个「够 26.2/26.3 用的最低能力」：
+            // Vulkan 1.2 + Level 2 是 MC 26.2+ 的运行基线；有加载器说明至少能起实例。
+            version = 0x0102;   // VK_API_VERSION_1_2
+            level = 2;
+            compute = true;
+        }
         return new VulkanCapabilities(version, level, compute, deqp,
                 deriveExtensions(version, level), deriveFeatures(version, level, compute));
     }
+
+    /**
+     * 系统里是否**真的有** Vulkan 加载器（{@code libvulkan.so}）。
+     * 覆盖 {@code /system/lib64}、{@code /system/lib}、{@code /vendor/lib64} 等常见位置，
+     * 以及 {@code LD_LIBRARY_PATH} 里可能存在的副本。
+     */
+    private static boolean hasSystemVulkanLoader() {
+        String[] dirs = {
+                "/system/lib64", "/system/lib", "/vendor/lib64", "/vendor/lib",
+                "/apex/com.android.runtime/lib64", "/system/lib/arm64"
+        };
+        String[] names = {"libvulkan.so"};
+        for (String d : dirs) {
+            for (String n : names) {
+                try {
+                    java.io.File f = new java.io.File(d, n);
+                    if (f.isFile() && f.length() > 0) {
+                        return true;
+                    }
+                } catch (Throwable ignored) {
+                }
+            }
+        }
+        // 最后一招：交给 native 试一次 dlopen（libpojavexec 里的 dlopen）
+        try {
+            if (nativeVulkanLoaderLoads()) {
+                return true;
+            }
+        } catch (Throwable ignored) {
+        }
+        return false;
+    }
+
+    /** native 侧：真正 dlopen 一次 libvulkan.so，返回是否成功（比看文件更准）。 */
+    private static native boolean nativeVulkanLoaderLoads();
 
     /**
      * 读取系统特性的 version 值。

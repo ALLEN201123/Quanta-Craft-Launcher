@@ -46,25 +46,12 @@ import org.lwjgl.glfw.CallbackBridge;
 public class PojavLauncher {
     public static Vector<String> getMcArgs(GameLaunchSetting gameLaunchSetting, Context context, int width, int height, String server) {
         try {
-            // ★★★★★ 1.5.0：26.2+ 启动**前**先把 MC 的图形后端钉成 Vulkan。
-            //   不钉的话，MC 一旦判定"上次意外关闭"就会打印
-            //   `forcing preferred graphics API to OpenGL` 永久降级，
-            //   而 OpenGL 路径在 gl4es 系上必然撞 minUniformOffsetAlignment=0 → 又崩 → 死循环。
-            //   （实测于 MuMu 26.3；只有设备真的支持 Vulkan 时才钉，否则保持原样交给检测弹窗提示。）
-            try {
-                String verDir = gameLaunchSetting.currentVersion;
-                if (verDir != null && verDir.length() > 0) {
-                    String verName = new File(verDir).getName();
-                    String gpu = com.qcl.launcher.launcher.launch.GpuBackendSelector
-                            .ensureVulkanFor26(context, verName, verDir);
-                    if ("forced-vulkan".equals(gpu) || "no-vulkan-support".equals(gpu)) {
-                        Logger.getInstance(context).appendToLog(
-                                "[图形后端] " + verName + " → " + gpu);
-                    }
-                }
-            } catch (Throwable ignoredGpu) {
-                // 钉后端失败不致命，照常启动
-            }
+            // ★★★★★ 1.5.0：**回退自动钉 Vulkan**（用户要求）。
+            //   原先每次启动都去改 options.txt 的 preferredGraphicsBackend，实测反而更糟：
+            //     · MC 会自己 `resetting preferred graphics API to Default` 覆盖掉；
+            //     · 而设备属性读不到时属于"不确定"，替他猜反而可能选错后端。
+            //   ⇒ 恢复原始逻辑：**不动玩家的 MC 设置**，由启动弹窗把实况告诉玩家，
+            //     玩家自己点「强制 Vulkan 后启动」时才写（知情选择，见 GpuBackendSelector.forceVulkan）。
             File jreRelease = new File(gameLaunchSetting.javaPath, "release");
             if (!jreRelease.isFile()) {
                 Logger.getInstance((Context)context).appendToLog("\u542f\u52a8\u5931\u8d25\uff1aJava \u8fd0\u884c\u5e93\u4e0d\u5b8c\u6574 \u2014\u2014 \u7f3a\u5c11 " + jreRelease.getAbsolutePath() + "\n\u8bf7\u5230\u300c\u8bbe\u7f6e \u2192 Java \u8fd0\u884c\u65f6\u300d\u91cd\u65b0\u5b89\u88c5\u8be5\u8fd0\u884c\u65f6\uff0c\u6216\u6539\u7528\u5176\u5b83\u7248\u672c\u3002");

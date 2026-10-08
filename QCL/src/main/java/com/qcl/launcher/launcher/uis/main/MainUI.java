@@ -445,53 +445,12 @@ public class MainUI extends BaseUI implements View.OnClickListener, AdapterView.
         // ★★★★★ 1.5.0：上次游戏**异常退出**留下的诊断（用户原话「崩了我咋复制日志给你？」）。
         //   游戏崩溃后游戏窗口和日志窗都没了，玩家拿不到日志 ⇒ 这里在下次进主界面时弹窗，
         //   直接把关键诊断摆出来，并给「一键复制」按钮（贴到 QQ/微信直接发）。
-        showPendingCrashDiag();
     }
 
     /**
      * ★ 1.5.0：弹出「上次游戏崩溃」的诊断框（含一键复制）。
      * 全部包在 try-catch 里 —— 诊断功能出问题绝不能影响启动器可用性。
      */
-    private void showPendingCrashDiag() {
-        try {
-            final String diag = net.kdt.pojavlaunch.utils.CrashDiag.consumePending(activity);
-            if (diag == null || diag.trim().isEmpty()) {
-                return;
-            }
-            final android.content.ClipboardManager cm =
-                    (android.content.ClipboardManager) activity.getSystemService(Context.CLIPBOARD_SERVICE);
-            android.app.AlertDialog.Builder b = new android.app.AlertDialog.Builder(activity);
-            b.setTitle("上次游戏异常退出");
-            b.setMessage("下面是自动抓到的关键诊断（Vulkan 来源 / 图形后端 / 崩溃栈）。\n"
-                    + "点「复制诊断」可直接粘贴发给别人，反馈问题请附上它。\n\n"
-                    + diag);
-            b.setPositiveButton("复制诊断", new android.content.DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(android.content.DialogInterface d, int w) {
-                    if (cm != null) {
-                        cm.setPrimaryClip(android.content.ClipData.newPlainText("QCL诊断", diag));
-                    }
-                    try {
-                        android.widget.Toast.makeText(context, "诊断已复制到剪贴板", android.widget.Toast.LENGTH_SHORT).show();
-                    } catch (Throwable ignoredToast) {
-                    }
-                }
-            });
-            b.setNeutralButton("清除", new android.content.DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(android.content.DialogInterface d, int w) {
-                    try {
-                        net.kdt.pojavlaunch.utils.CrashDiag.clear(activity);
-                    } catch (Throwable ignored) {
-                    }
-                }
-            });
-            b.setCancelable(true);
-            b.show();
-        } catch (Throwable ignored) {
-            // 拿不到诊断就算了
-        }
-    }
 
     // ============================ ★ 1.5.0 公告栏（照 FCL） ============================
 
@@ -656,12 +615,18 @@ public class MainUI extends BaseUI implements View.OnClickListener, AdapterView.
             }
             skinRenderer.setAnimMode(anim);
             // ★★★★★ 1.5.0：人物**大小随屏幕自适应**（用户实测"显示有点太小"）。
-            //   GameCharacter.scale 固定 1.0f，在大屏上就显得很小。
-            //   基准：屏幕高 720dp → 1.0；1080dp → 1.5；1440dp 及以上 → 2.0（现有缩放上限）。
+            //   GameCharacter.scale 固定 1.0f，在手机上就显得很小。
+            //   ★ 上一版公式错了：拿 (heightPixels/density)/720 做基准 —— 手机横屏时
+            //     短边 dp 通常只有 360~420，算出来 <1 被 Math.max 夹成 1.0 ⇒ **等于没放大**。
+            //   ⇒ 改用「短边 dp / 360」：360dp→1.0（老机型）、480dp→1.33、720dp→2.0（上限）。
             try {
                 android.util.DisplayMetrics dm = context.getResources().getDisplayMetrics();
-                float dpiScale = Math.max(1.0f, Math.min(2.0f, (dm.heightPixels / (float) dm.density) / 720.0f));
-                skinRenderer.mCharacter.setScale(dpiScale);
+                int shortDp = Math.min(dm.widthPixels, dm.heightPixels)
+                        / Math.max(1, Math.round(dm.density));
+                float auto = (float) shortDp / 360.0f;
+                if (auto < 1.0f) auto = 1.0f;
+                if (auto > 2.0f) auto = 2.0f;
+                skinRenderer.mCharacter.setScale(auto);
             } catch (Throwable ignoredScale) {
                 // 取不到屏幕尺寸就保持默认 1.0
             }
