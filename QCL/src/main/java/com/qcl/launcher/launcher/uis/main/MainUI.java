@@ -125,6 +125,48 @@ public class MainUI extends BaseUI implements View.OnClickListener, AdapterView.
         return li == 0 ? null : li;
     }
 
+    /**
+     * ★★★ 1.5.0：用**已缓存**的当前版本路径，**同步**填充「启动游戏」上方的版本名与图标。
+     *
+     * <p>解决的问题：进入启动器时版本名 / 图标「一闪而过」（先显示占位、再热切换）。
+     * 根因是布局的初始 text 是占位串，而真实值只在异步线程里才写入。
+     *
+     * <p>缓存的 {@code currentVersion} 是完整路径 ⇒ 版本名 = 文件名，主线程立刻就能取到；
+     * 图标按「加载器图标 → 远古原石 / 草方块」同一条优先级链取（与异步分支口径一致），
+     * 这样异步线程稍后填的是**同一个值**，不会产生视觉变化。
+     */
+    private void applyCachedVersionName() {
+        try {
+            if (activity == null || activity.publicGameSetting == null) {
+                return;
+            }
+            String cur = activity.publicGameSetting.currentVersion;
+            if (cur == null || cur.trim().isEmpty()) {
+                return;   // 真的没有版本 → 保持占位，异步分支会走「无版本」逻辑
+            }
+            String name = new File(cur).getName();
+            if (name == null || name.isEmpty()) {
+                return;
+            }
+            if (launchVersionText != null) {
+                launchVersionText.setText(name);
+            }
+            if (launchVersionIcon != null) {
+                Integer li = loaderIconFor(new File(activity.launcherSetting.gameFileDirectory
+                        + "/versions/" + name));
+                if (li != null) {
+                    launchVersionIcon.setBackground(context.getDrawable(li));
+                } else {
+                    int res = com.qcl.launcher.launcher.download.modloader.ModLoaderDetector
+                            .isLegacyVersion(name) ? R.drawable.ic_cobble : R.drawable.ic_grass;
+                    launchVersionIcon.setBackground(context.getDrawable(res));
+                }
+            }
+        } catch (Throwable ignored) {
+            // 预填失败无所谓：异步分支随后仍会写入正确的值
+        }
+    }
+
     public MainUI(Context context, MainActivity activity) {
         super(context, activity);
     }
@@ -180,6 +222,16 @@ public class MainUI extends BaseUI implements View.OnClickListener, AdapterView.
         versionIcon = activity.findViewById(R.id.current_version_icon);
         noVersionAlert = activity.findViewById(R.id.no_version_alert_text);
         currentVersionText = activity.findViewById(R.id.current_version_name_text);
+
+        // ★★★ 1.5.0 修复「进入启动器时，启动游戏上方的版本一闪而过」：
+        //   原来版本名**只在异步线程里填**（要读完 gameList 才 setText），
+        //   而布局里 launch_version_text 的初始 text 是
+        //   @string/launcher_button_current_version（"当前版本"占位）
+        //   ⇒ 进主界面先显示占位文字，几百毫秒后才热切换成真实版本名 = 肉眼可见的闪一下。
+        //   publicGameSetting.currentVersion 存的是**完整路径**（启动时落盘的，版本名 = 它的文件名），
+        //   ⇒ 这里在主线程**同步**先填一次；异步线程稍后读到相同值（绝大多数情况），
+        //     setText 内容不变 → 不会再闪。
+        applyCachedVersionName();
 
         // ★ 1.5.0：公告栏（新排版独有；旧排版为 null，后面统一判空）
         announcementContainer = activity.findViewById(R.id.announcement_container);
