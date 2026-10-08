@@ -169,6 +169,18 @@ public class VersionListUI extends BaseUI implements View.OnClickListener {
             dirParams.bottomMargin = dirGap;
             gameDirRow.addView(dirView, dirParams);
         }
+        // ★★★ 1.5.0 崩溃修复（用户真机崩溃日志 VersionListUI.init:172 NPE）：
+        //   gameListAdapter 是在**异步线程** refreshVersionList() 里创建的，
+        //   而 onStart → init() 是**同步**跑的 —— 两者存在竞态：
+        //   init() 先执行完、此时 adapter 还没被赋值 →
+        //   `gameListAdapter.refreshCurrentVersion(...)` 直接空指针（版本列表页都进不去）。
+        //   ⇒ 不再假设 adapter 一定存在：没有就按当前 gameList 现建一个。
+        if (gameListAdapter == null) {
+            if (gameList == null) {
+                gameList = new ArrayList<>();
+            }
+            gameListAdapter = new GameListAdapter(context, activity, gameList);
+        }
         gameListAdapter.refreshCurrentVersion(activity.publicGameSetting.currentVersion);
     }
 

@@ -16,45 +16,11 @@
         android:textSize="@dimen/text_size_big"
         android:text="@string/dialog_add_microsoft_account_title"/>
 
-    <LinearLayout
-        android:padding="10dp"
-        android:background="@drawable/launcher_view_blue"
-        android:layout_marginTop="20dp"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical">
-
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
-
-            <ImageView
-                android:layout_width="20dp"
-                android:layout_height="20dp"
-                android:layout_gravity="center"
-                android:background="@drawable/ic_outline_about_black"/>
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:layout_marginStart="5dp"
-                android:text="@string/dialog_add_microsoft_account_hint"
-                android:textSize="@dimen/text_size_middle"
-                android:textColor="@color/colorLinkBlueDark"/>
-
-        </LinearLayout>
-
-        <TextView
-            android:layout_marginTop="5dp"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/dialog_add_microsoft_account_hint_text"
-            android:textSize="@dimen/text_size_middle"
-            android:textColor="@color/colorLinkBlueDark"/>
-
-    </LinearLayout>
+    <!-- ★★★ 1.5.0：移除「提示」蓝框（用户明确要求）。
+         原来是 launcher_view_blue 浅蓝块（"提示 / 您需要点击登录按钮…"），
+         浅蓝底 + 浅蓝字对比度太低、夜间也很突兀 ⇒ 整块删掉。
+         ★ 框内三个控件都**没有 id**（只有 text 引用 string），无任何 findViewById 依赖；
+           对应的 dialog_add_microsoft_account_hint / _hint_text 两条 string 也随之不再被引用。 -->
 
     <LinearLayout
         android:layout_marginTop="18dp"
