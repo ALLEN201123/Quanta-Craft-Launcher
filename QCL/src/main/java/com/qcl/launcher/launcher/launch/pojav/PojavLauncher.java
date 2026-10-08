@@ -46,6 +46,25 @@ import org.lwjgl.glfw.CallbackBridge;
 public class PojavLauncher {
     public static Vector<String> getMcArgs(GameLaunchSetting gameLaunchSetting, Context context, int width, int height, String server) {
         try {
+            // ★★★★★ 1.5.0：26.2+ 启动**前**先把 MC 的图形后端钉成 Vulkan。
+            //   不钉的话，MC 一旦判定"上次意外关闭"就会打印
+            //   `forcing preferred graphics API to OpenGL` 永久降级，
+            //   而 OpenGL 路径在 gl4es 系上必然撞 minUniformOffsetAlignment=0 → 又崩 → 死循环。
+            //   （实测于 MuMu 26.3；只有设备真的支持 Vulkan 时才钉，否则保持原样交给检测弹窗提示。）
+            try {
+                String verDir = gameLaunchSetting.currentVersion;
+                if (verDir != null && verDir.length() > 0) {
+                    String verName = new File(verDir).getName();
+                    String gpu = com.qcl.launcher.launcher.launch.GpuBackendSelector
+                            .ensureVulkanFor26(context, verName, verDir);
+                    if ("forced-vulkan".equals(gpu) || "no-vulkan-support".equals(gpu)) {
+                        Logger.getInstance(context).appendToLog(
+                                "[图形后端] " + verName + " → " + gpu);
+                    }
+                }
+            } catch (Throwable ignoredGpu) {
+                // 钉后端失败不致命，照常启动
+            }
             File jreRelease = new File(gameLaunchSetting.javaPath, "release");
             if (!jreRelease.isFile()) {
                 Logger.getInstance((Context)context).appendToLog("\u542f\u52a8\u5931\u8d25\uff1aJava \u8fd0\u884c\u5e93\u4e0d\u5b8c\u6574 \u2014\u2014 \u7f3a\u5c11 " + jreRelease.getAbsolutePath() + "\n\u8bf7\u5230\u300c\u8bbe\u7f6e \u2192 Java \u8fd0\u884c\u65f6\u300d\u91cd\u65b0\u5b89\u88c5\u8be5\u8fd0\u884c\u65f6\uff0c\u6216\u6539\u7528\u5176\u5b83\u7248\u672c\u3002");
@@ -339,7 +358,20 @@ public class PojavLauncher {
                     args.add("-Djna.tmpdir=" + qclTmp);
                     args.add("-Dorg.lwjgl.system.SharedLibraryExtractPath=" + qclTmp);
                     args.add("-Dio.netty.native.workdir=" + qclTmp);
-                    File qclJna = Lwjgl333Helper.jnaDir(context);
+                    // ★★★★★ 1.5.0：JNA 的 native 库必须**按 LWJGL 版本分流**。
+                    //   26.2+ 走 LWJGL 3.4.1，其 libraries 里是 jna-5.17.0.jar；
+                    //   而 jnaDir()（lwjgl333）里那份是 5.13/5.14 时代的
+                    //   libjnidispatch.so（118584B）—— **版本错配** ⇒
+                    //   `NoClassDefFoundError: Could not initialize class com.sun.jna.NativeLong`
+                    //   ⇒ MC 在 CrashReport.preload → SystemReport.putHardware 时炸掉。
+                    //   实测（MuMu / 26.3）：日志里就是这一条 fatal。
+                    File qclJna;
+                    if (qclNeed341) {
+                        Lwjgl333Helper.prepareJna341(context);
+                        qclJna = Lwjgl333Helper.jnaDir341(context);
+                    } else {
+                        qclJna = Lwjgl333Helper.jnaDir(context);
+                    }
                     if (qclJna.isDirectory() && qclJna.list() != null && qclJna.list().length > 0) {
                         args.add("-Djna.boot.library.path=" + qclJna.getAbsolutePath());
                     } else {

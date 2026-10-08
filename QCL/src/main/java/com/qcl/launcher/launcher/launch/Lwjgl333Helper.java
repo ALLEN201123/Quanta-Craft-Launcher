@@ -131,6 +131,46 @@ public class Lwjgl333Helper {
         return new File(context.getFilesDir(), "lwjgl333/jna");
     }
 
+    /**
+     * ★★★★★ 1.5.0：LWJGL **3.4.1**（26.2+ 走的那套）对应的 JNA native 目录。
+     *
+     * <p>为什么必须有它：26.3 的 libraries 里是 {@code jna-5.17.0.jar}，
+     * 而 {@link #jnaDir} 里那份是 5.13/5.14 时代的 {@code libjnidispatch.so}（118584B）。
+     * JNA 的 native 库**与 jar 版本必须配套**，错配的典型症状就是
+     * {@code NoClassDefFoundError: Could not initialize class com.sun.jna.NativeLong}
+     * ⇒ MC 生成崩溃报告（{@code CrashReport.preload → SystemReport.putHardware}）时炸掉。
+     * <p>assets 里已放入 FCL 同款的 5.17.0 native 库（126912B）。
+     */
+    public static File jnaDir341(Context context) {
+        return new File(context.getFilesDir(), "lwjgl341/jna");
+    }
+
+    /** 把 assets/app_runtime/lwjgl341/jna/<abi> 解压到 {@link #jnaDir341}。 */
+    public static void prepareJna341(Context context) {
+        try {
+            android.content.res.AssetManager am = context.getAssets();
+            String abi = Lwjgl333Helper.abiDir();
+            String[] probe = am.list("app_runtime/lwjgl341/jna/" + abi);
+            if (probe == null || probe.length == 0) {
+                abi = "armeabi-v7a";
+            }
+            File dir = Lwjgl333Helper.jnaDir341(context);
+            Lwjgl333Helper.deleteRecursively(dir);
+            dir.mkdirs();
+            String[] list = am.list("app_runtime/lwjgl341/jna/" + abi);
+            if (list == null) {
+                return;
+            }
+            for (String name : list) {
+                if (!name.endsWith(".so")) continue;
+                Lwjgl333Helper.copyAsset(am, "app_runtime/lwjgl341/jna/" + abi + "/" + name,
+                        new File(dir, name));
+            }
+        } catch (Throwable t) {
+            // 解压失败不致命：PojavLauncher 会退到 nativeLibraryDir
+        }
+    }
+
     private static String detectLwjglVersion(String versionPath) {
         if (versionPath == null) {
             return null;
