@@ -203,6 +203,11 @@ public class GameListAdapter extends BaseAdapter {
             }
         }
         this.activity.publicGameSetting.currentVersion = this.activity.launcherSetting.gameFileDirectory + "/versions/" + this.list.get(i).name;
+        // ★ 1.5.0：切了当前版本后立刻刷新主界面「启动游戏」上方的版本名/图标。
+        //   判空：这 3 处赋值里有的在**构造函数**里，那时 uiManager/mainUI 可能还没就绪。
+        if (this.activity.uiManager != null && this.activity.uiManager.mainUI != null) {
+            this.activity.uiManager.mainUI.refreshCurrentVersionDisplay();
+        }
         if (this.activity.privateGameSetting.gameDirSetting.type == 1) {
             this.activity.uiManager.settingUI.settingUIManager.universalGameSettingUI.gameDirText.setText(this.activity.launcherSetting.gameFileDirectory + "/versions/" + this.list.get(i).name);
         }
@@ -352,6 +357,11 @@ public class GameListAdapter extends BaseAdapter {
         FileUtils.rename(this.activity.launcherSetting.gameFileDirectory + "/versions/" + this.list.get(i).name, str);
         if (this.list.get(i).isSelected) {
             this.activity.publicGameSetting.currentVersion = this.activity.launcherSetting.gameFileDirectory + "/versions/" + str;
+            // ★ 1.5.0：切了当前版本后立刻刷新主界面「启动游戏」上方的版本名/图标。
+            //   判空：这 3 处赋值里有的在**构造函数**里，那时 uiManager/mainUI 可能还没就绪。
+            if (this.activity.uiManager != null && this.activity.uiManager.mainUI != null) {
+                this.activity.uiManager.mainUI.refreshCurrentVersionDisplay();
+            }
             GsonUtils.savePublicGameSetting(this.activity.publicGameSetting, AppManifest.SETTING_DIR + "/public_game_setting.json");
         }
         this.activity.uiManager.versionListUI.refreshVersionList();
@@ -392,6 +402,11 @@ public class GameListAdapter extends BaseAdapter {
         if (this.activity.publicGameSetting.currentVersion.equals(this.activity.launcherSetting.gameFileDirectory + "/versions/" + this.list.get(i).name) && this.list.size() > 1) {
             this.list.remove(i);
             this.activity.publicGameSetting.currentVersion = this.activity.launcherSetting.gameFileDirectory + "/versions/" + this.list.get(0).name;
+            // ★ 1.5.0：切了当前版本后立刻刷新主界面「启动游戏」上方的版本名/图标。
+            //   判空：这 3 处赋值里有的在**构造函数**里，那时 uiManager/mainUI 可能还没就绪。
+            if (this.activity.uiManager != null && this.activity.uiManager.mainUI != null) {
+                this.activity.uiManager.mainUI.refreshCurrentVersionDisplay();
+            }
             GsonUtils.savePublicGameSetting(this.activity.publicGameSetting, AppManifest.SETTING_DIR + "/public_game_setting.json");
         }
         this.activity.uiManager.versionListUI.refreshVersionList();

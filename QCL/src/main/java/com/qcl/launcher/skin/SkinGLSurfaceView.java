@@ -43,7 +43,14 @@ public class SkinGLSurfaceView extends GLSurfaceView {
             float x = motionEvent.getX();
             float y = motionEvent.getY();
             if (motionEvent.getAction() == 2 && (minecraftSkinRenderer = this.mRenderer) != null && minecraftSkinRenderer.mCharacter != null) {
-                float f = 2.0f / this.mDensity;
+                // ★★★★★ 1.5.0（用户实测「不能左右 360 度无死角滑动」）：
+                //   旧系数 `2.0f / density`，而 MainUI 传的是**硬编码 5f**（setRenderer(r, 5f)），
+                //   于是滑动一整屏（≈450px 控件宽）只转 450*0.4=180°，观感上"转不动"。
+                //   ★ 改成**只按控件宽度换算**，与 DPI / 传入的 density 完全无关：
+                //     横向滑动「半个控件宽」= 转 180°，滑一整控件宽 = 360°，任意角度都可达
+                //     （GameCharacter.rotateBy 内部已做 360 取模，本身没有角度限位）。
+                int w = getWidth();
+                float f = (w > 0) ? (180.0f / (w * 0.5f)) : 1.0f;
                 this.mRenderer.mCharacter.rotateBy((x - this.mPreviousX) * f, (y - this.mPreviousY) * f);
             }
             this.mPreviousX = x;

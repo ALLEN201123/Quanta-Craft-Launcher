@@ -135,6 +135,19 @@ public class MainUI extends BaseUI implements View.OnClickListener, AdapterView.
      * 图标按「加载器图标 → 远古原石 / 草方块」同一条优先级链取（与异步分支口径一致），
      * 这样异步线程稍后填的是**同一个值**，不会产生视觉变化。
      */
+    /**
+     * ★ 1.5.0（用户实测「切换版本后，右下角持续显示的版本没有实时刷新」）：
+     * 供 {@code GameListAdapter} 在把某个版本设为「当前版本」后调用，立刻同步启动按钮上方的
+     * 版本名与图标（内部就是复用下面的 applyCachedVersionName，逻辑与启动时完全一致）。
+     */
+    public void refreshCurrentVersionDisplay() {
+        try {
+            applyCachedVersionName();
+        } catch (Throwable ignored) {
+            // 刷新失败不影响主界面
+        }
+    }
+
     private void applyCachedVersionName() {
         try {
             if (activity == null || activity.publicGameSetting == null) {
@@ -261,6 +274,13 @@ public class MainUI extends BaseUI implements View.OnClickListener, AdapterView.
         // ★ 1.5.0 新排版独有：左侧导航底部「回主界面」按钮（旧排版为 null → 跳过）
         if (startHomeUI != null) {
             startHomeUI.setOnClickListener(this);
+        }
+        // ★★★★★ 1.5.0 崩溃级 Bug 修复（用户实测「主界面按钮点不动」）：
+        //   onClick() 里**有** `v == startHomePageUI → activity.backToHome()` 的分支，
+        //   但这里**从来没给它 setOnClickListener** ⇒ 按钮完全没有监听器、点了毫无反应。
+        //   （其余左栏按钮都在上面挂了，唯独这个漏了。）
+        if (startHomePageUI != null) {
+            startHomePageUI.setOnClickListener(this);
         }
 
         startGame.setOnClickListener(this);
@@ -422,6 +442,55 @@ public class MainUI extends BaseUI implements View.OnClickListener, AdapterView.
         refreshAccount();
         // ★ 1.5.0：每次回主界面刷一次公告（新排版独有；旧排版没有 announcementContainer → 直接返回）
         loadAnnouncement();
+        // ★★★★★ 1.5.0：上次游戏**异常退出**留下的诊断（用户原话「崩了我咋复制日志给你？」）。
+        //   游戏崩溃后游戏窗口和日志窗都没了，玩家拿不到日志 ⇒ 这里在下次进主界面时弹窗，
+        //   直接把关键诊断摆出来，并给「一键复制」按钮（贴到 QQ/微信直接发）。
+        showPendingCrashDiag();
+    }
+
+    /**
+     * ★ 1.5.0：弹出「上次游戏崩溃」的诊断框（含一键复制）。
+     * 全部包在 try-catch 里 —— 诊断功能出问题绝不能影响启动器可用性。
+     */
+    private void showPendingCrashDiag() {
+        try {
+            final String diag = net.kdt.pojavlaunch.utils.CrashDiag.consumePending(activity);
+            if (diag == null || diag.trim().isEmpty()) {
+                return;
+            }
+            final android.content.ClipboardManager cm =
+                    (android.content.ClipboardManager) activity.getSystemService(Context.CLIPBOARD_SERVICE);
+            android.app.AlertDialog.Builder b = new android.app.AlertDialog.Builder(activity);
+            b.setTitle("上次游戏异常退出");
+            b.setMessage("下面是自动抓到的关键诊断（Vulkan 来源 / 图形后端 / 崩溃栈）。\n"
+                    + "点「复制诊断」可直接粘贴发给别人，反馈问题请附上它。\n\n"
+                    + diag);
+            b.setPositiveButton("复制诊断", new android.content.DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(android.content.DialogInterface d, int w) {
+                    if (cm != null) {
+                        cm.setPrimaryClip(android.content.ClipData.newPlainText("QCL诊断", diag));
+                    }
+                    try {
+                        android.widget.Toast.makeText(context, "诊断已复制到剪贴板", android.widget.Toast.LENGTH_SHORT).show();
+                    } catch (Throwable ignoredToast) {
+                    }
+                }
+            });
+            b.setNeutralButton("清除", new android.content.DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(android.content.DialogInterface d, int w) {
+                    try {
+                        net.kdt.pojavlaunch.utils.CrashDiag.clear(activity);
+                    } catch (Throwable ignored) {
+                    }
+                }
+            });
+            b.setCancelable(true);
+            b.show();
+        } catch (Throwable ignored) {
+            // 拿不到诊断就算了
+        }
     }
 
     // ============================ ★ 1.5.0 公告栏（照 FCL） ============================
@@ -571,12 +640,31 @@ public class MainUI extends BaseUI implements View.OnClickListener, AdapterView.
         }
         try {
             skinRenderer = new MinecraftSkinRenderer(context, R.drawable.skin_alex, true);
-            // ★★★ 1.5.0：套用玩家在「设置 → 外观 → 人物动作」里选的动作。
-            //   默认 ANIM_IDLE（站立不动）—— 用户要求默认不再一直走路。
+            // ★★★★★ 1.5.0：默认动作改成「有动作」（用户实测"默认没动作了，给它默认动作和 FCL 一致"）。
+            //   FCL 那边是 glTF 待机动画（GltfPlayerModel：待机 8~15s 随机播一个变体），
+            //   观感上**人物始终是动的**。QCL 这套老 GameCharacter 没有变体机制，
+            //   最接近的是 ANIM_WAVE（原地挥手循环）—— 站着有动作、又不像走路那样位移。
+            //   ★ 之前这里是 ANIM_IDLE（完全静止），所以用户看到"没动作"。
+            //   玩家仍可在「设置 → 外观 → 人物动作」里改。
             int anim = activity.launcherSetting == null
-                    ? MinecraftSkinRenderer.ANIM_IDLE
+                    ? MinecraftSkinRenderer.ANIM_WAVE
                     : activity.launcherSetting.accountModelAnim;
+            //   旧存档里 accountModelAnim 默认 0(=IDLE) 会让"升级后仍然静止"，
+            //   这里只在玩家**没有主动选过**（0）时给 WAVE，选过别的就尊重玩家选择。
+            if (activity.launcherSetting != null && activity.launcherSetting.accountModelAnim == 0) {
+                anim = MinecraftSkinRenderer.ANIM_WAVE;
+            }
             skinRenderer.setAnimMode(anim);
+            // ★★★★★ 1.5.0：人物**大小随屏幕自适应**（用户实测"显示有点太小"）。
+            //   GameCharacter.scale 固定 1.0f，在大屏上就显得很小。
+            //   基准：屏幕高 720dp → 1.0；1080dp → 1.5；1440dp 及以上 → 2.0（现有缩放上限）。
+            try {
+                android.util.DisplayMetrics dm = context.getResources().getDisplayMetrics();
+                float dpiScale = Math.max(1.0f, Math.min(2.0f, (dm.heightPixels / (float) dm.density) / 720.0f));
+                skinRenderer.mCharacter.setScale(dpiScale);
+            } catch (Throwable ignoredScale) {
+                // 取不到屏幕尺寸就保持默认 1.0
+            }
             skinGLSurfaceView = new SkinGLSurfaceView(context);
             skinGLSurfaceView.setEGLConfigChooser(8, 8, 8, 8, 16, 0);
             skinGLSurfaceView.getHolder().setFormat(PixelFormat.TRANSLUCENT);

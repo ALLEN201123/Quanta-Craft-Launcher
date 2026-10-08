@@ -38,6 +38,29 @@ public final class VulkanChecker {
     private static final String FEATURE_VULKAN_COMPUTE = "android.hardware.vulkan.compute";
     private static final String FEATURE_VULKAN_DEQP = "android.hardware.vulkan.deqp.level";
 
+    /**
+     * ★ 1.5.0：**游戏进程实际用的 Vulkan 来源**（native，来自 egl_bridge.c 的 qclGetVulkanSource）。
+     * 返回 "turnip"（走自带 Turnip 软 Vulkan）/ "system"（系统 libvulkan.so）/ "none"（没拿到）。
+     *
+     * <p>为什么需要它：本类只读**系统属性**，高通等机型属性里有 Vulkan 就会判"支持"并放行；
+     * 但若 Turnip 没接管、MC 实际回落 OpenGL，26.3+ 依旧崩 —— 两者会**脱节**。
+     * 把真实来源暴露出来，才能在崩溃前说清到底是哪一环出了问题。
+     *
+     * <p>★ 注意：只能在**游戏进程已加载 libpojavexec 并跑过 load_vulkan() 之后**才有意义；
+     * 启动前调用会得到 "none"（属正常，不代表出错）。因此所有调用点都必须 try-catch。
+     */
+    public static native String nativeGetVulkanSource();
+
+    /** 安全包装：拿不到就返回 "unknown"，绝不抛给调用方。 */
+    public static String getVulkanSourceSafe() {
+        try {
+            String s = nativeGetVulkanSource();
+            return (s == null || s.isEmpty()) ? "unknown" : s;
+        } catch (Throwable t) {
+            return "unknown";
+        }
+    }
+
     /** 采集设备 Vulkan 能力；设备不支持 Vulkan 时返回一个 apiVersionRaw=0 的对象（不会返回 null）。 */
     public static VulkanCapabilities check(Context context) {
         int version = 0;

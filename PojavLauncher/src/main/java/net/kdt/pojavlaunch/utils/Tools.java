@@ -53,6 +53,17 @@ public final class Tools {
             throw launchFailure;
         }
         Log.i("jrelog", "[游戏退出] JVM 已结束 exitCode=" + exitCode + "，回调 onExit");
+        // ★★★★★ 1.5.0：游戏**异常结束**时把关键诊断落盘，供启动器弹窗 + 一键复制。
+        //   动机（用户原话「他都崩了，我咋复制日志给你？」）：崩溃后游戏窗口已经没了，
+        //   日志窗也看不到，玩家没法把日志交出来 ⇒ 只能下次开启动器时才看得到。
+        //   这里在**游戏进程退出这一刻**（日志文件还完整）抓一份尾巴存到 crash_diag.txt。
+        if (exitCode != 0) {
+            try {
+                CrashDiag.capture(activity);
+            } catch (Throwable ignoredDiag) {
+                // 诊断失败绝不影响退出流程
+            }
+        }
         BaseMainActivity.onExit(activity, exitCode);
     }
 

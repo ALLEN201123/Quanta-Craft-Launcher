@@ -126,6 +126,14 @@ EXTERNAL_API void *pojavGetCurrentContext() {
 
 // 已加载的 Vulkan 句柄缓存（set_vulkan_ptr 与 loadTurnipVulkan 共用，各 ABI 都需要）
 static void* g_vulkan_ptr = NULL;
+// ★★★★★ 1.5.0：Vulkan **实际来源**标记。
+//   "turnip" = 走了自带 Turnip（Mesa 软件 Vulkan，Adreno 设备）｜"system" = 系统 libvulkan.so
+//   ｜"none" = 压根没加载到（VULKAN_PTR 为空 ⇒ MC 只能回落 OpenGL ⇒ 26.3+ 必崩）
+//   存在的意义：Java 层的 VulkanChecker 只读**系统属性**，会误判"支持"而放行；
+//   玩家真正需要知道的是"这次到底拿到 Vulkan 没有"，所以把它暴露给 Java 层显示。
+static const char* g_vulkan_source = "none";
+
+
 
 #ifdef ADRENO_POSSIBLE
 
@@ -222,14 +230,19 @@ void load_vulkan() {
         void* result = loadTurnipVulkan();
         if(result != NULL) {
             FCL_LOG("AdrenoSupp: Loaded Turnip, loader address: %p", result);
+            g_vulkan_source = "turnip";
             set_vulkan_ptr(result);
             return;
         }
+        // ★ 1.5.0：Turnip 没拿到时**明确记日志 + 标记**，否则 Java 层看不出为什么回落 OpenGL。
+        FCL_LOG("AdrenoSupp: Turnip unavailable (check: Adreno GPU? API>=28? DRIVER_PATH=%s)",
+                getenv("DRIVER_PATH") ? getenv("DRIVER_PATH") : "(unset)");
 #endif
     }
     FCL_LOG("OSMDroid: loading vulkan regularly...");
     void* vulkan_ptr = dlopen("libvulkan.so", RTLD_LAZY | RTLD_LOCAL);
     FCL_LOG("OSMDroid: loaded vulkan, ptr=%p", vulkan_ptr);
+    g_vulkan_source = (vulkan_ptr != NULL) ? "system" : "none";
     set_vulkan_ptr(vulkan_ptr);
 }
 
@@ -428,12 +441,33 @@ EXTERNAL_API void *pojavCreateContext(void *contextSrc) {
     return br_init_context((basic_render_window_t *) contextSrc);
 }
 
+// ★★★★★ 1.5.0：Vulkan **实际来源**标记（新增）。
+//   "turnip" = 走了自带 Turnip（Mesa 软件 Vulkan，Adreno 设备）｜"system" = 走了系统 libvulkan.so
+//   ｜"none" = 压根没加载到（VULKAN_PTR 为空 ⇒ MC 只能回落 OpenGL ⇒ 26.3+ 必崩）
+//   存在的意义：Java 层的 VulkanChecker 只读**系统属性**，会误判"支持"而放行；
+//   玩家真正需要知道的是"这次到底拿到 Vulkan 没有"，所以把它暴露给 Java 层显示。
+
 void *maybe_load_vulkan() {
     // We use the env var because
     // 1. it's easier to do that
     // 2. it won't break if something will try to load vulkan and osmesa simultaneously
     if (getenv("VULKAN_PTR") == NULL) load_vulkan();
     return (void *) strtoul(getenv("VULKAN_PTR"), NULL, 0x10);
+}
+
+/** 供 Java 层（VulkanChecker）查询：本次游戏进程实际用的 Vulkan 来源。 */
+__attribute__((visibility("default"))) const char* qclGetVulkanSource(void) {
+    if (getenv("VULKAN_PTR") == NULL) return "none";
+    return g_vulkan_source;
+}
+
+/**
+ * ★ 1.5.0：Java 层入口 —— VulkanChecker 用它拿到「实际 Vulkan 来源」。
+ * ★ 必须在**游戏 VM 之前**（启动器侧）也能调用，所以挂在启动器自己的类上。
+ */
+JNIEXPORT jstring JNICALL
+Java_com_qcl_launcher_launcher_launch_vulkan_VulkanChecker_nativeGetVulkanSource(JNIEnv *env, jclass thiz) {
+    return (*env)->NewStringUTF(env, qclGetVulkanSource());
 }
 
 EXTERNAL_API JNIEXPORT jlong JNICALL
