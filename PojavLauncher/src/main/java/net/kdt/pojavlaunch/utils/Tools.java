@@ -53,16 +53,17 @@ public final class Tools {
             throw launchFailure;
         }
         Log.i("jrelog", "[游戏退出] JVM 已结束 exitCode=" + exitCode + "，回调 onExit");
-        // ★★★★★ 1.5.0：游戏**异常结束**时把关键诊断落盘，供启动器弹窗 + 一键复制。
-        //   动机（用户原话「他都崩了，我咋复制日志给你？」）：崩溃后游戏窗口已经没了，
-        //   日志窗也看不到，玩家没法把日志交出来 ⇒ 只能下次开启动器时才看得到。
-        //   这里在**游戏进程退出这一刻**（日志文件还完整）抓一份尾巴存到 crash_diag.txt。
-        if (exitCode != 0) {
-            try {
-                CrashDiag.capture(activity);
-            } catch (Throwable ignoredDiag) {
-                // 诊断失败绝不影响退出流程
-            }
+        // ★★★★★ 1.5.0：游戏退出时抓一份关键诊断，供启动器弹窗 + 一键复制。
+        //   动机（用户原话「他都崩了，我咋复制日志给你？」）：崩溃后游戏窗口与日志窗都没了，
+        //   玩家拿不到日志，开发者只能靠猜。
+        //   ★★ 关键教训（第一版栽在这）：**不能用 `exitCode != 0` 判断是否崩溃** ——
+        //     26.3 的失败是 MC 内部的 `ArithmeticException`，MC 照样弹完自己的崩溃画面、
+        //     玩家点「返回」，JVM 是**正常退出**的 ⇒ exitCode = 0 ⇒ 第一版诊断永远不触发。
+        //   ⇒ 改成「扫日志找崩溃特征」，只要出现过异常/错误就抓，与退出码无关。
+        try {
+            CrashDiag.captureIfCrashed(activity);
+        } catch (Throwable ignoredDiag) {
+            // 诊断失败绝不影响退出流程
         }
         BaseMainActivity.onExit(activity, exitCode);
     }

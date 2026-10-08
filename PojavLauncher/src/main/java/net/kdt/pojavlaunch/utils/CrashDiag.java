@@ -71,6 +71,50 @@ public final class CrashDiag {
     }
 
     /**
+     * 游戏退出时调用：**只在日志里确实出现过崩溃特征时才抓**。
+     *
+     * <p>★ 为什么不能看退出码：MC 内部异常（如 26.3 的 {@code ArithmeticException}）走的是
+     * 「MC 弹自己的崩溃画面 → 玩家点返回 → JVM <b>正常</b>退出」，{@code exitCode} 是 0。
+     * 所以只能用日志内容判断，否则第一版那样永远抓不到（用户反馈"压根没见到任何诊断"）。
+     *
+     * @return 抓到的诊断文本；没有崩溃特征或失败返回空串（绝不抛异常）
+     */
+    public static String captureIfCrashed(Context ctx) {
+        try {
+            String tail = readTail(logFile(ctx));
+            if (!looksLikeCrash(tail)) {
+                return "";
+            }
+            return capture(ctx);
+        } catch (Throwable t) {
+            return "";
+        }
+    }
+
+    /** 日志里是否出现过"游戏崩了"的特征。 */
+    private static boolean looksLikeCrash(String tail) {
+        if (tail == null || tail.isEmpty()) {
+            return false;
+        }
+        // MC 崩溃画面必打印的堆栈头；以及渲染/加载阶段的致命异常
+        String[] marks = {
+                "Exception in thread", "at net.minecraft", "at com.mojang",
+                "java.lang.ArithmeticException", "java.lang.OutOfMemoryError",
+                "java.lang.NoSuchMethodError", "java.lang.NoClassDefFoundError",
+                "java.lang.UnsatisfiedLinkError", "EnderPearlLogger",
+                "-- Head --", "A detailed walkthrough of the error",
+                "Exception java.lang", "Failed to create window context",
+                "Could not initialize", "UnsatisfiedLinkError"
+        };
+        for (String m : marks) {
+            if (tail.contains(m)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
      * 游戏异常退出时调用：抓一份诊断写到 crash_diag.txt。
      *
      * @return 抓到的诊断文本；失败返回空串（绝不抛异常）

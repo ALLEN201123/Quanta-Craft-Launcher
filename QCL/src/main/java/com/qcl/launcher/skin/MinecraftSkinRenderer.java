@@ -143,10 +143,17 @@ public class MinecraftSkinRenderer implements GLSurfaceView.Renderer {
                     break;
                 }
                 case ANIM_WAVE: {
-                    // 挥手：站姿 + 单侧摆动（用小幅摆臂 + 身体侧倾合成）
-                    gameCharacter.SetRunning(true);
-                    gameCharacter.setWalkSwing((float) (Math.max(0.0d, Math.sin(t / 300.0d)) * 60.0d));
-                    gameCharacter.setZRotation((int) (Math.sin(t / 300.0d) * 4.0d));
+                    // ★★★★★ 1.5.0 修复（用户实测「手和身体都分离了」）：
+                    //   原来这里写的是 `SetRunning(true)` + 摆幅 **60**，而 Pojav 的
+                    //   `SetRunning(true)` 会把手臂/腿切到**跑步姿态**，再叠 60° 摆臂 ⇒
+                    //   手臂被甩到极端角度，看起来"和身体断开"。
+                    //   ★ 改成与 ANIM_IDLE 一致的站姿（SetRunning(false) + 小摆幅 + 呼吸浮动），
+                    //     只是摆臂幅度略大一点、周期略快，让它看起来"在动"而不是"静止"，
+                    //     同时**保证肢体不会脱节**。
+                    gameCharacter.SetRunning(false);
+                    gameCharacter.setWalkSwing((float) (Math.sin(t / 420.0d) * 14.0d));
+                    gameCharacter.setYRotation((int) (Math.sin(t / 900.0d) * 2.0d));
+                    gameCharacter.setZRotation((int) (Math.sin(t / 420.0d) * 1.5d));
                     break;
                 }
                 default: {
