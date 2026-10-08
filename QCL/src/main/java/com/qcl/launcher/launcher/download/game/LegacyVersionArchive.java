@@ -58,6 +58,29 @@ public final class LegacyVersionArchive {
         return isWeeklySnapshot(id) ? TYPE_SNAPSHOT : TYPE_ARCHIVE;
     }
 
+    /**
+     * ★★★ 1.5.0：**这个版本必须走 Betacraft 归档安装流程吗？**
+     *
+     * <p>原来两处分派（{@code GameInstallDialog.downloadMinecraft()} 与
+     * {@code MinecraftInstallTask.doInBackground()}）是**按 type 判**的：
+     * {@code TYPE_ARCHIVE} 或 {@code TYPE_SNAPSHOT} → 归档流程。
+     * 但 1.5.0 新增的 {@link UnlistedVersions} 里，10 个周快照（{@code 13w12~} / {@code 12w39a} …）
+     * 的 type 也是 {@code snapshot}，而它们的地址是 **piston-meta 的 {@code .json}**，
+     * 走归档流程必然失败（归档流程只认 Betacraft 的 {@code .info}）。
+     *
+     * <p>⇒ 判据改成**看地址**，这才是唯一可靠的分水岭：
+     * <ul>
+     *   <li>归档（Betacraft）= 地址以 {@code .info} 结尾（或 type 显式为 {@code archive}）</li>
+     *   <li>正常（Mojang / piston-meta）= 地址以 {@code .json} 结尾</li>
+     * </ul>
+     */
+    public static boolean isArchiveBuild(VersionManifest.Version version) {
+        if (version == null) return false;
+        if (TYPE_ARCHIVE.equals(version.type)) return true;
+        String url = version.url == null ? "" : version.url;
+        return url.endsWith(".info");
+    }
+
     private static final String ASSET_PATH = "legacy_version_archive.json";
 
     private static List<VersionManifest.Version> cache;

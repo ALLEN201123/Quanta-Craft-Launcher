@@ -1,21 +1,40 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- ★★★ 1.5.0 新排版（玩家可在「设置 → 外观 → 排版」里切回旧排版 ui_main.xml）。
+
+     设计目标（用户明确要求）：
+       · 入口从「顶部横排」改成「**左侧竖向导航条**」——顶部横排在手机横屏上 6 个入口挤成一排、
+         还得靠 HorizontalScrollView 左右滑，很难用；竖排在 900px 高的屏上完全放得下。
+       · **中间那块必须留给「持续人物显示」**（account_model_container 里的 SkinGLSurfaceView，
+         每帧转动的 3D 账号人物），绝不能像上一版草图那样拿卡片把它盖住。
+         所以结构是「左导航 ＋ 右侧主区」，主区里人物仍然拿 weight=1 吃掉全部剩余高度。
+       · 底部「启动游戏」由 200dp 居中改**通栏**（占满右侧主区宽度）。
+       · 左侧导航条用**竖向 ScrollView** 兜底 —— 小屏 / 窄比例时入口会超出屏幕高度，
+         滚一下就能点到，不会有按钮够不着。
+
+     ★ 本文件与 ui_main.xml 的 **id 集合完全一致（27 个）**，
+       因为 MainUI.java 及别处都是按 id 找控件的 —— 只改外层排布，控件一个不加不减。 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/ui_main"
     android:visibility="invisible"
-    android:orientation="vertical"
+    android:orientation="horizontal"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <!-- 顶部：所有入口从左到右排列，可左右滑动，避免最左/最右看不到 -->
-    <HorizontalScrollView
+    <!-- ★★ 新排版：左侧竖向导航条。
+         ★★★ 必须用**竖向 ScrollView**（不是 HorizontalScrollView）——
+           里面是竖排的入口按钮，横滚容器根本滚不动它。
+           小屏 / 窄边比（比如 4:3、或开了状态栏后可用高度不足）时，
+           入口加起来会超出屏幕高度 → 靠这里的竖向滚动兜住，**绝不能有按钮点不到**。
+           宽度 wrap（取最宽那条按钮），高度吃满。 -->
+    <ScrollView
         android:background="@color/qcl_gray_translucent_bar"
-        android:scrollbars="none"
-        android:fillViewport="false"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:scrollbars="vertical"
+        android:fillViewport="true"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent">
 
         <LinearLayout
-            android:orientation="horizontal"
+            android:orientation="vertical"
             android:paddingLeft="6dp"
             android:paddingRight="6dp"
             android:paddingTop="6dp"
@@ -312,9 +331,17 @@
 
         </LinearLayout>
 
-    </HorizontalScrollView>
+    </ScrollView>
 
-    <!-- 中间：持续显示当前账号的 3D 人物 -->
+    <!-- ★ 新排版：右侧主区 —— 0dp + weight=1，吃掉除左侧导航条以外的全部宽度 -->
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+    <!-- 中间：持续显示当前账号的 3D 人物
+         （★ 这就是「持续人物显示」，新排版里位置不变、尺寸不变，绝对不会被盖住） -->
     <FrameLayout
         android:id="@+id/account_model_container"
         android:layout_width="match_parent"
@@ -336,19 +363,23 @@
         android:layout_height="wrap_content"
         android:paddingBottom="24dp">
 
+        <!-- ★ 新排版：启动按钮由 200dp 居中改成「通栏」（占满右侧主区宽度） -->
         <LinearLayout
             android:tag="tint_accent_color"
             android:id="@+id/launcher_play_button"
             android:focusable="true"
             android:clickable="true"
             android:background="@drawable/launcher_button_transparent"
-            android:layout_width="200dp"
+            android:layout_width="match_parent"
+            android:layout_marginStart="12dp"
+            android:layout_marginEnd="12dp"
             android:layout_height="55dp"
             android:layout_centerHorizontal="true"
             android:orientation="horizontal">
 
             <LinearLayout
-                android:layout_width="179dp"
+                android:layout_width="0dp"
+                android:layout_weight="1"
                 android:layout_height="match_parent"
                 android:weightSum="2"
                 android:paddingTop="9dp"
@@ -412,5 +443,8 @@
         </LinearLayout>
 
     </RelativeLayout>
+
+    </LinearLayout>
+    <!-- ★ 新排版：右侧主区结束（account_model_container + 启动按钮都在它里面） -->
 
 </LinearLayout>

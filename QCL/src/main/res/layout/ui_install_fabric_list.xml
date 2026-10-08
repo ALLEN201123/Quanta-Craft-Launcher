@@ -8,50 +8,13 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <LinearLayout
-        android:id="@+id/download_fabric_hint_layout"
-        android:padding="10dp"
-        android:background="@drawable/launcher_view_blue"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical">
-
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
-
-            <ImageView
-                android:layout_width="20dp"
-                android:layout_height="20dp"
-                android:layout_gravity="center"
-                android:background="@drawable/ic_outline_about_black"/>
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:layout_marginStart="5dp"
-                android:text="@string/download_minecraft_ui_hint"
-                android:textSize="@dimen/text_size_middle"
-                android:textColor="@color/colorLinkBlueDark"/>
-
-        </LinearLayout>
-
-        <TextView
-            android:layout_marginTop="5dp"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/download_minecraft_ui_hint_text"
-            android:textSize="@dimen/text_size_middle"
-            android:textColor="@color/colorLinkBlueDark"/>
-
-    </LinearLayout>
+    <!-- ★ 1.5.0：顶部「提示」条已移除（用户要求：太占地方，列表能多显示一条是一条）。
+         列表容器由 match_parent 改为 0dp + weight=1，真正吃满剩余空间。 -->
 
     <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_marginTop="10dp">
+        android:layout_height="0dp"
+        android:layout_weight="1">
 
         <ListView
             android:background="@drawable/launcher_view_white"

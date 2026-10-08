@@ -1,8 +1,6 @@
 package com.qcl.launcher.launcher.uis.game.download.right.game;
 
 import android.content.Context;
-import android.content.Intent;
-import android.net.Uri;
 import android.os.Handler;
 import android.os.Message;
 import android.view.View;
@@ -30,7 +28,6 @@ public class DownloadForgeUI extends BaseUI implements View.OnClickListener {
     private TextView back;
     public LinearLayout downloadForgeUI;
     private ListView forgeListView;
-    private LinearLayout hintLayout;
     public boolean install;
     private final Handler loadingHandler;
     private ProgressBar progressBar;
@@ -65,9 +62,10 @@ public class DownloadForgeUI extends BaseUI implements View.OnClickListener {
     public void onCreate() {
         super.onCreate();
         this.downloadForgeUI = (LinearLayout) this.activity.findViewById(R.id.ui_install_forge_list);
-        LinearLayout linearLayout = (LinearLayout) this.activity.findViewById(R.id.download_forge_hint_layout);
-        this.hintLayout = linearLayout;
-        linearLayout.setOnClickListener(this);
+        // ★ 1.5.0：顶部「提示」条已移除（用户要求：太占地方）。
+        //   原来这里对 hintLayout 是**无条件** setOnClickListener(this)，
+        //   控件删掉后 findViewById 返回 null，会在 UIManager 构造期直接 NPE 把启动器打崩，
+        //   所以字段 / 查找 / 监听三处必须一起删。
         this.forgeListView = (ListView) this.activity.findViewById(R.id.forge_version_list);
         this.progressBar = (ProgressBar) this.activity.findViewById(R.id.loading_forge_list_progress);
         TextView textView = (TextView) this.activity.findViewById(R.id.back_to_install_ui_forge);
@@ -132,9 +130,7 @@ public class DownloadForgeUI extends BaseUI implements View.OnClickListener {
 
     @Override // android.view.View.OnClickListener
     public void onClick(View view) {
-        if (view == this.hintLayout) {
-            this.context.startActivity(new Intent("android.intent.action.VIEW", Uri.parse("https://afdian.net/@bangbang93")));
-        }
+        // ★ 1.5.0：`view == hintLayout` → 打开赞助页的分支已随提示条一起移除。
         if (view == this.back) {
             this.activity.backToLastUI();
         }

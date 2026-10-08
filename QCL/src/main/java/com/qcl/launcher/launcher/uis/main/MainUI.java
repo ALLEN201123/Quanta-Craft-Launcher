@@ -60,8 +60,8 @@ public class MainUI extends BaseUI implements View.OnClickListener, AdapterView.
     private LinearLayout startDownloadUI;
     private LinearLayout startMultiPlayerUI;
     private LinearLayout startSettingUI;
-    // ★ 1.4.1：大厅 / 实验室入口（自 1.4.0 朋友源码包合并）
-    private LinearLayout startLobbyUI;
+    // ★ 1.4.1：实验室入口（自 1.4.0 朋友源码包合并）
+    // ★ 1.5.0：原来的 startLobbyUI（大厅）已整体移除（用户："没有实际用处"）。
     private LinearLayout startLabUI;
 
     private LinearLayout startGame;
@@ -110,8 +110,7 @@ public class MainUI extends BaseUI implements View.OnClickListener, AdapterView.
         startDownloadUI = activity.findViewById(R.id.start_ui_download);
         startMultiPlayerUI = activity.findViewById(R.id.start_ui_multi_player);
         startSettingUI = activity.findViewById(R.id.start_ui_setting);
-        // ★ 1.4.1 新增入口
-        startLobbyUI = activity.findViewById(R.id.start_ui_lobby);
+        // ★ 1.4.1 新增入口（★ 1.5.0：「大厅」已移除，只剩实验室）
         startLabUI = activity.findViewById(R.id.start_ui_lab);
 
         startGame = activity.findViewById(R.id.launcher_play_button);
@@ -141,8 +140,7 @@ public class MainUI extends BaseUI implements View.OnClickListener, AdapterView.
         startDownloadUI.setOnClickListener(this);
         startMultiPlayerUI.setOnClickListener(this);
         startSettingUI.setOnClickListener(this);
-        // ★ 1.4.1 新增入口
-        startLobbyUI.setOnClickListener(this);
+        // ★ 1.4.1 新增入口（★ 1.5.0：「大厅」已移除，只剩实验室）
         startLabUI.setOnClickListener(this);
 
         startGame.setOnClickListener(this);
@@ -542,10 +540,7 @@ public class MainUI extends BaseUI implements View.OnClickListener, AdapterView.
         if (v == startSettingUI){
             activity.uiManager.switchMainUI(activity.uiManager.settingUI);
         }
-        // ★ 1.4.1 新增：大厅 / 实验室
-        if (v == startLobbyUI){
-            activity.uiManager.switchMainUI(activity.uiManager.lobbyUI);
-        }
+        // ★ 1.4.1 新增：实验室（★ 1.5.0：「大厅」分支已随入口一起移除）
         if (v == startLabUI){
             activity.uiManager.switchMainUI(activity.uiManager.labUI);
         }

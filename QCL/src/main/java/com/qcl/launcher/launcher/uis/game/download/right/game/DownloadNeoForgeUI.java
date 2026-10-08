@@ -1,8 +1,6 @@
 package com.qcl.launcher.launcher.uis.game.download.right.game;
 
 import android.content.Context;
-import android.content.Intent;
-import android.net.Uri;
 import android.os.Handler;
 import android.os.Message;
 import android.view.View;
@@ -39,7 +37,6 @@ import com.qcl.launcher.R;
  */
 public class DownloadNeoForgeUI extends BaseUI implements View.OnClickListener {
     public LinearLayout downloadNeoForgeUI;
-    private LinearLayout hintLayout;
     private ListView listView;
     private ProgressBar progressBar;
     private TextView back;
@@ -76,8 +73,9 @@ public class DownloadNeoForgeUI extends BaseUI implements View.OnClickListener {
     public void onCreate() {
         super.onCreate();
         this.downloadNeoForgeUI = (LinearLayout) this.activity.findViewById(R.id.ui_install_neoforge_list);
-        this.hintLayout = (LinearLayout) this.activity.findViewById(R.id.download_neoforge_hint_layout);
-        this.hintLayout.setOnClickListener(this);
+        // ★ 1.5.0：顶部「提示」条已移除（用户要求：太占地方）。
+        //   原来这里是 this.hintLayout.setOnClickListener(this)（连字段都没判空），
+        //   控件删掉后 findViewById 返回 null → UIManager 构造期 NPE 直接打崩启动器。
         this.listView = (ListView) this.activity.findViewById(R.id.neoforge_version_list);
         this.progressBar = (ProgressBar) this.activity.findViewById(R.id.loading_neoforge_list_progress);
         TextView textView = (TextView) this.activity.findViewById(R.id.back_to_install_ui_neoforge);
@@ -119,9 +117,7 @@ public class DownloadNeoForgeUI extends BaseUI implements View.OnClickListener {
 
     @Override
     public void onClick(View view) {
-        if (view == this.hintLayout) {
-            this.context.startActivity(new Intent("android.intent.action.VIEW", Uri.parse("https://neoforged.net/")));
-        }
+        // ★ 1.5.0：`view == hintLayout` → 打开 NeoForged 官网的分支已随提示条一起移除。
         if (view == this.back) {
             this.activity.backToLastUI();
         }

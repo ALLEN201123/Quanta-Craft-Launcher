@@ -21,8 +21,16 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent">
 
-            <include
-                layout="@layout/ui_main"
+            <!-- ★★★ 1.5.0：主界面改成「按设置选排版」，所以这里不再 include ui_main。
+                 原因有两个：
+                   ① `<include>` 是**编译期固定**的，没法按开关二选一；
+                   ② 两套布局的 id 集合**完全相同**（27 个），同时挂进视图树会让
+                      `findViewById` 只抓到第一个 → 点一套、动的是另一套（串页）。
+                 所以这里只留一个空容器，由 `MainActivity.inflateMainUi()` 在初始化时
+                 inflate `ui_main.xml`（旧排版）或 `ui_main_new.xml`（新排版）进去，
+                 同一时刻树里只有一套，天然没有重复 id。 -->
+            <FrameLayout
+                android:id="@+id/main_ui_host"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"/>
 
@@ -56,12 +64,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"/>
 
-            <!-- ★ 1.4.1 新增：大厅 / 实验室 -->
-            <include
-                layout="@layout/ui_lobby"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"/>
-
+            <!-- ★ 1.5.0：原「大厅」(ui_lobby) 已整体移除（用户："没有实际用处"）。
+                 下面是保留的「实验室」。 -->
             <include
                 layout="@layout/ui_lab"
                 android:layout_width="match_parent"

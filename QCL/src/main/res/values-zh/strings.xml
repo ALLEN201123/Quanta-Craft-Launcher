@@ -359,8 +359,9 @@
     <string name="download_ui_resource_pack">资源包</string>
     <string name="download_ui_world">世界</string>
 
-    <string name="download_minecraft_ui_hint">提示</string>
-    <string name="download_minecraft_ui_hint_text">国内镜像下载由 BMCLAPI 提供。点击查看服务说明。官方清单未收录的远古版本，大部分已改为考古社区的归档版（几乎涵盖全部远古版本），可直接安装。</string>
+    <!-- ★ 1.5.0：download_minecraft_ui_hint / _hint_text 已删除。
+         顶部「提示」条（BMCLAPI 镜像说明）已按用户要求从全部 9 个下载页移除，
+         这两条字符串不再有任何引用，留着只会被 lint 报 UnusedResources。 -->
     <string name="download_minecraft_ui_release">正式版</string>
     <string name="download_minecraft_ui_snapshot">快照版</string>
     <string name="download_minecraft_ui_old">远古版</string>
@@ -781,7 +782,10 @@
     <string name="exterior_setting_ui_theme_title">外观</string>
     <string name="exterior_setting_ui_theme">主题</string>
     <string name="exterior_setting_ui_bar_trans">标题栏透明</string>
-    <string name="exterior_setting_ui_style">草方块 UI</string>
+    <string name="exterior_setting_ui_layout_style">排版</string>
+    <string name="exterior_setting_ui_layout_old">旧排版</string>
+    <string name="exterior_setting_ui_layout_new">新排版</string>
+    <string name="exterior_setting_ui_layout_restart">重启启动器后新排版才会生效</string>
     <string name="exterior_setting_ui_full_screen">忽略刘海屏</string>
     <string name="exterior_setting_ui_bg_title">背景地址</string>
     <string name="exterior_setting_ui_bg_default">默认</string>

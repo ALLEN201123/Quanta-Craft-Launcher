@@ -300,8 +300,7 @@
     <string name="download_ui_package">整合包</string>
     <string name="download_ui_resource_pack">資源包</string>
     <string name="download_ui_world">世界</string>
-    <string name="download_minecraft_ui_hint">提示</string>
-    <string name="download_minecraft_ui_hint_text">鏡像下載由 BMCLAPI 提供。點擊查看服務說明。官方清單未收錄的歷史版本尚未補齊。</string>
+    <!-- ★ 1.5.0: download_minecraft_ui_hint / _hint_text removed (top info bar dropped). -->
     <string name="download_minecraft_ui_release">正式版</string>
     <string name="download_minecraft_ui_snapshot">測試版</string>
     <string name="download_minecraft_ui_old">遠古版</string>

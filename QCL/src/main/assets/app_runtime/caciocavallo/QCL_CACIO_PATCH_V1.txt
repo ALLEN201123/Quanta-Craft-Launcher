@@ -1,3 +1,0 @@
-QCL cacio FileDialog null-guard patch, v1
-applies to: cacio-shared-1.10-SNAPSHOT.jar
-fixes: CacioFileDialogPeer.setFile/setDirectory/setFilenameFilter NPE on null

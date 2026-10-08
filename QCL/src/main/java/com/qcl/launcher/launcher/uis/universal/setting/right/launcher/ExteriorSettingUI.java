@@ -62,12 +62,12 @@ import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.RadioButton;
 import android.widget.TextView;
+import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.widget.SwitchCompat;
 import com.qcl.launcher.launcher.MainActivity;
 import com.qcl.launcher.launcher.dialogs.tools.ColorSelectorDialog;
 import com.qcl.launcher.launcher.uis.tools.BaseUI;
-import com.qcl.launcher.launcher.uis.tools.QclThemeUtils;
 import com.qcl.launcher.manifest.AppManifest;
 import com.qcl.launcher.utils.animation.CustomAnimationUtils;
 import com.qcl.launcher.utils.file.UriUtils;
@@ -95,12 +95,14 @@ CompoundButton.OnCheckedChangeListener {
     private TextView panelColorText;
     private SwitchCompat transBarSwitch;
     private SwitchCompat fullscreenSwitch;
-    private SwitchCompat grassUiSwitch;
     private SwitchCompat showAccountModelSwitch;
     private SwitchCompat transBgSwitch;
     private LinearLayout fullscreenSetting;
     private RadioButton defaultRadio;
     private RadioButton classicRadio;
+    /** ★ 1.5.0：排版选择（旧排版 / 新排版） */
+    private RadioButton layoutOldRadio;
+    private RadioButton layoutNewRadio;
     private RadioButton customRadio;
     private RadioButton onlineRadio;
     private EditText editBgPath;
@@ -131,7 +133,6 @@ CompoundButton.OnCheckedChangeListener {
         this.panelColorText = (TextView)this.activity.findViewById(R.id.panel_color_text);
         this.transBarSwitch = (SwitchCompat)this.activity.findViewById(R.id.switch_trans_bar);
         this.fullscreenSwitch = (SwitchCompat)this.activity.findViewById(R.id.switch_full_screen);
-        this.grassUiSwitch = (SwitchCompat)this.activity.findViewById(R.id.switch_grass_ui);
         this.showAccountModelSwitch = (SwitchCompat)this.activity.findViewById(R.id.switch_show_account_model);
         this.transBgSwitch = (SwitchCompat)this.activity.findViewById(R.id.switch_transparent_bg);
         this.fullscreenSetting = (LinearLayout)this.activity.findViewById(R.id.fullscreen_layout);
@@ -139,6 +140,17 @@ CompoundButton.OnCheckedChangeListener {
         this.classicRadio = (RadioButton)this.activity.findViewById(R.id.select_bg_classic);
         this.customRadio = (RadioButton)this.activity.findViewById(R.id.select_bg_custom);
         this.onlineRadio = (RadioButton)this.activity.findViewById(R.id.select_bg_online);
+        // ★★★ 1.5.0：排版（旧排版 / 新排版）。这里就先把选中状态定好 —— 此刻**监听还没注册**
+        //   （注册在下面 onCreate 末尾），所以不会触发 onCheckedChanged、不会误弹「重启后生效」。
+        this.layoutOldRadio = (RadioButton)this.activity.findViewById(R.id.select_layout_old);
+        this.layoutNewRadio = (RadioButton)this.activity.findViewById(R.id.select_layout_new);
+        boolean useNewLayout = this.activity.launcherSetting.useNewLayout();
+        if (this.layoutNewRadio != null) {
+            this.layoutNewRadio.setChecked(useNewLayout);
+        }
+        if (this.layoutOldRadio != null) {
+            this.layoutOldRadio.setChecked(!useNewLayout);
+        }
         this.editBgPath = (EditText)this.activity.findViewById(R.id.edit_bg_path);
         this.editBgUrl = (EditText)this.activity.findViewById(R.id.edit_bg_url);
         this.selectBgPath = (ImageButton)this.activity.findViewById(R.id.select_bg_path);
@@ -185,9 +197,6 @@ CompoundButton.OnCheckedChangeListener {
         this.selectPanelColor.setOnClickListener((View.OnClickListener)this);
         this.transBarSwitch.setOnCheckedChangeListener((CompoundButton.OnCheckedChangeListener)this);
         this.fullscreenSwitch.setOnCheckedChangeListener((CompoundButton.OnCheckedChangeListener)this);
-        if (this.grassUiSwitch != null) {
-            this.grassUiSwitch.setOnCheckedChangeListener((CompoundButton.OnCheckedChangeListener)this);
-        }
         if (this.showAccountModelSwitch != null) {
             this.showAccountModelSwitch.setOnCheckedChangeListener((CompoundButton.OnCheckedChangeListener)this);
         }
@@ -198,6 +207,12 @@ CompoundButton.OnCheckedChangeListener {
         this.classicRadio.setOnCheckedChangeListener((CompoundButton.OnCheckedChangeListener)this);
         this.customRadio.setOnCheckedChangeListener((CompoundButton.OnCheckedChangeListener)this);
         this.onlineRadio.setOnCheckedChangeListener((CompoundButton.OnCheckedChangeListener)this);
+        if (this.layoutOldRadio != null) {
+            this.layoutOldRadio.setOnCheckedChangeListener((CompoundButton.OnCheckedChangeListener)this);
+        }
+        if (this.layoutNewRadio != null) {
+            this.layoutNewRadio.setOnCheckedChangeListener((CompoundButton.OnCheckedChangeListener)this);
+        }
         this.selectBgPath.setOnClickListener((View.OnClickListener)this);
         this.editBgPath.addTextChangedListener(new TextWatcher(){
 
@@ -251,11 +266,20 @@ CompoundButton.OnCheckedChangeListener {
         if (this.showAccountModelSwitch != null) {
             this.showAccountModelSwitch.setChecked(this.activity.launcherSetting.showAccountModel);
         }
-        if (this.grassUiSwitch != null) {
-            this.grassUiSwitch.setChecked(this.activity.launcherSetting.uiTheme == 1);
-            if (this.transBgSwitch != null) {
-                this.transBgSwitch.setChecked(this.activity.launcherSetting.transparentBackground);
-            }
+        // ★★★ 1.5.0：草方块开关移除后，「背景透明度」的同步必须独立出来 ——
+        //   它原来被错误地塞在 grassUiSwitch 的分支里（草方块开关为 null 就永远不会同步），
+        //   所以删草方块时必须把这段搬出来，否则这个开关会一直显示错的状态。
+        if (this.transBgSwitch != null) {
+            this.transBgSwitch.setChecked(this.activity.launcherSetting.transparentBackground);
+        }
+        // ★ 1.5.0：排版单选回填。用 useNewLayout()（老配置没存过这个键时算「新排版」），
+        //   与 onCreate 里的初值口径一致；setChecked 与当前设置一致 → 不会触发保存/Toast。
+        boolean layoutIsNew = this.activity.launcherSetting.useNewLayout();
+        if (this.layoutNewRadio != null) {
+            this.layoutNewRadio.setChecked(layoutIsNew);
+        }
+        if (this.layoutOldRadio != null) {
+            this.layoutOldRadio.setChecked(!layoutIsNew);
         }
         this.refreshColorEditable();
         if (Build.VERSION.SDK_INT < 28) {
@@ -263,21 +287,25 @@ CompoundButton.OnCheckedChangeListener {
         }
     }
 
+    /**
+     * ★ 1.5.0：草方块 UI 下线后，主题色 / 面板色**永远可编辑**。
+     *   原来这里按 {@code uiTheme == 1} 把两块颜色选择器禁用并调成半透明；
+     *   现在固定为「启用 + 不透明」。
+     */
     private void refreshColorEditable() {
-        boolean grass = this.activity.launcherSetting.uiTheme == 1;
-        this.setEnabledRecursive((View)this.selectTheme, !grass);
-        this.setEnabledRecursive((View)this.selectPanelColor, !grass);
+        this.setEnabledRecursive((View)this.selectTheme, true);
+        this.setEnabledRecursive((View)this.selectPanelColor, true);
         if (this.colorView != null) {
-            this.colorView.setAlpha(grass ? 0.35f : 1.0f);
+            this.colorView.setAlpha(1.0f);
         }
         if (this.panelColorView != null) {
-            this.panelColorView.setAlpha(grass ? 0.35f : 1.0f);
+            this.panelColorView.setAlpha(1.0f);
         }
         if (this.colorText != null) {
-            this.colorText.setAlpha(grass ? 0.45f : 1.0f);
+            this.colorText.setAlpha(1.0f);
         }
         if (this.panelColorText != null) {
-            this.panelColorText.setAlpha(grass ? 0.45f : 1.0f);
+            this.panelColorText.setAlpha(1.0f);
         }
     }
 
@@ -492,12 +520,8 @@ CompoundButton.OnCheckedChangeListener {
             }
             this.activity.getWindow().setFlags(256, 256);
         }
-        if (this.grassUiSwitch != null && buttonView == this.grassUiSwitch) {
-            this.activity.launcherSetting.uiTheme = isChecked ? 1 : 0;
-            GsonUtils.saveLauncherSetting(this.activity.launcherSetting, AppManifest.SETTING_DIR + "/launcher_setting.json");
-            QclThemeUtils.apply((Activity)this.activity, this.activity.launcherSetting.uiTheme);
-            this.refreshColorEditable();
-        }
+        // ★ 1.5.0：草方块 UI 开关已移除（那套主题一堆 bug，用户要求下线）。
+        //   原来这里会写 launcherSetting.uiTheme 并立刻 QclThemeUtils.apply(...)。
         // 1.3.7: 主界面是否显示账号人物（默认开）
         if (this.showAccountModelSwitch != null && buttonView == this.showAccountModelSwitch) {
             this.activity.launcherSetting.showAccountModel = isChecked;
@@ -512,6 +536,29 @@ CompoundButton.OnCheckedChangeListener {
                 container.setBackgroundColor(isChecked
                         ? android.graphics.Color.TRANSPARENT
                         : android.graphics.Color.parseColor("#C8EDEDED"));
+            }
+        }
+        // ★★★ 1.5.0：排版切换（旧排版 / 新排版）。
+        //   ★ 只有「值真的变了」才写入 + 弹提示 —— 否则每次进外观页回填 setChecked
+        //     都会触发一次 onCheckedChanged，一进页面就弹「重启后生效」，很烦。
+        //   ★ 必须重启才生效：MainActivity.inflateMainUi() 只在初始化时 inflate **一套**
+        //     （两套布局 id 相同，同时挂进视图树会 findViewById 串页），运行时换不了。
+        if (buttonView == this.layoutNewRadio && isChecked) {
+            this.layoutOldRadio.setChecked(false);
+            if (!this.activity.launcherSetting.useNewLayout()) {
+                this.activity.launcherSetting.uiStyle = 1;
+                this.activity.launcherSetting.uiStyleChosen = true;
+                GsonUtils.saveLauncherSetting(this.activity.launcherSetting, AppManifest.SETTING_DIR + "/launcher_setting.json");
+                Toast.makeText(this.context, R.string.exterior_setting_ui_layout_restart, 1).show();
+            }
+        }
+        if (buttonView == this.layoutOldRadio && isChecked) {
+            this.layoutNewRadio.setChecked(false);
+            if (this.activity.launcherSetting.useNewLayout()) {
+                this.activity.launcherSetting.uiStyle = 0;
+                this.activity.launcherSetting.uiStyleChosen = true;
+                GsonUtils.saveLauncherSetting(this.activity.launcherSetting, AppManifest.SETTING_DIR + "/launcher_setting.json");
+                Toast.makeText(this.context, R.string.exterior_setting_ui_layout_restart, 1).show();
             }
         }
         if (buttonView == this.defaultRadio && isChecked) {

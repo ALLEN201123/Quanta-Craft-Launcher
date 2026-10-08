@@ -47,6 +47,12 @@ public class DownloadGameListAdapter extends BaseAdapter {
         if (str.equals("snapshot")) {
             return this.context.getString(R.string.download_minecraft_ui_snapshot);
         }
+        // ★ 1.5.0：照 FCL —— PENDING（Combat Test / 1.18·1.19 实验性快照）与
+        //   UNOBFUSCATED（未混淆构建）都归「快照版」，
+        //   与 FCL 的 VersionInstallPage / RemoteVersionListAdapter 口径一致。
+        if (str.equals("pending") || str.equals("unobfuscated")) {
+            return this.context.getString(R.string.download_minecraft_ui_snapshot);
+        }
         if ("archive".equals(str)) {
             return this.context.getString(R.string.download_minecraft_ui_archive);
         }
@@ -61,14 +67,12 @@ public class DownloadGameListAdapter extends BaseAdapter {
         if (AprilFools.isAprilFools(version)) {
             return this.context.getString(R.string.download_minecraft_ui_april);
         }
-        // ★ 2026-10-06（用户实测"测试版里混了 1.3/1.4/1.4.1/1.4.3/1.5"）：
-        //   Mojang 官方清单把这几个纯数字正式版标成了 snapshot。
-        //   纯数字 id（1.1 / 1.4.1 / 1.5 …）一律按**正式版**显示，与 DownloadMinecraftUI
-        //   的筛选口径保持一致（那边不勾"正式版"就不会出现在列表里）。
-        String id = version == null ? null : version.id;
-        if (id != null && id.matches("\\d+(\\.\\d+)*")) {
-            return this.context.getString(R.string.download_minecraft_ui_release);
-        }
+        // ★★★ 2026-10-08 修正：删掉「纯数字 id 一律显示正式版」这条旧规则。
+        //   官方 version_manifest_v2.json 实测：1.3 / 1.4 / 1.4.1 / 1.4.3 / 1.5 / 1.6 /
+        //   1.6.3 / 1.7 / 1.7.1 的 type **就是 snapshot**（它们是预发布版，
+        //   正式版是 1.3.1 / 1.4.2 / 1.4.4 / 1.5.1 / 1.6.1 / 1.7.2），
+        //   只有 1.7.3 起官方才标 release。照抄清单才不会把预览版塞进「正式版」。
+        //   口径与 DownloadMinecraftUI.refresh() 完全一致。
         return getType(version == null ? "" : version.type);
     }
 
@@ -76,7 +80,7 @@ public class DownloadGameListAdapter extends BaseAdapter {
         if (str.equals("release")) {
             return this.context.getDrawable(R.drawable.ic_grass);
         }
-        if (str.equals("snapshot")) {
+        if (str.equals("snapshot") || str.equals("pending") || str.equals("unobfuscated")) {
             return this.context.getDrawable(R.drawable.ic_command);
         }
         return this.context.getDrawable(R.drawable.ic_command_block);

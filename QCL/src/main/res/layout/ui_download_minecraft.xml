@@ -7,52 +7,17 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <LinearLayout
-        android:id="@+id/download_minecraft_hint_layout"
-        android:padding="6dp"
-        android:background="@drawable/launcher_view_blue"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical">
-
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
-
-            <ImageView
-                android:layout_width="20dp"
-                android:layout_height="20dp"
-                android:layout_gravity="center"
-                android:background="@drawable/ic_outline_about_black"/>
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:layout_marginStart="5dp"
-                android:text="@string/download_minecraft_ui_hint"
-                android:textSize="@dimen/text_size_middle"
-                android:textColor="@color/colorLinkBlueDark"/>
-
-        </LinearLayout>
-
-        <TextView
-            android:layout_marginTop="5dp"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/download_minecraft_ui_hint_text"
-            android:maxLines="2"
-            android:ellipsize="end"
-            android:textSize="@dimen/text_size_small"
-            android:textColor="@color/colorLinkBlueDark"/>
-
-    </LinearLayout>
+    <!-- ★ 1.5.0：顶部「提示」(download_minecraft_hint_layout) 已移除（用户要求）——
+         它占了约 70px，本来列表就矮。注意：
+         ① 字符串 download_minecraft_ui_hint / _hint_text 是**和 Forge/Fabric/Quilt/OptiFine
+            等 8 个页面共用的**，所以只删本页控件，字符串必须留着；
+         ② 列表容器原来是 layout_height="match_parent"（竖向 LinearLayout 里会被兄弟挤掉一截），
+            现在改成 0dp + weight=1，**真正吃满剩余空间**，这才是「列表变大」的关键。 -->
 
     <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_marginTop="4dp">
+        android:layout_height="0dp"
+        android:layout_weight="1">
 
         <LinearLayout
             android:id="@+id/game_list_layout"

@@ -1,8 +1,6 @@
 package com.qcl.launcher.launcher.uis.game.download.right;
 
 import android.content.Context;
-import android.content.Intent;
-import android.net.Uri;
 import android.view.View;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
@@ -15,6 +13,7 @@ import com.google.gson.Gson;
 import com.qcl.launcher.launcher.MainActivity;
 import com.qcl.launcher.launcher.download.game.LegacyVersionArchive;
 import com.qcl.launcher.launcher.download.game.AprilFools;
+import com.qcl.launcher.launcher.download.game.UnlistedVersions;
 import com.qcl.launcher.launcher.download.game.VersionManifest;
 import com.qcl.launcher.launcher.list.download.minecraft.DownloadGameListAdapter;
 import com.qcl.launcher.launcher.uis.game.download.DownloadUrlSource;
@@ -38,7 +37,6 @@ public class DownloadMinecraftUI extends BaseUI implements View.OnClickListener,
     private CheckBox checkApril;
     public LinearLayout downloadMinecraftUI;
     private LinearLayout gameListLayout;
-    private LinearLayout hintLayout;
     private boolean loading;
     private ProgressBar loadingProgress;
     private ListView mcList;
@@ -53,9 +51,9 @@ public class DownloadMinecraftUI extends BaseUI implements View.OnClickListener,
     public void onCreate() {
         super.onCreate();
         this.downloadMinecraftUI = (LinearLayout) this.activity.findViewById(R.id.ui_download_minecraft);
-        LinearLayout linearLayout = (LinearLayout) this.activity.findViewById(R.id.download_minecraft_hint_layout);
-        this.hintLayout = linearLayout;
-        linearLayout.setOnClickListener(this);
+        // ★ 1.5.0：顶部「提示」条已移除（用户要求：太占地方，列表能多显示一条是一条）。
+        //   原来这里对 hintLayout 是**无条件** setOnClickListener（控件没了会 NPE），
+        //   所以字段、findViewById、监听三处必须一起删。
         this.gameListLayout = (LinearLayout) this.activity.findViewById(R.id.game_list_layout);
         this.checkRelease = (CheckBox) this.activity.findViewById(R.id.checkbox_release);
         this.checkSnapshot = (CheckBox) this.activity.findViewById(R.id.checkbox_snapshot);
@@ -151,44 +149,20 @@ public class DownloadMinecraftUI extends BaseUI implements View.OnClickListener,
                 linkedHashMap.put(version.id, version);
             }
         }
-        // ★ 1.4.9 诊断：周快照必须落在「快照版」分类（type=snapshot）。
-        //   若这里的 type 不是 snapshot，就会被 refresh() 归到「远古版」——
-        //   用户反馈"我让你把快照弄到测试版里，结果还在远古版那里"就是这里出问题。
-        try {
-            int snap = 0;
-            int arch = 0;
-            int weekSnap = 0;
-            String firstWeek = "";
-            String lastWeek = "";
-            String sample = "";
-            // linkedHashMap 是反编译产物（无泛型），values() 只能按 Object 迭代
-            for (Object obj : linkedHashMap.values()) {
-                VersionManifest.Version v = (VersionManifest.Version) obj;
-                String id = v.id == null ? "" : v.id;
-                // 独立复算一遍周快照判定（下标 0/1 数字、下标 2 是 w、下标 3 数字）
-                boolean wk = id.length() >= 4
-                        && id.charAt(0) >= '0' && id.charAt(0) <= '9'
-                        && id.charAt(1) >= '0' && id.charAt(1) <= '9'
-                        && id.charAt(2) == 'w'
-                        && id.charAt(3) >= '0' && id.charAt(3) <= '9';
-                if (wk) {
-                    weekSnap++;
-                    if (firstWeek.isEmpty() || id.compareTo(firstWeek) < 0) firstWeek = id;
-                    if (lastWeek.isEmpty() || id.compareTo(lastWeek) > 0) lastWeek = id;
-                }
-                if (LegacyVersionArchive.TYPE_SNAPSHOT.equals(v.type)) {
-                    snap++;
-                    if (sample.isEmpty()) sample = v.id;
-                } else if (LegacyVersionArchive.TYPE_ARCHIVE.equals(v.type)) {
-                    arch++;
-                }
+        // ★ 1.5.0：官方清单**漏收**的版本 —— Combat Test 12 个分支快照、
+        //   1.18_experimental-snapshot-1..7、1.19_deep_dark_experimental_snapshot-1、
+        //   *_unobfuscated（未混淆构建）11 个，以及 11w~13w 被官方删掉的 10 个周快照。
+        //   它们自带 piston-meta JSON 地址 ⇒ 走正常 Mojang 安装流程（不是归档流程）。
+        for (VersionManifest.Version version : UnlistedVersions.entries(this.context)) {
+            if (!linkedHashMap.containsKey(version.id)) {
+                linkedHashMap.put(version.id, version);
             }
-            android.util.Log.i("QCL-DL", "[版本清单] 合计=" + linkedHashMap.size()
-                    + " type=快照:" + snap + " type=远古:" + arch
-                    + " | 周快照判定命中=" + weekSnap
-                    + " 最早=" + firstWeek + " 最晚=" + lastWeek);
-        } catch (Throwable ignored) {
         }
+        // ★ 2026-10-08：1.4.9 期的「[版本清单] 计数」诊断日志已移除。
+        //   当时是为了排查「周快照落进远古版」加的；该问题已结案，
+        //   而且 1.5.0 实测发现 MuMu 的 logcat 缓冲只有 ~486 行、应用日志刷得又快
+        //   → 这行日志根本留不住，留着只是每次开下载页白算一遍全表。
+        //   以后模拟器上要取证，一律写**应用私有日志文件**，不要依赖 logcat。
         final ArrayList arrayList = new ArrayList(linkedHashMap.values());
         VersionManifest.sortNewestFirst(arrayList);
         this.activity.runOnUiThread(new Runnable() { // from class: com.qcl.launcher.launcher.uis.game.download.right.DownloadMinecraftUI$$ExternalSyntheticLambda1
@@ -214,36 +188,6 @@ public class DownloadMinecraftUI extends BaseUI implements View.OnClickListener,
         refresh();
     }
 
-    /**
-     * ★ 2026-06 修正 → 见下方 2026-10-06 注释。
-     * <p>
-     * 判断一个版本 id 是否是「正式版形态」：纯数字 + 点分，如 1 / 1.1 / 1.4.1 / 1.5 / 1.20.6。
-     * 快照一定是「数字+字母」形态（11w47a / 13w16a / 20w07a / 1.20.5-beta.1 里的 beta 那类另有 AprilFools 判定）。
-     *
-     * <p><b>为什么需要它</b>：实测 Mojang 官方 version_manifest_v2 把
-     * {@code 1.3 / 1.4 / 1.4.1 / 1.4.3 / 1.5} 全标成 {@code type=snapshot}，
-     * 只有 1.1、1.2.5 是 release。照抄清单 → 玩家在「测试版」里看到 1.1~1.5（用户实测截图）。
-     * 纯数字版本号一律按正式版归类，符合直觉。
-     */
-    private static boolean isPlainReleaseId(String id) {
-        if (id == null || id.isEmpty()) {
-            return false;
-        }
-        for (int i = 0; i < id.length(); i++) {
-            char c = id.charAt(i);
-            if (c == '.') {
-                if (i == 0 || i == id.length() - 1) {
-                    return false;      // 开头/结尾的点 → 不合法
-                }
-                continue;
-            }
-            if (c < '0' || c > '9') {
-                return false;          // 出现字母（w / beta / rc…）→ 是快照或候选版
-            }
-        }
-        return true;
-    }
-
     private void refresh() {
         if (this.mcList == null) {
             return;
@@ -255,22 +199,25 @@ public class DownloadMinecraftUI extends BaseUI implements View.OnClickListener,
             // ★ 1.4.5：愚人节版优先判定 —— 它们在清单里就是 snapshot，
             //   不先摘出来的话会被"快照版"一起吃进去（用户看不到单独分类）。
             boolean april = AprilFools.isAprilFools(next);
-            // ★ 2026-10-06 修复（用户实测"测试版里混了 5 个正式版"）
-            //   Mojang 官方清单把 1.1 ~ 1.5 这几个纯数字正式版**标成了 snapshot**
-            //   （实测官方 version_manifest_v2：1.3/1.4/1.4.1/1.4.3/1.5 全是 snapshot，
-            //     只有 1.1、1.2.5 是 release）。照抄清单就会让玩家在"测试版"里
-            //     看到 1.1~1.5，摸不着头脑。
-            //   规则：**id 是纯数字版本号（1 / 1.1 / 1.4.1 / 1.5 …）就一律按正式版归类**，
-            //     快照一定是 11w47a / 13w16a / 20w07a 这种「数字+字母」形态。
-            boolean plainRelease = isPlainReleaseId(next.id);
-            boolean equals = "release".equals(next.type) || plainRelease;
-            boolean equals2 = "snapshot".equals(next.type) && !plainRelease;
+            // ★★★ 2026-10-08 修正（群员实测反馈「预览版为啥跑正式版这一栏来了」）
+            //   这里原来有个 isPlainReleaseId()，把**所有纯数字 id**（1.3/1.4/1.4.1/1.4.3/
+            //   1.5/1.6/1.6.3/1.7/1.7.1）强行当「正式版」——那是 10-06 靠**未验证的假设**
+            //   加的（当天日志里明明写着「待查：清单里 1.5 的 type 到底是不是 release」）。
+            //   现按官方 version_manifest_v2.json 实测：这 9 个的 type **就是 snapshot**
+            //   （它们是各版本的预发布版；正式版是 1.3.1 / 1.4.2 / 1.4.4 / 1.5.1 / 1.6.1 / 1.7.2，
+            //     官方清单里只有 1.7.3 及之后才标 release）。
+            //   ⇒ 一律**照抄清单的 type**，与 FCL 的 VersionInstallPage 口径一致：
+            //     RELEASE → 正式版；PENDING / UNOBFUSCATED / SNAPSHOT → 快照版；其余 → 远古版。
+            boolean release = "release".equals(next.type);
+            boolean snapshotLike = "snapshot".equals(next.type)
+                    || UnlistedVersions.TYPE_PENDING.equals(next.type)
+                    || UnlistedVersions.TYPE_UNOBFUSCATED.equals(next.type);
             boolean show;
             if (april) {
                 show = this.checkApril.isChecked();
-            } else if (equals) {
+            } else if (release) {
                 show = this.checkRelease.isChecked();
-            } else if (equals2) {
+            } else if (snapshotLike) {
                 show = this.checkSnapshot.isChecked();
             } else {
                 show = this.checkOld.isChecked();
@@ -284,9 +231,8 @@ public class DownloadMinecraftUI extends BaseUI implements View.OnClickListener,
 
     @Override // android.view.View.OnClickListener
     public void onClick(View view) {
-        if (view == this.hintLayout) {
-            this.context.startActivity(new Intent("android.intent.action.VIEW", Uri.parse("https://bmclapidoc.bangbang93.com/")));
-        }
+        // ★ 1.5.0：原来这里还有一条 `view == hintLayout` → 打开 BMCLAPI 说明页的分支，
+        //   提示条已移除，分支一并删掉（保留了也没意义，控件都不存在了）。
         if (view == this.refresh) {
             init();
         }

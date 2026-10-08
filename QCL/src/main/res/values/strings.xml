@@ -385,8 +385,9 @@
     <string name="download_ui_mod">Mods</string>
     <string name="download_ui_resource_pack">Resource Packs</string>
     <string name="download_ui_world">Worlds</string>
-    <string name="download_minecraft_ui_hint">Information</string>
-    <string name="download_minecraft_ui_hint_text">Downloads are mirrored by BMCLAPI. Click for details. Most ancient versions missing from the official catalog are provided as archive builds (covering almost every ancient version) and can be installed directly.</string>
+    <!-- ★ 1.5.0: download_minecraft_ui_hint / _hint_text removed.
+         The top "Information" bar (BMCLAPI mirror notice) was removed from all 9 download
+         pages at the user's request, so these two strings have no references left. -->
     <string name="download_minecraft_ui_release">Releases</string>
     <string name="download_minecraft_ui_snapshot">Snapshots</string>
     <string name="download_minecraft_ui_old">Historical</string>
@@ -760,7 +761,10 @@
     <string name="exterior_setting_ui_theme">Theme</string>
     <string name="exterior_setting_ui_transparent_bg">透明界面背景（关闭恢复灰色）</string>
     <string name="exterior_setting_ui_bar_trans">Transparent titlebar</string>
-    <string name="exterior_setting_ui_style">Grass Block UI</string>
+    <string name="exterior_setting_ui_layout_style">Layout</string>
+    <string name="exterior_setting_ui_layout_old">Classic layout</string>
+    <string name="exterior_setting_ui_layout_new">New layout</string>
+    <string name="exterior_setting_ui_layout_restart">Restart the launcher to apply the new layout</string>
     <string name="exterior_setting_ui_full_screen">Ignore notch</string>
     <string name="exterior_setting_ui_bg_title">Background Image</string>
     <string name="exterior_setting_ui_bg_default">Default</string>

@@ -298,8 +298,7 @@
     <string name="download_ui_mod">Mods</string>
     <string name="download_ui_resource_pack">Pacotes de recursos</string>
     <string name="download_ui_world">Mundos</string>
-    <string name="download_minecraft_ui_hint">Informação</string>
-    <string name="download_minecraft_ui_hint_text">Os downloads são fornecidos por BMCLAPI. Clique aqui para obter mais informações.</string>
+    <!-- ★ 1.5.0: download_minecraft_ui_hint / _hint_text removed (top info bar dropped). -->
     <string name="download_minecraft_ui_release">Lan</string>
     <string name="download_minecraft_ui_snapshot">Instantâneos</string>
     <string name="download_minecraft_ui_old">Histórico</string>

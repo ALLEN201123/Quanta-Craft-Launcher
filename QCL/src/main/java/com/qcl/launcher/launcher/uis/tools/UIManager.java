@@ -28,7 +28,6 @@ import com.qcl.launcher.launcher.uis.game.version.universal.ExportPackageTypeUI;
 import com.qcl.launcher.launcher.uis.game.version.universal.InstallPackageUI;
 // ★ 1.4.1 新增页面（自 1.4.0 朋友源码包合并）
 import com.qcl.launcher.launcher.uis.lab.LabUI;
-import com.qcl.launcher.launcher.uis.lobby.LobbyUI;
 import com.qcl.launcher.launcher.uis.main.MainUI;
 import com.qcl.launcher.launcher.uis.universal.setting.SettingUI;
 
@@ -43,8 +42,7 @@ public class UIManager {
     public DownloadUI downloadUI;
     public SettingUI settingUI;
 
-    // ★ 1.4.1 新增：大厅 / 实验室
-    public LobbyUI lobbyUI;
+    // ★ 1.4.1 新增：实验室（★ 1.5.0：原「大厅」LobbyUI 已整体移除，用户说没实际用处）
     public LabUI labUI;
 
     public ModUpdateUI modUpdateUI;
@@ -78,8 +76,7 @@ public class UIManager {
         downloadUI = new DownloadUI(context, activity);
         settingUI = new SettingUI(context, activity);
 
-        // ★ 1.4.1 新增页面
-        lobbyUI = new LobbyUI(context, activity);
+        // ★ 1.4.1 新增页面（★ 1.5.0：「大厅」已移除）
         labUI = new LabUI(context, activity);
 
         modUpdateUI = new ModUpdateUI(context, activity);
@@ -108,8 +105,7 @@ public class UIManager {
         downloadUI.onCreate();
         settingUI.onCreate();
 
-        // ★ 1.4.1 新增页面
-        lobbyUI.onCreate();
+        // ★ 1.4.1 新增页面（★ 1.5.0：「大厅」已移除）
         labUI.onCreate();
 
         modUpdateUI.onCreate();
@@ -146,7 +142,6 @@ public class UIManager {
                 versionListUI,
                 downloadUI,
                 settingUI,
-                lobbyUI,
                 labUI,
                 installGameUI,
                 downloadForgeUI,

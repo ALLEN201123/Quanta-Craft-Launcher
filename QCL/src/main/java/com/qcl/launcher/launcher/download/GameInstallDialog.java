@@ -180,8 +180,7 @@ Handler.Callback {
         //   但 type 被设为 "snapshot"（这样它们才能出现在「测试版」而不是「远古版」里）
         //   → 点下载会掉进 MinecraftInstallTask，那条路没有 Mojang 元数据可读 → 必然失败。
         //   现在两种归档类型都走归档安装流程。
-        if (LegacyVersionArchive.TYPE_ARCHIVE.equals(this.version.type)
-                || LegacyVersionArchive.TYPE_SNAPSHOT.equals(this.version.type)) {
+        if (LegacyVersionArchive.isArchiveBuild(this.version)) {
             this.downloadArchivedBuild();
             return;
         }

@@ -1,8 +1,6 @@
 package com.qcl.launcher.launcher.uis.game.download.right.game;
 
 import android.content.Context;
-import android.content.Intent;
-import android.net.Uri;
 import android.os.Handler;
 import android.os.Message;
 import android.view.View;
@@ -35,7 +33,6 @@ public class DownloadOptifineUI extends BaseUI implements View.OnClickListener, 
     private CheckBox checkRelease;
     private CheckBox checkSnapshot;
     public LinearLayout downloadOptifineUI;
-    private LinearLayout hintLayout;
     public boolean install;
     private LinearLayout listLayout;
     private final Handler loadingHandler;
@@ -73,9 +70,10 @@ public class DownloadOptifineUI extends BaseUI implements View.OnClickListener, 
     public void onCreate() {
         super.onCreate();
         this.downloadOptifineUI = (LinearLayout) this.activity.findViewById(R.id.ui_install_optifine_list);
-        LinearLayout linearLayout = (LinearLayout) this.activity.findViewById(R.id.download_forge_hint_layout);
-        this.hintLayout = linearLayout;
-        linearLayout.setOnClickListener(this);
+        // ★ 1.5.0：顶部「提示」条已移除（用户要求：太占地方）。
+        //   ★ 注意这里原来查的是 R.id.download_forge_hint_layout —— OptiFine 页居然去查
+        //     **Forge 页**的提示条 id（老代码的串线 bug：靠 activity 全局 findViewById 兜住了，
+        //     但点 OptiFine 的提示实际触发的是 Forge 那条）。一并删掉，不再需要。
         this.listLayout = (LinearLayout) this.activity.findViewById(R.id.optifine_list_layout);
         this.checkRelease = (CheckBox) this.activity.findViewById(R.id.optifine_checkbox_release);
         this.checkSnapshot = (CheckBox) this.activity.findViewById(R.id.optifine_checkbox_snapshot);
@@ -176,9 +174,7 @@ public class DownloadOptifineUI extends BaseUI implements View.OnClickListener, 
 
     @Override // android.view.View.OnClickListener
     public void onClick(View view) {
-        if (view == this.hintLayout) {
-            this.context.startActivity(new Intent("android.intent.action.VIEW", Uri.parse("https://afdian.net/@bangbang93")));
-        }
+        // ★ 1.5.0：`view == hintLayout` → 打开赞助页的分支已随提示条一起移除。
         if (view == this.back) {
             this.activity.backToLastUI();
         }

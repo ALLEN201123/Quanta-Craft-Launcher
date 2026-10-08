@@ -38,7 +38,9 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
@@ -59,7 +61,6 @@ import com.qcl.launcher.launcher.setting.game.PublicGameSetting;
 import com.qcl.launcher.launcher.setting.launcher.LauncherSetting;
 import com.qcl.launcher.launcher.uis.game.download.DownloadUrlSource;
 import com.qcl.launcher.launcher.uis.main.DynamicBackground;
-import com.qcl.launcher.launcher.uis.tools.QclThemeUtils;
 import com.qcl.launcher.launcher.uis.tools.UIManager;
 import com.qcl.launcher.launcher.uis.universal.setting.right.launcher.ExteriorSettingUI;
 import com.qcl.launcher.manifest.AppManifest;
@@ -107,6 +108,10 @@ implements View.OnClickListener {
                     MainActivity.this.closeCurrentUI.setOnClickListener((View.OnClickListener)MainActivity.this);
                 }
                 MainActivity.this.uiContainer = (RelativeLayout)MainActivity.this.findViewById(R.id.main_ui_container);
+                // ★★★ 1.5.0：按设置把「旧排版 / 新排版」inflate 进 main_ui_host。
+                //   必须在 new UIManager(...) **之前** —— 那个构造里会对全部页面调 onCreate()，
+                //   每个都在 findViewById 找控件；布局还没进去的话全都拿到 null。
+                MainActivity.this.inflateMainUi();
                 MainActivity.this.uiManager = new UIManager((Context)MainActivity.this, MainActivity.this);
                 MainActivity.this.exteriorConfig.primaryColor(ExteriorSettingUI.parseThemeColorSafe((Context)MainActivity.this, MainActivity.this.launcherSetting.launcherTheme));
                 MainActivity.this.exteriorConfig.accentColor(ExteriorSettingUI.parseThemeColorSafe((Context)MainActivity.this, MainActivity.this.launcherSetting.launcherTheme));
@@ -133,7 +138,9 @@ implements View.OnClickListener {
                 }
                 catch (Throwable ignored) {
                 }
-                MainActivity.this.applyUiTheme();
+                // ★ 1.5.0：这里原来是 MainActivity.this.applyUiTheme();（草方块主题引擎）。
+                //   草方块 UI 已彻底删除，整个 QclThemeUtils 也没了 → 不再需要调用。
+                //   缺省主题的收尾工作现在由 customTheme() / exteriorConfig 负责。
             }
         }
     };
@@ -227,14 +234,54 @@ implements View.OnClickListener {
         }
     }
 
-    public void applyUiTheme() {
+    /**
+     * ★★★ 1.5.0：把「旧排版 / 新排版」里选中的那一套 inflate 进 {@code main_ui_host}。
+     *
+     * <p>为什么不像别的页面那样用 {@code <include>}：
+     * <ul>
+     *   <li>{@code <include>} 是**编译期固定**的，没法按设置二选一；</li>
+     *   <li>两套布局（{@code ui_main.xml} / {@code ui_main_new.xml}）的 **id 集合完全相同**
+     *       （27 个），若同时挂进视图树，{@code findViewById} 只会返回第一个匹配 →
+     *       点的是新排版、动的是旧排版（串页）。</li>
+     * </ul>
+     * 所以改成运行时只 inflate 一套，同一时刻树里只有一套，天然无重复 id。
+     *
+     * <p>★ 兜底很重要：新排版万一 inflate 失败（资源缺失 / 语法问题），
+     * 必须**自动退回旧排版** —— 否则启动器直接白屏，而「设置 → 外观」也进不去，
+     * 玩家连切回来都做不到，等于变砖。
+     */
+    public void inflateMainUi() {
         try {
-            QclThemeUtils.apply((Activity)this, this.launcherSetting.uiTheme);
-        }
-        catch (Throwable throwable) {
-            // empty catch block
+            View host = this.findViewById(R.id.main_ui_host);
+            if (!(host instanceof ViewGroup)) return;
+            ViewGroup group = (ViewGroup) host;
+            if (group.getChildCount() > 0) return;   // 幂等：别重复 inflate
+            boolean useNew = this.launcherSetting == null || this.launcherSetting.useNewLayout();
+            LayoutInflater.from(this).inflate(useNew ? R.layout.ui_main_new : R.layout.ui_main, group, true);
+        } catch (Throwable t) {
+            try {
+                ViewGroup group = (ViewGroup) this.findViewById(R.id.main_ui_host);
+                if (group != null && group.getChildCount() == 0) {
+                    LayoutInflater.from(this).inflate(R.layout.ui_main, group, true);
+                }
+            } catch (Throwable ignored) {
+                // 连旧排版都 inflate 不了就真没救了，交给上层按空界面处理。
+            }
         }
     }
+
+    /*
+     * ★★★ 1.5.0：**草方块 UI 已彻底删除**（那套主题一堆 bug，用户要求移除）。
+     *
+     * 原来这里是 applyUiTheme() → QclThemeUtils.apply(activity, uiTheme)，
+     * 由 QclThemeUtils 递归遍历整棵视图树，按「面板角色」把背景换成草方块贴图、
+     * 把文字染成草方块配色；传别的值则从 view tag 里取回原值做**还原**。
+     *
+     * 现在开关、字段（launcherSetting.uiTheme）、整套 QclThemeUtils
+     * 以及 qcl_grass_* 那 9 个 drawable 全部删掉了 —— 没有任何代码再改这些背景，
+     * 自然也不需要「还原」，所以这个方法整个移除。
+     * 视图背景就由布局文件本身说了算，干净可控。
+     */
 
     protected void onDestroy() {
         if (this.dynamicBackground != null) {

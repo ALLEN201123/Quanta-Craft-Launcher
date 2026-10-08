@@ -68,8 +68,7 @@ public class MinecraftInstallTask extends AsyncTask<VersionManifest.Version,Inte
             onProgressUpdate(0);
         });
 
-        if (LegacyVersionArchive.TYPE_ARCHIVE.equals(gameVersion.type)
-                || LegacyVersionArchive.TYPE_SNAPSHOT.equals(gameVersion.type)) {
+        if (LegacyVersionArchive.isArchiveBuild(gameVersion)) {
             // Archived builds (and Betacraft-backed weekly snapshots) carry no Mojang metadata
             // to install from. 本应由 GameInstallDialog.downloadArchivedBuild() 分派走
             // LegacyArchiveInstallTask；能跑到这里说明分派漏了，明确报错而不是静默装错。

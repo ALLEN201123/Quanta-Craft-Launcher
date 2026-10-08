@@ -298,8 +298,7 @@
     <string name="download_ui_mod">Mods</string>
     <string name="download_ui_resource_pack">Resource Packs</string>
     <string name="download_ui_world">Svetovi</string>
-    <string name="download_minecraft_ui_hint">Informacije</string>
-    <string name="download_minecraft_ui_hint_text">Preuzimanja obezbeđuje BMCLAPI. Kliknite ovde za više informacija.</string>
+    <!-- ★ 1.5.0: download_minecraft_ui_hint / _hint_text removed (top info bar dropped). -->
     <string name="download_minecraft_ui_release">Izdanja</string>
     <string name="download_minecraft_ui_snapshot">Snapshots</string>
     <string name="download_minecraft_ui_old">Istorične</string>
