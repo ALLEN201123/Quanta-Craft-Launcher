@@ -7,60 +7,80 @@
 
      ★★★ 本布局**只在新排版下 inflate**（旧排版完全不动）。
 
-     ★★★★ 1.5.0 重做（用户原话：「启动游戏上面的版本和账户也按照 fcl 的，不然看起来有点太难看」）——
-       上一版我自己加了两块「半透明圆角卡片」（账号卡片 + 独立版本行），FCL 根本**不是**这样画的，
-       叠在壁纸上确实很难看。现改为**逐条照 FCL 的 activity_main.xml**：
+     ★★★★ 1.5.0 重做（用户原话：
+       「账户显示在中间，版本显示在启动游戏按钮上方，大小和启动游戏一样，
+         头像和账户也要弄成和启动游戏的一样，就是看起来一样」）——
 
-         FCL 版式（自下而上，整体贴右下角）：
-           ┌─────────────────────────────┐
-           │        头像 52dp（悬浮、无底板）      │  @id/account
-           │        账号名 16sp bold              │   （selectableItemBackgroundBorderless，
-           │        账号提示 12sp                 │     全透明，靠壁纸本身够暗/够亮）
-           ├─────────────────────────────┤
-           │ ┌─────────────────────────┐ │  @id/start
-           │ │        启动游戏 (bold)        │ │   ← **版本名就在这个按钮里面**
-           │ │   [30dp图标] 版本名           │ │      下半行是「[图标] 版本名」
-           │ └─────────────────────────┘ │
-           └─────────────────────────────┘
+       FCL 的版式（activity_main.xml @id/right_menu_content）：
+         · @id/account 上下都被约束（top→progress、bottom→start）⇒ 在剩余空间里**自动居中**
+         · @id/start   最底部，内部「启动游戏」+「[图标] 版本名」
+         · 整个右栏宽 = 屏幕 25%（app:layout_constraintWidth_percent="0.25"）
 
-       ★ FCL 为什么不需要底板？因为它有 ThemeEngine：`app:use_theme_color="true"` 会让
-         文字色**自动取当前主题算出的高对比色**（FCLTextView.refreshTheme →
-         `ThemeEngine.getTheme().getColor2()`）。QCL 没有这套引擎
-         ⇒ 改用 QCL 自己的**昼夜成对翻转色** `qcl_nav_text_primary/secondary`
-           （日间近黑 / 夜间纯白），效果等价。
+       本文件的版式（**自下而上贴底，账号垂直居中**）：
+         ┌───────────────────────────────┐
+         │                               │
+         │        头像 64dp（悬浮、无底板）      │  ← @id/start_ui_account
+         │        账号名 16sp bold              │     上下约束 ⇒ **垂直居中**
+         │        账号提示 12sp                 │     （top→parent，bottom→版本行顶部）
+         │                               │
+         ├───────────────────────────────┤
+         │ ┌───────────────────────────┐ │  ← @id/launch_version_row
+         │ │   [22dp图标]  版本名（居中）    │ │     **独立一块，在启动按钮上方**
+         │ └───────────────────────────┘ │     与按钮**同宽同高**（都是通栏 match_parent）
+         │ ┌───────────────────────────┐ │  ← @id/launcher_play_button
+         │ │         启动游戏 (bold)        │ │     只剩一行文字（版本名已移出去）
+         │ └───────────────────────────┘ │
+         └───────────────────────────────┘
 
-       ★ 保留项：头像左右两块 ImageView（face + hat）尺寸/位置必须完全一致 ——
+       ★ 为什么根节点可以用 ConstraintLayout：`R.id.new_right_panel` **Java 侧零引用**
+         （MainActivity 只用 `new_right_panel_host`，类型是 View）⇒ 根节点类型随便改。
+       ★★★ 但**子节点必须是 LinearLayout**：MainUI 里
+           `private LinearLayout startAccountUI / startGame / launchVersionRow;`
+         findViewById 泛型推断会强转 ⇒ 换成别的容器类型会 ClassCastException（启动崩溃）。
+
+       ★ 为什么不需要底板？FCL 有 ThemeEngine：`app:use_theme_color="true"` 让文字色
+         自动取当前主题算出的高对比色。QCL 没有这套引擎
+         ⇒ 用 QCL 自己的**昼夜成对翻转色** `qcl_nav_text_primary/secondary`（日间近黑 / 夜间纯白）。
+
+       ★ 保留项：头像两个 ImageView（face + hat）尺寸/位置必须完全一致 ——
          `Avatar.setAvatar` 是按 `imageView.getWidth()` 缩放后叠加的，差一点帽子就歪。
        ★ 保留项：所有资源 id 一律不变（Java 侧 `findViewById` 全部依赖它们）。 -->
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/new_right_panel"
     android:layout_width="@dimen/qcl_right_panel_width"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:gravity="end|bottom"
     android:paddingBottom="16dp"
     android:paddingStart="10dp"
     android:paddingEnd="10dp">
 
-    <!-- ==================== 账号区（照 FCL @id/account） ==================== -->
-    <!-- ★ 无底板（FCL 是 selectableItemBackgroundBorderless = 全透明）：
-         上一版我加的 qcl_nav_panel_card 圆角卡片已**撤掉**（用户嫌难看）。
-         文字靠 qcl_nav_text_primary/secondary 的昼夜翻转保证可读。 -->
+    <!-- ==================== 账号区（照 FCL @id/account） ====================
+         ★★★ 垂直居中：top→parent、bottom→版本行顶部 ⇒ 在「顶部 ~ 版本行」之间居中，
+             既满足用户「账户显示在中间」，又天然不会和底部的版本行/启动按钮重叠。
+         ★ 无底板（FCL 是 selectableItemBackgroundBorderless = 全透明），
+           文字靠 qcl_nav_text_primary/secondary 的昼夜翻转保证可读。 -->
     <LinearLayout
         android:id="@+id/start_ui_account"
         android:focusable="true"
         android:clickable="true"
         android:background="?android:attr/selectableItemBackgroundBorderless"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal"
-        android:layout_marginBottom="10dp"
         android:orientation="vertical"
-        android:gravity="center_horizontal">
+        android:gravity="center_horizontal"
+        android:paddingTop="8dp"
+        android:paddingBottom="8dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/launch_version_row">
 
+        <!-- ★ 头像放大到 64dp（用户要求「头像和账户也要弄成和启动游戏的一样，就是看起来一样」：
+             原来 52dp 贴在 210dp 宽的右栏里显小，和通栏的启动按钮不成比例）。 -->
         <RelativeLayout
-            android:layout_width="52dp"
-            android:layout_height="52dp"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
             android:layout_gravity="center_horizontal">
 
             <!-- ★★★ 头像两个 ImageView **必须同尺寸、同位置（都靠左上，不加 centerInParent）**：
@@ -68,14 +88,14 @@
                  再叠加的（hat 盖在 face 上），尺寸或对齐只要差一点，帽子就会偏。 -->
             <ImageView
                 android:id="@+id/account_skin_face"
-                android:layout_width="52dp"
-                android:layout_height="52dp"
+                android:layout_width="64dp"
+                android:layout_height="64dp"
                 android:src="@drawable/ic_steve"/>
 
             <ImageView
                 android:id="@+id/account_skin_hat"
-                android:layout_width="52dp"
-                android:layout_height="52dp"/>
+                android:layout_width="64dp"
+                android:layout_height="64dp"/>
 
         </RelativeLayout>
 
@@ -85,7 +105,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
-            android:layout_marginTop="4dp"
+            android:layout_marginTop="6dp"
             android:text="@string/launcher_scroll_account_name"
             android:textColor="@color/qcl_nav_text_primary"
             android:textSize="16sp"
@@ -104,31 +124,72 @@
 
     </LinearLayout>
 
-    <!-- ==================== 启动区块（照 FCL @id/start） ==================== -->
-    <!-- ★★★ 关键差异（这才是 FCL 的样子）：
-         版本名**不是单独一行**，而是**画在启动按钮的下半部分** ——
-         上半是「启动游戏」，下半是「[30dp 版本图标] 版本名」。
-         上一版我做成「独立版本行 + 独立启动按钮」两块钱，所以看着散、难看。
+    <!-- ==================== 版本行（独立一块，在启动按钮**上方**） ====================
+         ★★★ 用户要求：「版本显示在启动游戏按钮上方，大小和启动游戏一样」——
+             所以它**不是**画在按钮内部（上一版的做法），而是**与按钮同宽同高的独立一块**：
+             两者都用 qcl_launch_block_bg（同款圆角 ripple）+ 同样的上下 padding ⇒ 大小完全一致。
+         ★ 点这一行 → 进版本列表（MainUI 里 launchVersionRow 的监听）。 -->
+    <LinearLayout
+        android:id="@+id/launch_version_row"
+        android:focusable="true"
+        android:clickable="true"
+        android:background="@drawable/qcl_launch_block_bg"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:paddingStart="10dp"
+        android:paddingEnd="10dp"
+        android:paddingTop="12dp"
+        android:paddingBottom="12dp"
+        android:layout_marginBottom="8dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/launcher_play_button">
 
-         ★ id 保留：launcher_play_button（整块可点 = 启动）、
-           launch_version_row（那一行 = 点进版本列表）、launch_version_icon / launch_version_text。
-           ⇒ Java 侧（MainUI）逻辑一行不用改。 -->
+        <!-- ★ 图标尺寸照 FCL 的 @id/icon = 30dp（上一版写 18dp、22dp 都偏小） -->
+        <ImageView
+            android:id="@+id/launch_version_icon"
+            android:layout_width="22dp"
+            android:layout_height="22dp"
+            android:layout_gravity="center_vertical"
+            android:background="@drawable/ic_grass"/>
+
+        <TextView
+            android:id="@+id/launch_version_text"
+            android:ellipsize="end"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:layout_marginStart="6dp"
+            android:singleLine="true"
+            android:text="@string/launcher_button_current_version"
+            android:textSize="14sp"
+            android:textColor="@color/qcl_nav_text_primary"/>
+
+    </LinearLayout>
+
+    <!-- ==================== 启动按钮（贴底） ====================
+         ★ 版本名已经**移到上方独立一行**，这里只剩「启动游戏」一行 ⇒ 高度与版本行一致（同款 padding）。
+         ★ 整块可点 = 启动游戏（MainUI 里 startGame 的监听）。 -->
     <LinearLayout
         android:id="@+id/launcher_play_button"
         android:tag="tint_accent_color"
         android:focusable="true"
         android:clickable="true"
         android:background="@drawable/qcl_launch_block_bg"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:gravity="center"
         android:paddingStart="10dp"
         android:paddingEnd="10dp"
-        android:paddingTop="10dp"
-        android:paddingBottom="10dp">
+        android:paddingTop="12dp"
+        android:paddingBottom="12dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent">
 
-        <!-- 「启动游戏」（照 FCL @id/text_start：bold、居中） -->
         <TextView
             android:singleLine="true"
             android:layout_width="wrap_content"
@@ -139,45 +200,6 @@
             android:textStyle="bold"
             android:textColor="@color/qcl_nav_text_primary"/>
 
-        <!-- 下半行 = 「[版本图标] 版本名」（照 FCL @id/icon + @id/version_name）
-             ★ 点这一行 → 进版本列表（MainUI 里 launchVersionRow 的监听）。
-             ★ 用 LinearLayout 而不是 ConstraintLayout：这里不需要约束，水平排即可，
-               而且 XML 更简单（FCL 用 ConstraintLayout 是为了跟 text_start 叠放，我们分开排）。 -->
-        <LinearLayout
-            android:id="@+id/launch_version_row"
-            android:focusable="true"
-            android:clickable="true"
-            android:background="?android:attr/selectableItemBackgroundBorderless"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
-            android:layout_marginTop="3dp"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
-
-            <!-- ★ 图标尺寸照 FCL 的 @id/icon = 30dp（上一版我写 18dp，太小） -->
-            <ImageView
-                android:id="@+id/launch_version_icon"
-                android:layout_width="22dp"
-                android:layout_height="22dp"
-                android:layout_gravity="center_vertical"
-                android:background="@drawable/ic_grass"/>
-
-            <TextView
-                android:id="@+id/launch_version_text"
-                android:ellipsize="end"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_vertical"
-                android:layout_marginStart="5dp"
-                android:singleLine="true"
-                android:maxWidth="140dp"
-                android:text="@string/launcher_button_current_version"
-                android:textSize="@dimen/text_size_small"
-                android:textColor="@color/qcl_nav_text_secondary"/>
-
-        </LinearLayout>
-
     </LinearLayout>
 
-</LinearLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>
