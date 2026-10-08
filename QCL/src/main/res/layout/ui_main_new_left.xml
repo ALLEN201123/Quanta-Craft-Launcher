@@ -29,6 +29,32 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content">
 
+        <!-- ★★★ 1.5.0：**主界面（首页）按钮** —— 点一下**直接回到主界面**。
+             （用户要求：放在左栏**最上方**，与 FCL 的 left_menu 完全一致 —— FCL 的 home 就是第一项。
+              图标取自图标库 ic_baseline_home_white）
+             ★ 与最底部的「返回」（start_ui_home）区分开：
+                 · 本按钮 = 一步回主界面（清空页面栈，照 MainActivity.backToHome）
+                 · 返回按钮 = 出栈退一层（照 FCL 的 uiManager.onBackPressed 语义） -->
+        <LinearLayout
+            android:background="@drawable/qcl_button_gray"
+            android:focusable="true"
+            android:clickable="true"
+            android:id="@+id/start_ui_home_page"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginEnd="6dp"
+            android:padding="@dimen/qcl_nav_pad">
+
+            <ImageView
+                android:id="@+id/home_page_icon"
+                android:layout_gravity="center"
+                android:layout_width="@dimen/qcl_nav_icon"
+                android:layout_height="@dimen/qcl_nav_icon"
+                android:background="@drawable/ic_baseline_home_white"/>
+
+        </LinearLayout>
+
         <!-- 1. 当前版本（纯图标；图标=**当前版本自己的图标**，草方块兜底，随加载器自动切换）
              点击 → 进版本设置。
              ★ current_version_icon / no_version_alert_text / current_version_name_text
@@ -174,31 +200,6 @@
                 android:layout_width="@dimen/qcl_nav_icon"
                 android:layout_height="@dimen/qcl_nav_icon"
                 android:background="@drawable/ic_qcl_multiplayer_white"/>
-
-        </LinearLayout>
-
-        <!-- ★★★ 1.5.0：**主界面（首页）按钮** —— 点一下**直接回到主界面**。
-             （用户要求：加在左侧栏「设置」的**上面**；图标取自图标库 ic_baseline_home_white）
-             ★ 与最底部的「返回」（start_ui_home）区分开：
-                 · 本按钮 = 一步回主界面（清空页面栈，照 MainActivity.backToHome）
-                 · 返回按钮 = 出栈退一层（照 FCL 的 uiManager.onBackPressed 语义） -->
-        <LinearLayout
-            android:background="@drawable/qcl_button_gray"
-            android:focusable="true"
-            android:clickable="true"
-            android:id="@+id/start_ui_home_page"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginEnd="6dp"
-            android:padding="@dimen/qcl_nav_pad">
-
-            <ImageView
-                android:id="@+id/home_page_icon"
-                android:layout_gravity="center"
-                android:layout_width="@dimen/qcl_nav_icon"
-                android:layout_height="@dimen/qcl_nav_icon"
-                android:background="@drawable/ic_baseline_home_white"/>
 
         </LinearLayout>
 

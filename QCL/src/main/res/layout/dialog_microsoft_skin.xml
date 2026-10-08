@@ -3,7 +3,8 @@
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="10dp">
+    android:padding="10dp"
+    android:background="@color/qcl_dialog_night_bg">
 
     <!-- 上半部分：左人物 + 右操作区 -->
     <LinearLayout

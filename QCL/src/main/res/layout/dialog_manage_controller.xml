@@ -3,7 +3,8 @@
     android:orientation="horizontal"
     android:padding="20dp"
     android:layout_width="500dp"
-    android:layout_height="280dp">
+    android:layout_height="280dp"
+    android:background="@color/qcl_dialog_night_bg">
 
     <LinearLayout
         android:layout_weight="1"

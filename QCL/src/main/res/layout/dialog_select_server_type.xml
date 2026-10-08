@@ -3,7 +3,8 @@
     android:orientation="vertical"
     android:padding="20dp"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="@color/qcl_dialog_night_bg">
 
     <TextView
         android:singleLine="true"

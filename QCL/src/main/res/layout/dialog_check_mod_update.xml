@@ -4,7 +4,8 @@
     android:padding="15dp"
     android:orientation="vertical"
     android:layout_width="500dp"
-    android:layout_height="265dp">
+    android:layout_height="265dp"
+    android:background="@color/qcl_dialog_night_bg">
 
     <TextView
         android:singleLine="true"
