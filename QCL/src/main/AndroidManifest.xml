@@ -92,6 +92,7 @@
         <activity
             android:name=".launcher.setting.RuntimeInstallActivity"
             android:screenOrientation="sensorLandscape"
+            android:theme="@style/Theme.QCL.Boot"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

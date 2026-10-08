@@ -1,11 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- ★ 1.5.0：启动前检查对话框（对照 FCL 的 TaskDialog / dialog_task.xml 完善）
+     - 内容区整体可上下滑动（ScrollView），小屏或 Vulkan 行出现时不再被裁掉
+     - 新增实时日志区（对照 FCL dialog_task 的 logScroll/logView），下载/校验过程可见
+     - 高度不再写死 305dp，改由 Java 侧按屏幕高度控制，避免小屏溢出 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:background="#00000000"
     android:padding="15dp"
     android:orientation="vertical"
     android:layout_width="500dp"
-    android:layout_height="265dp">
+    android:layout_height="wrap_content">
 
     <TextView
         android:singleLine="true"
@@ -15,6 +19,21 @@
         android:textColor="@color/colorPureBlack"
         android:textStyle="bold"
         android:text="@string/launch_check_dialog_title"/>
+
+    <!-- 可滑动内容区：所有检查行 + 下载任务列表 + 实时日志 -->
+    <ScrollView
+        android:id="@+id/check_scroll"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:layout_marginTop="5dp"
+        android:scrollbars="vertical"
+        android:fillViewport="true">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
 
     <LinearLayout
         android:layout_marginTop="15dp"
@@ -43,6 +62,41 @@
             android:textSize="@dimen/text_size_middle"
             android:textColor="@color/colorPureBlack"
             android:text="@string/launch_check_dialog_java"/>
+
+    </LinearLayout>
+
+    <!-- ★ 1.5.0 新增：Vulkan 检测行（仅 Minecraft 26.2+ 显示；低版本默认 gone）。
+         26.3 起对着色器/Vulkan 要求更严，这里在启动前先判设备是否扛得住，扛不住就拦住并引导。 -->
+    <LinearLayout
+        android:id="@+id/check_vulkan_row"
+        android:visibility="gone"
+        android:layout_marginTop="12dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#80FFFFFF"
+        android:paddingLeft="10dp"
+        android:paddingTop="6dp"
+        android:paddingBottom="6dp"
+        android:orientation="horizontal">
+
+        <ImageView
+            android:layout_marginStart="5dp"
+            android:layout_width="12dp"
+            android:layout_height="12sp"
+            android:background="@drawable/ic_baseline_arrow_black"
+            android:layout_gravity="center"
+            android:id="@+id/check_vulkan_state"/>
+
+        <TextView
+            android:singleLine="true"
+            android:layout_marginStart="10dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:textSize="@dimen/text_size_middle"
+            android:textColor="@color/colorPureBlack"
+            android:id="@+id/check_vulkan_text"
+            android:text="@string/launch_check_dialog_vulkan"/>
 
     </LinearLayout>
 
@@ -145,10 +199,31 @@
 
     </LinearLayout>
 
-    <View
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:layout_weight="1"/>
+    <!-- ★ 1.5.0 新增：实时日志区（对照 FCL dialog_task 的 logScroll/logView）
+         微软登录、库下载、Vulkan 检测等阶段文字实时滚动显示，默认 gone。 -->
+    <ScrollView
+        android:id="@+id/check_log_scroll"
+        android:visibility="gone"
+        android:layout_width="match_parent"
+        android:layout_height="110dp"
+        android:layout_marginTop="12dp"
+        android:background="#60FFFFFF"
+        android:padding="8dp"
+        android:scrollbars="vertical">
+
+        <TextView
+            android:id="@+id/check_log_view"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:fontFamily="monospace"
+            android:textSize="10sp"
+            android:textColor="@color/colorPureBlack"
+            android:lineSpacingExtra="2dp"/>
+
+    </ScrollView>
+
+        </LinearLayout>
+    </ScrollView>
 
     <LinearLayout
         android:layout_marginTop="10dp"

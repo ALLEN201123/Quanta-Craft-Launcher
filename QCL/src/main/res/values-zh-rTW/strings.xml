@@ -159,9 +159,9 @@
     <string name="dialog_offline_skin_cancel">取消</string>
     <string name="dialog_select_profile_title">選擇一個角色</string>
     <string name="dialog_select_profile_cancel">取消</string>
-    <string name="item_account_type_offline">離線模式</string>
-    <string name="item_account_type_mojang">Mojang 賬戶</string>
-    <string name="item_account_type_microsoft">微軟登錄</string>
+    <string name="item_account_type_offline">離線賬號</string>
+    <string name="item_account_type_mojang">正版賬號</string>
+    <string name="item_account_type_microsoft">正版賬號</string>
     <string name="item_account_type_auth_lib">外置登錄 (authlib-injector)</string>
     <string name="item_account_type_nide_8_auth">外置登錄 (nide8auth)</string>
     <string name="item_account_login_server">認證服務器:</string>
@@ -672,8 +672,9 @@
     <string name="exterior_setting_ui_bar_trans">標題欄透明</string>
     <string name="exterior_setting_ui_full_screen">忽略劉海屏</string>
     <string name="exterior_setting_ui_bg_title">背景地址</string>
-    <string name="exterior_setting_ui_bg_default">默認</string>
-    <string name="exterior_setting_ui_bg_classic">經典</string>
+    <string name="exterior_setting_ui_bg_default">默認（按時間自動切換晝夜）</string>
+    <string name="exterior_setting_ui_bg_classic">黑夜</string>
+    <string name="exterior_setting_ui_bg_day">白天</string>
     <string name="exterior_setting_ui_bg_custom">自定義</string>
     <string name="exterior_setting_ui_bg_online">網路</string>
     <string name="dialog_color_selector_title">選擇顏色</string>
@@ -992,4 +993,7 @@
     <string name="update_checking">正在檢查更新…</string>
     <string name="update_not_exist">目前已是最新版本</string>
     <string name="dialog_add_microsoft_account_device_code">設備碼登入</string>
+    <!-- ★ 1.5.0：主界面公告欄 -->
+    <string name="qcl_announcement">公告</string>
+    <string name="qcl_announcement_hide">隱藏</string>
 </resources>

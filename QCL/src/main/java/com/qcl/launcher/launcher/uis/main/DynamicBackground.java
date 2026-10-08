@@ -39,6 +39,15 @@ public class DynamicBackground {
     private static final long INTERVAL_MS = 10000L;
     private static final int FADE_MS = 600;
     public static final int[] RES_IDS = new int[]{R.drawable.qcl_bg_1, R.drawable.qcl_bg_2, R.drawable.qcl_bg_3, R.drawable.qcl_bg_4, R.drawable.qcl_bg_5, R.drawable.qcl_bg_6};
+
+    /** ★ 1.5.0：白天背景图（玩家提供的 26.3 截图）。 */
+    public static final int RES_DAY = R.drawable.qcl_bg_day;
+    /** ★ 1.5.0：黑夜背景图（玩家提供的 26.3 截图，沿用原名 ic_background_classic）。 */
+    public static final int RES_NIGHT = R.drawable.ic_background_classic;
+
+    /** 白天时段起止（含起、不含止）：6:00 ~ 18:00 显示白天图，其余显示黑夜图。 */
+    public static final int DAY_START_HOUR = 6;
+    public static final int DAY_END_HOUR = 18;
     private final Activity activity;
     private final View target;
     private final Handler handler = new Handler(Looper.getMainLooper());
@@ -175,6 +184,41 @@ public class DynamicBackground {
         catch (Throwable throwable) {
             // empty catch block
         }
+    }
+
+    /** ★ 1.5.0：当前是否属于白天。
+     *  ★★★ 用户明确：**背景图 + UI 配色统一按「手机系统夜间模式」切换**
+     *   （不是按现实时间）。系统深色模式 → 黑夜图 + 深色配色；浅色模式 → 白天图 + 亮色配色。 */
+    public static boolean isDaytimeNow() {
+        return !isSystemNightMode();
+    }
+
+    /** ★ 1.5.0：手机系统当前是否处于夜间（深色）模式。
+     *  ★ 背景图与全应用配色（values-night/colors.xml）**共用这一个判据**，保证两者永远一致。 */
+    public static boolean isSystemNightMode() {
+        try {
+            android.content.res.Configuration cfg = android.content.res.Resources
+                    .getSystem().getConfiguration();
+            int mode = cfg.uiMode & android.content.res.Configuration.UI_MODE_NIGHT_MASK;
+            return mode == android.content.res.Configuration.UI_MODE_NIGHT_YES;
+        } catch (Throwable t) {
+            return false;
+        }
+    }
+
+    /** ★ 1.5.0：按系统夜间模式返回该用的背景图资源 id。 */
+    public static int autoResId() {
+        return isDaytimeNow() ? RES_DAY : RES_NIGHT;
+    }
+
+    /**
+     * ★ 1.5.0：把昼夜背景应用到给定视图（按现实时间自动选图）。
+     *
+     * <p>供 {@code MainActivity} 启动 / 回到前台时调用；不含动画，
+     * 因为这是「静态切换」而不是轮播。
+     */
+    public static void applyAutoDayNight(Activity activity, View view) {
+        applySingle(activity, view, autoResId());
     }
 }
 

@@ -725,10 +725,14 @@ public class MainUI extends BaseUI implements View.OnClickListener, AdapterView.
 
     @Override
     public void onClick(View v) {
+        // ★★★ 1.5.0 修复（用户实测）：「点击一个按钮会重复弹起关闭」。
+        //   旧写法是一串**互相独立的 if**，一个 View 命中多个分支时会连着 switchMainUI 两次
+        //   → 视觉上"弹起又关闭"（例如左栏 startHomeUI 与主界面按钮同帧命中）。
+        //   ⇒ 改成 **if / else if 链**：一个点击只可能走一个分支。
         if (v == startAccountUI){
             activity.uiManager.switchMainUI(activity.uiManager.accountUI);
         }
-        if (v == startGameManagerUI){
+        else if (v == startGameManagerUI){
             if (noVersionAlert.getVisibility() == View.VISIBLE){
                 activity.uiManager.switchMainUI(activity.uiManager.versionListUI);
             }
@@ -737,22 +741,22 @@ public class MainUI extends BaseUI implements View.OnClickListener, AdapterView.
                 activity.uiManager.switchMainUI(activity.uiManager.gameManagerUI);
             }
         }
-        if (v == startVersionListUI){
+        else if (v == startVersionListUI){
             activity.uiManager.switchMainUI(activity.uiManager.versionListUI);
         }
-        if (v == startDownloadUI){
+        else if (v == startDownloadUI){
             activity.uiManager.switchMainUI(activity.uiManager.downloadUI);
         }
-        if (v == startMultiPlayerUI){
+        else if (v == startMultiPlayerUI){
             // ★ 1.5.0：不再弹那个白底白字的小 AlertDialog，改跳**完整的二级页面**
             //   （照 FCL 的 MultiplayerUI：左栏导航 + 右侧内容区 + 房主/房客教程）。
             activity.uiManager.switchMainUI(activity.uiManager.multiplayerUI);
         }
-        if (v == startSettingUI){
+        else if (v == startSettingUI){
             activity.uiManager.switchMainUI(activity.uiManager.settingUI);
         }
         // ★ 1.4.1 新增：实验室（★ 1.5.0：「大厅」分支已随入口一起移除）
-        if (v == startLabUI){
+        else if (v == startLabUI){
             activity.uiManager.switchMainUI(activity.uiManager.labUI);
         }
         // ★★★ 1.5.0 新排版独有：左侧导航底部「返回上一层」→ **层级式返回**（backToLastUI：出栈一层）。
@@ -765,7 +769,7 @@ public class MainUI extends BaseUI implements View.OnClickListener, AdapterView.
         //     ⇒ 这里先判：已经**在**主界面就**什么都不做**（既不退也不退出），
         //       只有在二级页面时才真正出栈一层。
         //     （系统返回键走的是 MainActivity.onBackPressed，行为不变。）
-        if (startHomeUI != null && v == startHomeUI){
+        else if (startHomeUI != null && v == startHomeUI){
             if (activity.uiManager == null || activity.uiManager.mainUI == null) {
                 return;
             }
@@ -775,7 +779,7 @@ public class MainUI extends BaseUI implements View.OnClickListener, AdapterView.
             }
             activity.backToLastUI();
         }
-        if (v == startGame){
+        else if (v == startGame){
             // ★★★ 1.5.0：**没有任何版本时，点「启动游戏」不启动，直接跳下载页**。
             //   判据用 currentVersion 是否为空 —— 这是 onStart() 里唯一可靠的"有没有版本"信号：
             //   有版本时它会被写成 "<游戏目录>/versions/<版本名>"，一个都没有时保持 ""。

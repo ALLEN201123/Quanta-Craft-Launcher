@@ -161,6 +161,28 @@
 
     </LinearLayout>
 
+    <!-- ★★★ 1.5.0 新排版专用：**左右两栏常驻层**（照 FCL 的 left_menu / right_menu）。
+         ★ 只在「设置 → 外观 → 排版」选了**新排版**时由 MainActivity 把
+           ui_main_new_left.xml / ui_main_new_right.xml inflate 进来；旧排版下这里是空的（GONE）。
+         ★ 位置很讲究：**放在 launcher_layout 之后**（= RelativLayout 里层级更高，
+           会盖住 main_ui_container 里那些全屏铺满的二级页面），这样切到版本列表 / 下载 /
+           设置等任意页面时，左导航和右侧启动栏**都不会消失**（用户要求）。
+         ★ 但必须在 qcl_back_bar **之前** —— 右上角那个悬浮返回栏仍要压在最上层。
+         ★ 旧排版：两个 host 保持 GONE，行为和 1.4.9 完全一致。 -->
+    <FrameLayout
+        android:id="@+id/new_left_nav_host"
+        android:visibility="gone"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_alignParentStart="true"/>
+
+    <FrameLayout
+        android:id="@+id/new_right_panel_host"
+        android:visibility="gone"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_alignParentEnd="true"/>
+
     <!-- 二级页面返回栏（1.0.6 新增）。
          顶部标题栏已整体移除，但二级页面（下载 / 版本列表 / 账户 / 设置 / 游戏管理等）
          仍需返回入口。这里用一层**悬浮**控件实现，不占布局空间、不引入标题栏：

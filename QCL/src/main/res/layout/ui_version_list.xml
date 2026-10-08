@@ -21,9 +21,13 @@
          loading_local_version_progress / content_list_parent /
          start_ui_download_minecraft / start_install_package_ui / start_ui_global_setting
        ⇒ 本文件只是把它们**重新摆放**，id 与类型全部原样保留，Java 一行都不用改。
-     ★ 根容器从 LinearLayout 换成 ConstraintLayout（为了 layout_constraintWidth_percent）；
-       visibility="invisible" 必须保留（BaseUI 靠它控制显隐）。 -->
-<androidx.constraintlayout.widget.ConstraintLayout
+     ★★★ 血的教训（2026-10-09 真机崩溃）：
+       VersionListUI.java:27 是 `public LinearLayout versionListUI;`，
+       `findViewById(R.id.ui_version_list)` 的泛型推断 ⇒ 根节点**必须是 LinearLayout 类型**，
+       否则 `ClassCastException: ConstraintLayout cannot be cast to LinearLayout`（启动即崩）。
+       ⇒ 处理：最外层保留 LinearLayout（id=ui_version_list），里面再套 ConstraintLayout 做左右分栏。
+     ★ visibility="invisible" 必须保留（BaseUI 靠它控制显隐）。 -->
+<LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:visibility="invisible"
@@ -31,7 +35,12 @@
     android:background="@color/launcher_ui_background"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="10dp">
+    android:orientation="vertical">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:padding="10dp">
 
     <!-- ==================== 左 30%：版本列表 ==================== -->
     <LinearLayout
@@ -292,4 +301,6 @@
 
     </LinearLayout>
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</LinearLayout>

@@ -648,8 +648,9 @@
     <string name="exterior_setting_ui_bar_trans">Transparent titlebar</string>
     <string name="exterior_setting_ui_full_screen">Ignore notch</string>
     <string name="exterior_setting_ui_bg_title">Background Image</string>
-    <string name="exterior_setting_ui_bg_default">Default</string>
-    <string name="exterior_setting_ui_bg_classic">Classic</string>
+    <string name="exterior_setting_ui_bg_default">Default (auto day/night)</string>
+    <string name="exterior_setting_ui_bg_classic">Night</string>
+    <string name="exterior_setting_ui_bg_day">Day</string>
     <string name="exterior_setting_ui_bg_custom">Custom</string>
     <string name="exterior_setting_ui_bg_online">From URL</string>
     <string name="dialog_color_selector_title">Color Selector</string>
@@ -940,4 +941,7 @@
     <string name="quilt_list_ui_title">Add a New Instance - Choose Your Quilt Version</string>
     <string name="install_game_ui_quilt_not_compatible">Incompatible with Quilt</string>
     <string name="dialog_add_microsoft_account_device_code">Device code login</string>
+    <!-- ★ 1.5.0：主界面公告栏 -->
+    <string name="qcl_announcement">Announcement</string>
+    <string name="qcl_announcement_hide">Hide</string>
 </resources>

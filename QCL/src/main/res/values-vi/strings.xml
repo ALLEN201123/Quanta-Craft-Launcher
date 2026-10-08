@@ -653,9 +653,10 @@
     <string name="export_world_ui_title">Thế giới xuất khẩu</string>
     <string name="export_world_ui_world_name">Tên thế giới</string>
     <string name="exterior_setting_ui_bar_trans">Thanh tiêu đề trong suốt</string>
-    <string name="exterior_setting_ui_bg_classic">Cổ điển</string>
+    <string name="exterior_setting_ui_bg_classic">Ban đêm</string>
+    <string name="exterior_setting_ui_bg_day">Ban ngày</string>
     <string name="exterior_setting_ui_bg_custom">Phong tục</string>
-    <string name="exterior_setting_ui_bg_default">Mặc định</string>
+    <string name="exterior_setting_ui_bg_default">Mặc định (tự động ngày/đêm)</string>
     <string name="exterior_setting_ui_bg_online">Từ URL</string>
     <string name="exterior_setting_ui_bg_title">Hình nền</string>
     <string name="exterior_setting_ui_full_screen">Bỏ qua khía cạnh</string>
@@ -929,5 +930,7 @@
     <string name="world_menu_manage">Quản lý Datapacks</string>
     <string name="world_menu_open_dir">Tiết lộ trong Explorer</string>
     <string name="feedback_ui_join_discord">Tham gia Discord</string>
-
+    <!-- ★ 1.5.0：公告栏 -->
+    <string name="qcl_announcement">Thông báo</string>
+    <string name="qcl_announcement_hide">Ẩn</string>
 </resources>

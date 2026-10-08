@@ -191,7 +191,17 @@ implements View.OnClickListener {
 
     private void startDynamicBackgroundIfNeeded() {
         try {
-            if (this.launcherSetting.launcherBackground.type != 0) {
+            int type = this.launcherSetting.launcherBackground.type;
+            // ★ 1.5.0：默认（type 1）= 按现实时间自动切昼夜。布局根默认背景是黑夜图，
+            //   白天时段必须换成白天图。放在这里因为它是「启动时决定背景」的唯一入口。
+            if (type == 1) {
+                DynamicBackground.applyAutoDayNight(this, this.launcherLayout);
+                if (this.dynamicBackground != null) {
+                    this.dynamicBackground.stop();
+                }
+                return;
+            }
+            if (type != 0) {
                 return;
             }
             if (this.dynamicBackground == null) {
@@ -207,8 +217,17 @@ implements View.OnClickListener {
     /** ★ 1.2.9：回到前台后确保动态背景继续轮播（只在「动态背景」模式下生效） */
     public void resumeDynamicBackground() {
         try {
-            if (this.launcherSetting == null || this.launcherSetting.launcherBackground == null
-                    || this.launcherSetting.launcherBackground.type != 0) {
+            if (this.launcherSetting == null || this.launcherSetting.launcherBackground == null) {
+                return;
+            }
+            int type = this.launcherSetting.launcherBackground.type;
+            // ★ 1.5.0：默认（type 1）→ 回到前台时按当前时间重新判定昼夜
+            //   （挂了很久再回来，白天/黑夜该换就换）
+            if (type == 1) {
+                DynamicBackground.applyAutoDayNight(this, this.launcherLayout);
+                return;
+            }
+            if (type != 0) {
                 return;
             }
             if (this.dynamicBackground == null) {
@@ -223,7 +242,14 @@ implements View.OnClickListener {
 
     public void refreshDynamicBackground() {
         try {
-            if (this.launcherSetting.launcherBackground.type == 0) {
+            int type = this.launcherSetting.launcherBackground.type;
+            if (type == 1) {
+                // ★ 1.5.0：默认 → 立刻按当前时间切昼夜（设置页点「默认」马上生效）
+                DynamicBackground.applyAutoDayNight(this, this.launcherLayout);
+                if (this.dynamicBackground != null) {
+                    this.dynamicBackground.stop();
+                }
+            } else if (type == 0) {
                 this.startDynamicBackgroundIfNeeded();
             } else if (this.dynamicBackground != null) {
                 this.dynamicBackground.stop();
@@ -258,6 +284,14 @@ implements View.OnClickListener {
             if (group.getChildCount() > 0) return;   // 幂等：别重复 inflate
             boolean useNew = this.launcherSetting == null || this.launcherSetting.useNewLayout();
             LayoutInflater.from(this).inflate(useNew ? R.layout.ui_main_new : R.layout.ui_main, group, true);
+            // ★★★ 1.5.0：新排版专属 —— 把「左侧常驻导航条」「右侧常驻栏」inflate 到
+            //   activity_main 顶层的两个 host 里（照 FCL 的 left_menu / right_menu）。
+            //   ★ 旧排版**完全不进这个分支**，两个 host 保持 GONE —— 旧排版行为零变化。
+            //   ★ 为什么不在 ui_main_new.xml 里：那个布局随主界面被 onStop 一起隐藏，
+            //     放进去的话切到版本列表/下载页时左右栏就没了，就不是"常驻"了。
+            if (useNew) {
+                inflateNewLayoutChrome();
+            }
         } catch (Throwable t) {
             try {
                 ViewGroup group = (ViewGroup) this.findViewById(R.id.main_ui_host);
@@ -268,6 +302,67 @@ implements View.OnClickListener {
                 // 连旧排版都 inflate 不了就真没救了，交给上层按空界面处理。
             }
         }
+    }
+
+    /**
+     * ★★★ 1.5.0 新排版专属：把左右两栏（左侧纯图标导航条 + 右侧账号/版本/启动栏）
+     * inflate 到 activity_main 顶层，让它们**跨页面常驻**（照 FCL 的 left_menu / right_menu）。
+     *
+     * <p>★ 只在 {@code useNewLayout()} 为真时调用；旧排版绝不会进这里。
+     * <p>★ 幂等：host 里已经有子 View 就跳过，避免 Activity 重建时叠两份
+     * （叠两份 → 同名 id 重复 → findViewById 只抓第一个 → 点一套动另一套）。
+     * <p>★ 任何失败都只 printStackTrace：宁可没有常驻栏，也不能让启动器起不来。
+     */
+    private void inflateNewLayoutChrome() {
+        try {
+            View leftHost = this.findViewById(R.id.new_left_nav_host);
+            if (leftHost instanceof ViewGroup && ((ViewGroup) leftHost).getChildCount() == 0) {
+                LayoutInflater.from(this).inflate(R.layout.ui_main_new_left, (ViewGroup) leftHost, true);
+                leftHost.setVisibility(View.VISIBLE);
+            }
+        } catch (Throwable t) {
+            t.printStackTrace();
+        }
+        try {
+            View rightHost = this.findViewById(R.id.new_right_panel_host);
+            if (rightHost instanceof ViewGroup && ((ViewGroup) rightHost).getChildCount() == 0) {
+                LayoutInflater.from(this).inflate(R.layout.ui_main_new_right, (ViewGroup) rightHost, true);
+                rightHost.setVisibility(View.VISIBLE);
+            }
+        } catch (Throwable t) {
+            t.printStackTrace();
+        }
+        // ★★★ 关键：左右两栏是**浮在最上层**的，而二级页面（版本列表/下载/设置…）
+        //   都是 match_parent 全屏铺满 —— 不加避让的话内容会被两栏压住。
+        //   做法：等两栏量好尺寸后，把 content 容器（main_ui_container）加上等宽的左右内边距，
+        //   所有二级页面就自动被"夹"在中间（这正是 FCL 的 ViewPager 效果）。
+        applyChromeInsets();
+    }
+
+    /**
+     * ★ 1.5.0：按左右常驻栏的实际宽度，给内容容器加左右内边距（照 FCL 三段式布局）。
+     * <p>★ 必须 post 到下一帧再量 —— inflate 完这一帧两栏宽度还是 0，直接量会得到 0 padding。
+     * <p>★ 只在内容容器上做一次；重复调用只更新数值，不会累加。
+     */
+    private void applyChromeInsets() {
+        final View content = this.findViewById(R.id.main_ui_container);
+        final View leftHost = this.findViewById(R.id.new_left_nav_host);
+        final View rightHost = this.findViewById(R.id.new_right_panel_host);
+        if (content == null || leftHost == null || rightHost == null) {
+            return;
+        }
+        content.post(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    int l = leftHost.getVisibility() == View.VISIBLE ? leftHost.getWidth() : 0;
+                    int r = rightHost.getVisibility() == View.VISIBLE ? rightHost.getWidth() : 0;
+                    content.setPadding(l, 0, r, 0);
+                } catch (Throwable t) {
+                    t.printStackTrace();
+                }
+            }
+        });
     }
 
     /*
@@ -298,6 +393,19 @@ implements View.OnClickListener {
     }
 
     public void showBarTitle(String title, boolean home, boolean close) {
+        // ★★★ 1.5.0：**新排版下不使用右上角悬浮返回栏**（用户要求）——
+        //   新版排左侧导航条最底部有常驻的「返回上一层」按钮（照 FCL 的 back），
+        //   功能与这个悬浮栏重复，两个都显示会挤在右上角、还压住二级页面顶排按钮。
+        //   判据：新排版专属的右栏 host 已 inflate 出来（visible）→ 直接不点亮。
+        //   ★ 这一处改动覆盖全部 20+ 二级页面，不用逐个改它们的 onStart()。
+        //   ★ 旧排版完全不进这个分支，返回栏行为与 1.4.9 一模一样。
+        try {
+            View chromeHost = this.findViewById(R.id.new_left_nav_host);
+            if (chromeHost != null && chromeHost.getVisibility() == View.VISIBLE) {
+                return;
+            }
+        } catch (Throwable ignored) {
+        }
         try {
             if (this.currentUIText != null) {
                 if (title != null && !title.isEmpty()) {
@@ -324,6 +432,19 @@ implements View.OnClickListener {
     }
 
     public void showBackBar() {
+        // ★★★ 1.5.0：新排版下**整个右上角悬浮返回栏都不显示**（用户要求）。
+        //   有些二级页面不走 showBarTitle()、而是直接调这里的 showBackBar()，
+        //   所以这道闸门必须也加在这里，否则「返回栏被压回去」只在部分页面生效。
+        try {
+            View chromeHost = this.findViewById(R.id.new_left_nav_host);
+            if (chromeHost != null && chromeHost.getVisibility() == View.VISIBLE) {
+                if (this.backBar != null) {
+                    this.backBar.setVisibility(View.GONE);
+                }
+                return;
+            }
+        } catch (Throwable ignored) {
+        }
         try {
             if (this.backBar == null) {
                 this.backBar = (LinearLayout)this.findViewById(R.id.qcl_back_bar);
@@ -489,6 +610,20 @@ implements View.OnClickListener {
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
         LocaleUtils.setLanguage((Context)this);
+        // ★★★ 1.5.0：**系统夜间模式切换**时同步刷新背景图。
+        //   说明：MainActivity 的 configChanges 里**故意不含 uiMode** → 正常情况下
+        //   系统会重建这个 Activity（资源重载 → values-night/colors.xml 生效 → 配色整体变深），
+        //   本方法不会被调到。这里只是兜底：某些 ROM 把 uiMode 当普通配置变更直接回调，
+        //   不重建的话至少要把背景图换过来（否则"深色配色 + 白天照片"会不搭）。
+        try {
+            if (this.launcherSetting != null
+                    && this.launcherSetting.launcherBackground != null
+                    && this.launcherSetting.launcherBackground.type == 1) {
+                com.qcl.launcher.launcher.uis.main.DynamicBackground
+                        .applyAutoDayNight(this, this.launcherLayout);
+            }
+        } catch (Throwable ignored) {
+        }
     }
 
     protected void onPause() {

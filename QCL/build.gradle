@@ -61,8 +61,10 @@ android {
         // ★ 351 / 1.4.9：修「保存一次后再进载入世界必崩」——
         //   f_() 的名字清洗只删 "  -  " 没截断 → "ush10-05_23:56.mclevel" → FileNotFoundException。
         //   改为截断 + 去非法字符 + 补后缀 + **文件不存在就清空 o**（绝不把脏路径交给原版读档）。
-        versionCode 351
-        versionName "1.4.9"
+        // ★ 352 / 1.5.0：移除大厅；昼夜背景（白天/黑夜/按时间自动切换）；启动前 Vulkan 检测（26.2+）；
+        //   启动检查界面可上下滑动 + 实时日志区；修 normalizeMcVersion 对 -preN 的归一化。
+        versionCode 352
+        versionName "1.5.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }

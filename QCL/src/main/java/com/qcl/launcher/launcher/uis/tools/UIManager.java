@@ -170,6 +170,21 @@ public class UIManager {
     }
 
     public void switchMainUI(BaseUI ui) {
+        // ★★★ 1.5.0 修复（用户实测）：**重复点击同一个按钮 → 页面"弹起又关闭"**。
+        //
+        //   根因在下面的执行顺序：
+        //     uis.add(ui);        ← 同一个对象**再次**入栈 ⇒ 栈变成 [main, vList, vList]
+        //     ui.onStart();       ← 先把新页面弹起（setVisibility(VISIBLE)）
+        //     uis.get(size-2).onStop();  ← 再"关掉上一个" —— 而倒数第二个**就是它自己**！
+        //   于是点第二次的表现就是：刚弹起来 → 紧接着被自己关掉（视觉上"抬起又关闭"）。
+        //   栈还只增不减，来回点几下就膨胀成一串重复项。
+        //
+        //   ⇒ 目标页面**已经**是当前的，就什么都不做：按钮保持它自己那个状态（用户原话：
+        //     "不应该是点了一个同一个按钮，保持那一个按钮的状态吗"）。
+        if (ui != null && ui == currentUI) {
+            System.out.println("-------------------------------------------switch to same ui, keep state (no-op)");
+            return;
+        }
         currentUI = ui;
         uis.add(ui);
         ui.onStart();

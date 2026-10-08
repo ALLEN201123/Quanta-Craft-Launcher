@@ -1,0 +1,226 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ★★★ 1.5.0 新排版：**左侧常驻导航条**（从 ui_main_new.xml 抽出，提到 activity_main 顶层）。
+
+     ★ 为什么要抽出来：用户要求「整体对照 FCL」—— FCL 的 left_menu 是**常驻**的，
+       切到版本列表 / 下载 / 设置等二级页面时它**不消失**，玩家可以随时横跳。
+       所以它不能再留在 ui_main_new.xml 里（那个随主界面一起被 onStop 隐藏）。
+
+     ★★★ 本布局**只在新排版下 inflate**（旧排版完全不动）。
+     ★ 竖向 ScrollView 兜底：小屏 / 窄比例时入口超出屏幕高度，滚一下就能点到。
+     ★ 全部入口**只留图标**（用户：「全屋只留图标」，含版本设置也去文字）。
+     ★★★ 1.5.0：加一层**半透明底板**（qcl_nav_panel_bg，昼夜成对翻转）。
+       原先是全透明（qcl_gray_translucent_bar = #00000000），图标直接浮在动态壁纸上：
+       夜间壁纸暗 → 白图标清晰；**日间壁纸亮 → 白图标 + 深色文字全糊**（用户实测指出）。
+       现在日间是浅灰板、夜间是深色板，两种模式下图标/文字都始终清晰。 -->
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/new_left_nav"
+    android:background="@color/qcl_nav_panel_bg"
+    android:scrollbars="vertical"
+    android:fillViewport="true"
+    android:layout_width="wrap_content"
+    android:layout_height="match_parent">
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:paddingLeft="6dp"
+        android:paddingRight="6dp"
+        android:paddingTop="6dp"
+        android:paddingBottom="6dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
+
+        <!-- 1. 当前版本（纯图标；图标=**当前版本自己的图标**，草方块兜底，随加载器自动切换）
+             点击 → 进版本设置。
+             ★ current_version_icon / no_version_alert_text / current_version_name_text
+               三个 id 全部保留（MainUI 按 id 找控件并控制显隐），只是不再显示文字。 -->
+        <LinearLayout
+            android:background="@drawable/qcl_button_gray"
+            android:focusable="true"
+            android:id="@+id/start_ui_game_manager"
+            android:clickable="true"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginEnd="6dp"
+            android:padding="6dp">
+
+            <ImageView
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:layout_gravity="center"
+                android:id="@+id/current_version_icon"
+                android:background="@drawable/ic_qcl_version_setting_white"/>
+
+            <LinearLayout
+                android:id="@+id/no_version_alert_text"
+                android:visibility="gone"
+                android:layout_width="wrap_content"
+                android:layout_height="26dp"
+                android:layout_gravity="center"
+                android:orientation="vertical">
+
+                <TextView
+                    android:singleLine="true"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="6dp"
+                    android:text="@string/launcher_scroll_game_manager"
+                    android:textColor="@color/colorPureWhite"
+                    android:textSize="@dimen/text_size_middle"/>
+
+                <TextView
+                    android:singleLine="true"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="6dp"
+                    android:text="@string/launcher_scroll_game_none"
+                    android:textColor="@color/colorLightWhite"
+                    android:textSize="@dimen/text_size_small"/>
+
+            </LinearLayout>
+
+            <TextView
+                android:singleLine="true"
+                android:visibility="gone"
+                android:layout_width="wrap_content"
+                android:layout_height="26dp"
+                android:layout_gravity="center"
+                android:gravity="center"
+                android:layout_marginStart="6dp"
+                android:id="@+id/current_version_name_text"
+                android:textColor="@color/colorPureWhite"
+                android:textSize="@dimen/text_size_middle"/>
+
+        </LinearLayout>
+
+        <!-- 3. 版本列表（纯图标） -->
+        <LinearLayout
+            android:background="@drawable/qcl_button_gray"
+            android:focusable="true"
+            android:id="@+id/start_ui_version_list"
+            android:clickable="true"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginEnd="6dp"
+            android:padding="6dp">
+
+            <ImageView
+                android:id="@+id/version_list_icon"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:layout_gravity="center"
+                android:background="@drawable/ic_qcl_version_list_white"/>
+
+        </LinearLayout>
+
+        <!-- 4. 下载（纯图标） -->
+        <LinearLayout
+            android:background="@drawable/qcl_button_gray"
+            android:focusable="true"
+            android:id="@+id/start_ui_download"
+            android:clickable="true"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginEnd="6dp"
+            android:padding="6dp">
+
+            <ImageView
+                android:id="@+id/download_icon"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:layout_gravity="center"
+                android:background="@drawable/ic_qcl_download_white"/>
+
+        </LinearLayout>
+
+        <!-- 6. 实验室（纯图标；图标=图标库「工具箱」，白标） -->
+        <LinearLayout
+            android:background="@drawable/qcl_button_gray"
+            android:focusable="true"
+            android:id="@+id/start_ui_lab"
+            android:clickable="true"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginEnd="6dp"
+            android:padding="6dp">
+
+            <ImageView
+                android:id="@+id/lab_icon"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:layout_gravity="center"
+                android:background="@drawable/ic_qcl_lab_white"/>
+
+        </LinearLayout>
+
+        <!-- 7. 多人游戏（纯图标） -->
+        <LinearLayout
+            android:background="@drawable/qcl_button_gray"
+            android:focusable="true"
+            android:id="@+id/start_ui_multi_player"
+            android:clickable="true"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginEnd="6dp"
+            android:padding="6dp">
+
+            <ImageView
+                android:id="@+id/multiplayer_icon"
+                android:layout_gravity="center"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:background="@drawable/ic_qcl_multiplayer_white"/>
+
+        </LinearLayout>
+
+        <!-- 8. 设置（纯图标） -->
+        <LinearLayout
+            android:background="@drawable/qcl_button_gray"
+            android:focusable="true"
+            android:id="@+id/start_ui_setting"
+            android:clickable="true"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:padding="6dp">
+
+            <ImageView
+                android:id="@+id/setting_icon"
+                android:layout_gravity="center"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:background="@drawable/ic_qcl_setting_white"/>
+
+        </LinearLayout>
+
+        <!-- ★ 1.5.0（照 FCL 左侧导航最底部的 back 按钮）：
+             「返回上一层」—— **层级式返回**，不是一键回主页。
+             进版本列表 → 点某个模组 → 再进详情 → 不想下了 → 点它退一层，
+             再点再退一层，一直退到主界面（对应 MainActivity.backToLastUI()）。 -->
+        <LinearLayout
+            android:background="@drawable/qcl_button_gray"
+            android:focusable="true"
+            android:clickable="true"
+            android:id="@+id/start_ui_home"
+            android:layout_marginTop="6dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:padding="6dp">
+
+            <ImageView
+                android:id="@+id/home_icon"
+                android:layout_gravity="center"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:background="@drawable/ic_baseline_arrow_white"/>
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</ScrollView>

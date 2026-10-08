@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ★★★ 1.5.0：新排版右侧「账号卡片 / 版本行」底板。
+
+     为什么需要它：账号名用 colorPureWhite(#FFFFFF)、账号类型与版本名用
+     colorLightWhite(#99FFFFFF)，**在日间模式下全是白色系**，直接浮在明亮的
+     白天壁纸上（樱花图，亮橙/亮粉）→ 玩家根本看不见账号名和版本名。
+
+     解决：给这两块各加一层**半透明圆角底板**（颜色随昼夜翻转，见
+     values/colors.xml 与 values-night/colors.xml 的 qcl_nav_panel_bg），
+     再把文字色改成昼夜成对可读的色：
+       · 日间：浅灰板 #B3EDEDED + 深色文字
+       · 夜间：深色板 #B3171C22 + 白色文字
+     按下态仍保留一层更深的蒙层作为点击反馈。 -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_pressed="true">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/qcl_nav_panel_bg_pressed"/>
+            <corners android:radius="10dp"/>
+        </shape>
+    </item>
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="@color/qcl_nav_panel_bg"/>
+            <corners android:radius="10dp"/>
+        </shape>
+    </item>
+</selector>
