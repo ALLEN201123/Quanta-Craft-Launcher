@@ -87,6 +87,14 @@ class SkinRenderer(context: Context) {
     @Volatile
     private var pendingCape: Bitmap? = null
 
+    /**
+     * ★ 2026-10-11：是否需要**显式清空**披风。
+     * 与 {@code pendingCape == null} 区分：后者现在表示"这次不改披风"（保留原贴图），
+     * 只有本标志为 true 才真的删掉披风贴图（玩家点「隐藏披风」）。
+     */
+    @Volatile
+    private var pendingClearCape: Boolean = false
+
     // ★ 默认 false：与 `defaultSkin()` 读的 steve.png（classic 布局）一致。
     //   FCL 这里是 true，因为它默认贴图是 alex.png（slim 布局）——别照抄。
     @Volatile
@@ -281,14 +289,49 @@ class SkinRenderer(context: Context) {
             model.rebuildSolidLayers(pixels, it.width)
         }
         pendingSkin = null
+        // ★★★★★ 2026-10-11 修（用户实测「上传皮肤之后主界面人物的披风被搞没了」）：
+        //
+        //   原来这里是：
+        //     val cape = pendingCape
+        //     if (cape != null) { uploadTexture(...) }
+        //     else if (capeTextureId != 0) { glDeleteTextures(...); capeTextureId = 0 }   ← 传 null 就删披风
+        //
+        //   也就是说**只要有一次 updateTexture 没带披风（cape = null），披风贴图就被删掉**。
+        //   而换肤/刷新路径上很容易出现"只更新皮肤、暂时拿不到披风位图"的情况
+        //   （比如 account.capeTexture 还没回填、或解码失败返回 null），
+        //   于是玩家看到的就是「换了皮肤 → 披风没了」。
+        //
+        //   现在改成：**cape 为 null 时保留原有披风贴图**，只有显式调用
+        //   {@code clearCape()} 才真正清空。语义更安全：
+        //     · 没提供披风 = 这次不改披风（而不是"把披风删掉"）
+        //     · 玩家点「隐藏披风」时走 clearCape()，行为与以前一致
         val cape = pendingCape
         if (cape != null) {
             capeTextureId = uploadTexture(capeTextureId, cape)
-        } else if (capeTextureId != 0) {
+        } else if (pendingClearCape && capeTextureId != 0) {
             GLES20.glDeleteTextures(1, intArrayOf(capeTextureId), 0)
             capeTextureId = 0
         }
         pendingCape = null
+        pendingClearCape = false
+    }
+
+    /**
+     * ★ 2026-10-11 新增：**显式**清空披风（玩家点「隐藏披风」时用）。
+     * 与"传 null"区分开 —— 传 null 现在是"这次不改披风"。
+     */
+    fun clearCape() {
+        val empty = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
+        androidMain().post {
+            try {
+                pendingCape = null
+                pendingClearCape = true
+                pendingHasUpdate = true
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+        empty.recycle()
     }
 
     private fun uploadTexture(existing: Int, bitmap: Bitmap): Int {

@@ -324,31 +324,62 @@ public class DownloadResourceAdapter extends BaseAdapter {
             //     动的是当时已经 measure 出来的可见行，不参与 getView 复用。
             // 先把上一轮可能还挂着的延迟动画清掉（转成 View 才有这个方法）
             ((android.view.View) listView).removeCallbacks(null);
-            final int count = listView.getChildCount();
-            for (int i = 0; i < count; i++) {
-                final android.view.View row = listView.getChildAt(i);
-                if (row == null) {
-                    continue;
-                }
-                final int index = i;
-                row.setAlpha(0f);
-                row.setTranslationX(dp(18));
-                listView.postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            row.animate()
-                                    .alpha(1f)
-                                    .translationX(0f)
-                                    .setDuration(180L)
-                                    .start();
-                        } catch (Throwable ignored) {
-                        }
-                    }
-                }, Math.min(index, 20) * 18L);
+            // ★★★★★ 2026-10-11 修（用户实测「根本没有滑入动画，只有一瞬间出现」）：
+            //   上一次我只用 listView.post(...) —— 但 post 的回调常常**早于 ListView 完成布局**，
+            //   那时 getChildCount() 仍是 0 ⇒ 一行都没动到 ⇒ 看着还是"瞬间出现"。
+            //   现在改成**等到下一次绘制前才跑**（ViewTreeObserver.OnPreDrawListener），
+            //   那时行已经 measure/layout 完，getChildAt 一定拿得到。
+            final android.view.ViewTreeObserver vto = listView.getViewTreeObserver();
+            if (!vto.isAlive()) {
+                return;
             }
+            vto.addOnPreDrawListener(new android.view.ViewTreeObserver.OnPreDrawListener() {
+                @Override
+                public boolean onPreDraw() {
+                    // 一次性监听：进来立刻摘掉，避免每帧都重放动画
+                    try {
+                        android.view.ViewTreeObserver cur = listView.getViewTreeObserver();
+                        if (cur.isAlive()) {
+                            cur.removeOnPreDrawListener(this);
+                        }
+                    } catch (Throwable ignored) {
+                    }
+                    try {
+                        runRowAnimation(listView);
+                    } catch (Throwable ignored) {
+                    }
+                    return true;
+                }
+            });
         } catch (Throwable ignored) {
             // 动画失败就静态显示
+        }
+    }
+
+    /** 逐行入场：与收藏夹完全同一套参数（alpha 0→1 + translationX 18dp→0，180ms，逐行延迟 18ms）。 */
+    private void runRowAnimation(final android.widget.ListView listView) {
+        final int count = listView.getChildCount();
+        for (int i = 0; i < count; i++) {
+            final android.view.View row = listView.getChildAt(i);
+            if (row == null) {
+                continue;
+            }
+            final int index = i;
+            row.setAlpha(0f);
+            row.setTranslationX(dp(18));
+            listView.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        row.animate()
+                                .alpha(1f)
+                                .translationX(0f)
+                                .setDuration(180L)
+                                .start();
+                    } catch (Throwable ignored) {
+                    }
+                }
+            }, Math.min(index, 20) * 18L);
         }
     }
 

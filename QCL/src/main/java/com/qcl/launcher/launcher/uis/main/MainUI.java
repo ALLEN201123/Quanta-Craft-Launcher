@@ -861,6 +861,12 @@ public void refreshAccountModel() {
             if (account.loginType == 3 && (account.capeTexture == null || account.capeTexture.trim().isEmpty())) {
                 fetchMicrosoftCapeOnce(account);
             }
+            // ★★★★★ 2026-10-11：**皮肤也让它在后台对一次**（用户要求"实时绑定"）——
+            //   在官网/别的启动器换了皮肤，回 QCL 进主界面就会自动跟上，不用重登。
+            //   比一次而已：一样就什么都不做；不一样才回填 + 重画。
+            if (account.loginType == 3) {
+                fetchMicrosoftSkinOnce(account);
+            }
         } catch (Throwable t) {
             t.printStackTrace();
         }
@@ -1068,6 +1074,78 @@ private void fetchMicrosoftCapeOnce(final com.qcl.launcher.auth.Account account)
 }
 
 private boolean capeFetchInFlight;
+
+/**
+ * ★★★★★ 2026-10-11 新增：**皮肤实时刷新**（用户要求）。
+ *
+ * <p>用户原话：「主界面显示的人物是跟微软账号实时绑定的吗？比如我在另一个启动器上改了
+ * 我的皮肤，然后重新进入 QCL，它那个主界面没有立刻刷新。」
+ *
+ * <p>原来的行为：`account.texture` **只在登录那一刻**写入，之后再也不更新 ⇒
+ * 在别处（官网 / 别的启动器）换了皮肤，回 QCL 看到的还是旧皮肤，只能重新登录。
+ *
+ * <p>现在的行为：每次进主界面都**静默**向微软要一次当前皮肤纹理，
+ * 与本地比一次（base64 不同才更新）：
+ * <ul>
+ *   <li>一样 ⇒ 什么都不做（绝大多数情况，零感知）；</li>
+ *   <li>不一样 ⇒ 回填 `account.texture` + 存盘 + **立刻重画人物**（不用重启、不用重登）；</li>
+ *   <li>失败/无网络 ⇒ 静默跳过，绝不影响启动。</li>
+ * </ul>
+ * 与已有的 {@link #fetchMicrosoftCapeOnce} 是同一套模式（防抖 + 后台线程 + 主线程回填）。
+ */
+private void fetchMicrosoftSkinOnce(final com.qcl.launcher.auth.Account account) {
+    if (account == null || account.loginType != 3
+            || account.auth_access_token == null || account.auth_access_token.trim().isEmpty()) {
+        return;
+    }
+    if (skinFetchInFlight) {
+        return;
+    }
+    skinFetchInFlight = true;
+    final String token = account.auth_access_token;
+    new Thread(() -> {
+        try {
+            com.qcl.launcher.auth.microsoft.Msa.MinecraftProfileResponse profile =
+                    com.qcl.launcher.auth.microsoft.Msa.getMinecraftProfile("Bearer", token);
+            if (profile == null) {
+                return;
+            }
+            java.util.Map<com.qcl.launcher.auth.yggdrasil.TextureType,
+                    com.qcl.launcher.auth.yggdrasil.Texture> map =
+                    com.qcl.launcher.auth.microsoft.Msa.getTextures(profile).orElse(null);
+            if (map == null) {
+                return;
+            }
+            final String fresh = com.qcl.launcher.auth.Account.downloadTextureAsBase64(
+                    map.get(com.qcl.launcher.auth.yggdrasil.TextureType.SKIN));
+            if (fresh == null || fresh.trim().isEmpty()) {
+                return;
+            }
+            // 与本地一致就不折腾（避免每次进主页都重画）
+            final String local = account.texture;
+            if (local != null && local.equals(fresh)) {
+                return;
+            }
+            account.texture = fresh;
+            activity.runOnUiThread(() -> {
+                try {
+                    com.qcl.launcher.utils.gson.GsonUtils.saveAccounts(
+                            activity.uiManager.accountUI.accounts,
+                            com.qcl.launcher.manifest.AppManifest.ACCOUNT_DIR + "/accounts.json");
+                    // 皮肤变了 ⇒ 立刻重画（refreshAccountModel 会读新的 account.texture）
+                    refreshAccountModel();
+                } catch (Throwable ignored) {
+                }
+            });
+        } catch (Throwable ignored) {
+            // 静默失败：拿不到就继续用本地的
+        } finally {
+            skinFetchInFlight = false;
+        }
+    }, "qcl-skin-fetch").start();
+}
+
+private boolean skinFetchInFlight;
 
     /**
      * ★ 1.5.0：入参既可以是**披风文件路径**（离线账号，`offlineSkinSetting.capePath`），
