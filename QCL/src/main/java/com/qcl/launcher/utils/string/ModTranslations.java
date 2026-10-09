@@ -152,16 +152,70 @@ public final class ModTranslations {
             return true;
         }
         try {
-            // ★ 1.5.0：改用**逐行容错**解析（原来一行格式不对就整表失败 ⇒ 一条中文都出不来）
+            // ★★★★★ 2026-10-11 关键修复：**Android 上 getResourceAsStream 读不到 assets！**
+            //   APK 里的 assets/ 不在 Java 类路径上（类路径只有 classes*.dex），
+            //   所以 `ModTranslations.class.getResourceAsStream("/assets/mod_data.txt")`
+            //   在真机/模拟器上**永远返回 null** ⇒ 表加载不了 ⇒ **一条模组名都翻译不出来**
+            //   （用户实测「没有一个模组名被翻译成中文过」）。
+            //   （桌面上 JVM 跑测试能通，是因为那时候 assets 真在 classpath 上 —— 这就是
+            //     "本地验证过了但真机不行" 的经典陷阱。）
+            //
+            //   现在改成**双路**：
+            //     ① 先试类路径（桌面/单元测试环境还能用）
+            //     ② 读不到再走 Android 的 AssetManager（真机真正的读法）
+            java.io.InputStream in = ModTranslations.class.getResourceAsStream(this.resourceName);
+            if (in == null) {
+                in = openFromAndroidAssets(this.resourceName);
+            }
+            if (in == null) {
+                return false;
+            }
             this.mods = parseModsSafely(
-                    IOUtils.readFullyAsString(
-                            ModTranslations.class.getResourceAsStream(this.resourceName),
-                            StandardCharsets.UTF_8),
+                    IOUtils.readFullyAsString(in, StandardCharsets.UTF_8),
                     this.resourceName);
             return true;
         } catch (Exception e) {
             Logging.LOG.log(Level.WARNING, "Failed to load " + this.resourceName, (Throwable) e);
             return false;
+        }
+    }
+
+    /**
+     * ★ 2026-10-11 新增：用 Android 的 AssetManager 打开 assets 里的文件。
+     *
+     * <p>为什么必须单独写：{@code getResourceAsStream} 只能读 **Java 类路径**，
+     * 而 APK 的 {@code assets/} 目录不在类路径上（只有 {@code classes*.dex} 在）。
+     * 想在真机上读 assets，只能用 {@code AssetManager.open("mod_data.txt")} ——
+     * 注意路径**不带 "assets/" 前缀**。
+     *
+     * <p>这里用反射拿 Application 的 Context，避免给这个工具类增加构造参数
+     * （它被 12 处静态调用，改签名牵动太广）。
+     *
+     * @param resourceName 形如 {@code /assets/mod_data.txt}
+     * @return 输入流；拿不到返回 null（调用方负责报错）
+     */
+    private static java.io.InputStream openFromAndroidAssets(String resourceName) {
+        try {
+            String path = resourceName;
+            if (path.startsWith("/")) {
+                path = path.substring(1);
+            }
+            if (path.startsWith("assets/")) {
+                path = path.substring("assets/".length());
+            }
+            // ★ 用 AppGlobals 拿 Application，但**必须强转成 android.content.Context** 再调 getAssets()。
+            //   踩过的坑：先前用 `app.getClass().getMethod("getAssets")` ——
+            //   Application 自己的类里并没有这个方法（是继承自 ContextWrapper），
+            //   反射找不到 ⇒ 抛异常 ⇒ 被 catch 吞掉 ⇒ 表还是加载不了，
+            //   表现就是"改了但还是没中文"。强转成接口再调最稳。
+            Class<?> appGlobals = Class.forName("android.app.AppGlobals");
+            Object app = appGlobals.getMethod("getInitialApplication").invoke(null);
+            if (!(app instanceof android.content.Context)) {
+                return null;
+            }
+            return ((android.content.Context) app).getAssets().open(path);
+        } catch (Throwable t) {
+            return null;
         }
     }
 
