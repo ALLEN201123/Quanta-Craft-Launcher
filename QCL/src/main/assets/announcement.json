@@ -1,9 +1,46 @@
 {
   "announcements": [
     {
-      "id": 7,
+      "id": 100,
       "significant": true,
       "outdated": false,
+      "minVersion": 0,
+      "maxVersion": 2147483647,
+      "specificLang": [],
+      "title": [
+        {
+          "lang": "zh_CN",
+          "text": "QCL 1.5.0 正式版更新说明（界面大重做）"
+        },
+        {
+          "lang": "zh_TW",
+          "text": "QCL 1.5.0 正式版更新說明（介面大重做）"
+        },
+        {
+          "lang": "en_US",
+          "text": "QCL 1.5.0 release notes (major UI overhaul)"
+        }
+      ],
+      "date": "2026-10-10",
+      "content": [
+        {
+          "lang": "zh_CN",
+          "text": "【界面大重做】\n· 全新主界面排版：左侧纯图标竖排导航常驻可见，切到版本列表 / 下载 / 设置等二级页面也不用先退回主界面\n· 右侧常驻「账号 + 版本名 + 启动游戏」区块，照 FCL 版式重做（版本名独立显示在启动按钮上方）\n· 排版可在「设置 → 外观 → 排版」里切换 新排版 / 旧排版，随时退回你习惯的样子\n· 主题可在「设置 → 外观 → 主题」里切换，并可选主题色\n· 背景支持 默认（按时间自动切换昼夜）/ 白天 / 黑夜 / 自定义 / 网络\n· 主界面新增公告栏（可隐藏），随时看到更新说明\n· 没有任何版本时，点「启动游戏」会直接跳到下载版本页，不再没反应\n\n【昼夜与配色】\n· 壁纸、面板底色、文字色**成套随昼夜翻转**，不再出现深底黑字看不见的情况\n· 修复夜间模式下多处「深底黑字 / 白块」：对话框改用成对的日/夜配色\n· 修复换肤对话框里的白块（drawable 取不到主题色）与按钮颜色不统一\n· 修复账号页「认证服务器」下方的说明文字夜间看不见\n· 全项目共 53 处文字补齐昼夜配色（列表描述、设置页路径、存档信息…）\n\n【3D 人物：换成 FCL 同款】\n· 主界面人物改用 FCL 的 glTF 模型与骨骼动画（经典 / 细臂两套模型自动切换）\n· 真正的待机动画：站立待机 + 3 个变体，每 8~15 秒随机播一个（FCL 原版规则）\n· 单指拖动可 360° 旋转，双指捏合可缩放\n· 纹理实时更新：离线 / 微软 / Mojang / 外置认证切换皮肤都会立刻反映到人物身上\n· 修复微软账号「手臂粗细不对」「先粗后细」「选了经典又变回苗条」\n· 修复「换了皮肤之后披风消失」\n\n【微软账号：皮肤与披风】\n· 微软披风此前**从未被拉取过**（接口分支被注释、账号也没有存它的字段），现已完整接入\n· 修复披风取错项（原来永远取列表第 1 件，所以「怎么切都是同一件」）\n· 换肤对话框的「确定」改为「上传」（照 FCL：选完文件先预览，点上传才提交）\n· 模型选择（经典 / 苗条）现在会被记住，并用服务端声明的模型为准\n· 皮肤与披风会**自动跟随微软服务端**：在官网或别的启动器改过，回主界面就会同步\n\n【下载页】\n· 修复「模组名一个中文也没有」：翻译表（3 万条）此前被误判成\"非中文环境\"而从不查表\n· 模组 / 整合包名显示为「中文名（英文原名）」，不再重复两遍英文\n· 修复「模组页刷新后一片空白，还会把整合包 / 资源包 / 账号页一起弄空白」\n· 彻底移除「加载版本列表失败，点击此处重试」提示：界面本来就有转圈，网络恢复后自己会出结果\n· 点击模组 / 整合包详情页不再「加载半天」：版本列表立刻显示，前置列表随后补上\n· 收藏按钮新增点击反馈动效；收藏页进场动画与其它页面统一\n· 列表切分类统一为逐行滑入（与收藏夹一致）\n\n【整合包安装】\n· 修复「进度条根本不动」：原来单个文件的下载进度从不上报\n· 每个文件单独一行，并实时显示该文件的下载进度\n· 修复取消按钮点了没反应、文件列表只显示一行\n\n【多人联机】\n· 改为完整的二级页面，含房主教程（7 步）与房客教程（5 步），全文照搬 FCL\n· 修复「启用多人联机」确认框白底白字、文字看不见\n\n【稳定性】\n· 修复「启动游戏时突然竖屏→闪退→回到横屏启动器」\n· 修复 26.3 / 26.4 崩溃（JNA 版本错配 + MC 降级死循环）\n· 适配 Android 15（平台 35）与 32 位设备；新增 26.2+ 的 Vulkan 支持检测\n· 内置 ANGLE / VirGL 等渲染器与驱动库，四架构齐全，开箱可用\n· 防杀后台：加前台服务 specialUse，切后台不易被系统回收\n· 版本分类补齐 41 条缺失版本，并新增 2.0（愚人节）三个版本\n· 中文覆盖补齐，界面已做到 0 缺失\n"
+        },
+        {
+          "lang": "zh_TW",
+          "text": "【介面大重做】\n· 全新主介面排版：左側純圖示直排導覽常駐可見，切到版本清單 / 下載 / 設定等次級頁面也不用先退回主介面\n· 右側常駐「帳號 + 版本名 + 啟動遊戲」區塊，照 FCL 版式重做\n· 排版可在「設定 → 外觀 → 排版」切換 新排版 / 舊排版\n· 主題可在「設定 → 外觀 → 主題」切換，並可選主題色\n· 背景支援 預設（依時間自動切換晝夜）/ 白天 / 黑夜 / 自訂 / 網路\n· 修復夜間模式下多處「深底黑字 / 白塊」\n\n【3D 人物：換成 FCL 同款】\n· 改用 FCL 的 glTF 模型與骨骼動畫（經典 / 細臂兩套自動切換）\n· 真正的待機動畫（站立待機 + 3 個變體，每 8~15 秒隨機播一個）\n· 單指拖曳 360° 旋轉、雙指縮放；紋理即時更新\n· 修復微軟帳號手臂粗細不對、換皮膚後披風消失\n\n【微軟帳號：外觀與披風】\n· 微軟披風此前從未被抓取過，現已完整接入\n· 修復披風取錯項（原本永遠取清單第 1 件）\n· 換膚對話框的「確定」改為「上傳」；模型選擇會被記住\n· 外觀與披風會自動跟隨微軟伺服器\n\n【下載頁】\n· 修復「模組名一個中文也沒有」、修復名稱英文重複兩遍\n· 修復重新整理後整頁空白並影響其他頁面\n· 移除「載入失敗，點此重試」提示\n· 詳情頁不再載入半天；收藏按鈕新增動效\n\n【整合包安裝】\n· 修復進度條不動；每個檔案單獨一行並顯示下載進度\n· 修復取消按鈕沒反應\n\n【穩定性】\n· 修復啟動時豎屏閃退、26.3 / 26.4 崩潰\n· 適配 Android 15 與 32 位裝置；內建渲染器開箱可用\n· 防殺後台；版本分類補齊 41 條缺失版本並新增 2.0（愚人節）三個版本\n"
+        },
+        {
+          "lang": "en_US",
+          "text": "[Major UI overhaul]\n- New main screen layout: a permanent icon-only nav rail on the left, so you no longer have to go\n  back to the main screen to reach the version list, downloads or settings.\n- Persistent account + version + launch block on the right, redone after FCL's layout.\n- Layout is switchable in Settings - Appearance - Layout (new / old).\n- Theme and accent colour are selectable in Settings - Appearance - Theme.\n- Background supports Default (auto day/night by time), Day, Night, Custom and Online.\n- Fixed many \"dark text on a dark panel\" and white-block issues in night mode.\n- 53 text elements across the project now carry day/night colours.\n\n[3D character: now the FCL pipeline]\n- Switched to FCL's glTF model with skeletal animation (classic / slim auto-switching).\n- Real idle animations (standing idle plus 3 variants, one every 8-15 seconds).\n- One-finger 360-degree rotation, pinch to zoom, live texture updates.\n- Fixed wrong arm width, \"thick then thin\", and the cape disappearing after a skin change.\n\n[Microsoft account: skin and cape]\n- Microsoft capes were never fetched before (the API branch was commented out and the account had\n  no field for it). They are now fully supported.\n- Fixed picking the wrong cape entry (it always used the first one, so switching never worked).\n- The skin dialog's OK button is now an Upload button; the model choice is remembered.\n- Skin and cape now follow the Microsoft server automatically.\n\n[Download pages]\n- Fixed \"no mod name is translated at all\", and fixed duplicated English names.\n- Fixed the blank page after a refresh that also broke other pages.\n- Removed the \"failed to load, tap to retry\" hint.\n- Detail pages load immediately now; the favourite button has feedback animation.\n\n[Modpack install]\n- Fixed frozen progress bars; each file gets its own row with live progress.\n- Fixed the dead cancel button.\n\n[Stability]\n- Fixed the portrait-orientation crash at launch and the 26.3 / 26.4 crashes.\n- Android 15 and 32-bit support; bundled renderers work out of the box.\n- Foreground service to survive being killed in the background; 41 missing versions added,\n  plus the three 2.0 (April Fools) versions.\n"
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "significant": true,
+      "outdated": true,
       "minVersion": 0,
       "maxVersion": 2147483647,
       "specificLang": [],
@@ -40,7 +77,7 @@
     {
       "id": 1,
       "significant": true,
-      "outdated": false,
+      "outdated": true,
       "minVersion": 0,
       "maxVersion": 2147483647,
       "specificLang": [],
@@ -77,7 +114,7 @@
     {
       "id": 2,
       "significant": true,
-      "outdated": false,
+      "outdated": true,
       "minVersion": 0,
       "maxVersion": 2147483647,
       "specificLang": [],
@@ -114,7 +151,7 @@
     {
       "id": 3,
       "significant": true,
-      "outdated": false,
+      "outdated": true,
       "minVersion": 0,
       "maxVersion": 2147483647,
       "specificLang": [],
@@ -151,7 +188,7 @@
     {
       "id": 4,
       "significant": true,
-      "outdated": false,
+      "outdated": true,
       "minVersion": 0,
       "maxVersion": 2147483647,
       "specificLang": [],
@@ -188,7 +225,7 @@
     {
       "id": 5,
       "significant": true,
-      "outdated": false,
+      "outdated": true,
       "minVersion": 0,
       "maxVersion": 2147483647,
       "specificLang": [],
