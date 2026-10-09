@@ -54,7 +54,6 @@ public class DownloadPackageUI extends BaseUI implements View.OnClickListener, A
     private ArrayList<RemoteMod> packageList;
     private ListView packageListView;
     private ProgressBar progressBar;
-    private TextView refreshText;
     private RemoteModRepository repository;
     private Button search;
     private Button refresh;
@@ -88,20 +87,17 @@ public class DownloadPackageUI extends BaseUI implements View.OnClickListener, A
                 if (message.what == 0) {
                     DownloadPackageUI.this.isSearching = true;
                     DownloadPackageUI.this.progressBar.setVisibility(0);
-                    DownloadPackageUI.this.refreshText.setVisibility(8);
                     DownloadPackageUI.this.packageListView.setVisibility(8);
                 }
                 if (message.what == 1) {
                     DownloadPackageUI.this.downloadPackageListAdapter.notifyDataSetChanged();
                     DownloadPackageUI.this.categoryListAdapter.notifyDataSetChanged();
                     DownloadPackageUI.this.progressBar.setVisibility(8);
-                    DownloadPackageUI.this.refreshText.setVisibility(8);
                     DownloadPackageUI.this.packageListView.setVisibility(0);
                     DownloadPackageUI.this.isSearching = false;
                 }
                 if (message.what == 2) {
                     DownloadPackageUI.this.progressBar.setVisibility(8);
-                    DownloadPackageUI.this.refreshText.setVisibility(0);
                     DownloadPackageUI.this.packageListView.setVisibility(8);
                     DownloadPackageUI.this.isSearching = false;
                 }
@@ -225,9 +221,6 @@ public class DownloadPackageUI extends BaseUI implements View.OnClickListener, A
         this.editVersion.setOnEditorActionListener(this);
         this.editVersion.addTextChangedListener(this);
         this.progressBar = (ProgressBar) this.activity.findViewById(R.id.loading_download_package_list_progress);
-        TextView textView = (TextView) this.activity.findViewById(R.id.refresh_package_list);
-        this.refreshText = textView;
-        textView.setOnClickListener(this);
         this.repository = new Repository();
         this.packageListView = (ListView) this.activity.findViewById(R.id.download_package_list);
         this.packageList = new ArrayList<>();
@@ -328,9 +321,6 @@ public class DownloadPackageUI extends BaseUI implements View.OnClickListener, A
             this.activity.uiManager.switchMainUI(this.activity.uiManager.installPackageUI);
         }
         if (view == this.search || view == this.refresh) {
-            search();
-        }
-        if (view == this.refreshText) {
             search();
         }
     }

@@ -527,7 +527,6 @@
     <string name="download_world_ui_sort">Sort By</string>
     <string name="download_world_ui_name_hint">Only English is supported</string>
     <string name="download_world_ui_search">Search</string>
-    <string name="download_list_load_fail">Unable to fetch version list. Please click here to retry.</string>
     <string name="download_mod_sort_date">Date Created</string>
     <string name="download_mod_sort_heat">Popularity</string>
     <string name="download_mod_sort_recent">Last Updated</string>
@@ -649,7 +648,6 @@
     <string name="modrinth_category_utility">Utility</string>
     <string name="modrinth_category_worldgen">Worldgen</string>
     <string name="download_resource_mod_dependency">Dependencies</string>
-    <string name="download_resource_load_fail">Unable to fetch version list. Please click here to retry.</string>
     <string name="download_resource_beta">Snapshot</string>
     <string name="download_resource_release">Release</string>
     <string name="dialog_download_resource_name_title">Filename</string>
@@ -1074,7 +1072,6 @@
 
     <string name="revival_future_plan">QCL (Quanta Craft Launcher) is an independent Minecraft Java Edition launcher. Since 1.1.1 the launch / render / input / Java runtime pipeline is self-built with an SDL3 window backend, using FCL (FoldCraftLauncher) as reference; versions 1.1.0 and earlier were based on HMCL-PE. Upstream licenses and attribution are preserved. It is not an official FCL release, nor an official HMCL-PE release.</string>
     <string name="revival_fcl_reference">Android Java 21/25 runtimes sourced from FCL-Team. FCL project: https://github.com/FCL-Team/FoldCraftLauncher</string>
-    <string name="revival_manifest_failed">Unable to refresh the version list. The previous list has been retained; check your network and try again.</string>
     <string name="feedback_ui_join_qq">Join QQ group</string>
     <string name="revival_sdl_unavailable">This version requires SDL3. The bundled Boat/Pojav window backends do not support SDL3 yet; selecting Java 25 does not enable it.</string>
     <string name="revival_java_unavailable">The selected Java runtime is unavailable or incomplete on this architecture. Java 25 is not available for 32-bit x86.</string>

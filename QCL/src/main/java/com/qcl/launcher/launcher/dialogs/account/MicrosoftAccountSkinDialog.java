@@ -18,6 +18,8 @@ import com.qcl.launcher.R;
 import com.qcl.launcher.auth.Account;
 import com.qcl.launcher.auth.microsoft.MinecraftSkinService;
 import com.qcl.launcher.auth.microsoft.Msa;
+import com.qcl.launcher.auth.yggdrasil.Texture;
+import com.qcl.launcher.auth.yggdrasil.TextureType;
 import com.qcl.launcher.launcher.MainActivity;
 import com.qcl.launcher.skin.gltf.SkinRenderer;
 import com.qcl.launcher.skin.gltf.SkinViewer;
@@ -169,19 +171,80 @@ public class MicrosoftAccountSkinDialog extends Dialog implements View.OnClickLi
 
     /**
      * 载入这个账号当前生效的披风（{@code account.capeTexture}）到预览。
-     * 没有就静默跳过 —— 玩家没披风是正常的。
+     *
+     * <p>★★★ 2026-10-11：**没有就主动去微软拉一次**（用户实测「对话框里背后连个毛的披风都没有，
+     * 只有主界面人物背后有」）。
+     *
+     * <p>为什么必须补拉：{@code account.capeTexture} 只在**登录那一刻**（三个登录入口）
+     * 和 **MainUI 的后台补拉**里才会被赋值。老账号登录时披风功能还不存在 ⇒ 字段是空的；
+     * 主界面碰巧显示，是因为它进页面时会后台补拉一次；
+     * 而**皮肤对话框打开时那次补拉往往还没回来** ⇒ 对话框里永远是空的。
+     *
+     * <p>现在的行为：先用现有的（有就立刻显示），没有就**本对话框自己拉一次**，
+     * 拉到后回填 + 存盘 + 立刻重画（拉不到就静默，玩家没披风是正常的）。
      */
     private void loadCurrentCapeForPreview() {
         try {
-            if (account.capeTexture == null || account.capeTexture.trim().isEmpty()) {
+            if (account.capeTexture != null && !account.capeTexture.trim().isEmpty()) {
+                Bitmap cape = Avatar.stringToBitmap(account.capeTexture);
+                if (cape != null) {
+                    setCapeBitmap(cape);
+                }
                 return;
-            }
-            Bitmap cape = Avatar.stringToBitmap(account.capeTexture);
-            if (cape != null) {
-                setCapeBitmap(cape);
             }
         } catch (Throwable ignored) {
         }
+        fetchCapeFromMicrosoft();
+    }
+
+    /** 是否已经在为本对话框拉披风（防重复请求）。 */
+    private volatile boolean capeFetching;
+
+    /**
+     * 直接调微软接口拉一次披风：MinecraftProfile → 披风纹理 → base64 → 回填账号 + 重画预览。
+     * 全程后台线程，失败静默（不弹 Toast 打扰玩家）。
+     */
+    private void fetchCapeFromMicrosoft() {
+        if (capeFetching || account == null) {
+            return;
+        }
+        final String token = account.auth_access_token;
+        if (token == null || token.trim().isEmpty()) {
+            return;
+        }
+        capeFetching = true;
+        new Thread(() -> {
+            try {
+                // ★ 写法完全照抄 MainUI.fetchMicrosoftCapeOnce：
+                //   profile 用 "Bearer"，纹理直接交给 Account.downloadTextureAsBase64，
+                //   不要自己拼 URL —— Texture 类没有 getUrl()（我先前写错，编译报"找不到符号"）。
+                Msa.MinecraftProfileResponse profile = Msa.getMinecraftProfile("Bearer", token);
+                if (profile == null) {
+                    return;
+                }
+                java.util.Map<TextureType, Texture> textures = Msa.getTextures(profile).orElse(null);
+                if (textures == null) {
+                    return;
+                }
+                String capeB64 = Account.downloadTextureAsBase64(textures.get(TextureType.CAPE));
+                if (capeB64 == null || capeB64.trim().isEmpty()) {
+                    return;
+                }
+                final Bitmap cape = Avatar.stringToBitmap(capeB64);
+                handler.post(() -> {
+                    if (cape == null) {
+                        return;
+                    }
+                    account.capeTexture = capeB64;
+                    saveAccountAndRefresh();
+                    setCapeBitmap(cape);
+                });
+            } catch (Throwable ignored) {
+                // 拉不到就算了，不打扰玩家
+            } finally {
+                capeFetching = false;
+            }
+        }, "qcl-cape-fetch").start();
     }
 
     @Override
@@ -194,7 +257,26 @@ public class MicrosoftAccountSkinDialog extends Dialog implements View.OnClickLi
         if (skinViewer != null) {
             skinViewer.onResume();
         }
+        // ★★★★★ 2026-10-11 关键修复（用户实测「只有主界面显示披风，皮肤对话框里没有」）：
+        //   **时序问题** —— init() 里 `previewSkin()` / `setCapeBitmap()` 都在 `show()` 之前跑，
+        //   那时候帧循环还没启动（`onResume()` 上面这行才启动），
+        //   于是那一次 `updateTexture(skin, cape, slim)` **没被 GL 线程处理**。
+        //   结果就是：人物后来靠其它更新显示了，但**披风没跟上** ⇒ 对话框里背后永远是空的。
+        //
+        //   修法：`onResume()` 之后**重新把 (皮肤, 披风) 成对应用一次**。
+        //   （这里再调一次 loadCurrentCapeForPreview 是无害的幂等操作，
+        //     且能顺带把"进对话框后主界面刚补拉回来的披风"也带上。）
+        if (!isCapeRestored) {
+            isCapeRestored = true;
+            loadCurrentCapeForPreview();
+            if (lastPreviewBitmap != null) {
+                previewSkin(lastPreviewBitmap);
+            }
+        }
     }
+
+    /** show() 之后是否已经重放过一次披风（避免重复重放）。 */
+    private boolean isCapeRestored;
 
     /**
      * ★★★ 1.5.0：把「经典 / 苗条」这个选择重新应用到当前预览皮肤。

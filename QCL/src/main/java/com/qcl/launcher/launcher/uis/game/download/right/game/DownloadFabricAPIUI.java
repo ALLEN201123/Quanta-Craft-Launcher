@@ -32,7 +32,6 @@ public class DownloadFabricAPIUI extends BaseUI implements View.OnClickListener 
     public boolean install;
     private final Handler loadingHandler;
     private ProgressBar progressBar;
-    private TextView refreshText;
     public String version;
 
     /* JADX INFO: Access modifiers changed from: package-private */
@@ -48,25 +47,21 @@ public class DownloadFabricAPIUI extends BaseUI implements View.OnClickListener 
                 if (message.what == 0) {
                     DownloadFabricAPIUI.this.fabricAPIListView.setVisibility(8);
                     DownloadFabricAPIUI.this.progressBar.setVisibility(0);
-                    DownloadFabricAPIUI.this.refreshText.setVisibility(8);
                     DownloadFabricAPIUI.this.back.setVisibility(8);
                 }
                 if (message.what == 1) {
                     DownloadFabricAPIUI.this.fabricAPIListView.setVisibility(0);
                     DownloadFabricAPIUI.this.progressBar.setVisibility(8);
-                    DownloadFabricAPIUI.this.refreshText.setVisibility(8);
                     DownloadFabricAPIUI.this.back.setVisibility(8);
                 }
                 if (message.what == 2) {
                     DownloadFabricAPIUI.this.fabricAPIListView.setVisibility(8);
                     DownloadFabricAPIUI.this.progressBar.setVisibility(8);
-                    DownloadFabricAPIUI.this.refreshText.setVisibility(8);
                     DownloadFabricAPIUI.this.back.setVisibility(0);
                 }
                 if (message.what == 3) {
                     DownloadFabricAPIUI.this.fabricAPIListView.setVisibility(8);
                     DownloadFabricAPIUI.this.progressBar.setVisibility(8);
-                    DownloadFabricAPIUI.this.refreshText.setVisibility(0);
                     DownloadFabricAPIUI.this.back.setVisibility(8);
                 }
             }
@@ -83,9 +78,7 @@ public class DownloadFabricAPIUI extends BaseUI implements View.OnClickListener 
         //   所以字段 / 查找 / 监听三处必须一起删。
         this.fabricAPIListView = (ListView) this.activity.findViewById(R.id.fabric_api_version_list);
         this.progressBar = (ProgressBar) this.activity.findViewById(R.id.loading_fabric_api_list_progress);
-        this.refreshText = (TextView) this.activity.findViewById(R.id.refresh_fabric_api_list);
         this.back = (TextView) this.activity.findViewById(R.id.back_to_install_ui_fabric_api);
-        this.refreshText.setOnClickListener(this);
         this.back.setOnClickListener(this);
     }
 
@@ -172,9 +165,6 @@ public class DownloadFabricAPIUI extends BaseUI implements View.OnClickListener 
     @Override // android.view.View.OnClickListener
     public void onClick(View view) {
         // ★ 1.5.0：`view == hintLayout` → 打开赞助页的分支已随提示条一起移除。
-        if (view == this.refreshText) {
-            refresh();
-        }
         if (view == this.back) {
             this.activity.backToLastUI();
         }

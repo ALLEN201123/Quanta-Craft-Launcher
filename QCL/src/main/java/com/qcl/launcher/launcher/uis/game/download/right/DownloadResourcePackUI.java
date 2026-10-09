@@ -55,7 +55,6 @@ public class DownloadResourcePackUI extends BaseUI implements View.OnClickListen
     private boolean isSearching;
     public String lastVersion;
     private ProgressBar progressBar;
-    private TextView refreshText;
     private RemoteModRepository repository;
     private ArrayList<RemoteMod> resourcePackList;
     private ListView resourcePackListView;
@@ -89,20 +88,17 @@ public class DownloadResourcePackUI extends BaseUI implements View.OnClickListen
                 if (message.what == 0) {
                     DownloadResourcePackUI.this.isSearching = true;
                     DownloadResourcePackUI.this.progressBar.setVisibility(0);
-                    DownloadResourcePackUI.this.refreshText.setVisibility(8);
                     DownloadResourcePackUI.this.resourcePackListView.setVisibility(8);
                 }
                 if (message.what == 1) {
                     DownloadResourcePackUI.this.downloadResourcePackListAdapter.notifyDataSetChanged();
                     DownloadResourcePackUI.this.categoryListAdapter.notifyDataSetChanged();
                     DownloadResourcePackUI.this.progressBar.setVisibility(8);
-                    DownloadResourcePackUI.this.refreshText.setVisibility(8);
                     DownloadResourcePackUI.this.resourcePackListView.setVisibility(0);
                     DownloadResourcePackUI.this.isSearching = false;
                 }
                 if (message.what == 2) {
                     DownloadResourcePackUI.this.progressBar.setVisibility(8);
-                    DownloadResourcePackUI.this.refreshText.setVisibility(0);
                     DownloadResourcePackUI.this.resourcePackListView.setVisibility(8);
                     DownloadResourcePackUI.this.isSearching = false;
                 }
@@ -183,9 +179,6 @@ public class DownloadResourcePackUI extends BaseUI implements View.OnClickListen
         this.editVersion.setOnEditorActionListener(this);
         this.editVersion.addTextChangedListener(this);
         this.progressBar = (ProgressBar) this.activity.findViewById(R.id.loading_download_resource_pack_list_progress);
-        TextView textView = (TextView) this.activity.findViewById(R.id.refresh_resource_pack_list);
-        this.refreshText = textView;
-        textView.setOnClickListener(this);
         this.repository = new Repository();
         ArrayList arrayList4 = new ArrayList();
         arrayList4.add(this.context.getString(R.string.download_mod_source_curse_forge));
@@ -316,9 +309,6 @@ public class DownloadResourcePackUI extends BaseUI implements View.OnClickListen
     @Override // android.view.View.OnClickListener
     public void onClick(View view) {
         if (view == this.search || view == this.refresh) {
-            search();
-        }
-        if (view == this.refreshText) {
             search();
         }
     }

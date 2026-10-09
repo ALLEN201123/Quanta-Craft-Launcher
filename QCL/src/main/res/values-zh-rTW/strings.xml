@@ -432,7 +432,6 @@
     <string name="download_world_ui_sort">排序</string>
     <string name="download_world_ui_name_hint">僅支持英文搜索</string>
     <string name="download_world_ui_search">搜索</string>
-    <string name="download_list_load_fail">加載版本列表失敗，點擊此處重試</string>
     <string name="download_mod_sort_date">創建日期</string>
     <string name="download_mod_sort_heat">熱度</string>
     <string name="download_mod_sort_recent">最近更新</string>
@@ -555,7 +554,6 @@
     <string name="modrinth_category_all">全部</string>
     <string name="download_resource_mcmod">MC 百科</string>
     <string name="download_resource_mod_dependency">前置 Mod</string>
-    <string name="download_resource_load_fail">加載版本列表失敗，點擊此處重試。</string>
     <string name="download_resource_beta">測試版</string>
     <string name="download_resource_release">正式版</string>
     <string name="dialog_download_resource_name_title">名稱</string>
@@ -966,7 +964,6 @@
     <string name="game_setting_ui_java_path_25">Java 25（Android，x86 32位不可用）</string>
     <string name="revival_future_plan">QCL（Quanta Craft Launcher，量子方塊啟動器）是獨立的 Minecraft Java 版啟動器。1.1.1 起，啟動／渲染／輸入／Java 執行時鏈路已改為自研實現，並以 FCL（FoldCraftLauncher）為參照；1.1.0 及更早版本基於 HMCL-PE。本專案保留上游授權與來源說明，不是 FCL 官方版本，也不是 HMCL-PE 官方版本。</string>
     <string name="revival_fcl_reference">Java 21/25 使用 FCL-Team 的 Android 執行環境。FCL 專案：https://github.com/FCL-Team/FoldCraftLauncher</string>
-    <string name="revival_manifest_failed">版本清單重新整理失敗，已保留原清單。請檢查網路後重試。</string>
     <string name="revival_sdl_unavailable">此版本需要 SDL3。目前的 Boat/Pojav 視窗後端尚未適配 SDL3，選擇 Java 25 不能取代視窗適配。</string>
     <string name="revival_java_unavailable">目前架構的 Java 執行環境不可用或安裝不完整。Java 25 暫不支援 x86 32位。</string>
 

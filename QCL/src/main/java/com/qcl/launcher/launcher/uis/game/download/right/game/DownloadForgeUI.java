@@ -70,7 +70,6 @@ public class DownloadForgeUI extends BaseUI implements View.OnClickListener {
         this.progressBar = (ProgressBar) this.activity.findViewById(R.id.loading_forge_list_progress);
         TextView textView = (TextView) this.activity.findViewById(R.id.back_to_install_ui_forge);
         this.back = textView;
-        textView.setOnClickListener(this);
     }
 
     @Override // com.qcl.launcher.launcher.uis.tools.BaseUI, com.qcl.launcher.launcher.uis.tools.UILifecycleCallbacks

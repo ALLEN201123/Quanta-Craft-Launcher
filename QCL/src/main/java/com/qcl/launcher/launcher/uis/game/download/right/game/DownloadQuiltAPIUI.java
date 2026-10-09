@@ -30,7 +30,6 @@ public class DownloadQuiltAPIUI extends BaseUI implements View.OnClickListener {
     private final Handler loadingHandler;
     private ProgressBar progressBar;
     private ListView quiltAPIListView;
-    private TextView refreshText;
     public String version;
 
     public DownloadQuiltAPIUI(Context context, MainActivity mainActivity) {
@@ -42,25 +41,21 @@ public class DownloadQuiltAPIUI extends BaseUI implements View.OnClickListener {
                 if (message.what == 0) {
                     DownloadQuiltAPIUI.this.quiltAPIListView.setVisibility(8);
                     DownloadQuiltAPIUI.this.progressBar.setVisibility(0);
-                    DownloadQuiltAPIUI.this.refreshText.setVisibility(8);
                     DownloadQuiltAPIUI.this.back.setVisibility(8);
                 }
                 if (message.what == 1) {
                     DownloadQuiltAPIUI.this.quiltAPIListView.setVisibility(0);
                     DownloadQuiltAPIUI.this.progressBar.setVisibility(8);
-                    DownloadQuiltAPIUI.this.refreshText.setVisibility(8);
                     DownloadQuiltAPIUI.this.back.setVisibility(8);
                 }
                 if (message.what == 2) {
                     DownloadQuiltAPIUI.this.quiltAPIListView.setVisibility(8);
                     DownloadQuiltAPIUI.this.progressBar.setVisibility(8);
-                    DownloadQuiltAPIUI.this.refreshText.setVisibility(8);
                     DownloadQuiltAPIUI.this.back.setVisibility(0);
                 }
                 if (message.what == 3) {
                     DownloadQuiltAPIUI.this.quiltAPIListView.setVisibility(8);
                     DownloadQuiltAPIUI.this.progressBar.setVisibility(8);
-                    DownloadQuiltAPIUI.this.refreshText.setVisibility(0);
                     DownloadQuiltAPIUI.this.back.setVisibility(8);
                 }
             }
@@ -77,9 +72,7 @@ public class DownloadQuiltAPIUI extends BaseUI implements View.OnClickListener {
         //   所以字段 / 查找 / 监听三处必须一起删。
         this.quiltAPIListView = (ListView) this.activity.findViewById(R.id.quilt_api_version_list);
         this.progressBar = (ProgressBar) this.activity.findViewById(R.id.loading_quilt_api_list_progress);
-        this.refreshText = (TextView) this.activity.findViewById(R.id.refresh_quilt_api_list);
         this.back = (TextView) this.activity.findViewById(R.id.back_to_install_ui_quilt_api);
-        this.refreshText.setOnClickListener(this);
         this.back.setOnClickListener(this);
     }
 
@@ -154,9 +147,6 @@ public class DownloadQuiltAPIUI extends BaseUI implements View.OnClickListener {
     @Override // android.view.View.OnClickListener
     public void onClick(View view) {
         // ★ 1.5.0：`view == hintLayout` → 打开赞助页的分支已随提示条一起移除。
-        if (view == this.refreshText) {
-            refresh();
-        }
         if (view == this.back) {
             this.activity.backToLastUI();
         }

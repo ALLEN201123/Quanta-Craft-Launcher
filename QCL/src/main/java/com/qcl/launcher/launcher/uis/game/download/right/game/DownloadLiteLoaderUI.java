@@ -74,7 +74,6 @@ public class DownloadLiteLoaderUI extends BaseUI implements View.OnClickListener
         this.progressBar = (ProgressBar) this.activity.findViewById(R.id.loading_lite_loader_list_progress);
         TextView textView = (TextView) this.activity.findViewById(R.id.back_to_install_ui_lite_loader);
         this.back = textView;
-        textView.setOnClickListener(this);
     }
 
     @Override // com.qcl.launcher.launcher.uis.tools.BaseUI, com.qcl.launcher.launcher.uis.tools.UILifecycleCallbacks

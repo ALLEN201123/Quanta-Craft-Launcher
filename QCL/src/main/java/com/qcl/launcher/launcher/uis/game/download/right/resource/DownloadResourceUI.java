@@ -66,7 +66,6 @@ public class DownloadResourceUI extends BaseDownloadUI implements View.OnClickLi
     private LinearLayout modrinth;
 
     private ProgressBar progressBar;
-    private TextView refreshText;
     private LinearLayout dependencyLayout;
     private ListView dependencyList;
     private ListView versionList;
@@ -101,12 +100,10 @@ public class DownloadResourceUI extends BaseDownloadUI implements View.OnClickLi
         modrinth.setOnClickListener(this);
 
         progressBar = findViewById(R.id.mod_info_progress);
-        refreshText = findViewById(R.id.mod_load_fail_text);
         dependencyLayout = findViewById(R.id.dependency_layout);
         dependencyList = findViewById(R.id.dependency_list);
         versionList = findViewById(R.id.mod_version_list);
 
-        refreshText.setOnClickListener(this);
 
         // ★ 1.2.9：详情页顶部的大图标也交给 ModIconLoader ——
         //   本来就是在子线程里下的（异步），但**没有超时也没有缓存**：服务器慢就一直挂着、
@@ -188,9 +185,6 @@ public class DownloadResourceUI extends BaseDownloadUI implements View.OnClickLi
             Uri uri = Uri.parse(bean.getPageUrl());
             Intent intent = new Intent(Intent.ACTION_VIEW, uri);
             context.startActivity(intent);
-        }
-        if (view == refreshText) {
-            refresh();
         }
     }
 
@@ -327,7 +321,6 @@ public class DownloadResourceUI extends BaseDownloadUI implements View.OnClickLi
                 dependencyLayout.setVisibility(View.GONE);
                 versionList.setVisibility(View.GONE);
                 progressBar.setVisibility(View.VISIBLE);
-                refreshText.setVisibility(View.GONE);
             });
             try {
                 // ★★★ 1.2.5：依赖拉不到**不该**让整页「版本列表加载失败」——
@@ -392,7 +385,6 @@ public class DownloadResourceUI extends BaseDownloadUI implements View.OnClickLi
                         dependencyLayout.setVisibility(View.GONE);
                         versionList.setVisibility(View.VISIBLE);
                         progressBar.setVisibility(View.GONE);
-                        refreshText.setVisibility(View.GONE);
                         versionList.setAdapter(modGameVersionAdapter);
                         reSetListViewHeight(versionList,getVersionListHeight(versionList) - versionList.getLayoutParams().height);
                     });
@@ -404,7 +396,6 @@ public class DownloadResourceUI extends BaseDownloadUI implements View.OnClickLi
                         dependencyLayout.setVisibility(View.VISIBLE);
                         versionList.setVisibility(View.VISIBLE);
                         progressBar.setVisibility(View.GONE);
-                        refreshText.setVisibility(View.GONE);
                         dependencyList.setAdapter(modDependencyAdapter);
                         versionList.setAdapter(modGameVersionAdapter);
                         reSetListViewHeight(dependencyList,getDependencyListHeight(dependencyList) - dependencyList.getLayoutParams().height);
@@ -417,7 +408,6 @@ public class DownloadResourceUI extends BaseDownloadUI implements View.OnClickLi
                     dependencyLayout.setVisibility(View.GONE);
                     versionList.setVisibility(View.GONE);
                     progressBar.setVisibility(View.GONE);
-                    refreshText.setVisibility(View.VISIBLE);
                 });
             }
         }).start();

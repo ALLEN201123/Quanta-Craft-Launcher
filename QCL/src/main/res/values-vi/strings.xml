@@ -517,7 +517,6 @@
     <string name="dialog_verify_verify_fail">Xác minh không hoàn thành</string>
     <string name="dialog_verify_verify_success">Xác minh thành công</string>
     <string name="donate_ui_text">Xin chào Minecraft! Launcher Pocket Edition là một trình khởi chạy Minecraft Android cho phép người dùng quản lý nhiều phiên bản Minecraft một cách dễ dàng. Bạn có thể quyên góp cho chúng tôi trên Afdian để hỗ trợ việc lưu trữ tệp và phát triển dự án của chúng tôi. Nhấp vào đây để có thêm thông tin.</string>
-    <string name="download_list_load_fail">Không thể tìm nạp danh sách phiên bản. Vui lòng bấm vào đây để thử lại.</string>
     <!-- ★ 1.5.0: download_minecraft_ui_hint / _hint_text removed (top info bar dropped). -->
     <string name="download_minecraft_ui_old">Lịch sử</string>
     <string name="download_minecraft_ui_april">Cá tháng Tư</string>
@@ -549,7 +548,6 @@
     <string name="download_package_ui_type">Loại</string>
     <string name="download_package_ui_version">Phiên bản trò chơi</string>
     <string name="download_resource_beta">Ảnh chụp nhanh</string>
-    <string name="download_resource_load_fail">Không thể tìm nạp danh sách phiên bản. Vui lòng bấm vào đây để thử lại.</string>
     <string name="download_resource_mcmod">MCMOD</string>
     <string name="download_resource_mod_dependency">Sự phụ thuộc</string>
     <string name="download_resource_pack_ui_game">Trò chơi</string>

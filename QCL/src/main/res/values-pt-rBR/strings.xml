@@ -421,7 +421,6 @@
     <string name="download_world_ui_sort">Ordenar por</string>
     <string name="download_world_ui_name_hint">Apenas inglês é suportado</string>
     <string name="download_world_ui_search">Pesquisar</string>
-    <string name="download_list_load_fail">Não foi possível buscar a lista de versões.  Clique aqui para tentar novamente.</string>
     <string name="download_mod_sort_date">Data Criada</string>
     <string name="download_mod_sort_heat">Popularidade</string>
     <string name="download_mod_sort_recent">Ultima atualização</string>
@@ -544,7 +543,6 @@
     <string name="modrinth_category_worldgen">Geração de Mundo</string>
     <string name="download_resource_mcmod">MCMOD</string>
     <string name="download_resource_mod_dependency">Dependências</string>
-    <string name="download_resource_load_fail">Não foi possível buscar a lista de versões.  Clique aqui para tentar novamente.</string>
     <string name="download_resource_beta">Instantâneo</string>
     <string name="download_resource_release">Oficial</string>
     <string name="dialog_download_resource_name_title">Nome do arquivo</string>

@@ -26,7 +26,6 @@ public class DonateUI extends BaseUI implements View.OnClickListener {
         this.donateUI = (LinearLayout) this.activity.findViewById(R.id.ui_donate);
         TextView textView = (TextView) this.activity.findViewById(R.id.donate);
         this.textView = textView;
-        textView.setOnClickListener(this);
     }
 
     @Override // com.qcl.launcher.launcher.uis.tools.BaseUI, com.qcl.launcher.launcher.uis.tools.UILifecycleCallbacks

@@ -80,7 +80,6 @@ public class DownloadNeoForgeUI extends BaseUI implements View.OnClickListener {
         this.progressBar = (ProgressBar) this.activity.findViewById(R.id.loading_neoforge_list_progress);
         TextView textView = (TextView) this.activity.findViewById(R.id.back_to_install_ui_neoforge);
         this.back = textView;
-        textView.setOnClickListener(this);
     }
 
     @Override

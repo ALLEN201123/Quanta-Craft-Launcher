@@ -250,7 +250,6 @@ public class HybridRemoteModRepository implements RemoteModRepository {
         }
 
         // ★★ 照 FCL：单源失败**不阻断**另一源，而是记一条"降级提示"告诉玩家结果可能不全。
-        //   两源都空才当失败（由调用方走 refreshText 提示）。
         if (a.isEmpty() && b.isEmpty()) {
             lastPartialWarning = null;
         } else if (a.isEmpty()) {

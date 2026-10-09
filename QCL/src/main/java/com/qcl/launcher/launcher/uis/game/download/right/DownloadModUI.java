@@ -55,7 +55,6 @@ public class DownloadModUI extends BaseUI implements View.OnClickListener, Adapt
     private DownloadResourceAdapter modListAdapter;
     private ListView modListView;
     private ProgressBar progressBar;
-    private TextView refreshText;
     private RemoteModRepository repository;
     private Button search;
     private Button refresh;
@@ -92,20 +91,17 @@ public class DownloadModUI extends BaseUI implements View.OnClickListener, Adapt
                 if (message.what == 0) {
                     DownloadModUI.this.isSearching = true;
                     DownloadModUI.this.progressBar.setVisibility(0);
-                    DownloadModUI.this.refreshText.setVisibility(8);
                     DownloadModUI.this.modListView.setVisibility(8);
                 }
                 if (message.what == 1) {
                     DownloadModUI.this.modListAdapter.notifyDataSetChanged();
                     DownloadModUI.this.categoryListAdapter.notifyDataSetChanged();
                     DownloadModUI.this.progressBar.setVisibility(8);
-                    DownloadModUI.this.refreshText.setVisibility(8);
                     DownloadModUI.this.modListView.setVisibility(0);
                     DownloadModUI.this.isSearching = false;
                 }
                 if (message.what == 2) {
                     DownloadModUI.this.progressBar.setVisibility(8);
-                    DownloadModUI.this.refreshText.setVisibility(0);
                     DownloadModUI.this.modListView.setVisibility(8);
                     DownloadModUI.this.isSearching = false;
                 }
@@ -235,9 +231,6 @@ public class DownloadModUI extends BaseUI implements View.OnClickListener, Adapt
         this.modListAdapter = downloadResourceAdapter;
         this.modListView.setAdapter((ListAdapter) downloadResourceAdapter);
         this.progressBar = (ProgressBar) this.activity.findViewById(R.id.loading_download_mod_list_progress);
-        TextView textView = (TextView) this.activity.findViewById(R.id.refresh_mod_list);
-        this.refreshText = textView;
-        textView.setOnClickListener(this);
     }
 
     @Override // com.qcl.launcher.launcher.uis.tools.BaseUI, com.qcl.launcher.launcher.uis.tools.UILifecycleCallbacks
@@ -260,9 +253,6 @@ public class DownloadModUI extends BaseUI implements View.OnClickListener, Adapt
     @Override // android.view.View.OnClickListener
     public void onClick(View view) {
         if (view == this.search || view == this.refresh) {
-            search();
-        }
-        if (view == this.refreshText) {
             search();
         }
     }

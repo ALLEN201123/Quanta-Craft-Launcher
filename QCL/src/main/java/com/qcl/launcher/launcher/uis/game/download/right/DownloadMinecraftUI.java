@@ -180,11 +180,12 @@ public class DownloadMinecraftUI extends BaseUI implements View.OnClickListener,
         this.refresh.setEnabled(true);
         this.loadingProgress.setVisibility(8);
         this.gameListLayout.setVisibility(0);
-        if (arrayList.isEmpty()) {
-            Toast.makeText(this.context, R.string.revival_manifest_failed, 1).show();
-        } else {
+        if (!arrayList.isEmpty()) {
             this.allList = arrayList;
         }
+        // ★ 2026-10-11：原来列表为空时弹「无法刷新版本列表…」的 Toast
+        //   （R.string.revival_manifest_failed）。该字符串资源已按用户要求**彻底删除**，
+        //   而且玩家不想被这种失败提示打扰 —— 空的就什么也不弹，等下次刷新即可。
         refresh();
     }
 

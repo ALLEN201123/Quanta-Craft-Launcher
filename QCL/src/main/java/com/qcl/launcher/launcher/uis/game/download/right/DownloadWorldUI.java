@@ -50,7 +50,6 @@ public class DownloadWorldUI extends BaseUI implements View.OnClickListener, Ada
     private Spinner editVersionSpinner;
     private boolean isSearching;
     private ProgressBar progressBar;
-    private TextView refreshText;
     private RemoteModRepository repository;
     private Button search;
     private Button refresh;
@@ -84,20 +83,17 @@ public class DownloadWorldUI extends BaseUI implements View.OnClickListener, Ada
                 if (message.what == 0) {
                     DownloadWorldUI.this.isSearching = true;
                     DownloadWorldUI.this.progressBar.setVisibility(0);
-                    DownloadWorldUI.this.refreshText.setVisibility(8);
                     DownloadWorldUI.this.worldListView.setVisibility(8);
                 }
                 if (message.what == 1) {
                     DownloadWorldUI.this.downloadWorldListAdapter.notifyDataSetChanged();
                     DownloadWorldUI.this.categoryListAdapter.notifyDataSetChanged();
                     DownloadWorldUI.this.progressBar.setVisibility(8);
-                    DownloadWorldUI.this.refreshText.setVisibility(8);
                     DownloadWorldUI.this.worldListView.setVisibility(0);
                     DownloadWorldUI.this.isSearching = false;
                 }
                 if (message.what == 2) {
                     DownloadWorldUI.this.progressBar.setVisibility(8);
-                    DownloadWorldUI.this.refreshText.setVisibility(0);
                     DownloadWorldUI.this.worldListView.setVisibility(8);
                     DownloadWorldUI.this.isSearching = false;
                 }
@@ -169,9 +165,6 @@ public class DownloadWorldUI extends BaseUI implements View.OnClickListener, Ada
         this.editVersion.setOnEditorActionListener(this);
         this.editVersion.addTextChangedListener(this);
         this.progressBar = (ProgressBar) this.activity.findViewById(R.id.loading_download_world_list_progress);
-        TextView textView = (TextView) this.activity.findViewById(R.id.refresh_world_list);
-        this.refreshText = textView;
-        textView.setOnClickListener(this);
         this.repository = new Repository();
         this.downloadSourceSpinner = (Spinner) this.activity.findViewById(R.id.download_world_arg_source);
         ArrayList arrayList4 = new ArrayList();
@@ -272,9 +265,6 @@ public class DownloadWorldUI extends BaseUI implements View.OnClickListener, Ada
     @Override // android.view.View.OnClickListener
     public void onClick(View view) {
         if (view == this.search || view == this.refresh) {
-            search();
-        }
-        if (view == this.refreshText) {
             search();
         }
     }

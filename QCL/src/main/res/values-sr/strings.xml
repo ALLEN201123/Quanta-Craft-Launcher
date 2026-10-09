@@ -421,7 +421,6 @@
     <string name="download_world_ui_sort">sortiraj po</string>
     <string name="download_world_ui_name_hint">Samo je engleski podržan</string>
     <string name="download_world_ui_search">pretraži</string>
-    <string name="download_list_load_fail">Nije moguće preuzeti listu verzija. Kliknite ovde da pokušate ponovo.</string>
     <string name="download_mod_sort_date">datum kreiraža</string>
     <string name="download_mod_sort_heat">popularnost</string>
     <string name="download_mod_sort_recent">najnovije ažuriranje</string>
@@ -544,7 +543,6 @@
     <string name="modrinth_category_worldgen">Worldgen</string>
     <string name="download_resource_mcmod">MCMOD</string>
     <string name="download_resource_mod_dependency">Dependencies</string>
-    <string name="download_resource_load_fail">Unable to fetch version list. Please click here to retry.</string>
     <string name="download_resource_beta">Snapshot</string>
     <string name="download_resource_release">izdanje</string>
     <string name="dialog_download_resource_name_title">ime fajla</string>

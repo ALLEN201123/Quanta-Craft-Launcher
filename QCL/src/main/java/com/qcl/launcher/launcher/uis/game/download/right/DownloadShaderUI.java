@@ -53,7 +53,6 @@ public class DownloadShaderUI extends BaseUI implements View.OnClickListener, Ad
     private boolean isSearching;
     public String lastVersion;
     private ProgressBar progressBar;
-    private TextView refreshText;
     private RemoteModRepository repository;
     private ArrayList<RemoteMod> resourcePackList;
     private ListView resourcePackListView;
@@ -87,20 +86,17 @@ public class DownloadShaderUI extends BaseUI implements View.OnClickListener, Ad
                 if (message.what == 0) {
                     DownloadShaderUI.this.isSearching = true;
                     DownloadShaderUI.this.progressBar.setVisibility(0);
-                    DownloadShaderUI.this.refreshText.setVisibility(8);
                     DownloadShaderUI.this.resourcePackListView.setVisibility(8);
                 }
                 if (message.what == 1) {
                     DownloadShaderUI.this.downloadResourcePackListAdapter.notifyDataSetChanged();
                     DownloadShaderUI.this.categoryListAdapter.notifyDataSetChanged();
                     DownloadShaderUI.this.progressBar.setVisibility(8);
-                    DownloadShaderUI.this.refreshText.setVisibility(8);
                     DownloadShaderUI.this.resourcePackListView.setVisibility(0);
                     DownloadShaderUI.this.isSearching = false;
                 }
                 if (message.what == 2) {
                     DownloadShaderUI.this.progressBar.setVisibility(8);
-                    DownloadShaderUI.this.refreshText.setVisibility(0);
                     DownloadShaderUI.this.resourcePackListView.setVisibility(8);
                     DownloadShaderUI.this.isSearching = false;
                 }
@@ -180,9 +176,6 @@ public class DownloadShaderUI extends BaseUI implements View.OnClickListener, Ad
         this.editVersion.setOnEditorActionListener(this);
         this.editVersion.addTextChangedListener(this);
         this.progressBar = (ProgressBar) this.activity.findViewById(R.id.loading_download_shader_list_progress);
-        TextView textView = (TextView) this.activity.findViewById(R.id.refresh_shader_list);
-        this.refreshText = textView;
-        textView.setOnClickListener(this);
         this.repository = ModrinthRemoteModRepository.SHADERS;
         this.resourcePackListView = (ListView) this.activity.findViewById(R.id.download_shader_list);
         this.resourcePackList = new ArrayList<>();
@@ -284,9 +277,6 @@ public class DownloadShaderUI extends BaseUI implements View.OnClickListener, Ad
     @Override // android.view.View.OnClickListener
     public void onClick(View view) {
         if (view == this.search || view == this.refresh) {
-            search();
-        }
-        if (view == this.refreshText) {
             search();
         }
     }
