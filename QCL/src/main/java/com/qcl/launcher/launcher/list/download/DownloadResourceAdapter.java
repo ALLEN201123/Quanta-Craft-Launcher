@@ -470,7 +470,70 @@ public class DownloadResourceAdapter extends BaseAdapter {
         if (cn == null || cn.isEmpty() || cn.equals(en)) {
             return en;
         }
+        // ★★★★★ 2026-10-11 修（用户实测「有没有发现连续多了两个英文名？」）：
+        //   翻译表里有 **395 条**的中文名**本身就带英文括号**，例如
+        //     sodium   → "钠 (Sodium)"
+        //     rubidium → "铷 (Rubidium)"
+        //     indium   → "铟 (Indium)"
+        //   而我这里又无条件在后面拼了一次英文原名 ⇒
+        //     "钠 (Sodium) Sodium"  ← 英文出现两次（用户一眼就看出来了）。
+        //
+        //   修法：**先判重** —— 如果中文名里已经包含英文原名（忽略大小写、
+        //   忽略空格与点的差异），就**只显示中文名**，不再重复拼英文。
+        //   这与 FCL 的表现一致（FCL 直接 setText(中文名)，不拼接）。
+        if (containsAsciiName(cn, en)) {
+            return cn;
+        }
         return cn + "  " + en;
+    }
+
+    /**
+     * ★ 2026-10-11 新增：判断中文名里是否**已经包含**英文原名。
+     *
+     * <p>用于避免 "钠 (Sodium) Sodium" 这种英文重复。
+     * 比较时做三重归一化，尽量多认出来：
+     * <ol>
+     *   <li>都转小写；</li>
+     *   <li>去掉空格、（）、-、_、.、' 等分隔符（"Reese's" vs "Reeses"）；</li>
+     *   <li>再去比 contains。</li>
+     * </ol>
+     *
+     * @param cn 中文显示名（可能含括号英文）
+     * @param en 英文原名
+     * @return true = 中文名里已经含有这个英文名，调用方不要再拼一遍
+     */
+    private static boolean containsAsciiName(String cn, String en) {
+        if (cn == null || en == null) {
+            return false;
+        }
+        try {
+            String a = normalizeForCompare(cn);
+            String b = normalizeForCompare(en);
+            if (b.isEmpty()) {
+                return true;
+            }
+            return a.contains(b);
+        } catch (Throwable ignored) {
+            return false;
+        }
+    }
+
+    /** 归一化：小写 + 去掉常见分隔符，便于"包含"判断。 */
+    private static String normalizeForCompare(String s) {
+        if (s == null) {
+            return "";
+        }
+        StringBuilder sb = new StringBuilder(s.length());
+        for (int i = 0; i < s.length(); i++) {
+            char c = s.charAt(i);
+            if (c == ' ' || c == '\t' || c == '(' || c == ')' || c == '（' || c == '）'
+                    || c == '-' || c == '_' || c == '.' || c == '\'' || c == '\u2019'
+                    || c == '[' || c == ']' || c == '【' || c == '】' || c == ':') {
+                continue;
+            }
+            sb.append(Character.toLowerCase(c));
+        }
+        return sb.toString();
     }
 
     @SuppressLint("HandlerLeak")
