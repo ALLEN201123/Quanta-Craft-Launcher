@@ -142,7 +142,7 @@ class SkinRenderer(context: Context) {
      * 同步更新 [texture]（当前纹理可读回，attach 重喂时不会退回默认皮肤）。
      */
     fun updateTexture(skin: Bitmap?, cape: Bitmap?) {
-        texture = arrayOf(skin, cape)
+        applyTextureCache(skin, cape)
         scheduleTextureUpdate(skin, cape, null)
     }
 
@@ -150,8 +150,40 @@ class SkinRenderer(context: Context) {
      * 更新皮肤纹理并显式指定模型（[slim] 覆盖图像自动检测）。
      */
     fun updateTexture(skin: Bitmap?, cape: Bitmap?, slim: Boolean) {
-        texture = arrayOf(skin, cape)
+        applyTextureCache(skin, cape)
         scheduleTextureUpdate(skin, cape, slim)
+    }
+
+    /**
+     * ★★★★★ 2026-10-11 新增：**带保护地**更新跨上下文重建缓存。
+     *
+     * <p>真凶（用户实测「主界面皮肤永远不变 / 一会儿又变回默认皮肤」）：
+     * 原来两个 updateTexture 都是 `texture = arrayOf(skin, cape)` ——
+     * **无条件覆盖**。而调用方很容易传 null：
+     * <ul>
+     *   <li>cape：{@code MainUI.refreshAccountModel()} 里
+     *       {@code decodeCape(account.capeTexture)} 解码失败就返回 null；</li>
+     *   <li>skin：某次刷新时 account.texture 还没回填。</li>
+     * </ul>
+     * 一旦缓存被 null 覆盖，之后**每次 EGL 上下文重建**（切页面 / Activity 重建 /
+     * surface 重来）{@code onSurfaceCreated()} 都会拿 null 去恢复
+     * ⇒ 人物**回到默认皮肤、披风消失**，玩家看到的就是"我换的皮肤永远没生效"。
+     *
+     * <p>所以语义与渲染端保持一致：
+     * <b>传 null = 这次不改这一类纹理</b>，绝不用 null 覆盖已有缓存。
+     * 只有显式 {@code clearCape()} 才清披风缓存。
+     */
+    private fun applyTextureCache(skin: Bitmap?, cape: Bitmap?) {
+        try {
+            if (skin != null) {
+                texture[0] = skin
+            }
+            if (cape != null) {
+                texture[1] = cape
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 
     /**
@@ -263,6 +295,22 @@ class SkinRenderer(context: Context) {
                 pendingCape = cape
                 pendingSlim = slimOverride ?: normalized.isSlim
                 pendingHasUpdate = true
+                // ★★★★★ 2026-10-11【关键修复】把新纹理**同步写进跨 GL 上下文的重建缓存**。
+                //
+                //   真凶：`texture` 数组（第 64 行 `arrayOf(defaultSkin(), null)`）**从来没被更新过**
+                //   —— scheduleTextureUpdate 只写 pendingSkin/pendingCape，不写 texture[]。
+                //   而 onSurfaceCreated() 里是：
+                //       texture[0]?.let { skinTextureId = uploadTexture(skinTextureId, it) }
+                //       texture[1]?.let { capeTextureId = uploadTexture(capeTextureId, it) }
+                //   于是**每次 EGL 上下文重建**（切页面、Activity 重建、surface 重来）
+                //   都会把人物恢复到**默认皮肤**、并且**披风消失**
+                //   —— 玩家看到的就是"我换的皮肤永远没生效 / 一会儿又变回去"。
+                //
+                //   现在写入缓存后，上下文重建时能正确恢复"最后一次真正生效的皮肤/披风"。
+                texture[0] = pendingSkin
+                if (cape != null) {
+                    texture[1] = cape
+                }
             } catch (e: Exception) {
                 e.printStackTrace()
                 Toast.makeText(appContext, "Skin Renderer: $e", Toast.LENGTH_SHORT).show()
@@ -308,9 +356,13 @@ class SkinRenderer(context: Context) {
         val cape = pendingCape
         if (cape != null) {
             capeTextureId = uploadTexture(capeTextureId, cape)
+            // ★ 2026-10-11：同步进跨上下文重建缓存，否则下次 onSurfaceCreated 披风就没了
+            texture[1] = cape
         } else if (pendingClearCape && capeTextureId != 0) {
             GLES20.glDeleteTextures(1, intArrayOf(capeTextureId), 0)
             capeTextureId = 0
+            // ★ 2026-10-11：缓存也一并清掉，否则重建时会把"已隐藏的披风"又画回来
+            texture[1] = null
         }
         pendingCape = null
         pendingClearCape = false

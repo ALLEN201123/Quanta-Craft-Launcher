@@ -1092,6 +1092,20 @@ public void refreshAccountModel() {
  *   这里暴露原始入口，让对话框绕过守卫直接更新纹理。
  */
 public void showModel(final Bitmap skin, final Bitmap cape, final boolean slim) {
+        // ★ 2026-10-11 排障（默认关闭，QCL_DBG_SKIN=1 才打印）：
+        //   记录每次真正喂给渲染器的皮肤/披风状况 —— 用于定位
+        //   "上传成功但主界面不变"到底是"没调到"还是"调到了但数据是空的"。
+        if ("1".equals(System.getenv("QCL_DBG_SKIN"))) {
+            try {
+                System.out.println("[QCL-skin] showModel: skin="
+                        + (skin == null ? "null" : (skin.getWidth() + "x" + skin.getHeight()
+                        + " id=" + System.identityHashCode(skin)))
+                        + " cape=" + (cape == null ? "null" : (cape.getWidth() + "x" + cape.getHeight()))
+                        + " slim=" + slim
+                        + " gltf=" + (gltfRenderer != null) + " viewer=" + (skinViewer != null));
+            } catch (Throwable ignored) {
+            }
+        }
         if (skin == null) {
             hideModel();
             return;
