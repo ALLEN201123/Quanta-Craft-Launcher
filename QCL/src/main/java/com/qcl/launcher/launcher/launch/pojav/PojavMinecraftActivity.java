@@ -31,6 +31,7 @@ package com.qcl.launcher.launcher.launch.pojav;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.pm.ActivityInfo;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.graphics.SurfaceTexture;
@@ -260,7 +261,22 @@ extends BaseMainActivity {
             public void onPicOutput() {
                 Log.i((String)"jrelog", (String)"[\u753b\u9762\u5207\u6362] \u6536\u5230 onPicOutput\uff0c\u64a4\u9664\u7b49\u5f85\u754c\u9762");
                 // ★ 1.4.3：首帧到达 = 「世界开始出现」，护栏（首次 grab 前不投绝对光标）从这一刻起计时。
-                org.lwjgl.glfw.CallbackBridge.notifyFirstFrame();
+                // ★★★★★ 2026-10-09 崩溃级修复（用户实测：启动游戏 → 认证/画面正在切换 →
+                //   突然竖屏 → 闪退 → 回到横屏启动器）。
+                //   根因：这一句**跨模块硬调用游戏侧类**（CallbackBridge 在 PojavLauncher 模块，
+                //   本 Activity 在 QCL 模块），而且**没有 try/catch**。模拟器实测日志在
+                //   「收到 onPicOutput」那一行**戛然而止**（531 行后什么都没有）⇒ 就崩在这里。
+                //   为什么以前没事现在炸：这句从别的路径挪到了 onPicOutput 的**最前面**；
+                //   游戏侧类此刻若未就绪，NoClassDefFoundError 会直接冒到游戏线程弄死整个进程。
+                //   ⇒ ① 反射取类，避开编译期跨模块耦合；② 整段失败也无妨，
+                //     它只影响光标护栏的计时起点，**绝不该为它崩游戏**。
+                try {
+                    Class<?> cb = Class.forName("org.lwjgl.glfw.CallbackBridge");
+                    java.lang.reflect.Method m = cb.getMethod("notifyFirstFrame");
+                    m.invoke(null);
+                } catch (Throwable ignoreFirstFrame) {
+                    Log.i((String)"jrelog", (String)"[画面切换] notifyFirstFrame 跳过: " + ignoreFirstFrame);
+                }
                 PojavMinecraftActivity.this.stopFrameProbe();
                 PojavMinecraftActivity.this.baseLayout.hideBackground();
             }
@@ -457,5 +473,31 @@ extends BaseMainActivity {
         }
         this.getWindow().setFlags(256, 256);
     }
-}
 
+    /**
+     * ★★★★★ 2026-10-09 崩溃级修复（用户实测：启动游戏 → 画面正在切换 → 突然变成竖屏
+     *   → 闪退 → 回到横屏启动器），**照 FCL `JVMActivity` 的做法搬**。
+     *
+     * <p>FCL 原文（com/tungsten/fcl/activity/JVMActivity.java:327）：
+     * <pre>
+     * // SDL 会在窗口创建时按窗口宽高动态请求方向，可能切到 sensorPortrait，
+     * // 此处强制锁定横向（跟随传感器），保证游戏画面方向一致
+     * &#64;Override public void setRequestedOrientation(int requestedOrientation) {
+     *     super.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE);
+     * }
+     * </pre>
+     *
+     * <p>★ 为什么必须这么改：{@code SDLActivity.setOrientation(w,h,resizable,hint)} 里
+     * 在「无有效 hint + 非 resizable」时算的是
+     * {@code (w > h ? SENSOR_LANDSCAPE : SENSOR_PORTRAIT)}，而 MC 启动早期窗口尺寸还没定，
+     * w/h 传进来是 0 或反的 → 判成 PORTRAIT → 真的把游戏切成竖屏 → 崩。
+     * 它随后调 {@code setRequestedOrientation} 会**覆盖** AndroidManifest 里的 sensorLandscape。
+     *
+     * <p>★ 刻意**不改 SDLActivity 内部逻辑**（那是上游代码，FCL 也没改），
+     * 只在宿主 Activity 这一层拦一道 —— 与 FCL 完全一致。
+     */
+    @Override
+    public void setRequestedOrientation(int requestedOrientation) {
+        super.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE);
+    }
+}
