@@ -218,6 +218,18 @@ public class Msa {
         }
     }
 
+    /**
+     * ★ 2026-10-11：最近一次 {@link #getTextures} 读到的**服务端皮肤变体**
+     * （{@code "SLIM"} / {@code "CLASSIC"}，取不到为 null）。
+     *
+     * <p>为什么要这个：微软 profile 里每个 skin 都带 {@code variant} 字段，
+     * 明确声明"这套皮肤该用粗手臂还是细手臂"。老代码从来没读过它，
+     * 只能靠皮肤像素自己猜 ⇒ 猜错时手臂粗细就错
+     * （用户实测「刚进启动器手臂是粗的，过一会又变苗条」）。
+     * 服务端声明比像素猜测权威，所以调用方应当用这个值覆盖 {@code account.model}。
+     */
+    public static volatile String LAST_SKIN_VARIANT;
+
     @RequiresApi(api = Build.VERSION_CODES.N)
     public static Optional<Map<TextureType, Texture>> getTextures(MinecraftProfileResponse profile) {
         Objects.requireNonNull(profile);
@@ -239,6 +251,7 @@ public class Msa {
         //
         //   现在先找 ACTIVE；万一服务端没标（老接口/字段缺失）再回退到第 0 项。
         String skinUrl = null;
+        String skinVariant = null;
         if (profile.skins != null && !profile.skins.isEmpty()) {
             for (MinecraftProfileResponseSkin s : profile.skins) {
                 if (s == null || s.url == null) {
@@ -246,16 +259,24 @@ public class Msa {
                 }
                 if ("ACTIVE".equals(s.state)) {
                     skinUrl = s.url;
+                    skinVariant = s.variant;
                     break;
                 }
                 if (skinUrl == null) {
                     skinUrl = s.url;   // 回退：先记住第一个有效的
+                    skinVariant = s.variant;
                 }
             }
         }
         if (skinUrl != null) {
             textures.put(TextureType.SKIN, new Texture(skinUrl, null));
         }
+        // ★★★★★ 2026-10-11：把服务端声明的**模型变体**记下来。
+        //   用户实测「刚进启动器手臂是粗的，过一会又变苗条」——
+        //   就是因为从来没人读 `variant`（CLASSIC / SLIM），
+        //   客户端只能靠"皮肤像素自己猜"，猜错了手臂就变粗。
+        //   这里存进静态字段，供调用方写回 account.model（服务端声明比像素猜测权威）。
+        LAST_SKIN_VARIANT = skinVariant;
 
         // ★ 1.5.0 恢复：微软账号的披风此前被注释掉 ⇒ 从没拉下来过 ⇒ 人物背后永远没披风。
         //   （Account 里同时新增了 capeTexture 字段来存，见 Account.capeTexture。）

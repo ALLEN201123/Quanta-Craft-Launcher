@@ -1232,6 +1232,8 @@ private void fetchMicrosoftCapeOnce(final com.qcl.launcher.auth.Account account)
             }
             // ★ 2026-10-11：与本地一致就不折腾（现在每次进主界面都会同步，
             //   没这个判断会每次都白重画一遍人物）。
+            //   注意：无论有没有变化都记一次同步时间，否则防抖失效。
+            account.lastServerSyncAt = System.currentTimeMillis();
             final String localCape = account.capeTexture;
             if (localCape != null && localCape.equals(cape)) {
                 return;
@@ -1281,21 +1283,18 @@ private void fetchMicrosoftSkinOnce(final com.qcl.launcher.auth.Account account)
             || account.auth_access_token == null || account.auth_access_token.trim().isEmpty()) {
         return;
     }
-    // ★★★★★ 2026-10-11【关键】本地刚上传过 ⇒ **在保护期内不许用服务端覆盖**。
+    // ★★★★★ 2026-10-11【修正】这里原来有一道"5 分钟保护期"
+    //   （`SKIN_UPLOAD_GRACE_MS`，上传后 5 分钟内拒绝从服务端同步）。
+    //   它的本意是好的：FCL 源码里写着上传后不要立刻重新拉预览，因为服务端有处理延迟。
+    //   但它把**真正的更新也一起挡住了** —— 用户实测：
+    //     「刚进启动器手臂是粗的，过一会又变苗条」
+    //     「切换了别的画面，再切回主界面，它才变回来」
+    //   根因就是保护期让第一次进入主界面时**不同步**，
+    //   直到玩家切了页面（保护期过了 / 走了另一条刷新路径）才更新。
     //
-    //   为什么（照 FCL 的原话）—— FCL 的 MicrosoftAccountSkinDialog.kt 里明确写着：
-    //     "Don't call refreshPreview() here — the binding resets to fallback
-    //      before async fetch completes. The preview from updatePreviewFromFile()
-    //      already shows the correct uploaded skin."
-    //   即：**上传成功后不要去重新拉服务端**，因为微软服务端处理有延迟，
-    //   立刻拉回来的是**旧皮肤**，会把刚上传的新皮肤覆盖掉。
-    //
-    //   我先前加的"每次进主界面都拉一次服务端"正好踩了这个坑 ⇒
-    //   玩家上传完回主界面，主界面又被旧皮肤盖回去，与对话框里显示的新皮肤不一致。
-    //
-    //   现在：上传成功后的 {@link #SKIN_UPLOAD_GRACE_MS} 内**跳过服务端同步**，
-    //   让本地刚上传的那张保持权威（这段窗口足够微软处理完，之后自动恢复正常同步）。
-    if (System.currentTimeMillis() - lastLocalSkinUploadAt < SKIN_UPLOAD_GRACE_MS) {
+    //   现在改成**短时防抖**（几秒内不重复发请求），不再有 5 分钟盲区：
+    //   每次进主界面都真去对一次服务端，该更新就立刻更新。
+    if (System.currentTimeMillis() - account.lastServerSyncAt < 4000L) {
         return;
     }
     if (skinFetchInFlight) {
@@ -1323,16 +1322,39 @@ private void fetchMicrosoftSkinOnce(final com.qcl.launcher.auth.Account account)
             }
             // 与本地一致就不折腾（避免每次进主页都重画）
             final String local = account.texture;
-            if (local != null && local.equals(fresh)) {
-                return;
+            final boolean skinSame = (local != null && local.equals(fresh));
+            // ★★★★★ 2026-10-11：**把服务端声明的模型变体读出来并应用**。
+            //   这是"手臂粗细不对"的正解 —— 微软 profile 里每个 skin 都带
+            //   `variant`（CLASSIC / SLIM），而老代码从来没读过，
+            //   只能靠皮肤像素自己猜，猜错手臂就变粗
+            //   （用户实测「刚进启动器手臂是粗的，过一会又变苗条」）。
+            //   服务端声明比像素猜测权威 ⇒ 用它覆盖 account.model。
+            final String variant = com.qcl.launcher.auth.microsoft.Msa.LAST_SKIN_VARIANT;
+            final com.qcl.launcher.auth.yggdrasil.TextureModel serverModel;
+            if ("SLIM".equalsIgnoreCase(variant)) {
+                serverModel = com.qcl.launcher.auth.yggdrasil.TextureModel.ALEX;
+            } else if ("CLASSIC".equalsIgnoreCase(variant)) {
+                serverModel = com.qcl.launcher.auth.yggdrasil.TextureModel.STEVE;
+            } else {
+                serverModel = null;   // 服务端没给 ⇒ 保持本地已保存的选择
+            }
+            final boolean modelSame = (serverModel == null || serverModel == account.model);
+            // 无论有没有变化都记一次同步时间 —— 否则防抖失效，
+            // 每次进主界面都会真的发一次网络请求（用户频繁切页面会很费流量）。
+            account.lastServerSyncAt = System.currentTimeMillis();
+            if (skinSame && modelSame) {
+                return;   // 皮肤与模型都与服务端一致 ⇒ 什么都不用做
             }
             account.texture = fresh;
+            if (serverModel != null) {
+                account.model = serverModel;
+            }
             activity.runOnUiThread(() -> {
                 try {
                     com.qcl.launcher.utils.gson.GsonUtils.saveAccounts(
                             activity.uiManager.accountUI.accounts,
                             com.qcl.launcher.manifest.AppManifest.ACCOUNT_DIR + "/accounts.json");
-                    // 皮肤变了 ⇒ 立刻重画（refreshAccountModel 会读新的 account.texture）
+                    // 皮肤/模型变了 ⇒ 立刻重画（refreshAccountModel 会读新的 texture + model）
                     refreshAccountModel();
                 } catch (Throwable ignored) {
                 }

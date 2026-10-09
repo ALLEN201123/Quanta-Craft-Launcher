@@ -42,6 +42,15 @@ public class Account {
      */
     public com.qcl.launcher.auth.yggdrasil.TextureModel model;
 
+    /**
+     * ★★★★★ 2026-10-11 新增：最近一次**从服务端同步皮肤**的时间戳（毫秒）。
+     *
+     * <p>用途：主界面每次进来都会去服务端对一次皮肤/披风，
+     * 但切换页面很频繁 ⇒ 用这个时间戳做"短时防抖"，
+     * 避免几秒内重复发请求（同时又不像固定 5 分钟保护期那样把真正的更新挡在外面）。
+     */
+    public long lastServerSyncAt;
+
     public Account(int i, String str, String str2, String str3, String str4, String str5, String str6, String str7, String str8, String str9, String str10, String str11) {
         this.loginType = i;
         this.email = str;
