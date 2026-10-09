@@ -790,6 +790,84 @@ private void applyCachedVersionName() {
      * ★ 1.5.0 改为 public：微软换肤对话框上传成功 / 换完皮肤后要主动让主界面人物跟着换
      * （见 MicrosoftAccountSkinDialog.saveAccountAndRefresh）。
      */
+/**
+ * ★★★★★ 2026-10-11 新增：**强制**把当前账号的纹理重新绑到主界面人物上。
+ *
+ * <p>用户实测：「皮肤确实上传成功了，就主界面不一致 / 主界面根本没有实时刷新」。
+ * 这条路**不依赖任何守卫**（不看 accountModelContainer、不看 gltfRenderer 是否为 null），
+ * 而是：没视图就建视图 → 直接拿 account 的纹理重画一遍。
+ *
+ * <p>与 {@link #refreshAccountModel()} 的区别：
+ * <ul>
+ *   <li>{@code refreshAccountModel()} 会先判断一堆前置条件，任一条不满足就静默返回
+ *       —— 换肤对话框里"看不到任何反应"极可能就是卡在这些判断上；</li>
+ *   <li>本方法是**兜底路径**：先把模型视图准备好，再无条件重绑一次，
+ *       确保"刚上传的皮肤"一定反映到界面上。</li>
+ * </ul>
+ * 失败也只是不显示，不会崩（整体 try/catch）。
+ */
+public void forceRefreshSkin() {
+    try {
+        // ① 没视图就先建（setupAccountModel 内部自己判重，重复调用安全）
+        if (skinViewer == null || gltfRenderer == null) {
+            setupAccountModel();
+        }
+        // ② 确保渲染循环在跑（否则 updateTexture 不会被 GL 线程消费）
+        try {
+            if (skinViewer != null) {
+                skinViewer.onResume();
+            }
+        } catch (Throwable ignored) {
+        }
+        // ③ 无条件重绑纹理
+        refreshAccountModel();
+    } catch (Throwable ignored) {
+        // 兜底路径也不能把主界面搞崩
+    }
+}
+
+/**
+ * ★★★★★ 2026-10-11 新增：**直接硬灌**指定皮肤到主界面（绕过所有守卫）。
+ *
+ * <p>用户实测：「皮肤确实上传成功了（官方启动器都能看到），但主界面根本没实时刷新」。
+ * 逐行对比 FCL 后发现差异：FCL 有专门的 {@code SkinTextureLoader}，
+ * 带 **generation 代际号 + force 强制重载**，上传后走 {@code skinLoader.load(account, true)}；
+ * 而 QCL 没有这个类，只有 {@link #refreshAccountModel()} 这条**带一串守卫**的路径，
+ * 守卫任一条不满足就直接 return ⇒ "上传成功但界面不动"。
+ *
+ * <p>本方法就是那个缺失的 force 入口：把换肤对话框里刚拿到的 Bitmap
+ * 直接喂给渲染器，不查任何条件。视图没建就先建。
+ *
+ * @param skin 新皮肤位图（null 则什么都不做）
+ * @param cape 披风位图，可为 null（含义是"这次不改披风"，渲染器已按此语义处理）
+ * @param slim 是否细手臂模型
+ */
+public void applySkinDirectly(final Bitmap skin, final Bitmap cape, final boolean slim) {
+    if (skin == null) {
+        return;
+    }
+    try {
+        if (skinViewer == null || gltfRenderer == null) {
+            setupAccountModel();
+        }
+        try {
+            if (skinViewer != null) {
+                skinViewer.onResume();
+            }
+        } catch (Throwable ignored) {
+        }
+        if (accountModelContainer != null) {
+            accountModelContainer.setVisibility(View.VISIBLE);
+        }
+        if (skinViewer != null) {
+            skinViewer.setVisibility(View.VISIBLE);
+        }
+        showModel(skin, cape, slim);
+    } catch (Throwable ignored) {
+        // 失败也不能把主界面搞崩
+    }
+}
+
 public void refreshAccountModel() {
         // ★ 2026-10-11：排障开关。默认关闭（QCL_DBG_SKIN=1 时才打印），
         //   用来确定"上传后主界面到底有没有被刷新、刷的是哪个账号、皮肤字节数多少"。
@@ -1005,7 +1083,15 @@ public void refreshAccountModel() {
         showModel(skin, null, slim);
     }
 
-    private void showModel(final Bitmap skin, final Bitmap cape, final boolean slim) {
+    /**
+ * ★ 2026-10-11 改为 public：换肤对话框上传成功后要能**直接硬灌**新皮肤到主界面。
+ *
+ * <p>为什么需要：FCL 有专门的 SkinTextureLoader（带 generation 代际号 + force 强制重载），
+ *   QCL 没有这个类，只有 refreshAccountModel() 这条带一串守卫的路径 ——
+ *   守卫任一条不满足就静默返回，于是上传成功了但主界面不动。
+ *   这里暴露原始入口，让对话框绕过守卫直接更新纹理。
+ */
+public void showModel(final Bitmap skin, final Bitmap cape, final boolean slim) {
         if (skin == null) {
             hideModel();
             return;

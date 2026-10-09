@@ -689,6 +689,37 @@ public class MicrosoftAccountSkinDialog extends Dialog implements View.OnClickLi
                         }
                         saveAccountAndRefresh();
                         previewSkin(skinImg);
+                        // ★★★★★ 2026-10-11 兜底（用户实测「皮肤确实上传成功了，但主界面不一致
+                        //   / 主界面根本没有实时刷新」）：
+                        //   `refreshAccountModel()` 有一串前置判断，任一条不满足就静默返回，
+                        //   于是对话框这边"看不到任何反应"。
+                        //   这里再走一次**强制路径**：没视图就建视图 + 确保渲染循环在跑 +
+                        //   无条件重绑纹理，确保刚上传的皮肤一定反映到主界面人物上。
+                        try {
+                            if (activity != null && activity.uiManager != null
+                                    && activity.uiManager.mainUI != null) {
+                                // ★★★★★ 2026-10-11【决定性修复】：**直接硬灌**新皮肤到主界面。
+                                //
+                                //   用户实测：「皮肤确实上传成功了（官方启动器都能看到），
+                                //   但主界面根本没实时刷新。」
+                                //
+                                //   逐行对比 FCL 后确认差异：FCL 有专门的 SkinTextureLoader，
+                                //   带 generation 代际号 + **force 强制重载**，上传后走
+                                //   `skinLoader.load(account, true)`；QCL 没有这个类，
+                                //   只有 refreshAccountModel() 那条**带一串守卫**的路径 ——
+                                //   守卫（accountModelContainer / gltfRenderer / 账号是否匹配 /
+                                //   纹理能否解码…）任一条不满足就静默 return。
+                                //
+                                //   这里不再依赖那条路径：把**刚上传的这张 Bitmap** 直接喂给
+                                //   主界面渲染器，前置条件一概不查（视图没建会自动建）。
+                                boolean slim = "slim".equals(detected);
+                                activity.uiManager.mainUI.applySkinDirectly(
+                                        skinImg, currentCapeBitmap, slim);
+                                // 仍然走一次常规刷新，保证状态一致（失败也无所谓）
+                                activity.uiManager.mainUI.forceRefreshSkin();
+                            }
+                        } catch (Throwable ignored) {
+                        }
                     } catch (Throwable ignored) {
                     }
                     Toast.makeText(getContext(), R.string.microsoft_skin_uploaded, Toast.LENGTH_SHORT).show();
