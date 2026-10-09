@@ -1289,4 +1289,6 @@
     <string name="launcher_spinner_text">▲</string>
     <string name="microsoft_skin_upload">上传</string>
     <string name="microsoft_skin_model_saved">模型已保存</string>
+    <string name="qcl_announcement_prev">◀</string>
+    <string name="qcl_announcement_next">▶</string>
 </resources>

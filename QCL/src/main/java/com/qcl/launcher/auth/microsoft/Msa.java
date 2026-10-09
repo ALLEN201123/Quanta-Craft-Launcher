@@ -224,13 +224,58 @@ public class Msa {
 
         Map<TextureType, Texture> textures = new EnumMap<>(TextureType.class);
 
-        if (!profile.skins.isEmpty()) {
-            textures.put(TextureType.SKIN, new Texture(profile.skins.get(0).url, null));
+        // ★★★★★ 2026-10-11【重大修复】必须取 **state == "ACTIVE"** 的那一项，
+        //   不能取 `get(0)`！
+        //
+        //   真实原因（用户实测「切换披风主界面一直都是这个图案，从没变过」）：
+        //   微软 profile 返回的数组**顺序 ≠ 激活项在第一位**。实测该账号返回：
+        //       capes[0] = Menace   (state=INACTIVE)
+        //       capes[1] = Home     (state=ACTIVE)   ← 真正在用的
+        //       capes[2] = Purple Heart (state=INACTIVE)
+        //       ...
+        //   而这里原来写的是 `profile.capes.get(0)` ⇒ **永远取到列表第 0 件**，
+        //   于是玩家无论怎么切披风，客户端拿到的永远是同一张
+        //   ⇒「主界面披风从来没变过」。皮肤同理（skins[0] 未必是激活项）。
+        //
+        //   现在先找 ACTIVE；万一服务端没标（老接口/字段缺失）再回退到第 0 项。
+        String skinUrl = null;
+        if (profile.skins != null && !profile.skins.isEmpty()) {
+            for (MinecraftProfileResponseSkin s : profile.skins) {
+                if (s == null || s.url == null) {
+                    continue;
+                }
+                if ("ACTIVE".equals(s.state)) {
+                    skinUrl = s.url;
+                    break;
+                }
+                if (skinUrl == null) {
+                    skinUrl = s.url;   // 回退：先记住第一个有效的
+                }
+            }
         }
+        if (skinUrl != null) {
+            textures.put(TextureType.SKIN, new Texture(skinUrl, null));
+        }
+
         // ★ 1.5.0 恢复：微软账号的披风此前被注释掉 ⇒ 从没拉下来过 ⇒ 人物背后永远没披风。
         //   （Account 里同时新增了 capeTexture 字段来存，见 Account.capeTexture。）
+        String capeUrl = null;
         if (profile.capes != null && !profile.capes.isEmpty()) {
-            textures.put(TextureType.CAPE, new Texture(profile.capes.get(0).url, null));
+            for (MinecraftProfileResponseCape c : profile.capes) {
+                if (c == null || c.url == null) {
+                    continue;
+                }
+                if ("ACTIVE".equals(c.state)) {
+                    capeUrl = c.url;
+                    break;
+                }
+                if (capeUrl == null) {
+                    capeUrl = c.url;   // 回退
+                }
+            }
+        }
+        if (capeUrl != null) {
+            textures.put(TextureType.CAPE, new Texture(capeUrl, null));
         }
 
         return Optional.of(textures);

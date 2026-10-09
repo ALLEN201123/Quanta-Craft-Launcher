@@ -461,12 +461,38 @@ public class MicrosoftAccountSkinDialog extends Dialog implements View.OnClickLi
                 //   原来只刷列表、预览仍旧是空的 ⇒ 玩家点了披风但人物背后什么都没变
                 //   （用户实测「一点披风都看不出来」）。
                 //   下载走 FCL 同款思路：URL → Bitmap → setCapeBitmap（内部会重画人物）。
+                // ★★★★★ 2026-10-11 修（用户实测 + 本地哈希对比确认的真 bug）：
+                //   原来只走 `downloadBitmapFromUrl(cape.url)` 这一条路，失败就 cape == null，
+                //   然后**什么都不更新**，却照样弹「披风已激活」
+                //   ⇒ 表现就是"提示成功、主界面披风永远不变"（用户原话：
+                //     「有没有一种可能，我切换披风这主界面一直都是红黑色的披风」—— 是的，就是这个 bug）。
+                //
+                //   实测证据：换披风前后 account.capeTexture 的 sha256 完全相同，
+                //   说明本地从来没被更新过。
+                //
+                //   现在：① 先试 url 下载；② 失败则**回退**到 Msa.getTextures(profile) 拿 CAPE
+                //   （这条路径在主界面早已验证可用）；③ 两条都失败就**如实报错**，不再谎报成功。
                 Bitmap capeImg = downloadBitmapFromUrl(capeUrl);
+                if (capeImg == null) {
+                    // URL 下载失败 ⇒ 回退到 Msa.getTextures 取 CAPE（多一条路，成功率更高）
+                    try {
+                        Msa.MinecraftProfileResponse prof = Msa.getMinecraftProfile("Bearer", account.auth_access_token);
+                        if (prof != null) {
+                            java.util.Map<TextureType, Texture> tex = Msa.getTextures(prof).orElse(null);
+                            if (tex != null) {
+                                capeImg = Avatar.stringToBitmap(Account.downloadTextureAsBase64(tex.get(TextureType.CAPE)));
+                            }
+                        }
+                    } catch (Throwable ignored) {
+                        // 回退也失败 ⇒ 下面统一按失败处理（如实提示，不谎报成功）
+                    }
+                }
                 final Bitmap cape = capeImg;
-                final String capeBase64 = (cape == null) ? null : Avatar.bitmapToString(cape);
+                final boolean capeOk = (cape != null);
+                final String capeBase64 = capeOk ? Avatar.bitmapToString(cape) : null;
                 handler.post(() -> {
                     setLoading(false);
-                    if (cape != null) {
+                    if (capeOk) {
                         account.capeTexture = capeBase64;
                         // ★★★★★ 2026-10-11：标记"刚本地改过披风" ⇒ 主界面在保护期内
                         //   不会用服务端（还没生效的旧披风）覆盖刚切好的这条，
@@ -477,8 +503,26 @@ public class MicrosoftAccountSkinDialog extends Dialog implements View.OnClickLi
                         }
                         saveAccountAndRefresh();
                         setCapeBitmap(cape);
+                        // ★ 主界面也**直接硬灌**一次这张新披风（绕过所有守卫，照 FCL 的 force 思路）
+                        try {
+                            if (activity != null && activity.uiManager != null
+                                    && activity.uiManager.mainUI != null) {
+                                Bitmap sk = (account.texture == null) ? null : Avatar.stringToBitmap(account.texture);
+                                if (sk != null) {
+                                    boolean slim = (account.model
+                                            == com.qcl.launcher.auth.yggdrasil.TextureModel.ALEX);
+                                    activity.uiManager.mainUI.applySkinDirectly(sk, cape, slim);
+                                }
+                            }
+                        } catch (Throwable ignored) {
+                        }
+                        Toast.makeText(getContext(), R.string.microsoft_cape_activated, Toast.LENGTH_SHORT).show();
+                    } else {
+                        // ★ 不再谎报成功：披风贴图没拿到就如实告诉玩家
+                        Toast.makeText(getContext(),
+                                getContext().getString(R.string.message_failed) + "\n(cape texture)",
+                                Toast.LENGTH_SHORT).show();
                     }
-                    Toast.makeText(getContext(), R.string.microsoft_cape_activated, Toast.LENGTH_SHORT).show();
                     loadCapes();
                 });
             } catch (Throwable e) {
@@ -490,7 +534,18 @@ public class MicrosoftAccountSkinDialog extends Dialog implements View.OnClickLi
         }).start();
     }
 
-    /** 下载一张纹理 URL 并解码为 Bitmap（http 自动升 https）；失败返回 null。 */
+    /**
+     * 下载一张纹理 URL 并解码为 Bitmap（http 自动升 https）。
+     *
+     * <p>★★★★★ 2026-10-11【重要】：原来这里 {@code catch (Throwable ignored) { return null; }} ——
+     * **异常被完全吞掉**，于是"下载失败"和"url 为空"从代码上完全无法区分。
+     * 而调用方（{@code activateCape}）在拿到 null 时**什么都不做**，
+     * 却照样弹「披风已激活」⇒ 玩家看到"提示成功但披风没变"。
+     *
+     * <p>用户实测（本地披风哈希对比）证实了这一点：
+     * 换披风前后 {@code account.capeTexture} 的 sha256 **一模一样**，
+     * 也就是说**主界面的披风从来没更新过**。所以这里必须把失败原因打出来。
+     */
     private static Bitmap downloadBitmapFromUrl(String url) {
         if (url == null || url.trim().isEmpty()) {
             return null;
@@ -509,7 +564,11 @@ public class MicrosoftAccountSkinDialog extends Dialog implements View.OnClickLi
             con.connect();
             is = con.getInputStream();
             return BitmapFactory.decodeStream(is);
-        } catch (Throwable ignored) {
+        } catch (Throwable e) {
+            // ★ 不再像以前那样静默吞掉：失败要能在 logcat 里看到原因
+            //   （以前 `catch (Throwable ignored) { return null; }` 导致
+            //    "提示成功但披风没变"完全无法排查）。
+            android.util.Log.w("QCL-cape", "下载披风失败: " + e);
             return null;
         } finally {
             try { if (is != null) is.close(); } catch (Throwable ignored) {}

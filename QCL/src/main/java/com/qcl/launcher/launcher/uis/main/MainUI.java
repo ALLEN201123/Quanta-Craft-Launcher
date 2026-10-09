@@ -112,6 +112,9 @@ public class MainUI extends BaseUI implements View.OnClickListener, AdapterView.
     private TextView announcementText;
     private TextView announcementDate;
     private LinearLayout announcementHide;
+    /** ★ 2026-10-10：公告左右翻页按钮（用户要求「加一个左右切换公告按钮」）。 */
+    private TextView announcementPrev;
+    private TextView announcementNext;
     /** 当前正在展示的那条公告（点隐藏时要记它的 id）。 */
     private Announcement currentAnnouncement;
 
@@ -299,6 +302,19 @@ private void applyCachedVersionName() {
         announcementText = activity.findViewById(R.id.announcement_text);
         announcementDate = activity.findViewById(R.id.announcement_date);
         announcementHide = activity.findViewById(R.id.announcement_hide);
+        // ★ 2026-10-10：公告左右翻页按钮（用户要求「加一个左右切换公告按钮」）
+        announcementPrev = activity.findViewById(R.id.announcement_prev);
+        announcementNext = activity.findViewById(R.id.announcement_next);
+        if (announcementPrev != null) {
+            announcementPrev.setOnClickListener(v -> {
+                showAnnouncementAt(announcementIndex - 1);
+            });
+        }
+        if (announcementNext != null) {
+            announcementNext.setOnClickListener(v -> {
+                showAnnouncementAt(announcementIndex + 1);
+            });
+        }
         if (announcementContainer != null) {
             // 先藏起来，等公告拉取结果回来再决定显不显示 —— 避免「闪一下空卡片」。
             announcementContainer.setVisibility(View.GONE);
@@ -628,36 +644,89 @@ private void applyCachedVersionName() {
         }
     }
 
+    /** ★ 2026-10-10：当前可显示的全部公告（玩家可用 ◀ ▶ 翻阅），以及正在看第几条。 */
+    private java.util.ArrayList<Announcement> announcementList;
+    private int announcementIndex = 0;
+    private int announcementVersionCode = 0;
+
     private void applyAnnouncement(ArrayList<Announcement> list, int versionCode) {
         if (announcementContainer == null) {
             return;
         }
-        Announcement picked = null;
+        // ★★★★★ 2026-10-10（用户要求「加一个左右切换公告按钮」）：
+        //   原来这里 for + break **只取第一条**能显示的公告，其余全部看不到
+        //   （用户实测「只有 10 月 10 日的内容，没有 10 月 9 日的」）。
+        //   现在改成：先把所有"当前版本该显示"的公告收成一个列表，
+        //   默认展示第 0 条，另外提供 ◀ / ▶ 让玩家自己翻阅。
+        java.util.ArrayList<Announcement> visible = new java.util.ArrayList<>();
         if (list != null) {
             for (Announcement a : list) {
                 if (a != null && a.shouldDisplay(context, versionCode)) {
-                    picked = a;
-                    break;
+                    visible.add(a);
                 }
             }
         }
-        if (picked == null) {
+        announcementList = visible;
+        announcementVersionCode = versionCode;
+        announcementIndex = 0;
+        if (visible.isEmpty()) {
             currentAnnouncement = null;
             announcementContainer.setVisibility(View.GONE);
             return;
         }
+        showAnnouncementAt(0);
+        CustomAnimationUtils.showViewFromLeft(announcementContainer, activity, context, false);
+        announcementContainer.setVisibility(View.VISIBLE);
+    }
+
+    /** ★ 2026-10-10：展示第 index 条公告（自动取模循环）。 */
+    private void showAnnouncementAt(int index) {
+        if (announcementList == null || announcementList.isEmpty()) {
+            return;
+        }
+        int n = announcementList.size();
+        announcementIndex = ((index % n) + n) % n;
+        Announcement picked = announcementList.get(announcementIndex);
         currentAnnouncement = picked;
         if (announcementTitle != null) {
             announcementTitle.setText(picked.getDisplayTitle(context));
         }
         if (announcementText != null) {
+            // 每次翻页回到顶部，否则会停在上一篇的滚动位置
             announcementText.setText(picked.getDisplayContent(context));
+            announcementText.setScrollY(0);
         }
         if (announcementDate != null) {
-            announcementDate.setText(picked.getDate());
+            // 多条时把「第 x / y 条」也标出来，玩家才知道还有别的
+            String d = picked.getDate();
+            if (n > 1) {
+                d = d + "    (" + (announcementIndex + 1) + "/" + n + ")";
+            }
+            announcementDate.setText(d);
         }
-        CustomAnimationUtils.showViewFromLeft(announcementContainer, activity, context, false);
-        announcementContainer.setVisibility(View.VISIBLE);
+        // 只有一条时左右按钮没意义 ⇒ 隐藏
+        if (announcementPrev != null) {
+            announcementPrev.setVisibility(n > 1 ? View.VISIBLE : View.INVISIBLE);
+        }
+        if (announcementNext != null) {
+            announcementNext.setVisibility(n > 1 ? View.VISIBLE : View.INVISIBLE);
+        }
+        // 翻页后重新挂一下滚动容器的位置（视图可能刚被 setText 触发布局）
+        try {
+            if (announcementContainer != null) {
+                announcementContainer.post(() -> {
+                    try {
+                        android.view.View sv = announcementText == null ? null
+                                : (android.view.View) announcementText.getParent();
+                        if (sv instanceof android.widget.ScrollView) {
+                            ((android.widget.ScrollView) sv).scrollTo(0, 0);
+                        }
+                    } catch (Throwable ignored) {
+                    }
+                });
+            }
+        } catch (Throwable ignored) {
+        }
     }
 
     /** 玩家点「隐藏」→ 记下 id + 收起公告栏。 */
@@ -869,23 +938,6 @@ public void applySkinDirectly(final Bitmap skin, final Bitmap cape, final boolea
 }
 
 public void refreshAccountModel() {
-        // ★ 2026-10-11：排障开关。默认关闭（QCL_DBG_SKIN=1 时才打印），
-        //   用来确定"上传后主界面到底有没有被刷新、刷的是哪个账号、皮肤字节数多少"。
-        //   —— 因为"加了刷新但界面没变"这种问题，靠读代码推断容易错，必须看实证。
-        final boolean dbg = "1".equals(System.getenv("QCL_DBG_SKIN"));
-        if (dbg) {
-            try {
-                com.qcl.launcher.auth.Account a0 = activity.publicGameSetting.account;
-                System.out.println("[QCL-skin] refreshAccountModel 被调用: account="
-                        + (a0 == null ? "null" : a0.auth_player_name)
-                        + " loginType=" + (a0 == null ? -1 : a0.loginType)
-                        + " textureLen=" + (a0 == null || a0.texture == null ? 0 : a0.texture.length())
-                        + " model=" + (a0 == null || a0.model == null ? "null" : a0.model.name())
-                        + " gltf=" + (gltfRenderer != null)
-                        + " container=" + (accountModelContainer != null));
-            } catch (Throwable ignored) {
-            }
-        }
         if (accountModelContainer == null) {
             return;
         }
@@ -950,10 +1002,20 @@ public void refreshAccountModel() {
                 }
             }
             showModel(renderSkin, decodeCape(account.capeTexture), skinSlim);
-            // ★ 1.5.0：微软账号若还没有披风数据（老账号是在"披风功能"之前登录的），
-            //   这里**后台补拉一次**并回填 —— 否则老账号永远看不到披风，只能重新登录。
-            //   失败静默（不打扰玩家），且只在"微软账号 + 没有披风"时才会发请求。
-            if (account.loginType == 3 && (account.capeTexture == null || account.capeTexture.trim().isEmpty())) {
+            // ★★★★★ 2026-10-11【关键修复】披风改成**每次进主界面都跟服务端对一次**。
+            //
+            //   原来这里有个条件：
+            //     if (account.loginType == 3 && (account.capeTexture == null || ...isEmpty()))
+            //   —— 也就是**只在本地没有披风时**才去拉服务端。
+            //   用户实测因此踩坑（原话）：
+            //     「我服务端上传的是青色，主界面怎么还是紫红？」
+            //   服务端=Home(青色)、本地=Menace(紫红)，重启 app 后主界面**依然显示紫红**，
+            //   因为本地"已经有披风了"⇒ 那句判断为 false ⇒ **永远不去同步**。
+            //
+            //   现在改成无条件同步（微软账号有 token 就同步）：
+            //   与皮肤同一套逻辑 —— 一样就什么都不做，不一样才回填 + 重画。
+            //   这样"在官网/别的启动器换了披风 → 回 QCL 自动跟上"才真正成立。
+            if (account.loginType == 3) {
                 fetchMicrosoftCapeOnce(account);
             }
             // ★★★★★ 2026-10-11：**皮肤也让它在后台对一次**（用户要求"实时绑定"）——
@@ -1092,20 +1154,6 @@ public void refreshAccountModel() {
  *   这里暴露原始入口，让对话框绕过守卫直接更新纹理。
  */
 public void showModel(final Bitmap skin, final Bitmap cape, final boolean slim) {
-        // ★ 2026-10-11 排障（默认关闭，QCL_DBG_SKIN=1 才打印）：
-        //   记录每次真正喂给渲染器的皮肤/披风状况 —— 用于定位
-        //   "上传成功但主界面不变"到底是"没调到"还是"调到了但数据是空的"。
-        if ("1".equals(System.getenv("QCL_DBG_SKIN"))) {
-            try {
-                System.out.println("[QCL-skin] showModel: skin="
-                        + (skin == null ? "null" : (skin.getWidth() + "x" + skin.getHeight()
-                        + " id=" + System.identityHashCode(skin)))
-                        + " cape=" + (cape == null ? "null" : (cape.getWidth() + "x" + cape.getHeight()))
-                        + " slim=" + slim
-                        + " gltf=" + (gltfRenderer != null) + " viewer=" + (skinViewer != null));
-            } catch (Throwable ignored) {
-            }
-        }
         if (skin == null) {
             hideModel();
             return;
@@ -1146,14 +1194,18 @@ private void fetchMicrosoftCapeOnce(final com.qcl.launcher.auth.Account account)
             || account.auth_access_token.trim().isEmpty()) {
         return;
     }
-    // ★★★★★ 2026-10-11 修（用户实测「换肤对话框里的披风显示与主界面披风显示依旧不一致」）：
-    //   与皮肤同一个坑 —— 玩家刚在对话框里**切换/隐藏了披风**，
-    //   而微软服务端生效有延迟，此时用服务端数据回填会把刚做的改动覆盖回去，
-    //   于是"对话框里是新披风、主界面还是旧披风"（或反过来）。
-    //   保护期内一律跳过服务端同步（与 SKIN_UPLOAD_GRACE_MS 同一套机制）。
-    if (System.currentTimeMillis() - lastLocalCapeChangeAt < SKIN_UPLOAD_GRACE_MS) {
-        return;
-    }
+    // ★★★★★ 2026-10-11【修正】此前这里加过一道"5 分钟保护期"，
+    //   本意是防止"刚本地切换披风、服务端还没生效"时被旧数据覆盖。
+    //   但用户实测指出它造成了**更严重**的问题：
+    //     「我服务端上传的是青色，主界面怎么还是紫红？」
+    //   —— 因为保护期内主界面**拒绝**从服务端同步，
+    //   于是玩家在官网/别的启动器换的披风，主界面一直不跟随
+    //   ⇒ 主界面与服务端**永久不一致**。
+    //
+    //   用户要求很明确：**主界面必须跟服务端一致**。
+    //   所以这里**彻底去掉保护期** —— 每次进主界面都以服务端为准。
+    //   （本地刚切换时的短暂过渡由 activateCape 自己直接更新界面负责，
+    //     不靠"禁止同步"来实现。）
     // 防抖：同一次进主界面若被多次调用，别重复发请求
     if (capeFetchInFlight) {
         return;
@@ -1177,6 +1229,12 @@ private void fetchMicrosoftCapeOnce(final com.qcl.launcher.auth.Account account)
                     map.get(com.qcl.launcher.auth.yggdrasil.TextureType.CAPE));
             if (cape == null || cape.trim().isEmpty()) {
                 return;   // 该账号本来就没有披风，别反复重试
+            }
+            // ★ 2026-10-11：与本地一致就不折腾（现在每次进主界面都会同步，
+            //   没这个判断会每次都白重画一遍人物）。
+            final String localCape = account.capeTexture;
+            if (localCape != null && localCape.equals(cape)) {
+                return;
             }
             account.capeTexture = cape;
             final String saved = cape;

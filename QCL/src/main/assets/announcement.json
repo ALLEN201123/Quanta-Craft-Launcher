@@ -1,43 +1,6 @@
 {
   "announcements": [
     {
-      "id": 6,
-      "significant": true,
-      "outdated": false,
-      "minVersion": 0,
-      "maxVersion": 2147483647,
-      "specificLang": [],
-      "title": [
-        {
-          "lang": "zh_CN",
-          "text": "1.5.0 更新说明（下载页 · 翻译 · 稳定性）"
-        },
-        {
-          "lang": "zh_TW",
-          "text": "1.5.0 更新說明（下載頁 · 翻譯 · 穩定性）"
-        },
-        {
-          "lang": "en_US",
-          "text": "1.5.0 notes: download pages, translations, stability"
-        }
-      ],
-      "date": "2026-10-09",
-      "content": [
-        {
-          "lang": "zh_CN",
-          "text": "【下载页与翻译】\n· 修复「模组名一条都不翻译」：翻译表（3 万条）此前在真机上根本加载不了（assets 读不到），\n  已改为类路径 + AssetManager 双路读取，现在 Sodium 会显示成「钠 Sodium」\n· 修复收藏夹与下载列表只查单一来源导致大量条目查不到中文的问题，改为三路回退\n· 远古版本、下载页、设置等处的英文串补齐中文（中文覆盖已做到 0 缺失）\n\n【主题与配色】\n· 修复换肤对话框里多处「白块」：drawable 里的 ?android:attr/colorAccent 取不到值，\n  改为运行时解析玩家主题色再上色（SkinDialogUtils）\n· 修复换肤对话框里动态新增的披风按钮**没被染色**、与其他按钮颜色不一致的问题\n· 多处对话框统一用 qcl_dialog_night_bg，日夜两套配色成套翻转\n\n【下载与列表】\n· 修复「模组页刷新后一片空白、还会把整合包 / 资源包 / 账号页一起弄空白」——\n  真凶是 5 个下载页在**后台线程里直接改 UI**（CalledFromWrongThreadException），\n  异常破坏了视图树 ⇒ 其他页面也渲染不出来。现已把 UI 操作全部搬回主线程\n· 彻底移除「加载版本列表失败，点击此处重试」提示：界面本来就有转圈，\n  网络恢复后自己会出结果，不再催玩家乱点\n\n【稳定】\n· 修复「启动游戏时突然竖屏→闪退→回到横屏启动器」：7 个 Activity 补齐 configChanges\n· 修复 26.3 / 26.4 崩溃：JNA 版本错配 + MC 降级死循环（按机器 Vulkan 能力钉后端）\n· 整合包安装：取消按钮点了没反应、文件列表只显示一行，均已修复\n"
-        },
-        {
-          "lang": "zh_TW",
-          "text": "【下载页与翻译】\n· 修复「模组名一条都不翻译」：翻译表（3 万条）此前在真机上根本加载不了（assets 读不到），\n  已改为类路径 + AssetManager 双路读取，现在 Sodium 会显示成「钠 Sodium」\n· 修复收藏夹与下载列表只查单一来源导致大量条目查不到中文的问题，改为三路回退\n· 远古版本、下载页、设置等处的英文串补齐中文（中文覆盖已做到 0 缺失）\n\n【主题与配色】\n· 修复换肤对话框里多处「白块」：drawable 里的 ?android:attr/colorAccent 取不到值，\n  改为运行时解析玩家主题色再上色（SkinDialogUtils）\n· 修复换肤对话框里动态新增的披风按钮**没被染色**、与其他按钮颜色不一致的问题\n· 多处对话框统一用 qcl_dialog_night_bg，日夜两套配色成套翻转\n\n【下载与列表】\n· 修复「模组页刷新后一片空白、还会把整合包 / 资源包 / 账号页一起弄空白」——\n  真凶是 5 个下载页在**后台线程里直接改 UI**（CalledFromWrongThreadException），\n  异常破坏了视图树 ⇒ 其他页面也渲染不出来。现已把 UI 操作全部搬回主线程\n· 彻底移除「加载版本列表失败，点击此处重试」提示：界面本来就有转圈，\n  网络恢复后自己会出结果，不再催玩家乱点\n\n【稳定】\n· 修复「启动游戏时突然竖屏→闪退→回到横屏启动器」：7 个 Activity 补齐 configChanges\n· 修复 26.3 / 26.4 崩溃：JNA 版本错配 + MC 降级死循环（按机器 Vulkan 能力钉后端）\n· 整合包安装：取消按钮点了没反应、文件列表只显示一行，均已修复\n"
-        },
-        {
-          "lang": "en_US",
-          "text": "[Download pages & translations]\n- Fixed \"no mod name is translated at all\": the 30k-entry translation table could not be\n  loaded on device (assets are not on the Java classpath). Now it is read via classpath or\n  AssetManager, so Sodium shows as \"钠 Sodium\".\n- Fixed favorites and download lists only querying one source, which left most entries in\n  English; now they fall back across three indexes.\n- Filled in the remaining Chinese strings; Chinese coverage is now complete.\n\n[Theme & colors]\n- Fixed several \"white blocks\" in the skin dialogs: ?android:attr/colorAccent resolves to\n  nothing there. Colors are now resolved from the player's theme at runtime (SkinDialogUtils).\n- Fixed dynamically created cape buttons not being tinted, so their color did not match the\n  other buttons.\n\n[Downloads & lists]\n- Fixed \"the mod page goes blank after a refresh and takes the modpack / resource pack /\n  account pages down with it\". Root cause: five download pages touched UI from a background\n  thread (CalledFromWrongThreadException), which corrupted the view tree. All UI work now\n  happens on the main thread.\n- Removed the \"failed to load, tap to retry\" hint entirely: there is already a spinner and\n  results appear once the network recovers.\n\n[Stability]\n- Fixed a crash when the screen briefly rotated to portrait during game authentication.\n- Fixed 26.3 / 26.4 crashes caused by a JNA version mismatch and Minecraft's fallback loop.\n- Fixed the modpack installer's dead cancel button and one-line file list.\n"
-        }
-      ]
-    },
-    {
       "id": 7,
       "significant": true,
       "outdated": false,
@@ -47,30 +10,30 @@
       "title": [
         {
           "lang": "zh_CN",
-          "text": "1.5.0 更新说明（微软皮肤披风 · 列表动画）"
+          "text": "1.5.0 更新说明（10月9日 ~ 10月10日）"
         },
         {
           "lang": "zh_TW",
-          "text": "1.5.0 更新說明（微軟外觀披風 · 列表動畫）"
+          "text": "1.5.0 更新說明（10月9日 ~ 10月10日）"
         },
         {
           "lang": "en_US",
-          "text": "1.5.0 notes: Microsoft skin & cape, list animations"
+          "text": "1.5.0 notes (Oct 9 - Oct 10)"
         }
       ],
-      "date": "2026-10-10",
+      "date": "2026-10-09 ~ 2026-10-10",
       "content": [
         {
           "lang": "zh_CN",
-          "text": "【微软账号 · 皮肤与披风】\n· 微软披风此前**从未被拉取过**（接口分支被注释、账号也没有存它的字段），\n  现已完整接入：登录即拉、老账号回填，主界面与换肤预览都能看到披风\n· 修复换肤对话框里「人物背后没有披风」：进对话框就成对设置（皮肤 + 披风），\n  并在缺少披风数据时**本对话框自己补拉一次**\n· 修复「换了皮肤之后披风被搞没」：渲染器原来把「没传披风」当成「删掉披风」，\n  现改为「没传 = 这次不改披风」，只有玩家点「隐藏披风」才真正清空\n· 换肤对话框的「确定」改为**「上传」**（照 FCL：选完文件先预览，点上传才提交）\n· 修复「选了经典模型，再进来又变回苗条」：模型选择此前**从未被保存**，\n  每次开窗都用像素重判覆盖玩家的选择。现已持久化，主界面与对话框口径一致\n· 皮肤**实时同步**：进主界面会静默核对一次服务端皮肤，在别处换过会自动跟上；\n  但**刚上传完的 5 分钟内不会**用服务端旧数据覆盖（服务端有处理延迟，照 FCL 的做法）\n\n【列表动画】\n· 收藏夹是逐行滑入，而模组 / 整合包 / 资源包 / 光影 / 世界**只有一瞬间出现** ——\n  原因是这 5 个页面压根没调用动画，且调用时机早于列表布局完成。\n  现已统一成与收藏夹完全一致的逐行滑入（alpha + 横向 18dp，180ms，逐行延迟 18ms）\n\n【其它】\n· 修复「账号一会儿没有一会儿又有」的偶发读取竞态\n· 上传皮肤后主界面不刷新：原来用 Java 引用比较判断\"是不是当前账号\"，\n  现改为按 UUID / 名字等价判断并兜底刷新\n"
+          "text": "【微软账号 · 皮肤与披风】\n· 微软披风此前**从未被拉取过**（接口分支被注释、账号也没有存它的字段），\n  现已完整接入：登录即拉、老账号回填，主界面与换肤预览都能看到披风\n· 修复换肤对话框里「人物背后没有披风」：进对话框就成对设置（皮肤 + 披风），\n  并在缺少披风数据时**本对话框自己补拉一次**\n· 修复「换了皮肤之后披风被搞没」：渲染器原来把「没传披风」当成「删掉披风」，\n  现改为「没传 = 这次不改披风」，只有玩家点「隐藏披风」才真正清空\n· 换肤对话框的「确定」改为**「上传」**（照 FCL：选完文件先预览，点上传才提交）\n· 修复「选了经典模型，再进来又变回苗条」：模型选择此前**从未被保存**，\n  每次开窗都用像素重判覆盖玩家的选择。现已持久化，主界面与对话框口径一致\n· 皮肤**实时同步**：进主界面会静默核对一次服务端皮肤，在别处换过会自动跟上；\n  但**刚上传完的 5 分钟内不会**用服务端旧数据覆盖（服务端有处理延迟，照 FCL 的做法）\n\n【列表动画】\n· 收藏夹是逐行滑入，而模组 / 整合包 / 资源包 / 光影 / 世界**只有一瞬间出现** ——\n  原因是这 5 个页面压根没调用动画，且调用时机早于列表布局完成。\n  现已统一成与收藏夹完全一致的逐行滑入（alpha + 横向 18dp，180ms，逐行延迟 18ms）\n\n【其它】\n· 修复「账号一会儿没有一会儿又有」的偶发读取竞态\n· 上传皮肤后主界面不刷新：原来用 Java 引用比较判断\"是不是当前账号\"，\n  现改为按 UUID / 名字等价判断并兜底刷新\n\n\n【下载页与翻译】\n· 修复「模组名一条都不翻译」：翻译表（3 万条）此前在真机上根本加载不了（assets 读不到），\n  已改为类路径 + AssetManager 双路读取，现在 Sodium 会显示成「钠 Sodium」\n· 修复收藏夹与下载列表只查单一来源导致大量条目查不到中文的问题，改为三路回退\n· 远古版本、下载页、设置等处的英文串补齐中文（中文覆盖已做到 0 缺失）\n\n【主题与配色】\n· 修复换肤对话框里多处「白块」：drawable 里的 ?android:attr/colorAccent 取不到值，\n  改为运行时解析玩家主题色再上色（SkinDialogUtils）\n· 修复换肤对话框里动态新增的披风按钮**没被染色**、与其他按钮颜色不一致的问题\n· 多处对话框统一用 qcl_dialog_night_bg，日夜两套配色成套翻转\n\n【下载与列表】\n· 修复「模组页刷新后一片空白、还会把整合包 / 资源包 / 账号页一起弄空白」——\n  真凶是 5 个下载页在**后台线程里直接改 UI**（CalledFromWrongThreadException），\n  异常破坏了视图树 ⇒ 其他页面也渲染不出来。现已把 UI 操作全部搬回主线程\n· 彻底移除「加载版本列表失败，点击此处重试」提示：界面本来就有转圈，\n  网络恢复后自己会出结果，不再催玩家乱点\n\n【稳定】\n· 修复「启动游戏时突然竖屏→闪退→回到横屏启动器」：7 个 Activity 补齐 configChanges\n· 修复 26.3 / 26.4 崩溃：JNA 版本错配 + MC 降级死循环（按机器 Vulkan 能力钉后端）\n· 整合包安装：取消按钮点了没反应、文件列表只显示一行，均已修复\n"
         },
         {
           "lang": "zh_TW",
-          "text": "【微软账号 · 皮肤与披风】\n· 微软披风此前**从未被拉取过**（接口分支被注释、账号也没有存它的字段），\n  现已完整接入：登录即拉、老账号回填，主界面与换肤预览都能看到披风\n· 修复换肤对话框里「人物背后没有披风」：进对话框就成对设置（皮肤 + 披风），\n  并在缺少披风数据时**本对话框自己补拉一次**\n· 修复「换了皮肤之后披风被搞没」：渲染器原来把「没传披风」当成「删掉披风」，\n  现改为「没传 = 这次不改披风」，只有玩家点「隐藏披风」才真正清空\n· 换肤对话框的「确定」改为**「上传」**（照 FCL：选完文件先预览，点上传才提交）\n· 修复「选了经典模型，再进来又变回苗条」：模型选择此前**从未被保存**，\n  每次开窗都用像素重判覆盖玩家的选择。现已持久化，主界面与对话框口径一致\n· 皮肤**实时同步**：进主界面会静默核对一次服务端皮肤，在别处换过会自动跟上；\n  但**刚上传完的 5 分钟内不会**用服务端旧数据覆盖（服务端有处理延迟，照 FCL 的做法）\n\n【列表动画】\n· 收藏夹是逐行滑入，而模组 / 整合包 / 资源包 / 光影 / 世界**只有一瞬间出现** ——\n  原因是这 5 个页面压根没调用动画，且调用时机早于列表布局完成。\n  现已统一成与收藏夹完全一致的逐行滑入（alpha + 横向 18dp，180ms，逐行延迟 18ms）\n\n【其它】\n· 修复「账号一会儿没有一会儿又有」的偶发读取竞态\n· 上传皮肤后主界面不刷新：原来用 Java 引用比较判断\"是不是当前账号\"，\n  现改为按 UUID / 名字等价判断并兜底刷新\n"
+          "text": "【微软账号 · 皮肤与披风】\n· 微软披风此前**从未被拉取过**（接口分支被注释、账号也没有存它的字段），\n  现已完整接入：登录即拉、老账号回填，主界面与换肤预览都能看到披风\n· 修复换肤对话框里「人物背后没有披风」：进对话框就成对设置（皮肤 + 披风），\n  并在缺少披风数据时**本对话框自己补拉一次**\n· 修复「换了皮肤之后披风被搞没」：渲染器原来把「没传披风」当成「删掉披风」，\n  现改为「没传 = 这次不改披风」，只有玩家点「隐藏披风」才真正清空\n· 换肤对话框的「确定」改为**「上传」**（照 FCL：选完文件先预览，点上传才提交）\n· 修复「选了经典模型，再进来又变回苗条」：模型选择此前**从未被保存**，\n  每次开窗都用像素重判覆盖玩家的选择。现已持久化，主界面与对话框口径一致\n· 皮肤**实时同步**：进主界面会静默核对一次服务端皮肤，在别处换过会自动跟上；\n  但**刚上传完的 5 分钟内不会**用服务端旧数据覆盖（服务端有处理延迟，照 FCL 的做法）\n\n【列表动画】\n· 收藏夹是逐行滑入，而模组 / 整合包 / 资源包 / 光影 / 世界**只有一瞬间出现** ——\n  原因是这 5 个页面压根没调用动画，且调用时机早于列表布局完成。\n  现已统一成与收藏夹完全一致的逐行滑入（alpha + 横向 18dp，180ms，逐行延迟 18ms）\n\n【其它】\n· 修复「账号一会儿没有一会儿又有」的偶发读取竞态\n· 上传皮肤后主界面不刷新：原来用 Java 引用比较判断\"是不是当前账号\"，\n  现改为按 UUID / 名字等价判断并兜底刷新\n\n\n【下载页与翻译】\n· 修复「模组名一条都不翻译」：翻译表（3 万条）此前在真机上根本加载不了（assets 读不到），\n  已改为类路径 + AssetManager 双路读取，现在 Sodium 会显示成「钠 Sodium」\n· 修复收藏夹与下载列表只查单一来源导致大量条目查不到中文的问题，改为三路回退\n· 远古版本、下载页、设置等处的英文串补齐中文（中文覆盖已做到 0 缺失）\n\n【主题与配色】\n· 修复换肤对话框里多处「白块」：drawable 里的 ?android:attr/colorAccent 取不到值，\n  改为运行时解析玩家主题色再上色（SkinDialogUtils）\n· 修复换肤对话框里动态新增的披风按钮**没被染色**、与其他按钮颜色不一致的问题\n· 多处对话框统一用 qcl_dialog_night_bg，日夜两套配色成套翻转\n\n【下载与列表】\n· 修复「模组页刷新后一片空白、还会把整合包 / 资源包 / 账号页一起弄空白」——\n  真凶是 5 个下载页在**后台线程里直接改 UI**（CalledFromWrongThreadException），\n  异常破坏了视图树 ⇒ 其他页面也渲染不出来。现已把 UI 操作全部搬回主线程\n· 彻底移除「加载版本列表失败，点击此处重试」提示：界面本来就有转圈，\n  网络恢复后自己会出结果，不再催玩家乱点\n\n【稳定】\n· 修复「启动游戏时突然竖屏→闪退→回到横屏启动器」：7 个 Activity 补齐 configChanges\n· 修复 26.3 / 26.4 崩溃：JNA 版本错配 + MC 降级死循环（按机器 Vulkan 能力钉后端）\n· 整合包安装：取消按钮点了没反应、文件列表只显示一行，均已修复\n"
         },
         {
           "lang": "en_US",
-          "text": "[Microsoft account · skin & cape]\n- Microsoft capes were never fetched before (the API branch was commented out and the\n  account had no field for it). Now they are fetched on login and backfilled for older\n  accounts, and show both on the main screen and in the skin preview.\n- Fixed \"no cape behind the character in the skin dialog\": skin and cape are now applied\n  together when the dialog opens, and the dialog fetches the cape itself if it is missing.\n- Fixed \"the cape disappears after changing skin\": the renderer treated \"no cape passed\" as\n  \"delete the cape\". Now a missing cape means \"leave it unchanged\"; only the\n  \"hide cape\" button actually clears it.\n- The skin dialog's \"OK\" button is now an \"Upload\" button, matching FCL: picking a file only\n  updates the preview, uploading submits it.\n- Fixed \"I picked the classic model but it reverts to slim\": the choice was never saved and\n  was overwritten by pixel detection on every open. It is now persisted, and the main screen\n  and the dialog agree.\n- Skins now sync: entering the main screen quietly checks the server skin so changes made\n  elsewhere show up. However, for five minutes after a local upload the server is not\n  consulted, because it still serves the old skin (same approach as FCL).\n\n[List animations]\n- Favorites animated row by row, while mods / modpacks / resource packs / shaders / worlds\n  appeared instantly: those five pages never called the animation and the call site ran\n  before layout finished. All of them now use the same row-by-row slide-in as favorites.\n\n[Other]\n- Fixed an occasional race where the account list appeared empty.\n- Fixed the main screen not refreshing after uploading a skin (it compared object identity\n  instead of UUID / name).\n"
+          "text": "[Microsoft account · skin & cape]\n- Microsoft capes were never fetched before (the API branch was commented out and the\n  account had no field for it). Now they are fetched on login and backfilled for older\n  accounts, and show both on the main screen and in the skin preview.\n- Fixed \"no cape behind the character in the skin dialog\": skin and cape are now applied\n  together when the dialog opens, and the dialog fetches the cape itself if it is missing.\n- Fixed \"the cape disappears after changing skin\": the renderer treated \"no cape passed\" as\n  \"delete the cape\". Now a missing cape means \"leave it unchanged\"; only the\n  \"hide cape\" button actually clears it.\n- The skin dialog's \"OK\" button is now an \"Upload\" button, matching FCL: picking a file only\n  updates the preview, uploading submits it.\n- Fixed \"I picked the classic model but it reverts to slim\": the choice was never saved and\n  was overwritten by pixel detection on every open. It is now persisted, and the main screen\n  and the dialog agree.\n- Skins now sync: entering the main screen quietly checks the server skin so changes made\n  elsewhere show up. However, for five minutes after a local upload the server is not\n  consulted, because it still serves the old skin (same approach as FCL).\n\n[List animations]\n- Favorites animated row by row, while mods / modpacks / resource packs / shaders / worlds\n  appeared instantly: those five pages never called the animation and the call site ran\n  before layout finished. All of them now use the same row-by-row slide-in as favorites.\n\n[Other]\n- Fixed an occasional race where the account list appeared empty.\n- Fixed the main screen not refreshing after uploading a skin (it compared object identity\n  instead of UUID / name).\n\n\n[Download pages & translations]\n- Fixed \"no mod name is translated at all\": the 30k-entry translation table could not be\n  loaded on device (assets are not on the Java classpath). Now it is read via classpath or\n  AssetManager, so Sodium shows as \"钠 Sodium\".\n- Fixed favorites and download lists only querying one source, which left most entries in\n  English; now they fall back across three indexes.\n- Filled in the remaining Chinese strings; Chinese coverage is now complete.\n\n[Theme & colors]\n- Fixed several \"white blocks\" in the skin dialogs: ?android:attr/colorAccent resolves to\n  nothing there. Colors are now resolved from the player's theme at runtime (SkinDialogUtils).\n- Fixed dynamically created cape buttons not being tinted, so their color did not match the\n  other buttons.\n\n[Downloads & lists]\n- Fixed \"the mod page goes blank after a refresh and takes the modpack / resource pack /\n  account pages down with it\". Root cause: five download pages touched UI from a background\n  thread (CalledFromWrongThreadException), which corrupted the view tree. All UI work now\n  happens on the main thread.\n- Removed the \"failed to load, tap to retry\" hint entirely: there is already a spinner and\n  results appear once the network recovers.\n\n[Stability]\n- Fixed a crash when the screen briefly rotated to portrait during game authentication.\n- Fixed 26.3 / 26.4 crashes caused by a JNA version mismatch and Minecraft's fallback loop.\n- Fixed the modpack installer's dead cancel button and one-line file list.\n"
         }
       ]
     },

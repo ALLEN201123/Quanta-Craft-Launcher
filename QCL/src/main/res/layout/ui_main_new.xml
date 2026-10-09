@@ -80,15 +80,59 @@
                 android:layout_height="1dp"
                 android:background="#33FFFFFF"/>
 
-            <TextView
-                android:id="@+id/announcement_date"
-                android:singleLine="true"
-                android:layout_width="wrap_content"
+            <!-- ★★★ 1.5.0（2026-10-10 用户要求）：「加一个左右切换公告按钮」。
+                 公告栏原来一次只显示**一条**（applyAnnouncement 里 for+break 只取第一条），
+                 拆成多条时玩家看不到其余的（用户实测「只看到 10-10，看不到 10-09」）。
+                 这里加「◀ / ▶」两个按钮在日期两侧，玩家可以自己翻阅所有公告。 -->
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:padding="10dp"
-                android:textColor="@color/colorLightWhite"
-                android:textSize="@dimen/text_size_small"/>
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/announcement_prev"
+                    android:singleLine="true"
+                    android:focusable="true"
+                    android:clickable="true"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:paddingLeft="14dp"
+                    android:paddingRight="14dp"
+                    android:paddingTop="10dp"
+                    android:paddingBottom="10dp"
+                    android:text="@string/qcl_announcement_prev"
+                    android:textColor="@color/colorPureWhite"
+                    android:textSize="16sp"/>
+
+                <TextView
+                    android:id="@+id/announcement_date"
+                    android:singleLine="true"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:paddingTop="10dp"
+                    android:paddingBottom="10dp"
+                    android:textColor="@color/colorLightWhite"
+                    android:textSize="@dimen/text_size_small"/>
+
+                <TextView
+                    android:id="@+id/announcement_next"
+                    android:singleLine="true"
+                    android:focusable="true"
+                    android:clickable="true"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:paddingLeft="14dp"
+                    android:paddingRight="14dp"
+                    android:paddingTop="10dp"
+                    android:paddingBottom="10dp"
+                    android:text="@string/qcl_announcement_next"
+                    android:textColor="@color/colorPureWhite"
+                    android:textSize="16sp"/>
+
+            </LinearLayout>
 
         </LinearLayout>
 
