@@ -634,6 +634,32 @@ public class MainUI extends BaseUI implements View.OnClickListener, AdapterView.
      * 老 {@link #skinGLSurfaceView}/{@link #skinRenderer}（GameCharacter）**保留给皮肤编辑器**，
      * 主界面不再使用。
      */
+    /**
+     * ★ 1.5.0：把设置里「人物动作」的下拉索引翻译成 glTF 模型内的 clip 名。
+     *
+     * <p>下拉 4 项与 glTF 模型里的 4 个真实 clip 一一对应：
+     * {@code 0→idle}、{@code 1→idle_sub_1}、{@code 2→idle_sub_2}、{@code 3→idle_sub_3}。
+     *
+     * <p>★ 这里**故意不复用 {@code SkinAnimations.entries}**（Kotlin 的 public val 在 Java 侧
+     * 不加 {@code @JvmField} 是 private 访问控制，编译直接报错）—— clip 名在 Java 侧固定一份，
+     * 少一层跨语言依赖，越界（含旧存档残留值）一律回落基础待机。
+     */
+    private static final String[] GLTF_IDLE_CLIPS = {
+            "idle", "idle_sub_1", "idle_sub_2", "idle_sub_3"
+    };
+
+    private String animClipFromIndex() {
+        int idx = 0;
+        try {
+            idx = activity.launcherSetting == null ? 0 : activity.launcherSetting.accountModelAnim;
+        } catch (Throwable ignored) {
+        }
+        if (idx < 0 || idx >= GLTF_IDLE_CLIPS.length) {
+            return GLTF_IDLE_CLIPS[0];
+        }
+        return GLTF_IDLE_CLIPS[idx];
+    }
+
     private void setupAccountModel() {
         if (accountModelView == null || skinViewer != null) {
             return;
@@ -646,10 +672,10 @@ public class MainUI extends BaseUI implements View.OnClickListener, AdapterView.
                             android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
                             android.widget.LinearLayout.LayoutParams.MATCH_PARENT));
             skinViewer.setRenderer(gltfRenderer, context.getResources().getDisplayMetrics().density);
-            // ★ 恢复玩家上次选的动画（FCL 同款持久化；未选过就是基础待机 idle）
+            // ★ 恢复玩家上次选的动画。设置里的下拉 4 项 = glTF 模型内的 4 个真实 clip
+            //   （idle / idle_sub_1 / idle_sub_2 / idle_sub_3），与 SkinAnimations.entries 一一对应。
             try {
-                gltfRenderer.playAnimation(
-                        com.qcl.launcher.skin.gltf.SkinAnimations.restore(context));
+                gltfRenderer.playAnimation(animClipFromIndex());
             } catch (Throwable ignoredAnim) {
                 // 读不到就用默认
             }

@@ -831,7 +831,10 @@ CompoundButton.OnCheckedChangeListener {
         this.accountModelAnimSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                if (position < MinecraftSkinRenderer.ANIM_IDLE || position > MinecraftSkinRenderer.ANIM_WAVE) {
+                // ★ 1.5.0：主界面人物已换成 glTF 骨骼动画，选项是 4 个**模型内真实存在的 clip**
+                //   （idle + idle_sub_1/2/3），不再是老的程序化模拟动作。
+                //   这里的 position 就是 clip 序号 0~3，MainUI 会据此调 playAnimation()。
+                if (position < 0 || position > 3) {
                     return;
                 }
                 // ★ 值没变就不写盘（进页面回填时可能触发一次）

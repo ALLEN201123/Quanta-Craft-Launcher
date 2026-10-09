@@ -668,11 +668,10 @@
     <!-- ★ 1.5.0：3D 人物动作选择 -->
     <string name="exterior_setting_account_model_anim">Character animation</string>
     <string-array name="account_model_anim_entries">
-        <item>Stand</item>
-        <item>Walk</item>
-        <item>Run</item>
-        <item>Spin</item>
-        <item>Wave</item>
+        <item>Idle (default)</item>
+        <item>Idle variant 1</item>
+        <item>Idle variant 2</item>
+        <item>Idle variant 3</item>
     </string-array>
     <string name="setting_ui_exterior">Appearance</string>
     <string name="setting_ui_download">Download</string>

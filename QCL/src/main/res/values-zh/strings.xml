@@ -688,11 +688,10 @@
     <!-- ★ 1.5.0：3D 人物动作选择 -->
     <string name="exterior_setting_account_model_anim">人物动作</string>
     <string-array name="account_model_anim_entries">
-        <item>站立</item>
-        <item>走路</item>
-        <item>跑步</item>
-        <item>旋转</item>
-        <item>挥手</item>
+        <item>站立（默认）</item>
+        <item>待机变体 1</item>
+        <item>待机变体 2</item>
+        <item>待机变体 3</item>
     </string-array>
     <string name="setting_ui_exterior">外观</string>
     <string name="setting_ui_download">下载</string>
