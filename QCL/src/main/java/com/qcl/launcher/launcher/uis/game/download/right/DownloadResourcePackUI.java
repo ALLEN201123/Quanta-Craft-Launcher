@@ -95,6 +95,15 @@ public class DownloadResourcePackUI extends BaseUI implements View.OnClickListen
                     DownloadResourcePackUI.this.categoryListAdapter.notifyDataSetChanged();
                     DownloadResourcePackUI.this.progressBar.setVisibility(8);
                     DownloadResourcePackUI.this.resourcePackListView.setVisibility(0);
+                    // ★ 2026-10-11 补上列表入场动画（原来只有模组页调了 animateList）
+                    //   ★ 必须 post：此刻还没完成布局，getChildCount() 为 0 动画会空跑。
+                    DownloadResourcePackUI.this.resourcePackListView.post(() -> {
+                        try {
+                            DownloadResourcePackUI.this.downloadResourcePackListAdapter
+                                    .animateList(DownloadResourcePackUI.this.resourcePackListView);
+                        } catch (Throwable ignored) {
+                        }
+                    });
                     DownloadResourcePackUI.this.isSearching = false;
                 }
                 if (message.what == 2) {

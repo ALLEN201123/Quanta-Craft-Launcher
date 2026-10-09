@@ -172,7 +172,7 @@
             android:layout_marginStart="10dp"
             android:layout_weight="1"
             android:gravity="center"
-            android:text="@string/dialog_offline_skin_confirm"
+            android:text="@string/microsoft_skin_upload"
             android:textSize="15sp"
             android:textColor="@color/qcl_dialog_btn_text"
             android:background="@drawable/qcl_dialog_button"

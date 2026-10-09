@@ -29,6 +29,19 @@ public class Account {
     public String capeTexture;
     public String user_type;
 
+    /**
+     * ★★★★★ 2026-10-11 新增：玩家给这个账号选的**皮肤模型**
+     * （{@code STEVE}=经典粗手臂 / {@code ALEX}=苗条细手臂）。
+     *
+     * <p>为什么要加（用户实测「上次选的是史蒂夫经典，再点进来又变回艾利克斯苗条」）：
+     * 微软换肤对话框原来**每次开窗都用皮肤像素重新判定** slim，
+     * 而玩家的选择**从未被保存** ⇒ 选 classic 只要图片右臂是 3 列，下次开窗又被判成 slim。
+     * （离线账号早就有 {@code OfflineSkinSetting.model} 存这个偏好，微软侧却漏了。）
+     *
+     * <p>存量账号没有这个字段时为 null ⇒ 对话框回退到"像素判定"（与旧行为一致，不需要迁移）。
+     */
+    public com.qcl.launcher.auth.yggdrasil.TextureModel model;
+
     public Account(int i, String str, String str2, String str3, String str4, String str5, String str6, String str7, String str8, String str9, String str10, String str11) {
         this.loginType = i;
         this.email = str;
@@ -59,6 +72,8 @@ public class Account {
         this.texture = account.texture;
         // ★ 1.5.0：拷贝构造**必须带上披风**，否则 refresh/copy 后披风丢失。
         this.capeTexture = account.capeTexture;
+        // ★ 2026-10-11：皮肤模型偏好同样要带上，否则 refresh 后被像素判定覆盖回苗条。
+        this.model = account.model;
         this.offlineSkinSetting = account.offlineSkinSetting;
     }
 

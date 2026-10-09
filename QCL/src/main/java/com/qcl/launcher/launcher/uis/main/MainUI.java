@@ -831,11 +831,28 @@ public void refreshAccountModel() {
             //   正解和离线分支一样：用 NormalizedSkin 从像素判定 slim，传给 showModel 切对模型。
             Bitmap renderSkin = skin;
             boolean skinSlim = false;
-            try {
-                NormalizedSkin normalized = new NormalizedSkin(skin);
-                skinSlim = normalized.isSlim();
-                renderSkin = normalized.isOldFormat() ? normalized.getNormalizedTexture() : normalized.getOriginalTexture();
-            } catch (Throwable ignored) {
+            // ★★★★★ 2026-10-11 修（用户实测「上传完之后主界面人物没啥变化」的不一致源）：
+            //   **优先用玩家保存的模型选择**（account.model），只有老账号没这个字段时
+            //   才回退"按皮肤像素判定"。
+            //   原来这里无条件用 NormalizedSkin(...).isSlim() ⇒
+            //   对话框里玩家选 classic、预览也是 classic，但**主界面按图片又判成 slim**
+            //   ⇒ 两处显示不一致，看着就像"上传没生效"。
+            //   （皮肤对话框里同样的逻辑已经改过，这里必须一起改，否则两边永远对不上。）
+            if (account.model != null) {
+                skinSlim = (account.model == com.qcl.launcher.auth.yggdrasil.TextureModel.ALEX);
+                try {
+                    NormalizedSkin normalized = new NormalizedSkin(skin);
+                    renderSkin = normalized.isOldFormat()
+                            ? normalized.getNormalizedTexture() : normalized.getOriginalTexture();
+                } catch (Throwable ignored) {
+                }
+            } else {
+                try {
+                    NormalizedSkin normalized = new NormalizedSkin(skin);
+                    skinSlim = normalized.isSlim();
+                    renderSkin = normalized.isOldFormat() ? normalized.getNormalizedTexture() : normalized.getOriginalTexture();
+                } catch (Throwable ignored) {
+                }
             }
             showModel(renderSkin, decodeCape(account.capeTexture), skinSlim);
             // ★ 1.5.0：微软账号若还没有披风数据（老账号是在"披风功能"之前登录的），

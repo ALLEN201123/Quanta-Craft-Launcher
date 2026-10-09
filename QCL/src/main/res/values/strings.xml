@@ -1171,4 +1171,6 @@ Multiplayer is powered by Terracotta (by BurningTNT). The multiplayer feature is
     <string name="terracotta_tutorial_guest">Guest usage:\n\n - Read the user notice on the launcher multiplayer page, then enable multiplayer\n - Launch the game, open the multiplayer module in the in-game menu\n - Tap \"I want to be a guest\", paste the invite code from the host and wait patiently\n - If asked for VPN permission, grant it, otherwise multiplayer will not work\n - Once it shows the room is joined, go to the game main menu, choose Multiplayer, refresh and enter the Terracotta lobby\n\nNotes:\n\n - Offline accounts are supported\n - Interoperates with HMCL, PCL CE and other Scaffolding-compatible software\n - Offline accounts are NOT supported when joining through the fallback server address</string>
     <string name="qcl_multiplayer_agree">I have read and agree</string>
     <string name="qcl_cancel">Cancel</string>
+    <string name="microsoft_skin_upload">Upload</string>
+    <string name="microsoft_skin_model_saved">Model saved</string>
 </resources>

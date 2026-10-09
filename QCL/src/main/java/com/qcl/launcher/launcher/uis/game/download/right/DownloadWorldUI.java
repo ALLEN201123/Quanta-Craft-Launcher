@@ -90,6 +90,15 @@ public class DownloadWorldUI extends BaseUI implements View.OnClickListener, Ada
                     DownloadWorldUI.this.categoryListAdapter.notifyDataSetChanged();
                     DownloadWorldUI.this.progressBar.setVisibility(8);
                     DownloadWorldUI.this.worldListView.setVisibility(0);
+                    // ★ 2026-10-11 补上列表入场动画（原来只有模组页调了 animateList）
+                    //   ★ 必须 post：此刻还没完成布局，getChildCount() 为 0 动画会空跑。
+                    DownloadWorldUI.this.worldListView.post(() -> {
+                        try {
+                            DownloadWorldUI.this.downloadWorldListAdapter
+                                    .animateList(DownloadWorldUI.this.worldListView);
+                        } catch (Throwable ignored) {
+                        }
+                    });
                     DownloadWorldUI.this.isSearching = false;
                 }
                 if (message.what == 2) {

@@ -1031,4 +1031,6 @@
     <string name="default_game_file_directory_list_sec_path">/storage/emulated/0/Android/data/com.qcl.launcher/files/.minecraft</string>
     <string name="dialog_color_selector_arrow">→</string>
     <string name="launcher_spinner_text">▲</string>
+    <string name="microsoft_skin_upload">上傳</string>
+    <string name="microsoft_skin_model_saved">模型已儲存</string>
 </resources>

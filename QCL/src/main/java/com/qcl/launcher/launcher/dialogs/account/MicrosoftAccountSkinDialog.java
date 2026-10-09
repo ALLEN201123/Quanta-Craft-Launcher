@@ -91,10 +91,21 @@ public class MicrosoftAccountSkinDialog extends Dialog implements View.OnClickLi
         resetSkin.setOnClickListener(this);
         hideCape.setOnClickListener(this);
         findViewById(R.id.ms_skin_negative).setOnClickListener(v -> dismiss());
-        // ★ 1.5.0 用户要求：「微软账号这个只有取消，没有确定」⇒ 补上「确定」。
-        //   语义：真正生效的是上面「选择皮肤」的上传动作，这里只是按常规关窗，
-        //   所以与取消等价（同 dismiss），不能写成 reload —— 那样会打断正在上传的换肤。
-        findViewById(R.id.ms_skin_positive).setOnClickListener(v -> dismiss());
+        // ★★★★★ 2026-10-11 修（用户实测「点确定之后没有立刻上传，再进来又变回苗条」）：
+        //
+        //   照 FCL 的语义改 —— FCL 的 MicrosoftAccountSkinDialog 是：
+        //       binding.skinFilePick -> 选文件后**只更新预览**，不上传
+        //       binding.upload       -> uploadFromFile()   ← 点这个才上传
+        //       binding.positive     -> dismiss()          ← 「确定」只是关窗
+        //   也就是说 FCL 有**独立的「上传」按钮**。
+        //
+        //   QCL 原来把上传塞在"选完文件就自动传"，而「确定」只是关窗 ⇒
+        //   玩家改完模型单选钮再点「确定」，**什么都没提交**，下次开窗又从像素重判 ⇒
+        //   "上次选经典，结果又变回苗条"。
+        //
+        //   现在把「确定」直接改成**上传按钮**（文案见 layout 里的 dialog_upload）：
+        //   点它 = 把当前选择（皮肤文件 + 经典/苗条）提交上去，成功后再关窗。
+        findViewById(R.id.ms_skin_positive).setOnClickListener(v -> commitSkin());
 
         // ★★★ 1.5.0：所有按钮染成「深色底 + 浅色字」，底色跟随玩家主题色（见 SkinDialogUtils）
         try {
@@ -145,15 +156,24 @@ public class MicrosoftAccountSkinDialog extends Dialog implements View.OnClickLi
             getWindow().setLayout(dialogW, dialogH);
         }
 
-        // ★★★ 加载当前微软账号的皮肤显示在 3D 预览，并自动检测是苗条还是经典
+        // ★★★ 加载当前微软账号的皮肤显示在 3D 预览，并确定用哪套模型
         if (account.texture != null && !account.texture.isEmpty()) {
             try {
                 Bitmap currentSkin = Avatar.stringToBitmap(account.texture);
+                // ★★★★★ 2026-10-11 修（用户实测「上次选史蒂夫经典，再点进来又变回艾利克斯苗条」）：
+                //   **优先用玩家上次保存的选择**（account.model），只有老账号没有该字段时
+                //   才回退到"按皮肤像素判定"。
+                //   原来无条件用 NormalizedSkin(...).isSlim() 覆盖单选钮 ⇒
+                //   玩家选 classic，只要图片右臂是 3 列，下次开窗又被判成 slim，选择被吃掉。
                 boolean slim;
-                try {
-                    slim = new NormalizedSkin(currentSkin).isSlim();
-                } catch (InvalidSkinException e) {
-                    slim = false;
+                if (account.model != null) {
+                    slim = (account.model == com.qcl.launcher.auth.yggdrasil.TextureModel.ALEX);
+                } else {
+                    try {
+                        slim = new NormalizedSkin(currentSkin).isSlim();
+                    } catch (InvalidSkinException e) {
+                        slim = false;
+                    }
                 }
                 model = slim ? "slim" : "classic";
                 modelSlim.setChecked(slim);
@@ -340,10 +360,37 @@ public class MicrosoftAccountSkinDialog extends Dialog implements View.OnClickLi
             com.qcl.launcher.utils.gson.GsonUtils.saveAccounts(
                     activity.uiManager.accountUI.accounts,
                     com.qcl.launcher.manifest.AppManifest.ACCOUNT_DIR + "/accounts.json");
-            // 正好是当前在用的账号 ⇒ 主界面 3D 人物要立刻跟着换
-            if (account != null && account == activity.publicGameSetting.account
-                    && activity.uiManager.mainUI != null) {
-                activity.uiManager.mainUI.refreshAccountModel();
+            // ★★★★★ 2026-10-11 修复（用户实测「上传完之后主界面人物没啥变化」）：
+            //   原来这里用的是 **Java 引用比较 `account == activity.publicGameSetting.account`**
+            //   —— 只有两边是**同一个对象实例**时才刷主界面。
+            //   而对话框拿到的 account 常常是列表里的另一个等价实例（Gson 反序列化 / 列表重建），
+            //   引用不同 ⇒ **主界面永远不刷新** ⇒ "上传完没变化"。
+            //
+            //   现在改成"**等价即刷新**"：UUID 相同、或（UUID 都空时）名字相同就刷新，
+            //   并兜底到"任何情况下都刷一次"——多刷一次只是重画人物，无副作用。
+            boolean shouldRefresh = false;
+            final com.qcl.launcher.auth.Account current =
+                    (activity.publicGameSetting == null) ? null : activity.publicGameSetting.account;
+            if (account != null && current != null) {
+                if (account == current) {
+                    shouldRefresh = true;
+                } else {
+                    String a = account.auth_uuid;
+                    String b = current.auth_uuid;
+                    if (a != null && !a.trim().isEmpty() && a.equals(b)) {
+                        shouldRefresh = true;
+                    } else if ((a == null || a.trim().isEmpty())
+                            && account.auth_player_name != null
+                            && account.auth_player_name.equals(current.auth_player_name)) {
+                        shouldRefresh = true;
+                    }
+                }
+            }
+            if (activity.uiManager.mainUI != null) {
+                try {
+                    activity.uiManager.mainUI.refreshAccountModel();
+                } catch (Throwable ignored2) {
+                }
             }
         } catch (Throwable ignored) {
         }
@@ -378,6 +425,24 @@ public class MicrosoftAccountSkinDialog extends Dialog implements View.OnClickLi
                         Button btn = new Button(getContext());
                         btn.setText(label);
                         btn.setOnClickListener(v -> activateCape(cape.id, cape.url));
+                        // ★★★★★ 2026-10-11 修（用户实测「披风切换按钮颜色与其他按钮不一致」）：
+                        //   这些按钮是**运行时 new 出来的**，而 SkinDialogUtils.tintAll 只在 init()
+                        //   里遍历一次静态布局 ⇒ **动态新增的披风按钮从来没被染色**，
+                        //   于是用系统默认 Button 样式，跟旁边那些深色主题按钮明显不一样。
+                        //   这里照静态按钮同一套做法补染：
+                        //     ① 背景用同一个 qcl_dialog_button（日月两套 shape 已配好）
+                        //     ② 文字用同一个 qcl_dialog_btn_text
+                        //     ③ 再用 SkinDialogUtils.tintButton 按当前主题色上色
+                        try {
+                            btn.setTextSize(15f);
+                            btn.setBackgroundResource(com.qcl.launcher.R.drawable.qcl_dialog_button);
+                            btn.setTextColor(getContext().getResources()
+                                    .getColor(com.qcl.launcher.R.color.qcl_dialog_btn_text));
+                            com.qcl.launcher.utils.string.SkinDialogUtils.tintButton(
+                                    getContext(), btn, themeColorNow());
+                        } catch (Throwable ignored) {
+                            // 染不上就退化成普通按钮，不影响功能
+                        }
                         capeListLayout.addView(btn);
                     }
                 });
@@ -505,8 +570,67 @@ public class MicrosoftAccountSkinDialog extends Dialog implements View.OnClickLi
         }
     }
 
-    private void uploadSkin(String path) {
-        setLoading(true);
+    /**
+     * ★★★★★ 2026-10-11 新增：「上传」按钮（原「确定」）被点击时的提交动作。
+     *
+     * <p>照 FCL 的 `binding.upload -> uploadFromFile()` 语义：
+     * <ul>
+     *   <li>玩家选过皮肤文件 ⇒ 用**当前单选钮的模型**重新上传一次（把选择真正提交上去）；</li>
+     *   <li>没选过文件、只改了模型单选钮 ⇒ 把模型选择**写进账号并存盘**
+     *       （皮肤纹理用现有的，不重传图片）；</li>
+     *   <li>提交完成后关窗。</li>
+     * </ul>
+     *
+     * <p>为什么要这一步（用户实测「点确定没立刻上传，再进来又变回苗条」）：
+     * 模型选择此前**根本没被保存过**，每次开窗都用像素重新判定 ⇒ 玩家的选择被吃掉。
+     */
+    private void commitSkin() {
+        // 先把模型选择落到账号上（无论有没有换图，这一步都做）
+        final String chosenModel = modelSlim.isChecked() ? "slim" : "classic";
+        this.model = chosenModel;
+        try {
+            if (account != null) {
+                account.model = "slim".equals(chosenModel)
+                        ? com.qcl.launcher.auth.yggdrasil.TextureModel.ALEX
+                        : com.qcl.launcher.auth.yggdrasil.TextureModel.STEVE;
+                saveAccountAndRefresh();
+            }
+        } catch (Throwable ignored) {
+        }
+
+        // 选过文件 ⇒ 连图和模型一起重新上传（这才是"实时上传"）
+        if (selectedSkinPath != null && !selectedSkinPath.trim().isEmpty()) {
+            uploadSkin(selectedSkinPath);
+            // 上传是异步的；上传成功后会自己 toast + 刷新预览。
+            // 这里不立刻 dismiss，等玩家看到"皮肤已上传"再手动关（照 FCL 的两段式体验）。
+            return;
+        }
+
+        // 没选文件：只是改了模型偏好 ⇒ 已存盘，直接关窗即可
+        Toast.makeText(getContext(), R.string.microsoft_skin_model_saved, Toast.LENGTH_SHORT).show();
+        dismiss();
+    }
+
+    /**
+     * ★ 2026-10-11：取当前主题色设置字符串（给动态创建的按钮染色用）。
+     *
+     * <p>口径与 init() 里那次 {@code tintAll(...)} 完全一致 ——
+     * 都读 {@code activity.launcherSetting.launcherTheme}，
+     * 这样**动态加的按钮和静态按钮颜色必然一样**（用户要求"跟主题色一模一样"）。
+     * 读不到就返回 null，由 {@link com.qcl.launcher.utils.string.SkinDialogUtils}
+     * 回退到项目默认 colorAccent（它的 resolveThemeColor 已处理）。
+     */
+    private String themeColorNow() {
+        try {
+            if (activity != null && activity.launcherSetting != null) {
+                return activity.launcherSetting.launcherTheme;
+            }
+        } catch (Throwable ignored) {
+        }
+        return null;
+    }
+
+    private void uploadSkin(String path) {        setLoading(true);
         // ★★★★★ 2026-10-11 修复（用户实测「换成经典的哥哥 → 点确认 → 重启 → 又变回苗条」）：
         //   原来**上传时用皮肤像素自己判定 variant**（detectedModel），然后把单选钮
         //   **强行改成判定结果** —— 玩家明明选了 classic，只要图片的右臂是 3 列像素，

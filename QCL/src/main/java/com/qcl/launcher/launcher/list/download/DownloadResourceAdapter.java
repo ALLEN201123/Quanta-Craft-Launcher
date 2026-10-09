@@ -308,13 +308,45 @@ public class DownloadResourceAdapter extends BaseAdapter {
             if (listView == null) {
                 return;
             }
-            android.view.View head = listView.getChildAt(0);
-            if (head == null) {
-                return;
+            // ★★★★★ 2026-10-11 与收藏夹统一（用户要求「收藏页面的动画统一了没，其他页面呢」）：
+            //
+            //   改之前这里只动**第 0 个可见行**、而且是**上下**滑 14dp ——
+            //   收藏夹那边是**逐行**入场、**左右**滑 18dp、180ms、逐行延迟 18ms，
+            //   两边观感完全不同（用户实测反馈不统一）。
+            //
+            //   现在照**收藏夹同一套参数**改：逐行 alpha 0→1 + translationX 18dp→0，
+            //   180ms，每行延迟 18ms，超过第 20 行不再累加（封顶约 360ms）。
+            //   这也正是 FCL 的做法（`AnimUtil.playTranslationX(view, ..., -100f, 0f)`
+            //   —— FCL 也是逐行 + 横向，不是整块纵向）。
+            //
+            //   ⚠️ ListView 复用 convertView 的顾虑在这里不成立：这段动画只在
+            //     **数据填好之后跑一次**（调用处是 search 成功的分支），
+            //     动的是当时已经 measure 出来的可见行，不参与 getView 复用。
+            // 先把上一轮可能还挂着的延迟动画清掉（转成 View 才有这个方法）
+            ((android.view.View) listView).removeCallbacks(null);
+            final int count = listView.getChildCount();
+            for (int i = 0; i < count; i++) {
+                final android.view.View row = listView.getChildAt(i);
+                if (row == null) {
+                    continue;
+                }
+                final int index = i;
+                row.setAlpha(0f);
+                row.setTranslationX(dp(18));
+                listView.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            row.animate()
+                                    .alpha(1f)
+                                    .translationX(0f)
+                                    .setDuration(180L)
+                                    .start();
+                        } catch (Throwable ignored) {
+                        }
+                    }
+                }, Math.min(index, 20) * 18L);
             }
-            head.setAlpha(0f);
-            head.setTranslationY(dp(14));
-            head.animate().alpha(1f).translationY(0f).setDuration(200L).start();
         } catch (Throwable ignored) {
             // 动画失败就静态显示
         }

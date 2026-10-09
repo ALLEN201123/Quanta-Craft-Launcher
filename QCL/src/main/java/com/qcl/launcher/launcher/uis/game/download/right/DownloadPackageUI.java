@@ -94,6 +94,17 @@ public class DownloadPackageUI extends BaseUI implements View.OnClickListener, A
                     DownloadPackageUI.this.categoryListAdapter.notifyDataSetChanged();
                     DownloadPackageUI.this.progressBar.setVisibility(8);
                     DownloadPackageUI.this.packageListView.setVisibility(0);
+                    // ★★★★★ 2026-10-11 补上列表入场动画（用户实测「整合包/光影/模组的动态切换没统一」）：
+                    //   原来**只有模组页**调了 animateList，其余 4 个下载页压根没调用
+                    //   ⇒ 它们一切分类就"瞬间刷出"，与收藏夹/模组页的逐行滑入不一致。
+                    //   ★ 必须 post：此刻 ListView 还没完成布局，getChildCount() 会是 0，动画会空跑。
+                    DownloadPackageUI.this.packageListView.post(() -> {
+                        try {
+                            DownloadPackageUI.this.downloadPackageListAdapter
+                                    .animateList(DownloadPackageUI.this.packageListView);
+                        } catch (Throwable ignored) {
+                        }
+                    });
                     DownloadPackageUI.this.isSearching = false;
                 }
                 if (message.what == 2) {

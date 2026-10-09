@@ -941,4 +941,6 @@
     <!-- ★ 1.5.0：主界面公告栏 -->
     <string name="qcl_announcement">Announcement</string>
     <string name="qcl_announcement_hide">Hide</string>
+    <string name="microsoft_skin_upload">Upload</string>
+    <string name="microsoft_skin_model_saved">Model saved</string>
 </resources>
