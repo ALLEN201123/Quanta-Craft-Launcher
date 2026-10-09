@@ -1166,6 +1166,34 @@ public void showModel(final Bitmap skin, final Bitmap cape, final boolean slim) 
                 accountModelView.setVisibility(View.VISIBLE);
                 skinViewer.setVisibility(View.VISIBLE);
                 gltfRenderer.updateTexture(skin, cape, slim);
+                // ★★★★★ 2026-10-11 修（用户实测「刚进启动器手臂是粗的，
+                //   切到别的页面再切回主界面才变苗条」）：
+                //
+                //   诊断日志证明 Java 层**完全正确**（model=ALEX、slim=true 都传对了），
+                //   所以问题在 GL 层：`updateTexture` 只是把新纹理挂到
+                //   `pendingSkin/pendingSlim`，要等渲染线程下一帧 `consumePendingUpdate()`
+                //   才真正 `model.setSlim(...)`。首次进主界面时渲染循环刚起步
+                //   （onResume → startFrameLoop 也是 post 到渲染线程的），
+                //   存在"先按默认的经典模型画了，pendingSlim 没赶上"的窗口
+                //   ⇒ 玩家看到粗手臂；切页面回来时循环已稳定，所以就正常了。
+                //
+                //   兜底：延迟再喂一次同样的纹理。此时帧循环必然已经在跑，
+                //   第二次 consumePendingUpdate 一定会把 slim 应用到模型上。
+                //   （重复喂同一张纹理是幂等的，只是多一次 GL 上传，代价可忽略。）
+                final Bitmap skinAgain = skin;
+                final Bitmap capeAgain = cape;
+                final boolean slimAgain = slim;
+                skinViewer.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            if (gltfRenderer != null) {
+                                gltfRenderer.updateTexture(skinAgain, capeAgain, slimAgain);
+                            }
+                        } catch (Throwable ignored) {
+                        }
+                    }
+                }, 400L);
                 return;
             } catch (Throwable t) {
                 t.printStackTrace();

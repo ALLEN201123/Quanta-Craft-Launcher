@@ -168,7 +168,7 @@ public class CurseInstallTask extends BaseModpackInstallTask {
             try {
                 // ★【2026-10-06】按版本隔离决定（原来写死 gameDir() → 开隔离的版本看不到 mod）
                 File target = new File(runDir(), "mods" + File.separator + fileName);
-                if ((target.isFile() && target.length() > 0) || downloadOne(url.toString(), target)) {
+                if ((target.isFile() && target.length() > 0) || downloadOne(url.toString(), target, fileRow)) {
                     ok++;
                     rowDone(fileRow);
                 } else {

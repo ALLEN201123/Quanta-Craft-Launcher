@@ -346,6 +346,53 @@ public abstract class BaseModpackInstallTask extends AsyncTask<Object, Integer, 
         };
     }
 
+    /**
+     * ★★★★★ 2026-10-11 新增：**带进度上报**的反馈 —— 让整合包安装时每个文件那一行
+     * 的进度条真的动起来。
+     *
+     * <p>用户实测（原话）：「我下载的整合包的那些进度条根本不动」。
+     *
+     * <p>根因：原来 {@link #downloadOne(String, File)} 把 `noopFeedback()` 传给
+     * {@code DownloadUtil.downloadFile} —— 那是个**什么都不做**的反馈，
+     * 于是单个文件的**字节级下载进度从来没上报过**；
+     * 而整包那行只在"每下完一个文件"时跳一次，小文件秒下完 ⇒ 看着就是完全不动。
+     *
+     * <p>这里换成真实反馈：把已下载/总大小换算成百分比回写该行。
+     * ★ 做了节流：百分比没变就不上报（避免小文件疯狂刷 UI 导致卡顿）。
+     *
+     * @param row 该文件对应的进度行；为 null 时退化为空反馈
+     */
+    protected DownloadTask.DownloadFeedback rowFeedback(final DownloadTaskListBean row) {
+        if (row == null) {
+            return noopFeedback();
+        }
+        return new DownloadTask.DownloadFeedback() {
+            private int lastPercent = -1;
+
+            @Override
+            public void updateProgress(long curr, long max) {
+                if (max <= 0) {
+                    return;
+                }
+                int percent = (int) (100L * curr / max);
+                if (percent < 0) {
+                    percent = 0;
+                } else if (percent > 100) {
+                    percent = 100;
+                }
+                if (percent == lastPercent) {
+                    return;   // 节流：没变化就不刷
+                }
+                lastPercent = percent;
+                rowProgress(row, percent);
+            }
+
+            @Override
+            public void updateSpeed(String speed) {
+            }
+        };
+    }
+
     // ==================== zip 遍历 / 解包 ====================
 
     protected boolean existsDirectory(ZipFile zip, String path) {
@@ -900,6 +947,15 @@ public abstract class BaseModpackInstallTask extends AsyncTask<Object, Integer, 
 
     /** 下载单个远程文件；任何失败都只记日志，返回是否成功 */
     protected boolean downloadOne(String url, File target) {
+        return downloadOne(url, target, null);
+    }
+
+    /**
+     * ★ 2026-10-11：带进度行的下载重载 —— 见 {@link #rowFeedback(DownloadTaskListBean)}。
+     *
+     * @param row 该文件的进度行（可为 null ⇒ 不显示逐字节进度）
+     */
+    protected boolean downloadOne(String url, File target, DownloadTaskListBean row) {
         if (url == null || url.isEmpty()) return false;
         try {
             File parent = target.getParentFile();
@@ -907,7 +963,7 @@ public abstract class BaseModpackInstallTask extends AsyncTask<Object, Integer, 
                 //noinspection ResultOfMethodCallIgnored
                 parent.mkdirs();
             }
-            return DownloadUtil.downloadFile(url, target.getAbsolutePath(), null, noopFeedback());
+            return DownloadUtil.downloadFile(url, target.getAbsolutePath(), null, rowFeedback(row));
         } catch (Throwable t) {
             android.util.Log.w("ModpackInstall", "远程文件下载失败（已跳过）: " + url, t);
             return false;

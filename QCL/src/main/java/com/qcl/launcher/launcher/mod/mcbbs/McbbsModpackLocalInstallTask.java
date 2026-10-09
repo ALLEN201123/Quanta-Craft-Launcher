@@ -189,8 +189,17 @@ public class McbbsModpackLocalInstallTask extends BaseModpackInstallTask {
                     if (url != null && fileName != null && !fileName.isEmpty()) {
                         // ★【2026-10-06】按版本隔离决定（原来是写死的 gameDir()）
                         File target = new File(runDir(), "mods" + File.separator + fileName);
-                        if ((target.isFile() && target.length() > 0) || downloadOne(url.toString(), target)) {
+                        // ★★★★★ 2026-10-11（用户实测「整合包的进度条根本不动」）：
+                        //   改成一文件一行 + 逐字节进度上报（原来是一行汇总 + 空反馈，
+                        //   小文件秒下完 ⇒ 看着完全不动）。
+                        DownloadTaskListBean fileRow = addRow(fileName);
+                        if ((target.isFile() && target.length() > 0)
+                                || downloadOne(url.toString(), target, fileRow)) {
                             ok++;
+                            rowDone(fileRow);
+                        } else {
+                            fileRow.name = fileName + "（下载失败）";
+                            rowDone(fileRow);
                         }
                     } else {
                         android.util.Log.i("ModpackInstall",

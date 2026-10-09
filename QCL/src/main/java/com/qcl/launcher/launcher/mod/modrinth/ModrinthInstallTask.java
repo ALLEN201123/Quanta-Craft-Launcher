@@ -145,8 +145,20 @@ public class ModrinthInstallTask extends BaseModpackInstallTask {
                 //   开了版本隔离的版本，游戏只读 versions/<name>/mods/ —— 原来下到 .minecraft/mods/
                 //   的结果就是"mod 下了一堆，游戏一个都看不到"（实测 49 个 mod 全躺在错误位置）。
                 File target = new File(runDir(), path);
-                if ((target.isFile() && target.length() > 0) || downloadOne(downloads.get(0).toString(), target)) {
+                // ★★★★★ 2026-10-11（用户实测「整合包的进度条根本不动」）：
+                //   原来这里是**一整行汇总**，只在"每个文件下完"时跳一次，
+                //   而且 downloadOne 用的是空反馈 ⇒ 单个文件的字节进度从不上报
+                //   ⇒ 小文件秒下完时看着就是完全不动。
+                //   现在照 Curse 那边的做法：**每个文件单独一行**，
+                //   并把这一行交给 downloadOne 做逐字节进度上报。
+                DownloadTaskListBean fileRow = addRow(path);
+                if ((target.isFile() && target.length() > 0)
+                        || downloadOne(downloads.get(0).toString(), target, fileRow)) {
                     ok++;
+                    rowDone(fileRow);
+                } else {
+                    fileRow.name = path + "（下载失败）";
+                    rowDone(fileRow);
                 }
             } catch (Throwable t) {
                 android.util.Log.w("ModpackInstall", "Modrinth 文件下载失败（已跳过，不阻断）", t);

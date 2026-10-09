@@ -336,18 +336,49 @@ public class DownloadResourceUI extends BaseDownloadUI implements View.OnClickLi
                 //   只给模组显示反而不够。真正不该显示前置的是：
                 //     · 整合包(1)：整包安装，它的"依赖"是加载器，不是一个个前置模组
                 //     · 世界(3)  ：跟模组依赖无关
-                if (resourceType == 0 || resourceType == 2) {
-                    try {
-                        deps = bean.getData().loadDependencies(repository);
-                    }
-                    catch (Throwable t) {
-                        t.printStackTrace();
-                        deps = new ArrayList<>();
-                    }
-                } else {
-                    deps = new ArrayList<>();
+                // ★★★★★ 2026-10-11 提速（用户实测「点击模组详情页/整合包详情页要加载半天」）：
+                //
+                //   原来这里是**串行**的：先 `loadDependencies()`（有几个前置就发几次 API 请求），
+                //   等它全部跑完，才轮到 `loadVersions()` —— 而"版本列表"才是玩家真正要等的东西。
+                //   前置多的模组（或网络慢时）就要等十几秒，页面一直只有转圈
+                //   ⇒ 看着就是"加载很久都还没加载完"。
+                //
+                //   现在把**依赖**挪到独立线程里并行拉（它只影响下面那一段"模组前置"区域，
+                //   拉到了再单独刷那一块），主线程立刻去拉版本列表并**尽快显示**。
+                //   依赖失败依旧当"没有依赖"处理，绝不影响版本列表。
+                final boolean needDeps = (resourceType == 0 || resourceType == 2);
+                if (needDeps) {
+                    new Thread(() -> {
+                        List<RemoteMod> depsAsync;
+                        try {
+                            depsAsync = bean.getData().loadDependencies(repository);
+                        } catch (Throwable t) {
+                            depsAsync = new ArrayList<>();
+                        }
+                        final List<RemoteMod> ready = (depsAsync == null)
+                                ? new ArrayList<>() : depsAsync;
+                        activity.runOnUiThread(() -> {
+                            try {
+                                this.dependencies = new ArrayList<>(ready);
+                                // 依赖到位后单独刷这一块（版本列表已经在显示了，不受影响）
+                                if (!ready.isEmpty()) {
+                                    modDependencyAdapter = new ModDependencyAdapter(context, activity,
+                                            repository, this.dependencies, this.dependencyTypes);
+                                    dependencyList.setAdapter(modDependencyAdapter);
+                                    dependencyLayout.setVisibility(View.VISIBLE);
+                                    reSetListViewHeight(dependencyList,
+                                            getDependencyListHeight(dependencyList)
+                                                    - dependencyList.getLayoutParams().height);
+                                }
+                            } catch (Throwable ignored) {
+                                // 依赖区域刷不出来也不影响已经显示的版本列表
+                            }
+                        });
+                    }, "qcl-deps").start();
                 }
-                this.dependencies = new ArrayList<>(deps);
+                // ★ 注意：这里**不要**给 this.dependencies 赋值 ——
+                //   上面那个异步线程拿到结果后会自己赋值并刷新依赖区域。
+                //   主流程只负责"版本列表"，两件事互不阻塞。
                 SimpleMultimap<String, RemoteMod.Version> versions = sortVersions(bean.getData().loadVersions(repository));
                 // ★ 1.2.9：依赖类型（必需/可选）**直接从已经取回来的版本列表里建表**。
                 //   1.2.7 时这一步是单独发一次请求（把整个版本列表又拉一遍），
@@ -378,30 +409,19 @@ public class DownloadResourceUI extends BaseDownloadUI implements View.OnClickLi
                 }
                 catch (Throwable ignored) {
                 }
-                List<RemoteMod> dependencies = this.dependencies;
-                if (dependencies.size() == 0) {
-                    modGameVersionAdapter = new ModGameVersionAdapter(context,versions,this);
-                    activity.runOnUiThread(() -> {
-                        dependencyLayout.setVisibility(View.GONE);
-                        versionList.setVisibility(View.VISIBLE);
-                        progressBar.setVisibility(View.GONE);
-                        versionList.setAdapter(modGameVersionAdapter);
-                        reSetListViewHeight(versionList,getVersionListHeight(versionList) - versionList.getLayoutParams().height);
-                    });
-                }
-                else {
-                    modDependencyAdapter = new ModDependencyAdapter(context,activity,repository,dependencies,this.dependencyTypes);
-                    modGameVersionAdapter = new ModGameVersionAdapter(context,versions,this);
-                    activity.runOnUiThread(() -> {
-                        dependencyLayout.setVisibility(View.VISIBLE);
-                        versionList.setVisibility(View.VISIBLE);
-                        progressBar.setVisibility(View.GONE);
-                        dependencyList.setAdapter(modDependencyAdapter);
-                        versionList.setAdapter(modGameVersionAdapter);
-                        reSetListViewHeight(dependencyList,getDependencyListHeight(dependencyList) - dependencyList.getLayoutParams().height);
-                        reSetListViewHeight(versionList,getVersionListHeight(versionList) - versionList.getLayoutParams().height);
-                    });
-                }
+                // ★★★★★ 2026-10-11：版本列表**立刻显示**，不再等依赖。
+                //   依赖是否为空由上面那个异步线程决定 ——
+                //   它拉到东西才把"模组前置"那块显示出来，拉不到/为空就保持隐藏。
+                //   这里先把依赖区域收起来、把版本列表亮出来、收掉转圈。
+                modGameVersionAdapter = new ModGameVersionAdapter(context, versions, this);
+                activity.runOnUiThread(() -> {
+                    dependencyLayout.setVisibility(View.GONE);
+                    versionList.setVisibility(View.VISIBLE);
+                    progressBar.setVisibility(View.GONE);
+                    versionList.setAdapter(modGameVersionAdapter);
+                    reSetListViewHeight(versionList,
+                            getVersionListHeight(versionList) - versionList.getLayoutParams().height);
+                });
             } catch (Exception e) {
                 e.printStackTrace();
                 activity.runOnUiThread(() -> {
