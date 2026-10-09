@@ -203,7 +203,9 @@ public class DownloadResourceAdapter extends BaseAdapter {
                         ? com.qcl.launcher.launcher.mod.HybridRemoteModRepository.platformOf(mod)
                         : src;
                 final String rid = remoteIdOf(mod);
-                viewHolder.favorite.setText(FavoriteManager.isFavorite(realSrc, rid, mod.getSlug()) ? "★" : "☆");
+                viewHolder.favorite.setText(FavoriteManager.isFavorite(realSrc, rid, mod.getSlug())
+                        ? context.getString(R.string.download_favorite_on)
+                        : context.getString(R.string.download_favorite_off));
                 viewHolder.favorite.setOnClickListener(v -> {
                     DownloadFavorite item = new DownloadFavorite();
                     item.source = realSrc;
@@ -224,8 +226,30 @@ public class DownloadResourceAdapter extends BaseAdapter {
                     }
                     // 建库时再取一次 title/description（列表数据可能已被中文翻译层改过，以详情为准更准）
                     boolean now = FavoriteManager.toggle(context, item);
-                    ((TextView) v).setText(now ? "★" : "☆");
-                    android.widget.Toast.makeText(context, now ? "已收藏" : "已取消收藏",
+                    ((TextView) v).setText(now
+                            ? context.getString(R.string.download_favorite_on)
+                            : context.getString(R.string.download_favorite_off));
+                    // ★★★★★ 2026-10-11（用户实测「收藏按钮切换和其他按钮切换的动画不一致」）：
+                    //   原来这里只是**干巴巴地换个字符**，没有任何反馈动画；
+                    //   而本项目其它按钮（列表项、启动按钮、左栏图标）都有动效。
+                    //   这里补上与列表入场同一套风格的反馈：
+                    //   先缩到 0.72 再弹回 1.0（回弹插值），让点按有"手感"。
+                    try {
+                        v.animate().cancel();
+                        v.setScaleX(0.72f);
+                        v.setScaleY(0.72f);
+                        v.animate()
+                                .scaleX(1f)
+                                .scaleY(1f)
+                                .setDuration(220L)
+                                .setInterpolator(new android.view.animation.OvershootInterpolator(2.2f))
+                                .start();
+                    } catch (Throwable ignoredAnim) {
+                        // 动画失败不影响收藏功能
+                    }
+                    android.widget.Toast.makeText(context,
+                            now ? context.getString(R.string.download_favorite_added)
+                                    : context.getString(R.string.download_favorite_removed),
                             android.widget.Toast.LENGTH_SHORT).show();
                 });
             } catch (Throwable ignoredFav) {

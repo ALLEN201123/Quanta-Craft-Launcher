@@ -196,27 +196,90 @@ public final class ModTranslations {
      */
     private static java.io.InputStream openFromAndroidAssets(String resourceName) {
         try {
-            String path = resourceName;
-            if (path.startsWith("/")) {
-                path = path.substring(1);
+            String path = normalizeAssetPath(resourceName);
+            // ★ 优先用**外部显式设置**的 Context（MainActivity 启动时 {@link #preload}
+            //   会把 Application 传进来）。这条路径最可靠 —— 不依赖任何反射与全局状态。
+            android.content.Context ctx = cachedContext;
+            if (ctx == null) {
+                // 兜底：老路径（AppGlobals 反射拿 Application）
+                //   注意必须强转成 android.content.Context 再调 getAssets()
+                //   （踩过的坑：`app.getClass().getMethod("getAssets")` 找不到 ——
+                //     getAssets 继承自 ContextWrapper，反射在 Application 类里找不到）
+                Class<?> appGlobals = Class.forName("android.app.AppGlobals");
+                Object app = appGlobals.getMethod("getInitialApplication").invoke(null);
+                if (app instanceof android.content.Context) {
+                    ctx = (android.content.Context) app;
+                }
             }
-            if (path.startsWith("assets/")) {
-                path = path.substring("assets/".length());
-            }
-            // ★ 用 AppGlobals 拿 Application，但**必须强转成 android.content.Context** 再调 getAssets()。
-            //   踩过的坑：先前用 `app.getClass().getMethod("getAssets")` ——
-            //   Application 自己的类里并没有这个方法（是继承自 ContextWrapper），
-            //   反射找不到 ⇒ 抛异常 ⇒ 被 catch 吞掉 ⇒ 表还是加载不了，
-            //   表现就是"改了但还是没中文"。强转成接口再调最稳。
-            Class<?> appGlobals = Class.forName("android.app.AppGlobals");
-            Object app = appGlobals.getMethod("getInitialApplication").invoke(null);
-            if (!(app instanceof android.content.Context)) {
+            if (ctx == null) {
                 return null;
             }
-            return ((android.content.Context) app).getAssets().open(path);
+            return ctx.getAssets().open(path);
         } catch (Throwable t) {
             return null;
         }
+    }
+
+    /**
+     * ★ 2026-10-11 新增：由 {@code MainActivity} 在启动时调用，**显式**把 Context 交进来并
+     * **主动预热**翻译表。
+     *
+     * <p>为什么需要：
+     * <ul>
+     *   <li>原来只靠 {@code AppGlobals.getInitialApplication()} 反射拿 Application，
+     *       一旦它在首次调用时还没准备好，就会返回 null ⇒ 表加载失败
+     *       ⇒ 而且失败结果会被**缓存**（mods 被设成空列表）⇒ 之后**永远没中文**，
+     *       表现就是用户实测的「下载页里的模组一个中文也没有」。</li>
+     *   <li>预热还有一个好处：1.8 MB 的表在**主线程之外**先读好，
+     *       列表滚动时才不会第一次查表就卡一下。</li>
+     * </ul>
+     *
+     * @param context 任意 Context（内部只取 ApplicationContext，不会泄漏 Activity）
+     */
+    public static void preload(final android.content.Context context) {
+        if (context == null) {
+            return;
+        }
+        try {
+            cachedContext = context.getApplicationContext() != null
+                    ? context.getApplicationContext() : context;
+        } catch (Throwable ignored) {
+            return;
+        }
+        // 放到后台线程预热：1.8 MB 的解析不该占主线程
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    MOD.loadFromResource();
+                    MOD.loadCurseForgeMap();
+                    MOD.loadModIdMap();
+                    MODPACK.loadFromResource();
+                    MODPACK.loadCurseForgeMap();
+                    MODPACK.loadModIdMap();
+                    android.util.Log.i("QCL-i18n", "翻译表预热完成: MOD="
+                            + (MOD.mods == null ? -1 : MOD.mods.size())
+                            + " MODPACK=" + (MODPACK.mods == null ? -1 : MODPACK.mods.size()));
+                } catch (Throwable t) {
+                    android.util.Log.w("QCL-i18n", "翻译表预热失败: " + t);
+                }
+            }
+        }, "qcl-i18n-preload").start();
+    }
+
+    /** ★ 外部显式设置的 Context（见 {@link #preload}）。 */
+    private static volatile android.content.Context cachedContext;
+
+    /** 把 {@code /assets/xxx.txt} 归一化成 AssetManager 认识的 {@code xxx.txt}。 */
+    private static String normalizeAssetPath(String resourceName) {
+        String path = resourceName == null ? "" : resourceName;
+        if (path.startsWith("/")) {
+            path = path.substring(1);
+        }
+        if (path.startsWith("assets/")) {
+            path = path.substring("assets/".length());
+        }
+        return path;
     }
 
     /**

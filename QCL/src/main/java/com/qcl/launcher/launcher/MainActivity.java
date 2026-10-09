@@ -166,6 +166,17 @@ implements View.OnClickListener {
             // 设不了就按系统来，不能因此崩
         }
         super.onCreate(bundle);
+        // ★★★★★ 2026-10-11（用户实测「下载页里的模组一个中文也没有，只有一堆英文原名」）：
+        //   在这里**显式**把 Context 交给翻译表并主动预热。
+        //   原来只靠 AppGlobals 反射拿 Application 去读 assets，
+        //   一旦它当时还没准备好就会加载失败，而且**失败结果会被缓存成空表**
+        //   ⇒ 之后永远查不到中文（表现就是"一个中文也没有"）。
+        //   从 Activity 拿 Context 最可靠。（preload 内部开后台线程解析，不占主线程。）
+        try {
+            com.qcl.launcher.utils.string.ModTranslations.preload(this);
+        } catch (Throwable ignoreI18n) {
+            // 翻译表加载失败绝不影响启动
+        }
         this.setContentView(R.layout.activity_main);
         this.launcherLayout = (LinearLayout)this.findViewById(R.id.launcher_layout);
         this.init();

@@ -97,9 +97,19 @@ public class DownloadFavoriteUI extends BaseUI {
             ensureViews();
             FavoriteManager.init(this.context);
             if (this.favoriteUI != null) {
-                // ★ 先置 VISIBLE 再播动画：否则动画在"还没显示"的视图上跑，等于白播
+                // ★★★★★ 2026-10-11（用户实测「收藏夹点进去是从左到右滑出来的，
+                //   而其他页面基本都是点击一下直接从中间浮现，动画不一致」）：
+                //
+                //   根因：`CustomAnimationUtils.showViewFromLeft(..., z)` 的第 4 个参数
+                //   就是"要不要播页面转场动画"：
+                //     · 收藏夹这里传的是 **true** ⇒ 播 makeInAnimation ⇒ **从左滑入**；
+                //     · 其它页面（模组/整合包/资源包…）都传 false ⇒ **瞬间显示**；
+                //     · 而 UIManager.switchMainUI 本身**不做任何页面动画**。
+                //   于是全项目只有收藏夹一个页面带滑入动画 —— 这就是"不一致"。
+                //
+                //   统一做法：**去掉收藏夹这一个特例**，改成和其它页面完全一样
+                //   （直接 VISIBLE，不播滑入）。这样所有页面切换动画就一致了。
                 this.favoriteUI.setVisibility(View.VISIBLE);
-                CustomAnimationUtils.showViewFromLeft(this.favoriteUI, this.activity, this.context, true);
             }
             rebuild();
         } catch (Throwable ignored) {

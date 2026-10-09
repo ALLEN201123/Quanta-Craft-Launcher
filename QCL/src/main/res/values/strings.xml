@@ -1175,4 +1175,8 @@ Multiplayer is powered by Terracotta (by BurningTNT). The multiplayer feature is
     <string name="microsoft_skin_model_saved">Model saved</string>
     <string name="qcl_announcement_prev">&lt;</string>
     <string name="qcl_announcement_next">&gt;</string>
+    <string name="download_favorite_on">★</string>
+    <string name="download_favorite_off">☆</string>
+    <string name="download_favorite_added">Added to favorites</string>
+    <string name="download_favorite_removed">Removed from favorites</string>
 </resources>

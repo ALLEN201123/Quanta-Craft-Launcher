@@ -1291,4 +1291,8 @@
     <string name="microsoft_skin_model_saved">模型已保存</string>
     <string name="qcl_announcement_prev">◀</string>
     <string name="qcl_announcement_next">▶</string>
+    <string name="download_favorite_on">★</string>
+    <string name="download_favorite_off">☆</string>
+    <string name="download_favorite_added">已收藏</string>
+    <string name="download_favorite_removed">已取消收藏</string>
 </resources>
