@@ -33,7 +33,8 @@
                     android:id="@+id/isolate_alert_text"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="" />
+                    android:text=""
+                    android:textColor="@color/colorPureBlack" />
             </LinearLayout>
 
             <LinearLayout
@@ -911,6 +912,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="@string/game_setting_ui_game_launcher_pojav"
+                                android:textColor="@color/colorPureBlack"
                                 android:textSize="@dimen/text_size_middle"
                                 android:id="@+id/current_launcher_isolate" />
 
@@ -989,6 +991,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="@string/game_setting_ui_pojav_renderer_gl4es_114"
+                                android:textColor="@color/colorPureBlack"
                                 android:textSize="@dimen/text_size_middle"
                                 android:id="@+id/current_pojav_renderer_isolate" />
 

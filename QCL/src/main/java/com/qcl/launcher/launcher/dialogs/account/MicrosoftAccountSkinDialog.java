@@ -468,6 +468,13 @@ public class MicrosoftAccountSkinDialog extends Dialog implements View.OnClickLi
                     setLoading(false);
                     if (cape != null) {
                         account.capeTexture = capeBase64;
+                        // ★★★★★ 2026-10-11：标记"刚本地改过披风" ⇒ 主界面在保护期内
+                        //   不会用服务端（还没生效的旧披风）覆盖刚切好的这条，
+                        //   否则会出现"对话框显示新披风、主界面显示旧披风"的不一致。
+                        try {
+                            com.qcl.launcher.launcher.uis.main.MainUI.markLocalCapeChanged();
+                        } catch (Throwable ignored) {
+                        }
                         saveAccountAndRefresh();
                         setCapeBitmap(cape);
                     }
@@ -544,6 +551,11 @@ public class MicrosoftAccountSkinDialog extends Dialog implements View.OnClickLi
                         setLoading(false);
                         // ★ 1.5.0：隐藏披风后预览也要跟着去掉（否则人物背后还挂着）
                         account.capeTexture = null;
+                        // ★ 2026-10-11：同上 —— 刚本地隐藏了披风，保护期内别被服务端旧数据回填
+                        try {
+                            com.qcl.launcher.launcher.uis.main.MainUI.markLocalCapeChanged();
+                        } catch (Throwable ignored) {
+                        }
                         saveAccountAndRefresh();
                         setCapeBitmap(null);
                         Toast.makeText(getContext(), R.string.microsoft_cape_hidden, Toast.LENGTH_SHORT).show();

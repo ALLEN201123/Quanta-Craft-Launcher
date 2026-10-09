@@ -54,6 +54,7 @@
                         android:layout_height="wrap_content"
                         android:singleLine="true"
                         android:text="@string/ui_about_bangbang93_sub"
+                        android:textColor="@color/colorPureBlack"
                         android:textSize="12sp" />
 
                 </LinearLayout>
@@ -110,6 +111,7 @@
                         android:layout_height="wrap_content"
                         android:singleLine="true"
                         android:text="@string/ui_about_mcmod_sub"
+                        android:textColor="@color/colorPureBlack"
                         android:textSize="12sp" />
 
                 </LinearLayout>
@@ -166,6 +168,7 @@
                         android:layout_height="wrap_content"
                         android:singleLine="true"
                         android:text="@string/ui_about_upstream_sub"
+                        android:textColor="@color/colorPureBlack"
                         android:textSize="12sp" />
 
                 </LinearLayout>
@@ -222,6 +225,7 @@
                         android:layout_height="wrap_content"
                         android:singleLine="true"
                         android:text="@string/ui_about_pojav_sub"
+                        android:textColor="@color/colorPureBlack"
                         android:textSize="12sp" />
 
                 </LinearLayout>
@@ -270,6 +274,7 @@
                         android:layout_height="wrap_content"
                         android:singleLine="true"
                         android:text="@string/ui_about_terracotta_sub"
+                        android:textColor="@color/colorPureBlack"
                         android:textSize="12sp" />
 
                 </LinearLayout>
@@ -317,6 +322,7 @@
                         android:layout_height="wrap_content"
                         android:singleLine="true"
                         android:text="@string/ui_about_libs_sub"
+                        android:textColor="@color/colorPureBlack"
                         android:textSize="12sp" />
 
                 </LinearLayout>
@@ -368,6 +374,7 @@
                         android:maxLines="3"
                         android:ellipsize="end"
                         android:text="@string/ui_about_fcl_sub"
+                        android:textColor="@color/colorPureBlack"
                         android:textSize="12sp" />
 
                 </LinearLayout>
@@ -425,6 +432,7 @@
                         android:maxLines="3"
                         android:ellipsize="end"
                         android:text="@string/ui_about_hmclpe_sub"
+                        android:textColor="@color/colorPureBlack"
                         android:textSize="12sp" />
 
                 </LinearLayout>
@@ -481,6 +489,7 @@
                         android:layout_height="wrap_content"
                         android:singleLine="true"
                         android:text="@string/ui_about_author_sub"
+                        android:textColor="@color/colorPureBlack"
                         android:textSize="12sp" />
 
                 </LinearLayout>
@@ -503,6 +512,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="@string/ui_about_author_style"
+                android:textColor="@color/colorPureBlack"
                 android:textSize="12sp"/>
 
         </LinearLayout>

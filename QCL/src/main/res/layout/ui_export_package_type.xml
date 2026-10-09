@@ -61,7 +61,8 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:textSize="@dimen/text_size_middle"
-                        android:text="@string/export_package_type_ui_hmcl_sub"/>
+                        android:text="@string/export_package_type_ui_hmcl_sub"
+                        android:textColor="@color/colorPureBlack"/>
 
                 </LinearLayout>
 
@@ -107,7 +108,8 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:textSize="@dimen/text_size_middle"
-                        android:text="@string/export_package_type_ui_multimc_sub"/>
+                        android:text="@string/export_package_type_ui_multimc_sub"
+                        android:textColor="@color/colorPureBlack"/>
 
                 </LinearLayout>
 
@@ -153,7 +155,8 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:textSize="@dimen/text_size_middle"
-                        android:text="@string/export_package_type_ui_server_sub"/>
+                        android:text="@string/export_package_type_ui_server_sub"
+                        android:textColor="@color/colorPureBlack"/>
 
                 </LinearLayout>
 

@@ -791,6 +791,23 @@ private void applyCachedVersionName() {
      * （见 MicrosoftAccountSkinDialog.saveAccountAndRefresh）。
      */
 public void refreshAccountModel() {
+        // ★ 2026-10-11：排障开关。默认关闭（QCL_DBG_SKIN=1 时才打印），
+        //   用来确定"上传后主界面到底有没有被刷新、刷的是哪个账号、皮肤字节数多少"。
+        //   —— 因为"加了刷新但界面没变"这种问题，靠读代码推断容易错，必须看实证。
+        final boolean dbg = "1".equals(System.getenv("QCL_DBG_SKIN"));
+        if (dbg) {
+            try {
+                com.qcl.launcher.auth.Account a0 = activity.publicGameSetting.account;
+                System.out.println("[QCL-skin] refreshAccountModel 被调用: account="
+                        + (a0 == null ? "null" : a0.auth_player_name)
+                        + " loginType=" + (a0 == null ? -1 : a0.loginType)
+                        + " textureLen=" + (a0 == null || a0.texture == null ? 0 : a0.texture.length())
+                        + " model=" + (a0 == null || a0.model == null ? "null" : a0.model.name())
+                        + " gltf=" + (gltfRenderer != null)
+                        + " container=" + (accountModelContainer != null));
+            } catch (Throwable ignored) {
+            }
+        }
         if (accountModelContainer == null) {
             return;
         }
@@ -1029,6 +1046,14 @@ private void fetchMicrosoftCapeOnce(final com.qcl.launcher.auth.Account account)
             || account.auth_access_token.trim().isEmpty()) {
         return;
     }
+    // ★★★★★ 2026-10-11 修（用户实测「换肤对话框里的披风显示与主界面披风显示依旧不一致」）：
+    //   与皮肤同一个坑 —— 玩家刚在对话框里**切换/隐藏了披风**，
+    //   而微软服务端生效有延迟，此时用服务端数据回填会把刚做的改动覆盖回去，
+    //   于是"对话框里是新披风、主界面还是旧披风"（或反过来）。
+    //   保护期内一律跳过服务端同步（与 SKIN_UPLOAD_GRACE_MS 同一套机制）。
+    if (System.currentTimeMillis() - lastLocalCapeChangeAt < SKIN_UPLOAD_GRACE_MS) {
+        return;
+    }
     // 防抖：同一次进主界面若被多次调用，别重复发请求
     if (capeFetchInFlight) {
         return;
@@ -1189,6 +1214,21 @@ private static volatile long lastLocalSkinUploadAt = 0L;
  */
 public static void markLocalSkinUploaded() {
     lastLocalSkinUploadAt = System.currentTimeMillis();
+}
+
+/** 最近一次**本地切换/隐藏披风**的时间戳（0 表示还没动过）。 */
+private static volatile long lastLocalCapeChangeAt = 0L;
+
+/**
+ * ★ 2026-10-11：玩家在换肤对话框里切换或隐藏披风后由对话框调用。
+ *
+ * <p>作用与 {@link #markLocalSkinUploaded()} 相同：保护期内
+ * {@link #fetchMicrosoftCapeOnce} **不再用服务端数据回填** ——
+ * 微软服务端生效有延迟，此刻回填会把玩家刚做的改动覆盖回去，
+ * 表现就是"对话框里的披风和主界面显示的不一致"。
+ */
+public static void markLocalCapeChanged() {
+    lastLocalCapeChangeAt = System.currentTimeMillis();
 }
 
     /**
