@@ -101,8 +101,21 @@ public class DownloadModUI extends BaseUI implements View.OnClickListener, Adapt
                     DownloadModUI.this.isSearching = false;
                 }
                 if (message.what == 2) {
+                    // ★★★★★ 2026-10-11 修复（用户实测：「转圈转半天，突然圈消失了，
+                    //   给我来了一张空白的列表，我还要再点一次刷新，列表才有可能出现」）：
+                    //
+                    //   原来这里除了收进度圈，还**把整个列表 setVisibility(8) 隐藏掉** ——
+                    //   一旦这次搜索失败（国内连 CurseForge/Modrinth 超时很常见），
+                    //   玩家看到的就是"圈转完 → 一片空白"，而不是"保留上一次的结果"。
+                    //   更糟的是这个空白会让人以为整个页面坏了。
+                    //
+                    //   照 FCL 的做法改：失败时**保留列表原样可见**（有旧结果就继续显示旧结果，
+                    //   没有就是空列表但页面结构还在），只收掉进度圈、并把搜索标志复位
+                    //   —— 这样玩家可以立刻再点一次刷新，不必先面对一张白纸。
                     DownloadModUI.this.progressBar.setVisibility(8);
-                    DownloadModUI.this.modListView.setVisibility(8);
+                    if (DownloadModUI.this.modListView != null) {
+                        DownloadModUI.this.modListView.setVisibility(0);
+                    }
                     DownloadModUI.this.isSearching = false;
                 }
             }
