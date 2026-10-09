@@ -246,16 +246,29 @@ public class DownloadWorldUI extends BaseUI implements View.OnClickListener, Ada
         try {
             this.searchHandler.sendEmptyMessage(0);
             List list = (List) this.repository.search(this.editVersion.getText().toString(), (RemoteModRepository.Category) this.categoryListAdapter.getItem(this.editCategory.getSelectedItemPosition()), 0, 50, this.editName.getText().toString(), RemoteMod.getSortTypeByPosition(this.editSort.getSelectedItemPosition()), RemoteModRepository.SortOrder.DESC).collect(Collectors.toList());
-            this.worldList.clear();
-            this.worldList.addAll(list);
             List list2 = (List) this.repository.getCategories().collect(Collectors.toList());
-            this.categoryList.clear();
-            this.categoryList.add(new RemoteModRepository.Category(CurseForgeRemoteModRepository.CATEGORY_ALL, "0", new ArrayList()));
-            for (int i = 0; i < list2.size(); i++) {
-                this.categoryList.add((RemoteModRepository.Category) list2.get(i));
-                this.categoryList.addAll(((RemoteModRepository.Category) list2.get(i)).getSubcategories());
-            }
-            this.searchHandler.sendEmptyMessage(1);
+            // ★★★★★ 2026-10-11 修「跨线程改 UI」崩溃（与模组页同因，logcat 实锤）：
+            //   ViewRootImpl$CalledFromWrongThreadException —— 后台线程不能碰 View。
+            //   这里原来在 new Thread 里直接 worldList.clear/addAll、
+            //   categoryList.clear/add ⇒ 抛异常 ⇒ 本页空白 + 视图树被搞坏 ⇒ "感染"其他页。
+            //   修法：网络留在后台，UI 操作搬回主线程。
+            final List finalList = list;
+            final List finalCategories = list2;
+            this.activity.runOnUiThread(() -> {
+                try {
+                    this.worldList.clear();
+                    this.worldList.addAll(finalList);
+                    this.categoryList.clear();
+                    this.categoryList.add(new RemoteModRepository.Category(CurseForgeRemoteModRepository.CATEGORY_ALL, "0", new ArrayList()));
+                    for (int i = 0; i < finalCategories.size(); i++) {
+                        this.categoryList.add((RemoteModRepository.Category) finalCategories.get(i));
+                        this.categoryList.addAll(((RemoteModRepository.Category) finalCategories.get(i)).getSubcategories());
+                    }
+                    this.searchHandler.sendEmptyMessage(1);
+                } catch (Throwable uiErr) {
+                    this.searchHandler.sendEmptyMessage(2);
+                }
+            });
         } catch (Exception e) {
             this.searchHandler.sendEmptyMessage(2);
             e.printStackTrace();

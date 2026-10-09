@@ -276,20 +276,39 @@ public class DownloadPackageUI extends BaseUI implements View.OnClickListener, A
                     ? null
                     : (RemoteModRepository.Category) this.categoryListAdapter.getItem(this.editCategory.getSelectedItemPosition());
             List list = (List) this.repository.search(this.editVersion.getText().toString(), category, 0, 50, this.editName.getText().toString(), RemoteMod.getSortTypeByPosition(this.editSort.getSelectedItemPosition()), RemoteModRepository.SortOrder.DESC).collect(Collectors.toList());
-            this.packageList.clear();
-            this.packageList.addAll(list);
             List list2 = (List) this.repository.getCategories().collect(Collectors.toList());
+            // ★★★★★ 2026-10-11 修「跨线程改 UI」崩溃（与模组页同因，logcat 实锤）：
+            //   ViewRootImpl$CalledFromWrongThreadException: Only the original thread
+            //   that created a view hierarchy can touch its views.
+            //   本方法跑在 new Thread(...) 里，却直接做了
+            //     packageList.clear/addAll、categoryList.clear/add、notifyDataSetChanged
+            //   —— 全是 UI 操作。异常一抛：本页空白，且视图树状态被搞坏
+            //   ⇒ 切到整合包/资源包/账号页也渲染不出来（"感染"）。
+            //   修法：网络留在后台（上面两行），**UI 操作整段搬回主线程**。
+            final List finalList = list;
+            final List finalCategories = list2;
+            final int finalSrcPos = srcPos;
+            final boolean finalHybrid = hybrid;
+            this.activity.runOnUiThread(() -> {
+            try {
+            this.packageList.clear();
+            this.packageList.addAll(finalList);
             this.categoryList.clear();
-            if (hybrid) {
+            if (finalHybrid) {
                 this.categoryList.add(new RemoteModRepository.Category(CurseForgeRemoteModRepository.CATEGORY_ALL, "0", new ArrayList()));
             } else {
-                this.categoryList.add(new RemoteModRepository.Category(srcPos == 0 ? CurseForgeRemoteModRepository.CATEGORY_ALL : ModrinthRemoteModRepository.CATEGORY_ALL, srcPos == 0 ? "0" : "all", new ArrayList()));
-                for (int i = 0; i < list2.size(); i++) {
-                    this.categoryList.add((RemoteModRepository.Category) list2.get(i));
-                    this.categoryList.addAll(((RemoteModRepository.Category) list2.get(i)).getSubcategories());
+                this.categoryList.add(new RemoteModRepository.Category(finalSrcPos == 0 ? CurseForgeRemoteModRepository.CATEGORY_ALL : ModrinthRemoteModRepository.CATEGORY_ALL, finalSrcPos == 0 ? "0" : "all", new ArrayList()));
+                for (int i = 0; i < finalCategories.size(); i++) {
+                    this.categoryList.add((RemoteModRepository.Category) finalCategories.get(i));
+                    this.categoryList.addAll(((RemoteModRepository.Category) finalCategories.get(i)).getSubcategories());
                 }
             }
             this.searchHandler.sendEmptyMessage(1);
+            } catch (Throwable uiErr) {
+                // 主线程里出问题也要复位，别让界面永远卡在转圈
+                this.searchHandler.sendEmptyMessage(2);
+            }
+            });
             // ★ 与模组页一致：聚合模式下只有一源成功时提示"结果可能不全"（照 FCL）
             final String partialFailed = hybrid ? HybridRemoteModRepository.lastPartialWarning() : null;
             final boolean hasResults = this.packageList != null && !this.packageList.isEmpty();

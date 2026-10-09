@@ -361,8 +361,32 @@ public class DownloadModUI extends BaseUI implements View.OnClickListener, Adapt
                     ? null
                     : (RemoteModRepository.Category) this.categoryListAdapter.getItem(this.typeSpinner.getSelectedItemPosition());
             List list = (List) this.repository.search(this.editVersion.getText().toString(), category, 0, 50, this.editName.getText().toString(), RemoteMod.getSortTypeByPosition(this.sortSpinner.getSelectedItemPosition()), RemoteModRepository.SortOrder.DESC).collect(Collectors.toList());
+            List list2 = (List) this.repository.getCategories().collect(Collectors.toList());
+            // ★★★★★ 2026-10-11 关键修复（用户实测「模组页刷新后一片空白，还会感染其他页面」）：
+            //
+            //   真凶（logcat 实锤）：
+            //     android.view.ViewRootImpl$CalledFromWrongThreadException:
+            //       Only the original thread that created a view hierarchy can touch its views.
+            //         at DownloadModUI.m477xbfb3ff53(DownloadModUI.java:367)
+            //   本方法跑在**后台线程**，却直接调用了
+            //     modList.clear() / modList.addAll() / modListAdapter.notifyDataSetChanged()
+            //     categoryList.clear() / categoryList.add() ...
+            //   —— 这些全都是 UI 操作（notifyDataSetChanged 会立刻触发 ListView 重绘）。
+            //   Android 禁止非创建线程碰 View，于是抛异常：
+            //     · 搜索被中断，列表**永远停在空白**
+            //     · 异常发生在 ViewRootImpl 的绘制路径上 ⇒ 整个视图树状态被搞坏
+            //       ⇒ 之后切到整合包/资源包/账号页也**渲染不出来**（用户说的"感染"）
+            //
+            //   修法：**网络请求留在后台线程**（上面两行 search/getCategories 不动），
+            //         把**所有集合与适配器操作搬到主线程**执行。
+            final List finalList = list;
+            final List finalCategories = list2;
+            final int finalSrcPos = srcPos;
+            final boolean finalHybrid = hybrid;
+            this.activity.runOnUiThread(() -> {
+            try {
             this.modList.clear();
-            this.modList.addAll(list);
+            this.modList.addAll(finalList);
             if (this.modListAdapter != null) {
                 this.modListAdapter.notifyDataSetChanged();
                 // ★ 1.5.0：数据填好后给列表一次入场动画（用户要求「列表没有动态切换」）。
@@ -373,19 +397,23 @@ public class DownloadModUI extends BaseUI implements View.OnClickListener, Adapt
                     }
                 });
             }
-            List list2 = (List) this.repository.getCategories().collect(Collectors.toList());
             this.categoryList.clear();
-            if (hybrid) {
+            if (finalHybrid) {
                 // ★ 混合：只给「全部」一项，并同步把下拉选中项复位到第 0 项
                 this.categoryList.add(new RemoteModRepository.Category(CurseForgeRemoteModRepository.CATEGORY_ALL, "0", new ArrayList()));
             } else {
-                this.categoryList.add(new RemoteModRepository.Category(srcPos == 0 ? CurseForgeRemoteModRepository.CATEGORY_ALL : ModrinthRemoteModRepository.CATEGORY_ALL, srcPos == 0 ? "0" : "all", new ArrayList()));
-                for (int i = 0; i < list2.size(); i++) {
-                    this.categoryList.add((RemoteModRepository.Category) list2.get(i));
-                    this.categoryList.addAll(((RemoteModRepository.Category) list2.get(i)).getSubcategories());
+                this.categoryList.add(new RemoteModRepository.Category(finalSrcPos == 0 ? CurseForgeRemoteModRepository.CATEGORY_ALL : ModrinthRemoteModRepository.CATEGORY_ALL, finalSrcPos == 0 ? "0" : "all", new ArrayList()));
+                for (int i = 0; i < finalCategories.size(); i++) {
+                    this.categoryList.add((RemoteModRepository.Category) finalCategories.get(i));
+                    this.categoryList.addAll(((RemoteModRepository.Category) finalCategories.get(i)).getSubcategories());
                 }
             }
             this.searchHandler.sendEmptyMessage(1);
+            } catch (Throwable uiErr) {
+                // 主线程里出问题也要复位，别让界面永远卡在转圈
+                this.searchHandler.sendEmptyMessage(2);
+            }
+            });
             // ★ 照 FCL `searchAggregated`：聚合模式下若**只有一源成功**，
             //   结果照常显示，但要告诉玩家"可能不全"（否则玩家以为那就是全部）。
             //   ⚠ 本方法跑在**后台线程** ⇒ 只能取值，弹 Toast 必须回主线程（在 handler what==1 里做）。

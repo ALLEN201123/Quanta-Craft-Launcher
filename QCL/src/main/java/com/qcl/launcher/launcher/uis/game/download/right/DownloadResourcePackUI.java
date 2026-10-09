@@ -289,17 +289,33 @@ public class DownloadResourcePackUI extends BaseUI implements View.OnClickListen
         try {
             this.searchHandler.sendEmptyMessage(0);
             List list = (List) this.repository.search(this.editVersion.getText().toString(), (RemoteModRepository.Category) this.categoryListAdapter.getItem(this.editCategory.getSelectedItemPosition()), 0, 50, this.editName.getText().toString(), RemoteMod.getSortTypeByPosition(this.editSort.getSelectedItemPosition()), RemoteModRepository.SortOrder.DESC).collect(Collectors.toList());
-            this.resourcePackList.clear();
-            this.resourcePackList.addAll(list);
             List list2 = (List) this.repository.getCategories().collect(Collectors.toList());
-            this.categoryList.clear();
-            boolean z = this.downloadSourceSpinner.getSelectedItemPosition() == 1;
-            this.categoryList.add(new RemoteModRepository.Category(z ? ModrinthRemoteModRepository.CATEGORY_ALL : CurseForgeRemoteModRepository.CATEGORY_ALL, z ? "all" : "0", new ArrayList()));
-            for (int i = 0; i < list2.size(); i++) {
-                this.categoryList.add((RemoteModRepository.Category) list2.get(i));
-                this.categoryList.addAll(((RemoteModRepository.Category) list2.get(i)).getSubcategories());
-            }
-            this.searchHandler.sendEmptyMessage(1);
+            // ★★★★★ 2026-10-11 修「跨线程改 UI」崩溃（与模组页同因，logcat 实锤）：
+            //   ViewRootImpl$CalledFromWrongThreadException: Only the original thread
+            //   that created a view hierarchy can touch its views.
+            //   本方法跑在 new Thread(...) 里，却直接做了
+            //     resourcePackList.clear/addAll、categoryList.clear/add
+            //   —— 全是 UI 操作。异常一抛：本页空白，视图树状态被搞坏
+            //   ⇒ 切到别的页面也渲染不出来（用户说的"感染"）。
+            //   修法：网络留在后台（上面两行），**UI 操作整段搬回主线程**。
+            final List finalList = list;
+            final List finalCategories = list2;
+            final boolean z = this.downloadSourceSpinner.getSelectedItemPosition() == 1;
+            this.activity.runOnUiThread(() -> {
+                try {
+                    this.resourcePackList.clear();
+                    this.resourcePackList.addAll(finalList);
+                    this.categoryList.clear();
+                    this.categoryList.add(new RemoteModRepository.Category(z ? ModrinthRemoteModRepository.CATEGORY_ALL : CurseForgeRemoteModRepository.CATEGORY_ALL, z ? "all" : "0", new ArrayList()));
+                    for (int i = 0; i < finalCategories.size(); i++) {
+                        this.categoryList.add((RemoteModRepository.Category) finalCategories.get(i));
+                        this.categoryList.addAll(((RemoteModRepository.Category) finalCategories.get(i)).getSubcategories());
+                    }
+                    this.searchHandler.sendEmptyMessage(1);
+                } catch (Throwable uiErr) {
+                    this.searchHandler.sendEmptyMessage(2);
+                }
+            });
         } catch (Exception e) {
             this.searchHandler.sendEmptyMessage(2);
             e.printStackTrace();
