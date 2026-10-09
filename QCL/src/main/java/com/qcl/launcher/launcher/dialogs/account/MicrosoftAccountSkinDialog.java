@@ -664,6 +664,17 @@ public class MicrosoftAccountSkinDialog extends Dialog implements View.OnClickLi
                     //   原来只刷新预览、关掉对话框就没了（用户实测「点了确定根本上传不了」）。
                     try {
                         account.texture = Avatar.bitmapToString(skinImg);
+                        // ★★★★★ 2026-10-11：标记"刚刚本地换过皮肤" ⇒ 主界面在保护期内
+                        //   **不会**用服务端（还没处理完的旧皮肤）覆盖这张新皮肤，
+                        //   否则会出现"对话框显示新皮肤、主界面显示旧皮肤"的不一致。
+                        //   （照 FCL 的做法：上传后刻意不重新拉服务端预览。）
+                        try {
+                            if (activity != null && activity.uiManager != null
+                                    && activity.uiManager.mainUI != null) {
+                                com.qcl.launcher.launcher.uis.main.MainUI.markLocalSkinUploaded();
+                            }
+                        } catch (Throwable ignored) {
+                        }
                         saveAccountAndRefresh();
                         previewSkin(skinImg);
                     } catch (Throwable ignored) {

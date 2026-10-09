@@ -1098,6 +1098,23 @@ private void fetchMicrosoftSkinOnce(final com.qcl.launcher.auth.Account account)
             || account.auth_access_token == null || account.auth_access_token.trim().isEmpty()) {
         return;
     }
+    // ★★★★★ 2026-10-11【关键】本地刚上传过 ⇒ **在保护期内不许用服务端覆盖**。
+    //
+    //   为什么（照 FCL 的原话）—— FCL 的 MicrosoftAccountSkinDialog.kt 里明确写着：
+    //     "Don't call refreshPreview() here — the binding resets to fallback
+    //      before async fetch completes. The preview from updatePreviewFromFile()
+    //      already shows the correct uploaded skin."
+    //   即：**上传成功后不要去重新拉服务端**，因为微软服务端处理有延迟，
+    //   立刻拉回来的是**旧皮肤**，会把刚上传的新皮肤覆盖掉。
+    //
+    //   我先前加的"每次进主界面都拉一次服务端"正好踩了这个坑 ⇒
+    //   玩家上传完回主界面，主界面又被旧皮肤盖回去，与对话框里显示的新皮肤不一致。
+    //
+    //   现在：上传成功后的 {@link #SKIN_UPLOAD_GRACE_MS} 内**跳过服务端同步**，
+    //   让本地刚上传的那张保持权威（这段窗口足够微软处理完，之后自动恢复正常同步）。
+    if (System.currentTimeMillis() - lastLocalSkinUploadAt < SKIN_UPLOAD_GRACE_MS) {
+        return;
+    }
     if (skinFetchInFlight) {
         return;
     }
@@ -1146,6 +1163,33 @@ private void fetchMicrosoftSkinOnce(final com.qcl.launcher.auth.Account account)
 }
 
 private boolean skinFetchInFlight;
+
+/**
+ * ★ 2026-10-11：**本地皮肤上传保护期**（毫秒）。
+ *
+ * <p>玩家在换肤对话框里上传成功后，记下时间戳；在保护期内
+ * {@link #fetchMicrosoftSkinOnce} **不再向服务端同步皮肤** ——
+ * 因为微软服务端处理有延迟（通常几十秒），此刻拉回来的是旧皮肤，
+ * 会把刚上传的新皮肤覆盖掉，造成"主界面与对话框显示不一致"。
+ *
+ * <p>这与 FCL 的做法一致：FCL 上传成功后刻意**不**重新拉取预览
+ * （源码注释："Don't call refreshPreview() here — the binding resets to fallback
+ * before async fetch completes"）。
+ *
+ * <p>取 5 分钟：足够服务端处理完，又不至于让"在别处换了皮肤"永远同步不过来。
+ */
+public static final long SKIN_UPLOAD_GRACE_MS = 5 * 60 * 1000L;
+
+/** 最近一次本地皮肤上传成功的时间戳（0 表示还没上传过）。 */
+private static volatile long lastLocalSkinUploadAt = 0L;
+
+/**
+ * ★ 2026-10-11：换肤上传成功后由 {@code MicrosoftAccountSkinDialog} 调用，
+ * 标记"刚刚本地换过皮肤"，从而在保护期内跳过服务端同步。
+ */
+public static void markLocalSkinUploaded() {
+    lastLocalSkinUploadAt = System.currentTimeMillis();
+}
 
     /**
      * ★ 1.5.0：入参既可以是**披风文件路径**（离线账号，`offlineSkinSetting.capePath`），
