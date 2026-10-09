@@ -1,16 +1,16 @@
 {
   "latestRelease": {
-    "versionCode": 351,
-    "versionName": "1.4.9",
-    "date": "2026-10-07",
+    "versionCode": 352,
+    "versionName": "1.5.0",
+    "date": "2026-10-10",
     "url": [
-      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.4.9/QCL-release-1.4.9-universal.apk",
-      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.4.9/QCL-release-1.4.9-arm64.apk",
-      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.4.9/QCL-release-1.4.9-arm.apk",
-      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.4.9/QCL-release-1.4.9-x86_64.apk",
-      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.4.9/QCL-release-1.4.9-x86.apk"
+      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.5.0/QCL-release-1.5.0-universal.apk",
+      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.5.0/QCL-release-1.5.0-arm64.apk",
+      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.5.0/QCL-release-1.5.0-arm.apk",
+      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.5.0/QCL-release-1.5.0-x86_64.apk",
+      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.5.0/QCL-release-1.5.0-x86.apk"
     ],
     "netdiskUrl": "https://pan.quark.cn/s/f2c26c4fb66f",
-    "updateLog": "1.4.9：整合包全格式落地 + 渲染器按版本独立 + 1.0 补上中文 + 包体积大瘦身\n\n【整合包】五种格式下完就能直接玩：mod 与配置按版本隔离落到 versions/<版本>/（实测 Fabulously Optimized 148 个 mod 全部到位，不再一股脑堆在 .minecraft 根目录）；下载页点版本即可下载并自动安装，覆盖 Curse / Modrinth / MultiMC / MCBBS / QCL；26.x 的 patches 新格式（没有 inheritsFrom 的那种）现在会被正确应用。\n\n【微软登录】换回 1.4.7 的独立全屏授权页，登录按钮的转圈动画一并恢复；修掉 Android 16 / vivo 等机型上「授权成功后收尾崩溃」。\n\n【1.0 补上中文】1.0 的语言文件本来就全，缺的是游戏里直接写死、查不到语言表的那部分英文。这次补齐了暂停菜单（Game menu / Back to game / Save and quit to title）、世界列表（Select world / Wrong location! / Loading level）、存档过程（Saving chunks / Saving level / OpenGL: / Java:）等；同时避开统计/成就用的 key 和启动参数名，避免统计异常或启动失败。\n\n【渲染器】按版本独立，换渲染器只影响该版本、不再污染全局设置；修掉「查不到就悄悄换成另一个」的行为；MobileGlues 按插件自己声明的方式注入环境变量。\n\n【退出游戏】正常退出时补上收尾回调，不再卡在最后一帧退不回主界面。\n\n【体积】【体积】按本地实测文件：arm64 326 MB → 206 MB（−120 MB）、x86 317 MB → 192 MB、arm 322 MB → 199 MB、x86_64 326 MB → 212 MB、universal 421 MB → 411 MB；五个架构合计 1711 MB → 1220 MB（**−491 MB**）。1.4.6 / 1.4.7 / 1.4.8 三个版本大小几乎相同（约 1711 MB），等于连续三个版本累计砍掉近半。全架构包按设计包含全部 4 个架构，体积本来就最大。\n\n【这次没做，都留给 1.5.0】① Minecraft 26.3 与 Vulkan 检测——官方 26.3 对着色器要求更严格，部分设备需要 Vulkan，本版本请用 26.2 及以下；② 界面与背景图重构。\n\n【已走通】微软登录完整流程、整合包安装与启动、1.0 中文、渲染器切换，均已实测。"
+    "updateLog": "1.5.0：界面大重做 + 3D 人物换 FCL 同款 + 微软披风完整接入 + 下载页全面修复\n\n【界面大重做｜新旧都保留，随时可切回】\n· 新排版：左侧纯图标竖排导航常驻，切到版本列表/下载/设置等二级页面也不用先退回主界面；\n  右侧常驻「账号 + 版本名 + 启动游戏」区块。\n· 排版可切换：设置 → 外观 → 排版 → 新排版 / 旧排版（旧排版原样保留，重启生效）。\n· 主题与主题色：设置 → 外观 → 主题。\n· 背景昼夜：默认（按现实时间自动切换）/ 白天 / 黑夜 / 自定义 / 网络。\n· 没有任何版本时，点「启动游戏」会直接跳到下载版本页。\n· 主界面新增公告栏，可隐藏。\n\n【昼夜与配色｜成套翻转】\n· 壁纸、面板底色、文字色成套随昼夜翻转，不再出现「深底黑字看不见」。\n· 修掉夜间模式下多处白块/黑字；修掉换肤对话框白块与按钮颜色不统一。\n· 修掉账号页「认证服务器」下方说明文字夜间看不见。\n· 全项目 53 处文字补齐昼夜配色。\n\n【3D 人物｜换成 FCL 同款 glTF 管线】\n· 骨骼动画：站立待机 + 3 个变体，每 8~15 秒随机播一个（FCL 原版规则）。\n· 单指 360° 旋转、双指缩放；纹理实时更新。\n· 修掉「手臂先粗后细要切页面才变回来」「选了经典又变回苗条」「换皮肤后披风消失」。\n\n【微软账号｜皮肤与披风】\n· 微软披风此前从未被拉取过（接口分支被注释、账号也没字段），现已完整接入。\n· 修掉「披风永远取列表第一件」——所以以前怎么切都是同一件。\n· 换肤对话框的「确定」改为「上传」（照 FCL：选完文件先预览，点上传才提交）。\n· 模型选择（经典/苗条）改为持久化，并以服务端声明为准。\n· 皮肤与披风自动跟随微软服务端：在官网或别的启动器改过，回主界面自动同步。\n\n【下载页】\n· 修掉「模组名一个中文也没有」：翻译表 31062 条此前因中文判定写错而从不被查询。\n· 修掉中文名与英文重复两遍（钠 (Sodium) Sodium → 钠 (Sodium)）。\n· 修掉「刷新后整页空白，还会把整合包/资源包/账号页一起弄空白」。\n· 彻底移除「加载版本列表失败，点击此处重试」提示。\n· 详情页不再加载半天（依赖改并行，版本列表立刻显示）。\n· 收藏按钮补点击动效；收藏页进场动画与其它页统一；列表切分类统一逐行滑入。\n\n【整合包安装】\n· 修掉「进度条根本不动」：单文件下载进度从未上报。现在每个文件单独一行并实时显示进度。\n· 修掉取消按钮点了没反应、文件列表只显示一行。\n\n【多人联机 / 稳定性】\n· 多人联机改为完整二级页面（房主教程 7 步 + 房客教程 5 步，全文照搬 FCL）。\n· 修掉「启动游戏时突然竖屏→闪退→回到横屏启动器」。\n· 修掉 26.3 / 26.4 崩溃（JNA 版本错配 + MC 降级死循环）。\n· 防杀后台：前台服务 specialUse。\n· 版本分类补齐 41 条缺失版本，并新增 2.0 愚人节三个版本。\n· 中文覆盖补齐，界面 0 缺失。\n\n【已知问题】Minecraft 26.3 暂不可用——官方对着色器要求更严格，部分设备需要 Vulkan；\n检测与引导顺延到 1.5.1，本版本请用 26.2 及以下。"
   }
 }
