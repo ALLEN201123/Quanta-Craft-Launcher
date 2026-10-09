@@ -1326,17 +1326,21 @@ private void fetchMicrosoftSkinOnce(final com.qcl.launcher.auth.Account account)
             // ★★★★★ 2026-10-11：**把服务端声明的模型变体读出来并应用**。
             //   这是"手臂粗细不对"的正解 —— 微软 profile 里每个 skin 都带
             //   `variant`（CLASSIC / SLIM），而老代码从来没读过，
-            //   只能靠皮肤像素自己猜，猜错手臂就变粗
-            //   （用户实测「刚进启动器手臂是粗的，过一会又变苗条」）。
-            //   服务端声明比像素猜测权威 ⇒ 用它覆盖 account.model。
-            final String variant = com.qcl.launcher.auth.microsoft.Msa.LAST_SKIN_VARIANT;
+            //   只能靠皮肤像素自己猜，猜错手臂就变粗。
+            //
+            //   ★ 注意：必须从**这一次请求返回的 profile** 里取，
+            //     不能用静态字段缓存（我先前那样做过，结果被别的调用覆盖了变体，
+            //     用户实测「他把苗条的手臂变成了史蒂夫的经典手臂」）。
+            //     getActiveSkinSlim 直接从 profile 现取 ⇒ 值必然与皮肤配套。
+            final Boolean serverSlim =
+                    com.qcl.launcher.auth.microsoft.Msa.getActiveSkinSlim(profile);
             final com.qcl.launcher.auth.yggdrasil.TextureModel serverModel;
-            if ("SLIM".equalsIgnoreCase(variant)) {
-                serverModel = com.qcl.launcher.auth.yggdrasil.TextureModel.ALEX;
-            } else if ("CLASSIC".equalsIgnoreCase(variant)) {
-                serverModel = com.qcl.launcher.auth.yggdrasil.TextureModel.STEVE;
+            if (serverSlim == null) {
+                serverModel = null;   // 服务端没声明 ⇒ 保持本地已保存的选择，绝不瞎猜
             } else {
-                serverModel = null;   // 服务端没给 ⇒ 保持本地已保存的选择
+                serverModel = serverSlim
+                        ? com.qcl.launcher.auth.yggdrasil.TextureModel.ALEX
+                        : com.qcl.launcher.auth.yggdrasil.TextureModel.STEVE;
             }
             final boolean modelSame = (serverModel == null || serverModel == account.model);
             // 无论有没有变化都记一次同步时间 —— 否则防抖失效，
