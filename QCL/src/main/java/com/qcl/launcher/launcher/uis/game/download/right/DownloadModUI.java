@@ -20,6 +20,7 @@ import android.widget.SpinnerAdapter;
 import android.widget.TextView;
 import com.qcl.launcher.launcher.MainActivity;
 import com.qcl.launcher.launcher.list.download.DownloadResourceAdapter;
+import com.qcl.launcher.launcher.mod.HybridRemoteModRepository;
 import com.qcl.launcher.launcher.mod.LocalizedRemoteModRepository;
 import com.qcl.launcher.launcher.mod.RemoteMod;
 import com.qcl.launcher.launcher.mod.RemoteModRepository;
@@ -112,6 +113,23 @@ public class DownloadModUI extends BaseUI implements View.OnClickListener, Adapt
         };
     }
 
+    /**
+     * 「下载源」下拉的选中项 → 实际仓库。
+     *
+     * <p>★ 1.5.0 用户要求混合搜索：下拉多了一项「CurseForge + Modrinth」，
+     *   选中时用 {@link HybridRemoteModRepository} 并发查两站再合并去重。
+     *   （下标 0=CurseForge、1=Modrinth、2=混合；别用字符串比，别写死 magic number。）
+     */
+    private RemoteModRepository repositoryForPosition(int position) {
+        if (position == 2) {
+            return HybridModRepository.MODS;
+        }
+        if (position == 1) {
+            return ModrinthRemoteModRepository.MODS;
+        }
+        return CurseForgeRemoteModRepository.MODS;
+    }
+
     /* JADX INFO: Access modifiers changed from: private */
     /* loaded from: classes2.dex */
     public class Repository extends LocalizedRemoteModRepository {
@@ -120,10 +138,7 @@ public class DownloadModUI extends BaseUI implements View.OnClickListener, Adapt
 
         @Override // com.qcl.launcher.launcher.mod.LocalizedRemoteModRepository
         protected RemoteModRepository getBackedRemoteModRepository() {
-            if (DownloadModUI.this.downloadSourceSpinner.getSelectedItemPosition() == 1) {
-                return ModrinthRemoteModRepository.MODS;
-            }
-            return CurseForgeRemoteModRepository.MODS;
+            return repositoryForPosition(DownloadModUI.this.downloadSourceSpinner.getSelectedItemPosition());
         }
 
         @Override // com.qcl.launcher.launcher.mod.RemoteModRepository
@@ -151,11 +166,15 @@ public class DownloadModUI extends BaseUI implements View.OnClickListener, Adapt
         this.sourceList = arrayList;
         arrayList.add(this.context.getString(R.string.download_mod_source_curse_forge));
         this.sourceList.add(this.context.getString(R.string.download_mod_source_modrinth));
+        // ★ 1.5.0 混合搜索：第三项，两站并发查完合并去重（见 HybridRemoteModRepository）
+        this.sourceList.add(this.context.getString(R.string.download_mod_source_hybrid));
         ArrayAdapter<String> arrayAdapter2 = new ArrayAdapter<>(this.context, R.layout.item_spinner, this.sourceList);
         this.sourceListAdapter = arrayAdapter2;
         arrayAdapter2.setDropDownViewResource(R.layout.item_spinner_drop_down);
         this.downloadSourceSpinner.setAdapter((SpinnerAdapter) this.sourceListAdapter);
-        this.downloadSourceSpinner.setSelection(1);
+        // ★ 2026-10-09 用户要求：「把混合设置为默认」⇒ 停在第 3 项（下标 2）。
+        //   注意必须放在 setAdapter 之后、注册监听之前，否则会被下面的监听立刻当成切换事件。
+        this.downloadSourceSpinner.setSelection(2);
         ArrayList<String> arrayList2 = new ArrayList<>();
         this.versionList = arrayList2;
         arrayList2.add("");
@@ -256,6 +275,16 @@ public class DownloadModUI extends BaseUI implements View.OnClickListener, Adapt
 
     @Override // android.widget.AdapterView.OnItemSelectedListener
     public void onItemSelected(AdapterView<?> adapterView, View view, int i, long j) {
+        // ★ 1.5.0：切「下载源」必须重新查一次 —— 以前这里没监听 downloadSourceSpinner，
+        //   玩家从 Modrinth 切到 CurseForge，看到的还是上一站的旧列表（经典「源没生效」）。
+        if (adapterView == this.downloadSourceSpinner) {
+            // 分类体系随源变 ⇒ 复位到第 0 项「全部」，否则旧分类 id 会让新源查不到东西
+            if (this.typeSpinner != null) {
+                this.typeSpinner.setSelection(0);
+            }
+            search();
+            return;
+        }
         if (adapterView == this.typeSpinner || adapterView == this.sortSpinner || adapterView == this.versionSpinner) {
             search();
             if (adapterView == this.versionSpinner) {
@@ -321,17 +350,60 @@ public class DownloadModUI extends BaseUI implements View.OnClickListener, Adapt
     public /* synthetic */ void m477xbfb3ff53() {
         try {
             this.searchHandler.sendEmptyMessage(0);
-            List list = (List) this.repository.search(this.editVersion.getText().toString(), (RemoteModRepository.Category) this.categoryListAdapter.getItem(this.typeSpinner.getSelectedItemPosition()), 0, 50, this.editName.getText().toString(), RemoteMod.getSortTypeByPosition(this.sortSpinner.getSelectedItemPosition()), RemoteModRepository.SortOrder.DESC).collect(Collectors.toList());
+            int srcPos = this.downloadSourceSpinner.getSelectedItemPosition();
+            boolean hybrid = srcPos == 2;
+            // ★ 1.5.0 混合模式：分类下拉只有「全部」（两站分类体系不通用，
+            //   列出来只会让玩家选一个然后某一边搜不到 —— 判定在 HybridRemoteModRepository 里）。
+            RemoteModRepository.Category category = hybrid
+                    ? null
+                    : (RemoteModRepository.Category) this.categoryListAdapter.getItem(this.typeSpinner.getSelectedItemPosition());
+            List list = (List) this.repository.search(this.editVersion.getText().toString(), category, 0, 50, this.editName.getText().toString(), RemoteMod.getSortTypeByPosition(this.sortSpinner.getSelectedItemPosition()), RemoteModRepository.SortOrder.DESC).collect(Collectors.toList());
             this.modList.clear();
             this.modList.addAll(list);
+            if (this.modListAdapter != null) {
+                this.modListAdapter.notifyDataSetChanged();
+                // ★ 1.5.0：数据填好后给列表一次入场动画（用户要求「列表没有动态切换」）。
+                //   ★ 必须 post 一下：此时 ListView 还没完成布局，getChildAt(0) 为 null，动画会失效。
+                this.modListView.post(() -> {
+                    if (this.modListAdapter != null) {
+                        this.modListAdapter.animateList(this.modListView);
+                    }
+                });
+            }
             List list2 = (List) this.repository.getCategories().collect(Collectors.toList());
             this.categoryList.clear();
-            this.categoryList.add(new RemoteModRepository.Category(this.downloadSourceSpinner.getSelectedItemPosition() == 0 ? CurseForgeRemoteModRepository.CATEGORY_ALL : ModrinthRemoteModRepository.CATEGORY_ALL, this.downloadSourceSpinner.getSelectedItemPosition() == 0 ? "0" : "all", new ArrayList()));
-            for (int i = 0; i < list2.size(); i++) {
-                this.categoryList.add((RemoteModRepository.Category) list2.get(i));
-                this.categoryList.addAll(((RemoteModRepository.Category) list2.get(i)).getSubcategories());
+            if (hybrid) {
+                // ★ 混合：只给「全部」一项，并同步把下拉选中项复位到第 0 项
+                this.categoryList.add(new RemoteModRepository.Category(CurseForgeRemoteModRepository.CATEGORY_ALL, "0", new ArrayList()));
+            } else {
+                this.categoryList.add(new RemoteModRepository.Category(srcPos == 0 ? CurseForgeRemoteModRepository.CATEGORY_ALL : ModrinthRemoteModRepository.CATEGORY_ALL, srcPos == 0 ? "0" : "all", new ArrayList()));
+                for (int i = 0; i < list2.size(); i++) {
+                    this.categoryList.add((RemoteModRepository.Category) list2.get(i));
+                    this.categoryList.addAll(((RemoteModRepository.Category) list2.get(i)).getSubcategories());
+                }
             }
             this.searchHandler.sendEmptyMessage(1);
+            // ★ 照 FCL `searchAggregated`：聚合模式下若**只有一源成功**，
+            //   结果照常显示，但要告诉玩家"可能不全"（否则玩家以为那就是全部）。
+            //   ⚠ 本方法跑在**后台线程** ⇒ 只能取值，弹 Toast 必须回主线程（在 handler what==1 里做）。
+            final String partialFailed = hybrid ? HybridRemoteModRepository.lastPartialWarning() : null;
+            final boolean hasResults = this.modList != null && !this.modList.isEmpty();
+            if (partialFailed != null && hasResults) {
+                final int failedRes = "CURSEFORGE".equals(partialFailed)
+                        ? R.string.download_mod_source_curse_forge : R.string.download_mod_source_modrinth;
+                final int onlyRes = "CURSEFORGE".equals(partialFailed)
+                        ? R.string.download_mod_source_modrinth : R.string.download_mod_source_curse_forge;
+                this.activity.runOnUiThread(() -> {
+                    try {
+                        android.widget.Toast.makeText(DownloadModUI.this.context,
+                                DownloadModUI.this.context.getString(R.string.download_search_partial,
+                                        DownloadModUI.this.context.getString(failedRes),
+                                        DownloadModUI.this.context.getString(onlyRes)),
+                                android.widget.Toast.LENGTH_LONG).show();
+                    } catch (Throwable ignoreToast) {
+                    }
+                });
+            }
         } catch (Exception e) {
             this.searchHandler.sendEmptyMessage(2);
             e.printStackTrace();

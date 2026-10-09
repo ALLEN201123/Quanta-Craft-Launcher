@@ -19,6 +19,8 @@ public class DownloadUI extends BaseUI implements View.OnClickListener {
     public LinearLayout startDownloadResourcePackUI;
     public LinearLayout startDownloadShaderUI;
     public LinearLayout startDownloadWorldUI;
+    /** ★ 2026-10-09：收藏标签页 */
+    public LinearLayout startDownloadFavoriteUI;
 
     public DownloadUI(Context context, MainActivity mainActivity) {
         super(context, mainActivity);
@@ -34,12 +36,16 @@ public class DownloadUI extends BaseUI implements View.OnClickListener {
         this.startDownloadResourcePackUI = (LinearLayout) this.activity.findViewById(R.id.start_download_resource_pack_ui);
         this.startDownloadWorldUI = (LinearLayout) this.activity.findViewById(R.id.start_download_world_ui);
         this.startDownloadShaderUI = (LinearLayout) this.activity.findViewById(R.id.start_download_shader_ui);
+        this.startDownloadFavoriteUI = (LinearLayout) this.activity.findViewById(R.id.start_download_favorite_ui);
         this.startDownloadGameUI.setOnClickListener(this);
         this.startDownloadModUI.setOnClickListener(this);
         this.startDownloadPackageUI.setOnClickListener(this);
         this.startDownloadResourcePackUI.setOnClickListener(this);
         this.startDownloadWorldUI.setOnClickListener(this);
         this.startDownloadShaderUI.setOnClickListener(this);
+        if (this.startDownloadFavoriteUI != null) {
+            this.startDownloadFavoriteUI.setOnClickListener(this);
+        }
         this.downloadUIManager = new DownloadUIManager(this.context, this.activity);
     }
 
@@ -105,6 +111,11 @@ public class DownloadUI extends BaseUI implements View.OnClickListener {
         if (view == this.startDownloadWorldUI) {
             DownloadUIManager downloadUIManager6 = this.downloadUIManager;
             downloadUIManager6.switchDownloadUI(downloadUIManager6.downloadWorldUI);
+        }
+        // ★ 2026-10-09：收藏页
+        if (view == this.startDownloadFavoriteUI) {
+            DownloadUIManager downloadUIManager7 = this.downloadUIManager;
+            downloadUIManager7.switchDownloadUI(downloadUIManager7.downloadFavoriteUI);
         }
     }
 }

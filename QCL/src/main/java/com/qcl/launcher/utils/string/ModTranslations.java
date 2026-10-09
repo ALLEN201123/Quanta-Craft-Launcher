@@ -152,22 +152,53 @@ public final class ModTranslations {
             return true;
         }
         try {
-            this.mods = (List) Arrays.stream(IOUtils.readFullyAsString(ModTranslations.class.getResourceAsStream(this.resourceName), StandardCharsets.UTF_8).split("\n")).filter(new Predicate() { // from class: com.qcl.launcher.utils.string.ModTranslations$$ExternalSyntheticLambda6
-                @Override // java.util.function.Predicate
-                public final boolean test(Object obj) {
-                    return ModTranslations.lambda$loadFromResource$3((String) obj);
-                }
-            }).map(new Function() { // from class: com.qcl.launcher.utils.string.ModTranslations$$ExternalSyntheticLambda3
-                @Override // java.util.function.Function
-                public final Object apply(Object obj) {
-                    return new ModTranslations.Mod((String) obj);
-                }
-            }).collect(Collectors.toList());
+            // ★ 1.5.0：改用**逐行容错**解析（原来一行格式不对就整表失败 ⇒ 一条中文都出不来）
+            this.mods = parseModsSafely(
+                    IOUtils.readFullyAsString(
+                            ModTranslations.class.getResourceAsStream(this.resourceName),
+                            StandardCharsets.UTF_8),
+                    this.resourceName);
             return true;
         } catch (Exception e) {
             Logging.LOG.log(Level.WARNING, "Failed to load " + this.resourceName, (Throwable) e);
             return false;
         }
+    }
+
+    /**
+     * ★★★ 1.5.0 新增：**逐行容错**地把一整张表读成 Mod 列表。
+     *
+     * <p>为什么必须单独写这个：原来用 stream 的 {@code map(line -> new Mod(line))}，
+     * 而 {@link Mod#Mod(String)} 对格式不对的行**直接 throw** ⇒ **一行坏、整张表全废**
+     * （{@code collect} 抛异常 → 外层 catch → mods 为 null → 一条中文都出不来）。
+     *
+     * <p>现在改成逐行 try/catch：坏行跳过并继续，**其余行照常生效**。
+     * 顺带统计跳过条数，便于日后排查数据文件。
+     *
+     * @return 成功解析的条数（可能为 0，不抛异常）
+     */
+    private static List<Mod> parseModsSafely(String content, String sourceName) {
+        List<Mod> out = new ArrayList<>();
+        if (content == null) {
+            return out;
+        }
+        int skipped = 0;
+        for (String raw : content.split("\n")) {
+            String line = raw.trim();
+            if (line.isEmpty() || line.startsWith("#")) {
+                continue;
+            }
+            try {
+                out.add(new Mod(line));
+            } catch (Throwable t) {
+                skipped++;
+            }
+        }
+        if (skipped > 0) {
+            Logging.LOG.log(Level.WARNING,
+                    "Skipped " + skipped + " malformed lines in " + sourceName);
+        }
+        return out;
     }
 
     /* JADX INFO: Access modifiers changed from: package-private */
@@ -246,17 +277,33 @@ public final class ModTranslations {
         private final String subname;
 
         public Mod(String str) {
+            // ★★★ 1.5.0 修复（用户实测「下载列表的模组依旧没有中文翻译」，实测数据取证）：
+            //   这份翻译表（assets/mod_data.txt 31062 条 / modpack_data.txt 1493 条）
+            //   的**真实格式是 6 段**：`curseforge;mcmod;modIds;名称;副名;缩写`
+            //   ——例：`industrial-craft;2;IC2,ic2;工业时代2;Industrial Craft 2;IC2`
+            //   而旧代码要求 7 段、**不满足直接 throw IllegalArgumentException**
+            //   ⇒ 解析第一条就炸 ⇒ **整张表加载失败** ⇒ 一条中文都出不来（现象正是"完全没翻译"）。
+            //   ⇒ 现在按真实格式解析 6 段；同时保留对 7 段（旧格式）的兼容。
             String[] split = str.split(";", -1);
-            if (split.length != 7) {
-                throw new IllegalArgumentException("Illegal mod data line, 7 items expected " + str);
+            if (split.length == 6) {
+                this.curseforge = split[0];
+                this.mcmod = split[1];
+                this.mcbbs = "";
+                this.modIds = Collections.unmodifiableList(Arrays.asList(split[2].split(",")));
+                this.name = split[3];
+                this.subname = split[4];
+                this.abbr = split[5];
+            } else if (split.length == 7) {
+                this.curseforge = split[0];
+                this.mcmod = split[1];
+                this.mcbbs = split[2];
+                this.modIds = Collections.unmodifiableList(Arrays.asList(split[3].split(",")));
+                this.name = split[4];
+                this.subname = split[5];
+                this.abbr = split[6];
+            } else {
+                throw new IllegalArgumentException("Illegal mod data line, 6 or 7 items expected " + str);
             }
-            this.curseforge = split[0];
-            this.mcmod = split[1];
-            this.mcbbs = split[2];
-            this.modIds = Collections.unmodifiableList(Arrays.asList(split[3].split(",")));
-            this.name = split[4];
-            this.subname = split[5];
-            this.abbr = split[6];
         }
 
         public Mod(String str, String str2, String str3, List<String> list, String str4, String str5, String str6) {

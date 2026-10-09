@@ -1,15 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- ★ 1.5.0：启动前检查对话框（对照 FCL 的 TaskDialog / dialog_task.xml 完善）
      - 内容区整体可上下滑动（ScrollView），小屏或 Vulkan 行出现时不再被裁掉
-     - 新增实时日志区（对照 FCL dialog_task 的 logScroll/logView），下载/校验过程可见
-     - 高度不再写死 305dp，改由 Java 侧按屏幕高度控制，避免小屏溢出 -->
+     - ★ 2026-10-09 用户要求：**日志/控制台区整个删除**（原 check_log_scroll/check_log_view
+       连字段与 appendLog/clearLog 一并移除），此窗口只保留步骤标识 + 取消按钮
+     - 高度不再写死 305dp，改由 Java 侧按屏幕高度控制，避免小屏溢出
+     - 根用 match_parent + layout_gravity="center"，配合 Java 侧「窗口宽=内容宽」才能真正居中 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:background="#00000000"
     android:padding="15dp"
     android:orientation="vertical"
-    android:layout_width="500dp"
-    android:layout_height="wrap_content">
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_gravity="center">
 
     <TextView
         android:singleLine="true"
@@ -97,6 +100,75 @@
             android:textColor="@color/colorPureBlack"
             android:id="@+id/check_vulkan_text"
             android:text="@string/launch_check_dialog_vulkan"/>
+
+    </LinearLayout>
+
+    <!-- ★ 2026-10-09 用户要求：控制台里再加两行检测（模组检测 / 游戏版本检测），且要「超 FCL」——
+         FCL 只做「有没有加载器」，我们这两行会给出**逐条可核对的详情**（重复 mod id / 版本不符 /
+         缺前置 / 空文件 / json id 与目录名不一致 / 缺客户端 jar 等），点行可看详情。 -->
+    <LinearLayout
+        android:id="@+id/check_mod_row"
+        android:layout_marginTop="12dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#80FFFFFF"
+        android:paddingLeft="10dp"
+        android:paddingTop="6dp"
+        android:paddingBottom="6dp"
+        android:orientation="horizontal">
+
+        <ImageView
+            android:layout_marginStart="5dp"
+            android:layout_width="12dp"
+            android:layout_height="12sp"
+            android:background="@drawable/ic_baseline_arrow_black"
+            android:layout_gravity="center"
+            android:id="@+id/check_mod_state"/>
+
+        <TextView
+            android:id="@+id/check_mod_text"
+            android:singleLine="true"
+            android:layout_marginStart="10dp"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:textSize="@dimen/text_size_middle"
+            android:textColor="@color/colorPureBlack"
+            android:text="@string/launch_check_dialog_mod"/>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/check_game_version_row"
+        android:layout_marginTop="12dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#80FFFFFF"
+        android:paddingLeft="10dp"
+        android:paddingTop="6dp"
+        android:paddingBottom="6dp"
+        android:orientation="horizontal">
+
+        <ImageView
+            android:layout_marginStart="5dp"
+            android:layout_width="12dp"
+            android:layout_height="12sp"
+            android:background="@drawable/ic_baseline_arrow_black"
+            android:layout_gravity="center"
+            android:id="@+id/check_game_version_state"/>
+
+        <TextView
+            android:id="@+id/check_game_version_text"
+            android:singleLine="true"
+            android:layout_marginStart="10dp"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:textSize="@dimen/text_size_middle"
+            android:textColor="@color/colorPureBlack"
+            android:text="@string/launch_check_dialog_game_version"/>
 
     </LinearLayout>
 
@@ -198,29 +270,6 @@
             android:text="@string/launch_check_dialog_launch"/>
 
     </LinearLayout>
-
-    <!-- ★ 1.5.0 新增：实时日志区（对照 FCL dialog_task 的 logScroll/logView）
-         微软登录、库下载、Vulkan 检测等阶段文字实时滚动显示，默认 gone。 -->
-    <ScrollView
-        android:id="@+id/check_log_scroll"
-        android:visibility="gone"
-        android:layout_width="match_parent"
-        android:layout_height="110dp"
-        android:layout_marginTop="12dp"
-        android:background="#60FFFFFF"
-        android:padding="8dp"
-        android:scrollbars="vertical">
-
-        <TextView
-            android:id="@+id/check_log_view"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:fontFamily="monospace"
-            android:textSize="10sp"
-            android:textColor="@color/colorPureBlack"
-            android:lineSpacingExtra="2dp"/>
-
-    </ScrollView>
 
         </LinearLayout>
     </ScrollView>

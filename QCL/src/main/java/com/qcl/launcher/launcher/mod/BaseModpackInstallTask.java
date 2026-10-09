@@ -446,13 +446,20 @@ public abstract class BaseModpackInstallTask extends AsyncTask<Object, Integer, 
             File target = new File(dest, relative);
             File parent = target.getParentFile();
             if (parent != null) {
-                //noinspection ResultOfMethodCallIgnored
+                //noinspection ResultOfMethodCallExpected
                 parent.mkdirs();
             }
+            // ★★★ 1.5.0 用户要求「整合包安装列出的文件只显示一条、看不到正在下载什么」：
+            //   原来整个解包过程只对应**一个** row（"解包整合包"），几千个文件全挤在那一行里
+            //   ⇒ 玩家只看到一行、看不到当前在处理哪个文件。
+            //   ⇒ 现在每个文件**单独一行**，并在写入过程中滚动到最新行（行已由
+            //     InstallPackageUI 的 AdapterDataObserver 自动滚动）。
+            DownloadTaskListBean fileRow = addRow("  " + relative);
             try (InputStream in = zip.getInputStream(entry)) {
                 writeStream(in, target);
             }
             overrides.add(new ModpackConfiguration.FileInformation(relative, sha1Hex(target)));
+            rowDone(fileRow);
             done++;
             if (total > 0) {
                 rowProgress(row, (int) (100.0 * done / total));
@@ -817,7 +824,15 @@ public abstract class BaseModpackInstallTask extends AsyncTask<Object, Integer, 
                             url = DownloadUrlSource.replaceSubUrl(url, source, DownloadUrlSource.LIBRARIES);
                         }
                         if (url != null && (url.startsWith("http://") || url.startsWith("https://"))) {
-                            downloadOne(url, target);
+                            // ★ 2026-10-09 用户要求：「整合包的所有文件下载也要展示给玩家看，
+                            //   包括下载进度」——原来几百个库文件（含全部依赖 jar）**全挤在一行**里，
+                            //   玩家根本看不出下了什么 ⇒ 现在**每个文件单独一行**（照 FCL 的逐文件任务列表）。
+                            DownloadTaskListBean fileRow = addRow("下载 " + target.getName());
+                            try {
+                                downloadOne(url, target);
+                            } finally {
+                                rowDone(fileRow);
+                            }
                         }
                     }
                 }

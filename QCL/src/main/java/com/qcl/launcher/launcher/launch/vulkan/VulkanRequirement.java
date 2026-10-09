@@ -173,8 +173,68 @@ public final class VulkanRequirement {
         if (gameVersion == null) {
             return false;
         }
-        String v = normalizeMcVersion(gameVersion);
+        String v = normalizeMcVersion(versionNameOf(gameVersion));
+        // ★★★ 2026-10-09 修复（用户实测「点 inf-20100223 就弹 Vulkan 检测」）：
+        //   **远古版本必须在这里硬拦**。只靠 VersionCompare 逐段比是不够的 ——
+        //   inf-20100223 会被解析成 [20100223]，第一段就大于 26 ⇒ 误判为「需要 Vulkan」。
+        //   判据交给 VersionCompare 内部那道闸（认远古前缀 inf-/b1./a1./c0./rd- 等），
+        //   这样 26.2-rc1 / 1.21.11-pre1 这类**预览版**不会被误杀。
+        if (!VersionCompare.isComparable(v)) {
+            return false;
+        }
         return VersionCompare.compare(v, MIN_MC_VERSION) >= 0;
+    }
+
+    /**
+     * ★ 2026-10-09 用户要求：**Vulkan 提示弹窗只在 26.3 及以上弹出**。
+     *
+     * <p>原因：26.2 虽然也带 Vulkan 后端，但 26.3 起才把要求收紧到「必须」这个程度
+     * （多出必需项 {@code drawIndirectFirstInstance}）。26.2 弹这个框属于骚扰玩家。
+     *
+     * <p>入参与 {@link #hasVulkanBackend} 一样，**版本名或完整路径都吃**。
+     */
+    public static boolean needsVulkanNotice(String gameVersion) {
+        if (gameVersion == null) {
+            return false;
+        }
+        String v = normalizeMcVersion(versionNameOf(gameVersion));
+        // ★ 同 hasVulkanBackend：远古版本一律不弹提示（判据在 VersionCompare 内部那道闸）。
+        if (!VersionCompare.isComparable(v)) {
+            return false;
+        }
+        return VersionCompare.compare(v, VULKAN_NOTICE_FROM) >= 0;
+    }
+
+    /** 开始弹 Vulkan 提示的版本（用户口径：26.3）。 */
+    public static final String VULKAN_NOTICE_FROM = "26.3";
+
+    /**
+     * ★ 2026-10-09 修复（用户实测「启动游戏那个窗口里连 Vulkan 行都没有、检测弹窗从不出现」）：
+     *
+     * <p>本方法的入参**可能是「版本名」，也可能是「版本的完整路径」** ——
+     * 因为 `MainUI` 传的是 `publicGameSetting.currentVersion`（按项目铁律，它存的是**完整路径**），
+     * 而 `GameListAdapter` / `GameManagerUI` 传的是 `.../versions/<名字>`。
+     *
+     * <p>旧实现直接把整串丢给 {@link VersionCompare}，而它用 `\d+` 抽**所有**数字 ⇒
+     * `/storage/emulated/0/QCL/.minecraft/versions/26.3` 被解析成 `[0, 26, 3]`
+     * （开头的 0 来自 `emulated/0`）⇒ 与 `26.2`=`[26,2]` 比较得出 `0 < 26` ⇒ **判定为"不需要 Vulkan"**
+     * ⇒ 行被 `GONE` 且**检测弹窗整段 return 掉**。26.3 因此从来不提示 Vulkan。
+     *
+     * <p>⇒ 这里统一取**最后一段路径**当版本名（同时容忍 Win 反斜杠与首尾空白）。
+     */
+    private static String versionNameOf(String s) {
+        if (s == null) {
+            return "";
+        }
+        String t = s.trim();
+        int slash = Math.max(t.lastIndexOf('/'), t.lastIndexOf('\\'));
+        if (slash >= 0) {
+            t = t.substring(slash + 1);
+        }
+        while (t.endsWith("/") || t.endsWith("\\")) {
+            t = t.substring(0, t.length() - 1);
+        }
+        return t;
     }
 
     /**

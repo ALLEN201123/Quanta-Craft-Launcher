@@ -160,11 +160,15 @@ extends AsyncTask<RecyclerView, Integer, Exception> {
                 }
                 catch (IOException e) {
                     e.printStackTrace();
-                    // ★ 1.2.5：开了「不检查游戏文件」时，资源索引拉不到也不拦启动
-                    //   （没有索引就等于没有音频要补，游戏照样进）
-                    if (!skipGameFiles) {
-                        return new Exception(this.activity.getString(R.string.launch_check_dialog_exception_assets_failed));
-                    }
+                    // ★★ 2026-10-09 用户实测修复：「整合包下载弹出 资源文件下载失败」。
+                    //   原逻辑是「拉不到资源索引 && !不检查游戏文件 ⇒ 直接抛错拦启动」。
+                    //   但**索引缺失本来就无害**（下面注释自己写着："没有索引就等于没有音频要补，
+                    //   游戏照样进"），而且索引不存在时 sha1 校验必然失败 ⇒ 必然尝试联网拉 ⇒
+                    //   网络/镜像抖一下就把玩家拦在门外（实测：游戏明明能进）。
+                    //   ⇒ 改为**一律降级放过**：记日志 + 用空索引继续，交给后面的资源下载去补。
+                    android.util.Log.w("jrelog",
+                            "[启动前检查] 资源索引 " + assetIndexInfo.id
+                                    + " 拉取失败，已降级放过（不影响启动）：" + e);
                     assetIndexString = "{\"objects\":{}}";
                 }
             }

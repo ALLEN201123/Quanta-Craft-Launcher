@@ -40,7 +40,10 @@ public class JREUtils {
 
     public static native void setupBridgeWindowNew(Surface surface);
 
+
     public static native void setupExitTrap(Context context);
+
+    
 
     private JREUtils() {
     }
@@ -491,6 +494,7 @@ public class JREUtils {
         arrayList.addAll(list);
         initJavaRuntime(str);
         setupExitTrap(activity);
+        // ★ 2026-10-09：拦 glGetString 防 NULL（26.3 启动即崩的根因，见 native 实现注释）
         chdir(str4);
         arrayList.add(0, "java");
         int launchJVM = VMLauncher.launchJVM((String[]) arrayList.toArray(new String[0]));

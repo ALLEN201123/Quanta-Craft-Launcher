@@ -204,7 +204,7 @@ public class DownloadMinecraftUI extends BaseUI implements View.OnClickListener,
             //   1.5/1.6/1.6.3/1.7/1.7.1）强行当「正式版」——那是 10-06 靠**未验证的假设**
             //   加的（当天日志里明明写着「待查：清单里 1.5 的 type 到底是不是 release」）。
             //   现按官方 version_manifest_v2.json 实测：这 9 个的 type **就是 snapshot**
-            //   （它们是各版本的预发布版；正式版是 1.3.1 / 1.4.2 / 1.4.4 / 1.5.1 / 1.6.1 / 1.7.2，
+            //   （它们是各版本的预发布版；正式版是 1.3.1 / 1.4.2 / 1.4.4 / 1.5.0 / 1.6.1 / 1.7.2，
             //     官方清单里只有 1.7.3 及之后才标 release）。
             //   ⇒ 一律**照抄清单的 type**，与 FCL 的 VersionInstallPage 口径一致：
             //     RELEASE → 正式版；PENDING / UNOBFUSCATED / SNAPSHOT → 快照版；其余 → 远古版。

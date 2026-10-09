@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ★★★ 1.5.0 用户要求：「那些白色按钮全部转为深色，除了字不转」。
+
+  ★ 为什么这里**不写** `?android:attr/colorAccent`（2026-10-09 实测踩坑）：
+    那样写按钮**会渲染成白块**。本项目主题里定义的是 AppCompat 的 `colorAccent`
+    （values/themes.xml，无 `android:` 前缀），而 `?android:attr/colorAccent` 指的是
+    framework 的同名属性、**取不到值**；drawable 里属性引用取不到值就退化成透明/白
+    ⇒ 正是用户看到的"白按钮不跟随昼夜"。
+
+  ★ 正确做法（照项目现成套路 LocalModListAdapter:127）：
+    drawable 只提供**深色底 + 可 tint 的形状**；
+    运行时代码用 `DrawableCompat.setTint(底, Color.parseColor(getThemeColor(...)))`
+    染成玩家当前主题色（见 SkinDialogUtils.tintButton）。
+    ⇒ 既保证永远是深色（不会白），又真正跟随玩家自定义主题色。
+  ★ 文字色固定浅色（qcl_dialog_btn_text），不随底色翻黑 —— 用户明确要求"字不转"。
+-->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_pressed="true">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/qcl_dialog_btn_pressed" />
+            <corners android:radius="8dp" />
+        </shape>
+    </item>
+    <item>
+        <shape android:shape="rectangle">
+            <!-- 深色兜底底色；运行时会再被 setTint 成主题色 -->
+            <solid android:color="@color/qcl_dialog_btn_fallback" />
+            <corners android:radius="8dp" />
+        </shape>
+    </item>
+</selector>

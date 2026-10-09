@@ -125,7 +125,7 @@ public final class ModLoaderVersions {
      *   （★ 所以必须知道 sha256 才能下，光猜文件名一定 404）
      *
      *   有直链且 .zip（可安装）：
-     *     1.6.2 / 1.6.1 / 1.5.2 / 1.5.1 / 1.5 / 1.4.7 / 1.4.6 / 1.4.5 / 1.4.4 / 1.4.2
+     *     1.6.2 / 1.6.1 / 1.5.2 / 1.5.0 / 1.5 / 1.4.7 / 1.4.6 / 1.4.5 / 1.4.4 / 1.4.2
      *     / 1.3.2 / 1.3.1 / 1.2.5 / B1.9p5 / B1.8.1
      *   有直链但 .rar（启动器**无法解压**，已排除）：
      *     A1.2.6 / A1.2.2 / A1.2.1_01 / A1.2.0_02 / 1.1
@@ -137,7 +137,7 @@ public final class ModLoaderVersions {
         put("1.6.2", "ModLoader 1.6.2.zip", "0b14f5e261c9862989aa74313b59188cce10bea6724bae31130ce1e8e6a1c060");
         put("1.6.1", "ModLoader 1.6.1.zip", "95fc5afdd9cc14d85cb41225fb689d7994f5994287ed9595e192026c06e7b536");
         put("1.5.2", "ModLoader 1.5.2.zip", "0c355696c2f3ba405bb1f0f845dc51a6613c121eac25a6c7bc9d8046f2c941df");
-        put("1.5.1", "ModLoader 1.5.1.zip", "af7d7bca70b8bc08c75e96ec90a25432682dfc825aa4fe35485dcb390b1f7014");
+        put("1.5.0", "ModLoader 1.5.0.zip", "af7d7bca70b8bc08c75e96ec90a25432682dfc825aa4fe35485dcb390b1f7014");
         put("1.5", "ModLoader 1.5.zip", "597d4d437a250986da84a9c7aee3ea653739608caf1d4a208f2006d8cbdfbc3d");
         put("1.4.7", "ModLoader 1.4.7.zip", "685ead73c19531cf24062c7536737663421ed4170cfa582baddbbf6cba1544d2");
         put("1.4.6", "ModLoader 1.4.6.zip", "f69b1f99b76c23cc1e076197375996e3b79feb369952ac692630f7b063709d5f");

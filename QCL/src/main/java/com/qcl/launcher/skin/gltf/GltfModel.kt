@@ -247,8 +247,63 @@ class GltfModel private constructor() {
         computeWorldMatrices()
     }
 
-    /** 按 material 分组绘制：capeOnly=true 画披风网格，false 画其余（皮肤）网格；
-     * 已重建体素层的 *_Layer 网格以体素网格替代零厚度面片 */
+    /**
+     * 体素化第二层开关（照 FCL）：关闭时 `*_Layer` 网格回落零厚度面片。
+     */
+    var solidLayerEnabled = true
+
+    /**
+     * ★ 2026-10-09 补回 FCL 的这一对（此前整段缺失）：
+     * 身体与腿部分离开关：关闭时上身与腿部贴合，腰部共面接缝可能闪烁。
+     *
+     * <p>★ 用<b>自定义 setter</b>，与 FCL 完全一致：赋值即生效 ——
+     *   写成普通字段的话，`setUpperBodySeparated(false)` 只改了个布尔值，
+     *   抬起量根本没重算 ⇒ 开关看起来"没用"。FCL 正是靠这个 setter 自动 apply。
+     */
+    var upperBodySeparated = true
+        set(value) {
+            if (field == value) {
+                return
+            }
+            field = value
+            applyUpperBodyLift()
+        }
+
+    /** 当前已应用到 LIFT_NODES 的总抬高量（0 = 未分离）。 */
+    private var appliedLift = 0f
+
+    /**
+     * 按分离开关重设上身部件的 rest 抬高量，随后重新居中并恢复 rest 姿势。
+     * ★ 照 FCL `GltfModel.applyUpperBodyLift`（此前缺失）。
+     */
+    fun applyUpperBodyLift() {
+        val lift = if (upperBodySeparated) UPPER_BODY_LIFT else 0f
+        if (lift == appliedLift) {
+            return
+        }
+        val delta = lift - appliedLift
+        appliedLift = lift
+        for (node in nodes) {
+            if (node.name in LIFT_NODES) {
+                node.restTranslation[1] += delta
+                node.rebuildLocalMatrix()
+            }
+        }
+        centerModel()
+        nodes.forEach { it.resetPose() }
+    }
+
+    /**
+     * 按 material 分组绘制（**照 FCL 的两遍式**）。
+     *
+     * ★ 2026-10-09 用户实测修复「中间那个人物的叠层纹理比 FCL 少很多」：
+     *   原来只有**一遍** —— 有体素层的网格就只画实心体素立方体，而体素化只收 alpha≥阈值的不透明像素，
+     *   **叠层里所有半透明像素全被丢掉了**（帽子/外套的半透部分、以及给出层次感的那些像素）。
+     *   FCL 是两遍：
+     *     ① 正常深度写入 —— 有体素层就画体素立方体，其余画面片；
+     *     ② `glDepthMask(false)` + `GL_LESS` —— 把**原始零厚度面片再画一遍**，把半透明像素补回来
+     *       （面片在体素表面内侧，深度量化同值时不盖染立方体）。
+     */
     fun draw(
         positionLocation: Int,
         texCoordLocation: Int,
@@ -259,6 +314,45 @@ class GltfModel private constructor() {
         mvpBase: FloatArray,
         modelBase: FloatArray,
         capeOnly: Boolean
+    ) {
+        // 第一遍：正常深度写入
+        drawMeshes(mvpBase, modelBase, capeOnly) { mesh, mvp, normalMatrix ->
+            val layer = if (capeOnly || !solidLayerEnabled) null else mesh.solidLayer
+            if (layer != null) {
+                layer.draw(
+                    positionLocation, texCoordLocation, normalLocation, lightMixLocation,
+                    mvpMatrixLocation, normalMatrixLocation, mvp, normalMatrix
+                )
+            } else {
+                mesh.draw(
+                    positionLocation, texCoordLocation, normalLocation, lightMixLocation,
+                    mvpMatrixLocation, normalMatrixLocation, mvp, normalMatrix
+                )
+            }
+        }
+        // 第二遍：把已体素化部件的原始面片再画一遍（补回半透明像素）
+        if (solidLayerEnabled) {
+            GLES20.glDepthMask(false)
+            GLES20.glDepthFunc(GLES20.GL_LESS)
+            drawMeshes(mvpBase, modelBase, capeOnly) { mesh, mvp, normalMatrix ->
+                if (!capeOnly && mesh.solidLayer != null) {
+                    mesh.draw(
+                        positionLocation, texCoordLocation, normalLocation, lightMixLocation,
+                        mvpMatrixLocation, normalMatrixLocation, mvp, normalMatrix
+                    )
+                }
+            }
+            GLES20.glDepthFunc(GLES20.GL_LEQUAL)
+            GLES20.glDepthMask(true)
+        }
+    }
+
+    /** 遍历绘制顺序里的全部网格（capeOnly 过滤材质后交给 block）。 */
+    private fun drawMeshes(
+        mvpBase: FloatArray,
+        modelBase: FloatArray,
+        capeOnly: Boolean,
+        block: (GltfMesh, FloatArray, FloatArray) -> Unit
     ) {
         val normalMatrix = FloatArray(16)
         for (node in drawOrder) {
@@ -271,20 +365,7 @@ class GltfModel private constructor() {
                 if ((mesh.materialName == CAPE_MATERIAL) != capeOnly) {
                     continue
                 }
-                if (!capeOnly) {
-                    val layer = mesh.solidLayer
-                    if (layer != null) {
-                        layer.draw(
-                            positionLocation, texCoordLocation, normalLocation, lightMixLocation,
-                            mvpMatrixLocation, normalMatrixLocation, tempMatrix, normalMatrix
-                        )
-                        continue
-                    }
-                }
-                mesh.draw(
-                    positionLocation, texCoordLocation, normalLocation, lightMixLocation,
-                    mvpMatrixLocation, normalMatrixLocation, tempMatrix, normalMatrix
-                )
+                block(mesh, tempMatrix, normalMatrix)
             }
         }
     }
@@ -394,11 +475,9 @@ class GltfModel private constructor() {
 
         // rest 局部矩阵 → 部件抬高 → 绘制顺序 → 以原点为中心 → 运行时姿势初始化
         nodes.forEach { it.rebuildLocalMatrix() }
-        nodes.forEach { node ->
-            if (node.name in LIFT_NODES) {
-                node.restTranslation[1] += UPPER_BODY_LIFT
-            }
-        }
+        // ★ 照 FCL：抬起走 applyUpperBodyLift()（内部会记 appliedLift），
+        //   这样运行时再切 `upperBodySeparated` 才知道该加减多少。
+        applyUpperBodyLift()
         collectDrawOrder(rootNodes)
         centerModel()
         nodes.forEach { it.resetPose() }

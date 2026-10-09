@@ -40,6 +40,30 @@ class GltfPlayerModel(context: Context) {
         active.playAnimation(animationId)
     }
 
+    /**
+     * ★ 2026-10-09：切换体素化第二层（两实例同步，避免 slim 切换后状态不一致）。
+     * 关闭时第二层回落零厚度面片（照 FCL 的 `GltfPlayerModel.setSolidLayerEnabled`）。
+     */
+    fun setSolidLayerEnabled(enabled: Boolean) {
+        classic.solidLayerEnabled = enabled
+        slimModel.solidLayerEnabled = enabled
+    }
+
+    /**
+     * ★ 2026-10-09 补回 FCL 的这一对（此前整段缺失）：
+     * 切换身体与腿部分离（两实例同步，避免 slim 切换后状态不一致）。
+     * 关闭时上身与腿部贴合，腰部共面接缝可能闪烁。
+     */
+    fun setUpperBodySeparated(separated: Boolean) {
+        classic.upperBodySeparated = separated
+        slimModel.upperBodySeparated = separated
+        // ★ 关键：字段赋值后必须把抬起量真正应用到 rest 矩阵，否则改了开关模型没重抬 = 白改。
+        //   `applyUpperBodyLift` 内部按 `appliedLift` 判重、未加载时 nodes 为空自然空转，
+        //   所以不需要额外的 isLoaded 判断（与 FCL 同一套语义）。
+        classic.applyUpperBodyLift()
+        slimModel.applyUpperBodyLift()
+    }
+
     /** 播放指定烘焙动画（clip 名），未知 id 忽略；手动选择重置插播计时 */
     fun playAnimation(id: String) {
         if (active.playAnimation(id)) {

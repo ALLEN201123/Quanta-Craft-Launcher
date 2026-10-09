@@ -68,4 +68,13 @@
 
     <!-- 版本列表容器底：日间近白半透明 → 夜间深色半透明 -->
     <color name="qcl_version_list_bg">#9E171C22</color>
+
+<!-- ★★★ 1.5.0：按钮跟随主题（夜间态）。
+     ★ 用户明确要求：**底色日夜都是深色**，**字不跟着转深**（始终浅色）。
+     ★ 底色本身引用主题 `?android:attr/colorAccent`（斑驳森林 #556980，
+       夜间刻意保持不变 —— 该色在深浅底上都成立），这里只定义按下态与文字色。 -->
+    <color name="qcl_dialog_btn_pressed">#FF161D25</color>
+    <!-- ★ 深色兜底底色：与日间同值（斑驳森林 #556980 在深浅底上都成立）。 -->
+    <color name="qcl_dialog_btn_fallback">#FF556980</color>
+    <color name="qcl_dialog_btn_text">#FFF2F6FA</color>
 </resources>

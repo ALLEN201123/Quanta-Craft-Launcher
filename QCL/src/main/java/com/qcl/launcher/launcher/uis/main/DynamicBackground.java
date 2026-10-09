@@ -45,9 +45,9 @@ public class DynamicBackground {
     /** ★ 1.5.0：黑夜背景图（玩家提供的 26.3 截图，沿用原名 ic_background_classic）。 */
     public static final int RES_NIGHT = R.drawable.ic_background_classic;
 
-    /** 白天时段起止（含起、不含止）：6:00 ~ 18:00 显示白天图，其余显示黑夜图。 */
-    public static final int DAY_START_HOUR = 6;
-    public static final int DAY_END_HOUR = 18;
+    /** ★ 1.5.0 白天时段起止（含起、不含止）：**08:00 ~ 19:00** 显示白天图，其余显示黑夜图（用户定的时间点）。 */
+    public static final int DAY_START_HOUR = 8;
+    public static final int DAY_END_HOUR = 19;
     private final Activity activity;
     private final View target;
     private final Handler handler = new Handler(Looper.getMainLooper());
@@ -186,11 +186,161 @@ public class DynamicBackground {
         }
     }
 
-    /** ★ 1.5.0：当前是否属于白天。
-     *  ★★★ 用户明确：**背景图 + UI 配色统一按「手机系统夜间模式」切换**
-     *   （不是按现实时间）。系统深色模式 → 黑夜图 + 深色配色；浅色模式 → 白天图 + 亮色配色。 */
+    /**
+     * 拿小时数；**优先等一次网络时间**（最多等 {@code timeoutMs} 毫秒）。
+     *
+     * <p>★ 为什么需要「等」：启动首帧若用本地时钟（实测设备慢 8 小时）会判错昼夜，
+     *   先显示错误的配色、再等校正 = 用户会看到一次明显的「白天↔夜晚」闪变。
+     *   这里在主线程短暂等待网络时间（只在缓存为空时等待），把闪变消灭在源头。
+     *   超时或取不到就照常用本地时钟兜底，**绝不阻塞启动**。
+     */
+    private static int currentHourBlocking(int timeoutMs) {
+        int h = cachedHour;
+        if (h >= 0) {
+            return h;
+        }
+        if (timeoutMs > 0) {
+            try {
+                java.util.concurrent.FutureTask<Integer> task =
+                        new java.util.concurrent.FutureTask<>(DynamicBackground::fetchNetHour);
+                new Thread(task, "qcl-daynight-boot").start();
+                try {
+                    Integer r = task.get(timeoutMs, java.util.concurrent.TimeUnit.MILLISECONDS);
+                    if (r != null && r >= 0) {
+                        cachedHour = r;
+                        return r;
+                    }
+                } catch (Throwable ignored) {
+                }
+            } catch (Throwable ignored) {
+            }
+        }
+        return currentHour();
+    }
+
+    /**
+     * 当前小时（0–23）——**优先用网络时间**，取不到才退回设备本地时钟。
+     *
+     * <p>★★ 为什么必须优先网络时间：实测 MuMu 模拟器上
+     *   <pre>电脑 2026-10-09 20:24  ↔  设备 date 显示 12:21，epoch 差 28927 秒（≈8h整）</pre>
+     *   设备 {@code auto_time=1}、时区标签也是 {@code Asia/Shanghai}，但时钟本体整整慢一个时区
+     *   ⇒ 只读 {@code Calendar} 会在晚上 8 点判成中午 12 点，**昼夜直接反了**。
+     *   所以取网络时间（HTTP 响应头 {@code Date}）当权威，本地时钟只当兜底。
+     *
+     * <p>★★★ **绝不能在主线程调本方法**：{@code applyAutoDayNight} /
+     *   {@code applyRealTimeNightMode} 全在主线程（onCreate、onResume），
+     *   Android 会直接抛 {@code NetworkOnMainThreadException}。
+     *   所以拆成两半：主线程只读 {@link #cachedHour}，取网络时间丢后台线程
+     *   （{@link #refreshHourAsync}），取回后再回调刷新界面。
+     *
+     * @return 0–23；彻底取不到时返回 -1
+     */
+    private static volatile int cachedHour = -1;
+
+    /** 后台取网络时间 → 更新缓存 → 回调。并发调用只跑一个线程。 */
+    private static final java.util.concurrent.atomic.AtomicBoolean FETCHING =
+            new java.util.concurrent.atomic.AtomicBoolean(false);
+
+    /**
+     * 主线程安全的取小时：只读缓存，绝不联网。
+     * 缓存还没填上时退回本地时钟（比返回 -1 强）。
+     */
+    private static int currentHour() {
+        int h = cachedHour;
+        if (h >= 0) {
+            return h;
+        }
+        try {
+            return java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY);
+        } catch (Throwable t) {
+            return -1;
+        }
+    }
+
+    /**
+     * 后台刷新网络时间；完成后在主线程跑 {@code onDone}（可为空）。
+     * 失败静默 —— 缓存与本地时钟兜底已经够用。
+     */
+    public static void refreshHourAsync(final Runnable onDone) {
+        if (!FETCHING.compareAndSet(false, true)) {
+            // 已有一次在跑：等它完成即可（不重复发请求）
+            return;
+        }
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                int h = fetchNetHour();
+                if (h >= 0) {
+                    cachedHour = h;
+                }
+                FETCHING.set(false);
+                if (onDone != null) {
+                    try {
+                        new Handler(Looper.getMainLooper()).post(onDone);
+                    } catch (Throwable ignored) {
+                    }
+                }
+            }
+        }, "qcl-daynight-clock").start();
+    }
+
+    /** 真去服务器取时间（**只能在后台线程调**）。取不到返回 -1。 */
+    private static int fetchNetHour() {
+        // 两个源都试：任何一个拿到就算数
+        String[] hosts = {
+                "http://connectivitycheck.gstatic.com/generate_204",
+                "http://www.baidu.com/",
+        };
+        for (String url : hosts) {
+            try {
+                java.net.HttpURLConnection c =
+                        (java.net.HttpURLConnection) new java.net.URL(url).openConnection();
+                c.setConnectTimeout(3000);
+                c.setReadTimeout(3000);
+                c.setRequestMethod("HEAD");
+                try {
+                    c.connect();
+                } catch (Throwable ignoreConnectOnly) {
+                }
+                long server = c.getHeaderFieldDate("Date", 0L);
+                c.disconnect();
+                if (server > 0L) {
+                    // Date 头是 GMT，按本地时区换算成小时
+                    java.util.Calendar g = java.util.Calendar.getInstance();
+                    g.setTimeInMillis(server);
+                    return g.get(java.util.Calendar.HOUR_OF_DAY);
+                }
+            } catch (Throwable ignored) {
+            }
+        }
+        return -1;
+    }
+
+    /**
+     * ★ 1.5.0：当前是否属于白天 —— **按现实时间**（用户实测「下午了还是晚上的壁纸」）。
+     *
+     * <p>★★ 这里曾经被我改成"跟随手机系统夜间模式"（注释里写着"用户明确"），
+     *   结果玩家的手机一直开着深色模式，于是**下午也显示夜晚图**。
+     *   ⇒ 现在改回真正的「随时间变化」。
+     *
+     * <p>★ 分界按用户要求固定为 **早上 8 点 / 晚上 7 点**：
+     * <ul>
+     *   <li>夜晚：00:00–07:59</li>
+     *   <li>白天：08:00–18:59</li>
+     *   <li>夜晚：19:00–23:59</li>
+     * </ul>
+     */
     public static boolean isDaytimeNow() {
-        return !isSystemNightMode();
+        // ★ 首次调用（启动首帧）时缓存还是空的：短暂等一次网络时间，
+        //   免得先用错的本地时钟判一次昼夜、随后再闪变。
+        //   3 秒上限，取不到就退回本地时钟，绝不卡住启动。
+        int hour = currentHourBlocking(3000);
+        if (hour < 0) {
+            // 连时间都取不到 ⇒ 退回系统夜间模式，至少不会瞎猜
+            return !isSystemNightMode();
+        }
+        // ★ 08:00 ~ 18:59 视为白天（用户定的时间点：早 8 点 / 晚 7 点）
+        return hour >= DAY_START_HOUR && hour < DAY_END_HOUR;
     }
 
     /** ★ 1.5.0：手机系统当前是否处于夜间（深色）模式。
@@ -212,13 +362,93 @@ public class DynamicBackground {
     }
 
     /**
+     * ★ 1.5.0：让**整套配色**也跟着现实时间走（用户：「主题色也全部改一下」）。
+     *
+     * <p>★ 为什么需要这一步：壁纸是我自己画的（{@link #isDaytimeNow()} 判定），
+     *   而界面配色走 Android 标准的 {@code values-night/colors.xml}，
+     *   **只跟随手机系统深色模式**。两者判据不同 ⇒ 会出现
+     *   「下午亮着、界面却是深色」这种自相矛盾。
+     *   ⇒ 用 {@code AppCompatDelegate.setDefaultNightMode()} 把主题模式也按现实时间钉住，
+     *   {@code values-night} 与壁纸就**永远一致**。
+     *
+     * <p>调用时机：{@code MainActivity.onCreate} 里、setContentView 之前。
+     *
+     * @return 实际设定到的模式（便于日志排查）
+     */
+    public static int applyRealTimeNightMode(android.content.Context ctx) {
+        int mode;
+        try {
+            boolean day = isDaytimeNow();
+            mode = day ? androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_NO
+                       : androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_YES;
+            androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode(mode);
+            // ★★★ 关键补充（2026-10-09 实测踩坑）：
+            //   只 setDefaultNightMode 可能「看起来没反应」——
+            //   ① 它是**应用级**开关，对**已经创建**的 Activity 不一定立刻重建；
+            //   ② 若当前 mode 与目标相同，AppCompat 干脆不做任何事（不重建）。
+            //   而我们首调时网络时间还没回来（用本地时钟，可能是错的），
+            //   等校正后 mode 恰好与首调相同 ⇒ 界面停在错误那一侧。
+            //   ⇒ 追加 Activity 自身的 localNightMode：直接改**这一个 Activity** 的夜间标志，
+            //     它会真正让 values-night 生效（配置变更能重建 Activity：
+            //     MainActivity 的 configChanges 已刻意不含 uiMode）。
+            //   ⚠ `Activity.getLocalNightMode()/setLocalNightMode()` 是 **API 29+**，
+            //     本工程 minSdk 26 ⇒ 不能直接调（编译不过）。
+            //     统一走 AppCompat 的 `AppCompatDelegate`（兼容 API 14+）。
+            try {
+                if (ctx instanceof androidx.appcompat.app.AppCompatActivity) {
+                    androidx.appcompat.app.AppCompatActivity ac = (androidx.appcompat.app.AppCompatActivity) ctx;
+                    if (ac.getDelegate() != null
+                            && ac.getDelegate().getLocalNightMode() != mode) {
+                        ac.getDelegate().setLocalNightMode(mode);
+                    }
+                }
+            } catch (Throwable ignoreLocal) {
+                // 拿不到 delegate 就只靠 setDefaultNightMode（对已运行的实例可能不重建）
+            }
+        } catch (Throwable t) {
+            mode = androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM;
+        }
+        return mode;
+    }
+
+
+    /**
      * ★ 1.5.0：把昼夜背景应用到给定视图（按现实时间自动选图）。
      *
      * <p>供 {@code MainActivity} 启动 / 回到前台时调用；不含动画，
      * 因为这是「静态切换」而不是轮播。
+     *
+     * <p>★★ 同时<b>异步校正时钟</b>：先用当前缓存/本地时钟贴一次（保证立刻有图），
+     *   再后台取网络时间，取回来后若判定的昼夜变了就<b>自动重贴</b>。
+     *   ⇒ 设备时钟慢 8 小时这类脏环境下，用户最终看到的仍是正确的那张图。
      */
-    public static void applyAutoDayNight(Activity activity, View view) {
+    public static void applyAutoDayNight(final Activity activity, final View view) {
         applySingle(activity, view, autoResId());
+        try {
+            final int before = autoResId();
+            final boolean beforeDay = isDaytimeNow();
+            refreshHourAsync(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        if (activity.isFinishing() || view == null) {
+                            return;
+                        }
+                        if (autoResId() != before) {
+                            // ★ 网络时间把昼夜判定掰回来了 → 重贴
+                            applySingle(activity, view, autoResId());
+                        }
+                        if (isDaytimeNow() != beforeDay) {
+                            // ★ 配色（values-night）也要跟着掰回来。
+                            //   setDefaultNightMode 会触发 Activity 重建，视觉上就是整体换色。
+                            applyRealTimeNightMode(activity);
+                        }
+                    } catch (Throwable ignored) {
+                    }
+                }
+            });
+        } catch (Throwable ignored) {
+        }
     }
 }
 

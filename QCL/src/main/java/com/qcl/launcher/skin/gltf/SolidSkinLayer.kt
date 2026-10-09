@@ -181,6 +181,12 @@ class SolidSkinLayer {
         if (u < 0 || v < 0 || u >= bitmapWidth || v * bitmapWidth + u >= pixels.size) {
             return false
         }
+        // ★★★ 必须照 FCL 原样：`>= ALPHA_THRESHOLD(26)`。
+        // ★★ 2026-10-09 搬运失误教训：这里曾被误改成 `== OPAQUE_ALPHA(255)`，
+        //   注释还自称"FCL 就是这样"—— 但 FCL 源码写的是 `>= 26`，**那句注释是假的**。
+        //   后果很直接：手臂（含袖子/手套/外套那一大片）大量像素是**半透明阴影**，
+        //   `== 255` 判据把它们全判成"非体素" ⇒ 手臂纹理缺失一大半、看着像秃了。
+        //   体素立方体重叠造成轻微条纹是 FCL 的既有观感，不要用"收紧阈值"去消灭它。
         return pixels[v * bitmapWidth + u] ushr 24 >= ALPHA_THRESHOLD
     }
 
@@ -338,7 +344,7 @@ class SolidSkinLayer {
     companion object {
         private const val TEXTURE_SIZE = 64f
 
-        // 与片元着色器 alpha<0.1 丢弃阈值一致
+        // 与片元着色器 alpha<0.1 丢弃阈值一致（照 FCL `com.mio.skin.SolidSkinLayer`）
         private const val ALPHA_THRESHOLD = 26
 
         // 面序号（3D Skin Layers 的模型空间面命名）

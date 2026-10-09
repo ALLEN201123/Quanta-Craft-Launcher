@@ -2,6 +2,7 @@ package com.qcl.launcher.launcher.uis.game.version.universal;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.os.AsyncTask;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
@@ -82,6 +83,14 @@ public class InstallPackageUI extends BaseUI implements View.OnClickListener {
     /** 安装进度对话框（安装期间不让关掉）与其中的任务列表 */
     private AlertDialog installDialog;
     private DownloadTaskListAdapter installTaskAdapter;
+    /**
+     * ★ 1.5.0：安装任务提为字段 —— 原来它是 {@code startInstall()} 里的**局部变量**，
+     *   于是「取消」按钮根本拿不到任务、点了毫无反应（用户实测「取消按钮点不动」）。
+     *   ★ 存成 {@link AsyncTask}：MultiMC 与通用任务分属两个父类
+     *   （BaseModpackInstallTask / MultiMCModpackInstallTask），没有共同的具体父类，
+     *   但都继承 AsyncTask ⇒ 用它做统一句柄最简单（两个父类内部都已用 isCancelled() 判中止）。
+     */
+    private AsyncTask<Object, Integer, Exception> installTask;
 
     public InstallPackageUI(Context context, MainActivity activity) {
         super(context, activity);
@@ -305,6 +314,17 @@ public class InstallPackageUI extends BaseUI implements View.OnClickListener {
         taskListView.setLayoutManager(new LinearLayoutManager(context));
         installTaskAdapter = new DownloadTaskListAdapter(context);
         taskListView.setAdapter(installTaskAdapter);
+        // ★ 2026-10-09 用户要求：整合包「所有文件下载」都要看得见 —— 每加一行就自动滚到最新那行，
+        //   否则玩家只能盯着前几行，看不到当前正在下哪个文件。
+        installTaskAdapter.registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
+            @Override
+            public void onItemRangeInserted(int positionStart, int itemCount) {
+                try {
+                    taskListView.scrollToPosition(installTaskAdapter.getItemCount() - 1);
+                } catch (Throwable ignored) {
+                }
+            }
+        });
         if (taskListView.getItemAnimator() != null) {
             taskListView.getItemAnimator().setAddDuration(0L);
             taskListView.getItemAnimator().setChangeDuration(0L);
@@ -313,6 +333,30 @@ public class InstallPackageUI extends BaseUI implements View.OnClickListener {
             if (taskListView.getItemAnimator() instanceof SimpleItemAnimator) {
                 ((SimpleItemAnimator) taskListView.getItemAnimator()).setSupportsChangeAnimations(false);
             }
+        }
+
+        // ★★★ 1.5.0 修复「整合包安装的取消按钮点不动」：
+        //   布局 dialog_install_game.xml 里**本来就有** cancel_install_game，
+        //   但这个界面从来没给它设监听器 ⇒ 按钮可见却点了毫无反应。
+        //   ⇒ 现在绑上：取消任务（两个任务父类内部都用 isCancelled() 判中止，会自己停下来）
+        //     + 关掉对话框，并清掉字段防止收尾再弹一次。
+        android.view.View cancelBtn = dialogView.findViewById(R.id.cancel_install_game);
+        if (cancelBtn != null) {
+            cancelBtn.setOnClickListener(v -> {
+                try {
+                    AsyncTask<Object, Integer, Exception> t = this.installTask;
+                    if (t != null && !t.isCancelled()) {
+                        t.cancel(true);
+                    }
+                } catch (Throwable ignored) {
+                }
+                this.installTask = null;
+                if (this.installDialog != null && this.installDialog.isShowing()) {
+                    this.installDialog.dismiss();
+                }
+                this.installDialog = null;
+                this.installTaskAdapter = null;
+            });
         }
 
         installDialog = new AlertDialog.Builder(context)
@@ -345,6 +389,8 @@ public class InstallPackageUI extends BaseUI implements View.OnClickListener {
                     finishInstall(error, targetName);
                 }
             });
+            // ★ 1.5.0：记到字段上，取消按钮才拿得到（原来只是局部变量）
+            this.installTask = task;
             task.execute();
             return;
         }
@@ -376,6 +422,8 @@ public class InstallPackageUI extends BaseUI implements View.OnClickListener {
                 finishInstall(error, targetName);
             }
         });
+        // ★ 1.5.0：记到字段上，取消按钮才拿得到
+        this.installTask = task;
         task.execute();
     }
 

@@ -45,21 +45,31 @@ public class InstallLauncherFile {
             activity.loadingProgressText.setText((CharSequence)(progress + " %"));
         });
         activity.runOnUiThread(() -> activity.loadingText.setText((CharSequence)activity.getString(R.string.loading_hint_plugin)));
-        if (!new File(AppManifest.PLUGIN_DIR + "/installer").exists() || !new File(AppManifest.PLUGIN_DIR + "/installer/version").exists() || Integer.parseInt(Objects.requireNonNull(FileStringUtils.getStringFromFile(AppManifest.PLUGIN_DIR + "/installer/version"))) < Integer.parseInt(Objects.requireNonNull(AssetsUtils.readAssetsTxt((Context)activity, "plugin/installer/version")))) {
-            com.qcl.launcher.utils.file.FileUtils.deleteDirectory(AppManifest.PLUGIN_DIR + "/installer");
-            AssetsUtils.getInstance((Context)activity).setProgressCallback(progressCallback).copyOnMainThread("plugin/installer", AppManifest.PLUGIN_DIR + "/installer");
-        }
-        if (!new File(AppManifest.PLUGIN_DIR + "/touch").exists() || !new File(AppManifest.PLUGIN_DIR + "/touch/version").exists() || Integer.parseInt(Objects.requireNonNull(FileStringUtils.getStringFromFile(AppManifest.PLUGIN_DIR + "/touch/version"))) < Integer.parseInt(Objects.requireNonNull(AssetsUtils.readAssetsTxt((Context)activity, "plugin/touch/version")))) {
-            com.qcl.launcher.utils.file.FileUtils.deleteDirectory(AppManifest.PLUGIN_DIR + "/touch");
-            AssetsUtils.getInstance((Context)activity).setProgressCallback(progressCallback).copyOnMainThread("plugin/touch", AppManifest.PLUGIN_DIR + "/touch");
-        }
-        if (!new File(AppManifest.PLUGIN_DIR + "/login/authlib-injector").exists() || !new File(AppManifest.PLUGIN_DIR + "/login/authlib-injector/version").exists() || Integer.parseInt(Objects.requireNonNull(FileStringUtils.getStringFromFile(AppManifest.PLUGIN_DIR + "/login/authlib-injector/version"))) < Integer.parseInt(Objects.requireNonNull(AssetsUtils.readAssetsTxt((Context)activity, "plugin/login/authlib-injector/version")))) {
-            com.qcl.launcher.utils.file.FileUtils.deleteDirectory(AppManifest.PLUGIN_DIR + "/login/authlib-injector");
-            AssetsUtils.getInstance((Context)activity).setProgressCallback(progressCallback).copyOnMainThread("plugin/login/authlib-injector", AppManifest.PLUGIN_DIR + "/login/authlib-injector");
-        }
-        if (!new File(AppManifest.PLUGIN_DIR + "/login/nide8auth").exists() || !new File(AppManifest.PLUGIN_DIR + "/login/nide8auth/version").exists() || Integer.parseInt(Objects.requireNonNull(FileStringUtils.getStringFromFile(AppManifest.PLUGIN_DIR + "/login/nide8auth/version"))) < Integer.parseInt(Objects.requireNonNull(AssetsUtils.readAssetsTxt((Context)activity, "plugin/login/nide8auth/version")))) {
-            com.qcl.launcher.utils.file.FileUtils.deleteDirectory(AppManifest.PLUGIN_DIR + "/login/nide8auth");
-            AssetsUtils.getInstance((Context)activity).setProgressCallback(progressCallback).copyOnMainThread("plugin/login/nide8auth", AppManifest.PLUGIN_DIR + "/login/nide8auth");
+        // ★ 2026-10-09：4 个 plugin 目录也改成**并发**（原来一条条串行）
+        {
+            final String[][] pluginSpec = {
+                    {"plugin/installer", AppManifest.PLUGIN_DIR + "/installer"},
+                    {"plugin/touch", AppManifest.PLUGIN_DIR + "/touch"},
+                    {"plugin/login/authlib-injector", AppManifest.PLUGIN_DIR + "/login/authlib-injector"},
+                    {"plugin/login/nide8auth", AppManifest.PLUGIN_DIR + "/login/nide8auth"}};
+            java.util.List<String[]> pairs = new java.util.ArrayList<>();
+            java.util.List<String> labels = new java.util.ArrayList<>();
+            for (String[] s : pluginSpec) {
+                if (InstallLauncherFile.needsPluginCopy(activity, s[0], s[1])) {
+                    com.qcl.launcher.utils.file.FileUtils.deleteDirectory(s[1]);
+                    pairs.add(s);
+                    labels.add(activity.getString(R.string.loading_hint_plugin));
+                }
+            }
+            if (!pairs.isEmpty()) {
+                final AssetsUtils pluginAu = AssetsUtils.getInstance((Context) activity);
+                pluginAu.setProgressCallback(null);
+                Runnable[] jobs = new Runnable[pairs.size()];
+                for (int i = 0; i < pairs.size(); i++) {
+                    jobs[i] = InstallLauncherFile.copyJob(pluginAu, pairs.get(i)[0], pairs.get(i)[1]);
+                }
+                InstallLauncherFile.runParallel(activity, labels.toArray(new String[0]), jobs, progressCallback);
+            }
         }
         activity.runOnUiThread(() -> activity.loadingText.setText((CharSequence)activity.getString(R.string.loading_hint_control)));
         // ★ 2026-09-19：默认控键布局按 info.json 内容比对更新（只动 Default，玩家自建布局不受影响）。
@@ -76,15 +86,37 @@ public class InstallLauncherFile {
             // ★ Boat 后端已彻底移除：assets/app_runtime/ 下没有 boat 目录，
             //   原来这里会无条件拷贝一次，属确定的死路径（copyOnMainThread 对不存在的路径会静默失败），已删除。
             //   BOAT_LIB_DIR 的 deleteDirectory 仍保留，用于清理历史安装残留。
-            AssetsUtils.getInstance((Context)activity).setProgressCallback(progressCallback).copyOnMainThread("app_runtime/pojav", AppManifest.POJAV_LIB_DIR);
-            AssetsUtils.getInstance((Context)activity).setProgressCallback(progressCallback).copyOnMainThread("app_runtime/caciocavallo", AppManifest.CACIOCAVALLO_DIR);
-            AssetsUtils.getInstance((Context)activity).setProgressCallback(progressCallback).copyOnMainThread("app_runtime/caciocavallo17", AppManifest.CACIOCAVALLO17_DIR);
-            AssetsUtils.getInstance((Context)activity).setProgressCallback(progressCallback).copyOnMainThread("app_runtime/version", AppManifest.DEFAULT_RUNTIME_DIR + "/version");
+            // ★ 2026-10-09 用户要求：这 4 个目录**并发**解压（原来是一条条串行）。
+            //   它们互不重叠，可以一起跑；进度由 runParallel 按「完成个数」统一上报。
+            final AssetsUtils au = AssetsUtils.getInstance((Context) activity);
+            au.setProgressCallback(null);   // 并发期别让共享字节计数互相踩
+            InstallLauncherFile.runParallel(activity,
+                    new String[]{
+                            activity.getString(R.string.loading_hint_lib),
+                            activity.getString(R.string.loading_hint_lib),
+                            activity.getString(R.string.loading_hint_lib),
+                            activity.getString(R.string.loading_hint_lib)},
+                    new Runnable[]{
+                            InstallLauncherFile.copyJob(au, "app_runtime/pojav", AppManifest.POJAV_LIB_DIR),
+                            InstallLauncherFile.copyJob(au, "app_runtime/caciocavallo", AppManifest.CACIOCAVALLO_DIR),
+                            InstallLauncherFile.copyJob(au, "app_runtime/caciocavallo17", AppManifest.CACIOCAVALLO17_DIR),
+                            InstallLauncherFile.copyJob(au, "app_runtime/version", AppManifest.DEFAULT_RUNTIME_DIR + "/version")},
+                    progressCallback);
         }
-        InstallLauncherFile.checkJava8(activity, progressCallback);
-        InstallLauncherFile.checkJava17(activity, progressCallback);
-        InstallLauncherFile.checkJava21(activity, progressCallback);
-        InstallLauncherFile.checkJava25(activity, progressCallback);
+        // ★ 2026-10-09：4 个 JRE 也**并发**装 —— 各自写各自的目录（default / JRE17 / JRE21 / JRE25），
+        //   互不干扰。这是首次安装里最慢的一段，并行后能省一大半时间。
+        InstallLauncherFile.runParallel(activity,
+                new String[]{
+                        activity.getString(R.string.loading_hint_java_8),
+                        activity.getString(R.string.loading_hint_java_17),
+                        activity.getString(R.string.loading_hint_java_21),
+                        activity.getString(R.string.loading_hint_java_25)},
+                new Runnable[]{
+                        () -> InstallLauncherFile.checkJava8(activity, null),
+                        () -> InstallLauncherFile.checkJava17(activity, null),
+                        () -> InstallLauncherFile.checkJava21(activity, null),
+                        () -> InstallLauncherFile.checkJava25(activity, null)},
+                progressCallback);
         activity.runOnUiThread(() -> InstallLauncherFile.enterLauncher(activity));
     }
 
@@ -155,6 +187,89 @@ public class InstallLauncherFile {
     }
 
     @SuppressLint(value={"SetTextI18n"})
+    /**
+     * ★ 2026-10-09 用户要求：首次那个「解压并安装」页必须**并发**跑。
+     *
+     * <p>FCL 就是并发解压；QCL 原来把 4 个 plugin + 4 个 runtime 目录 + 4 个 JRE
+     * **排成一条队一个个来**，首次安装慢得离谱。
+     *
+     * <p>并发度取 {@code min(4, CPU 核数)}；进度按「已完成个数」统一上报，不再依赖
+     * {@code AssetsUtils} 那套共享的字节计数（多线程会互相踩）。任一任务失败会在全部结束后抛出。
+     */
+    private static void runParallel(final RuntimeInstallActivity activity, final String[] labels,
+                                    final Runnable[] jobs, final AssetsUtils.ProgressCallback cb) {
+        int threads = Math.max(2, Math.min(4, Runtime.getRuntime().availableProcessors()));
+        java.util.concurrent.ExecutorService pool = java.util.concurrent.Executors.newFixedThreadPool(threads);
+        final java.util.concurrent.atomic.AtomicInteger done = new java.util.concurrent.atomic.AtomicInteger();
+        final java.util.concurrent.atomic.AtomicReference<Throwable> firstError =
+                new java.util.concurrent.atomic.AtomicReference<>();
+        for (int i = 0; i < jobs.length; i++) {
+            final Runnable job = jobs[i];
+            final String label = (labels != null && i < labels.length) ? labels[i] : null;
+            pool.execute(() -> {
+                try {
+                    if (label != null) {
+                        activity.runOnUiThread(() -> activity.loadingText.setText((CharSequence) label));
+                    }
+                    job.run();
+                } catch (Throwable t) {
+                    firstError.compareAndSet(null, t);
+                } finally {
+                    final int p = done.incrementAndGet() * 100 / jobs.length;
+                    try {
+                        activity.runOnUiThread(() -> {
+                            activity.loadingProgress.setProgress(p);
+                            activity.loadingProgressText.setText((CharSequence) (p + " %"));
+                        });
+                        if (cb != null) {
+                            cb.onProgress(p);
+                        }
+                    } catch (Throwable ignored) {
+                    }
+                }
+            });
+        }
+        pool.shutdown();
+        try {
+            pool.awaitTermination(60L, java.util.concurrent.TimeUnit.MINUTES);
+        } catch (InterruptedException ignored) {
+        }
+        Throwable t = firstError.get();
+        if (t instanceof RuntimeException) {
+            throw (RuntimeException) t;
+        }
+        if (t != null) {
+            throw new RuntimeException(t);
+        }
+    }
+
+    /** 把一个 (assets 源, 目标) 的运行时目录复制包装成可并发执行的 Runnable。 */
+    private static Runnable copyJob(final AssetsUtils au, final String src, final String dst) {
+        return () -> {
+            try {
+                au.copyRuntimeOrThrow(src, dst);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        };
+    }
+
+    /** 某个 plugin 目录是否**需要重新复制**（版本号低于 assets 里的版本，或根本没装）。 */
+    private static boolean needsPluginCopy(Context ctx, String assetDir, String targetDir) {
+        try {
+            File vf = new File(targetDir, "version");
+            if (vf.exists()) {
+                int installed = Integer.parseInt(
+                        Objects.requireNonNull(FileStringUtils.getStringFromFile(vf.getAbsolutePath())).trim());
+                int expected = Integer.parseInt(
+                        Objects.requireNonNull(AssetsUtils.readAssetsTxt(ctx, assetDir + "/version")).trim());
+                return installed < expected;
+            }
+        } catch (Throwable ignored) {
+        }
+        return true;   // 目录/版本文件不存在，或读不到版本 → 需要装
+    }
+
     public static void checkJava8(RuntimeInstallActivity activity, AssetsUtils.ProgressCallback callback) {
         activity.runOnUiThread(() -> activity.loadingText.setText((CharSequence)activity.getString(R.string.loading_hint_java_8)));
         InstallLauncherFile.installJava8(activity, callback);

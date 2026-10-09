@@ -62,9 +62,12 @@
     <string name="launcher_button_current_version">没有任何版本</string>
 
     <string name="launch_check_dialog_title">启动游戏</string>
-    <string name="launch_check_dialog_java">检测 Java 版本</string>
+    <string name="launch_check_dialog_java">检查 Java</string>
     <string name="launch_check_dialog_vulkan">检测 Vulkan 支持</string>
-    <string name="launch_check_dialog_lib">处理游戏依赖</string>
+    <string name="launch_check_dialog_mod">模组检测</string>
+    <string name="launch_check_dialog_game_version">游戏版本检测</string>
+    <string name="launch_check_dialog_preflight_title">启动前检查</string>
+    <string name="launch_check_dialog_lib">检查游戏类</string>
     <string name="launch_check_dialog_login">登录</string>
     <string name="launch_check_dialog_launch">等待游戏启动</string>
     <string name="launch_check_dialog_cancel">取消</string>
@@ -1139,6 +1142,14 @@
 
 多人联机由 Terracotta（作者 BurningTNT）提供支持；多人联机功能仅限中国大陆地区使用。</string>
     <string name="download_ui_shader">光影</string>
+    <string name="download_ui_favorite">收藏</string>
+    <string name="download_ui_favorite_all">全部</string>
+    <string name="download_ui_favorite_refresh">刷新</string>
+    <string name="download_ui_favorite_empty">还没有收藏。在「模组 / 整合包 / 资源包 / 光影 / 世界」列表里点右侧的 ☆ 即可收藏。</string>
+    <string name="download_ui_favorite_open">打开</string>
+    <string name="download_ui_favorite_remove">取消收藏</string>
+    <string name="download_ui_favorite_loading">正在获取最新详情…</string>
+    <string name="download_ui_favorite_fail">获取详情失败（网络或该资源已下架）。已为你打开项目主页。</string>
     <string name="game_menu_launch_log">启动日志</string>
     <string name="qcl_multiplayer_disclaimer">多人联机功能仅限中国大陆地区使用。在中华人民共和国境外使用本功能，本启动器不承担任何责任。请自行确认你所在地区的法律法规；使用本功能可能带来法律风险，请自行评估并承担相应后果。请勿将邀请码、IP、端口告知任何陌生人。</string>
     <string name="qcl_runtime_bit">运行时位数</string>
@@ -1237,4 +1248,46 @@
     <string name="terracotta_tutorial_guest">房客使用方法：\n\n - 在启动器多人联机主页阅读用户须知后启用联机功能\n - 启动游戏，在游戏内的联机菜单中找到联机模块并打开\n - 点击“我想当房客”，在输入框内输入房主提供的邀请码，并耐心等待\n - 若弹出提示要求申请 VPN 权限，请授予，否则无法正常使用\n - 显示已加入房间后，在游戏主界面选择多人游戏并刷新，双击进入陶瓦联机大厅\n\n注意事项：\n\n - 该软件支持离线账户\n - 该软件支持与 HMCL 和 PCL CE 等支持 Scaffolding 协议的软件互联\n - 使用备用服务器地址加入游戏时，不支持离线账户，自行解决</string>
     <string name="qcl_multiplayer_agree">我已知悉并同意</string>
     <string name="qcl_cancel">取消</string>
+    <!-- ★ 1.5.0 聚合搜索（措辞与 FCL 的 mods_aggregate 对齐） -->
+    <string name="download_mod_source_hybrid">聚合搜索</string>
+    <string name="download_search_partial">无法连接到 %1$s，当前仅显示 %2$s 的搜索结果，可能不全</string>
+    <string name="download_mod_source_curse_forge">CurseForge</string>
+    <string name="download_mod_source_modrinth">Modrinth</string>
+    <string name="download_mod_ui_refresh">刷新</string>
+    <string name="download_resource_curse_forge">CurseForge</string>
+    <string name="download_resource_modrinth">Modrinth</string>
+    <string name="install_game_ui_modloader">模组加载器</string>
+    <string name="dialog_add_offline_account_uuid">UUID</string>
+    <string name="game_setting_ui_ram">MB</string>
+    <string name="export_package_type_ui_multimc">MultiMC</string>
+    <string name="app_name">Quanta Craft Launcher</string>
+    <string name="app_name_pri">Quanta Craft Launcher</string>
+    <string name="app_name_sec">量子方块启动器</string>
+    <string name="ui_about_qcl_main">QCL（量子方块启动器）</string>
+    <string name="ui_about_qcl_sub">1.5.0</string>
+    <string name="version_name">v1.5.0</string>
+    <string name="app_bar_title">QCL · 量子方块启动器 v1.5.0</string>
+    <string name="ui_about_bangbang93_main">BMCLAPI</string>
+    <string name="ui_about_cosine_main">CosineMath</string>
+    <string name="ui_about_shirosakimio_main">ShirosakiMio</string>
+    <string name="ui_about_shirosakimio_sub">B 站 ID：@ShirosakiMio</string>
+    <string name="ui_about_tsaltedfishking_main">TSaltedfishKing</string>
+    <string name="ui_about_tungsten_main">Tungsten</string>
+    <string name="ui_about_tungsten_sub">B 站 ID：@念小六</string>
+    <string name="install_game_ui_fabric">Fabric</string>
+    <string name="install_game_ui_fabric_api">Fabric API</string>
+    <string name="install_game_ui_forge">Forge</string>
+    <string name="install_game_ui_quilt">Quilt</string>
+    <string name="install_game_ui_quilt_api">Quilt API</string>
+    <string name="install_game_ui_babric">Babric</string>
+    <string name="install_game_ui_liteloader">LiteLoader</string>
+    <string name="install_game_ui_minecraft">Minecraft</string>
+    <string name="install_game_ui_optifine">OptiFine</string>
+    <string name="game_setting_ui_game_launcher_pojav">PojavLauncher</string>
+    <string name="game_setting_ui_pojav_renderer_gl4es_114">Holy GL4ES（OpenGL 2.1/3.2）</string>
+    <string name="game_setting_ui_pojav_renderer_virgl">VirGLRenderer（OpenGL 4.3）</string>
+    <string name="default_game_file_directory_list_pri_path">/storage/emulated/0/QCL/.minecraft</string>
+    <string name="default_game_file_directory_list_sec_path">/storage/emulated/0/Android/data/com.qcl.launcher/files/.minecraft</string>
+    <string name="dialog_color_selector_arrow">→</string>
+    <string name="launcher_spinner_text">▲</string>
 </resources>

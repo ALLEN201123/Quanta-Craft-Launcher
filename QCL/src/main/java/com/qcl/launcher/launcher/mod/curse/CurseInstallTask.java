@@ -118,39 +118,73 @@ public class CurseInstallTask extends BaseModpackInstallTask {
     }
 
     /**
-     * manifest.files 里列的远程 mod：直接按 fileName + url 下到 mods/（best-effort）。
-     * ★ 缺失 fileName / url 的条目需要查 CurseForge API 才能补全，本阶段不做（只记日志）。
+     * manifest.files 里列的远程 mod：下到 {@code mods/}。
+     *
+     * ★★★★ 2026-10-09 用户实测「根本没有列出很多显示模组文件下载进度」——已用真实数据取证：
+     *   RLCraft 的 {@code manifest.files} 有 <b>81 条</b>，但每条<b>只有</b>
+     *   {@code {projectID, fileID, required}}，<b>没有 fileName / url</b>；
+     *   而这里原来是「缺 fileName/url 就跳过」⇒ 81 个全被跳过，玩家只看到 1 行。
+     *   （CF 官方<b>不提供</b>整合包内文件清单 API —— {@code /v1/mods/{id}/files/{fid}/manifest}
+     *   实测 404，只能下 zip 后从 {@code manifest.json} 读，再逐条回查 CF 补全。）
+     *
+     * <p>现在的做法（照 FCL 的 {@code TaskDialog + TaskListener} 逐条报进度的观感）：
+     * <ol>
+     *   <li>{@link CurseForgeRemoteModRepository#completeManifestFiles} 6 条并发补全 fileName/url；</li>
+     *   <li><b>每个文件单独一行</b>（文件名就是行名），逐行推进度；</li>
+     *   <li>整段再补一行总进度，让玩家一眼看到「还剩多少」。</li>
+     * </ol>
      */
     private void downloadManifestFiles() {
         if (manifest == null || manifest.getFiles() == null || manifest.getFiles().isEmpty()) {
             return;
         }
-        List<CurseManifestFile> files = manifest.getFiles();
-        DownloadTaskListBean row = addRow("下载整合包列出的 mod（best-effort）");
+        // ① 先补全（原来就是缺这一步，导致 81 个 mod 全被跳过）
+        List<CurseManifestFile> files;
+        try {
+            files = CurseForgeRemoteModRepository.MODS.completeManifestFiles(manifest.getFiles());
+        } catch (Throwable t) {
+            android.util.Log.w("ModpackInstall", "CF 文件信息补全失败，按原样继续", t);
+            files = manifest.getFiles();
+        }
+        DownloadTaskListBean overall = addRow("下载整合包列出的 mod（共 " + files.size() + " 个）");
         int total = files.size();
         int done = 0;
         int ok = 0;
         for (CurseManifestFile file : files) {
             done++;
+            if (file == null) {
+                continue;
+            }
+            String fileName = file.getFileName();
+            URL url = file.getUrl();
+            if (fileName == null || url == null) {
+                // 补全也拿不到的（CF 下架 / 已删文件）：记一行，不让整包失败
+                rowDone(addRow(file.getProjectID() + "/" + file.getFileID() + "（CF 已下架，跳过）"));
+                rowProgress(overall, (int) (100.0 * done / total));
+                continue;
+            }
+            // ② ★ 每个文件单独一行，行名就是文件名 —— 这才是"列出很多文件下载进度"
+            DownloadTaskListBean fileRow = addRow(fileName);
             try {
-                String fileName = file.getFileName();
-                URL url = file.getUrl();
-                if (fileName != null && url != null) {
-                    // ★【2026-10-06】按版本隔离决定（原来是写死的 gameDir() → 开隔离的版本看不到 mod）
-                    File target = new File(runDir(), "mods" + File.separator + fileName);
-                    if ((target.isFile() && target.length() > 0) || downloadOne(url.toString(), target)) {
-                        ok++;
-                    }
+                // ★【2026-10-06】按版本隔离决定（原来写死 gameDir() → 开隔离的版本看不到 mod）
+                File target = new File(runDir(), "mods" + File.separator + fileName);
+                if ((target.isFile() && target.length() > 0) || downloadOne(url.toString(), target)) {
+                    ok++;
+                    rowDone(fileRow);
                 } else {
-                    android.util.Log.i("ModpackInstall",
-                            "Curse 条目缺少 fileName/url，跳过（需查 CurseForge API 补全）");
+                    // ★ DownloadTaskListBean 没有 state 字段（列表只显示 name/url/path/sha1），
+                    //   失败状态只能写回行名 —— 与 Modrinth 那边逐文件成行的做法一致。
+                    fileRow.name = fileName + "（下载失败）";
+                    rowDone(fileRow);
                 }
             } catch (Throwable t) {
-                android.util.Log.w("ModpackInstall", "Curse mod 下载失败（已跳过，不阻断）", t);
+                fileRow.name = fileName + "（下载失败）";
+                rowDone(fileRow);
+                android.util.Log.w("ModpackInstall", "Curse mod 下载失败（已跳过，不阻断）: " + fileName, t);
             }
-            rowProgress(row, (int) (100.0 * done / total));
+            rowProgress(overall, (int) (100.0 * done / total));
         }
-        rowDone(row);
-        android.util.Log.i("ModpackInstall", "Curse 远程 mod best-effort 完成：" + ok + "/" + total);
+        rowDone(overall);
+        android.util.Log.i("ModpackInstall", "Curse 远程 mod 完成：" + ok + "/" + total);
     }
 }

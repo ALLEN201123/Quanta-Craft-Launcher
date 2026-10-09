@@ -419,8 +419,8 @@
                 android:gravity="center"
                 android:text="@string/dialog_offline_skin_confirm"
                 android:textSize="@dimen/text_size_middle"
-                android:textColor="@color/colorLinkBlue"
-                android:background="@drawable/launcher_button_parent"
+                android:textColor="@color/qcl_dialog_btn_text"
+                android:background="@drawable/qcl_dialog_button"
                 android:id="@+id/edit_skin_positive"/>
 
             <Button
@@ -432,8 +432,8 @@
                 android:gravity="center"
                 android:text="@string/dialog_offline_skin_cancel"
                 android:textSize="@dimen/text_size_middle"
-                android:textColor="@color/colorPureBlack"
-                android:background="@drawable/launcher_button_parent"
+                android:textColor="@color/qcl_dialog_btn_text"
+                android:background="@drawable/qcl_dialog_button"
                 android:id="@+id/cancel_edit_skin"/>
 
         </LinearLayout>

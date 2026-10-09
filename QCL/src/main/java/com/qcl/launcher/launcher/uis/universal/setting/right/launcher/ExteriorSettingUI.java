@@ -37,7 +37,7 @@
 package com.qcl.launcher.launcher.uis.universal.setting.right.launcher;
 
 import com.qcl.launcher.utils.QclColors;
-import com.qcl.launcher.skin.MinecraftSkinRenderer;
+import com.qcl.launcher.skin.gltf.SkinRenderer;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
@@ -335,8 +335,10 @@ CompoundButton.OnCheckedChangeListener {
         //     ⇒ 所以这里只回填，监听在下面 registerAnimListener() 里注册。
         if (this.accountModelAnimSpinner != null) {
             int anim = this.activity.launcherSetting.accountModelAnim;
-            if (anim < MinecraftSkinRenderer.ANIM_IDLE || anim > MinecraftSkinRenderer.ANIM_WAVE) {
-                anim = MinecraftSkinRenderer.ANIM_IDLE;
+            // ★ 1.5.0：老 MinecraftSkinRenderer（连同 GameCharacter）已删除，
+            //   这里只用字面量做范围校验（下拉仍是 0~5：待机/走/跑/转/挥手/点头）。
+            if (anim < 0 || anim > 5) {
+                anim = 0;
             }
             this.accountModelAnimSpinner.setSelection(anim);
         }

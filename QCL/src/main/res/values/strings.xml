@@ -36,6 +36,9 @@
     <string name="install_game_ui_babric_only_b173">Only for b1.7.3</string>
     <string name="download_mod_source_curse_forge" translatable="false">CurseForge</string>
     <string name="download_mod_source_modrinth" translatable="false">Modrinth</string>
+    <!-- ★ 1.5.0 聚合搜索源（措辞与 FCL 的 mods_aggregate 对齐：英文 Aggregated / 中文 聚合搜索） -->
+    <string name="download_mod_source_hybrid">Aggregated</string>
+    <string name="download_search_partial">Failed to connect to %1$s, currently only showing results from %2$s. Results may be incomplete.</string>
     <string name="download_resource_curse_forge" translatable="false">CurseForge</string>
     <string name="download_resource_modrinth" translatable="false">Modrinth</string>
     <string name="download_resource_mcmod" translatable="false">MCMod</string>
@@ -131,6 +134,9 @@
     <string name="launch_check_dialog_title">Launch Game</string>
     <string name="launch_check_dialog_java">Checking Java version</string>
     <string name="launch_check_dialog_vulkan">Checking Vulkan support</string>
+    <string name="launch_check_dialog_mod">Checking mods</string>
+    <string name="launch_check_dialog_game_version">Checking game version</string>
+    <string name="launch_check_dialog_preflight_title">Pre-launch check</string>
     <string name="launch_check_dialog_lib">Resolving dependencies</string>
     <string name="launch_check_dialog_login">Logging in</string>
     <string name="launch_check_dialog_launch">Waiting for the game to launch</string>
@@ -1083,6 +1089,14 @@ This project is licensed under GNU GPL-3.0; the complete source code is provided
 
 Multiplayer is powered by Terracotta (by BurningTNT). The multiplayer feature is restricted to mainland China only.</string>
     <string name="download_ui_shader">Shader</string>
+    <string name="download_ui_favorite">Favorites</string>
+    <string name="download_ui_favorite_all">All</string>
+    <string name="download_ui_favorite_refresh">Refresh</string>
+    <string name="download_ui_favorite_empty">No favorites yet. Tap the ☆ on any entry in Mods / Modpacks / Resource packs / Shaders / Worlds to add one.</string>
+    <string name="download_ui_favorite_open">Open</string>
+    <string name="download_ui_favorite_remove">Remove</string>
+    <string name="download_ui_favorite_loading">Fetching latest details…</string>
+    <string name="download_ui_favorite_fail">Could not fetch details (network or the project is gone). Opened the project page instead.</string>
     <string name="game_menu_launch_log">Launch log</string>
     <string name="qcl_multiplayer_disclaimer">The multiplayer feature is restricted to mainland China only. Outside mainland China, this launcher assumes no responsibility whatsoever. Please check the laws and regulations of your region; using this feature may carry legal risk, which you evaluate and bear yourself. Never share the invite code, IP or port with strangers.</string>
     <string name="qcl_runtime_bit">Runtime bitness</string>

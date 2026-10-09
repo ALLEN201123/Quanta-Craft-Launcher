@@ -150,6 +150,21 @@ implements View.OnClickListener {
     //   下面这些 native 方法。这里改成等价的**纯 Java 实现**，彻底摘掉对它的依赖。
     @Override
     protected void onCreate(Bundle bundle) {
+        // ★★★★★ 2026-10-09（用户：「随时间变化的壁纸不准确，下午了还是晚上的壁纸」
+        //   +「主题色也全部改一下」）：把**配色主题**也按现实时间钉住。
+        //   必须在 setContentView 之前设，否则 values-night 会先按系统深色模式加载一遍。
+        //
+        //   ★★ 但**不能只信本地时钟**：实测 MuMu 上设备时钟整整慢 8 小时（epoch 差 28927s），
+        //   本地时钟会把晚上 8 点判成中午 12 点。所以：
+        //     ① 先异步取网络时间（后台线程，不阻塞启动、也不会 NetworkOnMainThread）
+        //     ② 拿到了就按它定色，没拿到才退回本地时钟
+        //   （取回后若判定与初值不同，DynamicBackground.applyAutoDayNight 会再校正一次。）
+        try {
+            com.qcl.launcher.launcher.uis.main.DynamicBackground.refreshHourAsync(null);
+            com.qcl.launcher.launcher.uis.main.DynamicBackground.applyRealTimeNightMode(this);
+        } catch (Throwable ignoreTheme) {
+            // 设不了就按系统来，不能因此崩
+        }
         super.onCreate(bundle);
         this.setContentView(R.layout.activity_main);
         this.launcherLayout = (LinearLayout)this.findViewById(R.id.launcher_layout);
@@ -181,6 +196,14 @@ implements View.OnClickListener {
             this.publicGameSetting = InitializeSetting.initializePublicGameSetting((Context)this, this);
             this.privateGameSetting = InitializeSetting.initializePrivateGameSetting((Context)this);
             this.runOnUiThread(() -> {
+                // ★ 1.5.0：把 MainActivity 注册给启动前预检（LaunchPreflightChecks），
+                //   好让它能读到**全局**隔离设置（用户在「通用游戏设置」里开的那个）。
+                //   ★ 必须在 privateGameSetting 初始化**之后**注册，否则读到的是空对象。
+                try {
+                    com.qcl.launcher.launcher.launch.check.LaunchPreflightChecks
+                            .setGlobalSettingProvider((Context) this);
+                } catch (Throwable ignored) {
+                }
                 this.updateChecker = new UpdateChecker((Context)this, this);
                 this.updateChecker.checkAuto();
             });
@@ -619,11 +642,13 @@ implements View.OnClickListener {
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
         LocaleUtils.setLanguage((Context)this);
-        // ★★★ 1.5.0：**系统夜间模式切换**时同步刷新背景图。
-        //   说明：MainActivity 的 configChanges 里**故意不含 uiMode** → 正常情况下
-        //   系统会重建这个 Activity（资源重载 → values-night/colors.xml 生效 → 配色整体变深），
-        //   本方法不会被调到。这里只是兜底：某些 ROM 把 uiMode 当普通配置变更直接回调，
-        //   不重建的话至少要把背景图换过来（否则"深色配色 + 白天照片"会不搭）。
+        // ★★★ 1.5.0 修正：配色随昼夜切换要靠 **Activity 重建**，而重建的前提是
+        //   **manifest 的 configChanges 不含 uiMode** —— 原来这里写着 uiMode
+        //   （而下面这段注释却说「故意不含 uiMode」），自相矛盾：
+        //   含 uiMode ⇒ setDefaultNightMode() 不会重建 Activity ⇒
+        //   values-night/colors.xml 永远不重新加载 ⇒ **背景是夜晚、界面却还是白天配色**。
+        //   ⇒ 已从 manifest 里删掉 MainActivity 的 uiMode；这里只保留兜底
+        //   （某些 ROM 仍可能把 uiMode 当普通配置变更直接回调）。
         try {
             if (this.launcherSetting != null
                     && this.launcherSetting.launcherBackground != null

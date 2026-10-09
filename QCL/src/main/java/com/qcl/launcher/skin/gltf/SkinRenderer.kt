@@ -35,6 +35,14 @@ class SkinRenderer(context: Context) {
     init {
         // 默认播放待机（账户弹窗等不调用 restoreSkinAnimation 的场景也有动画）
         model.playAnimation(animationId)
+        // ★ 2026-10-09：初始默认皮肤是 **steve（classic / 非 slim）**，
+        //   模型必须与之一致 —— 否则手臂会采样到透明贴图区，看起来"糙、只有一层"。
+        //   ★ 这里**不能照抄 FCL 的 `model.setSlim(true)`**：FCL 的 `defaultSkin()` 读的是
+        //   `/assets/img/alex.png`，alex 是 slim 布局，所以 FCL 设 slim 是对的；
+        //   而我们把默认皮肤换成了 `steve.png`（1.5.0 为修「离线账号显示成艾利克斯」改的），
+        //   若还照抄 setSlim(true) 就成了**模型与贴图不匹配** ⇒ 正是用户实测的粗糙观感。
+        //   ⇒ 真正的皮肤进来时由 `consumePendingUpdate()` 按 `pendingSlim` 自动切对。
+        model.setSlim(false)
     }
 
     /**
@@ -79,11 +87,45 @@ class SkinRenderer(context: Context) {
     @Volatile
     private var pendingCape: Bitmap? = null
 
+    // ★ 默认 false：与 `defaultSkin()` 读的 steve.png（classic 布局）一致。
+    //   FCL 这里是 true，因为它默认贴图是 alex.png（slim 布局）——别照抄。
     @Volatile
     private var pendingSlim = false
 
     @Volatile
     private var pendingHasUpdate = false
+
+    // ---- FCL 的两个渲染开关（1.5.0 补齐，此前整段缺失） ----
+
+    /**
+     * 体素化第二层开关（任意线程可写、渲染线程读）；关闭时第二层回落零厚度面片。
+     *
+     * ★ 与 FCL 对齐：`SkinRenderer` 暴露这个开关、由 UI 决定初始值。
+     *   我们侧此前**只有模型层的 `GltfModel.solidLayerEnabled`**，渲染器这一层没有，
+     *   于是「第二层」到底开没开完全取决于模型默认值，谁也关不掉/切不动。
+     */
+    @Volatile
+    var solidLayerEnabled = true
+        set(value) {
+            field = value
+            model.setSolidLayerEnabled(value)
+        }
+
+    /**
+     * 身体与腿部分离开关：关闭时上身与腿部贴合（腰部接缝可能闪烁）。
+     * 抬起量在模型加载时已硬编码应用（`GltfModel` 里 `UPPER_BODY_LIFT`），
+     * 这里只把状态同步给模型，供 UI 切换。
+     */
+    @Volatile
+    var upperBodySeparated = true
+        set(value) {
+            field = value
+            pendingSeparation = true
+        }
+
+    /** 分离开关待应用标志：`rest` 局部矩阵修改较重，交渲染线程消费以免与绘制竞争。 */
+    @Volatile
+    private var pendingSeparation = false
 
     // ---- 对外 API（任意线程可调）----
 
@@ -155,6 +197,9 @@ class SkinRenderer(context: Context) {
         GLES20.glEnable(GLES20.GL_BLEND)
         GLES20.glBlendFunc(GLES20.GL_ONE, GLES20.GL_ONE_MINUS_SRC_ALPHA)
         texture[0]?.let { skinTextureId = uploadTexture(skinTextureId, it) }
+        // ★ 2026-10-09 补回 FCL 的这一行（此前被删）：披风纹理也要上传，
+        //   否则「有披风但画面上什么都没有」。
+        texture[1]?.let { capeTextureId = uploadTexture(capeTextureId, it) }
     }
 
     fun onSurfaceChanged(width: Int, height: Int) {
@@ -218,6 +263,11 @@ class SkinRenderer(context: Context) {
     }
 
     private fun consumePendingUpdate() {
+        // ★ 2026-10-09 补回 FCL 的分离开关消费（此前整段缺失）
+        if (pendingSeparation) {
+            pendingSeparation = false
+            model.setUpperBodySeparated(upperBodySeparated)
+        }
         if (!pendingHasUpdate) {
             return
         }

@@ -185,7 +185,11 @@ implements View.OnClickListener {
                                 @Override
                                 public void run() {
                                     String skinTexture = Avatar.bitmapToString(skin);
+                                    // ★ 1.5.0：同时下载并保存披风（此前根本没拉过，披风永远是空）。
+                                    //   下载失败返回 null，account.capeTexture 留空即可，不影响登录。
+                                    String capeTexture = Account.downloadTextureAsBase64(map.get(TextureType.CAPE));
                                     AddMicrosoftAccountDialog.this.account = new Account(3, "", "", "mojang", "0", msa.mcName, msa.mcUuid, msa.mcToken, "00000000-0000-0000-0000-000000000000", msa.msRefreshToken, "", skinTexture);
+                                    AddMicrosoftAccountDialog.this.account.capeTexture = capeTexture;
                                     AddMicrosoftAccountDialog.this.onMicrosoftAccountAddListener.onPositive(AddMicrosoftAccountDialog.this.account);
                                     AddMicrosoftAccountDialog.this.dismiss();
                                 }

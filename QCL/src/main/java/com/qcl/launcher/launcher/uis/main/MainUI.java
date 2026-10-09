@@ -33,9 +33,8 @@ import com.qcl.launcher.launcher.setting.InitializeSetting;
 import com.qcl.launcher.launcher.setting.SettingUtils;
 import com.qcl.launcher.launcher.uis.tools.BaseUI;
 import com.qcl.launcher.launcher.view.spinner.VersionSpinnerAdapter;
-import com.qcl.launcher.skin.GameCharacter;
-import com.qcl.launcher.skin.MinecraftSkinRenderer;
-import com.qcl.launcher.skin.SkinGLSurfaceView;
+import com.qcl.launcher.skin.gltf.SkinViewer;
+import com.qcl.launcher.skin.gltf.SkinRenderer;
 import com.qcl.launcher.skin.utils.Avatar;
 // ★ 1.4.1：老格式皮肤需要归一化后再渲染（否则帽子层黑块 / 模型误判）
 import com.qcl.launcher.skin.utils.NormalizedSkin;
@@ -93,14 +92,12 @@ public class MainUI extends BaseUI implements View.OnClickListener, AdapterView.
     private LinearLayout accountModelView;
     private FrameLayout accountModelContainer;
 
-    // ★★★★★ 1.5.0：主界面人物改用 **FCL 的 glTF 管线**（真正的骨骼动画 + 待机随机变体）。
-    //   老字段（skinGLSurfaceView / skinRenderer / GameCharacter）**保留但不再用于主界面** ——
-    //   皮肤编辑器等仍用它们，这里只把主界面的人物换成 FCL 那一套。
+    // ★★★★★ 1.5.0：主界面人物用 **FCL 的 glTF 管线**（真正的骨骼动画 + 待机随机变体）。
+    //   ★★★ 1.5.0：老管线（SkinGLSurfaceView / MinecraftSkinRenderer / GameCharacter）
+    //   **已彻底删除**，全站（主界面 + 皮肤对话框 + 微软换肤对话框）统一走这一套。
     private com.qcl.launcher.skin.gltf.SkinViewer skinViewer;
     private com.qcl.launcher.skin.gltf.SkinRenderer gltfRenderer;
 
-    private SkinGLSurfaceView skinGLSurfaceView;
-    private MinecraftSkinRenderer skinRenderer;
     public TextView accountName;
     public TextView accountType;
 
@@ -155,7 +152,30 @@ public class MainUI extends BaseUI implements View.OnClickListener, AdapterView.
         }
     }
 
-    private void applyCachedVersionName() {
+    /**
+ * ★ 1.5.0 辅助：按版本名在版本列表里找 {@link GameListBean}（为了拿它自带的 iconPath）。
+ * 找不到就返回 null，调用方按兜底处理。
+ */
+private GameListBean findGameListBean(String name) {
+    try {
+        if (activity == null || activity.uiManager == null
+                || activity.uiManager.versionListUI == null
+                || activity.uiManager.versionListUI.gameList == null) {
+            return null;
+        }
+        java.util.List<GameListBean> list = activity.uiManager.versionListUI.gameList;
+        for (int i = 0; i < list.size(); i++) {
+            GameListBean b = list.get(i);
+            if (b != null && name != null && name.equals(b.name)) {
+                return b;
+            }
+        }
+    } catch (Throwable ignored) {
+    }
+    return null;
+}
+
+private void applyCachedVersionName() {
         try {
             if (activity == null || activity.publicGameSetting == null) {
                 return;
@@ -180,6 +200,26 @@ public class MainUI extends BaseUI implements View.OnClickListener, AdapterView.
                     int res = com.qcl.launcher.launcher.download.modloader.ModLoaderDetector
                             .isLegacyVersion(name) ? R.drawable.ic_cobble : R.drawable.ic_grass;
                     launchVersionIcon.setBackground(context.getDrawable(res));
+                }
+            }
+            // ★★★ 1.5.0 修复（用户实测「我在版本列表切版本，那个游戏设置/当前版本的图标
+            //   没有跟着切换」）：原来只刷了启动按钮上方的 launchVersionIcon，
+            //   **漏了左侧导航那格 versionIcon** ⇒ 在版本列表里切了版本，左栏图标还是旧的。
+            //   ⇒ 这里一并刷新，并沿用与 onItemSelected 相同的优先级
+            //   （版本自带 iconPath → 加载器 logo → 方块兜底）。
+            if (versionIcon != null) {
+                GameListBean bean = findGameListBean(name);
+                String iconPath = (bean == null) ? null : bean.iconPath;
+                if (iconPath != null && !iconPath.isEmpty() && new File(iconPath).exists()) {
+                    versionIcon.setBackground(DrawableUtils.getDrawableFromFile(iconPath));
+                } else {
+                    Integer li2 = loaderIconFor(new File(activity.launcherSetting.gameFileDirectory
+                            + "/versions/" + name));
+                    if (li2 != null) {
+                        versionIcon.setBackground(context.getDrawable(li2));
+                    } else {
+                        versionIcon.setBackground(context.getDrawable(R.drawable.ic_qcl_version_setting_white));
+                    }
                 }
             }
         } catch (Throwable ignored) {
@@ -350,10 +390,6 @@ public class MainUI extends BaseUI implements View.OnClickListener, AdapterView.
             showModelCfg = activity.launcherSetting == null || activity.launcherSetting.showAccountModel;
         } catch (Throwable ignored) {
         }
-        if (skinGLSurfaceView != null) {
-            skinGLSurfaceView.onResume();
-            skinGLSurfaceView.setVisibility(View.GONE);   // ★ 主界面已改用 glTF，老视图只给皮肤编辑器用
-        }
         // ★ 1.5.0：glTF 人物随主界面 onResume 恢复渲染
         if (skinViewer != null) {
             try {
@@ -369,6 +405,12 @@ public class MainUI extends BaseUI implements View.OnClickListener, AdapterView.
                 try {
                     if (gltfRenderer == null || skinViewer == null) {
                         setupAccountModel();
+                    }
+                    // ★ 用户在设置里改了「人物动作」后**不必重启启动器**：
+                    //   每次回到主界面都按当前设置重新 playAnimation 一次。
+                    //   （之前只在 setupAccountModel 里调，那是"首次创建视图"才跑 ⇒ 改了设置没反应。）
+                    if (gltfRenderer != null) {
+                        gltfRenderer.playAnimation(animClipFromIndex());
                     }
                     refreshAccountModel();
                 } catch (Throwable ignoredRefresh) {
@@ -388,6 +430,47 @@ public class MainUI extends BaseUI implements View.OnClickListener, AdapterView.
         }
         CustomAnimationUtils.showViewFromLeft(mainUI,activity,context,true);
         activity.hideBarTitle();
+
+        // ★ 2026-10-09 用户要求：QCL 版「新手教程」（参考 FCL 的 com/mio/util/GuideUtil.kt），
+        //   **按当前左侧栏的布局**逐个引导；只看没看过的步骤。
+        //   tag 存在外部私有目录 guide_tag.txt —— 想重看直接删掉那个文件即可。
+        try {
+            final View[] navViews = {
+                    startHomePageUI, startGameManagerUI, startVersionListUI, startDownloadUI,
+                    startLabUI, startMultiPlayerUI, startSettingUI, startHomeUI,
+                    // ★ 2026-10-09 用户要求补上**右侧**的介绍
+                    startAccountUI, launchVersionRow, startGame};
+            final String[] navTags = {
+                    "nav_home_page", "nav_game_manager", "nav_version_list", "nav_download",
+                    "nav_lab", "nav_multi_player", "nav_setting", "nav_home",
+                    "right_account", "right_version", "right_play"};
+            final String[] navTitles = {
+                    "主界面", "游戏管理", "版本列表", "下载", "实验室", "多人联机", "设置", "回到主界面",
+                    "账号", "当前版本", "启动游戏"};
+            final String[] navDescs = {
+                    "随时点这里回到主界面。",
+                    "管理当前版本的存档、模组、资源包。",
+                    "安装 / 切换 Minecraft 版本，也能看每个版本的详情。",
+                    "下载游戏版本、模组、整合包与光影。",
+                    "实验性功能都收在这里。",
+                    "和朋友一起玩（Terracotta 联机）。",
+                    "渲染器、Java 版本、主题色、内存都在这里。",
+                    "在二级页面点这个也能直接回主界面。",
+                    "点这里切换 / 管理账号（离线、微软、外置登录都在这）。",
+                    "这里显示要启动的版本，点一下可以换版本。",
+                    "一切选好后，点这个按钮启动游戏。会先做启动前检查（Java / Vulkan / 模组 / 版本）。"};
+            new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
+                try {
+                    GuideUtil.Step[] steps = new GuideUtil.Step[navViews.length];
+                    for (int i = 0; i < navViews.length; i++) {
+                        steps[i] = new GuideUtil.Step(navTags[i], navViews[i], navTitles[i], navDescs[i]);
+                    }
+                    GuideUtil.showOnMain(activity, steps);
+                } catch (Throwable ignoredGuide) {
+                }
+            }, 1500L);
+        } catch (Throwable ignoredGuideSetup) {
+        }
 
         new Thread(() -> {
             ArrayList<GameListBean> gameList = SettingUtils.getLocalVersionInfo(activity.launcherSetting.gameFileDirectory,activity.publicGameSetting.currentVersion);
@@ -672,8 +755,7 @@ public class MainUI extends BaseUI implements View.OnClickListener, AdapterView.
                             android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
                             android.widget.LinearLayout.LayoutParams.MATCH_PARENT));
             skinViewer.setRenderer(gltfRenderer, context.getResources().getDisplayMetrics().density);
-            // ★ 恢复玩家上次选的动画。设置里的下拉 4 项 = glTF 模型内的 4 个真实 clip
-            //   （idle / idle_sub_1 / idle_sub_2 / idle_sub_3），与 SkinAnimations.entries 一一对应。
+            // ★ 用户选的动画
             try {
                 gltfRenderer.playAnimation(animClipFromIndex());
             } catch (Throwable ignoredAnim) {
@@ -690,85 +772,34 @@ public class MainUI extends BaseUI implements View.OnClickListener, AdapterView.
         } catch (Throwable t) {
             t.printStackTrace();
         }
-        // 老的人物视图若已创建则隐藏（皮肤编辑器仍会用到它）
-        if (skinGLSurfaceView != null) {
-            skinGLSurfaceView.setVisibility(View.GONE);
-        }
+        // 老的人物视图已随 GameCharacter 管线一起删除，无需再隐藏
     }
 
     /**
-     * ★ 1.5.0：主界面人物的兜底创建（旧版逻辑，保留以防 glTF 初始化失败）。
-     * @deprecated 主界面已改用 glTF 管线，此方法只服务皮肤编辑器。
+     * ★★★ 1.5.0：**整个老人物管线（GameCharacter / MinecraftSkinRenderer / SkinGLSurfaceView）
+     *   已彻底删除**，不再有「glTF 起不来就退回老管线」的兜底。
+     *
+     *   原因：老 GameCharacter 只有 setWalkSwing 一个动作，**没有 FCL 的待机随机变体状态机**
+     *   ⇒ 只要走到兜底，人物就变成"一直站着不动"（用户实测：皮肤对话框里就是这样）。
+     *   与其让人物偶尔退化成一堆木头，不如**glTF 起不来就不显示人物**，行为可预期。
+     *   ⇒ 老管线相关文件 skin/GameCharacter.java、skin/MinecraftSkinRenderer.java、
+     *     skin/SkinGLSurfaceView.java、skin/body、skin/cape 均已删除。
      */
-    @Deprecated
-    private void setupLegacyAccountModel() {
-        if (accountModelView == null || skinGLSurfaceView != null) {
-            return;
-        }
-        try {
-            skinRenderer = new MinecraftSkinRenderer(context, R.drawable.skin_alex, true);
-            // ★★★★★ 1.5.0：默认动作改成「有动作」（用户实测"默认没动作了，给它默认动作和 FCL 一致"）。
-            //   FCL 那边是 glTF 待机动画（GltfPlayerModel：待机 8~15s 随机播一个变体），
-            //   观感上**人物始终是动的**。QCL 这套老 GameCharacter 没有变体机制，
-            //   最接近的是 ANIM_WAVE（原地挥手循环）—— 站着有动作、又不像走路那样位移。
-            //   ★ 之前这里是 ANIM_IDLE（完全静止），所以用户看到"没动作"。
-            //   玩家仍可在「设置 → 外观 → 人物动作」里改。
-            int anim = activity.launcherSetting == null
-                    ? MinecraftSkinRenderer.ANIM_WAVE
-                    : activity.launcherSetting.accountModelAnim;
-            //   旧存档里 accountModelAnim 默认 0(=IDLE) 会让"升级后仍然静止"，
-            //   这里只在玩家**没有主动选过**（0）时给 WAVE，选过别的就尊重玩家选择。
-            if (activity.launcherSetting != null && activity.launcherSetting.accountModelAnim == 0) {
-                anim = MinecraftSkinRenderer.ANIM_WAVE;
-            }
-            skinRenderer.setAnimMode(anim);
-            // ★★★★★ 1.5.0：人物**大小随屏幕自适应**（用户实测"显示有点太小"）。
-            //   GameCharacter.scale 固定 1.0f，在手机上就显得很小。
-            //   ★ 上一版公式错了：拿 (heightPixels/density)/720 做基准 —— 手机横屏时
-            //     短边 dp 通常只有 360~420，算出来 <1 被 Math.max 夹成 1.0 ⇒ **等于没放大**。
-            //   ⇒ 改用「短边 dp / 360」：360dp→1.0（老机型）、480dp→1.33、720dp→2.0（上限）。
-            try {
-                android.util.DisplayMetrics dm = context.getResources().getDisplayMetrics();
-                int shortDp = Math.min(dm.widthPixels, dm.heightPixels)
-                        / Math.max(1, Math.round(dm.density));
-                float auto = (float) shortDp / 360.0f;
-                if (auto < 1.0f) auto = 1.0f;
-                if (auto > 2.0f) auto = 2.0f;
-                skinRenderer.mCharacter.setScale(auto);
-            } catch (Throwable ignoredScale) {
-                // 取不到屏幕尺寸就保持默认 1.0
-            }
-            skinGLSurfaceView = new SkinGLSurfaceView(context);
-            skinGLSurfaceView.setEGLConfigChooser(8, 8, 8, 8, 16, 0);
-            skinGLSurfaceView.getHolder().setFormat(PixelFormat.TRANSLUCENT);
-            skinGLSurfaceView.setZOrderOnTop(true);
-            skinGLSurfaceView.setRenderer(skinRenderer, 5f);
-            skinGLSurfaceView.setRenderMode(GLSurfaceView.RENDERMODE_CONTINUOUSLY);
-            skinGLSurfaceView.setPreserveEGLContextOnPause(true);
-            // 人物视图占满整个长方形容器
-            accountModelView.addView(skinGLSurfaceView, new android.widget.LinearLayout.LayoutParams(
-                    android.view.ViewGroup.LayoutParams.MATCH_PARENT,
-                    android.view.ViewGroup.LayoutParams.MATCH_PARENT));
-        } catch (Throwable t) {
-            // A device without a usable GL context must not take the whole launcher down.
-            t.printStackTrace();
-            skinGLSurfaceView = null;
-            skinRenderer = null;
-        }
-    }
 
-    private void refreshAccountModel() {
+    /**
+     * ★ 1.5.0 改为 public：微软换肤对话框上传成功 / 换完皮肤后要主动让主界面人物跟着换
+     * （见 MicrosoftAccountSkinDialog.saveAccountAndRefresh）。
+     */
+public void refreshAccountModel() {
         if (accountModelContainer == null) {
             return;
         }
         // ★★★★★ 1.5.0 修复（用户实测「切页面再回主界面，人物会消失」的真凶）：
-        //   这个守卫原本只看**老**字段 skinRenderer（GameCharacter）。主界面换成 glTF 后，
-        //   skinRenderer 永远是 null ⇒ 这里每次都"再试一次并 return" ⇒
-        //   refreshAccountModel 提前退出、showModel 从不执行 ⇒ 人物再也不出现。
-        //   ⇒ 改成判断「glTF 或老管线，任一可用即可」，两者都没有才真的放弃。
-        if (gltfRenderer == null && skinRenderer == null) {
+        //   这个守卫原本只看老字段 skinRenderer（GameCharacter）。1.5.0 老管线已删除，
+        //   现在**唯一**的人物管线是 glTF ⇒ 守卫只认 gltfRenderer。
+        if (gltfRenderer == null) {
             setupAccountModel();
-            if (gltfRenderer == null && skinRenderer == null) {
+            if (gltfRenderer == null) {
                 return;
             }
         }
@@ -794,7 +825,25 @@ public class MainUI extends BaseUI implements View.OnClickListener, AdapterView.
             }
             // ★ 1.5.0：统一交给 showModel，这样**微软账户的纹理/模型也会跟着换**
             //   （微软与离线、Mojang 共用同一条路径，只是皮肤来源不同）。
-            showModel(skin, null, false);
+            // ★★★ 1.5.0 修复（用户实测「微软账号是 slim 细手臂，但显示成粗手臂」）：
+            //   这里原来**写死 `false`** ⇒ 不管微软/Mojang 的皮肤是不是 slim（3D 细手臂模型），
+            //   一律切到 classic 粗手臂模型，模型与贴图错位 → 看着就是错的粗手臂。
+            //   正解和离线分支一样：用 NormalizedSkin 从像素判定 slim，传给 showModel 切对模型。
+            Bitmap renderSkin = skin;
+            boolean skinSlim = false;
+            try {
+                NormalizedSkin normalized = new NormalizedSkin(skin);
+                skinSlim = normalized.isSlim();
+                renderSkin = normalized.isOldFormat() ? normalized.getNormalizedTexture() : normalized.getOriginalTexture();
+            } catch (Throwable ignored) {
+            }
+            showModel(renderSkin, decodeCape(account.capeTexture), skinSlim);
+            // ★ 1.5.0：微软账号若还没有披风数据（老账号是在"披风功能"之前登录的），
+            //   这里**后台补拉一次**并回填 —— 否则老账号永远看不到披风，只能重新登录。
+            //   失败静默（不打扰玩家），且只在"微软账号 + 没有披风"时才会发请求。
+            if (account.loginType == 3 && (account.capeTexture == null || account.capeTexture.trim().isEmpty())) {
+                fetchMicrosoftCapeOnce(account);
+            }
         } catch (Throwable t) {
             t.printStackTrace();
         }
@@ -927,9 +976,6 @@ public class MainUI extends BaseUI implements View.OnClickListener, AdapterView.
         if (gltfRenderer != null && skinViewer != null) {
             try {
                 accountModelView.setVisibility(View.VISIBLE);
-                if (skinGLSurfaceView != null) {
-                    skinGLSurfaceView.setVisibility(View.GONE);
-                }
                 skinViewer.setVisibility(View.VISIBLE);
                 gltfRenderer.updateTexture(skin, cape, slim);
                 return;
@@ -937,39 +983,104 @@ public class MainUI extends BaseUI implements View.OnClickListener, AdapterView.
                 t.printStackTrace();
             }
         }
-        // 兜底：glTF 不可用时仍走老的 GameCharacter，保证人物不消失
-        try {
-            if (skinGLSurfaceView == null) {
-                setupLegacyAccountModel();
-            }
-            accountModelView.setVisibility(View.VISIBLE);
-            if (skinRenderer != null) {
-                skinRenderer.mCharacter = new GameCharacter(slim);
-            }
-            Bitmap usableCape = (cape != null && cape.getWidth() == 64 && cape.getHeight() == 32) ? cape : null;
-            skinRenderer.updateTexture(skin, usableCape);
-        } catch (Throwable t) {
-            t.printStackTrace();
-        }
+        // ★★★ 1.5.0：老 GameCharacter 兜底**已删除**。glTF 不可用时直接不显示人物，
+        //   绝不退回"永远站着不动"的老渲染器（那正是用户报的现象）。
+        hideModel();
     }
 
-    private static Bitmap decodeCape(String path) {
-        if (path == null) return null;
-        File file = new File(path);
-        return file.isFile() ? BitmapFactory.decodeFile(path) : null;
+/**
+ * ★ 1.5.0：给**还没有披风数据的微软账号**后台补拉一次披风并回填。
+ *
+ * <p>为什么需要：披风是这批才加的（此前 {@code Msa.getTextures} 的 CAPE 分支被注释），
+ * 所以**所有老账号的 {@code capeTexture} 都是空的** ⇒ 除非玩家重新登录，否则永远没披风。
+ *
+ * <p>约定：
+ * <ul>
+ *   <li>只在 {@code auth_access_token} 有值时才请求（没有 token 就不做无用功）；</li>
+ *   <li>拉到后写回 account + 存盘 + 立刻刷新主界面人物；</li>
+ *   <li>失败**静默**，不弹 Toast、不打断启动 —— 玩家不该因为一个披风被打扰。</li>
+ * </ul>
+ */
+private void fetchMicrosoftCapeOnce(final com.qcl.launcher.auth.Account account) {
+    if (account == null || account.auth_access_token == null
+            || account.auth_access_token.trim().isEmpty()) {
+        return;
+    }
+    // 防抖：同一次进主界面若被多次调用，别重复发请求
+    if (capeFetchInFlight) {
+        return;
+    }
+    capeFetchInFlight = true;
+    final String token = account.auth_access_token;
+    new Thread(() -> {
+        try {
+            com.qcl.launcher.auth.microsoft.Msa.MinecraftProfileResponse profile =
+                    com.qcl.launcher.auth.microsoft.Msa.getMinecraftProfile("Bearer", token);
+            if (profile == null) {
+                return;
+            }
+            java.util.Map<com.qcl.launcher.auth.yggdrasil.TextureType,
+                    com.qcl.launcher.auth.yggdrasil.Texture> map =
+                    com.qcl.launcher.auth.microsoft.Msa.getTextures(profile).orElse(null);
+            if (map == null) {
+                return;
+            }
+            final String cape = com.qcl.launcher.auth.Account.downloadTextureAsBase64(
+                    map.get(com.qcl.launcher.auth.yggdrasil.TextureType.CAPE));
+            if (cape == null || cape.trim().isEmpty()) {
+                return;   // 该账号本来就没有披风，别反复重试
+            }
+            account.capeTexture = cape;
+            final String saved = cape;
+            activity.runOnUiThread(() -> {
+                try {
+                    com.qcl.launcher.utils.gson.GsonUtils.saveAccounts(
+                            activity.uiManager.accountUI.accounts,
+                            com.qcl.launcher.manifest.AppManifest.ACCOUNT_DIR + "/accounts.json");
+                    // 拉到了披风 ⇒ 立刻把人物重画一次
+                    showModel(Avatar.stringToBitmap(account.texture), Avatar.stringToBitmap(saved), false);
+                } catch (Throwable ignored) {
+                }
+            });
+        } catch (Throwable ignored) {
+            // 静默失败
+        } finally {
+            capeFetchInFlight = false;
+        }
+    }).start();
+}
+
+private boolean capeFetchInFlight;
+
+    /**
+     * ★ 1.5.0：入参既可以是**披风文件路径**（离线账号，`offlineSkinSetting.capePath`），
+     * 也可以是**base64 纹理**（微软等账号，`account.capeTexture`，与 texture 同格式）。
+     *
+     * <p>靠前缀判断：base64 纹理不会以 {@code /} 或盘符开头。
+     */
+    private static Bitmap decodeCape(String pathOrBase64) {
+        if (pathOrBase64 == null || pathOrBase64.trim().isEmpty()) {
+            return null;
+        }
+        String s = pathOrBase64.trim();
+        try {
+            if (s.startsWith("/") || s.contains(":\\") || s.contains(":/")) {
+                File file = new File(s);
+                return file.isFile() ? BitmapFactory.decodeFile(s) : null;
+            }
+            return Avatar.stringToBitmap(s);
+        } catch (Throwable ignored) {
+            return null;
+        }
     }
 
     @Override
     public void onStop() {
         super.onStop();
-        // ★ 1.3.7 修复：切到其他页面时，3D 人物（GLSurfaceView）只 onPause 不够 ——
+        // ★ 1.3.7 修复：切到其他页面时，3D 人物只 onPause 不够 ——
         //   部分手机上会把画面残留在上层，遮住设置/下载/版本列表界面。这里彻底隐藏。
-        if (skinGLSurfaceView != null) {
-            skinGLSurfaceView.onPause();
-            skinGLSurfaceView.setVisibility(View.GONE);
-        }
         // ★ 1.5.0：glTF 人物（TextureView + EGL）同样要 onPause 并隐藏，
-        //   否则换页后画面会残留在上层遮住别的界面（同老 GLSurfaceView 的坑）。
+        //   否则换页后画面会残留在上层遮住别的界面。
         if (skinViewer != null) {
             try {
                 skinViewer.onPause();

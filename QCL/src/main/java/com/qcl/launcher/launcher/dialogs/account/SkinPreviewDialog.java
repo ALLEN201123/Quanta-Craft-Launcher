@@ -48,9 +48,8 @@ import com.qcl.launcher.auth.Account;
 import com.qcl.launcher.auth.offline.OfflineSkinSetting;
 import com.qcl.launcher.auth.offline.SkinJson;
 import com.qcl.launcher.launcher.MainActivity;
-import com.qcl.launcher.skin.GameCharacter;
-import com.qcl.launcher.skin.MinecraftSkinRenderer;
-import com.qcl.launcher.skin.SkinGLSurfaceView;
+import com.qcl.launcher.skin.gltf.SkinRenderer;
+import com.qcl.launcher.skin.gltf.SkinViewer;
 import com.qcl.launcher.skin.utils.Avatar;
 import com.qcl.launcher.skin.utils.InvalidSkinException;
 import com.qcl.launcher.skin.utils.NormalizedSkin;
@@ -81,24 +80,15 @@ implements View.OnClickListener {
     private LinearLayout skinParentView;
     private Button positive;
     private Button negative;
-    private final MinecraftSkinRenderer renderer;
+    // ★★★ 1.5.0：彻底弃用老 `MinecraftSkinRenderer + GameCharacter + SkinGLSurfaceView`，
+    //   **全站改用主界面那套 glTF 管线**（SkinViewer + SkinRenderer），照 FCL 的做法。
+    //   原因：老 GameCharacter 只有 `setWalkSwing(sin(t)*幅度)` 一个动作，
+    //   **没有 FCL 的「8~15 秒随机插播待机变体」状态机** ⇒ 对话框里人物像根木头，
+    //   而主界面是 glTF 所以会动 ⇒ 两处观感不一致（用户实测报的就是这个）。
+    //   换成同一套管线后，对话框与主界面人物**表现完全一致**。
+    private final SkinRenderer renderer;
+    private SkinViewer skinViewer;
     private final Handler handler;
-    private final Runnable startRunnable = new Runnable(){
-
-        @Override
-        public void run() {
-            ((SkinPreviewDialog)SkinPreviewDialog.this).renderer.mCharacter.SetRunning(true);
-            SkinPreviewDialog.this.handler.postDelayed(SkinPreviewDialog.this.stopRunnable, 2000L);
-        }
-    };
-    private final Runnable stopRunnable = new Runnable(){
-
-        @Override
-        public void run() {
-            ((SkinPreviewDialog)SkinPreviewDialog.this).renderer.mCharacter.SetRunning(false);
-            SkinPreviewDialog.this.handler.postDelayed(SkinPreviewDialog.this.startRunnable, 10000L);
-        }
-    };
     private RadioButton defaultSkin;
     private RadioButton steveSkin;
     private RadioButton alexSkin;
@@ -123,7 +113,9 @@ implements View.OnClickListener {
         this.account = account;
         this.callback = callback;
         this.handler = new Handler();
-        this.renderer = new MinecraftSkinRenderer(context, R.drawable.skin_steve, false);
+        // glTF 管线的待机随机变体由 SkinRenderer 内部状态机自己驱动（8~15 秒随机），
+        // 不再需要老代码用 Handler 手动 SetRunning(true/false) 切换 ⇒ 两个 runnable 已删。
+        this.renderer = new SkinRenderer(context);
         skinPreviewDialog = this;
         this.init();
     }
@@ -138,13 +130,18 @@ implements View.OnClickListener {
         this.fakeBackground = (Button)this.activity.findViewById(R.id.fake_dialog_background);
         this.dialog.setVisibility(0);
         this.fakeBackground.setVisibility(0);
-        this.handler.postDelayed(this.startRunnable, 10000L);
+        // glTF 的 TextureView 必须在 attach 后 resume 渲染线程
+        if (this.skinViewer != null) {
+            this.skinViewer.onResume();
+        }
     }
 
     public void dismiss() {
         this.activity.dialogMode = false;
-        this.handler.removeCallbacks(this.startRunnable);
-        this.handler.removeCallbacks(this.stopRunnable);
+        // ★ 1.5.0：glTF 的 TextureView 必须 pause + 摘掉，否则 EGL 渲染线程会一直跑
+        if (this.skinViewer != null) {
+            this.skinViewer.onPause();
+        }
         this.skinParentView.removeAllViews();
         this.dialog.setVisibility(8);
         this.fakeBackground.setVisibility(8);
@@ -154,17 +151,34 @@ implements View.OnClickListener {
     @SuppressLint(value={"ClickableViewAccessibility"})
     private void init() {
         this.skinParentView = (LinearLayout)this.activity.findViewById(R.id.skin_parent_view);
-        SkinGLSurfaceView skinGLSurfaceView = new SkinGLSurfaceView(this.context);
-        skinGLSurfaceView.setEGLConfigChooser(8, 8, 8, 8, 16, 0);
-        skinGLSurfaceView.getHolder().setFormat(1);
-        skinGLSurfaceView.getHolder().setFormat(-3);
-        skinGLSurfaceView.setZOrderOnTop(true);
-        skinGLSurfaceView.setRenderer(this.renderer, 5.0f);
-        skinGLSurfaceView.setRenderMode(1);
-        skinGLSurfaceView.setPreserveEGLContextOnPause(true);
-        this.skinParentView.addView((View)skinGLSurfaceView);
+        // ★★★ 1.5.0：人物视图从 SkinGLSurfaceView 换成 glTF 的 SkinViewer（TextureView + EGL）。
+        //   ★ SkinViewer 是 TextureView，**不能 setZOrderOnTop**（那是 GLSurfaceView 独有的 API，
+        //     且 TextureView 没有 SurfaceHolder）⇒ 老代码那几行 setEGLConfigChooser / getHolder()
+        //     / setZOrderOnTop 全部不能留，否则编译直接不过。
+        try {
+            skinViewer = new SkinViewer(this.context);
+            this.skinParentView.addView(skinViewer, new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.MATCH_PARENT));
+            skinViewer.setRenderer(this.renderer,
+                    this.context.getResources().getDisplayMetrics().density);
+        } catch (Throwable t) {
+            // glTF 起不来也不能让对话框打不开：人物位置留空，其余功能照常
+            t.printStackTrace();
+            skinViewer = null;
+        }
         this.positive = (Button)this.activity.findViewById(R.id.edit_skin_positive);
         this.negative = (Button)this.activity.findViewById(R.id.cancel_edit_skin);
+        // ★★★ 1.5.0：确定 / 取消按钮染成「深色底 + 浅色字」，底色跟随玩家主题色
+        try {
+            com.qcl.launcher.utils.string.SkinDialogUtils.tintButton(this.context, this.positive,
+                    (this.activity != null && this.activity.launcherSetting != null)
+                            ? this.activity.launcherSetting.launcherTheme : null);
+            com.qcl.launcher.utils.string.SkinDialogUtils.tintButton(this.context, this.negative,
+                    (this.activity != null && this.activity.launcherSetting != null)
+                            ? this.activity.launcherSetting.launcherTheme : null);
+        } catch (Throwable ignored) {
+        }
         this.littleSkinUrl = (TextView)this.activity.findViewById(R.id.little_skin_url);
         this.littleSkinUrl.setOnClickListener((View.OnClickListener)this);
         this.defaultSkin = (RadioButton)this.activity.findViewById(R.id.check_skin_default);
@@ -202,8 +216,7 @@ implements View.OnClickListener {
                     Bitmap cape = new File(((SkinPreviewDialog)SkinPreviewDialog.this).offlineSkinSetting.capePath).exists() ? (BitmapFactory.decodeFile((String)((SkinPreviewDialog)SkinPreviewDialog.this).offlineSkinSetting.capePath).getWidth() == 64 && BitmapFactory.decodeFile((String)((SkinPreviewDialog)SkinPreviewDialog.this).offlineSkinSetting.capePath).getHeight() == 32 ? BitmapFactory.decodeFile((String)((SkinPreviewDialog)SkinPreviewDialog.this).offlineSkinSetting.capePath) : null) : null;
                     try {
                         NormalizedSkin normalizedSkin = new NormalizedSkin(skin);
-                        ((SkinPreviewDialog)SkinPreviewDialog.this).renderer.mCharacter = new GameCharacter(normalizedSkin.isSlim());
-                        SkinPreviewDialog.this.renderer.updateTexture(normalizedSkin.isOldFormat() ? normalizedSkin.getNormalizedTexture() : normalizedSkin.getOriginalTexture(), cape);
+                        ((SkinPreviewDialog)SkinPreviewDialog.this).renderer.updateTexture(normalizedSkin.isOldFormat() ? normalizedSkin.getNormalizedTexture() : normalizedSkin.getOriginalTexture(), cape, normalizedSkin.isSlim());
                     }
                     catch (InvalidSkinException e) {
                         e.printStackTrace();
@@ -226,8 +239,7 @@ implements View.OnClickListener {
                     Bitmap cape = new File(((SkinPreviewDialog)SkinPreviewDialog.this).offlineSkinSetting.capePath).exists() ? (BitmapFactory.decodeFile((String)((SkinPreviewDialog)SkinPreviewDialog.this).offlineSkinSetting.capePath).getWidth() == 64 && BitmapFactory.decodeFile((String)((SkinPreviewDialog)SkinPreviewDialog.this).offlineSkinSetting.capePath).getHeight() == 32 ? BitmapFactory.decodeFile((String)((SkinPreviewDialog)SkinPreviewDialog.this).offlineSkinSetting.capePath) : null) : null;
                     try {
                         NormalizedSkin normalizedSkin = new NormalizedSkin(skin);
-                        ((SkinPreviewDialog)SkinPreviewDialog.this).renderer.mCharacter = new GameCharacter(normalizedSkin.isSlim());
-                        SkinPreviewDialog.this.renderer.updateTexture(normalizedSkin.isOldFormat() ? normalizedSkin.getNormalizedTexture() : normalizedSkin.getOriginalTexture(), cape);
+                        ((SkinPreviewDialog)SkinPreviewDialog.this).renderer.updateTexture(normalizedSkin.isOldFormat() ? normalizedSkin.getNormalizedTexture() : normalizedSkin.getOriginalTexture(), cape, normalizedSkin.isSlim());
                     }
                     catch (InvalidSkinException e) {
                         e.printStackTrace();
@@ -291,8 +303,7 @@ implements View.OnClickListener {
                                     if (((SkinPreviewDialog)SkinPreviewDialog.this).offlineSkinSetting.type == 5) {
                                         try {
                                             NormalizedSkin normalizedSkin = new NormalizedSkin(skin);
-                                            ((SkinPreviewDialog)SkinPreviewDialog.this).renderer.mCharacter = new GameCharacter(normalizedSkin.isSlim());
-                                            SkinPreviewDialog.this.renderer.updateTexture(normalizedSkin.isOldFormat() ? normalizedSkin.getNormalizedTexture() : normalizedSkin.getOriginalTexture(), cape);
+                                            SkinPreviewDialog.this.renderer.updateTexture(normalizedSkin.isOldFormat() ? normalizedSkin.getNormalizedTexture() : normalizedSkin.getOriginalTexture(), cape, normalizedSkin.isSlim());
                                         }
                                         catch (InvalidSkinException e) {
                                             e.printStackTrace();
@@ -406,8 +417,7 @@ implements View.OnClickListener {
         this.localSkinLayout.setVisibility(8);
         this.littleSkinLayout.setVisibility(8);
         this.blessingSkinLayout.setVisibility(8);
-        this.renderer.mCharacter = new GameCharacter(false);
-        this.renderer.updateTexture(Avatar.getBitmapFromRes(this.context, R.drawable.skin_steve), null);
+        this.renderer.updateTexture(Avatar.getBitmapFromRes(this.context, R.drawable.skin_steve), null, false);
         this.offlineSkinSetting.type = 0;
     }
 
@@ -421,8 +431,7 @@ implements View.OnClickListener {
         this.localSkinLayout.setVisibility(8);
         this.littleSkinLayout.setVisibility(8);
         this.blessingSkinLayout.setVisibility(8);
-        this.renderer.mCharacter = new GameCharacter(false);
-        this.renderer.updateTexture(Avatar.getBitmapFromRes(this.context, R.drawable.skin_steve), null);
+        this.renderer.updateTexture(Avatar.getBitmapFromRes(this.context, R.drawable.skin_steve), null, false);
         this.offlineSkinSetting.type = 1;
     }
 
@@ -436,8 +445,7 @@ implements View.OnClickListener {
         this.localSkinLayout.setVisibility(8);
         this.littleSkinLayout.setVisibility(8);
         this.blessingSkinLayout.setVisibility(8);
-        this.renderer.mCharacter = new GameCharacter(true);
-        this.renderer.updateTexture(Avatar.getBitmapFromRes(this.context, R.drawable.skin_alex), null);
+        this.renderer.updateTexture(Avatar.getBitmapFromRes(this.context, R.drawable.skin_alex), null, true);
         this.offlineSkinSetting.type = 2;
     }
 
@@ -501,8 +509,7 @@ implements View.OnClickListener {
                         if (this.offlineSkinSetting.type == 4) {
                             try {
                                 NormalizedSkin normalizedSkin = new NormalizedSkin(skin);
-                                this.renderer.mCharacter = new GameCharacter(normalizedSkin.isSlim());
-                                this.renderer.updateTexture(normalizedSkin.isOldFormat() ? normalizedSkin.getNormalizedTexture() : normalizedSkin.getOriginalTexture(), cape);
+                                this.renderer.updateTexture(normalizedSkin.isOldFormat() ? normalizedSkin.getNormalizedTexture() : normalizedSkin.getOriginalTexture(), cape, normalizedSkin.isSlim());
                             }
                             catch (InvalidSkinException e) {
                                 e.printStackTrace();
@@ -546,12 +553,18 @@ implements View.OnClickListener {
         }
     }
 
+    // ★ 1.5.0：人物视图已换成 glTF 的 SkinViewer（TextureView），暂停/恢复走它自己的方法，
+        //   并且必须判空 —— glTF 起不来时 skinViewer 为 null（这时不显示人物，但对话框其余功能照常）。
     public void onPause() {
-        ((SkinGLSurfaceView)this.skinParentView.getChildAt(0)).onPause();
+        if (this.skinViewer != null) {
+            this.skinViewer.onPause();
+        }
     }
 
     public void onResume() {
-        ((SkinGLSurfaceView)this.skinParentView.getChildAt(0)).onResume();
+        if (this.skinViewer != null) {
+            this.skinViewer.onResume();
+        }
     }
 
     public static interface OfflineSkinCallback {

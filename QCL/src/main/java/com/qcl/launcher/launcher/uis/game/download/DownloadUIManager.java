@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import com.qcl.launcher.launcher.MainActivity;
 import com.qcl.launcher.launcher.uis.game.download.right.DownloadMinecraftUI;
+import com.qcl.launcher.launcher.uis.game.download.right.DownloadFavoriteUI;
 import com.qcl.launcher.launcher.uis.game.download.right.DownloadModUI;
 import com.qcl.launcher.launcher.uis.game.download.right.DownloadPackageUI;
 import com.qcl.launcher.launcher.uis.game.download.right.DownloadResourcePackUI;
@@ -14,6 +15,8 @@ import com.qcl.launcher.launcher.uis.tools.BaseUI;
 /* loaded from: classes2.dex */
 public class DownloadUIManager {
     public DownloadMinecraftUI downloadMinecraftUI;
+    /** ★ 2026-10-09：收藏页 */
+    public DownloadFavoriteUI downloadFavoriteUI;
     public DownloadModUI downloadModUI;
     public DownloadPackageUI downloadPackageUI;
     public DownloadResourcePackUI downloadResourcePackUI;
@@ -28,14 +31,16 @@ public class DownloadUIManager {
         this.downloadResourcePackUI = new DownloadResourcePackUI(context, mainActivity);
         this.downloadWorldUI = new DownloadWorldUI(context, mainActivity);
         this.downloadShaderUI = new DownloadShaderUI(context, mainActivity);
+        this.downloadFavoriteUI = new DownloadFavoriteUI(context, mainActivity);
         this.downloadMinecraftUI.onCreate();
         this.downloadModUI.onCreate();
         this.downloadPackageUI.onCreate();
         this.downloadResourcePackUI.onCreate();
         this.downloadWorldUI.onCreate();
         this.downloadShaderUI.onCreate();
+        this.downloadFavoriteUI.onCreate();
         DownloadMinecraftUI downloadMinecraftUI = this.downloadMinecraftUI;
-        this.downloadUIs = new BaseUI[]{downloadMinecraftUI, this.downloadModUI, this.downloadPackageUI, this.downloadResourcePackUI, this.downloadWorldUI, this.downloadShaderUI};
+        this.downloadUIs = new BaseUI[]{downloadMinecraftUI, this.downloadModUI, this.downloadPackageUI, this.downloadResourcePackUI, this.downloadWorldUI, this.downloadShaderUI, this.downloadFavoriteUI};
         switchDownloadUI(downloadMinecraftUI);
     }
 

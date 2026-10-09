@@ -159,7 +159,14 @@ public final class RendererPlugin {
             //   所以改成**逐个主动探测候选包**（清单里逐包声明，稳）。
             for (String pkg : CANDIDATE_PACKAGES) {
                 try {
-                    ApplicationInfo ai = pm.getApplicationInfo(pkg, 0);
+                    // ★★★★ 2026-10-09 修正：flags 必须带 GET_META_DATA，否则 ApplicationInfo
+                    //   里的 metaData 恒为 null ⇒ parse() 第一步就 return null ⇒
+                    //   实测日志一直是「[渲染器插件] id=mg 未匹配；已装={}」（**空集合**），
+                    //   插件声明的 env 永远拿不到。
+                    //   ★ FCL 走的是 pm.queryIntentActivities(...).activityInfo.applicationInfo
+                    //   （那条路径自带 metaData）；这里不必绕，补上 GET_META_DATA 即可。
+                    ApplicationInfo ai = pm.getApplicationInfo(pkg,
+                            PackageManager.GET_META_DATA);
                     Plugin p = parse(context, pm, ai);
                     if (p != null) {
                         CACHE.put(p.packageName, p);
@@ -441,20 +448,62 @@ public final class RendererPlugin {
             if (gl.contains(want) || egl.contains(want) || pkg.contains(want)) {
                 return p;
             }
-            // ③ id 的「去掉下划线/前缀」形式出现在库名或包名里
-            //    mg → mobileglues；这样 libmobileglues.so / com.fcl.plugin.mobileglues 都能命中
-            String bare = want.replace("_", "");
-            if (bare.length() >= 2) {
-                if (gl.contains(bare) || pkg.contains(bare)) {
+            // ③ id 的「别名」形式出现在库名或包名里。
+            //    ★ 2026-10-09 修正：原来这里写的是 `want.replace("_", "")`，
+            //      注释说「mg → mobileglues」，但删下划线并不会把 mg 变成 mobileglues，
+            //      于是 `"libmobileglues.so".contains("mg")` = false、
+            //      `"com.fcl.plugin.mobileglues".contains("mg")` = false
+            //      ⇒ 日志一直打「[渲染器插件] id=mg 未匹配」（实测 26.2/26.3 均如此）。
+            //      实际能不能跑是另一条路径（RendererCompat 找 so）兜住了，所以没致命，
+            //      但匹配失败会导致插件声明的 env 拿不到，属于真 bug。
+            //    ⇒ 真正实现别名映射：id → 库名/包名里的特征串。
+            for (String alias : rendererAliases(want)) {
+                if (gl.contains(alias) || egl.contains(alias) || pkg.contains(alias)) {
                     return p;
                 }
-                if (fallback == null && pkg.replace("com.fcl.plugin.", "")
-                        .contains(bare)) {
+            }
+            // ④ 兜底：包名去掉固定前缀后仍包含 id
+            String bare = want.replace("_", "");
+            if (bare.length() >= 2 && pkg.replace("com.fcl.plugin.", "").contains(bare)) {
+                if (fallback == null) {
                     fallback = p;
                 }
             }
         }
         return fallback;
+    }
+
+    /**
+     * ★ 2026-10-09：渲染器 id → 库名/包名中的**特征串**别名表。
+     *
+     * <p>QCL 额外支持了 FCL 没有的渲染器（如 {@code mg} = MobileGlues），
+     * 而插件只声明 `libmobileglues.so` / `com.fcl.plugin.mobileglues`，
+     * 不含短 id，所以必须在这里显式给出别名才能匹配上。
+     */
+    private static String[] rendererAliases(String id) {
+        if (id == null) {
+            return new String[0];
+        }
+        // 外部插件型：id 太短，无法从库名反推，只能显式列别名
+        if ("mg".equals(id) || "mobileglues".equals(id)) {
+            return new String[]{"mobileglues"};
+        }
+        if ("virgl".equals(id)) {
+            return new String[]{"virgl", "osmesa"};
+        }
+        if ("freedreno".equals(id)) {
+            return new String[]{"freedreno"};
+        }
+        if ("zink".equals(id)) {
+            return new String[]{"zink"};
+        }
+        if ("vgpu".equals(id)) {
+            return new String[]{"vgpu"};
+        }
+        if ("krypton".equals(id) || "ng_gl4es".equals(id)) {
+            return new String[]{"ng_gl4es"};
+        }
+        return new String[0];
     }
 
     /** 便于「插件要求注入哪些 env」的自检与日志。 */

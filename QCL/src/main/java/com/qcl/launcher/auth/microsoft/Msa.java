@@ -227,9 +227,11 @@ public class Msa {
         if (!profile.skins.isEmpty()) {
             textures.put(TextureType.SKIN, new Texture(profile.skins.get(0).url, null));
         }
-        // if (!profile.capes.isEmpty()) {
-        // textures.put(TextureType.CAPE, new Texture(profile.capes.get(0).url, null);
-        // }
+        // ★ 1.5.0 恢复：微软账号的披风此前被注释掉 ⇒ 从没拉下来过 ⇒ 人物背后永远没披风。
+        //   （Account 里同时新增了 capeTexture 字段来存，见 Account.capeTexture。）
+        if (profile.capes != null && !profile.capes.isEmpty()) {
+            textures.put(TextureType.CAPE, new Texture(profile.capes.get(0).url, null));
+        }
 
         return Optional.of(textures);
     }

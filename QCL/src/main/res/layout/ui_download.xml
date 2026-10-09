@@ -181,6 +181,42 @@
 
             </LinearLayout>
 
+            <!-- ★ 2026-10-09 用户要求：下载页新增「收藏」标签（照 FCL 的收藏页入口） -->
+            <LinearLayout
+                android:layout_height="56dp"
+                android:minWidth="84dp"
+                android:layout_marginStart="8dp"
+                android:gravity="center"
+                android:padding="6dp"
+                android:background="@drawable/launcher_button_parent"
+                android:focusable="true"
+                android:clickable="true"
+                android:id="@+id/start_download_favorite_ui"
+                android:layout_width="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_gravity="center_horizontal"
+                    android:layout_width="22dp"
+                    android:layout_height="22dp"
+                    android:gravity="center"
+                    android:textSize="16sp"
+                    android:textColor="@color/colorPureBlack"
+                    android:text="★"/>
+
+                <TextView
+                    android:layout_marginTop="6dp"
+                    android:gravity="center_horizontal"
+                    android:singleLine="true"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/download_ui_favorite"
+                    android:textSize="14sp"
+                    android:textColor="@color/colorPureBlack"/>
+
+            </LinearLayout>
+
             <LinearLayout
                 android:layout_height="56dp"
                 android:minWidth="84dp"
@@ -250,6 +286,12 @@
 
         <include
             layout="@layout/ui_download_world"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"/>
+
+        <!-- ★ 2026-10-09 用户要求：收藏页内容（少了这个 include 页面就是空的） -->
+        <include
+            layout="@layout/ui_download_favorite"
             android:layout_width="match_parent"
             android:layout_height="match_parent"/>
 

@@ -53,9 +53,17 @@ public final class GpuBackendSelector {
             if (!needsVulkan(versionName)) {
                 return "kept";
             }
-            if (!com.qcl.launcher.launcher.launch.vulkan.VulkanChecker.check(ctx).isSupported()) {
-                // 设备没有 Vulkan：不动，交给 VulkanCheckDialog 去解释，别把"提示"变成"崩溃"
-                return "no-vulkan-support";
+            // ★★★★★ 1.5.0 修正：**自动钉 Vulkan 只认「系统属性里的真实版本号」**。
+            //   之前用了 VulkanChecker 的（含"看到 libvulkan.so 就算支持"的兜底），
+            //   在 MuMu 上误判成支持 → 自动钉 vulkan → 但 MC 自己又
+            //   `resetting preferred graphics API to Default` 覆盖掉，
+            //   而模拟器的 Vulkan 其实是能力不足的软实现 ⇒ 反而更糟。
+            //   ⇒ 自动钉只在**属性明确报了 version** 时做；属性读不到的一律交给启动弹窗，
+            //     由玩家点「强制 Vulkan 后启动」自己决定（那是知情选择，不是我们替他猜）。
+            int raw = com.qcl.launcher.launcher.launch.vulkan.VulkanChecker
+                    .systemReportedVersion(ctx);
+            if (raw == 0) {
+                return "no-confirmed-vulkan";
             }
             File opt = new File(versionDir, "options.txt");
             if (!opt.isFile()) {
@@ -85,6 +93,71 @@ public final class GpuBackendSelector {
         } catch (Throwable t) {
             return "kept";
         }
+    }
+
+    /**
+     * ★ 1.5.0：**无条件**把该版本的 {@code preferredGraphicsBackend} 钉成 {@code "vulkan"}。
+     *
+     * <p>供启动检查弹窗的「强制 Vulkan 后启动」使用 —— 玩家已经明确知情并选择了，
+     * 这里不再做设备能力判断（哪怕系统属性没填也照钉）。
+     *
+     * @return "forced-vulkan" / "no-options.txt" / "failed"
+     */
+    public static String forceVulkan(Context ctx, String versionName) {
+        try {
+            String dir = versionDirOf(ctx, versionName);
+            if (dir == null) {
+                return "failed";
+            }
+            File opt = new File(dir, "options.txt");
+            if (!opt.isFile()) {
+                return "no-options.txt";
+            }
+            List<String> lines = readAll(opt);
+            boolean changed = false;
+            for (int i = 0; i < lines.size(); i++) {
+                if (lines.get(i).startsWith(KEY + ":")) {
+                    if (!lines.get(i).equals(KEY + ":\"vulkan\"")) {
+                        lines.set(i, KEY + ":\"vulkan\"");
+                        changed = true;
+                    }
+                    break;
+                }
+            }
+            if (!changed) {
+                lines.add(KEY + ":\"vulkan\"");
+            }
+            writeAll(opt, lines);
+            return "forced-vulkan";
+        } catch (Throwable t) {
+            return "failed";
+        }
+    }
+
+    /** 由版本名推出它的目录；找不到返回 null。 */
+    private static String versionDirOf(Context ctx, String versionName) {
+        try {
+            if (versionName == null || versionName.isEmpty()) {
+                return null;
+            }
+            java.io.File[] roots = {
+                    new File(ctx.getExternalFilesDir(null) == null
+                            ? ctx.getFilesDir().getParentFile() : ctx.getExternalFilesDir(null), "game"),
+                    new File("/sdcard/QCL/.minecraft/versions"),
+                    new File("/sdcard/HMCL/.minecraft/versions"),
+            };
+            for (java.io.File r : roots) {
+                if (r == null) {
+                    continue;
+                }
+                java.io.File c = new File(r, versionName);
+                if (c.isDirectory()) {
+                    return c.getAbsolutePath();
+                }
+            }
+        } catch (Throwable ignored) {
+        }
+        return null;
     }
 
     /** 26.2 起才有 Vulkan 后端（与 VulkanRequirement.MIN_MC_VERSION 一致）。 */

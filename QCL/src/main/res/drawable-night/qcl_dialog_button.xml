@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ★ 1.5.0 夜间态。与 drawable/qcl_dialog_button.xml 成对存在，缺一即昼夜不切换。
+  ★ 同样**不引用** ?android:attr/colorAccent（取不到值 → 白块，2026-10-09 实测踩坑）。
+  底色是深色兜底值 + 运行时代码 setTint 成主题色；按下态比日间更暗一点。
+-->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_pressed="true">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/qcl_dialog_btn_pressed" />
+            <corners android:radius="8dp" />
+        </shape>
+    </item>
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="@color/qcl_dialog_btn_fallback" />
+            <corners android:radius="8dp" />
+        </shape>
+    </item>
+</selector>

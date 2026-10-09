@@ -424,7 +424,10 @@ AdapterView.OnItemSelectedListener {
                                 @Override
                                 public void run() {
                                     String skinTexture = Avatar.bitmapToString(skin);
+                                    // ★ 1.5.0：同时保存披风（此前 CAPE 分支被注释 ⇒ 从没拉过）
+                                    String capeTexture = Account.downloadTextureAsBase64(map.get(TextureType.CAPE));
                                     AddAccountDialog.this.account = new Account(3, "", "", "mojang", "0", msa.mcName, msa.mcUuid, msa.mcToken, "00000000-0000-0000-0000-000000000000", msa.msRefreshToken, "", skinTexture);
+                                    AddAccountDialog.this.account.capeTexture = capeTexture;
                                     AddAccountDialog.this.callback.onAccountAdd(AddAccountDialog.this.account);
                                     AddAccountDialog.this.dismiss();
                                 }

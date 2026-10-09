@@ -19,6 +19,8 @@ import androidx.annotation.NonNull;
 import com.qcl.launcher.R;
 import com.qcl.launcher.launcher.MainActivity;
 import com.qcl.launcher.launcher.download.modloader.ModLoaderDetector;
+import com.qcl.launcher.launcher.download.favorite.DownloadFavorite;
+import com.qcl.launcher.launcher.download.favorite.FavoriteManager;
 import com.qcl.launcher.launcher.mod.RemoteMod;
 import com.qcl.launcher.launcher.mod.RemoteModRepository;
 import com.qcl.launcher.launcher.mod.curse.CurseForgeRemoteModRepository;
@@ -48,6 +50,8 @@ public class DownloadResourceAdapter extends BaseAdapter {
         TextView name;
         TextView categories;
         TextView introduction;
+        /** ★ 2026-10-09：收藏星标 */
+        TextView favorite;
     }
 
     public DownloadResourceAdapter(Context context, MainActivity activity, RemoteModRepository repository, ArrayList<RemoteMod> modList, int type){
@@ -85,6 +89,7 @@ public class DownloadResourceAdapter extends BaseAdapter {
             viewHolder.name = convertView.findViewById(R.id.mod_name);
             viewHolder.categories = convertView.findViewById(R.id.mod_categories);
             viewHolder.introduction = convertView.findViewById(R.id.mod_introduction);
+            viewHolder.favorite = convertView.findViewById(R.id.mod_favorite);
             activity.exteriorConfig.apply(viewHolder.categories);
             convertView.setTag(viewHolder);
         }
@@ -173,16 +178,212 @@ public class DownloadResourceAdapter extends BaseAdapter {
         else {
             modTranslations = ModTranslations.EMPTY;
         }
-        viewHolder.name.setText(modList.get(position).getTitle());
-        if (LocaleUtils.isChinese(context)) {
-            viewHolder.name.setText((modTranslations.getModByCurseForgeId(modList.get(position).getSlug()) != null && Objects.requireNonNull(modTranslations.getModByCurseForgeId(modList.get(position).getSlug())).getDisplayName() != null) ? Objects.requireNonNull(modTranslations.getModByCurseForgeId(modList.get(position).getSlug())).getDisplayName() : modList.get(position).getTitle());
-        }
+        // ★★★ 1.5.0 用户要求：「模组名称首先显示中文，后面显示英文」。
+        //   原逻辑是**二选一**：查到中文就只显示中文，查不到才显示英文 ⇒ 英文名整个看不到。
+        //   现在改成**中文在前 + 英文在后**（"中文名  English Name"）。
+        //   ★ 中文系统才拼；英文系统保持原样只显示英文（用户明确说"首先中文后面英文"）。
+        viewHolder.name.setText(displayTitleWithEn(modList.get(position), modTranslations));
         viewHolder.introduction.setText(modList.get(position).getDescription());
+        final RemoteMod mod = modList.get(position);
         viewHolder.item.setOnClickListener(view -> {
-            DownloadResourceUI downloadResourceUI = new DownloadResourceUI(context,activity,repository,modList.get(position),type);
+            // ★ 1.5.0 混合搜索：列表里混着 CurseForge 与 Modrinth 的结果，
+            //   详情页必须拿 **这个 mod 自己那个源** 的仓库，
+            //   否则版本列表 / 依赖 / 安装全部会打到另一站去（串台 → 404 / 空列表）。
+            DownloadResourceUI downloadResourceUI =
+                    new DownloadResourceUI(context, activity, repositoryFor(mod), mod, type);
             activity.uiManager.switchMainUI(downloadResourceUI);
         });
+        // ★ 2026-10-09 用户要求：下载页收藏（照 FCL 的 FavoriteActions —— 列表项上放星标，点一下加入/移出）
+        if (viewHolder.favorite != null) {
+            try {
+                FavoriteManager.init(context);
+                // ★ 1.5.0 混合模式下 sourceOf(repository) 会是 UNKNOWN ⇒ 改按 mod 自身来源判
+                final String src = sourceOf(repository);
+                final String realSrc = "UNKNOWN".equals(src)
+                        ? com.qcl.launcher.launcher.mod.HybridRemoteModRepository.platformOf(mod)
+                        : src;
+                final String rid = remoteIdOf(mod);
+                viewHolder.favorite.setText(FavoriteManager.isFavorite(realSrc, rid, mod.getSlug()) ? "★" : "☆");
+                viewHolder.favorite.setOnClickListener(v -> {
+                    DownloadFavorite item = new DownloadFavorite();
+                    item.source = realSrc;
+                    item.modId = rid;
+                    item.type = typeName(type);
+                    item.slug = mod.getSlug();
+                    // ★★ 2026-10-09 用户实测「收藏夹里标题只有英文，没中文」——
+                    //   列表上显示的是**翻译后**的名字（上面 183 行查 ModTranslations），
+                    //   但收藏时却存 `mod.getTitle()`（**原名**）⇒ 中文那个名字根本没入库。
+                    //   ⇒ 这里把**显示用的那个名字**（可能已是中文）一起存下来。
+                    String shown = viewHolder.name.getText().toString();
+                    item.title = (shown != null && !shown.isEmpty()) ? shown : mod.getTitle();
+                    item.description = mod.getDescription();
+                    item.iconUrl = mod.getIconUrl();
+                    item.pageUrl = mod.getPageUrl();
+                    if (mod.getCategories() != null) {
+                        item.categories = new java.util.ArrayList<>(mod.getCategories());
+                    }
+                    // 建库时再取一次 title/description（列表数据可能已被中文翻译层改过，以详情为准更准）
+                    boolean now = FavoriteManager.toggle(context, item);
+                    ((TextView) v).setText(now ? "★" : "☆");
+                    android.widget.Toast.makeText(context, now ? "已收藏" : "已取消收藏",
+                            android.widget.Toast.LENGTH_SHORT).show();
+                });
+            } catch (Throwable ignoredFav) {
+                viewHolder.favorite.setVisibility(View.GONE);
+            }
+        }
         return convertView;
+    }
+
+    /**
+     * ★ 1.5.0 混合搜索：给某个 mod 挑「它自己那个源」的仓库。
+     *
+     * <p>非混合（普通 CurseForge / Modrinth 列表）时原样返回，不改变任何既有行为；
+     * 混合时才按 mod 的来源分派。
+     */
+    private RemoteModRepository repositoryFor(RemoteMod mod) {
+        try {
+            if (this.repository instanceof com.qcl.launcher.launcher.mod.HybridRemoteModRepository) {
+                return ((com.qcl.launcher.launcher.mod.HybridRemoteModRepository) this.repository).repositoryFor(mod);
+            }
+        } catch (Throwable ignored) {
+        }
+        return this.repository;
+    }
+
+    /** 收藏用的平台标识（与 FCL 的 "CURSEFORGE" / "MODRINTH" 对齐）。 */
+    private static String sourceOf(RemoteModRepository repo) {
+        try {
+            // ★ 1.5.0 混合仓库：光看仓库对象判不出平台（它同时含两站），
+            //   这种情况由调用方改用 sourceOf(mod)；这里兜底成 CurseForge 也不对，
+            //   所以返回 UNKNOWN 让上层用 mod 自己的来源。
+            String n = repo.getClass().getSimpleName().toLowerCase(java.util.Locale.ROOT);
+            if (n.contains("hybrid")) {
+                return "UNKNOWN";
+            }
+            if (n.contains("curse")) {
+                return "CURSEFORGE";
+            }
+            if (n.contains("modrinth")) {
+                return "MODRINTH";
+            }
+        } catch (Throwable ignored) {
+        }
+        return "UNKNOWN";
+    }
+
+    /** 远程项目 id（Modrinth projectId / CurseForge modId），拿不到就用 slug 兜底。 */
+    private static String remoteIdOf(RemoteMod mod) {
+        try {
+            if (mod.getData() != null) {
+                String id = mod.getData().getRemoteId();
+                if (id != null && !id.isEmpty()) {
+                    return id;
+                }
+            }
+        } catch (Throwable ignored) {
+        }
+        try {
+            Object d = mod.getData();
+            if (d instanceof com.qcl.launcher.launcher.mod.curse.CurseAddon) {
+                return String.valueOf(((com.qcl.launcher.launcher.mod.curse.CurseAddon) d).getId());
+            }
+        } catch (Throwable ignored) {
+        }
+        return mod.getSlug() == null ? "" : mod.getSlug();
+    }
+
+    /**
+     * ★ 1.5.0：给整个列表加一次「淡入 + 轻微上移」的入场动画。
+     *
+     * <p>用户要求「下载页/收藏夹的列表项没有动态切换」—— 原来五个下载页
+     * （模组 / 整合包 / 资源包 / 光影 / 世界）都是数据一填好就瞬间显示。
+     *
+     * <p>★ 为什么**整块**动画而不是逐项：这是 ListView，`getView` 会复用 convertView，
+     *   逐项 animate 会在滚动复用时反复触发、出现跳动 ⇒ 只在数据填充后整体动一次。
+     *   （收藏夹是 LinearLayout 逐条 addView，所以那边用的是逐行入场动画。）
+     */
+    public void animateList(android.widget.ListView listView) {
+        try {
+            if (listView == null) {
+                return;
+            }
+            android.view.View head = listView.getChildAt(0);
+            if (head == null) {
+                return;
+            }
+            head.setAlpha(0f);
+            head.setTranslationY(dp(14));
+            head.animate().alpha(1f).translationY(0f).setDuration(200L).start();
+        } catch (Throwable ignored) {
+            // 动画失败就静态显示
+        }
+    }
+
+    private int dp(int v) {
+        try {
+            return (int) (v * context.getResources().getDisplayMetrics().density + 0.5f);
+        } catch (Throwable ignored) {
+            return v;
+        }
+    }
+
+    /**
+     * 适配器的 type 整数 → FCL 的资源类别名。 */
+    private static String typeName(int type) {
+        try {
+            return RemoteModRepository.Type.values()[type].name();
+        } catch (Throwable ignored) {
+            return "MOD";
+        }
+    }
+
+    /**
+     * ★★★ 1.5.0 用户要求：「首先显示中文，后面显示英文」。
+     *
+     * <p>原逻辑是二选一（查到中文就只显示中文），导致英文原名整个看不到。
+     * 这里改成拼接：<b>中文名 + 两个空格 + 英文原名</b>。
+     *
+     * <p>规则：
+     * <ul>
+     *   <li>非中文系统 / 翻译表查不到 / 中文名与英文名相同 → 只显示英文原名（不重复、不加空格）；</li>
+     *   <li>查到中文且与英文不同 → "中文名  English Name"。</li>
+     * </ul>
+     * ★ 资源包 / 世界 / 光影用的是 {@link ModTranslations#EMPTY}（没有翻译表），
+     *   所以自动退化成只显示英文 —— 行为与以前一致，不会出现空名字。
+     */
+    private String displayTitleWithEn(RemoteMod mod, ModTranslations translations) {
+        if (mod == null) {
+            return "";
+        }
+        String en = mod.getTitle() == null ? "" : mod.getTitle().trim();
+        if (!LocaleUtils.isChinese(context) || translations == null) {
+            return en;
+        }
+        String cn = null;
+        try {
+            // ★★★ 1.5.0 修正（用户实测「下载里只翻译了描述，根本没翻译名称」）：
+            //   原来**只查 CurseForge slug** 一条路。但下载页是**混合搜索**，混着 CurseForge 与
+            //   Modrinth 的结果，两站 slug 互不相同 ⇒ 大量条目查不到中文 ⇒ 只显示英文原名。
+            //   翻译表其实有三路索引（见 ModTranslations）：curseForgeMap(slug) / modIdMap(modIds)，
+            //   外加名称本身可查。⇒ 现在按 slug → modId → 英文名 三路依次回退。
+            ModTranslations.Mod t = translations.getModByCurseForgeId(mod.getSlug());
+            if (t == null) {
+                t = translations.getModById(mod.getSlug());
+            }
+            if (t == null && en.indexOf(' ') > 0) {
+                // 有些站点的 slug 就是"名称 去空格"，用整名再试一次
+                t = translations.getModByCurseForgeId(en.replace(" ", ""));
+            }
+            if (t != null && t.getDisplayName() != null) {
+                cn = t.getDisplayName().trim();
+            }
+        } catch (Throwable ignored) {
+        }
+        if (cn == null || cn.isEmpty() || cn.equals(en)) {
+            return en;
+        }
+        return cn + "  " + en;
     }
 
     @SuppressLint("HandlerLeak")

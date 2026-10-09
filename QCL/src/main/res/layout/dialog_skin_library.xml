@@ -44,7 +44,9 @@
             android:layout_marginStart="8dp"
             android:minWidth="72dp"
             android:text="@string/skin_library_search"
-            android:textSize="13sp" />
+            android:textSize="13sp"
+            android:textColor="@color/qcl_dialog_btn_text"
+            android:background="@drawable/qcl_dialog_button" />
     </LinearLayout>
 
     <!-- 模型 / 收藏 / 本地文件 -->
@@ -69,7 +71,9 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="6dp"
             android:text="@string/skin_library_favorite"
-            android:textSize="13sp" />
+            android:textSize="13sp"
+            android:textColor="@color/qcl_dialog_btn_text"
+            android:background="@drawable/qcl_dialog_button" />
 
         <Button
             android:id="@+id/sk_local_btn"
@@ -77,7 +81,9 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="6dp"
             android:text="@string/skin_library_local"
-            android:textSize="13sp" />
+            android:textSize="13sp"
+            android:textColor="@color/qcl_dialog_btn_text"
+            android:background="@drawable/qcl_dialog_button" />
     </LinearLayout>
 
     <!-- 左：皮肤网格；右：预览 -->
@@ -139,7 +145,9 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="@string/skin_library_apply" />
+            android:text="@string/skin_library_apply"
+            android:textColor="@color/qcl_dialog_btn_text"
+            android:background="@drawable/qcl_dialog_button" />
 
         <Button
             android:id="@+id/sk_cancel"
@@ -147,7 +155,9 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="10dp"
             android:layout_weight="1"
-            android:text="@string/skin_library_cancel" />
+            android:text="@string/skin_library_cancel"
+            android:textColor="@color/qcl_dialog_btn_text"
+            android:background="@drawable/qcl_dialog_button" />
     </LinearLayout>
 
 </LinearLayout>

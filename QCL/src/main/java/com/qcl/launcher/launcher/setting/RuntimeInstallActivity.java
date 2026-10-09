@@ -419,11 +419,17 @@ implements View.OnClickListener {
         this.installButton.setEnabled(false);
         this.installButton.setText(R.string.splash_runtime_installing);
         this.worker.execute(() -> {
-            StringBuilder failed = new StringBuilder();
+            // ★ 2026-10-09 用户要求：**并发**安装（原来全排在一个单线程里一条条来，
+            //   jna / lwjgl / cacio / 4 个 JRE 都是串行的）。StringBuffer 自带同步，多线程写安全。
+            final StringBuffer failed = new StringBuffer();
+            final java.util.concurrent.ExecutorService specPool = java.util.concurrent.Executors.newFixedThreadPool(
+                    Math.max(2, Math.min(4, Runtime.getRuntime().availableProcessors())));
+            final java.util.List<java.util.concurrent.Future<?>> specFutures = new java.util.ArrayList<>();
             for (Map.Entry<String, Spec> e : this.specs.entrySet()) {
-                Spec spec = e.getValue();
-                Item item = this.items.get(e.getKey());
+                final Spec spec = e.getValue();
+                final Item item = this.items.get(e.getKey());
                 if (item == null || item.installed || "sdl".equals(spec.key) || "java25".equals(spec.key) && "x86".equals(this.arch)) continue;
+                specFutures.add(specPool.submit(() -> {
                 this.main.post(() -> this.beginItem(item));
                 try {
                     if (spec.isJava) {
@@ -439,6 +445,14 @@ implements View.OnClickListener {
                     failed.append("\n\u00b7 ").append(spec.key).append(": ").append(t);
                 }
                 this.main.post(() -> this.endItem(item));
+                }));
+            }
+            specPool.shutdown();
+            for (java.util.concurrent.Future<?> f : specFutures) {
+                try {
+                    f.get();
+                } catch (Throwable ignored) {
+                }
             }
             this.installing = false;
             String failMsg = failed.length() == 0 ? null : failed.toString();

@@ -31,6 +31,7 @@ import com.qcl.launcher.auth.Account;
 import com.qcl.launcher.auth.microsoft.MinecraftSkinService;
 import com.qcl.launcher.auth.offline.OfflineSkinSetting;
 import com.qcl.launcher.auth.yggdrasil.TextureModel;
+import com.qcl.launcher.skin.utils.Avatar;
 import com.qcl.launcher.launcher.MainActivity;
 import com.qcl.launcher.manifest.AppManifest;
 import com.qcl.launcher.skin.utils.NormalizedSkin;
@@ -154,6 +155,16 @@ public class SkinLibraryDialog extends Dialog implements View.OnClickListener {
         cancelBtn.setOnClickListener(this);
         applyBtn.setOnClickListener(this);
         favBtn.setOnClickListener(this);
+
+        // ★★★ 1.5.0：把所有按钮染成「深色底 + 浅色字」，底色跟随玩家自定义主题色。
+        //   drawable 只给深色形状，颜色在这里动态染（见 SkinDialogUtils 的踩坑注释）。
+        try {
+            String theme = (activity != null && activity.launcherSetting != null)
+                    ? activity.launcherSetting.launcherTheme : null;
+            com.qcl.launcher.utils.string.SkinDialogUtils.tintAll(context,
+                    (android.view.View) findViewById(android.R.id.content), theme);
+        } catch (Throwable ignored) {
+        }
 
         loadFavorites();
         shown.addAll(favorites);
@@ -499,6 +510,26 @@ public class SkinLibraryDialog extends Dialog implements View.OnClickListener {
                     handler.post(() -> {
                         setBusy(false, context.getString(R.string.skin_library_ms_uploaded));
                         toast(context.getString(R.string.skin_library_ms_uploaded));
+                        dismiss();
+                    });
+                } else if (account != null && account.loginType == 2) {
+                    // ★★★ 1.5.0 修复（用户实测「Mojang 正版账号长按换皮肤图标，弹出来的皮肤库
+                    //   选了皮肤却不生效」）：Mojang 的人物纹理来自 `account.texture`
+                    //   （见 MainUI.refreshAccountModel），**根本不看 offlineSkinSetting**。
+                    //   原先它被当成"离线/第三方"走 else 分支写 offlineSkinSetting
+                    //   ⇒ 选了等于没选，人物纹丝不动。
+                    //   正解：直接归一化后写 account.texture，回调交给列表保存（回调里会 notifyDataSetChanged）。
+                    final Bitmap picked = BitmapFactory.decodeFile(local.getAbsolutePath());
+                    if (picked == null) {
+                        throw new IOException("decode failed: " + local.getAbsolutePath());
+                    }
+                    account.texture = Avatar.bitmapToString(picked);
+                    handler.post(() -> {
+                        setBusy(false, context.getString(R.string.skin_library_applied));
+                        if (callback != null) {
+                            callback.onPositive(null);
+                        }
+                        toast(context.getString(R.string.skin_library_applied));
                         dismiss();
                     });
                 } else {

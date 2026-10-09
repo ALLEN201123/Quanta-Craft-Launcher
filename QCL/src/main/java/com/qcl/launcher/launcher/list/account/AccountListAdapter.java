@@ -469,6 +469,22 @@ public class AccountListAdapter extends BaseAdapter {
                 });
                 skinPreviewDialog.show();
             }
+            else if (account.loginType == 2) {
+                // ★★★ 1.5.0 修复（用户实测「Mojang 正版账号的换皮肤图标点不动」）：
+                //   **loginType 2 从来就没有分支** —— 监听只写了 1（离线）/3（微软）/4（第三方），
+                //   正版账号点进来 if/else 全落空 ⇒ 连一次都不执行 ⇒ 毫无反应（实测无崩溃、无日志）。
+                //   正解：走本地选图 + 写 account.texture（**不往正版服务器上传**，
+                //   上传要走 yggdrasil API 且会换掉真实正版皮肤，不是本地换皮的语义）。
+                //   写完 texture 后 MainUI.refreshAccountModel 读的就是它 ⇒ 主界面人物同步变。
+                skinPosition = position;
+                skinButton = viewHolder.skin;
+                skinProgress = viewHolder.uploadProgress;
+                Intent intent = new Intent(context, FileChooser.class);
+                intent.putExtra(Constants.SELECTION_MODE, Constants.SELECTION_MODES.SINGLE_SELECTION.ordinal());
+                intent.putExtra(Constants.ALLOWED_FILE_EXTENSIONS, "png");
+                intent.putExtra(Constants.INITIAL_DIRECTORY, Environment.getExternalStorageDirectory().getAbsolutePath());
+                activity.startActivityForResult(intent, AccountUI.SELECT_SKIN_REQUEST);
+            }
             else if (account.loginType == 3) {
                 // ★★★ 1.1.6：微软账号本地换皮（照 FCL），不再跳转官网。
                 MicrosoftAccountSkinDialog dialog = new MicrosoftAccountSkinDialog(context, activity, account);
@@ -489,7 +505,14 @@ public class AccountListAdapter extends BaseAdapter {
         //   离线 / 微软 / 第三方账户都能从库里挑皮肤：离线写本地皮肤，微软直接上传换肤
         viewHolder.skin.setOnLongClickListener(v -> {
             SkinLibraryDialog library = new SkinLibraryDialog(context, activity, account, offlineSkinSetting -> {
-                account.offlineSkinSetting = offlineSkinSetting;
+                // ★★★ 1.5.0 修复（用户实测「Mojang 长按选皮肤不生效」）：
+                //   Mojang 走 SkinLibraryDialog 的新分支时回调传的是 **null**（皮肤已直接写进
+                //   account.texture）。原代码**无条件**把它赋给 account.offlineSkinSetting
+                //   ⇒ 会把离线/微软账户本来好的设置**抹成 null**。
+                //   ⇒ 只有回调带非 null 时才写 offlineSkinSetting。
+                if (offlineSkinSetting != null) {
+                    account.offlineSkinSetting = offlineSkinSetting;
+                }
                 if (isSelected) {
                     activity.publicGameSetting.account = account;
                     GsonUtils.savePublicGameSetting(activity.publicGameSetting, AppManifest.SETTING_DIR + "/public_game_setting.json");

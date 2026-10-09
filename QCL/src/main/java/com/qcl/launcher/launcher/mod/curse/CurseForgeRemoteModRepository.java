@@ -163,6 +163,89 @@ public final class CurseForgeRemoteModRepository implements RemoteModRepository 
         });
     }
 
+    /**
+     * ★★★★ 2026-10-09 用户实测：「下载整合包根本没有列出很多显示模组文件下载进度」——
+     * **真根因已用真实数据取证**（下载 RLCraft 1.12.2 那个 1.5MB 的包解包验证）：
+     * <pre>
+     *   zip 内条目 1063 个，overrides/ 1061 个，
+     *   manifest.json 的 files 有 <b>81 条</b>，
+     *   但每条<b>只有</b> {@code {projectID, fileID, required}}，
+     *   <b>没有 fileName、也没有 url</b>！
+     * </pre>
+     * 而 {@code CurseInstallTask.downloadManifestFiles()} 原来的逻辑是
+     * 「缺 fileName/url 就跳过并记一行日志」⇒ **81 个 mod 全被跳过，
+     * 玩家只看到 1 行（那个整合包 zip 本体）** —— 正是用户看到的现象。
+     *
+     * <p><b>解法</b>：拿 {@code projectID/fileID} 回头查 CurseForge 补全 fileName/url。
+     * 实测 {@code GET /v1/mods/{projectID}/files/{fileID}} 可拿到：
+     * {@code fileName / fileLength / downloadUrl / hashes}。
+     * 这里**逐条并发补全**（CF 没有批量「按 (projectID,fileID) 取」的端点，
+     * {@code POST /v1/mods} 那套批量只认 modId 列表，返回的是每个 mod 的 latestFiles，
+     * 对不上具体的 fileID ⇒ 只能用单查，6 条并发）。
+     *
+     * @param files manifest 里那 81 条（可能缺 fileName/url）
+     * @return 补全后的新列表（补不上的原样保留，交给调用方跳过）
+     */
+    public java.util.List<CurseManifestFile> completeManifestFiles(java.util.List<CurseManifestFile> files) {
+        if (files == null || files.isEmpty()) {
+            return files;
+        }
+        java.util.List<CurseManifestFile> out = new ArrayList<>(files.size());
+        java.util.List<CurseManifestFile> need = new ArrayList<>();
+        for (CurseManifestFile f : files) {
+            if (f == null) {
+                continue;
+            }
+            // 已经有 fileName + url 的不用查（有些整合包自己就写全了）
+            if (f.getFileName() != null && f.getUrl() != null) {
+                out.add(f);
+            } else {
+                need.add(f);
+            }
+        }
+        if (need.isEmpty()) {
+            return out;
+        }
+        // ★ 6 条并发：81 个 mod 串行查要一两分钟，并发后十几秒
+        java.util.concurrent.ExecutorService pool = java.util.concurrent.Executors.newFixedThreadPool(6);
+        try {
+            java.util.List<java.util.concurrent.Future<CurseManifestFile>> futures = new ArrayList<>();
+            for (final CurseManifestFile f : need) {
+                futures.add(pool.submit(() -> {
+                    try {
+                        if (f.getProjectID() <= 0 || f.getFileID() <= 0) {
+                            return null;
+                        }
+                        Response resp = (Response) HttpRequest
+                                .GET("https://api.curseforge.com/v1/mods/" + f.getProjectID() + "/files/" + f.getFileID())
+                                .header("X-API-KEY", apiKey)
+                                .getJson(new TypeToken<Response<CurseAddon.LatestFile>>() {
+                                }.getType());
+                        CurseAddon.LatestFile lf = (CurseAddon.LatestFile) resp.getData();
+                        if (lf == null || lf.getFileName() == null || lf.getDownloadUrl() == null) {
+                            return null;
+                        }
+                        // withFileName/withURL 都是不可变 copy，正好用来补全
+                        return f.withFileName(lf.getFileName()).withURL(lf.getDownloadUrl());
+                    } catch (Throwable t) {
+                        return null;
+                    }
+                }));
+            }
+            for (java.util.concurrent.Future<CurseManifestFile> fu : futures) {
+                CurseManifestFile r = null;
+                try {
+                    r = fu.get(20, java.util.concurrent.TimeUnit.SECONDS);
+                } catch (Throwable ignored) {
+                }
+                out.add(r);
+            }
+        } finally {
+            pool.shutdownNow();
+        }
+        return out;
+    }
+
     @Override // com.qcl.launcher.launcher.mod.RemoteModRepository
     public Optional<RemoteMod.Version> getRemoteVersionByLocalFile(LocalModFile localModFile, Path path) throws IOException {
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();

@@ -22,6 +22,7 @@ import android.widget.SpinnerAdapter;
 import android.widget.TextView;
 import com.qcl.launcher.launcher.MainActivity;
 import com.qcl.launcher.launcher.list.download.DownloadResourceAdapter;
+import com.qcl.launcher.launcher.mod.HybridRemoteModRepository;
 import com.qcl.launcher.launcher.mod.LocalizedRemoteModRepository;
 import com.qcl.launcher.launcher.mod.RemoteMod;
 import com.qcl.launcher.launcher.mod.RemoteModRepository;
@@ -108,6 +109,23 @@ public class DownloadPackageUI extends BaseUI implements View.OnClickListener, A
         };
     }
 
+    /**
+     * 「下载源」下拉的选中项 → 实际仓库。
+     *
+     * <p>★ 1.5.0 用户要求整合包也完善：下拉多了一项「CurseForge + Modrinth」，
+     *   选中时用 {@link com.qcl.launcher.launcher.mod.HybridRemoteModRepository} 并发查两站再合并去重。
+     *   （下标 0=CurseForge、1=Modrinth、2=混合。）
+     */
+    private RemoteModRepository repositoryForPosition(int position) {
+        if (position == 2) {
+            return HybridModRepository.MODPACKS;
+        }
+        if (position == 1) {
+            return ModrinthRemoteModRepository.MODPACKS;
+        }
+        return CurseForgeRemoteModRepository.MODPACKS;
+    }
+
     /* JADX INFO: Access modifiers changed from: private */
     /* loaded from: classes2.dex */
     public class Repository extends LocalizedRemoteModRepository {
@@ -116,10 +134,7 @@ public class DownloadPackageUI extends BaseUI implements View.OnClickListener, A
 
         @Override // com.qcl.launcher.launcher.mod.LocalizedRemoteModRepository
         protected RemoteModRepository getBackedRemoteModRepository() {
-            if (DownloadPackageUI.this.downloadSourceSpinner.getSelectedItemPosition() == 1) {
-                return ModrinthRemoteModRepository.MODPACKS;
-            }
-            return CurseForgeRemoteModRepository.MODPACKS;
+            return repositoryForPosition(DownloadPackageUI.this.downloadSourceSpinner.getSelectedItemPosition());
         }
 
         @Override // com.qcl.launcher.launcher.mod.RemoteModRepository
@@ -158,11 +173,15 @@ public class DownloadPackageUI extends BaseUI implements View.OnClickListener, A
         this.sourceList = arrayList;
         arrayList.add(this.context.getString(R.string.download_mod_source_curse_forge));
         this.sourceList.add(this.context.getString(R.string.download_mod_source_modrinth));
+        // ★ 1.5.0 混合搜索：整合包同样支持两站并发合并
+        this.sourceList.add(this.context.getString(R.string.download_mod_source_hybrid));
         ArrayAdapter<String> arrayAdapter = new ArrayAdapter<>(this.context, R.layout.item_spinner, this.sourceList);
         this.sourceListAdapter = arrayAdapter;
         arrayAdapter.setDropDownViewResource(R.layout.item_spinner_drop_down);
         this.downloadSourceSpinner.setAdapter((SpinnerAdapter) this.sourceListAdapter);
-        this.downloadSourceSpinner.setSelection(1);
+        // ★ 2026-10-09 用户要求：「把混合设置为默认」⇒ 停在第 3 项（下标 2）。
+        //   注意必须放在 setAdapter 之后、注册监听之前。
+        this.downloadSourceSpinner.setSelection(2);
         ArrayList<String> arrayList2 = new ArrayList<>();
         this.sortList = arrayList2;
         arrayList2.add(this.context.getString(R.string.download_mod_sort_date));
@@ -257,17 +276,46 @@ public class DownloadPackageUI extends BaseUI implements View.OnClickListener, A
     public /* synthetic */ void m478xbcd1e517() {
         try {
             this.searchHandler.sendEmptyMessage(0);
-            List list = (List) this.repository.search(this.editVersion.getText().toString(), (RemoteModRepository.Category) this.categoryListAdapter.getItem(this.editCategory.getSelectedItemPosition()), 0, 50, this.editName.getText().toString(), RemoteMod.getSortTypeByPosition(this.editSort.getSelectedItemPosition()), RemoteModRepository.SortOrder.DESC).collect(Collectors.toList());
+            int srcPos = this.downloadSourceSpinner.getSelectedItemPosition();
+            boolean hybrid = srcPos == 2;
+            // ★ 1.5.0 混合模式：分类只有「全部」（两站分类体系不通用）
+            RemoteModRepository.Category category = hybrid
+                    ? null
+                    : (RemoteModRepository.Category) this.categoryListAdapter.getItem(this.editCategory.getSelectedItemPosition());
+            List list = (List) this.repository.search(this.editVersion.getText().toString(), category, 0, 50, this.editName.getText().toString(), RemoteMod.getSortTypeByPosition(this.editSort.getSelectedItemPosition()), RemoteModRepository.SortOrder.DESC).collect(Collectors.toList());
             this.packageList.clear();
             this.packageList.addAll(list);
             List list2 = (List) this.repository.getCategories().collect(Collectors.toList());
             this.categoryList.clear();
-            this.categoryList.add(new RemoteModRepository.Category(this.downloadSourceSpinner.getSelectedItemPosition() == 0 ? CurseForgeRemoteModRepository.CATEGORY_ALL : ModrinthRemoteModRepository.CATEGORY_ALL, this.downloadSourceSpinner.getSelectedItemPosition() == 0 ? "0" : "all", new ArrayList()));
-            for (int i = 0; i < list2.size(); i++) {
-                this.categoryList.add((RemoteModRepository.Category) list2.get(i));
-                this.categoryList.addAll(((RemoteModRepository.Category) list2.get(i)).getSubcategories());
+            if (hybrid) {
+                this.categoryList.add(new RemoteModRepository.Category(CurseForgeRemoteModRepository.CATEGORY_ALL, "0", new ArrayList()));
+            } else {
+                this.categoryList.add(new RemoteModRepository.Category(srcPos == 0 ? CurseForgeRemoteModRepository.CATEGORY_ALL : ModrinthRemoteModRepository.CATEGORY_ALL, srcPos == 0 ? "0" : "all", new ArrayList()));
+                for (int i = 0; i < list2.size(); i++) {
+                    this.categoryList.add((RemoteModRepository.Category) list2.get(i));
+                    this.categoryList.addAll(((RemoteModRepository.Category) list2.get(i)).getSubcategories());
+                }
             }
             this.searchHandler.sendEmptyMessage(1);
+            // ★ 与模组页一致：聚合模式下只有一源成功时提示"结果可能不全"（照 FCL）
+            final String partialFailed = hybrid ? HybridRemoteModRepository.lastPartialWarning() : null;
+            final boolean hasResults = this.packageList != null && !this.packageList.isEmpty();
+            if (partialFailed != null && hasResults) {
+                final int failedRes = "CURSEFORGE".equals(partialFailed)
+                        ? R.string.download_mod_source_curse_forge : R.string.download_mod_source_modrinth;
+                final int onlyRes = "CURSEFORGE".equals(partialFailed)
+                        ? R.string.download_mod_source_modrinth : R.string.download_mod_source_curse_forge;
+                this.activity.runOnUiThread(() -> {
+                    try {
+                        android.widget.Toast.makeText(DownloadPackageUI.this.context,
+                                DownloadPackageUI.this.context.getString(R.string.download_search_partial,
+                                        DownloadPackageUI.this.context.getString(failedRes),
+                                        DownloadPackageUI.this.context.getString(onlyRes)),
+                                android.widget.Toast.LENGTH_LONG).show();
+                    } catch (Throwable ignoreToast) {
+                    }
+                });
+            }
         } catch (Exception e) {
             this.searchHandler.sendEmptyMessage(2);
             e.printStackTrace();
@@ -294,6 +342,14 @@ public class DownloadPackageUI extends BaseUI implements View.OnClickListener, A
 
     @Override // android.widget.AdapterView.OnItemSelectedListener
     public void onItemSelected(AdapterView<?> adapterView, View view, int i, long j) {
+        // ★ 1.5.0：切「下载源」必须重新查一次（以前没监听，玩家看到的还是上一站的旧列表）
+        if (adapterView == this.downloadSourceSpinner) {
+            if (this.editCategory != null) {
+                this.editCategory.setSelection(0);
+            }
+            search();
+            return;
+        }
         if (adapterView == this.editCategory || adapterView == this.editSort || adapterView == this.editVersionSpinner) {
             search();
             if (adapterView == this.editVersionSpinner) {

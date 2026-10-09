@@ -83,4 +83,16 @@
          又让壁纸透上来（与其余页面的半透明风格统一）。
          日间：近白半透明；夜间：深色半透明（见 values-night）。 -->
     <color name="qcl_version_list_bg">#9EEDEDED</color>
+
+    <!-- ★★★ 1.5.0 用户要求：「把那些白色按钮全部转为深色，除了字不转」。
+     底色**日夜都是深色**，文字**日夜都是浅色**（不跟着底色变暗）⇒ 深底浅字，白天夜里都清晰。
+     ★ 底色本身不再写死，而是引用主题 `?android:attr/colorAccent`（见 drawable/qcl_dialog_button.xml）
+       —— 这样既跟随昼夜/主题，也是玩家在设置里能自定义的主题色。
+       这三个色只剩「按下态」和「文字色」需要定义。
+       配套 drawable/ + drawable-night/ 成对文件都必须存在。 -->
+    <color name="qcl_dialog_btn_pressed">#FF1E2833</color>
+    <!-- ★ 深色兜底底色：drawable 里用它，运行时代码再 setTint 成玩家主题色。
+         取值就是主题色 colorAccent 的斑驳森林 #556980（日夜都成立），保证绝不会渲染成白块。 -->
+    <color name="qcl_dialog_btn_fallback">#FF556980</color>
+    <color name="qcl_dialog_btn_text">#FFF2F6FA</color>
 </resources>

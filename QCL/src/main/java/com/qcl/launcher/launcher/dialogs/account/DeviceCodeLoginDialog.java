@@ -314,6 +314,9 @@ public class DeviceCodeLoginDialog extends AlertDialog {
                 is.close();
             }
             final String skinTexture = Avatar.bitmapToString(skin);
+            // ★ 1.5.0：同时下载披风（此前Msa.getTextures 里 CAPE 被注释 ⇒ 从没拉过披风）
+            final String capeTexture = Account.downloadTextureAsBase64(
+                    textures == null ? null : textures.get(TextureType.CAPE));
             ui.post(() -> {
                 if (cancelled) {
                     return;
@@ -322,6 +325,7 @@ public class DeviceCodeLoginDialog extends AlertDialog {
                         msa.mcName, msa.mcUuid, msa.mcToken,
                         "00000000-0000-0000-0000-000000000000",
                         msa.msRefreshToken, "", skinTexture);
+                account.capeTexture = capeTexture;
                 listener.onPositive(account);
                 dismiss();
             });

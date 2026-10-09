@@ -66,6 +66,9 @@ Handler.Callback {
     /** ★ 1.2.3：全部下载成功后的回调（模组下载完要做 class 检测/注入） */
     private Runnable onComplete;
 
+    /** ★ 2026-10-09：玩家点过「取消」——用于抑制失败弹窗（取消不是"下载失败"）。 */
+    private boolean isCancelledByUser = false;
+
     public void setOnComplete(Runnable r) {
         this.onComplete = r;
     }
@@ -125,6 +128,12 @@ Handler.Callback {
             @Override
             public void onFinished(ArrayList<DownloadTaskListBean> failedFile) {
                 DownloadDialog.this.handler.post(() -> {
+                    // ★★★ 2026-10-09：玩家点过「取消」就别再弹失败框了 ——
+                    //   取消会把未下的文件算作 failed（这属于"玩家主动放弃"，不是失败）。
+                    //   原来照样弹「以下文件下载失败」，用户看到的就是"点了取消还弹一堆错误"。
+                    if (DownloadDialog.this.isCancelledByUser) {
+                        return;
+                    }
                     if (failedFile.size() > 0) {
                         StringBuilder stringBuilder = new StringBuilder();
                         stringBuilder.append("The following files failed to download:");
@@ -184,6 +193,8 @@ Handler.Callback {
 
     public void onClick(View view) {
         if (view == this.cancelButton) {
+            // ★ 先置标志再退出：置早了会让 onFinished 的 post 抢跑，置晚了会弹失败框
+            this.isCancelledByUser = true;
             this.exit();
         }
     }

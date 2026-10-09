@@ -70,7 +70,7 @@ public class DownloadGameListAdapter extends BaseAdapter {
         // ★★★ 2026-10-08 修正：删掉「纯数字 id 一律显示正式版」这条旧规则。
         //   官方 version_manifest_v2.json 实测：1.3 / 1.4 / 1.4.1 / 1.4.3 / 1.5 / 1.6 /
         //   1.6.3 / 1.7 / 1.7.1 的 type **就是 snapshot**（它们是预发布版，
-        //   正式版是 1.3.1 / 1.4.2 / 1.4.4 / 1.5.1 / 1.6.1 / 1.7.2），
+        //   正式版是 1.3.1 / 1.4.2 / 1.4.4 / 1.5.0 / 1.6.1 / 1.7.2），
         //   只有 1.7.3 起官方才标 release。照抄清单才不会把预览版塞进「正式版」。
         //   口径与 DownloadMinecraftUI.refresh() 完全一致。
         return getType(version == null ? "" : version.type);

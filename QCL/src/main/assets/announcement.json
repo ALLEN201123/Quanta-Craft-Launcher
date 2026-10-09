@@ -36,6 +36,154 @@
           "text": "[New Main UI]\n· Left navigation is now icon-only and vertical, and stays visible on sub-pages (version list / download / settings) - no need to go back home first.\n· Right side keeps an always-on Account + Version + Play block, rebuilt after FCL's layout (account vertically centered, version name on its own row above the Play button).\n· With no version installed, tapping Play jumps straight to the download page instead of doing nothing.\n· Added this announcement panel; tap Hide to stop seeing it.\n\n[Multiplayer]\n· Rebuilt as a full sub-page instead of a small dialog.\n· 5 left entries: About Terracotta / Host tutorial / Guest tutorial / Feedback form / About EasyTier.\n· Host (7 steps) and guest (5 steps) tutorials ported from FCL, with notes included.\n· Fixed the \"Enable multiplayer\" confirm dialog rendering white-on-white (invisible text).\n· You can now share the multiplayer core log once enabled.\n\n[3D Character: now fully FCL's]\n· The main-screen character now uses FCL's glTF model and skeletal animations (classic / slim models switch automatically).\n· Real idle animation: idle plus 3 idle variants, one random variant every 8-15 seconds (FCL's own rule, never repeating the previous one).\n· Rotation and scaling follow your finger: drag with one finger for unrestricted 360-degree rotation, pinch with two fingers to zoom in / out.\n· Textures update live: switching skins on offline, Microsoft, Mojang or third-party accounts is reflected on the character immediately.\n· Fixed the character not matching the account avatar (offline Steve was shown as Alex).\n· Fixed the character disappearing after visiting a sub-page and returning home.\n· Character size now uses FCL's native proportions.\n\n[Fixes]\n· Fixed the install page flashing for a moment on startup even when the runtime was already installed.\n· Fixed the version list background being fully opaque (wallpaper no longer visible).\n· Fixed the left back button exiting the launcher when pressed on the home screen (it now only steps back one level on sub-pages).\n· Fixed several dark-on-dark / unreadable texts in night mode; colors now flip as a matched day/night pair.\n· Android 15 (API 35) and 32-bit device compatibility.\n· Added Vulkan support detection for 26.2+.\n· Fixed a page 'popping up then closing' when tapping the same button repeatedly; it now stays on that page.\n· Bundled ANGLE / VirGL renderer and driver libraries (all four architectures: arm64 / armeabi-v7a / x86 / x86_64), renderers work out of the box.\n· Version list rebuilt after FCL: game directories on the left (shared / private), version list on the right, plus a new top category row (All / Fabric / Forge / NeoForge / Other).\n· Top-row buttons and left-nav icons now scale with the screen; nothing overflows on narrow screens.\n· Ancient and archived versions now use a unified cobblestone-cube icon; the icon picker gained the cube icons and now follows the day/night theme.\n· New Home button above Settings in the left nav — one tap returns to the home screen.\n· Announcements are no longer permanently suppressed by 'Hide': after an update they reappear (hide again to suppress).\n· Default download source changed to the official one; every project on the About page now has its own icon; removed the Discord entry (an HMCL PE leftover) from Feedback.\n· Fixed the version name flashing on startup, white-on-white dialogs at night, and a rare crash when opening the version list; removed the Microsoft account hint box.\n\nThanks to everyone who reported issues."
         }
       ]
+    },
+    {
+      "id": 2,
+      "significant": true,
+      "outdated": false,
+      "minVersion": 0,
+      "maxVersion": 2147483647,
+      "specificLang": [],
+      "title": [
+        {
+          "lang": "zh_CN",
+          "text": "启动控制台 & 3D 人物 更新说明"
+        },
+        {
+          "lang": "zh_TW",
+          "text": "啟動主控台 & 3D 人物 更新說明"
+        },
+        {
+          "lang": "en_US",
+          "text": "Launch console & 3D character update"
+        }
+      ],
+      "date": "2026-10-09",
+      "content": [
+        {
+          "lang": "zh_CN",
+          "text": "【启动控制台（点「启动游戏」后弹出的那个窗口）】\n· 窗口现在真正居中显示（此前是窗口居中、内容却贴在左边）\n· 移除了窗口里的调试日志区，只保留步骤标识与「取消」\n· 新增「模组检测」：扫描 mods 目录，逐条报出重复的 mod id、声明支持的版本与当前版本不符、缺少前置模组、0 字节损坏文件\n· 新增「游戏版本检测」：校验版本 json 里的 id 与目录名是否一致、inheritsFrom 父版本是否还在、是否缺少客户端 jar 与资源索引\n· 这两行点一下就能看逐条详情，不只是「有问题」三个字\n· 修复：Vulkan 检测弹窗从来不出现（判定把「完整路径」当成了版本名，26.3 被误判为不需要 Vulkan）\n· 修复：Vulkan 弹窗出现后启动仍会自己往下跑 —— 现在必须点一下按钮才会继续\n· 检测弹窗与窗口配色现在跟随「设置 → 主题色」\n\n【3D 人物：补齐第二层纹理】\n· 帽子 / 外套 / 左右袖 / 左右裤腿 全部渲染，采用体素化实心实现（不是零厚度面片，边缘不留缝）\n· 披风单独一遍渲染\n· 经典 / 细臂两套模型都支持第二层\n\n【关于 26.3】\n· 26.3 的启动崩溃已定位到 MobileGlues 插件内部（glGetString 拿到空指针后未判空）。\n  同版本下 Fold Craft Launcher 在本机也一样进不去（它自己死在启动参数重复上）。\n  这一步不是启动器能单方面修好的环节，插件更新后我们会第一时间跟进。\n\n感谢每一位反馈问题的玩家。"
+        },
+        {
+          "lang": "zh_TW",
+          "text": "【啟動主控台（點「啟動遊戲」後彈出的那個視窗）】\n· 視窗現在真正置中顯示（此前是視窗置中、內容卻貼在左邊）\n· 移除了視窗裡的除錯日誌區，只保留步驟標識與「取消」\n· 新增「模組檢測」：掃描 mods 目錄，逐條報出重複的 mod id、宣告支援的版本與當前版本不符、缺少前置模組、0 位元組損壞檔案\n· 新增「遊戲版本檢測」：校驗版本 json 裡的 id 與目錄名是否一致、inheritsFrom 父版本是否還在、是否缺少客戶端 jar 與資源索引\n· 這兩行點一下就能看逐條詳情，不只是「有問題」三個字\n· 修復：Vulkan 檢測彈窗從不出現（判定把「完整路徑」當成了版本名，26.3 被誤判為不需要 Vulkan）\n· 修復：Vulkan 彈窗出現後啟動仍會自己往下跑 —— 現在必須點一下按鈕才會繼續\n· 檢測彈窗與視窗配色現在跟隨「設定 → 主題色」\n\n【3D 人物：補齊第二層紋理】\n· 帽子 / 外套 / 左右袖 / 左右褲腿 全部渲染，採用體素化實心實作（不是零厚度面片，邊緣不留縫）\n· 披風單獨一遍渲染\n· 經典 / 細臂兩套模型都支援第二層\n\n【關於 26.3】\n· 26.3 的啟動崩潰已定位到 MobileGlues 外掛內部（glGetString 拿到空指標後未判空）。\n  同版本下 Fold Craft Launcher 在本機也一樣進不去（它自己死在啟動參數重複上）。\n  這一步不是啟動器能單方面修好的環節，外掛更新後我們會第一時間跟進。\n\n感謝每一位回饋問題的玩家。"
+        },
+        {
+          "lang": "en_US",
+          "text": "[Launch console (the window that pops up when you tap Play)]\n· The window is now genuinely centered (previously the window was centered but its content stuck to the left).\n· Removed the debug log area; only the step rows and Cancel remain.\n· New \"Mod check\": scans the mods folder and reports duplicate mod ids, mods whose declared MC version does not match, missing dependencies, and 0-byte corrupt files.\n· New \"Game version check\": verifies that the version json's id matches the folder name, that inheritsFrom still exists, and that the client jar / asset index are present.\n· Tap either row to see the itemized details.\n· Fixed the Vulkan dialog never appearing (the check treated a full path as a version name, so 26.3 was misjudged as not needing Vulkan).\n· Fixed the launch continuing while the Vulkan dialog was still on screen - now it waits for you to press a button.\n· Dialogs and the console now follow the theme color set in Settings.\n\n[3D character: second layer textures]\n· Hat / jacket / sleeves / leg overlays are all rendered, using a solid voxelized implementation (not zero-thickness planes, so no gaps at the edges).\n· The cape is rendered in its own pass.\n· Both classic and slim models support the second layer.\n\n[About 26.3]\n· The 26.3 launch crash has been traced inside the MobileGlues plugin (glGetString dereferences a null pointer).\n  Fold Craft Launcher cannot get into 26.3 on this machine either (it fails on duplicated launch arguments).\n  This step cannot be fixed from the launcher side alone; we will follow up as soon as the plugin updates.\n\nThanks to everyone who reported issues."
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "significant": true,
+      "outdated": false,
+      "minVersion": 0,
+      "maxVersion": 2147483647,
+      "specificLang": [],
+      "title": [
+        {
+          "lang": "zh_CN",
+          "text": "新手教程 & 启动前检查 更新说明"
+        },
+        {
+          "lang": "zh_TW",
+          "text": "新手教學 & 啟動前檢查 更新說明"
+        },
+        {
+          "lang": "en_US",
+          "text": "Onboarding tutorial & pre-launch check update"
+        }
+      ],
+      "date": "2026-10-09",
+      "content": [
+        {
+          "lang": "zh_CN",
+          "text": "【新手教程（首次进入自动弹出）】\n· 按当前左侧栏布局逐个引导：主界面 / 游戏管理 / 版本列表 / 下载 / 实验室 / 多人联机 / 设置\n· 右侧也补齐了：账号 / 当前版本 / 启动游戏\n· 观感对齐 FCL：暗底遮罩 + 目标处圆形高亮 + 主题色气泡，点一下继续\n· 看过的不再重复出现\n\n【中间 3D 人物：补齐叠层纹理】\n· 第二层改为**两遍绘制**（照 FCL）：先画实心体素，再补画一遍原始面片把半透明像素找回来\n· 之前只画了一遍，叠层里的半透明部分全被丢掉 —— 这就是你觉得「叠层比 FCL 少很多」的原因\n\n【启动前检查（点启动游戏后那个窗口）】\n· 修复：点了「取消」它却在后台静默启动\n· 修复：模组明明兼容却报「不兼容」（改为只报已知问题）\n· 修复：同一个 jar 被报成重复 mod id\n· 修复：只是改了个版本目录名就被拦\n· 修复：Vulkan 提示只在 26.3 及以上弹出（26.2 不再打扰）\n· 修复：换成 MobileGlues 渲染器后仍提示 Sodium 不兼容\n· 补上「有模组但未安装模组加载器」的拦截\n\n【首次安装（解压并安装）】\n· 改为**并发**解压：插件 / 运行时目录 / 4 个 Java 全部并行，不再一个接一个排队\n\n感谢每一位反馈问题的玩家。"
+        },
+        {
+          "lang": "zh_TW",
+          "text": "【新手教學（首次進入自動彈出）】\n· 依目前左側欄版面逐項引導：主介面 / 遊戲管理 / 版本列表 / 下載 / 實驗室 / 多人連機 / 設定\n· 右側也補齊了：帳號 / 目前版本 / 啟動遊戲\n· 觀感對齊 FCL：暗底遮罩 + 目標處圓形高亮 + 主題色氣泡，點一下繼續\n· 看過的不再重複出現\n\n【中間 3D 人物：補齊疊層紋理】\n· 第二層改為**兩遍繪製**（照 FCL）：先畫實心體素，再補畫一遍原始面片把半透明像素找回來\n· 之前只畫了一遍，疊層裡的半透明部分全被丟掉 —— 這就是你覺得「疊層比 FCL 少很多」的原因\n\n【啟動前檢查（點啟動遊戲後那個視窗）】\n· 修復：點了「取消」它卻在背景靜默啟動\n· 修復：模組明明相容卻報「不相容」（改為只報已知問題）\n· 修復：同一個 jar 被報成重複 mod id\n· 修復：只是改了個版本目錄名就被攔\n· 修復：Vulkan 提示只在 26.3 及以上彈出（26.2 不再打擾）\n· 修復：換成 MobileGlues 渲染器後仍提示 Sodium 不相容\n· 補上「有模組但未安裝模組載入器」的攔截\n\n【首次安裝（解壓並安裝）】\n· 改為**並行**解壓：外掛 / 執行環境目錄 / 4 個 Java 全部並行，不再一個接一個排隊\n\n感謝每一位回饋問題的玩家。"
+        },
+        {
+          "lang": "en_US",
+          "text": "[Onboarding tutorial (shows on first launch)]\n· Walks you through the current left navigation: Home / Game manager / Version list / Download / Lab / Multiplayer / Settings.\n· The right side is covered too: Account / Current version / Play.\n· Same look as FCL: dim overlay, circular highlight on the target, themed bubble; tap to continue.\n· Steps you have already seen will not show again.\n\n[3D character: overlay layer restored]\n· The second layer now draws in two passes (as in FCL): first the solid voxel cubes, then the original planes again to bring back the semi-transparent pixels.\n· Previously only one pass ran, so every semi-transparent overlay pixel was dropped - that is why the overlay looked much sparser than FCL.\n\n[Pre-launch check (the window shown after tapping Play)]\n· Fixed: tapping Cancel still launched the game silently in the background.\n· Fixed: compatible mods were reported as incompatible (now only known issues are reported).\n· Fixed: the same jar was reported twice as a duplicate mod id.\n· Fixed: merely renaming a version folder got you blocked.\n· Fixed: the Vulkan notice now only appears for 26.3 and above.\n· Fixed: the Sodium incompatibility hint still appeared after switching to MobileGlues.\n· Added the missing \"mods present but no mod loader installed\" block.\n\n[First-run install (unpack & install)]\n· Now runs in parallel: plugins / runtime folders / all four Java runtimes unpack concurrently instead of one after another.\n\nThanks to everyone who reported issues."
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "significant": true,
+      "outdated": false,
+      "minVersion": 0,
+      "maxVersion": 2147483647,
+      "specificLang": [],
+      "title": [
+        {
+          "lang": "zh_CN",
+          "text": "收藏夹 & 整合包下载 更新说明"
+        },
+        {
+          "lang": "zh_TW",
+          "text": "收藏夾 & 整合包下載 更新說明"
+        },
+        {
+          "lang": "en_US",
+          "text": "Favorites & modpack download update"
+        }
+      ],
+      "date": "2026-10-09",
+      "content": [
+        {
+          "lang": "zh_CN",
+          "text": "【下载页新增「收藏」】\n· 模组 / 整合包 / 资源包 / 光影 / 世界的列表右侧都有 ☆，点一下即收藏\n· 下载页新增「收藏」标签页：按 全部 / 模组 / 整合包 / 资源包 / 光影 / 世界 分类筛选\n· 收藏的模组自动显示中文名（例如 Sodium → 钠），原标题附在下面便于对照\n· 每行左侧显示该模组的图标\n· 点「打开」会重新拉取该项目的最新信息，再进详情页，可直接下载最新版本\n· 修复：收藏数据可能丢失的问题（读取失败时不再把空列表写回文件）\n\n【3D 人物】\n· 补齐第二层叠层纹理：改为两遍绘制，半透明像素不再丢失（此前叠层比 FCL 少很多）\n\n【整合包下载】\n· 每个正在下载的文件单独一行显示（含进度），不再全挤在一行里\n· 任务列表高度加大并自动滚动到最新一行，能看清当前在装什么\n· 修复：资源索引拉取失败会误拦启动（现在只是记日志，不影响进游戏）\n\n【启动前检查 & 新手教程】\n· 检测到不兼容模组时会拦截并提示「以下模组可能不兼容 QCL 启动器」，可选择「仍要启动」或「取消」\n· 新手教程补上右侧的 账号 / 当前版本 / 启动游戏 介绍\n\n感谢每一位反馈问题的玩家。"
+        },
+        {
+          "lang": "zh_TW",
+          "text": "【下載頁新增「收藏」】\n· 模組 / 整合包 / 資源包 / 光影 / 世界的列表右側都有 ☆，點一下即收藏\n· 下載頁新增「收藏」分頁：依 全部 / 模組 / 整合包 / 資源包 / 光影 / 世界 分類篩選\n· 收藏的模組自動顯示中文名（例如 Sodium → 鈉），原名附在下面便於對照\n· 每列左側顯示該模組的圖示\n· 點「開啟」會重新取得該專案的最新資訊，再進詳情頁，可直接下載最新版本\n· 修復：收藏資料可能遺失的問題（讀取失敗時不再把空清單寫回檔案）\n\n【3D 人物】\n· 補齊第二層疊層紋理：改為兩遍繪製，半透明像素不再遺失（此前疊層比 FCL 少很多）\n\n【整合包下載】\n· 每個正在下載的檔案單獨一列顯示（含進度），不再全擠在一列裡\n· 任務清單高度加大並自動捲動到最新一列，能看清目前在下載什麼\n· 修復：資源索引讀取失敗會誤攔啟動（現在只記日誌，不影響進遊戲）\n\n【啟動前檢查 & 新手教學】\n· 偵測到不相容模組時會攔截並提示「以下模組可能不相容 QCL 啟動器」，可選擇「仍要啟動」或「取消」\n· 新手教學補上右側的 帳號 / 目前版本 / 啟動遊戲 介紹\n\n感謝每一位回饋問題的玩家。"
+        },
+        {
+          "lang": "en_US",
+          "text": "[Favorites added to the download page]\n· Every row in Mods / Modpacks / Resource packs / Shaders / Worlds now has a ☆ - one tap to favorite.\n· New \"Favorites\" tab on the download page, with filters: All / Mods / Modpacks / Resource packs / Shaders / Worlds.\n· Favorited mods show a Chinese name automatically (e.g. Sodium -> 钠), with the original name underneath.\n· Each row shows the project icon on the left.\n· \"Open\" refetches the project's latest details, then opens its page where you can download the newest version.\n· Fixed: favorites could be lost (an empty list is no longer written back when loading fails).\n\n[3D character]\n· Second-layer overlay restored: drawn in two passes so semi-transparent pixels are no longer dropped.\n\n[Modpack download]\n· Every file being downloaded now gets its own row with progress instead of being crammed into one row.\n· The task list is taller and auto-scrolls to the newest row.\n· Fixed: a failed asset-index fetch used to block launching (now it only logs and does not affect the game).\n\n[Pre-launch check & tutorial]\n· Incompatible mods now block with \"The following mods may not be compatible with QCL\" and offer \"Launch anyway\" / \"Cancel\".\n· The onboarding tutorial now also covers Account / Current version / Play on the right side.\n\nThanks to everyone who reported issues."
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "significant": true,
+      "outdated": false,
+      "minVersion": 0,
+      "maxVersion": 2147483647,
+      "specificLang": [],
+      "title": [
+        {
+          "lang": "zh_CN",
+          "text": "QCL 1.5.0 更新说明（人物与下载页）"
+        },
+        {
+          "lang": "zh_TW",
+          "text": "QCL 1.5.0 更新說明（人物與下載頁）"
+        },
+        {
+          "lang": "en_US",
+          "text": "QCL 1.5.0 Release Notes (Character & Downloads)"
+        }
+      ],
+      "date": "2026-10-09",
+      "content": [
+        {
+          "lang": "zh_CN",
+          "text": "【下载页：模组名称改为「中文在前、英文在后」】\n· 模组 / 整合包列表的标题现在是「中文名  English Name」\n· 以前是二选一：查到中文就只显示中文，英文原名整个看不到；现在两段都显示，方便对照\n· 查不到中文翻译的条目仍只显示英文原名，不会出现空名字\n\n【修复：正版（Mojang）账号换皮肤按钮点不动】\n· 账号列表里点正版账号的换皮肤图标，以前**点了毫无反应**（不崩溃、不报错）\n· 原因是那个按钮只写了离线 / 微软 / 第三方三种账号的处理分支，唯独漏了正版账号\n· 现在补上了：点一下会打开本地选图，选完立刻生效并保存\n\n【修复：长按换皮肤图标，从皮肤库选皮肤不生效】\n· 正版账号的人物用的是另一份皮肤数据，以前选完皮肤人物却纹丝不动\n· 现在选完立刻换到人物身上\n\n【修复：微软 / 正版账号的细手臂显示成粗手臂】\n· 人物模型不再固定按「经典」那套渲染，会自动按皮肤判断该用细手臂还是粗手臂\n\n【3D 人物：全部换成 FCL 同款，并修好纹理与动画】\n· 皮肤对话框（离线换肤、微软换肤）里的人物不再一直站着不动，现在和主界面一样有随机待机动作\n· 老的人物渲染器（GameCharacter 等）已彻底移除，全站统一使用 FCL 的 glTF 人物管线\n· 修复人物手臂纹理缺失一大半：手臂上大量半透明阴影像素之前被误判丢弃，导致袖子、手套只剩一半\n· 史蒂夫 / 艾利克斯的默认皮肤换成 FCL 那一版（原先用的是另一份旧文件，胡子、配色都不一样）\n\n感谢每一位反馈问题的玩家。\n\n【修复：点远古版本（indev / b1 / a1 等）也弹 Vulkan 检测】\n· 以前版本判定会把 inf-20100223 里的 20100223 当成版本数字，比 26 还大 ⇒ 远古版本被误判成「需要 Vulkan」\n· 现在远古版本一律不检测、不弹窗；26.2-rc1 / 26.3-pre2 这类 26.x 预览版仍照常检测，不受影响\n\n【界面：按钮不再永远是白块】\n· 皮肤库、离线换肤、微软换肤这几个对话框的按钮，原先用的是透明底 / 写死浅灰的背景，白天夜里一个样\n· 现在统一改成深色底 + 浅色字，并跟随主题强调色（你在设置里改主题色，按钮也跟着变）\n"
+        },
+        {
+          "lang": "zh_TW",
+          "text": "【下載頁：模組名稱改為「中文在前、英文在後」】\n· 模組 / 整合包列表的標題現在是「中文名  English Name」\n· 以前是二選一：查到中文就只顯示中文，英文原名整個看不到；現在兩段都顯示，方便對照\n· 查不到中文翻譯的項目仍只顯示英文原名，不會出現空名字\n\n【修復：正版（Mojang）帳號換皮膚按鈕點不動】\n· 帳號列表裡點正版帳號的換皮膚圖示，以前**點了毫無反應**（不崩潰、不報錯）\n· 原因是那個按鈕只寫了離線 / 微軟 / 第三方三種帳號的處理分支，唯獨漏了正版帳號\n· 現在補上了：點一下會開啟本機選圖，選完立刻生效並儲存\n\n【修復：長按換皮膚圖示，從皮膚庫選皮膚不生效】\n· 正版帳號的人物用的是另一份皮膚資料，以前選完皮膚人物卻紋絲不動\n· 現在選完立刻換到人物身上\n\n【修復：微軟 / 正版帳號的細手臂顯示成粗手臂】\n· 人物模型不再固定按「經典」那套渲染，會自動按皮膚判斷該用細手臂還是粗手臂\n\n【3D 人物：全部換成 FCL 同款，並修好紋理與動畫】\n· 皮膚對話框（離線換膚、微軟換膚）裡的人物不再一直站著不動，現在和主介面一樣有隨機待機動作\n· 老的人物算繪器（GameCharacter 等）已徹底移除，全站統一使用 FCL 的 glTF 人物管線\n· 修復人物手臂紋理缺失一大半：手臂上大量半透明陰影像素之前被誤判丟棄，導致袖子、手套只剩一半\n· 史蒂夫 / 艾利克斯的預設皮膚換成 FCL 那一版（原先用的是另一份舊檔案，鬍子、配色都不一樣）\n\n感謝每一位回報問題的玩家。\n\n【修復：點遠古版本（indev / b1 / a1 等）也彈 Vulkan 檢測】\n· 以前版本判定會把 inf-20100223 裡的 20100223 當成版本數字，比 26 還大 ⇒ 遠古版本被誤判成「需要 Vulkan」\n· 現在遠古版本一律不檢測、不彈窗；26.2-rc1 / 26.3-pre2 這類 26.x 預覽版仍照常檢測，不受影響\n\n【介面：按鈕不再永遠是白塊】\n· 皮膚庫、離線換膚、微軟換膚這幾個對話框的按鈕，原先用的是透明底 / 寫死淺灰的背景，白天夜裡一個樣\n· 現在統一改成深色底 + 淺色字，並跟隨主題強調色（你在設定裡改主題色，按鈕也跟著變）\n"
+        },
+        {
+          "lang": "en_US",
+          "text": "[Downloads] Mod names now show Chinese first, then English\n- Mod / modpack titles are now displayed as \"Chinese Name  English Name\"\n- Previously it was either/or: once a Chinese translation was found only the Chinese name was shown and the original English name disappeared entirely. Now both are shown for easy reference.\n- Entries without a Chinese translation still show only the original English name, so a name never turns blank.\n\n[FIX] Skin-change button did nothing on Mojang (official) accounts\n- Tapping the skin-change icon on an official account did absolutely nothing (no crash, no error).\n- The button only handled offline / Microsoft / third-party accounts and the official-account branch was missing.\n- Now it opens the local file picker, and the picked skin applies and saves immediately.\n\n[FIX] Long-pressing the skin icon and choosing from the skin library had no effect\n- Official accounts read a different skin source, so the chosen skin never showed on the character.\n- Now the character updates as soon as you pick one.\n\n[FIX] Slim arms were rendered as classic arms on Microsoft / official accounts\n- The character model no longer defaults to the classic model; it now detects slim vs classic from the skin itself.\n\n[3D character] Fully switched to FCL's pipeline, textures and animation fixed\n- The character inside the skin dialogs (offline skin, Microsoft skin) no longer stands frozen; it now has the same random idle animations as the main screen.\n- The old character renderer (GameCharacter and friends) is fully removed; everything now uses FCL's glTF character pipeline.\n- FIX: large parts of the arm textures were missing. Many semi-transparent shading pixels on the arms were wrongly discarded, leaving only half of the sleeves and gloves.\n- Default Steve / Alex skins replaced with FCL's versions (previously a different, older file was used, with different facial hair and colors).\n\nThanks to everyone who reported these issues.\n\n[FIX] Vulkan check also popped up for ancient versions (indev / b1 / a1)\n- The old version check read the digits inside inf-20100223 and got 20100223, which is larger than 26, so ancient versions were wrongly treated as \"needs Vulkan\".\n- Ancient versions now skip the check entirely; 26.x previews such as 26.2-rc1 / 26.3-pre2 are still detected as before.\n\n[UI] Buttons are no longer permanently white blocks\n- The buttons in the skin library / offline skin / Microsoft skin dialogs used a transparent or hard-coded light-grey background, so they looked identical day and night.\n- They are now dark with light text, and follow the theme accent color (change the theme color in settings and the buttons follow it)."
+        }
+      ]
     }
   ]
 }

@@ -74,6 +74,7 @@ void custom_exit(int code) {
     (*exitTrap_jvm)->DetachCurrentThread(exitTrap_jvm);
     old_exit(code);
 }
+
 JNIEXPORT void JNICALL Java_net_kdt_pojavlaunch_utils_JREUtils_setupExitTrap(JNIEnv *env, jclass clazz, jobject context) {
     exitTrap_ctx = (*env)->NewGlobalRef(env,context);
     (*env)->GetJavaVM(env,&exitTrap_jvm);
