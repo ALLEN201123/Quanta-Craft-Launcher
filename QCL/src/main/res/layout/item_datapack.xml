@@ -48,6 +48,7 @@
                 android:singleLine="true"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:textColor="@color/colorLightWhite"
                 android:id="@+id/info"
                 android:textSize="@dimen/text_size_small"/>
 

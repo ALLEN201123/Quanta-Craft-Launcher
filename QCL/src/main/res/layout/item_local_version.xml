@@ -42,6 +42,7 @@
 
         <TextView
             android:singleLine="true"
+            android:textColor="@color/colorLightWhite"
             android:id="@+id/version_id"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

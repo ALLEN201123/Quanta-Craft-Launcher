@@ -275,6 +275,7 @@
                             android:singleLine="true"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+                            android:textColor="@color/colorLightWhite"
                             android:textSize="@dimen/text_size_middle"
                             android:id="@+id/legacy_cn_lang_value" />
 
@@ -321,6 +322,7 @@
                             android:singleLine="true"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+                            android:textColor="@color/colorLightWhite"
                             android:textSize="@dimen/text_size_middle"
                             android:id="@+id/check_update_state" />
 

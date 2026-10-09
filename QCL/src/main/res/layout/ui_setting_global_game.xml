@@ -60,6 +60,7 @@
                             android:singleLine="true"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+                            android:textColor="@color/colorLightWhite"
                             android:textSize="@dimen/text_size_middle"
                             android:id="@+id/java_path_text" />
 
@@ -133,6 +134,7 @@
                             android:layout_height="wrap_content"
                             android:layout_gravity="center"
                             android:singleLine="true"
+                            android:textColor="@color/colorLightWhite"
                             android:textSize="@dimen/text_size_small"
                             android:id="@+id/java_8_path"/>
 
@@ -167,6 +169,7 @@
                             android:layout_height="wrap_content"
                             android:layout_gravity="center"
                             android:singleLine="true"
+                            android:textColor="@color/colorLightWhite"
                             android:textSize="@dimen/text_size_small"
                             android:id="@+id/java_17_path"/>
 
@@ -201,6 +204,7 @@
                             android:layout_height="wrap_content"
                             android:layout_gravity="center"
                             android:singleLine="true"
+                            android:textColor="@color/colorLightWhite"
                             android:textSize="@dimen/text_size_small"
                             android:id="@+id/java_21_path"/>
 
@@ -235,6 +239,7 @@
                             android:layout_height="wrap_content"
                             android:layout_gravity="center"
                             android:singleLine="true"
+                            android:textColor="@color/colorLightWhite"
                             android:textSize="@dimen/text_size_small"
                             android:id="@+id/java_25_path"/>
 
@@ -280,6 +285,7 @@
                             android:singleLine="true"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+                            android:textColor="@color/colorLightWhite"
                             android:textSize="@dimen/text_size_middle"
                             android:id="@+id/game_directory_text" />
 
@@ -753,6 +759,7 @@
                             android:singleLine="true"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+                            android:textColor="@color/colorLightWhite"
                             android:textSize="@dimen/text_size_middle"
                             android:id="@+id/control_layout" />
 

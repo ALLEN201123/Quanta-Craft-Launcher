@@ -10,7 +10,34 @@ import java.util.Locale;
 public class LocaleUtils {
     public static boolean isChinese(Context context) {
         int i = context.getSharedPreferences("lang", 0).getInt("lang", 0);
-        return i == 2 || (i == 0 && getSystemLocale() == Locale.CHINA);
+        // ★★★★★ 2026-10-11 修（用户实测「下载页里的模组一个中文也没有」）：
+        //   原来这里写的是 `getSystemLocale() == Locale.CHINA` ——
+        //   用 **`==` 比较 Locale 对象引用**！而 Locale.CHINA 只是个静态单例，
+        //   getSystemLocale() 返回的通常是**另一个实例**（国产 ROM / 模拟器上尤其常见，
+        //   形如 zh_CN_#Hans、zh-Hans-CN 等），引用不同 ⇒ **永远返回 false**
+        //   ⇒ 判定成"非中文环境" ⇒ 调用方（DownloadResourceAdapter.displayTitleWithEn 等）
+        //   直接短路返回英文，**压根不去查那张已加载好的 31062 条翻译表**。
+        //   实测证据（logcat）：`slug=sodium title=Sodium isChinese=false trans=ok`
+        //   —— 表是 ok 的，却被这个判定挡住了。
+        //
+        //   现在改成**按语言代码判断**（zh / zh_CN / zh_TW / zh-Hans… 都算中文），
+        //   不再依赖对象引用。
+        if (i == 2 || i == 3) {
+            return true;    // 玩家在设置里显式选了简中 / 繁中
+        }
+        if (i == 1) {
+            return false;   // 玩家显式选了英文
+        }
+        try {
+            Locale sys = getSystemLocale();
+            if (sys == null) {
+                return false;
+            }
+            String lang = sys.getLanguage();
+            return lang != null && "zh".equalsIgnoreCase(lang);
+        } catch (Throwable ignored) {
+            return false;
+        }
     }
 
     public static String getMinecraftLang(Context context) {

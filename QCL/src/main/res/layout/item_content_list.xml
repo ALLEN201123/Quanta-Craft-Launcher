@@ -36,6 +36,7 @@
 
         <TextView
             android:singleLine="true"
+            android:textColor="@color/colorLightWhite"
             android:id="@+id/content_path"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

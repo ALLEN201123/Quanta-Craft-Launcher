@@ -167,6 +167,7 @@
                             android:singleLine="true"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+                            android:textColor="@color/colorLightWhite"
                             android:textSize="@dimen/text_size_middle"
                             android:id="@+id/cache_content_text" />
 

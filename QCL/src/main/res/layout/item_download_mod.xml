@@ -62,11 +62,18 @@
 
             </LinearLayout>
 
+            <!-- ★★★★★ 2026-10-11 修（用户实测「模组的描述文字是黑色的，没有统一到主题色，
+                 而且不随昼夜变化」）：
+                 这里**漏写了 android:textColor** ⇒ 用系统默认深色（黑）⇒
+                 深色背景下几乎看不见、夜间更看不见。
+                 与上面 mod_name 保持同一口径：用 colorPureBlack
+                 （该色在 values-night 里是 #FFFFFFFF ⇒ 自动随昼夜翻转）。 -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:singleLine="true"
                 android:textSize="12sp"
+                android:textColor="@color/colorLightWhite"
                 android:id="@+id/mod_introduction"/>
 
         </LinearLayout>
