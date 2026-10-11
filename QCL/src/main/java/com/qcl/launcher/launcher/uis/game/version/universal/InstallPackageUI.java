@@ -365,6 +365,15 @@ public class InstallPackageUI extends BaseUI implements View.OnClickListener {
                 .setCancelable(false)
                 .create();
         installDialog.show();
+        // ★★★★★ 2026-10-11（用户实测「整合包自动安装的取消按钮在手机上根本找不到，
+        //   只有电脑上能看到，是不是屏幕比例太大了」）：
+        //   布局 dialog_install_game.xml 把宽度写死 500dp，手机横屏可用宽度不足 500dp
+        //   ⇒ 对话框比屏幕宽 ⇒ **底部取消按钮被挤出可见区域**。
+        //   DialogFit 按屏幕比例把尺寸压回来（不改布局文件）。
+        try {
+            com.qcl.launcher.utils.ui.DialogFit.fit(installDialog);
+        } catch (Throwable ignored) {
+        }
 
         // 任务要靠 Activity 拿游戏目录（提供器 new 的时候没有 context）
         MultiMCModpackInstallTask.setActivity(activity);

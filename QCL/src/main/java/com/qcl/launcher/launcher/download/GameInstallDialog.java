@@ -148,6 +148,28 @@ Handler.Callback {
         }
     }
 
+    /**
+     * ★★★★★ 2026-10-11 新增（用户实测「取消按钮在手机上根本找不到，只有电脑上能看到」）：
+     * 显示后把对话框尺寸**压进屏幕内**。
+     *
+     * <p>真凶：{@code dialog_install_game.xml} 根布局写死 {@code 500dp} 宽，
+     * 而手机横屏可用宽度常常不足 500dp（屏幕宽 − 系统栏 − 对话框边距）
+     * ⇒ 对话框比屏幕还宽 ⇒ **底部的「取消」按钮被挤出可见区域**。
+     * 电脑屏幕大所以能看见 —— 这正是用户描述的现象。
+     *
+     * <p>{@link com.qcl.launcher.utils.ui.DialogFit} 会按屏幕比例把宽高压回来，
+     * 不改任何布局文件（风险最低）。
+     */
+    @Override
+    public void show() {
+        super.show();
+        try {
+            com.qcl.launcher.utils.ui.DialogFit.fit(this);
+        } catch (Throwable ignored) {
+            // 自适应失败也照常显示
+        }
+    }
+
     private void init() {
         this.taskListView = (RecyclerView)this.findViewById(R.id.download_task_list);
         this.taskListView.setLayoutManager((RecyclerView.LayoutManager)new LinearLayoutManager(this.context));

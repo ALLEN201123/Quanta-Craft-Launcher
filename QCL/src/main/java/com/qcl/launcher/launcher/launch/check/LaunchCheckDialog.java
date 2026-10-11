@@ -307,6 +307,25 @@ public class LaunchCheckDialog extends Dialog implements View.OnClickListener, H
      * </ol>
      */
     private void startVulkanCheck() {
+        // ★★★★★ 2026-10-11（用户要求：「移除 26.3 以上的 VK 提示」）：
+        //   26.3 起官方对着色器/扩展要求更严（多出 drawIndirectFirstInstance），
+        //   手机端基本都过不了 ⇒ 弹窗只会反复拦住玩家、也让启动流程变复杂。
+        //   既然 26.3 的 Vulkan 检测与引导已经**明确顺延到 1.5.1**，
+        //   这里就让 26.3+ **直接跳过检测**（不显示该行、不弹窗、当作通过），
+        //   玩家想试就自己试，启动器不再拦。
+        //   —— 26.2 仍然保留检测与引导（它是能跑起来的版本，引导有实际意义）。
+        try {
+            if (com.qcl.launcher.launcher.launch.vulkan.VulkanRequirement
+                    .needsVulkanNotice(this.launchVersion)) {
+                if (this.vulkanRow != null) {
+                    this.vulkanRow.setVisibility(View.GONE);
+                }
+                this.vulkan = true;
+                return;
+            }
+        } catch (Throwable ignored) {
+            // 版本解析失败就按原逻辑走（宁可多检一次也不误拦）
+        }
         boolean needed;
         try {
             needed = com.qcl.launcher.launcher.launch.vulkan.VulkanRequirement
@@ -332,34 +351,19 @@ public class LaunchCheckDialog extends Dialog implements View.OnClickListener, H
             com.qcl.launcher.launcher.launch.vulkan.VulkanSupport support =
                     new com.qcl.launcher.launcher.launch.vulkan.VulkanSupport(caps);
             boolean ok = caps.isSupported() && support.isVersionSupported(this.launchVersion);
-            // ★★★★★ 1.5.0（用户实测「检测逻辑的弹窗根本没有弹出来」）：
-            //   原来 `ok == true` 就直接 `return` 放行，玩家什么都不知道，
-            //   结果后面照样崩（判定通过 ≠ 实际能用：系统属性填了不代表 Turnip/后端真的就绪）。
-            //   ⇒ 26.2+ 一律**弹窗告知后端实况**，让玩家知情并可选择：
-            //       「仍要启动」= 按现状继续；「强制 Vulkan」= 把 preferredGraphicsBackend 钉死再走；
-            //       「取消」= 回版本列表。
-            // ★ 2026-10-09 用户要求：**弹窗只在 26.3+ 出现**。
+            // ★★★★★ 2026-10-11（用户要求「移除 26.3 以上的 VK 提示」）：
+            //   26.3+ 已在 startVulkanCheck() 开头**直接放行**（不检测、不弹窗），
+            //   所以能走到这里的只剩 **26.2**。
             //   26.2 虽然也带 Vulkan 后端，但 26.3 起才把要求收紧到"必须"；
-            //   26.2 弹这个框是骚扰玩家 ⇒ 只显示行结果，不弹窗、也不关闸。
-            boolean needNotice = com.qcl.launcher.launcher.launch.vulkan.VulkanRequirement
-                    .needsVulkanNotice(this.launchVersion);
-            if (!needNotice) {
-                this.vulkan = true;
-                checkState();
-                return;
-            }
-            // ★ 2026-10-09 用户实测修复（「弹窗出来了，但启动仍在继续」）：
-            //   这里**必须先关闸**。旧代码是 `vulkan = true` 之后再弹窗 ⇒ 弹窗还在屏幕上时
-            //   checkState() 已经满足全部条件，启动流程自己就往下跑了，玩家根本没机会点按钮。
-            //   ⇒ 改成 vulkan = false，由弹窗三个按钮里任一个来开闸。
-            this.vulkan = false;
+            //   26.2 弹框纯属骚扰玩家 ⇒ 这里只把检测结果画到那一行上，**不弹窗、不关闸**。
             if (this.vulkanState != null) {
                 this.vulkanState.setBackground(
                         ok ? this.getContext().getDrawable(R.drawable.ic_baseline_done_white)
                            : this.getContext().getDrawable(R.drawable.ic_baseline_close_white));
             }
-            showVulkanNotice(caps, support, ok);
-            armGateSafety();
+            this.vulkan = true;
+            checkState();
+            return;
         } catch (Throwable t) {
             // 任何异常都放行，绝不误拦玩家
             this.vulkan = true;
