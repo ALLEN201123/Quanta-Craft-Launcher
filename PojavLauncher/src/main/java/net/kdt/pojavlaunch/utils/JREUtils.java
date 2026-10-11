@@ -378,6 +378,20 @@ public class JREUtils {
         }
         arrayMap.put("AWTSTUB_WIDTH", Integer.toString(CallbackBridge.windowWidth > 0 ? CallbackBridge.windowWidth : CallbackBridge.physicalWidth));
         arrayMap.put("AWTSTUB_HEIGHT", Integer.toString(CallbackBridge.windowHeight > 0 ? CallbackBridge.windowHeight : CallbackBridge.physicalHeight));
+        // ★★★★★ 2026-10-11 新增（用户要求「在版本设置里加一个使用原生手机的 VK 驱动」）：
+        //   照 FCL 的做法 —— FCL 的 FCLauncher 里：
+        //       if (config.getUseVKDriverSystem()) envMap.put("VULKAN_DRIVER_SYSTEM", "1");
+        //   置 1 时原生层（Vulkan 加载器 / zink / Turnip 选择逻辑）会**优先用系统自带驱动**，
+        //   而不是启动器捆绑的那份。默认不设（= 用自带驱动），行为与以前完全一致。
+        //   ★ 开关由 QCL 模块经 System property `qcl.vulkan.driver.system` 传下来
+        //     （跨模块，与 qcl.renderer.picked 同一套路）。
+        try {
+            if ("1".equals(System.getProperty("qcl.vulkan.driver.system", "0"))) {
+                arrayMap.put("VULKAN_DRIVER_SYSTEM", "1");
+            }
+        } catch (Throwable ignored) {
+            // 取不到就不设（保持原行为）
+        }
 
         Iterator it = arrayMap.entrySet().iterator();
         while (it.hasNext()) {

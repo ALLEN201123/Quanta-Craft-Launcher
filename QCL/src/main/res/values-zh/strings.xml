@@ -1295,4 +1295,6 @@
     <string name="download_favorite_off">☆</string>
     <string name="download_favorite_added">已收藏</string>
     <string name="download_favorite_removed">已取消收藏</string>
+    <string name="game_setting_ui_vulkan_driver_system">使用系统 Vulkan 驱动</string>
+    <string name="game_setting_ui_vulkan_driver_system_desc">用手机自带的 Vulkan 驱动。性能更好，但可能存在兼容问题。</string>
 </resources>

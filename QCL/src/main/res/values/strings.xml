@@ -1179,4 +1179,6 @@ Multiplayer is powered by Terracotta (by BurningTNT). The multiplayer feature is
     <string name="download_favorite_off">☆</string>
     <string name="download_favorite_added">Added to favorites</string>
     <string name="download_favorite_removed">Removed from favorites</string>
+    <string name="game_setting_ui_vulkan_driver_system">Use System Vulkan driver</string>
+    <string name="game_setting_ui_vulkan_driver_system_desc">Use the system Vulkan driver. Better performance but may cause compatibility issues.</string>
 </resources>

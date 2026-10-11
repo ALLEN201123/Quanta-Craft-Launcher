@@ -231,4 +231,41 @@ public class GameLaunchSetting {
         }
         return new GameLaunchSetting(account, str8, str5, str7, privateGameSettingFromFile.extraJavaFlags, privateGameSettingFromFile.extraMinecraftFlags, str6, privateGameSettingFromFile.boatLauncherSetting.renderer, privateGameSettingFromFile.pojavLauncherSetting.renderer, privateGameSettingFromFile.touchInjector, privateGameSettingFromFile.scaleFactor, launcherSettingFromFile.gameFileDirectory, privateGameSettingFromFile.ramSetting.minRam, privateGameSettingFromFile.ramSetting.maxRam, privateGameSettingFromFile.controlLayout, privateGameSettingFromFile.server, launcherSettingFromFile.fullscreen, privateGameSettingFromFile.log);
     }
+
+    /**
+     * ★★★★★ 2026-10-11 新增（用户要求「在版本设置里加一个使用原生手机的 VK 驱动」）：
+     * 查询「使用系统 Vulkan 驱动」这个开关的**当前生效值**。
+     *
+     * <p>生效顺序与渲染器完全一致（这样界面上的开关状态与真正启动时用的值不会脱节）：
+     * <ol>
+     *   <li>{@code <版本目录>/qcl.cfg} 存在且开了独立设置 ⇒ 用它；</li>
+     *   <li>否则用全局 {@code private_game_setting.json}。</li>
+     * </ol>
+     *
+     * @param versionPath 版本目录（形如 {@code <gameDir>/versions/26.4-snapshot-2}）
+     * @return true = 用手机自带的 Vulkan 驱动；false = 用启动器捆绑驱动（默认）
+     */
+    public static boolean useSystemVulkanDriver(String versionPath) {
+        try {
+            if (versionPath != null && !versionPath.isEmpty()) {
+                String qclCfg = versionPath + "/qcl.cfg";
+                if (new File(qclCfg).exists()) {
+                    com.qcl.launcher.launcher.setting.game.PrivateGameSetting v =
+                            GsonUtils.getPrivateGameSettingFromFile(qclCfg);
+                    if (v != null && (v.forceEnable || v.enable) && v.pojavLauncherSetting != null) {
+                        return v.pojavLauncherSetting.vulkanDriverSystem;
+                    }
+                }
+            }
+            com.qcl.launcher.launcher.setting.game.PrivateGameSetting global =
+                    GsonUtils.getPrivateGameSettingFromFile(
+                            AppManifest.SETTING_DIR + "/private_game_setting.json");
+            if (global != null && global.pojavLauncherSetting != null) {
+                return global.pojavLauncherSetting.vulkanDriverSystem;
+            }
+        } catch (Throwable ignored) {
+            // 读不到就当关闭（保持原行为，绝不因为一个开关把启动搞崩）
+        }
+        return false;
+    }
 }

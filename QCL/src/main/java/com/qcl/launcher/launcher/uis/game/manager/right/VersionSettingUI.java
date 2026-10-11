@@ -149,6 +149,10 @@ SeekBar.OnSeekBarChangeListener {
     private TextView currentControlPattern;
     private ControllerManagerDialog controllerManagerDialog;
     private SwitchCompat checkTouchInjector;
+    /** ★ 2026-10-11：使用系统（手机自带）Vulkan 驱动。照 FCL 的 vulkanDriverSystem。 */
+    private SwitchCompat switchVulkanDriverSystem;
+    /** ★ 2026-10-11：上面那一行的整块容器（点整行也能切换，手感和别的设置项一致）。 */
+    private android.view.View vulkanDriverSystemRow;
 
     public VersionSettingUI(Context context, MainActivity activity) {
         super(context, activity);
@@ -225,6 +229,11 @@ SeekBar.OnSeekBarChangeListener {
         this.manageController.setOnClickListener((View.OnClickListener)this);
         this.currentControlPattern = (TextView)this.activity.findViewById(R.id.control_layout_isolate);
         this.checkTouchInjector = (SwitchCompat)this.activity.findViewById(R.id.switch_touch_injector_isolate);
+        // ★★★★★ 2026-10-11 新增（用户要求「在版本设置里加一个使用原生手机的 VK 驱动」）：
+        //   照 FCL 的 VersionSettingAdapter —— 「使用系统 Vulkan 驱动」开关，
+        //   打开后启动时给原生层设 VULKAN_DRIVER_SYSTEM=1（FCL 的 FCLauncher 同款）。
+        this.switchVulkanDriverSystem = (SwitchCompat)this.activity.findViewById(R.id.switch_vulkan_driver_system_isolate);
+        this.vulkanDriverSystemRow = this.activity.findViewById(R.id.vulkan_driver_system_row_isolate);
         this.editServer = (EditText)this.activity.findViewById(R.id.edit_mc_server_isolate);
         this.editServer.addTextChangedListener(new TextWatcher(){
 
@@ -278,6 +287,14 @@ SeekBar.OnSeekBarChangeListener {
         this.checkJava21.setOnClickListener((View.OnClickListener)this);
         this.checkJava25.setOnClickListener((View.OnClickListener)this);
         this.checkTouchInjector.setOnCheckedChangeListener((CompoundButton.OnCheckedChangeListener)this);
+        // ★ 2026-10-11：Vulkan 驱动开关（开关本身 + 整行点击都能切换）
+        if (this.switchVulkanDriverSystem != null) {
+            this.switchVulkanDriverSystem.setOnCheckedChangeListener((CompoundButton.OnCheckedChangeListener)this);
+        }
+        if (this.vulkanDriverSystemRow != null && this.switchVulkanDriverSystem != null) {
+            this.vulkanDriverSystemRow.setOnClickListener(v ->
+                    this.switchVulkanDriverSystem.setChecked(!this.switchVulkanDriverSystem.isChecked()));
+        }
         this.checkGameDirDefault.setOnClickListener((View.OnClickListener)this);
         this.checkGameDirIsolate.setOnClickListener((View.OnClickListener)this);
         this.checkGameDirCustom.setOnClickListener((View.OnClickListener)this);
@@ -601,6 +618,17 @@ SeekBar.OnSeekBarChangeListener {
         this.notCheckForge.setChecked(setting.notCheckForge);
         this.notCheckJVM.setChecked(setting.notCheckJvm);
         this.checkTouchInjector.setChecked(setting.touchInjector);
+        // ★ 2026-10-11：回填「使用系统 Vulkan 驱动」的当前状态
+        if (this.switchVulkanDriverSystem != null) {
+            boolean vkSys = false;
+            try {
+                if (setting.pojavLauncherSetting != null) {
+                    vkSys = setting.pojavLauncherSetting.vulkanDriverSystem;
+                }
+            } catch (Throwable ignored) {
+            }
+            this.switchVulkanDriverSystem.setChecked(vkSys);
+        }
         this.editGameDir.setText((CharSequence)setting.gameDirSetting.path);
         this.editServer.setText((CharSequence)setting.server);
         this.editJVMArgs.setText((CharSequence)setting.extraJavaFlags);
@@ -917,6 +945,20 @@ SeekBar.OnSeekBarChangeListener {
             }
             if (compoundButton == this.checkTouchInjector && this.privateGameSetting != null) {
                 this.privateGameSetting.touchInjector = b;
+            }
+            // ★ 2026-10-11：使用系统 Vulkan 驱动（存进本版本的 qcl.cfg）
+            if (compoundButton == this.switchVulkanDriverSystem && this.privateGameSetting != null) {
+                try {
+                    if (this.privateGameSetting.pojavLauncherSetting == null) {
+                        this.privateGameSetting.pojavLauncherSetting =
+                                new com.qcl.launcher.launcher.setting.game.child.PojavLauncherSetting(
+                                        true,
+                                        com.qcl.launcher.launcher.launch.RendererCompat.defaultRendererId(),
+                                        "default");
+                    }
+                    this.privateGameSetting.pojavLauncherSetting.vulkanDriverSystem = b;
+                } catch (Throwable ignored) {
+                }
             }
             GsonUtils.savePrivateGameSetting(this.privateGameSetting, this.activity.launcherSetting.gameFileDirectory + "/versions/" + this.versionName + "/qcl.cfg");
         }

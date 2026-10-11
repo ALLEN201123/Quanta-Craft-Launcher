@@ -455,6 +455,20 @@ public class PojavLauncher {
             final boolean qclNeedsSdl = qclHasLwjglLibrary(version, "lwjgl-sdl") && !qclHasLwjglLibrary(version, "lwjgl-glfw");
             System.setProperty("qcl.highver", qclNeedsDesktopGl ? "1" : "0");
             System.setProperty("qcl.renderer.picked", qclEffectiveRenderer);
+            // ★★★★★ 2026-10-11 新增（用户要求「在版本设置里加一个使用原生手机的 VK 驱动」）：
+            //   照 FCL 的做法 —— FCL 的 VersionSetting.vulkanDriverSystem（每版本一个开关）
+            //   在 FCLauncher 里变成环境变量 `VULKAN_DRIVER_SYSTEM=1`：
+            //       if (config.getUseVKDriverSystem()) envMap.put("VULKAN_DRIVER_SYSTEM", "1");
+            //   QCL 是跨模块（QCL 模块发参数、PojavLauncher 模块设 env），
+            //   所以这里用 System property 传下去，由 JREUtils 写进 setenv 表
+            //   （与上面 qcl.renderer.picked 完全同一套路）。
+            try {
+                boolean qclVkSystem = com.qcl.launcher.launcher.setting.game.GameLaunchSetting
+                        .useSystemVulkanDriver(gameLaunchSetting.game_directory);
+                System.setProperty("qcl.vulkan.driver.system", qclVkSystem ? "1" : "0");
+            } catch (Throwable ignored) {
+                // 读不到就当关闭（保持原行为）
+            }
             // ★ 说明：外部渲染器（mg）的库能被找到，靠的是**把渲染器库目录并进 LD_LIBRARY_PATH**
             //   （对齐 FCL 的 appendCommonPaths：`sb.append(pluginLibPath + ":")`）。
             //   FCL 并不修改这个 libname，QCL 同样保持原样（见 JREUtils 的 LD_LIBRARY_PATH 处理）。

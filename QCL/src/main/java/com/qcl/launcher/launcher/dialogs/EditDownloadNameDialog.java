@@ -30,6 +30,14 @@ public class EditDownloadNameDialog extends Dialog implements View.OnClickListen
     private Button positive;
     private DownloadResourceUI ui;
     private RemoteMod.Version version;
+    /**
+     * ★★★★★ 2026-10-11 新增：本次下载所属的**版本目录**（形如 {@code <gameDir>/versions/26.4-snapshot-2}）。
+     *
+     * <p>为什么要存下来：算"东西该下到哪"时必须知道**是哪个版本**，
+     * 否则「版本隔离」（gameDirSetting.type==1）无从解析 —— 这正是
+     * 「开了版本隔离后模组下到全局 mods、游戏里找不到」的根因。
+     */
+    private String versionPathForIsolation;
 
     public EditDownloadNameDialog(Context context, DownloadResourceUI downloadResourceUI, RemoteMod.Version version, boolean z, String str) {
         super(context);
@@ -57,6 +65,8 @@ public class EditDownloadNameDialog extends Dialog implements View.OnClickListen
         PrivateGameSetting privateGameSetting;
         if (view == this.positive && !this.editText.getText().toString().equals("") && !this.editText.getText().toString().contains("/")) {
             String str = null;
+            // ★ 2026-10-11：记下"本次下载属于哪个版本目录"，供下面的版本隔离解析使用
+            this.versionPathForIsolation = null;
             if (this.ui.resourceType == 0) {
                 if (this.ui.activity.uiManager.downloadUI.downloadUIManager.downloadModUI.gameVersion != null) {
                     str = this.ui.activity.launcherSetting.gameFileDirectory + "/versions/" + this.ui.activity.uiManager.downloadUI.downloadUIManager.downloadModUI.gameVersion;
@@ -65,6 +75,8 @@ public class EditDownloadNameDialog extends Dialog implements View.OnClickListen
                 str = this.ui.activity.launcherSetting.gameFileDirectory + "/versions/" + this.ui.activity.uiManager.downloadUI.downloadUIManager.downloadResourcePackUI.gameVersion;
             }
             if (str != null) {
+                // ★ 2026-10-11：版本目录已知 ⇒ 记下来给版本隔离用
+                this.versionPathForIsolation = str;
                 String str2 = str + "/qcl.cfg";
                 if (new File(str2).exists() && GsonUtils.getPrivateGameSettingFromFile(str2) != null && (GsonUtils.getPrivateGameSettingFromFile(str2).forceEnable || GsonUtils.getPrivateGameSettingFromFile(str2).enable)) {
                     privateGameSetting = GsonUtils.getPrivateGameSettingFromFile(str2);
@@ -78,7 +90,51 @@ public class EditDownloadNameDialog extends Dialog implements View.OnClickListen
                 }
             } else {
                 PrivateGameSetting privateGameSetting2 = this.ui.activity.privateGameSetting;
-                if (privateGameSetting2.gameDirSetting.type == 0 || privateGameSetting2.gameDirSetting.type == 1) {
+                if (privateGameSetting2 == null
+                        || privateGameSetting2.gameDirSetting == null) {
+                    // 全新安装 / 设置文件损坏：造一份最小可用设置（照 GameLaunchSetting 的兜底写法）。
+                    // ★ 默认 GameDirSetting(1, "") = **版本隔离**，这样模组会进
+                    //   versions/<版本>/mods/ —— 与「版本隔离」这个默认行为的语义一致。
+                    try {
+                        privateGameSetting2 = new PrivateGameSetting(
+                                false, true, true, false, false, false, false,
+                                new com.qcl.launcher.launcher.setting.game.child.JavaSetting(true, "default"),
+                                "", "", "",
+                                new com.qcl.launcher.launcher.setting.game.child.GameDirSetting(1, ""),
+                                new com.qcl.launcher.launcher.setting.game.child.BoatLauncherSetting(false, "default", "default"),
+                                new com.qcl.launcher.launcher.setting.game.child.PojavLauncherSetting(true,
+                                        com.qcl.launcher.launcher.launch.RendererCompat.defaultRendererId(), "default"),
+                                new com.qcl.launcher.launcher.setting.game.child.RamSetting(0, 0, true),
+                                "Default", 1.0f);
+                    } catch (Throwable ignored) {
+                        // 造不出来就退回游戏根目录（绝不让下载因为读设置失败而中断）
+                        privateGameSetting2 = null;
+                    }
+                }
+                if (privateGameSetting2 == null || privateGameSetting2.gameDirSetting == null) {
+                    str = this.ui.activity.launcherSetting.gameFileDirectory;
+                } else
+                // ★★★★★ 2026-10-11 修（用户实测「开启全局版本隔离后，模组下载的位置不匹配：
+                //   东西没进 versions/<版本>/mods，根本找不到」）：
+                //
+                //   真凶：原来这里**只看 gameDirSetting.type，完全没算"版本隔离"** ——
+                //     type == 0 或 1 一律给 `launcherSetting.gameFileDirectory`（游戏根目录）
+                //     ⇒ 模组落到全局 `.minecraft/mods/`，而开了版本隔离的版本只读
+                //       `versions/<版本>/mods/` ⇒ 游戏里一个都看不到。
+                //
+                //   正确算法与 BaseModpackInstallTask.runDir() 完全一致：
+                //     ① 版本目录存在 + qcl.cfg 开了独立设置 ⇒ 用版本自己的设置；
+                //     ② 否则用全局设置；
+                //     ③ 最后统一交给 PrivateGameSetting.getGameDir(root, vdir, setting) ——
+                //        **必须把 vdir（版本目录）传进去**，type==1（版本隔离）才会解析成版本目录。
+                if (this.versionPathForIsolation != null && !this.versionPathForIsolation.isEmpty()) {
+                    str = com.qcl.launcher.launcher.setting.game.PrivateGameSetting.getGameDir(
+                            this.ui.activity.launcherSetting.gameFileDirectory,
+                            this.versionPathForIsolation,
+                            privateGameSetting2.gameDirSetting);
+                } else if (privateGameSetting2.gameDirSetting.type == 0
+                        || privateGameSetting2.gameDirSetting.type == 1) {
+                    // 没有版本上下文（极少见）：隔离时也无从下手，退回游戏根目录
                     str = this.ui.activity.launcherSetting.gameFileDirectory;
                 } else {
                     str = privateGameSetting2.gameDirSetting.path;

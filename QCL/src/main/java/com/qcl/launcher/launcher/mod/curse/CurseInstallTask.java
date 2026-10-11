@@ -82,15 +82,178 @@ public class CurseInstallTask extends BaseModpackInstallTask {
         reportOverall(100);
     }
 
-    /** 游戏版本：manifest.minecraft.version 为主，缺失时退回 Modpack 自身记录的 */
+    /**
+     * 游戏版本解析。
+     *
+     * ★★★★★ 2026-10-11 重写（用户实测原话）：
+     *   「我下载整合包，他就要求我下一个原版游戏；而且我下一个 26.3 的整合包，
+     *     他都根本检测不到这是个 26.3 的版本。你能不能改一下判断逻辑？
+     *     如果整合包完全脱离了版本名称，你这又该如何检测版本？」
+     *
+     * <p>原来只有两条路：{@code manifest.minecraft.version} → {@code modpack.getGameVersion()}。
+     * 两者都拿不到就返回 null ⇒ `ensureBaseVersionInstalled` 直接去**下原版**，
+     * 玩家看到的就是"下个整合包还逼我下原版游戏"。
+     *
+     * <p>现在改成**四级回退**，尽量从整合包自身把版本挖出来：
+     * <ol>
+     *   <li>{@code manifest.minecraft.version}（CF 官方清单，最权威）；</li>
+     *   <li>从 **mods 列表里的 mod 文件名/目录名**里嗅探 MC 版本
+     *       （很多整合包本体不带版本号，但里面的 mod 名带，例如
+     *        {@code sodium-fabric-0.6.0+mc1.21.4.jar}、{@code iris-1.21.4.jar}、
+     *        {@code mods/1.21.4/...}）—— 这是本题"脱离版本名称"时最有用的线索；</li>
+     *   <li>{@code modpack.getGameVersion()}（启动器自己记的）；</li>
+     *   <li>overrides / 整个 zip 的**目录名**里嗅探（{@code overrides/1.21.4/}、
+     *       {@code config/26.3/} 这类按版本分目录的包）。</li>
+     * </ol>
+     * 全部失败才返回 null（此时仍然会去下原版，但至少给了上面四条路机会）。
+     */
     private String resolveGameVersion() {
+        // ① CF 官方清单
         if (manifest != null && manifest.getMinecraft() != null) {
             String v = manifest.getMinecraft().getGameVersion();
             if (v != null && !v.isEmpty()) {
                 return v;
             }
         }
-        return modpack == null ? null : modpack.getGameVersion();
+        // ② 从 mods 的文件名 / 路径里嗅探
+        String sniffed = sniffVersionFromManifestFiles();
+        if (sniffed != null) {
+            android.util.Log.i("ModpackInstall",
+                    "整合包未声明 MC 版本，从 mod 文件名嗅探到: " + sniffed);
+            return sniffed;
+        }
+        // ③ 启动器自己记的
+        if (modpack != null && modpack.getGameVersion() != null
+                && !modpack.getGameVersion().isEmpty()) {
+            return modpack.getGameVersion();
+        }
+        // ④ 从 zip 内目录名嗅探
+        String fromZip = sniffVersionFromZipEntries();
+        if (fromZip != null) {
+            android.util.Log.i("ModpackInstall",
+                    "整合包未声明 MC 版本，从 zip 目录名嗅探到: " + fromZip);
+            return fromZip;
+        }
+        return null;
+    }
+
+    /**
+     * ★ 2026-10-11 新增：从 {@code manifest.getFiles()} 的**文件名 / 路径**里嗅探 MC 版本。
+     *
+     * <p>识别的常见写法（大小写不敏感）：
+     * <pre>
+     *   sodium-fabric-0.6.0+mc1.21.4.jar   → 1.21.4
+     *   iris-mc1.21.4.jar                  → 1.21.4
+     *   mods/1.21.4/xxx.jar                → 1.21.4
+     *   fabric-api-0.119.2+1.21.4.jar      → 1.21.4
+     * </pre>
+     * 选择策略：**取出现次数最多的那个**（单个 mod 可能写着兼容版本，多数派更准），
+     * 出现次数相同则取版本号最大的。
+     */
+    private String sniffVersionFromManifestFiles() {
+        try {
+            if (manifest == null || manifest.getFiles() == null) {
+                return null;
+            }
+            java.util.HashMap<String, Integer> counter = new java.util.HashMap<String, Integer>();
+            for (CurseManifestFile f : manifest.getFiles()) {
+                if (f == null) {
+                    continue;
+                }
+                collectVersions(f.getFileName(), counter);
+            }
+            return pickMostLikelyVersion(counter);
+        } catch (Throwable ignored) {
+            return null;
+        }
+    }
+
+    /**
+     * ★ 2026-10-11 新增：从 {@code manifest.getOverrides()} 的**目录名**里嗅探。
+     *
+     * <p>CF 清单里 overrides 就是一个目录名（通常是 "overrides"），
+     * 但有些整合包会按版本命名（例如 {@code overrides-1.21.4} / {@code 26.3}），
+     * 这就是"完全脱离版本名称"时最后一条可用线索。
+     */
+    private String sniffVersionFromZipEntries() {
+        try {
+            if (manifest == null) {
+                return null;
+            }
+            java.util.HashMap<String, Integer> counter = new java.util.HashMap<String, Integer>();
+            collectVersions(manifest.getOverrides(), counter);
+            return pickMostLikelyVersion(counter);
+        } catch (Throwable ignored) {
+            return null;
+        }
+    }
+
+    /**
+     * ★ 2026-10-11 新增：从一段文本里抽出所有形如 MC 版本号的片段并计数。
+     *
+     * <p>MC 版本号形态：{@code 1.21.4} / {@code 1.20} / {@code b1.7.3} / {@code 26.3} / {@code 26.4-snapshot-2}。
+     * ★ 关键约束：**必须带点号**（如 1.21）或者是 >= 20 的大版本号（如 26.3）——
+     * 否则 {@code sodium-fabric-0.6.0} 里的 {@code 0.6.0}、jar 里的 {@code 1} 都会被误当版本。
+     */
+    private static void collectVersions(String text, java.util.HashMap<String, Integer> counter) {
+        if (text == null || text.isEmpty() || counter == null) {
+            return;
+        }
+        java.util.regex.Matcher m = java.util.regex.Pattern
+                .compile("(?i)(?:^|[^0-9a-z])((?:b|a|inf-|c0\\.|rd-)?(\\d{1,2})\\.(\\d{1,2})(?:\\.(\\d{1,2}))?)")
+                .matcher(text);
+        while (m.find()) {
+            String full = m.group(1);
+            String major = m.group(2);
+            try {
+                int maj = Integer.parseInt(major);
+                // 只接受：MC 传统版本（1.x）或现代大版本（20+，如 26.3 / 26.4）
+                if (maj != 1 && maj < 20) {
+                    continue;
+                }
+                // 排除明显是 mod 自身版本号的（0.x / 2.x~19.x）
+                Integer c = counter.get(full);
+                counter.put(full, c == null ? 1 : c + 1);
+            } catch (Throwable ignored) {
+            }
+        }
+    }
+
+    /** ★ 2026-10-11 新增：从计数表里挑最可能的那个版本（次数最多 → 版本号最大）。 */
+    private static String pickMostLikelyVersion(java.util.HashMap<String, Integer> counter) {
+        if (counter == null || counter.isEmpty()) {
+            return null;
+        }
+        String best = null;
+        int bestCount = -1;
+        for (java.util.Map.Entry<String, Integer> e : counter.entrySet()) {
+            int c = e.getValue() == null ? 0 : e.getValue();
+            if (c > bestCount) {
+                bestCount = c;
+                best = e.getKey();
+            } else if (c == bestCount && best != null && compareVersionLike(e.getKey(), best) > 0) {
+                best = e.getKey();
+            }
+        }
+        return best;
+    }
+
+    /** ★ 2026-10-11 新增：轻量版本比较（逐段数字比大小），仅用于"同票数取更大"。 */
+    private static int compareVersionLike(String a, String b) {
+        try {
+            String[] x = a.replaceAll("[^0-9.]", "").split("\\.");
+            String[] y = b.replaceAll("[^0-9.]", "").split("\\.");
+            int n = Math.max(x.length, y.length);
+            for (int i = 0; i < n; i++) {
+                int xi = (i < x.length && !x[i].isEmpty()) ? Integer.parseInt(x[i]) : 0;
+                int yi = (i < y.length && !y[i].isEmpty()) ? Integer.parseInt(y[i]) : 0;
+                if (xi != yi) {
+                    return xi - yi;
+                }
+            }
+        } catch (Throwable ignored) {
+        }
+        return 0;
     }
 
     /** manifest.minecraft.modLoaders 里的 id 形如 "forge-47.2.0" / "fabric-0.15.0" */
