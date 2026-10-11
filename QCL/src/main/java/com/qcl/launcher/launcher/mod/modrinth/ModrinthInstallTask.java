@@ -81,13 +81,45 @@ public class ModrinthInstallTask extends BaseModpackInstallTask {
     }
 
     private String resolveGameVersion() {
+        // ① Modrinth index 里的 dependencies.minecraft（最权威）
         if (manifest != null) {
             String v = manifest.getGameVersion();
             if (v != null && !v.isEmpty()) {
                 return v;
             }
         }
+        // ② 从整合包自身嗅探（mod 文件名 / 路径）—— 见基类 sniffGameVersion()
+        String sniffed = sniffGameVersion();
+        if (sniffed != null) {
+            android.util.Log.i("ModpackInstall",
+                    "Modrinth 整合包未声明 MC 版本，从包内名字嗅探到: " + sniffed);
+            return sniffed;
+        }
+        // ③ 启动器自己记的
         return modpack == null ? null : modpack.getGameVersion();
+    }
+
+    /**
+     * ★ 2026-10-11：把"可能含 MC 版本号"的文本喂给基类嗅探。
+     * Modrinth 包的文件路径普遍带 MC 版本（{@code mods/sodium-0.6.0+mc26.3.jar}）。
+     */
+    @Override
+    protected java.util.List<String> candidateNameTexts() {
+        java.util.List<String> out = new java.util.ArrayList<String>();
+        try {
+            if (manifest != null && manifest.getFiles() != null) {
+                for (ModrinthManifest.File f : manifest.getFiles()) {
+                    if (f != null && f.getPath() != null) {
+                        out.add(f.getPath());
+                    }
+                }
+            }
+            if (name != null) {
+                out.add(name);
+            }
+        } catch (Throwable ignored) {
+        }
+        return out;
     }
 
     /** dependencies 里的加载器键值：forge / neoforge / fabric-loader / quilt-loader */

@@ -993,7 +993,19 @@ public void refreshAccountModel() {
                             ? normalized.getNormalizedTexture() : normalized.getOriginalTexture();
                 } catch (Throwable ignored) {
                 }
+            } else if (sServerModelHint != null) {
+                // ★★★★★ 2026-10-11：字段为空但**服务端已经给了权威答案** ⇒ 用它（别再用像素猜）。
+                //   实测数据：本地 account.model = None，服务端 variant = SLIM。
+                skinSlim = (sServerModelHint == com.qcl.launcher.auth.yggdrasil.TextureModel.ALEX);
+                try {
+                    NormalizedSkin normalized = new NormalizedSkin(skin);
+                    renderSkin = normalized.isOldFormat()
+                            ? normalized.getNormalizedTexture() : normalized.getOriginalTexture();
+                } catch (Throwable ignored) {
+                }
             } else {
+                // 还没问到服务端 ⇒ 先按像素判一次（并**顺手去问一次**，下次就有权威值了）
+                fetchServerModelHintOnce(account);
                 try {
                     NormalizedSkin normalized = new NormalizedSkin(skin);
                     skinSlim = normalized.isSlim();
@@ -1400,6 +1412,64 @@ private void fetchMicrosoftSkinOnce(final com.qcl.launcher.auth.Account account)
 }
 
 private boolean skinFetchInFlight;
+
+/**
+ * ★★★★★ 2026-10-11 新增：**皮肤模型（经典 / 苗条）的权威来源**。
+ *
+ * <p>用户实测「手臂还是会变回史蒂夫经典手臂」。排查拿到的真实数据是：
+ * <pre>
+ *   本地 account.model = None      ← 模型字段是空的（老账号从没写过这个字段）
+ *   服务端 skin variant = SLIM     ← 服务端明确说是细手臂
+ * </pre>
+ * 字段为空时下游只能"按皮肤像素自己猜"，猜错手臂就变粗。
+ *
+ * <p>所以加这条兜底：字段为空时**直接问服务端要 variant**（只查一次，
+ * 写进静态缓存 + 写回账号并重画），刷新人物时优先用它。
+ */
+private static volatile com.qcl.launcher.auth.yggdrasil.TextureModel sServerModelHint;
+private static volatile boolean sServerModelQueried;
+
+/** 后台查一次服务端 variant 并缓存（只查一次；失败静默，保持原行为）。 */
+private void fetchServerModelHintOnce(final com.qcl.launcher.auth.Account account) {
+    if (sServerModelQueried || account == null || account.loginType != 3
+            || account.auth_access_token == null || account.auth_access_token.trim().isEmpty()) {
+        return;
+    }
+    sServerModelQueried = true;
+    final String token = account.auth_access_token;
+    new Thread(new Runnable() {
+        @Override
+        public void run() {
+            try {
+                com.qcl.launcher.auth.microsoft.Msa.MinecraftProfileResponse profile =
+                        com.qcl.launcher.auth.microsoft.Msa.getMinecraftProfile("Bearer", token);
+                Boolean slim = com.qcl.launcher.auth.microsoft.Msa.getActiveSkinSlim(profile);
+                if (slim == null) {
+                    return;
+                }
+                final com.qcl.launcher.auth.yggdrasil.TextureModel m = slim
+                        ? com.qcl.launcher.auth.yggdrasil.TextureModel.ALEX
+                        : com.qcl.launcher.auth.yggdrasil.TextureModel.STEVE;
+                sServerModelHint = m;
+                account.model = m;   // 写回账号 ⇒ 下次启动就带值了，不必再查
+                activity.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            com.qcl.launcher.utils.gson.GsonUtils.saveAccounts(
+                                    activity.uiManager.accountUI.accounts,
+                                    com.qcl.launcher.manifest.AppManifest.ACCOUNT_DIR + "/accounts.json");
+                            refreshAccountModel();
+                        } catch (Throwable ignored) {
+                        }
+                    }
+                });
+            } catch (Throwable ignored) {
+                // 拿不到就继续用像素判定
+            }
+        }
+    }, "qcl-model-hint").start();
+}
 
 /**
  * ★ 2026-10-11：**本地皮肤上传保护期**（毫秒）。

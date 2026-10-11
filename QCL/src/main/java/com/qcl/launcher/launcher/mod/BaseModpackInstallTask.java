@@ -950,6 +950,47 @@ public abstract class BaseModpackInstallTask extends AsyncTask<Object, Integer, 
         return downloadOne(url, target, null);
     }
 
+    // ==================== ★★★★★ 从整合包自身嗅探 MC 版本 ====================
+    //
+    // 用户实测（原话）：
+    //   「我下载整合包，他就要求我下一个原版游戏；而且我下一个 26.3 的整合包，
+    //     他都根本检测不到。你能不能改一下判断逻辑？
+    //     如果整合包完全脱离了版本名称，你这又该如何检测版本？」
+    //
+    // 背景：FCL 之所以不用嗅探，是因为它只吃"清单里必然带 minecraft.version"的包，
+    // 而且读不到会直接抛 `CurseForge Manifest.gameVersion cannot be blank.`（拒绝安装）。
+    // QCL 的策略是"尽力装"，所以清单缺版本时不能摆烂去下原版，
+    // 而应该**从整合包自身把版本挖出来**。
+    //
+    // 这里把嗅探放在基类 ⇒ Curse / Modrinth / MultiMC / MCBBS / QCL / 通用 六种格式
+    // 都能用；各子类只要把"可能含版本号的名字/路径"喂进来即可（见 candidateNameTexts）。
+
+    /**
+     * ★ 2026-10-11 新增：子类重写，返回**可能含有 MC 版本号**的字符串
+     * （文件名、路径、目录名…）。基类会逐个嗅探。
+     *
+     * @return 可为 null / 空
+     */
+    protected java.util.List<String> candidateNameTexts() {
+        return null;
+    }
+
+    /**
+     * ★ 2026-10-11 新增：从整合包自身嗅探 MC 版本（供各格式的 resolveGameVersion 兜底调用）。
+     *
+     * <p>算法放在公共工具 {@link ModpackVersionSniffer}（因为 MultiMC 那条继承树用不到本基类）。
+     * 取"出现次数最多"的版本号（单个 mod 可能写着兼容版本，多数派更准），
+     * 同票时取版本号更大的；嗅探不到返回 null。
+     */
+    protected String sniffGameVersion() {
+        try {
+            return ModpackVersionSniffer.sniff(candidateNameTexts());
+        } catch (Throwable ignored) {
+            return null;
+        }
+    }
+
+
     /**
      * ★ 2026-10-11：带进度行的下载重载 —— 见 {@link #rowFeedback(DownloadTaskListBean)}。
      *

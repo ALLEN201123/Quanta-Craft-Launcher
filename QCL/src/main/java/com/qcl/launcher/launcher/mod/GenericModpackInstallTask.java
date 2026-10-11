@@ -36,6 +36,26 @@ public class GenericModpackInstallTask extends BaseModpackInstallTask {
         super(activity, file, modpack, name, adapter);
     }
 
+    /**
+     * ★ 2026-10-11：通用模式没有清单结构，只能拿"包名"当线索
+     * （玩家给的整合包名里常带 MC 版本，如 {@code Fabulously.Optimized-1.21.4}）。
+     * 加密压缩包的名字同样有效 —— 这也是"完全脱离版本名称"时的最后一条路。
+     */
+    @Override
+    protected java.util.List<String> candidateNameTexts() {
+        java.util.List<String> out = new java.util.ArrayList<String>();
+        try {
+            if (name != null) {
+                out.add(name);
+            }
+            if (zipFile != null && zipFile.getName() != null) {
+                out.add(zipFile.getName());
+            }
+        } catch (Throwable ignored) {
+        }
+        return out;
+    }
+
     @Override
     protected void install() throws Exception {
         File versionDir = versionDir(name);
@@ -56,7 +76,16 @@ public class GenericModpackInstallTask extends BaseModpackInstallTask {
         }
 
         // ---- ③ 有游戏版本号时顺带把基础版本准备好 ----
+        // ★★★★★ 2026-10-11：原来拿不到版本就**什么都不做**（玩家进游戏发现缺本体）。
+        //   现在补上"从整合包自身嗅探"兜底（与 Curse / Modrinth / MCBBS 同一套算法）。
         String gameVersion = modpack == null ? null : modpack.getGameVersion();
+        if (gameVersion == null || gameVersion.isEmpty()) {
+            gameVersion = sniffGameVersion();
+            if (gameVersion != null) {
+                android.util.Log.i("ModpackInstall",
+                        "通用模式整合包未声明 MC 版本，从包内名字嗅探到: " + gameVersion);
+            }
+        }
         if (gameVersion != null && !gameVersion.isEmpty()) {
             DownloadTaskListBean baseRow = addRow("准备基础游戏版本 " + gameVersion);
             ensureBaseVersionInstalled(versionDir, gameVersion);

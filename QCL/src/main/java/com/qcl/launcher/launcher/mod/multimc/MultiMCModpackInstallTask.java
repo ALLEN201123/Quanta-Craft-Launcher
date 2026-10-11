@@ -245,6 +245,31 @@ public class MultiMCModpackInstallTask extends AsyncTask<Object, Integer, Except
      * ★ 注意 id 用**整合包的目录名**（跟 FCL 的 builder.name(name) 一致），
      *   不是游戏版本号 —— 因为整合包是装成自己的一个版本。
      */
+    /**
+     * ★ 2026-10-11：把 MultiMC 这边"可能含 MC 版本号"的文本喂给嗅探工具。
+     *
+     * <p>说明：MultiMC 的 IntendedVersion 在 {@code mmc-pack.json} 里，正常情况能拿到；
+     * 这里覆盖的是"文件缺失 / 字段为空"的兜底（用实例名、包名这些还在手上的线索）。
+     * ★ 本类继承 {@code AsyncTask} 而不是 {@code BaseModpackInstallTask}，
+     *   所以走公共工具 {@link com.qcl.launcher.launcher.mod.ModpackVersionSniffer}。
+     */
+    private String sniffGameVersionLocal() {
+        java.util.List<String> out = new java.util.ArrayList<String>();
+        try {
+            if (manifest != null && manifest.getName() != null) {
+                out.add(manifest.getName());
+            }
+            if (name != null) {
+                out.add(name);
+            }
+            if (zipFile != null && zipFile.getName() != null) {
+                out.add(zipFile.getName());
+            }
+        } catch (Throwable ignored) {
+        }
+        return com.qcl.launcher.launcher.mod.ModpackVersionSniffer.sniff(out);
+    }
+
     private void ensureGameInstalled(File versionDir) throws Exception {
         File jar = new File(versionDir, name + ".jar");
         if (jar.isFile() && jar.length() > 0) {
@@ -253,8 +278,19 @@ public class MultiMCModpackInstallTask extends AsyncTask<Object, Integer, Except
 
         String gameVersion = manifest == null ? null : manifest.getGameVersion();
         if (gameVersion == null || gameVersion.isEmpty()) {
+            // ★★★★★ 2026-10-11：原来这里**直接抛异常**（"整合包里没写游戏版本"）
+            //   ⇒ 玩家看到的就是"下个整合包却装不了 / 逼我去下原版"。
+            //   现在先尝试**从整合包自身嗅探**（mmc-pack.json 组件名 / 包名等），
+            //   实在拿不到才报错。
+            gameVersion = sniffGameVersionLocal();
+            if (gameVersion != null) {
+                android.util.Log.i("ModpackInstall",
+                        "MultiMC 整合包 IntendedVersion 为空，从包内名字嗅探到: " + gameVersion);
+            }
+        }
+        if (gameVersion == null || gameVersion.isEmpty()) {
             throw new IOException("整合包里没写游戏版本（IntendedVersion 为空），"
-                    + "启动器不知道该下载哪个本体。");
+                    + "启动器也不知道该下载哪个本体。");
         }
 
         // ===== 1) 先走 BMCL 版本清单（用户要求：直接用 bmcl）=====

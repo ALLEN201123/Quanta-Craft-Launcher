@@ -54,13 +54,55 @@ public class McbbsModpackLocalInstallTask extends BaseModpackInstallTask {
         this.manifest = manifest;
     }
 
+    /** ★ 2026-10-11：把 MCBBS 清单里"可能含 MC 版本号"的文本喂给基类嗅探。 */
+    @Override
+    protected java.util.List<String> candidateNameTexts() {
+        java.util.List<String> out = new java.util.ArrayList<String>();
+        try {
+            if (manifest != null) {
+                if (manifest.getFiles() != null) {
+                    for (Object f : manifest.getFiles()) {
+                        if (f instanceof McbbsModpackManifest.CurseFile) {
+                            String fn = ((McbbsModpackManifest.CurseFile) f).getFileName();
+                            if (fn != null) {
+                                out.add(fn);
+                            }
+                        } else if (f instanceof McbbsModpackManifest.AddonFile) {
+                            String p = ((McbbsModpackManifest.AddonFile) f).getPath();
+                            if (p != null) {
+                                out.add(p);
+                            }
+                        }
+                    }
+                }
+                if (manifest.getName() != null) {
+                    out.add(manifest.getName());
+                }
+            }
+            if (name != null) {
+                out.add(name);
+            }
+        } catch (Throwable ignored) {
+        }
+        return out;
+    }
+
     @Override
     protected void install() throws Exception {
         File versionDir = versionDir(name);
         //noinspection ResultOfMethodCallIgnored
         versionDir.mkdirs();
 
-        final String gameVersion = modpack == null ? null : modpack.getGameVersion();
+        // ★★★★★ 2026-10-11：MCBBS 原来**完全依赖 modpack.getGameVersion()**，拿不到就直接去下原版。
+        //   现在补上"从整合包自身嗅探"这条兜底（与 Curse / Modrinth 同一套算法）。
+        String gameVersion = modpack == null ? null : modpack.getGameVersion();
+        if (gameVersion == null || gameVersion.isEmpty()) {
+            gameVersion = sniffGameVersion();
+            if (gameVersion != null) {
+                android.util.Log.i("ModpackInstall",
+                        "MCBBS 整合包未声明 MC 版本，从包内名字嗅探到: " + gameVersion);
+            }
+        }
 
         // ---- ① 基础游戏版本 ----
         DownloadTaskListBean baseRow = addRow("准备基础游戏版本 " + (gameVersion == null ? "" : gameVersion));
