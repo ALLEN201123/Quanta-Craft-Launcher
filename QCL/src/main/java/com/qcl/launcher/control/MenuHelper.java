@@ -209,6 +209,9 @@ SeekBar.OnSeekBarChangeListener {
 
     public void disableCursor() {
         android.util.Log.i("QCL_TOUCH", "disableCursor() -> gameCursorMode=1 (grab 视角模式)");
+        // ★ 2026-10-12：**先记下原模式**再切换 —— 下面的"脏值判断"只在
+        //   「原来处于光标模式」时才有意义（那时期坐标确实应在屏内）。
+        final boolean wasCursorMode = (this.gameCursorMode == 0);
         this.gameCursorMode = 1;
         // ★★★ 1.4.3 修复「关菜单后视角一次性猛偏」的真凶。
         //   原实现（09-20）无条件把基准重置到**屏幕中心**并把光标推给游戏
@@ -222,21 +225,41 @@ SeekBar.OnSeekBarChangeListener {
         if (this.viewManager != null && this.viewManager.screenWidth > 0) {
             float screenW = this.viewManager.screenWidth;
             float screenH = this.viewManager.screenHeight;
-            boolean pointerDirty = this.pointerX < 0.0f || this.pointerX > screenW
-                    || this.pointerY < 0.0f || this.pointerY > screenH;
+            // ★★★★★ 2026-10-12 修正一处**条件错误**（用户实测「开背包/ESC → 关闭 → 滑一下 → 巨大偏移」）：
+            //   转视角（grab 模式）时 `pointerX/pointerY` 是**无界累加**的 —— 滑得越多它越大，
+            //   正常就会远超屏幕尺寸。而这里原来拿它跟屏幕尺寸比"越界"，
+            //   ⇒ **每次关菜单都被误判为脏值**、强行钳回屏内
+            //   ⇒ 下一次滑动从「被钳过的位置」出发，MC 用相邻帧差算 delta ⇒ **巨大跳变**；
+            //     同时也造成"滑到边缘就划不动"。
+            //   ⇒ 只有**光标模式**（gameCursorMode==0，坐标确实应在屏内）才需要判脏值；
+            //     grab 模式（刚切成 1）一律不碰，避免人为制造位移。
+            boolean inCursorMode = wasCursorMode;
+            boolean pointerDirty = inCursorMode
+                    && (this.pointerX < 0.0f || this.pointerX > screenW
+                        || this.pointerY < 0.0f || this.pointerY > screenH);
             if (pointerDirty) {
                 android.util.Log.i("QCL_TOUCH", "disableCursor(): 指针越界(" + this.pointerX + "," + this.pointerY
                         + ") → 钳回屏内，不归中");
-            }
-            this.pointerX = Math.max(0.0f, Math.min(screenW, this.pointerX));
-            this.pointerY = Math.max(0.0f, Math.min(screenH, this.pointerY));
-            this.currentX = this.pointerX;
-            this.currentY = this.pointerY;
-            this.cursorX = this.pointerX;
-            this.cursorY = this.pointerY;
-            if (pointerDirty) {
+                this.pointerX = Math.max(0.0f, Math.min(screenW, this.pointerX));
+                this.pointerY = Math.max(0.0f, Math.min(screenH, this.pointerY));
+                this.currentX = this.pointerX;
+                this.currentY = this.pointerY;
+                this.cursorX = this.pointerX;
+                this.cursorY = this.pointerY;
                 InputBridge.setPointer(this.launcher, (int) this.pointerX, (int) this.pointerY);
             }
+        }
+        // ★★★★★ 2026-10-12 新增：模式切换时**同步一次 SDL 侧的坐标基准**。
+        //   为什么需要：SDL 在相对鼠标模式下会用「上次位置」算事件增量（xrel/yrel）。
+        //   开菜单期间 QCL 一直在投绝对坐标，关闭菜单那一刻 SDL 的"上次位置"停在
+        //   「你在菜单里点的那个按钮」上；恢复游戏后的**第一次滑动**
+        //   会让 SDL 算出「按钮位置 → 手指位置」的人为大位移 ⇒ **视角巨大偏移**
+        //   （用户实测：「打开背包，然后再关闭背包，然后滑动一下屏幕，直接发生巨大偏移」）。
+        //   在切换点主动投一次当前基准，把 SDL 的"上次位置"对齐到现状，
+        //   之后第一次滑动的增量就只有你手指真正移动的那一点点。
+        try {
+            InputBridge.setPointer(this.launcher, (int) this.pointerX, (int) this.pointerY);
+        } catch (Throwable ignored) {
         }
         if (this.viewManager != null) {
             this.viewManager.disableCursor();
