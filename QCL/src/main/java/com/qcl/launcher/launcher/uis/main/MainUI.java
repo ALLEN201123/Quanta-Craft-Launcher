@@ -1166,6 +1166,9 @@ public void refreshAccountModel() {
  *   这里暴露原始入口，让对话框绕过守卫直接更新纹理。
  */
 public void showModel(final Bitmap skin, final Bitmap cape, final boolean slim) {
+        logArm("showModel", "slim=" + slim + " skin="
+                + (skin == null ? "null" : skin.getWidth() + "x" + skin.getHeight())
+                + " cape=" + (cape == null ? "null" : "有"));
         if (skin == null) {
             hideModel();
             return;
@@ -1286,7 +1289,34 @@ private void fetchMicrosoftCapeOnce(final com.qcl.launcher.auth.Account account)
                             activity.uiManager.accountUI.accounts,
                             com.qcl.launcher.manifest.AppManifest.ACCOUNT_DIR + "/accounts.json");
                     // 拉到了披风 ⇒ 立刻把人物重画一次
-                    showModel(Avatar.stringToBitmap(account.texture), Avatar.stringToBitmap(saved), false);
+                    // ★★★★★ 2026-10-11 修【手臂变粗的真凶】（logcat 实锤）：
+                    //   原来这里第三个参数**硬编码 false**（= 经典粗手臂）：
+                    //       showModel(Avatar.stringToBitmap(account.texture),
+                    //                 Avatar.stringToBitmap(saved), false);
+                    //   于是"披风拉回来"这一下就把人物的 slim 状态覆盖成"粗手臂"——
+                    //   日志证据：
+                    //     18:14:34.993 hint-applied | 把 model 写成 ALEX
+                    //     18:14:35.000 showModel | slim=true  skin=64x64 cape=null  ← 苗条正确
+                    //     18:14:35.514 showModel | slim=false skin=64x64 cape=有    ← 披风一到就变粗 ❌
+                    //   这就是用户看到的「过了一会直接给我变回史蒂夫的胳膊」。
+                    //
+                    //   现在按**当前账号保存的模型**（没有就问服务端 hint）来决定，绝不写死。
+                    boolean capeSlim;
+                    if (account.model != null) {
+                        capeSlim = (account.model == com.qcl.launcher.auth.yggdrasil.TextureModel.ALEX);
+                    } else if (sServerModelHint != null) {
+                        capeSlim = (sServerModelHint == com.qcl.launcher.auth.yggdrasil.TextureModel.ALEX);
+                    } else {
+                        // 实在没有权威值 ⇒ 按皮肤像素判（保持与别处一致，不写死 false）
+                        try {
+                            capeSlim = new NormalizedSkin(Avatar.stringToBitmap(account.texture)).isSlim();
+                        } catch (Throwable ignored) {
+                            capeSlim = false;
+                        }
+                    }
+                    logArm("cape-redraw", "capeSlim=" + capeSlim + " model=" + account.model
+                            + " hint=" + sServerModelHint);
+                    showModel(Avatar.stringToBitmap(account.texture), Avatar.stringToBitmap(saved), capeSlim);
                 } catch (Throwable ignored) {
                 }
             });
@@ -1392,6 +1422,8 @@ private void fetchMicrosoftSkinOnce(final com.qcl.launcher.auth.Account account)
             account.texture = fresh;
             if (serverModel != null) {
                 account.model = serverModel;
+                logArm("skin-sync-model", "把 model 写成 " + serverModel
+                        + "（serverSlim=" + serverSlim + "）");
             }
             activity.runOnUiThread(() -> {
                 try {
@@ -1429,12 +1461,23 @@ private boolean skinFetchInFlight;
 private static volatile com.qcl.launcher.auth.yggdrasil.TextureModel sServerModelHint;
 private static volatile boolean sServerModelQueried;
 
+/** ★ 2026-10-11 临时诊断：记录 slim 值到底是被哪条路径改的（tag QCLARM）。 */
+private static void logArm(String where, String detail) {
+    try {
+        android.util.Log.w("QCLARM", where + " | " + detail);
+    } catch (Throwable ignored) {
+    }
+}
+
 /** 后台查一次服务端 variant 并缓存（只查一次；失败静默，保持原行为）。 */
 private void fetchServerModelHintOnce(final com.qcl.launcher.auth.Account account) {
     if (sServerModelQueried || account == null || account.loginType != 3
             || account.auth_access_token == null || account.auth_access_token.trim().isEmpty()) {
+        logArm("hint-skip", "queried=" + sServerModelQueried + " acc="
+                + (account == null ? "null" : String.valueOf(account.loginType)));
         return;
     }
+    logArm("hint-start", "开始向服务端查 variant");
     sServerModelQueried = true;
     final String token = account.auth_access_token;
     new Thread(new Runnable() {
@@ -1445,13 +1488,16 @@ private void fetchServerModelHintOnce(final com.qcl.launcher.auth.Account accoun
                         com.qcl.launcher.auth.microsoft.Msa.getMinecraftProfile("Bearer", token);
                 Boolean slim = com.qcl.launcher.auth.microsoft.Msa.getActiveSkinSlim(profile);
                 if (slim == null) {
+                    logArm("hint-null", "服务端没给 variant");
                     return;
                 }
+                logArm("hint-got", "服务端 variant slim=" + slim + " （本地 model=" + account.model + "）");
                 final com.qcl.launcher.auth.yggdrasil.TextureModel m = slim
                         ? com.qcl.launcher.auth.yggdrasil.TextureModel.ALEX
                         : com.qcl.launcher.auth.yggdrasil.TextureModel.STEVE;
                 sServerModelHint = m;
                 account.model = m;   // 写回账号 ⇒ 下次启动就带值了，不必再查
+                logArm("hint-applied", "把 model 写成 " + m);
                 activity.runOnUiThread(new Runnable() {
                     @Override
                     public void run() {

@@ -354,6 +354,13 @@ public class SDLSurface extends SurfaceView implements SurfaceHolder.Callback,
 //        scaleGestureDetector.onTouchEvent(event);
 //
 //        return true;
+        // ★★★★★ 2026-10-11 诊断（用户要求「加一个日志，我点击看无响应」）：
+        //   注意 —— 上面整段触摸转发**是被注释掉的**，这里直接 return false。
+        //   也就是说 **触摸事件不会经由此路径进入 SDL**（FCL 同样如此，故两边一致）；
+        //   那"点按钮没反应"就必须发生在别处。这行日志用来确认：
+        //     若你点击屏幕时能看到 [1-onTouch]，说明事件到了 Surface 但被这里丢弃；
+        //     若一条都没有，说明事件根本没到 Surface（被上层控件消费 / 窗口没焦点）。
+        QCLInputLog.log("1-onTouch", "到达(但此路径已禁用) " + QCLInputLog.describe(event));
         return false;
     }
 
@@ -437,6 +444,8 @@ public class SDLSurface extends SurfaceView implements SurfaceHolder.Callback,
     {
         int action = event.getActionMasked();
         int pointerCount = event.getPointerCount();
+        // ★★★★★ 2026-10-11 诊断：指针捕获路径（鼠标/指针模式下**真正**送进游戏的路径）
+        QCLInputLog.log("2-onCapturedPointer", QCLInputLog.describe(event));
 
         for (int i = 0; i < pointerCount; i++) {
             float x, y;

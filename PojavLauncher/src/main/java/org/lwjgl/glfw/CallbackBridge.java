@@ -1,9 +1,24 @@
 package org.lwjgl.glfw;
 
 import android.view.Choreographer;
+import android.view.MotionEvent;
+
+import net.kdt.pojavlaunch.keyboard.LwjglGlfwKeycode;
+import org.libsdl.app.QCLInputLog;
+import org.libsdl.app.SDLActivity;
+import org.libsdl.app.SdlBridge;
 
 public class CallbackBridge {
     public static Choreographer sChoreographer = Choreographer.getInstance();
+
+    /**
+     * ★★★★★ 2026-10-11 新增（修「MC 26.4 按钮点不动」）：累积的鼠标按键状态。
+     *
+     * <p>SDL 的 {@code MotionEvent} 要的是 **buttonState 位掩码**（不是单个按键），
+     * 所以按 FCL 的做法在这里累积：按下时置位、抬起时清位，再把整个掩码报给 SDL。
+     */
+    private static int sMouseButtonState = 0;
+
     private static volatile boolean isGrabbing = false;
     /** push 通道是否已经收到过回调；没收到则退回 native 轮询（兜底）。 */
     private static volatile boolean grabStatePushed = false;
@@ -49,9 +64,45 @@ public class CallbackBridge {
 
     public static boolean sendCursorPos(float x, float y) {
         DEBUG_STRING.append("CursorPos=").append(x).append(", ").append(y).append("\n");
+        float dx = x - mouseX;
+        float dy = y - mouseY;
         mouseX = x;
         mouseY = y;
         CallbackBridge.nativeSendCursorPos(mouseX, mouseY);
+        // ★★★★★ 2026-10-11 修「MC 26.4 能进主菜单但按钮点不动」——**SDL 输入双路**。
+        //
+        //   根因（子代理逐文件对照 FCL 查出，证据：`git log --all -S onNativeMouse` 为空）：
+        //     MC 26.3+ 用 SDL3 窗口后端，它**只从 SDL 事件队列取输入**
+        //     （SDL_PollEvent）。而 QCL 的输入出口**只有 GLFW 一条**：
+        //       TouchPad → InputBridge → CallbackBridge.nativeSend* →
+        //       input_bridge_v3.c 的 pojav_environ 队列 → 只有 pojavPumpEvents() 消费，
+        //       而它内部是 GLFW_invoke_CursorPos / GLFW_invoke_MouseButton。
+        //     SDL 版 MC **不调用任何 GLFW 函数** ⇒ 队列永远没人读 ⇒ 点击全部丢失。
+        //     渲染不受影响（SDL surface 走 egl_bridge 另一条路）⇒ 完美对应
+        //     「画面正常、按钮点不动」。
+        //   ★ 这不是 1.5.0 改坏的 —— 这段代码 QCL **从来没有过**（1.4.8 也没有），
+        //     是「还原被误删的 SDL3 Hook」让 26.4 第一次能进主菜单，才把这个老缺口暴露出来。
+        //
+        //   修法：投射一份到 SDL（FCL 同款）。闸门必须是 SdlBridge.getSdlEnabled()
+        //   —— 它只在 SDL_Init 握手完成后为 true；**不能**用
+        //   SDLActivity.getSDLSurface() != null，因为 PojavMinecraftActivity 对
+        //   **所有版本**都无条件调 prepareSurface（非 SDL 版本也会成立）⇒ 会对
+        //   未初始化的 SDL 调 native 而崩。
+        if (!SdlBridge.getSdlEnabled()) {
+            return true;
+        }
+        try {
+            if (CallbackBridge.isGrabbing()) {
+                // 锁指针（游戏内视角）→ 报**相对增量**
+                SDLActivity.onNativeMouse(0, MotionEvent.ACTION_MOVE, dx, dy, true);
+                QCLInputLog.log("SDL-cursor", "相对 dx=" + dx + " dy=" + dy);
+            } else {
+                // 菜单/未锁定 → 报**绝对坐标**
+                SDLActivity.onNativeMouse(0, MotionEvent.ACTION_MOVE, x, y, false);
+                QCLInputLog.log("SDL-cursor", "绝对 x=" + x + " y=" + y);
+            }
+        } catch (Throwable ignored) {
+        }
         return true;
     }
 
@@ -99,6 +150,50 @@ public class CallbackBridge {
     public static void sendMouseKeycode(int button, int modifiers, boolean isDown) {
         DEBUG_STRING.append("MouseKey=").append(button).append(", down=").append(isDown).append("\n");
         CallbackBridge.nativeSendMouseButton(button, isDown ? 1 : 0, modifiers);
+        // ★★★★★ 2026-10-11「SDL 输入双路」第 2 条（**这条才是按钮点得动的关键**）：
+        //   GLFW 那条已经发了，但 SDL 版 MC（26.3+）只读 SDL 事件队列 ⇒ 必须再投一份。
+        //   SDL 要的是 **buttonState 位掩码**（不是单个按键），所以这里累积后再上报
+        //   —— 与 FCL 的 sMouseButtonState 做法完全一致。
+        if (!SdlBridge.getSdlEnabled()) {
+            return;
+        }
+        int aKey = -1;
+        switch (button) {
+            case LwjglGlfwKeycode.GLFW_MOUSE_BUTTON_LEFT:
+                aKey = MotionEvent.BUTTON_PRIMARY;
+                break;
+            case LwjglGlfwKeycode.GLFW_MOUSE_BUTTON_RIGHT:
+                aKey = MotionEvent.BUTTON_SECONDARY;
+                break;
+            case LwjglGlfwKeycode.GLFW_MOUSE_BUTTON_MIDDLE:
+                aKey = MotionEvent.BUTTON_TERTIARY;
+                break;
+            case LwjglGlfwKeycode.GLFW_MOUSE_BUTTON_4:   // = 3（侧键"后退"）
+                aKey = MotionEvent.BUTTON_BACK;
+                break;
+            case LwjglGlfwKeycode.GLFW_MOUSE_BUTTON_5:   // = 4（侧键"前进"）
+                aKey = MotionEvent.BUTTON_FORWARD;
+                break;
+            default:
+                break;
+        }
+        if (aKey == -1) {
+            return;
+        }
+        if (isDown) {
+            sMouseButtonState |= aKey;
+        } else {
+            sMouseButtonState &= ~aKey;
+        }
+        try {
+            SDLActivity.onNativeMouse(sMouseButtonState,
+                    isDown ? MotionEvent.ACTION_DOWN : MotionEvent.ACTION_UP,
+                    mouseX, mouseY, false);
+            QCLInputLog.log("SDL-mouse", "button=" + button + " state=0x"
+                    + Integer.toHexString(sMouseButtonState) + " down=" + isDown
+                    + " x=" + mouseX + " y=" + mouseY);
+        } catch (Throwable ignored) {
+        }
     }
 
     public static void sendMouseKeycode(int keycode) {
@@ -109,6 +204,16 @@ public class CallbackBridge {
     public static void sendScroll(double xoffset, double yoffset) {
         DEBUG_STRING.append("ScrollX=").append(xoffset).append(",ScrollY=").append(yoffset);
         CallbackBridge.nativeSendScroll(xoffset, yoffset);
+        // ★★★★★ 2026-10-11「SDL 输入双路」第 3 条：滚轮也要投一份给 SDL（26.3+ 只读 SDL 队列）
+        if (!SdlBridge.getSdlEnabled()) {
+            return;
+        }
+        try {
+            SDLActivity.onNativeMouse(0, MotionEvent.ACTION_SCROLL,
+                    (float) xoffset, (float) yoffset, false);
+            QCLInputLog.log("SDL-scroll", "x=" + xoffset + " y=" + yoffset);
+        } catch (Throwable ignored) {
+        }
     }
 
     public static void sendUpdateWindowSize(int w, int h) {

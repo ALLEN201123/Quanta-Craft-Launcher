@@ -1129,6 +1129,12 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
     public static native void onNativeKeyUp(int keycode);
     public static native boolean onNativeSoftReturnKey();
     public static native void onNativeKeyboardFocusLost();
+    // ★★★★★ 2026-10-11 撤掉上一步的错误改法：这两个方法**必须保持 native 原名**。
+    //   原因：libSDL3.so 里没有 `Java_org_libsdl_app_*` 导出符号，
+    //   这些方法**全靠 JNI_OnLoad 里的 RegisterNatives 按「名字+签名」注册**。
+    //   一旦改成 Java 包装 + 私有 native（换名），RegisterNatives 就绑不上，
+    //   游戏侧调用时直接 UnsatisfiedLinkError 崩。
+    //   ⇒ 日志改在**调用方**（CallbackBridge 的 SDL 双路 + SDLSurface）里打，那里一样能定位。
     public static native void onNativeMouse(int button, int action, float x, float y, boolean relative);
     public static native void onNativeTouch(int touchDevId, int pointerFingerId,
                                             int action, float x,
