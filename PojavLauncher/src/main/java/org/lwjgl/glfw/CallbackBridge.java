@@ -114,6 +114,45 @@ public class CallbackBridge {
         DEBUG_STRING.append("KeyCode=").append(keycode).append(", Char=").append(keychar);
         if (keycode != 0) {
             CallbackBridge.nativeSendKey(keycode, scancode, isDown ? 1 : 0, modifiers);
+            // ★★★★★ 2026-10-12「SDL 输入双路」第 4 条 —— **虚拟键盘 / 实体键盘**。
+            //
+            //   用户实测：「现在只有鼠标可以生效，但是虚拟键盘生效不了，根本啥也点不动」，
+            //   并提醒「我说的 SDL 不是低版本的」⇒ 是 **SDL3**（MC 26.3+ 的后端）。
+            //   与鼠标同一个病根：GLFW 那条发了，但 SDL 版 MC **只读 SDL 事件队列**。
+            //
+            //   ★★ 关键：**不能透传！** QCL 的 keycode 是 **GLFW 键码**，不是 Android 键码。
+            //     证据（QCL/src/main/res/layout/view_group_keyboard.xml）：
+            //       Esc 按钮 qcl:keyCode="256" = GLFW_KEY_ESCAPE
+            //       F1  按钮 qcl:keyCode="290" = GLFW_KEY_F1
+            //       A   按钮 qcl:keyCode="65"  = GLFW_KEY_A（= ASCII 'A'）
+            //     而 SDL3 的 SDLActivity.onNativeKeyDown(int) 要的是 **Android 键码**
+            //     （SDL 官方在 onKeyDown 里就是 onNativeKeyDown(keyCode)，
+            //       keyCode 来自 android.view.KeyEvent）。
+            //     透传会把 256 这类 GLFW 值塞给 SDL ⇒ SDLK_* 全对不上 ⇒ 依然点不动。
+            //   ⇒ 走 SdlKeycodeConverter 做 **GLFW → Android 一跳转换**
+            //     （已按虚拟键盘实际用到的 104 个键逐一核对）。
+            //
+            //   闸门仍是 SdlBridge.getSdlEnabled()（GLFW 版本为 false，行为不变）。
+            //   ★ 这里**不能 return**（下面还要发 char），故用嵌套判断。
+            if (SdlBridge.getSdlEnabled()) {
+                try {
+                    int androidKeycode = org.libsdl.app.SdlKeycodeConverter
+                            .toAndroidKeycode(keycode);
+                    if (androidKeycode != android.view.KeyEvent.KEYCODE_UNKNOWN) {
+                        if (isDown) {
+                            SDLActivity.onNativeKeyDown(androidKeycode);
+                        } else {
+                            SDLActivity.onNativeKeyUp(androidKeycode);
+                        }
+                        org.libsdl.app.QCLInputLog.log("SDL-key", "glfw=" + keycode
+                                + " -> android=" + androidKeycode + " down=" + isDown);
+                    } else {
+                        org.libsdl.app.QCLInputLog.log("SDL-key-UNMAPPED",
+                                "glfw=" + keycode + " down=" + isDown);
+                    }
+                } catch (Throwable ignored) {
+                }
+            }
         }
         if (isDown && keychar != '\u0000') {
             CallbackBridge.nativeSendCharMods(keychar, modifiers);
@@ -124,6 +163,35 @@ public class CallbackBridge {
     public static void sendChar(char keychar, int modifiers) {
         CallbackBridge.nativeSendCharMods(keychar, modifiers);
         CallbackBridge.nativeSendChar(keychar);
+        // ★★★★★ 2026-10-12「SDL 输入双路」第 5 条 —— **文本输入**（聊天框 / 告示牌 / 命名）。
+        //   照 FCL 的做法：按下 → 抬起 各报一次，让 SDL 产出对应的文本事件。
+        //   ★ 与键码那条一样，这里也**不能透传 char** —— SDL 要的是 Android 键码，
+        //     所以复用 SdlKeycodeConverter 的 ASCII 区映射（A-Z / 0-9 / 常用符号）。
+        //     ★ 关键差异：**注意大小写**。sendKeycode 那条大小写由 Shift 决定，
+        //     而同为 A-Z 键码；这里补 Shift 掩码，保证聊天框里大小写正确。
+        if (!SdlBridge.getSdlEnabled()) {
+            return;
+        }
+        try {
+            int code = org.libsdl.app.SdlKeycodeConverter.toAndroidKeycode(keychar);
+            if (code == android.view.KeyEvent.KEYCODE_UNKNOWN) {
+                // 中文等非 ASCII：交给系统输入法（SDLInputConnection）那条路，这里跳过
+                return;
+            }
+            boolean upper = keychar >= 'A' && keychar <= 'Z';
+            if (upper) {
+                // 大写字母：SDL 侧需要看到 Shift 按下，否则会产出小写
+                SDLActivity.onNativeKeyDown(android.view.KeyEvent.KEYCODE_SHIFT_LEFT);
+            }
+            SDLActivity.onNativeKeyDown(code);
+            SDLActivity.onNativeKeyUp(code);
+            if (upper) {
+                SDLActivity.onNativeKeyUp(android.view.KeyEvent.KEYCODE_SHIFT_LEFT);
+            }
+            org.libsdl.app.QCLInputLog.log("SDL-char", "char=" + (int) keychar
+                    + " code=" + code + " upper=" + upper);
+        } catch (Throwable ignored) {
+        }
     }
 
     public static void sendKeyPress(int keyCode, int modifiers, boolean status) {
