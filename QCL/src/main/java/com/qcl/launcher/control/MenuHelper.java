@@ -95,6 +95,17 @@ SeekBar.OnSeekBarChangeListener {
     public LayoutPanel baseLayout;
     public int launcher;
     public float scaleFactor;
+
+    /**
+     * ★★★★★ 2026-10-12 新增（修「滑动屏幕出现巨大视角偏移」）：
+     * **当前生效的分辨率缩放系数**，供 {@link InputBridge#setPointer} 统一归一使用。
+     *
+     * <p>为什么需要它：QCL 内部坐标系不统一 —— `MKManager` 的调用点乘了 scaleFactor，
+     * 而 `TouchPad` / `MenuHelper` / `ViewManager` 的没乘，同一份"屏幕坐标"混用两个尺度
+     * ⇒ 游戏看到的光标位置来回跳 ⇒ 视角巨大偏移。
+     * 把出口统一到这个静态值，就能让所有调用点归一（默认 1.0f = 不缩放，保持原行为）。
+     */
+    public static volatile float sActiveScaleFactor = 1.0f;
     public int screenWidth;
     public int screenHeight;
     public GameMenuSetting gameMenuSetting;
@@ -161,6 +172,11 @@ SeekBar.OnSeekBarChangeListener {
         this.enableNameEditor = editMode;
         this.launcher = launcher;
         this.scaleFactor = scaleFactor;
+        // ★ 2026-10-12：把当前生效的缩放系数发布给 InputBridge.setPointer（统一坐标系用）。
+        //   有效值才发布（<=0 视为没配置，保持 1.0f 不缩放，绝不制造新的坐标偏移）。
+        if (scaleFactor > 0f) {
+            MenuHelper.sActiveScaleFactor = scaleFactor;
+        }
         this.patternList = SettingUtils.getControlPatternList();
         if (this.patternList.size() == 0) {
             InitializeSetting.initializeControlPattern((Activity)activity, new AssetsUtils.FileOperateCallback(){

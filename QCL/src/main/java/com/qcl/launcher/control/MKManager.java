@@ -97,7 +97,10 @@ public class MKManager implements View.OnKeyListener, View.OnCapturedPointerList
             this.menuHelper.cursorY = f;
             this.menuHelper.pointerX = x;
             this.menuHelper.pointerY = f;
-            InputBridge.setPointer(this.menuHelper.launcher, (int) (x * this.menuHelper.scaleFactor), (int) (f * this.menuHelper.scaleFactor));
+            // ★ 2026-10-12：**不要**在这里乘 scaleFactor —— 统一由 InputBridge.setPointer
+            //   在出口乘一次。原来这里乘、而 TouchPad/MenuHelper/ViewManager 不乘，
+            //   同一份屏幕坐标混用两个尺度 ⇒ 游戏看到的位置来回跳 ⇒ 视角巨大偏移。
+            InputBridge.setPointer(this.menuHelper.launcher, (int) x, (int) f);
         } else {
             this.menuHelper.pointerX += motionEvent.getX() * this.menuHelper.gameMenuSetting.mouseSpeed;
             this.menuHelper.pointerY += motionEvent.getY() * this.menuHelper.gameMenuSetting.mouseSpeed;
@@ -105,7 +108,9 @@ public class MKManager implements View.OnKeyListener, View.OnCapturedPointerList
             menuHelper.currentX = menuHelper.pointerX;
             MenuHelper menuHelper2 = this.menuHelper;
             menuHelper2.currentY = menuHelper2.pointerY;
-            InputBridge.setPointer(this.menuHelper.launcher, (int) (this.menuHelper.pointerX * this.menuHelper.scaleFactor), (int) (this.menuHelper.pointerY * this.menuHelper.scaleFactor));
+            // ★ 2026-10-12：同上，scaleFactor 统一在 InputBridge 出口乘，避免双重缩放。
+            InputBridge.setPointer(this.menuHelper.launcher,
+                    (int) this.menuHelper.pointerX, (int) this.menuHelper.pointerY);
         }
         return handleMouseEvent(motionEvent);
     }
