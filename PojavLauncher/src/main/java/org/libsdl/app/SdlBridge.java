@@ -46,10 +46,39 @@ public final class SdlBridge {
         return sdlEnabled;
     }
 
+    /**
+     * ★★★★★ 2026-10-12 补齐（全量对照 FCL 后发现的漏抄项）：
+     * **把「是否需要 SDL 文本输入」真正下发给 SDL3**。
+     *
+     * <p>原来这里只是记一个 Java 布尔值就 `return true`，**根本没调用 SDL** ——
+     * 于是 SDL3 的文本输入通道（IME / 软键盘）从来没被打开过，
+     * 聊天框、告示牌、命名框都收不到输入法。
+     *
+     * <p>SDL3 的文本输入 API 要求**在主线程调用**，所以原生侧用
+     * `SDL_RunOnMainThread` 投递（照 FCL 的做法），不阻塞等待；
+     * 激活结果由 SDL 的 showTextInput 回调异步镜像回 Java。
+     */
     public static boolean setNativeTextInputActive(boolean active) {
         nativeTextInputActive = active;
-        return true;
+        try {
+            return nativeSetNativeTextInputActive(active);
+        } catch (Throwable ignored) {
+            // 原生不可用（非 SDL 版本 / so 未就绪）⇒ 保持 Java 标记，行为与以前一致
+            return true;
+        }
     }
+
+    /** ★ 2026-10-12：原生实现（input_bridge_v3.c）。 */
+    private static native boolean nativeSetNativeTextInputActive(boolean active);
+
+    /**
+     * ★ 2026-10-12：SDL 渲染路径是否真的活着 —— 以**首个 SDL 窗口已创建**为准
+     * （FCL 的判据：`sdlHookGetPrimaryWindow() != NULL`）。
+     *
+     * <p>为什么不能只看 Java 标记：仅手柄子系统初始化 SDL（例如 MC 26.2 挂 Controlify）时
+     * 也会走 SDL_Init，但**没有窗口**、也就没有 SDL 渲染路径。
+     */
+    private static native boolean nativeIsSdlRenderActive();
 
     public static boolean getNativeTextInputActive() {
         return nativeTextInputActive;
@@ -151,11 +180,36 @@ public final class SdlBridge {
         SDLSurface.clearNativeSurface();
     }
 
-    /** 游戏是否运行在 SDL 渲染路径。 */
+    /**
+     * 游戏是否运行在 SDL 渲染路径。
+     *
+     * <p>★ 2026-10-12 改进（照 FCL）：以原生侧的**首个 SDL 窗口是否已创建**为准，
+     * 而不是只看 Java 标记位。原因：仅手柄子系统初始化 SDL
+     * （例如 MC 26.2 挂 Controlify）时也会走 SDL_Init、`sdlEnabled` 也会变 true，
+     * 但**没有窗口、也没有 SDL 渲染路径** ⇒ 只看标记会误判。
+     */
     public static boolean isSdlRenderActive() {
-        return sdlEnabled;
+        try {
+            return nativeIsSdlRenderActive();
+        } catch (Throwable ignored) {
+            return sdlEnabled;   // 原生不可用就退回原判据
+        }
     }
 
+    /**
+     * ★ 2026-10-12（照 FCL）：初始化 SDL 的手柄子系统。
+     *
+     * <p>QCL 原来这里是**空实现**。MC 26.2+ 挂 Controlify 等手柄 mod 时会请求初始化
+     * gamepad/joystick 子系统；不初始化就收不到手柄输入。
+     * 具体初始化在原生侧（input_bridge_v3.c），这里只做转发。
+     */
     public static void initializeControllerSubsystems() {
+        try {
+            nativeInitializeControllerSubsystems();
+        } catch (Throwable ignored) {
+        }
     }
+
+    /** ★ 2026-10-12：原生实现（input_bridge_v3.c）。 */
+    private static native void nativeInitializeControllerSubsystems();
 }

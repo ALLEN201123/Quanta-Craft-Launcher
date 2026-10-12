@@ -572,9 +572,44 @@ public class CallbackBridge {
         return false;
     }
 
+    // ==================== ★ 2026-10-12 手柄直通（照 FCL 补齐） ====================
+    //
+    //  全量对照 FCL 时发现的漏抄项：FCL 的 CallbackBridge 有这两个 buffer，
+    //  指向原生侧 `pojav_environ->gamepadState`（QCL 的 environ.h 里**早就有这个字段**，
+    //  只是没人用）⇒ 游戏侧直接读写这块内存即可拿到手柄状态，零 JNI 拷贝开销。
+    //
+    //  GLFWgamepadstate 布局（environ.h:33-36）：
+    //      unsigned char buttons[15];
+    //      float         axes[6];
+    //
+    //  ★ 顺手把 `nativeResetInputState` 的声明放在这里（见上面的 resetInputState）。
+
+    /** 手柄按键状态（15 字节，直接映射 GLFWgamepadstate.buttons）。 */
+    public static final java.nio.ByteBuffer sGamepadButtonBuffer;
+
+    /** 手柄轴状态（6 个 float，小端，直接映射 GLFWgamepadstate.axes）。 */
+    public static final java.nio.FloatBuffer sGamepadAxisBuffer;
+
+    private static native java.nio.ByteBuffer nativeCreateGamepadButtonBuffer();
+
+    private static native java.nio.ByteBuffer nativeCreateGamepadAxisBuffer();
+
     static {
         DEBUG_STRING = new StringBuilder();
         System.loadLibrary("pojavexec");
+        // ★ 这两个 buffer 必须在这里初始化：游戏侧一加载 CallbackBridge 就要能读到，
+        //   晚一步初始化会出现"手柄状态全 0"的窗口期。
+        java.nio.ByteBuffer btn = null;
+        java.nio.FloatBuffer ax = null;
+        try {
+            btn = nativeCreateGamepadButtonBuffer();
+            ax = nativeCreateGamepadAxisBuffer()
+                    .order(java.nio.ByteOrder.LITTLE_ENDIAN).asFloatBuffer();
+        } catch (Throwable ignored) {
+            // 原生还没就绪（理论上不会；兜底避免类初始化失败把游戏拖崩）
+        }
+        sGamepadButtonBuffer = btn;
+        sGamepadAxisBuffer = ax;
     }
 }
 

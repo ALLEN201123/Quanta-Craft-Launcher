@@ -18,6 +18,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdatomic.h>
+// ★ 2026-10-12 新增：SDL 文本输入/手柄那组 JNI 需要 bool 与 uint32_t
+#include <stdbool.h>
+#include <stdint.h>
 #include <math.h>
 
 #include "log.h"
@@ -903,5 +906,128 @@ Java_org_lwjgl_glfw_GLFW_glfwSetCursorPos(__attribute__((unused)) JNIEnv *env,
                                           __attribute__((unused)) jlong window, jdouble xpos,
                                           jdouble ypos) {
     JavaCritical_org_lwjgl_glfw_GLFW_glfwSetCursorPos(window, xpos, ypos);
+}
+
+/*
+ * ============================================================================
+ * ★★★★★ 2026-10-12 补齐「手柄 + SDL 文本输入」（用户要求「全部抄过来」）
+ *
+ *   上面那段注释原本写着「手柄/SDL 的 JNI 符号 FCL 虽有，但 QCL Java 侧无对应
+ *   native 声明、零引用，不搬」—— 现在 Java 侧声明已经补上（CallbackBridge 的
+ *   两个 gamepad buffer、SdlBridge 的文本输入与手柄子系统），所以必须一起搬过来，
+ *   否则类初始化时就会 UnsatisfiedLinkError：'ByteBuffer ...nativeCreateGamepadButtonBuffer()'。
+ * ============================================================================
+ */
+
+/* ---- 手柄直通：把 pojav_environ->gamepadState 直接暴露成 Java 的 DirectByteBuffer ---- */
+JNIEXPORT jobject JNICALL
+Java_org_lwjgl_glfw_CallbackBridge_nativeCreateGamepadButtonBuffer(JNIEnv *env,
+                                                                  __attribute__((unused)) jclass clazz) {
+    return (*env)->NewDirectByteBuffer(env, pojav_environ->gamepadState.buttons,
+                                       sizeof(pojav_environ->gamepadState.buttons));
+}
+
+JNIEXPORT jobject JNICALL
+Java_org_lwjgl_glfw_CallbackBridge_nativeCreateGamepadAxisBuffer(JNIEnv *env,
+                                                                __attribute__((unused)) jclass clazz) {
+    return (*env)->NewDirectByteBuffer(env, pojav_environ->gamepadState.axes,
+                                       sizeof(pojav_environ->gamepadState.axes));
+}
+
+/* ---- SDL 文本输入（照 FCL）：SDL3 的文本输入 API 必须在主线程调用，用 SDL_RunOnMainThread 投递 ---- */
+typedef struct SDL_Window SDL_Window;
+typedef uint32_t SDL_PropertiesID;
+typedef void (*SDL_MainThreadCallback)(void *userdata);
+typedef bool (*sdlStartTextInput_t)(SDL_Window *, SDL_PropertiesID);
+typedef bool (*sdlStopTextInput_t)(SDL_Window *);
+typedef bool (*sdlRunOnMainThread_t)(SDL_MainThreadCallback, void *, bool);
+
+/* 由 sdl_hook.c 提供：返回首个成功创建的 SDL 窗口（SDL 渲染路径存活的判据）。 */
+extern SDL_Window *sdlHookGetPrimaryWindow(void);
+
+static void qclSdlTextInputMainThreadCallback(void *userdata) {
+    void *handle = dlopen("libSDL3.so", RTLD_NOW);
+    if (handle == NULL) {
+        __android_log_print(ANDROID_LOG_ERROR, "QCL_INPUT",
+                            "文本输入: libSDL3.so dlopen 失败");
+        return;
+    }
+    SDL_Window *window = sdlHookGetPrimaryWindow();
+    if (window == NULL) {
+        __android_log_print(ANDROID_LOG_WARN, "QCL_INPUT",
+                            "文本输入: 暂无 SDL 窗口，跳过");
+        return;
+    }
+    if (userdata != NULL) {
+        sdlStartTextInput_t start = (sdlStartTextInput_t) dlsym(handle, "SDL_StartTextInput");
+        if (start != NULL) {
+            start(window, 0);
+            __android_log_print(ANDROID_LOG_INFO, "QCL_INPUT", "文本输入: SDL_StartTextInput OK");
+        } else {
+            __android_log_print(ANDROID_LOG_ERROR, "QCL_INPUT",
+                                "文本输入: 找不到 SDL_StartTextInput");
+        }
+    } else {
+        sdlStopTextInput_t stop = (sdlStopTextInput_t) dlsym(handle, "SDL_StopTextInput");
+        if (stop != NULL) {
+            stop(window);
+            __android_log_print(ANDROID_LOG_INFO, "QCL_INPUT", "文本输入: SDL_StopTextInput OK");
+        } else {
+            __android_log_print(ANDROID_LOG_ERROR, "QCL_INPUT",
+                                "文本输入: 找不到 SDL_StopTextInput");
+        }
+    }
+}
+
+JNIEXPORT jboolean JNICALL
+Java_org_libsdl_app_SdlBridge_nativeIsSdlRenderActive(__attribute__((unused)) JNIEnv *env,
+                                                      __attribute__((unused)) jclass clazz) {
+    // SDL 渲染路径以「首个 SDL 窗口已创建」为标志；仅手柄子系统初始化 SDL 时没有窗口。
+    return sdlHookGetPrimaryWindow() != NULL ? JNI_TRUE : JNI_FALSE;
+}
+
+JNIEXPORT jboolean JNICALL
+Java_org_libsdl_app_SdlBridge_nativeSetNativeTextInputActive(__attribute__((unused)) JNIEnv *env,
+                                                             __attribute__((unused)) jclass clazz,
+                                                             jboolean active) {
+    if (sdlHookGetPrimaryWindow() == NULL) {
+        __android_log_print(ANDROID_LOG_WARN, "QCL_INPUT",
+                            "setNativeTextInputActive: 暂无 SDL 窗口（SDL 渲染路径未启用）");
+        return JNI_FALSE;
+    }
+    void *handle = dlopen("libSDL3.so", RTLD_NOW);
+    if (handle == NULL) {
+        __android_log_print(ANDROID_LOG_ERROR, "QCL_INPUT",
+                            "setNativeTextInputActive: libSDL3.so dlopen 失败");
+        return JNI_FALSE;
+    }
+    sdlRunOnMainThread_t runOnMain =
+            (sdlRunOnMainThread_t) dlsym(handle, "SDL_RunOnMainThread");
+    if (runOnMain == NULL) {
+        __android_log_print(ANDROID_LOG_ERROR, "QCL_INPUT",
+                            "setNativeTextInputActive: 找不到 SDL_RunOnMainThread");
+        return JNI_FALSE;
+    }
+    // SDL3 文本输入 API 要求主线程，经 SDL_RunOnMainThread 投递；
+    // 不等待完成，激活结果由 SDL 回调 showTextInput 异步镜像回 Java 层。
+    bool result = runOnMain(qclSdlTextInputMainThreadCallback,
+                            (void *) (intptr_t) (active ? 1 : 0), false);
+    if (!result) {
+        __android_log_print(ANDROID_LOG_ERROR, "QCL_INPUT",
+                            "setNativeTextInputActive: SDL_RunOnMainThread 投递失败");
+    }
+    return result ? JNI_TRUE : JNI_FALSE;
+}
+
+JNIEXPORT void JNICALL
+Java_org_libsdl_app_SdlBridge_nativeInitializeControllerSubsystems(__attribute__((unused)) JNIEnv *env,
+                                                                   __attribute__((unused)) jclass clazz) {
+    // MC 26.2+ 挂 Controlify 等手柄 mod 时会请求初始化 gamepad/joystick 子系统。
+    // SDL3 的子系统初始化由 SDL_InitSubSystem 完成，而它已被 sdl_hook.c 挂钩；
+    // 这里只需保证 SDL 库已加载（其 JNI_OnLoad 已在启动器侧完成注册）。
+    void *handle = dlopen("libSDL3.so", RTLD_NOW);
+    __android_log_print(handle != NULL ? ANDROID_LOG_INFO : ANDROID_LOG_WARN, "QCL_INPUT",
+                        "initializeControllerSubsystems: libSDL3.so %s",
+                        handle != NULL ? "已加载" : "加载失败");
 }
 
