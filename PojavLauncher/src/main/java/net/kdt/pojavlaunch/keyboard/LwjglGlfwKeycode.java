@@ -2,6 +2,16 @@ package net.kdt.pojavlaunch.keyboard;
 
 /* loaded from: classes2.dex */
 public class LwjglGlfwKeycode {
+    /**
+     * ★★★★★ 2026-10-12 新增（照 FCL 的 LwjglGlfwKeycode.GLFW_FOCUSED = 0x20001）：
+     * 窗口是否获得输入焦点。`CallbackBridge.nativeSetWindowAttrib(GLFW_FOCUSED, 0/1)`
+     * 用来告诉**游戏侧**窗口焦点状态。
+     *
+     * <p>为什么重要：MC 认为窗口没焦点时会**忽略输入**；
+     * 而失焦时同步这个标志 + 复位输入状态，是 FCL 修「切菜单/切后台后输入卡住」的标准做法
+     * （见 FCL JVMActivity.onWindowFocusChanged）。QCL 原来完全没有这一环。
+     */
+    public static final int GLFW_FOCUSED = 0x20001;
     public static final int GLFW_HOVERED = 131083;
     public static final short GLFW_KEY_0 = 48;
     public static final short GLFW_KEY_1 = 49;

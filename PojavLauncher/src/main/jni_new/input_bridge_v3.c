@@ -521,6 +521,40 @@ JNIEXPORT jboolean JNICALL Java_org_lwjgl_glfw_CallbackBridge_nativeIsGrabbing(J
     return pojav_environ->isGrabbing;
 }
 
+/**
+ * ★★★★★ 2026-10-12 新增（移植自 FCL 的 `critical_reset_input_state` / `nativeResetInputState`）：
+ * **复位原生侧的按键/鼠标按下状态**。
+ *
+ * <p>为什么必须要它（用户实测「打开一次 ESC / 背包后卡在鼠标模式，
+ * 返回游戏视角还跟着点的地方跑、方向轮盘也消失」）：
+ * 游戏侧与启动器侧各存一份"哪些键按着"的状态，切菜单/切窗口时若只更新了一侧，
+ * 就会永久错位 —— 表现为"以为你一直按着某键"或"以为还在鼠标模式"。
+ * FCL 的做法是在**窗口失焦**和**退出**时把两边都清零（见 JVMActivity）。
+ *
+ * <p>这里清的是 QCL 侧真正在用的两份按下表（都在 pojav_environ 里，
+ * 由 nativeInitGLFWNativeBridge 从游戏侧 jar 的静态字段取到）：
+ * <ul>
+ *   <li>{@code keyDownBuffer}：318 字节，索引 = 键码（对齐 FCL 的 memset 长度）</li>
+ *   <li>{@code mouseDownBuffer}：8 字节，索引 = 鼠标键</li>
+ * </ul>
+ *
+ * <p>★ Java 侧由 {@code CallbackBridge.resetInputState()} 调用，
+ * 那里还会补一个 SDL 的 ACTION_UP 并清掉修饰键状态。
+ */
+JNIEXPORT void JNICALL Java_org_lwjgl_glfw_CallbackBridge_nativeResetInputState(JNIEnv* env, jclass clazz) {
+    if (pojav_environ == NULL) {
+        return;
+    }
+    if (pojav_environ->keyDownBuffer != NULL) {
+        memset(pojav_environ->keyDownBuffer, 0, 318);
+    }
+    if (pojav_environ->mouseDownBuffer != NULL) {
+        memset(pojav_environ->mouseDownBuffer, 0, 8);
+    }
+    __android_log_print(ANDROID_LOG_INFO, "QCL_INPUT",
+                        "nativeResetInputState: keyDownBuffer/mouseDownBuffer 已清零");
+}
+
 JNIEXPORT jboolean JNICALL Java_org_lwjgl_glfw_CallbackBridge_nativeSendChar(JNIEnv* env, jclass clazz, jchar codepoint /* jint codepoint */) {
     if (pojav_environ->GLFW_invoke_Char && pojav_environ->isInputReady) {
         if (pojav_environ->isUseStackQueueCall) {

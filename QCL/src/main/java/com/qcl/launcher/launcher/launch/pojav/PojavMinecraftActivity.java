@@ -354,7 +354,46 @@ extends BaseMainActivity {
         if (this.menuHelper.viewManager != null && this.menuHelper.gameCursorMode == 1) {
             CallbackBridge.sendKeyPress((int)256);
         }
+        // ★★★★★ 2026-10-12 新增（移植自 FCL 的 JVMActivity.onWindowFocusChanged）：
+        //   切到后台时复位输入状态。FCL 在**窗口失焦**时也做同样的事：
+        //     CallbackBridge.nativeSetWindowAttrib(GLFW_FOCUSED, 0);
+        //     CallbackBridge.resetInputState();
+        //   为什么需要：游戏侧与启动器侧各存一份"哪些键/鼠标键按着"，
+        //   切后台时抬起事件可能永远收不到 ⇒ 状态永久错位
+        //   （用户实测表现：返回游戏后卡在鼠标模式、视角跟着点、方向轮盘消失）。
+        try {
+            CallbackBridge.nativeSetWindowAttrib(
+                    net.kdt.pojavlaunch.keyboard.LwjglGlfwKeycode.GLFW_FOCUSED, 0);
+        } catch (Throwable ignored) {
+        }
+        try {
+            CallbackBridge.resetInputState();
+        } catch (Throwable ignored) {
+        }
         super.onPause();
+    }
+
+    /**
+     * ★★★★★ 2026-10-12 新增（照 FCL 的 `JVMActivity.onWindowFocusChanged`）：
+     * 窗口失焦/获焦时同步 GLFW 焦点标志，**失焦时复位输入状态**。
+     *
+     * <p>这是修「打开一次 ESC / 背包后卡在鼠标模式」的关键一环 ——
+     * QCL 原来完全没有失焦处理，FCL 有。
+     */
+    @Override
+    public void onWindowFocusChanged(boolean hasFocus) {
+        super.onWindowFocusChanged(hasFocus);
+        try {
+            CallbackBridge.nativeSetWindowAttrib(
+                    net.kdt.pojavlaunch.keyboard.LwjglGlfwKeycode.GLFW_FOCUSED, hasFocus ? 1 : 0);
+        } catch (Throwable ignored) {
+        }
+        if (!hasFocus) {
+            try {
+                CallbackBridge.resetInputState();
+            } catch (Throwable ignored) {
+            }
+        }
     }
 
     protected void onResume() {
@@ -376,6 +415,12 @@ extends BaseMainActivity {
     }
 
     protected void onDestroy() {
+        // ★ 2026-10-12（照 FCL 的 JVMActivity.onDestroy → CallbackBridge.resetInputState()）：
+        //   退出游戏时复位输入状态，避免按键/鼠标按下状态跨会话残留。
+        try {
+            CallbackBridge.resetInputState();
+        } catch (Throwable ignored) {
+        }
         try {
             QclFileBridge.stop();
         } catch (Throwable ignored) {

@@ -474,10 +474,64 @@ public class CallbackBridge {
         notifyLauncher(type, action);
     }
 
-    /** ★★★ 1.1.1（移植自 FCL）：重置 SDL 相关状态，由 SdlBridge.reset() 调用。
-     *  QCL 的 CallbackBridge 暂无手柄直通/增量字段，先留空实现（与 FCL 语义对齐）。 */
-    public static void clearSdlBridgeState() {
+    /**
+     * ★★★★★ 2026-10-12 新增（移植自 FCL 的 `CallbackBridge.resetInputState`）：
+     * **复位输入状态** —— 修用户实测的「打开一次 ESC/背包后卡在鼠标模式」。
+     *
+     * <p>FCL 会在两个时机调用它（`JVMActivity`）：
+     * <pre>
+     *   onDestroy()                        → 退出游戏时
+     *   onWindowFocusChanged(false)        → **窗口失焦时**
+     * </pre>
+     * QCL **两个都没有**，于是：
+     * <ul>
+     *   <li>SDL3 那条路我新加的 `sMouseButtonState`（按键位掩码累积）会残留 ——
+     *       按下过一次左键后若没收到抬起事件，掩码一直是"按着"；</li>
+     *   <li>`holdingShift/Ctrl/Alt` 等修饰键状态会残留；</li>
+     *   <li>切菜单/切窗口时游戏侧与启动器侧的按下状态就此错位。</li>
+     * </ul>
+     * 这正是"进了鼠标模式就出不回来、视角跟着点的地方跑、方向轮盘消失"的成因之一。
+     *
+     * <p>做法与 FCL 一致：先让原生层复位，再把 SDL 侧还没抬起的按键补一个 ACTION_UP
+     * （否则 SDL 会认为鼠标键一直按着），最后清掉 Java 侧所有残留状态。
+     */
+    public static void resetInputState() {
+        try {
+            nativeResetInputState();
+        } catch (Throwable ignored) {
+        }
+        if (org.libsdl.app.SdlBridge.getSdlEnabled() && sMouseButtonState != 0) {
+            try {
+                SDLActivity.onNativeMouse(0, MotionEvent.ACTION_UP, mouseX, mouseY, false);
+            } catch (Throwable ignored) {
+            }
+        }
+        sMouseButtonState = 0;
+        holdingAlt = false;
+        holdingCapslock = false;
+        holdingCtrl = false;
+        holdingNumlock = false;
+        holdingShift = false;
     }
+
+    /**
+     * ★★★ 1.1.1（移植自 FCL）：重置 SDL 相关状态，由 SdlBridge.reset() 调用。
+     *
+     * <p>★ 2026-10-12 修复：原来这里是**空实现**（注释写"暂无手柄直通/增量字段"），
+     * 但 FCL 的同名方法会清 `sMouseButtonState`。QCL 现在也有这个字段了（SDL 双路要用），
+     * 所以必须一起清 —— 否则退出/重进游戏时按键状态会跨会话残留。
+     */
+    public static void clearSdlBridgeState() {
+        sMouseButtonState = 0;
+        holdingAlt = false;
+        holdingCapslock = false;
+        holdingCtrl = false;
+        holdingNumlock = false;
+        holdingShift = false;
+    }
+
+    /** ★ 2026-10-12：原生侧复位输入（对齐 FCL 的 nativeResetInputState）。 */
+    private static native void nativeResetInputState();
 
     /** 由 native 层（input_bridge_v3.c 的 nativeNotifyLauncher）回调：加载 SDL3 并绑定 surface。 */
     @SuppressWarnings("unused")

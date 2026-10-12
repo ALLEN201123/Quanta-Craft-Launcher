@@ -39,6 +39,25 @@ SDL_Window *SDL_GetWindowFromEvent(const void *event);
 
 SDL_Window *SDL_GetWindowFromID(uint32_t id);
 
+// ★★★★★ 2026-10-12 新增：MC 26.3+（SDL3）用这个函数切换「鼠标模式 ↔ 游戏模式」。
+//   用户实测：「打开一次 ESC / 背包之后，返回游戏就一直卡在鼠标模式，
+//             视角跟着点的地方跑，方向轮盘也没了」。
+//   为什么必须在**原生层**hook：QCL 的 libSDL3.so 是从 nativeLibraryDir 直接加载的，
+//   游戏调用 SDL_SetWindowRelativeMouseMode 时走的是 so 里的实现，
+//   Java 侧那份补丁（SDLMouse.SDL_SetWindowRelativeMouseMode → nativeSetGrabbing）
+//   只在"经由 LWJGL 绑定调用"时才生效 ⇒ 一旦游戏不经绑定调用，抓取状态就永远停在旧值。
+//   在原生层拦截可以**无条件**拿到真实的 grab 状态。
+bool SDL_SetWindowRelativeMouseMode(SDL_Window *window, bool enabled);
+
+// ★ 2026-10-12：SDL3 里另一个会改鼠标抓取状态的入口（有些后端走这个）。
+bool SDL_SetWindowMouseGrab(SDL_Window *window, bool grabbed);
+
+// ★ 2026-10-12：权威状态查询 —— 拦到设置调用后用它们读**真实生效值**，
+//   而不是相信传进来的参数（两者不一致时以 SDL 内部状态为准）。
+bool SDL_GetWindowRelativeMouseMode(SDL_Window *window);
+
+bool SDL_GetWindowMouseGrab(SDL_Window *window);
+
 bool SDL_GL_SetAttribute(int attr, int value);
 
 void *SDL_LoadObject(const char *path);
@@ -486,6 +505,96 @@ typedef void (*sdlUnloadObject_t)(void *);
 
 typedef void *(*sdlGlGetProcAddress_t)(const char *proc);
 
+// ★ 2026-10-12：SDL_SetWindowRelativeMouseMode / SDL_SetWindowMouseGrab ——
+//   「鼠标模式 ↔ 游戏模式」的切换点（两个入口都要拦）
+typedef bool (*sdlSetWindowRelativeMouseMode_t)(SDL_Window *, bool);
+typedef bool (*sdlGetWindowRelativeMouseMode_t)(SDL_Window *);
+typedef bool (*sdlSetWindowMouseGrab_t)(SDL_Window *, bool);
+
+static sdlSetWindowRelativeMouseMode_t realSdlSetWindowRelativeMouseMode = NULL;
+static sdlSetWindowMouseGrab_t realSdlSetWindowMouseGrab = NULL;
+
+/**
+ * ★★★★★ 2026-10-12 新增：把「游戏是否在抓取鼠标」同步给启动器。
+ *
+ * <p>这是修「打开一次 ESC/背包后卡在鼠标模式、视角跟着点、方向轮盘消失」的核心。
+ *
+ * <p>抓取状态只有 `pojav_environ->isGrabbing` 这一份存储，
+ * 而它的 Java 侧镜像 `CallbackBridge.isGrabbing()` 决定了
+ * `gameCursorMode`（0=光标模式，1=游戏视角模式）⇒ 决定方向轮盘显隐与视角是否跟手。
+ *
+ * <p>原来只有一个更新入口：Java 的 `CallbackBridge.nativeSetGrabbing`。
+ * 而游戏走 SDL3 时**不经过它**（libSDL3.so 由 nativeLibraryDir 直接加载，
+ * Java 侧补丁只在经 LWJGL 绑定时才生效）⇒ 状态停在旧值、切不回游戏模式。
+ *
+ * <p>这里在原生层拦截 SDL_SetWindowRelativeMouseMode，**无条件**拿到真实状态，
+ * 更新 `pojav_environ->isGrabbing` 并复用 `onGrabStateChanged` 主动推给 Java
+ * （与 input_bridge_v3.c 的 nativeSetGrabbing 完全同一套推送逻辑，只是入口不同）。
+ */
+static void qclSyncGrabState(jboolean grabbing) {
+    if (pojav_environ == NULL) return;
+    pojav_environ->isGrabbing = grabbing;
+    if (pojav_environ->method_onGrabStateChanged == NULL) return;
+
+    JavaVM *dalvikJvm = pojav_environ->dalvikJavaVMPtr;
+    if (dalvikJvm == NULL) return;
+
+    JNIEnv *dalvikEnv = NULL;
+    jboolean needDetach = JNI_FALSE;
+    jint envResult = (*dalvikJvm)->GetEnv(dalvikJvm, (void **) &dalvikEnv, JNI_VERSION_1_4);
+    if (envResult == JNI_EDETACHED) {
+        envResult = (*dalvikJvm)->AttachCurrentThread(dalvikJvm, &dalvikEnv, NULL);
+        needDetach = JNI_TRUE;
+    }
+    if (envResult == JNI_OK && dalvikEnv != NULL) {
+        (*dalvikEnv)->CallStaticVoidMethod(dalvikEnv, pojav_environ->bridgeClazz,
+                                           pojav_environ->method_onGrabStateChanged, grabbing);
+        if ((*dalvikEnv)->ExceptionCheck(dalvikEnv)) {
+            (*dalvikEnv)->ExceptionClear(dalvikEnv);
+        }
+    }
+    if (needDetach) {
+        (*dalvikJvm)->DetachCurrentThread(dalvikJvm);
+    }
+}
+
+/** 拦截 SDL_SetWindowRelativeMouseMode：先转真实调用，再把**真实状态**同步给启动器。 */
+static bool proxy_SDL_SetWindowRelativeMouseMode(SDL_Window *window, bool enabled) {
+    bool r = realSdlSetWindowRelativeMouseMode
+             ? realSdlSetWindowRelativeMouseMode(window, enabled) : false;
+    // ★ 用 SDL 自己的 getter 读**权威值**，而不是相信传进来的 enabled。
+    //   为什么：SDL 内部可能因窗口/后端状态而没真正应用该值；
+    //   而启动器拿到错的状态就会永久卡在"鼠标模式"（正是本次要修的现象）。
+    bool actual = r;
+    sdlGetWindowRelativeMouseMode_t getter =
+            (sdlGetWindowRelativeMouseMode_t) dlsym(RTLD_DEFAULT, "SDL_GetWindowRelativeMouseMode");
+    if (getter != NULL && window != NULL) {
+        actual = getter(window);
+    }
+    LOG_TO_I("SDL_Hook: SDL_SetWindowRelativeMouseMode(%p, %d) -> 真实=%d（同步抓取状态）",
+             window, (int) enabled, (int) actual);
+    qclSyncGrabState(actual ? JNI_TRUE : JNI_FALSE);
+    return r;
+}
+
+/** 拦截 SDL_SetWindowMouseGrab：同上（另一个会改抓取状态的入口）。 */
+static bool proxy_SDL_SetWindowMouseGrab(SDL_Window *window, bool grabbed) {
+    bool r = realSdlSetWindowMouseGrab
+             ? realSdlSetWindowMouseGrab(window, grabbed) : false;
+    bool actual = r;
+    sdlGetWindowRelativeMouseMode_t getter =
+            (sdlGetWindowRelativeMouseMode_t) dlsym(RTLD_DEFAULT, "SDL_GetWindowRelativeMouseMode");
+    if (getter != NULL && window != NULL) {
+        actual = getter(window);
+    } else {
+        actual = grabbed;
+    }
+    LOG_TO_I("SDL_Hook: SDL_SetWindowMouseGrab(%p, %d) -> 真实=%d（同步抓取状态）",
+             window, (int) grabbed, (int) actual);
+    qclSyncGrabState(actual ? JNI_TRUE : JNI_FALSE);
+    return r;
+}
+
 static sdlGlGetProcAddress_t realSdlGlGetProcAddress;
 
 // ★ 1.1.3：MC 26.3 的 RenderPearl 会校验「LWJGL 解析到的 GL 函数 == SDL 解析到的 GL 函数」，
@@ -509,8 +618,7 @@ static void *proxy_SDL_GL_GetProcAddress(const char *proc) {
 }
 
 static sdlInitSubSystem_t realSdlInitSubSystem;
-static sdlCreateWindow_t realSdlCreateWindow;
-static sdlCreateWindowWithProperties_t realSdlCreateWindowWithProperties;
+static sdlCreateWindow_t realSdlCreateWindow;static sdlCreateWindowWithProperties_t realSdlCreateWindowWithProperties;
 static sdlDestroyWindow_t realSdlDestroyWindow;
 static sdlGetWindowFromEvent_t realSdlGetWindowFromEvent;
 static sdlGetWindowFromID_t realSdlGetWindowFromID;
@@ -620,6 +728,20 @@ void *sdlDlsymProxy(const char *symbol, void *real) {    if (strcmp(symbol, "SDL
     if (strcmp(symbol, "SDL_GL_GetProcAddress") == 0) {
         if (realSdlGlGetProcAddress == NULL) realSdlGlGetProcAddress = (sdlGlGetProcAddress_t) real;
         return (void *) proxy_SDL_GL_GetProcAddress;
+    }
+    // ★★★★★ 2026-10-12：抓取状态同步（「鼠标模式 ↔ 游戏模式」切换的唯一开关）。
+    //   拦截它，保证无论游戏是否经由 LWJGL 绑定调用，启动器都能拿到真实 grab 状态。
+    //   ⇒ 修「打开一次 ESC/背包后卡在鼠标模式、视角跟着点、方向轮盘消失」。
+    if (strcmp(symbol, "SDL_SetWindowRelativeMouseMode") == 0) {
+        if (realSdlSetWindowRelativeMouseMode == NULL)
+            realSdlSetWindowRelativeMouseMode = (sdlSetWindowRelativeMouseMode_t) real;
+        return (void *) proxy_SDL_SetWindowRelativeMouseMode;
+    }
+    // ★ 2026-10-12：另一个抓取入口也拦（不同后端/版本可能走这个）
+    if (strcmp(symbol, "SDL_SetWindowMouseGrab") == 0) {
+        if (realSdlSetWindowMouseGrab == NULL)
+            realSdlSetWindowMouseGrab = (sdlSetWindowMouseGrab_t) real;
+        return (void *) proxy_SDL_SetWindowMouseGrab;
     }
     if (strcmp(symbol, "SDL_CreateWindow") == 0) {
         if (realSdlCreateWindow == NULL) realSdlCreateWindow = (sdlCreateWindow_t) real;
