@@ -329,14 +329,13 @@ extends View {
                     if (movePointerIndex != -1) {
                         float newX = event.getX(movePointerIndex);
                         float newY = event.getY(movePointerIndex);
-                        // FCL：位移 = (本帧点 - 上一帧点) × 灵敏度 ÷ scaleFactor
-                        //   ★ 除以 scaleFactor 是关键：InputBridge.setPointer 在出口会乘回
-                        //     scaleFactor，两边正好抵消 ⇒ 实际位移只由手指和灵敏度决定。
-                        float sf = this.menuHelper.scaleFactor > 0f ? this.menuHelper.scaleFactor : 1f;
+                        // FCL：位移 = (本帧点 - 上一帧点) × 灵敏度
+                        //   ★ **不除以 scaleFactor** —— 整条链路统一用屏幕坐标，
+                        //     InputBridge.setPointer 也不再做任何缩放（见那里的注释）。
                         float moveDeltaX = (newX - this.lastMoveX)
-                                * this.menuHelper.gameMenuSetting.mouseSpeed / sf;
+                                * this.menuHelper.gameMenuSetting.mouseSpeed;
                         float moveDeltaY = (newY - this.lastMoveY)
-                                * this.menuHelper.gameMenuSetting.mouseSpeed / sf;
+                                * this.menuHelper.gameMenuSetting.mouseSpeed;
                         // ★ 基准 + 增量（不再累加到 pointerX）
                         this.menuHelper.pointerX = this.grabBaseX + moveDeltaX;
                         this.menuHelper.pointerY = this.grabBaseY + moveDeltaY;

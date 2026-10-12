@@ -94,19 +94,7 @@ SeekBar.OnSeekBarChangeListener {
     public View gameMenuContainer;
     public LayoutPanel baseLayout;
     public int launcher;
-    public float scaleFactor;
-
-    /**
-     * ★★★★★ 2026-10-12 新增（修「滑动屏幕出现巨大视角偏移」）：
-     * **当前生效的分辨率缩放系数**，供 {@link InputBridge#setPointer} 统一归一使用。
-     *
-     * <p>为什么需要它：QCL 内部坐标系不统一 —— `MKManager` 的调用点乘了 scaleFactor，
-     * 而 `TouchPad` / `MenuHelper` / `ViewManager` 的没乘，同一份"屏幕坐标"混用两个尺度
-     * ⇒ 游戏看到的光标位置来回跳 ⇒ 视角巨大偏移。
-     * 把出口统一到这个静态值，就能让所有调用点归一（默认 1.0f = 不缩放，保持原行为）。
-     */
-    public static volatile float sActiveScaleFactor = 1.0f;
-    public int screenWidth;
+    public float scaleFactor;    public int screenWidth;
     public int screenHeight;
     public GameMenuSetting gameMenuSetting;
     public TouchCharInput touchCharInput;
@@ -172,11 +160,6 @@ SeekBar.OnSeekBarChangeListener {
         this.enableNameEditor = editMode;
         this.launcher = launcher;
         this.scaleFactor = scaleFactor;
-        // ★ 2026-10-12：把当前生效的缩放系数发布给 InputBridge.setPointer（统一坐标系用）。
-        //   有效值才发布（<=0 视为没配置，保持 1.0f 不缩放，绝不制造新的坐标偏移）。
-        if (scaleFactor > 0f) {
-            MenuHelper.sActiveScaleFactor = scaleFactor;
-        }
         this.patternList = SettingUtils.getControlPatternList();
         if (this.patternList.size() == 0) {
             InitializeSetting.initializeControlPattern((Activity)activity, new AssetsUtils.FileOperateCallback(){
@@ -248,18 +231,6 @@ SeekBar.OnSeekBarChangeListener {
                 this.cursorY = this.pointerY;
                 InputBridge.setPointer(this.launcher, (int) this.pointerX, (int) this.pointerY);
             }
-        }
-        // ★★★★★ 2026-10-12 新增：模式切换时**同步一次 SDL 侧的坐标基准**。
-        //   为什么需要：SDL 在相对鼠标模式下会用「上次位置」算事件增量（xrel/yrel）。
-        //   开菜单期间 QCL 一直在投绝对坐标，关闭菜单那一刻 SDL 的"上次位置"停在
-        //   「你在菜单里点的那个按钮」上；恢复游戏后的**第一次滑动**
-        //   会让 SDL 算出「按钮位置 → 手指位置」的人为大位移 ⇒ **视角巨大偏移**
-        //   （用户实测：「打开背包，然后再关闭背包，然后滑动一下屏幕，直接发生巨大偏移」）。
-        //   在切换点主动投一次当前基准，把 SDL 的"上次位置"对齐到现状，
-        //   之后第一次滑动的增量就只有你手指真正移动的那一点点。
-        try {
-            InputBridge.setPointer(this.launcher, (int) this.pointerX, (int) this.pointerY);
-        } catch (Throwable ignored) {
         }
         if (this.viewManager != null) {
             this.viewManager.disableCursor();

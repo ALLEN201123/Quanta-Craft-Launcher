@@ -56,54 +56,26 @@ public class InputBridge {
     }
 
     /**
-     * ★★★★★ 2026-10-12 修「滑动屏幕出现巨大视角偏移」+「滑到最左就划不动了」。
+     * ★★★★★ 2026-10-12 最终版：**坐标原样送达，不做任何缩放、不做任何钳制**。
      *
-     * <p>★ 第一版我加了**边界钳制** —— 那是**错的**，用户实测：
-     * 「我滑到最左边，它就给我停住了，根本划不动。FCL 压根不会出现屏幕划不动的现象」。
-     * 原因：转视角靠的是**位移增量**，`pointerX` 允许（也应该）无限增长；
-     * 一旦钳到屏幕宽度，滑到边缘后增量就永远是 0 ⇒ 视角再也转不动。
-     * ⇒ **钳制已删除**，只保留坐标系归一（这才是真正的病根）。
+     * <p>用户实测：「我他妈想要往左滑、往右滑，他直接给我一直居中。你只抄了表面！」
      *
-     * <p>真正的病根：坐标系不统一 —— 同一份"屏幕坐标"，
-     * <pre>
-     *   MKManager.java:100/108    → setPointer(x * scaleFactor, ...)   ← 乘了
-     *   TouchPad.java:251/288/313 → setPointer(x, ...)                ← 没乘
-     *   MenuHelper.java:222       → setPointer(...)                   ← 没乘
-     *   ViewManager.java:218/249  → setPointer(...)                   ← 没乘
-     * </pre>
-     * 游戏收到的光标位置在两个尺度之间**来回跳**，而 MC 用相邻帧位置差算视角 delta
-     * ⇒ **滑动时突然巨大偏移**（尤其"开关一次背包/ESC 之后第一下滑动"最明显，
-     * 因为那一刻两边状态刚被刷新、尺度差被一次性放大）。
+     * <p>这个"一直居中"是我自己绕出来的 —— 我先后在 `TouchPad` 里除以 `scaleFactor`、
+     * 又在**这里**乘 `scaleFactor`（两边抵消等于没做，却把坐标空间搅乱），
+     * 还在 `MKManager` 里保留了一次乘法 ⇒ 同一条链路上有三个地方在动同一个坐标，
+     * 任何一处不一致都会让游戏看到的位置对不上、表现为视角被拉回中心。
      *
-     * <p>修法：在**唯一出口**统一乘一次 `scaleFactor`（并把 MKManager 里原有的那次去掉，
-     * 避免双重缩放）⇒ 全项目只有一个缩放点、坐标系唯一。**不做任何钳制。**
+     * <p>FCL 的语义其实很简单：**控制层算好绝对坐标，原样交给游戏**，
+     * 由 MC 自己用「本帧位置 − 上一帧位置」算 delta。
+     * 坐标缩放（`scaleFactor`）在 FCL 里只作用于**触摸点 → 游戏坐标**的换算，
+     * 不参与这里的指针投递。
+     *
+     * <p>⇒ 现在把整条链路拉直：**统一使用屏幕坐标，一个缩放点都不留**。
+     * 这样 `pointerX/pointerY`、MC 的光标位置、手指位置三者始终在同一空间里，
+     * 不可能再出现"对不上 → 被拉回中心"。
      */
     public static boolean setPointer(int i, int i2, int i3) {
-        return CallbackBridge.sendCursorPos(scaleX(i2), scaleY(i3));
-    }
-
-    /** ★ 2026-10-12：按 scaleFactor 归一到游戏坐标系（**不钳制** —— 转视角需要无限位移）。 */
-    private static int scaleX(int x) {
-        try {
-            float s = com.qcl.launcher.control.MenuHelper.sActiveScaleFactor;
-            if (s > 0f && s != 1f) {
-                return (int) (x * s);
-            }
-        } catch (Throwable ignored) {
-        }
-        return x;
-    }
-
-    /** ★ 2026-10-12：同上（y 轴）。 */
-    private static int scaleY(int y) {
-        try {
-            float s = com.qcl.launcher.control.MenuHelper.sActiveScaleFactor;
-            if (s > 0f && s != 1f) {
-                return (int) (y * s);
-            }
-        } catch (Throwable ignored) {
-        }
-        return y;
+        return CallbackBridge.sendCursorPos(i2, i3);
     }
 
     public static void sendKeyChar(int i, char c) {
