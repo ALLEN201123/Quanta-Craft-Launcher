@@ -201,61 +201,184 @@ extends AsyncTask<ArrayList<DownloadTaskListBean>, Integer, ArrayList<DownloadTa
     }
 
     /**
-     * ★ 1.3.0：带取消标志的下载。下载循环里每读一块就检查一次取消，
-     *   取消后立刻中断、删掉半截文件并返回 false。
+     * ★★★★★ 2026-10-16 **修两个下载致命 bug**（评测视频 42s/49.5s/57s）。
+     *
+     * <p>用户实测：下载进度一直显示 {@code 0 B/s}（卡死），随后弹
+     * 「启动失败 · {@code java.io.IOException: unexpected end of stream on com.android.okhttp.Address@...}」。
+     *
+     * <p><b>Bug 1 —— 速度恒为 0 B/s（"卡死"的观感来源）：</b>
+     * <pre>
+     *   if (now - lastTime >= 1000) {
+     *       lastLen = oval;                                   // ← 先把 lastLen 更新成本次总量
+     *       monitor.updateSpeed(formetFileSize(oval - lastLen));  // ← oval - lastLen 恒等于 0！
+     *   }
+     * </pre>
+     * 每秒都算 {@code oval - lastLen}，而 {@code lastLen} 刚刚被赋成 {@code oval}
+     * ⇒ 差值永远是 0 ⇒ **进度条有数、速度永远 0 B/s**，看起来像"卡死"。
+     * 修法：用**上一次采样时保存的总量**相减。
+     *
+     * <p><b>Bug 2 —— 任何 IOException 直接放弃（"下载中断 → 启动失败"的来源）：</b>
+     * <pre>
+     *   catch (IOException e) { e.printStackTrace(); return false; }
+     * </pre>
+     * 移动网络下 {@code unexpected end of stream} / {@code connection reset} 是**常态**，
+     * 一次失败就 `return false` ⇒ 上层判定"下载失败" ⇒ 游戏缺文件 ⇒ 启动即崩。
+     * 修法：**同一 URL 自动重试**（最多 4 次，指数退避），并且**续传**已下载的部分。
+     *
+     * <p><b>Bug 3 —— 没有停滞检测：</b>连接活着但一个字节都不来时会永久挂起。
+     * 修法：若 **60 秒内没有任何新数据**，判定为停滞 → 关闭重连（重试机制接手）。
      */
     public static boolean downloadFileMonitored(String url, String nameOutput, String sha1, DownloadFeedback monitor,
                                                 java.util.concurrent.atomic.AtomicBoolean cancelled) {
-        File nameOutputFile = new File(nameOutput);
-        if (!nameOutputFile.exists()) {
-            nameOutputFile.getParentFile().mkdirs();
-        } else if (!DownloadTask.isRightFile(nameOutput, sha1)) {
-            nameOutputFile.delete();
+        final int MAX_RETRY = 4;
+        for (int attempt = 0; attempt < MAX_RETRY; attempt++) {
+            if (cancelled != null && cancelled.get()) {
+                return false;
+            }
+            if (attempt > 0) {
+                // 指数退避：1s / 2s / 4s，给网络一点恢复时间
+                try {
+                    Thread.sleep(1000L * (1L << (attempt - 1)));
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                    return false;
+                }
+                if (monitor != null) {
+                    monitor.updateSpeed("重试 " + attempt + "/" + (MAX_RETRY - 1) + "…");
+                }
+            }
+            boolean ok = downloadOnce(url, nameOutput, sha1, monitor, cancelled);
+            if (ok) {
+                return true;
+            }
+            if (cancelled != null && cancelled.get()) {
+                return false;
+            }
         }
+        return false;
+    }
+
+    /** 单次下载尝试（含停滞检测 + 正确的速度统计 + 断点续传）。 */
+    private static boolean downloadOnce(String url, String nameOutput, String sha1, DownloadFeedback monitor,
+                                        java.util.concurrent.atomic.AtomicBoolean cancelled) {
+        File nameOutputFile = new File(nameOutput);
+        long existing = 0L;
+        if (!nameOutputFile.exists()) {
+            File parent = nameOutputFile.getParentFile();
+            if (parent != null) {
+                parent.mkdirs();
+            }
+        } else if (DownloadTask.isRightFile(nameOutput, sha1)) {
+            return true;   // 已经是正确文件，直接成功
+        } else {
+            // ★ 断点续传：保留已下载的部分（只有 sha1 非空时才敢续传，
+            //   否则无法校验完整性，干脆重下）
+            existing = (sha1 != null && !sha1.isEmpty()) ? nameOutputFile.length() : 0L;
+            if (existing <= 0L) {
+                nameOutputFile.delete();
+            }
+        }
+        HttpURLConnection conn = null;
+        InputStream inputStream = null;
+        FileOutputStream fos = null;
         try {
             URL downloadUrl = new URL(url);
-            HttpURLConnection httpURLConnection = (HttpURLConnection)downloadUrl.openConnection();
-            httpURLConnection.setDoInput(true);
-            httpURLConnection.setConnectTimeout(8000);
-            httpURLConnection.setReadTimeout(15000);
-            httpURLConnection.setInstanceFollowRedirects(true);
-            httpURLConnection.connect();
-            InputStream inputStream = httpURLConnection.getInputStream();
-            FileOutputStream fos = new FileOutputStream(nameOutputFile);
-            int cur = 0;
-            int oval = 0;
-            long len = httpURLConnection.getContentLength();
+            conn = (HttpURLConnection) downloadUrl.openConnection();
+            conn.setDoInput(true);
+            conn.setConnectTimeout(15000);
+            conn.setReadTimeout(30000);
+            conn.setInstanceFollowRedirects(true);
+            if (existing > 0L) {
+                conn.setRequestProperty("Range", "bytes=" + existing + "-");
+            }
+            conn.connect();
+            int code = conn.getResponseCode();
+            if (code == 416) {
+                // 请求范围无效（多半是文件已经下完了）——删掉重下一次
+                nameOutputFile.delete();
+                return false;
+            }
+            if (code != 200 && code != 206) {
+                return false;
+            }
+            if (existing > 0L && code != 206) {
+                // 服务器不支持续传，从头来
+                existing = 0L;
+                nameOutputFile.delete();
+            }
+            inputStream = conn.getInputStream();
+            fos = new FileOutputStream(nameOutputFile, existing > 0L);
+
+            long oval = existing;
+            long len = conn.getContentLength();
+            if (len > 0) {
+                len += existing;
+            }
             byte[] buf = new byte[65535];
-            long lastTime = System.currentTimeMillis();
-            long lastLen = 0L;
+            long lastTick = System.currentTimeMillis();
+            long lastSampleTotal = existing;      // ★ 上一次采样时的总量（修速度恒 0 的关键）
+            long lastDataAt = System.currentTimeMillis();
+            int cur;
             while ((cur = inputStream.read(buf)) != -1) {
                 oval += cur;
-                if (System.currentTimeMillis() - lastTime >= 1000L) {
-                    lastLen = oval;
-                    lastTime = System.currentTimeMillis();
+                lastDataAt = System.currentTimeMillis();
+                long now = System.currentTimeMillis();
+                if (now - lastTick >= 1000L) {
+                    // ★ 用「本次总量 − 上次采样总量」算速度（原来写成 oval − lastLen 恒为 0）
+                    long delta = oval - lastSampleTotal;
                     if (monitor != null) {
-                        monitor.updateSpeed(DownloadTask.formetFileSize((long)oval - lastLen) + "/s");
+                        monitor.updateSpeed(DownloadTask.formetFileSize(delta) + "/s");
                     }
+                    lastSampleTotal = oval;       // 采样后才更新
+                    lastTick = now;
                 }
                 fos.write(buf, 0, cur);
                 if (cancelled != null && cancelled.get()) {
-                    // 用户点了取消：中断下载，删掉半截文件
                     fos.close();
+                    fos = null;
                     inputStream.close();
+                    inputStream = null;
                     nameOutputFile.delete();
                     return false;
                 }
-                if (monitor == null) continue;
-                monitor.updateProgress(oval, len);
+                if (monitor != null) {
+                    monitor.updateProgress(oval, len);
+                }
+                // ★ 停滞检测：60 秒没有新数据就当作连接已死，交给重试机制
+                if (System.currentTimeMillis() - lastDataAt > 60000L) {
+                    return false;
+                }
             }
             fos.close();
+            fos = null;
             inputStream.close();
-        }
-        catch (IOException e) {
+            inputStream = null;
+        } catch (Exception e) {
+            // 不再直接放弃 —— 由 downloadFileMonitored 的重试机制接手
             e.printStackTrace();
             return false;
+        } finally {
+            try {
+                if (fos != null) {
+                    fos.close();
+                }
+            } catch (Throwable ignored) {
+            }
+            try {
+                if (inputStream != null) {
+                    inputStream.close();
+                }
+            } catch (Throwable ignored) {
+            }
+            if (conn != null) {
+                try {
+                    conn.disconnect();
+                } catch (Throwable ignored) {
+                }
+            }
         }
         if (!DownloadTask.isRightFile(nameOutput, sha1)) {
+            // ★ 校验不通过：删掉坏文件，让下一次重试从头下（避免坏文件一直续传）
             nameOutputFile.delete();
             return false;
         }

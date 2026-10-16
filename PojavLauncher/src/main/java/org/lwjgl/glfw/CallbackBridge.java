@@ -4,7 +4,6 @@ import android.view.Choreographer;
 import android.view.MotionEvent;
 
 import net.kdt.pojavlaunch.keyboard.LwjglGlfwKeycode;
-import org.libsdl.app.QCLInputLog;
 import org.libsdl.app.SDLActivity;
 import org.libsdl.app.SdlBridge;
 
@@ -95,11 +94,9 @@ public class CallbackBridge {
             if (CallbackBridge.isGrabbing()) {
                 // 锁指针（游戏内视角）→ 报**相对增量**
                 SDLActivity.onNativeMouse(0, MotionEvent.ACTION_MOVE, dx, dy, true);
-                QCLInputLog.log("SDL-cursor", "相对 dx=" + dx + " dy=" + dy);
             } else {
                 // 菜单/未锁定 → 报**绝对坐标**
                 SDLActivity.onNativeMouse(0, MotionEvent.ACTION_MOVE, x, y, false);
-                QCLInputLog.log("SDL-cursor", "绝对 x=" + x + " y=" + y);
             }
         } catch (Throwable ignored) {
         }
@@ -109,6 +106,7 @@ public class CallbackBridge {
     public static void sendPrepareGrabInitialPos() {
         DEBUG_STRING.append("Prepare set grab initial posititon: ignored");
     }
+
 
     public static void sendKeycode(int keycode, char keychar, int scancode, int modifiers, boolean isDown) {
         DEBUG_STRING.append("KeyCode=").append(keycode).append(", Char=").append(keychar);
@@ -144,11 +142,7 @@ public class CallbackBridge {
                         } else {
                             SDLActivity.onNativeKeyUp(androidKeycode);
                         }
-                        org.libsdl.app.QCLInputLog.log("SDL-key", "glfw=" + keycode
-                                + " -> android=" + androidKeycode + " down=" + isDown);
                     } else {
-                        org.libsdl.app.QCLInputLog.log("SDL-key-UNMAPPED",
-                                "glfw=" + keycode + " down=" + isDown);
                     }
                 } catch (Throwable ignored) {
                 }
@@ -188,8 +182,6 @@ public class CallbackBridge {
             if (upper) {
                 SDLActivity.onNativeKeyUp(android.view.KeyEvent.KEYCODE_SHIFT_LEFT);
             }
-            org.libsdl.app.QCLInputLog.log("SDL-char", "char=" + (int) keychar
-                    + " code=" + code + " upper=" + upper);
         } catch (Throwable ignored) {
         }
     }
@@ -254,12 +246,20 @@ public class CallbackBridge {
             sMouseButtonState &= ~aKey;
         }
         try {
+            // ★★★★★ 2026-10-15 **恢复传真实坐标（撤销我把坐标归零的那一版）**。
+            //
+            //   用户实测：「你他妈不传坐标，他妈连那些单人游戏之类的按键都点不动了」
+            //   ⇒ 点击事件**必须**携带坐标，SDL 要靠它定位点击位置。
+            //     传 (0,0) 等于每次都点在屏幕左上角 ⇒ 按钮全部点不中。
+            //
+            //   ★ 结论（试过的三条路都不对，记录下来避免重走）：
+            //     ① `relative=false` + 真实坐标 → 打开背包后点击大偏移
+            //     ② `relative=true`  + 真实坐标 → 随便点就大偏移（更糟）
+            //     ③ `(0,0)`                       → 按钮全部点不动
+            //   ⇒ 只能回到 ①（与 FCL 逐字一致的原样），这是**唯一能点动按钮**的版本。
             SDLActivity.onNativeMouse(sMouseButtonState,
                     isDown ? MotionEvent.ACTION_DOWN : MotionEvent.ACTION_UP,
                     mouseX, mouseY, false);
-            QCLInputLog.log("SDL-mouse", "button=" + button + " state=0x"
-                    + Integer.toHexString(sMouseButtonState) + " down=" + isDown
-                    + " x=" + mouseX + " y=" + mouseY);
         } catch (Throwable ignored) {
         }
     }
@@ -279,7 +279,6 @@ public class CallbackBridge {
         try {
             SDLActivity.onNativeMouse(0, MotionEvent.ACTION_SCROLL,
                     (float) xoffset, (float) yoffset, false);
-            QCLInputLog.log("SDL-scroll", "x=" + xoffset + " y=" + yoffset);
         } catch (Throwable ignored) {
         }
     }

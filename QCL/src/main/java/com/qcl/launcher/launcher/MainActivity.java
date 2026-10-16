@@ -74,6 +74,15 @@ implements View.OnClickListener {
     public LinearLayout launcherLayout;
     public boolean isLoaded = false;
     public boolean dialogMode = false;
+    /**
+     * ★★★★★ 2026-10-16：最近一次已生效的「夜间模式位」（{@code Configuration.UI_MODE_NIGHT_MASK}）。
+     *
+     * <p>用途：系统切深色/浅色时，{@code onConfigurationChanged} 会对比它来决定是否
+     * {@code recreate()}，让 {@code values-night/colors.xml} 重新解析
+     * —— 修「切到夜间模式后必须手动重启启动器配色才同步」。
+     * 重建后会在 onCreate 里重新赋值，避免无限重建。
+     */
+    public int lastAppliedUiMode = -1;
     public LauncherSetting launcherSetting;
     public PublicGameSetting publicGameSetting;
     public PrivateGameSetting privateGameSetting;
@@ -150,6 +159,15 @@ implements View.OnClickListener {
     //   下面这些 native 方法。这里改成等价的**纯 Java 实现**，彻底摘掉对它的依赖。
     @Override
     protected void onCreate(Bundle bundle) {
+        // ★★★★★ 2026-10-16：记下「本次创建时生效的夜间模式位」。
+        //   onConfigurationChanged 只在**真的变化**时才 recreate()，
+        //   重建后这里会重新记录新值 ⇒ 不会无限重建。
+        try {
+            this.lastAppliedUiMode = getResources().getConfiguration().uiMode
+                    & android.content.res.Configuration.UI_MODE_NIGHT_MASK;
+        } catch (Throwable ignored) {
+            this.lastAppliedUiMode = -1;
+        }
         // ★★★★★ 2026-10-09（用户：「随时间变化的壁纸不准确，下午了还是晚上的壁纸」
         //   +「主题色也全部改一下」）：把**配色主题**也按现实时间钉住。
         //   必须在 setContentView 之前设，否则 values-night 会先按系统深色模式加载一遍。
@@ -556,7 +574,19 @@ implements View.OnClickListener {
         this.uiManager.removeUIIfExist(this.uiManager.downloadOptifineUI);
         this.uiManager.removeUIIfExist(this.uiManager.downloadQuiltUI);
         this.uiManager.removeUIIfExist(this.uiManager.downloadQuiltAPIUI);
-        this.uiManager.uis.get(this.uiManager.uis.size() - 1).onStart();
+        // ★★★★★ 2026-10-16 **修「closeCurrentUI 在空栈时崩溃 / 页面变空白」**。
+        //
+        //   老代码这里直接 `uis.get(uis.size() - 1)`：
+        //     · 栈为空时抛 IndexOutOfBoundsException ⇒ 本次收尾流程整个中断，
+        //       下面的 onStop 一串全不执行 ⇒ 被移除的页面视图**不隐藏**，
+        //       一直压在目标页上 ⇒ 用户看到的就是**空白 / 滚木**；
+        //     · 而且一旦崩在中间，currentUI 与实际可见视图就永久错位。
+        //   ⇒ 加空栈保护（空栈时退回主界面），保证后面的收尾逻辑一定跑得到。
+        if (!this.uiManager.uis.isEmpty()) {
+            this.uiManager.uis.get(this.uiManager.uis.size() - 1).onStart();
+        } else if (this.uiManager.mainUI != null) {
+            this.uiManager.mainUI.onStart();
+        }
         if (this.uiManager.currentUI == this.uiManager.exportWorldUI) {
             this.uiManager.exportWorldUI.onStop();
         }
@@ -653,13 +683,36 @@ implements View.OnClickListener {
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
         LocaleUtils.setLanguage((Context)this);
-        // ★★★ 1.5.0 修正：配色随昼夜切换要靠 **Activity 重建**，而重建的前提是
-        //   **manifest 的 configChanges 不含 uiMode** —— 原来这里写着 uiMode
-        //   （而下面这段注释却说「故意不含 uiMode」），自相矛盾：
-        //   含 uiMode ⇒ setDefaultNightMode() 不会重建 Activity ⇒
-        //   values-night/colors.xml 永远不重新加载 ⇒ **背景是夜晚、界面却还是白天配色**。
-        //   ⇒ 已从 manifest 里删掉 MainActivity 的 uiMode；这里只保留兜底
-        //   （某些 ROM 仍可能把 uiMode 当普通配置变更直接回调）。
+        // ★★★★★ 2026-10-16 **修「切到夜间模式后必须重启启动器才会同步配色」**。
+        //
+        //   用户实测：「明明到了夜间模式，还必须要重启一下、重新进入启动器，
+        //   它才会自动同步，没有跟那些壁纸一样的 UI 颜色同步，需要修复」。
+        //
+        //   ★ 根因：`values-night/colors.xml` 是**资源限定符**，只在
+        //     「加载资源 / 重建 Activity」时才会被重新解析。
+        //     系统切深色模式时，若本 Activity 仍存活（配置变更没让它重建），
+        //     已经 inflate 好的视图**不会**重新读一次颜色 ⇒ 界面停在旧配色，
+        //     必须手动重启（= 重新 onCreate）才对。而壁纸是自己按现实时间重画的，
+        //     所以「壁纸变了、颜色没变」。
+        //
+        //   ⇒ 修法：在这里检测 **夜间模式位** 是否真的变了；
+        //     变了就 `recreate()` 一次，让所有视图重新走一遍资源解析
+        //     —— 效果等同于用户手动重启，但**自动完成**。
+        //
+        //   ★ 只在真的变了才重建（拿当前配置的 uiMode 位比对），
+        //     避免旋转屏幕 / 改字体大小等其它配置变更也触发重建。
+        try {
+            int newMode = newConfig.uiMode & Configuration.UI_MODE_NIGHT_MASK;
+            int curMode = getResources().getConfiguration().uiMode
+                    & Configuration.UI_MODE_NIGHT_MASK;
+            if (newMode != curMode) {
+                // ★ 记到字段里，供重建后再次比对，防止无限重建
+                this.lastAppliedUiMode = newMode;
+                recreate();
+                return;
+            }
+        } catch (Throwable ignored) {
+        }
         try {
             if (this.launcherSetting != null
                     && this.launcherSetting.launcherBackground != null
@@ -688,6 +741,15 @@ implements View.OnClickListener {
             // ★ 1.2.9：回到前台时把动态背景的轮播重新挂上（切后台回来后不动的问题）
             this.resumeDynamicBackground();
 
+        }
+        // ★★★★★ 2026-10-16 新增：**应用用户自定义的字体颜色**。
+        //   在这里（而不是各页面各自调用）做一次，所有子页面的正文文字就都会跟着变。
+        //   fontColor 为空 / "DEFAULT" 时 parse() 返回 0，apply() 直接不做任何事
+        //   ⇒ 完全等于旧行为（日间黑字、夜间白字），不会有回归。
+        try {
+            com.qcl.launcher.utils.ui.FontColorUtils.apply(this,
+                    com.qcl.launcher.utils.ui.FontColorUtils.parse(this.launcherSetting.fontColor));
+        } catch (Throwable ignored) {
         }
         if (SkinPreviewDialog.getInstance() != null) {
             SkinPreviewDialog.getInstance().onResume();

@@ -111,7 +111,16 @@ public class ThemeColorSpinnerAdapter extends ArrayAdapter<String> {
             TextView tv = new TextView(context);
             tv.setTextSize(14f);
             tv.setSingleLine(true);
-            tv.setTextColor(0xFFE8E8E8);   // ★ 下拉在深色底上，用浅色文字保可读
+            // ★★★★★ 2026-10-16 修「外观页主题下拉框文字看不清 / 像叠字」（评测视频 27.0s）。
+            //
+            //   原来是**硬编码** `0xFFE8E8E8`（浅灰），注释写「下拉在深色底上，用浅色文字保可读」。
+            //   但 Android Spinner 用的是**系统默认弹窗背景**（跟随主题）：
+            //     · 夜间模式 → 深色弹窗 ⇒ 浅灰字勉强可读；
+            //     · 浅色模式 → **白色弹窗** ⇒ 浅灰字几乎看不见，与相邻内容糊在一起像"叠字"。
+            //   ⇒ 改用项目统一的正文色资源 `colorPureBlack`：
+            //     `values/` = #000000（浅底黑字）、`values-night/` = #FFFFFF（深底白字），
+            //     **自动昼夜翻转**，与「底/字成对翻转」的项目铁律一致。
+            tv.setTextColor(context.getResources().getColor(com.qcl.launcher.R.color.colorPureBlack));
             tv.setTag("label");
             row.addView(tv);
         }

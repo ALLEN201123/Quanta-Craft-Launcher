@@ -94,7 +94,8 @@ SeekBar.OnSeekBarChangeListener {
     public View gameMenuContainer;
     public LayoutPanel baseLayout;
     public int launcher;
-    public float scaleFactor;    public int screenWidth;
+    public float scaleFactor;
+    public int screenWidth;
     public int screenHeight;
     public GameMenuSetting gameMenuSetting;
     public TouchCharInput touchCharInput;
@@ -180,7 +181,6 @@ SeekBar.OnSeekBarChangeListener {
     }
 
     public void enableCursor() {
-        android.util.Log.i("QCL_TOUCH", "enableCursor() -> gameCursorMode=0 (光标模式)");
         this.gameCursorMode = 0;
         if (this.viewManager != null) {
             this.viewManager.enableCursor();
@@ -191,45 +191,49 @@ SeekBar.OnSeekBarChangeListener {
     }
 
     public void disableCursor() {
-        android.util.Log.i("QCL_TOUCH", "disableCursor() -> gameCursorMode=1 (grab 视角模式)");
-        // ★ 2026-10-12：**先记下原模式**再切换 —— 下面的"脏值判断"只在
-        //   「原来处于光标模式」时才有意义（那时期坐标确实应在屏内）。
-        final boolean wasCursorMode = (this.gameCursorMode == 0);
         this.gameCursorMode = 1;
-        // ★★★ 1.4.3 修复「关菜单后视角一次性猛偏」的真凶。
-        //   原实现（09-20）无条件把基准重置到**屏幕中心**并把光标推给游戏
-        //   （`InputBridge.setPointer(中心)`）。可关菜单时游戏内光标正停在「你点的那个按钮」上
-        //   （例如「返回游戏」= (800,701)），这一推等于让游戏看到
-        //   「按钮位置 → 屏幕中心」的**人为大位移**，MC 用相邻帧坐标差算 delta → 视角抬天。
-        //   实测对照（同一次会话、同样 20px 微滑）：
-        //     · 鼠标点「返回游戏」按钮关菜单 → 画面差 50.35，天空占屏 20.7% → 41.6%
-        //     · 用 ESC 悬浮键关菜单（光标没被动过） → 画面差 0.01
-        //   ⇒ 现在只在「指针真的越界（脏值）」时才钳回屏内，保留原来防脏值的意图，**不再制造跳变**。
+        // ★★★★★ 2026-10-15 修「打开背包 → 关闭背包 → 点左键/右键 → 视角大偏移」。
+        //
+        //   用户实测原话：「打开背包，随便点右键或者左键，还是会大偏移」
+        //   「我现在随便点左键，它都会大偏移，根本就不用动的」
+        //
+        //   ★ 根因：**`pointerX/pointerY` 与游戏内光标位置不是同一个坐标系里的值**。
+        //     <pre>
+        //       转视角时： pointerX += 每帧位移     → 一路累加到很大（例如 5000），
+        //                                          且**从来没有被重置过**
+        //       关背包时： MC 把光标**归中**到窗口中心 (1340, 630)
+        //       点击时：   sendMouseKeycode 把 pointerX 派生的 mouseX 作为
+        //                 **绝对位置**送给游戏 ⇒ 游戏看到「光标从 630 瞬移到 5000」
+        //                 ⇒ 相邻帧位置差巨大 ⇒ **视角大偏移**
+        //     </pre>
+        //     ⇒ 偏移**完全来自点击事件**（不用动手指也会偏），因为点击是"投绝对坐标"的时机。
+        //
+        //   ★ 为什么之前几次都没修好：
+        //     · 我只改 `CallbackBridge.mouseX`（没改 `pointerX`）→ 移动路径与点击路径仍不一致；
+        //     · 我改成 `relative=true` / `(0,0)` → 语义错，按钮点不中或偏移更大。
+        //     ⇒ 正确做法是**把三个值一起对齐到"游戏内光标真正所在的位置"**：
+        //       `pointerX/pointerY`（转视角基准）、`currentX/currentY`、`cursorX/cursorY`、
+        //       以及 `CallbackBridge.mouseX/mouseY`（点击基准）—— 全部设成**窗口中心**，
+        //       也就是 MC 归中后的真实光标位置。
+        //
+        //   ★ 与 1.4.3 那次修复的关系：
+        //     1.4.3 反对的是「**把中心推给游戏**」（`InputBridge.setPointer(中心)`），
+        //     因为那会制造一次「按钮位置 → 中心」的人为位移。
+        //     ⇒ 这里**只改内部基准值，不调用 `InputBridge.setPointer`**，
+        //       绝不主动把中心推给游戏；下一次滑动/点击时自然从中心出发，差值为 0。
         if (this.viewManager != null && this.viewManager.screenWidth > 0) {
-            float screenW = this.viewManager.screenWidth;
-            float screenH = this.viewManager.screenHeight;
-            // ★★★★★ 2026-10-12 修正一处**条件错误**（用户实测「开背包/ESC → 关闭 → 滑一下 → 巨大偏移」）：
-            //   转视角（grab 模式）时 `pointerX/pointerY` 是**无界累加**的 —— 滑得越多它越大，
-            //   正常就会远超屏幕尺寸。而这里原来拿它跟屏幕尺寸比"越界"，
-            //   ⇒ **每次关菜单都被误判为脏值**、强行钳回屏内
-            //   ⇒ 下一次滑动从「被钳过的位置」出发，MC 用相邻帧差算 delta ⇒ **巨大跳变**；
-            //     同时也造成"滑到边缘就划不动"。
-            //   ⇒ 只有**光标模式**（gameCursorMode==0，坐标确实应在屏内）才需要判脏值；
-            //     grab 模式（刚切成 1）一律不碰，避免人为制造位移。
-            boolean inCursorMode = wasCursorMode;
-            boolean pointerDirty = inCursorMode
-                    && (this.pointerX < 0.0f || this.pointerX > screenW
-                        || this.pointerY < 0.0f || this.pointerY > screenH);
-            if (pointerDirty) {
-                android.util.Log.i("QCL_TOUCH", "disableCursor(): 指针越界(" + this.pointerX + "," + this.pointerY
-                        + ") → 钳回屏内，不归中");
-                this.pointerX = Math.max(0.0f, Math.min(screenW, this.pointerX));
-                this.pointerY = Math.max(0.0f, Math.min(screenH, this.pointerY));
-                this.currentX = this.pointerX;
-                this.currentY = this.pointerY;
-                this.cursorX = this.pointerX;
-                this.cursorY = this.pointerY;
-                InputBridge.setPointer(this.launcher, (int) this.pointerX, (int) this.pointerY);
+            float cx = this.viewManager.screenWidth * 0.5f;
+            float cy = this.viewManager.screenHeight * 0.5f;
+            this.pointerX = cx;
+            this.pointerY = cy;
+            this.currentX = cx;
+            this.currentY = cy;
+            this.cursorX = cx;
+            this.cursorY = cy;
+            try {
+                org.lwjgl.glfw.CallbackBridge.mouseX = cx;
+                org.lwjgl.glfw.CallbackBridge.mouseY = cy;
+            } catch (Throwable ignored) {
             }
         }
         if (this.viewManager != null) {

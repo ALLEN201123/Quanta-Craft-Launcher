@@ -21,6 +21,18 @@ public class LauncherSetting {
     public String panelColor;
     public boolean transBar;
     /**
+     * ★★★★★ 2026-10-16 新增：**自定义字体颜色**
+     * （用户要求「在外观那里加一个字体颜色自定义调节功能」）。
+     *
+     * <p>存 {@code #AARRGGBB} / {@code #RRGGBB} 字符串；
+     * {@code null} / 空 / {@code "DEFAULT"} 都表示**跟随主题**
+     * （= 旧行为：日间黑字、夜间白字），此时不做任何运行时着色。
+     *
+     * <p>Gson 走 Unsafe 分配 ⇒ 老存档里没有这个键时读出 {@code null} = 跟随主题，
+     * 正好是我们要的默认行为，不需要额外的 chosen 标记。
+     */
+    public String fontColor;
+    /**
      * ★ 1.3.7 / ★★★ 1.5.0 改默认值：主界面是否显示账号人物。
      *
      * <p>★ 用户明确要求：**默认关闭**（原来默认开）。

@@ -182,7 +182,24 @@ public class UIManager {
         //   ⇒ 目标页面**已经**是当前的，就什么都不做：按钮保持它自己那个状态（用户原话：
         //     "不应该是点了一个同一个按钮，保持那一个按钮的状态吗"）。
         if (ui != null && ui == currentUI) {
-            System.out.println("-------------------------------------------switch to same ui, keep state (no-op)");
+            // ★★★★★ 2026-10-16 **修「页面卡在隐藏状态 → 全空白」**。
+            //
+            //   老实现这里**直接 return**。可如果这个页面的视图恰好正处于隐藏状态
+            //   （被 hideViewToLeft 藏过、或上一次切换只执行了一半），
+            //   那么"重复点同一个按钮"就永远不会把它重新显示出来 ⇒ **页面永远空白**。
+            //   —— 这正是用户实测「重命名实例后，实例消失，接着下载页/其他页面也变成滚木」
+            //      能一路串下去的机制之一。
+            //
+            //   ⇒ 短路之前**确保它真的可见**，再返回。
+            try {
+                if (ui instanceof BaseUI) {
+                    BaseUI b = (BaseUI) ui;
+                    // 重新走一遍 onStart：子类实现里就是 showViewFromLeft(..., setVisibility(VISIBLE))
+                    b.onStart();
+                }
+            } catch (Throwable ignored) {
+            }
+            System.out.println("-------------------------------------------switch to same ui, ensure visible");
             return;
         }
         currentUI = ui;
@@ -232,11 +249,95 @@ public class UIManager {
         }
     }
 
+    /**
+     * 把某个页面从「返回栈」里移除（退出/完成时调用，MainActivity 一口气调了 20+ 次）。
+     *
+     * ★★★★★ 2026-10-16 **修「重命名实例后实例消失 → 下载页/其他页面也跟着变滚木」**。
+     *
+     * <p>老实现有两个致命缺陷，正是用户描述的「影响全局」的那个根因：
+     *
+     * <p><b>缺陷 1 —— 循环里边遍历边删、不同步下标（漏删）：</b>
+     * <pre>
+     *   for (int i = 0; i &lt; uis.size(); i++) {
+     *       if (uis.get(i) == ui) uis.remove(i);   // 删完 i 还 ++ ⇒ 相邻的重复项被跳过
+     *   }
+     * </pre>
+     * {@link #switchMainUI} 的注释里已经写明「栈还只增不减，来回点几下就膨胀成一串重复项」，
+     * 也就是说**同一个页面在栈里可能连续出现多次**。前向删除会把相邻的那一份漏在栈里。
+     *
+     * <p><b>缺陷 2（真正致命）—— 删掉的可能是 {@code currentUI}：</b>
+     * 移除之后 {@code currentUI} 仍指向一个**已经不在栈里**的幽灵对象。
+     * 此后 {@link #switchMainUI} 一进来就撞上这段：
+     * <pre>
+     *   if (ui != null &amp;&amp; ui == currentUI) {
+     *       System.out.println("switch to same ui, keep state (no-op)");
+     *       return;                       // ← 直接返回，什么都不做
+     *   }
+     * </pre>
+     * 于是**目标页面永远不会 onStart()、永远保持隐藏 ⇒ 页面全空白**。
+     * 这完全对应实测现象：**重命名实例之后，实例消失，接着下载页 / 其他页面也变成空白**。
+     *
+     * <p>★ 修法：
+     * <ol>
+     *   <li>用**倒序**遍历删除（不会漏删、也不会下标越界）；</li>
+     *   <li>若被移除的正是 {@code currentUI}，把 {@code currentUI} 清成 {@code null}
+     *       —— 这样下一次 {@code switchMainUI} 一定会真正执行 onStart，
+     *       而不会命中「同一个 UI 就直接 return」的短路；</li>
+     *   <li>把栈**去重**（同一页面只保留最后一次出现），从根上消除"重复项膨胀"。</li>
+     * </ol>
+     */
     public void removeUIIfExist(BaseUI ui) {
-        for (int i = 0;i < uis.size();i++){
-            if (uis.get(i) == ui){
+        if (ui == null || uis == null) {
+            return;
+        }
+        boolean removedCurrent = false;
+        // ① 倒序删除：既不漏删也不会下标越界
+        for (int i = uis.size() - 1; i >= 0; i--) {
+            if (uis.get(i) == ui) {
                 uis.remove(i);
+                if (ui == currentUI) {
+                    removedCurrent = true;
+                }
             }
+        }
+        // ② 当前页被移出栈：**在这里直接把它藏起来**
+        //    —— 不能只把 currentUI 置 null 就完事：
+        //    MainActivity.closeCurrentUI() 后面紧跟一串
+        //      `if (uiManager.currentUI == xxxUI) xxxUI.onStop();`
+        //    一旦 currentUI 变成 null，那些判断**全部不再成立**，
+        //    被移除的那一页就**永远不会 onStop（视图不隐藏）** ⇒ 它一直压在栈顶页上面 ⇒ 页面看起来空白。
+        if (removedCurrent) {
+            try {
+                ui.onStop();
+            } catch (Throwable ignored) {
+            }
+            currentUI = null;
+        }
+        // ③ 去重：修掉「重复点击同一按钮导致同一页面在栈里出现多次」的历史遗留
+        dedupeStack();
+    }
+
+    /** 返回栈去重（同一页面只保留**最后一次**出现的位置，保持相对顺序）。 */
+    private void dedupeStack() {
+        try {
+            if (uis == null || uis.size() < 2) {
+                return;
+            }
+            for (int i = uis.size() - 1; i >= 0; i--) {
+                BaseUI a = uis.get(i);
+                boolean removedBefore = false;
+                for (int j = i - 1; j >= 0; j--) {
+                    if (uis.get(j) == a) {
+                        uis.remove(j);
+                        removedBefore = true;
+                    }
+                }
+                // ★ 在 i 之前删掉了元素 ⇒ 原 i 位置整体左移，必须同步 i（每轮只调一次）
+                if (removedBefore) {
+                    i--;
+                }
+            }
+        } catch (Throwable ignored) {
         }
     }
 }

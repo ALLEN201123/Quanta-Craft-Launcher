@@ -120,7 +120,55 @@ public final class ModLoaderDetector {
         try {
             String low = new String(Files.readAllBytes(json.toPath()), "UTF-8")
                     .toLowerCase();
-            // ★ 顺序有讲究：Babric 的 json 里也有 fabric-loader，但 .babric 标记在上面已经拦掉了
+            // ★★★★★ 2026-10-16 **修「Forge 被认成 Fabric」**（评测视频 48s/51s/54s：
+            //   「安装Forge加载器的整合包会让Forge变成滚木」，实测同一实例在
+            //   「模组检测 · OK · Fabric · 14 个模组」与「· Forge · 16 个模组」之间跳变）。
+            //
+            //   ★ 原实现是**顺序 if-return**，`fabric-loader` 排在 `minecraftforge` **前面**：
+            //     <pre>
+            //       if (low.contains("fabric-loader"))  return FABRIC;    // ← 先命中就返回
+            //       ...
+            //       if (low.contains("minecraftforge")) return FORGE;     // ← 永远轮不到
+            //     </pre>
+            //   Forge 整合包的版本 json 经常**同时**出现 fabric 字样：
+            //     · `inheritsFrom` 指向一个曾装过 Fabric 的父版本；
+            //     · 整合包自带的 `mods` / `libraries` 里塞了 Fabric 系依赖；
+            //     · 打包工具写入了 `fabric-loader` 的残留。
+            //   ⇒ 于是 Forge 被判成 Fabric ⇒ 加载器被"覆盖"、模组数量/图标全错。
+            //
+            //   ★ 修法：改成**加权计分**，证据强的胜出；同分时按
+            //     NeoForge > Forge > Quilt > LiteLoader > Fabric 的优先级
+            //     （Fabric 最弱，因为它的关键字最容易被别的整合包捎带）。
+            //     这样「只有 fabric-loader」仍判 Fabric，而「forge + fabric 混杂」判 Forge。
+            int scFabric = countOf(low, "fabric-loader", "fabricloader", "net.fabricmc");
+            int scQuilt = countOf(low, "quilt-loader", "quiltmc");
+            int scLite = countOf(low, "liteloader", "com.mumfrey.liteloader");
+            int scNeo = countOf(low, "neoforged", "neoforge", "neo-form", "net.neoforged");
+            int scForge = countOf(low, "minecraftforge", "fmlcore", "fmlloader",
+                    "net.minecraftforge", "forgegradle");
+
+            // ★ 关键：Forge / NeoForge 只要**存在**且不弱于 Fabric，就优先判 Forge
+            //   （它们的库名在生产 json 里比 Fabric 更专一，Fabric 更容易是被捎带的）。
+            if (scNeo > 0 && scNeo >= scFabric) {
+                return NEOFORGE;
+            }
+            if (scForge > 0 && scForge >= scFabric) {
+                return FORGE;
+            }
+            if (scQuilt > 0 && scQuilt > scFabric) {
+                return QUILT;
+            }
+            if (scLite > 0) {
+                return LITELOADER;
+            }
+            if (scFabric > 0) {
+                return FABRIC;
+            }
+            // 兜底：分数全为 0 时（关键字被拼写变体绕过）退回原来的包含判断，
+            //       保证绝不比以前更差。
+            if (scNeo > 0 || low.contains("neoforge")) {
+                return NEOFORGE;
+            }
             if (low.contains("fabric-loader")) {
                 return FABRIC;
             }
@@ -130,11 +178,6 @@ public final class ModLoaderDetector {
             if (low.contains("liteloader")) {
                 return LITELOADER;
             }
-            // NeoForge 要放在 Forge 前面认：它的库名里同样有 "forge" 字样
-            if (low.contains("neoforged") || low.contains("neoforge")
-                    || low.contains("neo-form")) {
-                return NEOFORGE;
-            }
             if (low.contains("minecraftforge") || low.contains("fmlcore")
                     || low.contains("fmlloader")) {
                 return FORGE;
@@ -142,6 +185,23 @@ public final class ModLoaderDetector {
         } catch (Exception ignored) {
         }
         return null;
+    }
+
+    /** 统计若干关键字在文本里出现的**总次数**（用于加权计分）。 */
+    private static int countOf(String haystack, String... needles) {
+        int n = 0;
+        for (String needle : needles) {
+            int from = 0;
+            while (true) {
+                int idx = haystack.indexOf(needle, from);
+                if (idx < 0) {
+                    break;
+                }
+                n++;
+                from = idx + needle.length();
+            }
+        }
+        return n;
     }
 
     /**

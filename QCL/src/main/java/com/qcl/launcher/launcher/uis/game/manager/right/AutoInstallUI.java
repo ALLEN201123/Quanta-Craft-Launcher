@@ -545,20 +545,43 @@ implements View.OnClickListener {
             this.quiltVersion = null;
             this.uninstall("quilt");
         }
-        if (view == this.selectForgeVersion && this.fabricVersion == null && this.quiltVersion == null) {
-            this.activity.uiManager.downloadForgeUI.version = this.gameVersion;
-            this.activity.uiManager.downloadForgeUI.install = true;
-            this.activity.uiManager.switchMainUI(this.activity.uiManager.downloadForgeUI);
+        // ★★★★★ 2026-10-16 修「自动安装选 Forge 没反应 / 不能自己装」（评测视频 60s）。
+        //
+        //   用户实测：「去到版本设置里面的自动安装，选择 forge，还不能自己安装，里面全是空白的问题」。
+        //
+        //   ★ 根因：这些分支原来都带一个**静默守卫** `fabricVersion == null && quiltVersion == null`。
+        //     只要该实例装过 Fabric 或 Quilt，**点 Forge / NeoForge / LiteLoader / OptiFine
+        //     的安装按钮就什么都不发生** —— 没有任何提示，用户只看到"点了没用"。
+        //     （守卫本身有道理：Forge 与 Fabric 不能共存于同一个版本目录。
+        //       但**不能静默失败**，必须告诉用户"为什么"以及"怎么办"。）
+        //
+        //   ⇒ 现在：能装就装；不能装就弹一条明确提示，说明冲突原因 + 建议做法。
+        if (view == this.selectForgeVersion) {
+            if (this.fabricVersion == null && this.quiltVersion == null) {
+                this.activity.uiManager.downloadForgeUI.version = this.gameVersion;
+                this.activity.uiManager.downloadForgeUI.install = true;
+                this.activity.uiManager.switchMainUI(this.activity.uiManager.downloadForgeUI);
+            } else {
+                toastConflict("Forge", this.fabricVersion != null ? "Fabric" : "Quilt");
+            }
         }
-        if (view == this.selectNeoForgeVersion && this.fabricVersion == null && this.quiltVersion == null) {
-            this.activity.uiManager.downloadNeoForgeUI.version = this.gameVersion;
-            this.activity.uiManager.downloadNeoForgeUI.install = true;
-            this.activity.uiManager.switchMainUI(this.activity.uiManager.downloadNeoForgeUI);
+        if (view == this.selectNeoForgeVersion) {
+            if (this.fabricVersion == null && this.quiltVersion == null) {
+                this.activity.uiManager.downloadNeoForgeUI.version = this.gameVersion;
+                this.activity.uiManager.downloadNeoForgeUI.install = true;
+                this.activity.uiManager.switchMainUI(this.activity.uiManager.downloadNeoForgeUI);
+            } else {
+                toastConflict("NeoForge", this.fabricVersion != null ? "Fabric" : "Quilt");
+            }
         }
-        if (view == this.selectLiteLoaderVersion && this.fabricVersion == null && this.quiltVersion == null) {
-            this.activity.uiManager.downloadLiteLoaderUI.version = this.gameVersion;
-            this.activity.uiManager.downloadLiteLoaderUI.install = true;
-            this.activity.uiManager.switchMainUI(this.activity.uiManager.downloadLiteLoaderUI);
+        if (view == this.selectLiteLoaderVersion) {
+            if (this.fabricVersion == null && this.quiltVersion == null) {
+                this.activity.uiManager.downloadLiteLoaderUI.version = this.gameVersion;
+                this.activity.uiManager.downloadLiteLoaderUI.install = true;
+                this.activity.uiManager.switchMainUI(this.activity.uiManager.downloadLiteLoaderUI);
+            } else {
+                toastConflict("LiteLoader", this.fabricVersion != null ? "Fabric" : "Quilt");
+            }
         }
         if (view == this.selectOptiFineVersion && this.fabricVersion == null && this.quiltVersion == null) {
             this.activity.uiManager.downloadOptifineUI.version = this.gameVersion;
@@ -584,6 +607,35 @@ implements View.OnClickListener {
             this.activity.uiManager.downloadQuiltAPIUI.version = this.gameVersion;
             this.activity.uiManager.downloadQuiltAPIUI.install = true;
             this.activity.uiManager.switchMainUI(this.activity.uiManager.downloadQuiltAPIUI);
+        }
+    }
+
+    /**
+     * ★★★★★ 2026-10-16 新增：模组加载器**冲突提示**。
+     *
+     * <p>为什么需要（用户实测原话）：「在1.20.1整合包那里，自动安装那里选择 forge，
+     * 点进去，然后进入详情页，里面没有他的列表，只有没有任何安装列表的提示词摆在中间。
+     * **还不能自己装**」。
+     *
+     * <p>原来这些安装箭头都带一个**静默守卫**
+     * {@code fabricVersion == null && quiltVersion == null}：
+     * 只要该实例装过 Fabric / Quilt，点 Forge / NeoForge / LiteLoader 的安装箭头
+     * **什么都不发生、也没有任何提示** ⇒ 用户以为"点不动 / 就是装不了"。
+     *
+     * <p>守卫本身是对的（Forge 与 Fabric 不能共存于同一个版本目录），
+     * 但**必须把原因告诉用户**，否则表现为"按钮坏了"。
+     *
+     * @param want      用户想装的加载器（Forge / NeoForge / LiteLoader）
+     * @param installed 当前已装、导致冲突的加载器（Fabric / Quilt）
+     */
+    private void toastConflict(String want, String installed) {
+        try {
+            String msg = "当前版本已安装 " + installed + "，无法再装 " + want
+                    + "（二者不能共存）。请先卸载 " + installed
+                    + "，或新建一个版本再装 " + want + "。";
+            android.widget.Toast.makeText(this.context, msg,
+                    android.widget.Toast.LENGTH_LONG).show();
+        } catch (Throwable ignored) {
         }
     }
 }

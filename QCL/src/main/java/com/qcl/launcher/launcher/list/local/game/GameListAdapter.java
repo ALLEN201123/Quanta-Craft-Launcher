@@ -352,9 +352,13 @@ public class GameListAdapter extends BaseAdapter {
     /* JADX INFO: Access modifiers changed from: package-private */
     /* renamed from: lambda$getView$3$com-qcl-launcher-launcher-list-local-game-GameListAdapter, reason: not valid java name */
     public /* synthetic */ void m443x44411b3f(int i, String str) {
-        FileUtils.rename(this.activity.launcherSetting.gameFileDirectory + "/versions/" + this.list.get(i).name + "/" + this.list.get(i).name + ".jar", str + ".jar");
-        FileUtils.rename(this.activity.launcherSetting.gameFileDirectory + "/versions/" + this.list.get(i).name + "/" + this.list.get(i).name + ".json", str + ".json");
-        FileUtils.rename(this.activity.launcherSetting.gameFileDirectory + "/versions/" + this.list.get(i).name, str);
+        // ★★★★★ 2026-10-16 修「重命名实例后实例消失」（评测视频 33.0s）。
+        //   原实现只改「与旧文件夹同名」的 jar/json，整合包实例的 jar/json 往往不叫文件夹名
+        //   ⇒ 那两行静默失败、但文件夹照样改名 ⇒ 改名后 jar/json 名 ≠ 文件夹名
+        //   ⇒ SettingUtils.getLocalVersionInfo() 的硬性条件不满足 ⇒ 实例不再被列出 = 消失。
+        //   改用 FileUtils.renameVersionDir()：先改目录，再把目录内 jar/json 统一改成新名。
+        String versionsDir = this.activity.launcherSetting.gameFileDirectory + "/versions";
+        FileUtils.renameVersionDir(versionsDir, this.list.get(i).name, str);
         if (this.list.get(i).isSelected) {
             this.activity.publicGameSetting.currentVersion = this.activity.launcherSetting.gameFileDirectory + "/versions/" + str;
             // ★ 1.5.0：切了当前版本后立刻刷新主界面「启动游戏」上方的版本名/图标。

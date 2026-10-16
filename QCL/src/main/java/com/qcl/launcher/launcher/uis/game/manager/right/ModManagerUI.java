@@ -150,6 +150,39 @@ public class ModManagerUI extends BaseUI implements View.OnClickListener {
                 .registerTypeAdapter(Argument.class, new Argument.Deserializer())
                 .create();
         Version version = gson.fromJson(gameJsonText, Version.class);
+        // ★★★★★ 2026-10-16 **修崩溃**：
+        //   「如果一个目录没有安装游戏，然后再点击游戏单独设置，启动器会直接反应不过来，然后崩溃」。
+        //
+        //   ★ 实测崩溃栈（用户提供）：
+        //     <pre>
+        //       java.lang.NullPointerException: Attempt to invoke virtual method
+        //         'java.lang.String com.qcl.launcher.launcher.game.Version.getId()' on a null object reference
+        //           at ModManagerUI.refresh(ModManagerUI.java:153)
+        //           at GameManagerUI.init(GameManagerUI.java:290)
+        //           at GameManagerUI.onStart(GameManagerUI.java:92)
+        //     </pre>
+        //   ★ 根因：该目录下**没有任何版本**时，`versionName` 对应的 json 不存在，
+        //     `gson.fromJson(...)` 返回 **null**，下一行 `version.getId()` 直接 NPE。
+        //   ⇒ 这里加空值保护：拿不到版本就当作"没有加载器 / 没有模组"，
+        //     让页面能正常打开并显示空列表，而不是崩溃。
+        if (version == null) {
+            this.versionId = (versionName == null ? "" : versionName);
+            selectedMods = new ArrayList<>();
+            try {
+                // 让模组管理页显示"该版本没有安装任何模组"，而不是留一个半初始化状态
+                this.activity.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            refreshList();
+                        } catch (Throwable ignored) {
+                        }
+                    }
+                });
+            } catch (Throwable ignored) {
+            }
+            return;
+        }
         this.versionId = version.getId();
         PrivateGameSetting privateGameSetting;
         String settingPath = activity.launcherSetting.gameFileDirectory + "/versions/" + versionName + "/qcl.cfg";

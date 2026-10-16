@@ -571,8 +571,6 @@ static bool proxy_SDL_SetWindowRelativeMouseMode(SDL_Window *window, bool enable
     if (getter != NULL && window != NULL) {
         actual = getter(window);
     }
-    LOG_TO_I("SDL_Hook: SDL_SetWindowRelativeMouseMode(%p, %d) -> 真实=%d（同步抓取状态）",
-             window, (int) enabled, (int) actual);
     qclSyncGrabState(actual ? JNI_TRUE : JNI_FALSE);
     return r;
 }
@@ -589,8 +587,6 @@ static bool proxy_SDL_SetWindowMouseGrab(SDL_Window *window, bool grabbed) {
     } else {
         actual = grabbed;
     }
-    LOG_TO_I("SDL_Hook: SDL_SetWindowMouseGrab(%p, %d) -> 真实=%d（同步抓取状态）",
-             window, (int) grabbed, (int) actual);
     qclSyncGrabState(actual ? JNI_TRUE : JNI_FALSE);
     return r;
 }

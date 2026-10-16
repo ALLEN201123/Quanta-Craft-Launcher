@@ -62,17 +62,6 @@ extends View {
     // ★ 09-20 照搬 FCL：逐帧位移累积用（FCL 里是每帧把 downX/downY 推进到当前点）
     private float lastMoveX;
     private float lastMoveY;
-    /**
-     * ★★★★★ 2026-10-12（照 FCL）：grab 模式转视角的**基准坐标**，手指按下时记一次。
-     *
-     * <p>FCL 的做法是 `setPointer(initialX + deltaX, initialY + deltaY)` ——
-     * 每帧用「基准 + 本帧位移」重算绝对坐标。
-     * QCL 原来是 `pointerX += 每帧位移`（无界累加），会一路增长到远超屏幕尺寸，
-     * 一撞上任何 `&gt; screenWidth` 的钳制就被夹住 ⇒ **滑到边缘再也划不动**；
-     * 且中途被钳后下一帧 delta 突变 ⇒ **巨大偏移**。
-     */
-    private float grabBaseX;
-    private float grabBaseY;
     private long downTime;
     private int pointerID;
     private final Handler handler = new Handler();
@@ -268,13 +257,6 @@ extends View {
                     this.initialY = event.getY();
                     this.lastMoveX = event.getX();
                     this.lastMoveY = event.getY();
-                    // ★★★★★ 2026-10-12（照 FCL）：grab 模式的**基准**在手指按下时记一次。
-                    //   FCL TouchPad.java:213-214 `initialX = gameMenu.getPointerX();`
-                    //   之后每帧投递 `基准 + 本帧位移`（而不是无界累加 pointerX）。
-                    //   ⇒ 坐标始终只比基准多出"你实际滑过的距离"，不会被任何钳制夹住，
-                    //     也不会因为中途被钳而产生突变。
-                    this.grabBaseX = this.menuHelper.pointerX;
-                    this.grabBaseY = this.menuHelper.pointerY;
                     this.downTime = System.currentTimeMillis();
                     this.pointerID = event.getPointerId(event.getActionIndex());
                     if (this.menuHelper.gameMenuSetting.mouseMode == 1 && this.menuHelper.gameCursorMode == 0) {
@@ -307,42 +289,27 @@ extends View {
                         }
                     }
                     if (this.menuHelper.gameCursorMode != 1 || this.menuHelper.gameMenuSetting.disableHalfScreen && !(this.initialX > (float)(this.screenWidth >> 1)) || event.getPointerId(event.getActionIndex()) != this.pointerID) break;
-                    // ★★★★★ 2026-10-12 **按 FCL 的算法重写**（用户实测两次报"滑到最左边划不动"+
-                    //   "关背包后滑一下巨大偏移"，之前的累加式实现始终修不好）。
-                    //
-                    //   FCL 的做法（FCL TouchPad.java:213-251）：
-                    //     · ACTION_DOWN 时记一次基准 initialX/initialY（= 当时的 pointerX/pointerY）
-                    //     · 之后**每一帧都用「基准 + 本帧位移」重算绝对坐标**：
-                    //         deltaX = (newDownX - downX) * 灵敏度 / scaleFactor
-                    //         setPointer(initialX + deltaX, initialY + deltaY)
-                    //       并把 downX 推进到 newDownX
-                    //     ⇒ 投递的是**受限的绝对坐标**（只比基准多出「你实际滑过的距离」）
-                    //
-                    //   QCL 原实现是 `pointerX += 每帧位移`（无界累加）：
-                    //     · pointerX 会一直增长到远超屏幕尺寸 ⇒ 一撞上任何 `> screenWidth`
-                    //       的钳制就被夹住，之后增量恒为 0 ⇒ **滑到边缘再也划不动**；
-                    //     · 而且它投的是"从 DOWN 起算的总位移"，一旦中途被钳过，
-                    //       下一帧的 delta 就会突变 ⇒ **巨大偏移**。
-                    //
-                    //   ⇒ 现在完全照 FCL：基准 + 增量，不做无界累加、不做任何钳制。
+                    // ★★★ 2026-09-20 完全照搬 FCL TouchPad.onTouchEvent 的 grab 分支（FCL 第226-251行）：
+                    //   FCL 用「本帧点 − 上一帧点」得到位移，累加到 DOWN 时记下的基准（getPointerX），
+                    //   再 setPointer 投递**累积后的绝对坐标**；每帧把基准推进到当前点。
+                    //   QCL 原实现调 viewManager.setGamePointer("1", true, dx, dy)，而该函数在
+                    //   hold=true（手指还按着）时**直接 return，pointerX 永不推进** → 每次都拿同一个
+                    //   旧 pointerX 加上「从 initialX 起算的绝对位移」重复投递 → MC 侧算出的 delta
+                    //   恒定不变 → 视角纹丝不动（实测：滑动 800px 画面完全没变；且因为乘了
+                    //   scaleFactor，投递值高达 3057 远超屏宽 1600，坐标完全离谱）。
                     int movePointerIndex = event.findPointerIndex(this.pointerID);
                     if (movePointerIndex != -1) {
                         float newX = event.getX(movePointerIndex);
                         float newY = event.getY(movePointerIndex);
-                        // FCL：位移 = (本帧点 - 上一帧点) × 灵敏度
-                        //   ★ **不除以 scaleFactor** —— 整条链路统一用屏幕坐标，
-                        //     InputBridge.setPointer 也不再做任何缩放（见那里的注释）。
-                        float moveDeltaX = (newX - this.lastMoveX)
-                                * this.menuHelper.gameMenuSetting.mouseSpeed;
-                        float moveDeltaY = (newY - this.lastMoveY)
-                                * this.menuHelper.gameMenuSetting.mouseSpeed;
-                        // ★ 基准 + 增量（不再累加到 pointerX）
-                        this.menuHelper.pointerX = this.grabBaseX + moveDeltaX;
-                        this.menuHelper.pointerY = this.grabBaseY + moveDeltaY;
+                        float moveDeltaX = (newX - this.lastMoveX) * this.menuHelper.gameMenuSetting.mouseSpeed;
+                        float moveDeltaY = (newY - this.lastMoveY) * this.menuHelper.gameMenuSetting.mouseSpeed;
+                        this.menuHelper.pointerX += moveDeltaX;
+                        this.menuHelper.pointerY += moveDeltaY;
                         this.menuHelper.currentX = this.menuHelper.pointerX;
                         this.menuHelper.currentY = this.menuHelper.pointerY;
                         this.lastMoveX = newX;
                         this.lastMoveY = newY;
+                        // FCL 直接传未缩放坐标（gameMenu.getInput().setPointer(initialX + deltaX, ...)）
                         InputBridge.setPointer(this.launcher,
                                 (int) this.menuHelper.pointerX,
                                 (int) this.menuHelper.pointerY);

@@ -196,6 +196,85 @@
 
                 </LinearLayout>
 
+                <!-- ★★★★★ 2026-10-16 新增：**字体颜色自定义调节**
+                     （用户要求「在外观那里加一个字体颜色自定义调节功能」）。
+                     点左侧色块 → 打开调色板选颜色 → 全局正文文字立刻变色；
+                     右侧「跟随主题」按钮清空设置、回到日间黑字/夜间白字。 -->
+                <LinearLayout
+                    android:paddingStart="15dp"
+                    android:paddingEnd="15dp"
+                    android:paddingBottom="15dp"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/exterior_setting_ui_font_color"
+                            android:textSize="@dimen/text_size_middle"
+                            android:textColor="@color/colorPureBlack"/>
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/exterior_setting_ui_font_color_hint"
+                            android:textSize="@dimen/text_size_small"
+                            android:textColor="@color/colorLightWhite"/>
+
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/select_font_color"
+                        android:padding="6dp"
+                        android:layout_width="110dp"
+                        android:layout_height="28dp"
+                        android:layout_gravity="center"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:background="@drawable/launcher_button_gray"
+                        android:orientation="horizontal">
+
+                        <View
+                            android:layout_marginStart="6dp"
+                            android:layout_width="16dp"
+                            android:layout_height="16dp"
+                            android:id="@+id/font_color_view"/>
+
+                        <TextView
+                            android:singleLine="true"
+                            android:layout_width="match_parent"
+                            android:layout_height="16dp"
+                            android:id="@+id/font_color_text"
+                            android:textColor="#FFFFFFFF"
+                            android:background="#80000000"
+                            android:textSize="@dimen/text_size_small"
+                            android:gravity="center"/>
+
+                    </LinearLayout>
+
+                    <Button
+                        android:id="@+id/reset_font_color"
+                        android:layout_width="wrap_content"
+                        android:layout_height="32dp"
+                        android:layout_marginStart="6dp"
+                        android:minWidth="0dp"
+                        android:paddingLeft="8dp"
+                        android:paddingRight="8dp"
+                        android:textSize="@dimen/text_size_small"
+                        android:text="@string/exterior_setting_ui_font_color_reset"
+                        android:background="@drawable/launcher_button_gray"
+                        android:textColor="@color/colorPureBlack"/>
+
+                </LinearLayout>
+
                 <View
                     android:layout_width="match_parent"
                     android:layout_height="1px"

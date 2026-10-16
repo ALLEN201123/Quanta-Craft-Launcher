@@ -175,7 +175,13 @@ public class WorldManagerUI extends BaseUI implements CompoundButton.OnCheckedCh
                     .registerTypeAdapter(Argument.class, new Argument.Deserializer())
                     .create();
             Version v = gson.fromJson(gameJsonText, Version.class);
-            this.version = v.getId();
+            // ★★★★★ 2026-10-16 **修同类崩溃**（与 ModManagerUI 同源）。
+            //   「目录里没有安装游戏时点游戏设置 → 崩溃」的崩溃栈是
+            //     ModManagerUI.refresh → Version.getId() NPE；
+            //   这里 `v.getId()` 是**完全相同**的写法 —— 该目录没有版本 json 时
+            //   `fromJson` 返回 null ⇒ 一样会 NPE（只是先被 ModManagerUI 抢崩了）。
+            //   ⇒ 一并加空值保护：拿不到版本就当"没有存档"，页面正常打开。
+            this.version = (v == null ? (versionName == null ? "" : versionName) : v.getId());
             allWorldList = new ArrayList<>();
             // ★ 1.4.4：远古版本（classic / indev / infdev）的存档位置与新版本不一样 ——
             //   有时落在游戏目录的 saves/，有时落在**版本目录**的 saves/。

@@ -980,6 +980,33 @@ static void qclSdlTextInputMainThreadCallback(void *userdata) {
 }
 
 JNIEXPORT jboolean JNICALL
+Java_org_lwjgl_glfw_CallbackBridge_nativeIsSdlRelativeMouseMode(__attribute__((unused)) JNIEnv *env,
+                                                                __attribute__((unused)) jclass clazz) {
+    // ★★★★★ 2026-10-12 新增（修「滑动屏幕出现巨大视角偏移」）：
+    //   直接问 **SDL 自己的真实相对模式**，而不是用启动器侧的 isGrabbing 猜。
+    //   为什么必须这样：发"相对增量"还是"绝对坐标"必须与 SDL 当前怎么解释严格对应，
+    //   一旦错位（把增量当绝对坐标），光标会被搬到屏幕角落 ⇒ 每次滑动都巨大跳变。
+    //
+    //   取不到窗口/符号时**返回 false**（= 按绝对坐标发）—— 这一侧是安全的：
+    //   绝对坐标在非相对模式下是正确的；而在相对模式下把绝对坐标当增量，
+    //   退化为"小位移"，不会产生跳变，比反过来安全得多。
+    void *handle = dlopen("libSDL3.so", RTLD_NOW);
+    if (handle == NULL) {
+        return JNI_FALSE;
+    }
+    void *win = (void *) sdlHookGetPrimaryWindow();
+    if (win == NULL) {
+        return JNI_FALSE;
+    }
+    typedef bool (*getRel_t)(void *);
+    getRel_t getRel = (getRel_t) dlsym(handle, "SDL_GetWindowRelativeMouseMode");
+    if (getRel == NULL) {
+        return JNI_FALSE;
+    }
+    return getRel(win) ? JNI_TRUE : JNI_FALSE;
+}
+
+JNIEXPORT jboolean JNICALL
 Java_org_libsdl_app_SdlBridge_nativeIsSdlRenderActive(__attribute__((unused)) JNIEnv *env,
                                                       __attribute__((unused)) jclass clazz) {
     // SDL 渲染路径以「首个 SDL 窗口已创建」为标志；仅手柄子系统初始化 SDL 时没有窗口。

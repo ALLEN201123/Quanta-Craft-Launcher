@@ -57,6 +57,8 @@ import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.View;
 import android.view.ViewGroup;
+// ★★★★★ 2026-10-16 字体颜色自定义调节用到 Button
+import android.widget.Button;
 import android.widget.AdapterView;
 import android.widget.CompoundButton;
 import android.widget.EditText;
@@ -93,6 +95,12 @@ CompoundButton.OnCheckedChangeListener {
     // ★★★ 1.5.0 用户要求：主题色入口从「色块+十六进制小按钮」改为**下拉框**（Spinner）。
     //   点开列出预设配色，选中即全局应用。下面的两个自定义色块负责进调色板微调。
     private Spinner selectTheme;
+
+    // ★★★★★ 2026-10-16 新增：字体颜色自定义调节（外观页）
+    private LinearLayout selectFontColor;
+    private View fontColorView;
+    private TextView fontColorText;
+    private Button resetFontColor;
     private View colorView;
     private TextView colorText;
     private LinearLayout selectPanelColor;
@@ -156,6 +164,19 @@ CompoundButton.OnCheckedChangeListener {
         this.customPanelBlock = (LinearLayout)this.activity.findViewById(R.id.custom_panel_block);
         this.panelColorBlockView = this.activity.findViewById(R.id.panel_color_block_view);
         this.panelColorBlockText = (TextView)this.activity.findViewById(R.id.panel_color_block_text);
+        // ★★★★★ 2026-10-16 新增：**字体颜色自定义调节**的三个控件
+        //   （用户要求「在外观那里加一个字体颜色自定义调节功能」）
+        this.selectFontColor = (LinearLayout)this.activity.findViewById(R.id.select_font_color);
+        this.fontColorView = this.activity.findViewById(R.id.font_color_view);
+        this.fontColorText = (TextView)this.activity.findViewById(R.id.font_color_text);
+        this.resetFontColor = (Button)this.activity.findViewById(R.id.reset_font_color);
+        if (this.selectFontColor != null) {
+            this.selectFontColor.setOnClickListener((View.OnClickListener)this);
+        }
+        if (this.resetFontColor != null) {
+            this.resetFontColor.setOnClickListener((View.OnClickListener)this);
+        }
+        refreshFontColorUi();
         setupThemeColorSpinner();
         this.transBarSwitch = (SwitchCompat)this.activity.findViewById(R.id.switch_trans_bar);
         this.fullscreenSwitch = (SwitchCompat)this.activity.findViewById(R.id.switch_full_screen);
@@ -618,6 +639,52 @@ CompoundButton.OnCheckedChangeListener {
             });
             dialog.show();
         }
+        // ★★★★★ 2026-10-16 新增：**字体颜色自定义调节**
+        //   （用户要求「在外观那里加一个字体颜色自定义调节功能」）。
+        //
+        //   点色块 → 打开调色板；选定后：
+        //     ① 写入 launcherSetting.fontColor 并落盘；
+        //     ② 立刻对当前界面应用一次（用户当场看到效果）；
+        //     ③ 刷新本页的色块预览与十六进制文字。
+        //   点「跟随主题」按钮 → 清空设置，回到日间黑字 / 夜间白字。
+        if (v == this.selectFontColor) {
+            dialog = new ColorSelectorDialog(this.context, true,
+                    com.qcl.launcher.utils.ui.FontColorUtils.parse(this.activity.launcherSetting.fontColor));
+            dialog.setColorSelectorDialogListener(new ColorSelectorDialog.ColorSelectorDialogListener() {
+
+                @Override
+                @SuppressLint(value={"SetTextI18n"})
+                public void onColorSelected(int color2) {
+                    ExteriorSettingUI.this.applyFontColor(color2);
+                }
+
+                @Override
+                @SuppressLint(value={"SetTextI18n"})
+                public void onPositive(int destColor) {
+                    ExteriorSettingUI.this.applyFontColor(destColor);
+                }
+
+                @Override
+                @SuppressLint(value={"SetTextI18n"})
+                public void onNegative(int initColor) {
+                    // 取消：把界面恢复成"当前已保存的设置"，不要留下半路预览
+                    ExteriorSettingUI.this.applyFontColor(
+                            com.qcl.launcher.utils.ui.FontColorUtils.parse(
+                                    ExteriorSettingUI.this.activity.launcherSetting.fontColor));
+                }
+            });
+            dialog.show();
+        }
+        if (v == this.resetFontColor) {
+            this.activity.launcherSetting.fontColor = null;   // null = 跟随主题
+            GsonUtils.saveLauncherSetting(this.activity.launcherSetting, AppManifest.SETTING_DIR + "/launcher_setting.json");
+            // 重建当前界面即可恢复成主题默认文字色
+            this.refreshFontColorUi();
+            try {
+                this.activity.recreate();
+            } catch (Throwable ignored) {
+            }
+        }
         // ★ 1.5.0：面板色的两个入口都走这里 —— 右侧小按钮 + 下拉框下方的第二个自定义色块。
         if (v == this.selectPanelColor || v == this.customPanelBlock) {
             dialog = new ColorSelectorDialog(this.context, true, ExteriorSettingUI.getPanelColor(this.context, this.activity.launcherSetting.panelColor));
@@ -688,7 +755,24 @@ CompoundButton.OnCheckedChangeListener {
             // ★ 1.5.0：开关一变，动作选择行的可用性要跟着变（关=置灰不可选，开=可选）
             this.applyAccountModelAnimEnabled(isChecked);
         }
-        // ★ 1.2.3：透明界面背景（默认开；关掉恢复原来的灰色面板 #C8EDEDED）
+        // ★ 1.2.3：透明界面背景（默认开；关掉恢复原来的灰色面板）
+        // ★★★★★ 2026-10-16 **修「夜间模式还有白色背景 → 白字看不见」**。
+        //
+        //   用户实测：「现在夜间模式有些背景还是全是白的，导致玩家根本看不见白色的字」。
+        //
+        //   ★ 根因：这里**硬编码**了 `#C8EDEDED`。而 `#C8EDEDED` 正是
+        //     `values/colors.xml` 里 `qcl_panel_gray` 的**日间值** ——
+        //     夜间本该由 `values-night/colors.xml` 翻成深色 `#E61A1F26`。
+        //     但 `Color.parseColor` 是**运行时硬编码**，不走资源限定符 ⇒ 夜间也是近白底；
+        //     而 `colorPureBlack`（946 个布局的正文色）在夜间已翻成 **#FFFFFF 白**
+        //     ⇒ **白底 + 白字 = 完全看不见**。
+        //     （`values/colors.xml` 的注释就写着这条铁律：
+        //       「浅色态：面板 #C8EDEDED ↔ 文字 #000000；夜间态：面板→深色 ↔ 文字→白色；
+        //         只翻一个就会出现『白底白字』→ 玩家根本看不见」。）
+        //
+        //   ★ 修法：改用资源 `R.color.qcl_panel_gray` ——
+        //     `values/` 是 `#C8EDEDED`（日间浅灰，视觉与原来完全一致），
+        //     `values-night/` 是 `#E61A1F26`（夜间深色），**自动昼夜翻转**。
         if (this.transBgSwitch != null && buttonView == this.transBgSwitch) {
             this.activity.launcherSetting.transparentBackground = isChecked;
             GsonUtils.saveLauncherSetting(this.activity.launcherSetting, AppManifest.SETTING_DIR + "/launcher_setting.json");
@@ -696,7 +780,7 @@ CompoundButton.OnCheckedChangeListener {
             if (container != null) {
                 container.setBackgroundColor(isChecked
                         ? android.graphics.Color.TRANSPARENT
-                        : android.graphics.Color.parseColor("#C8EDEDED"));
+                        : this.context.getResources().getColor(R.color.qcl_panel_gray));
             }
         }
         // ★★★ 1.5.0：排版切换（旧排版 / 新排版）。
@@ -710,7 +794,12 @@ CompoundButton.OnCheckedChangeListener {
                 this.activity.launcherSetting.uiStyle = 1;
                 this.activity.launcherSetting.uiStyleChosen = true;
                 GsonUtils.saveLauncherSetting(this.activity.launcherSetting, AppManifest.SETTING_DIR + "/launcher_setting.json");
-                Toast.makeText(this.context, R.string.exterior_setting_ui_layout_restart, 1).show();
+                // ★★★★★ 2026-10-16 修「切排版必须玩家手动重启」：
+                //   用户要求「切换旧排版和新排版必须重启，玩家必须手动重启，
+                //   改成自动重启一下启动器」。
+                //   原来只弹一句「重启后生效」，现在**保存后自动重建 Activity**，
+                //   玩家不用自己动手（重建 = 重新 inflate 对应的那套布局）。
+                this.restartLauncherForLayoutChange();
             }
         }
         if (buttonView == this.layoutOldRadio && isChecked) {
@@ -719,7 +808,7 @@ CompoundButton.OnCheckedChangeListener {
                 this.activity.launcherSetting.uiStyle = 0;
                 this.activity.launcherSetting.uiStyleChosen = true;
                 GsonUtils.saveLauncherSetting(this.activity.launcherSetting, AppManifest.SETTING_DIR + "/launcher_setting.json");
-                Toast.makeText(this.context, R.string.exterior_setting_ui_layout_restart, 1).show();
+                this.restartLauncherForLayoutChange();
             }
         }
         if (buttonView == this.defaultRadio && isChecked) {
@@ -851,6 +940,96 @@ CompoundButton.OnCheckedChangeListener {
             public void onNothingSelected(AdapterView<?> parent) {
             }
         });
+    }
+
+    /**
+     * ★★★★★ 2026-10-16 新增：切换排版后**自动重启启动器**。
+     *
+     * <p>用户要求：「切换那个旧排版和新排版必须要重启，玩家必须手动重启，
+     * 改成自动重启一下启动器」。
+     *
+     * <p>★ 为什么必须重建：{@code MainActivity.inflateMainUi()} 只在初始化时
+     * inflate **一套**布局（{@code ui_main.xml} 旧排版 / {@code ui_main_new.xml} 新排版）。
+     * 两套布局的 id 集合完全相同，同时挂进视图树会让 {@code findViewById} 抓错页
+     * ⇒ 运行时换不了，只能重建 Activity。
+     *
+     * <p>★ 实现要点：
+     * <ul>
+     *   <li>先用 Toast 告诉用户"正在重启"，否则界面突然消失会以为崩了；</li>
+     *   <li>延迟 600ms 再重建，让 Toast 与开关动画先画完；</li>
+     *   <li>在**主线程**调用 {@code recreate()}。</li>
+     * </ul>
+     */
+    private void restartLauncherForLayoutChange() {
+        try {
+            Toast.makeText(this.context, "正在切换到新排版，启动器即将自动重启…",
+                    Toast.LENGTH_SHORT).show();
+        } catch (Throwable ignored) {
+        }
+        try {
+            new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(
+                    new Runnable() {
+                        @Override
+                        public void run() {
+                            try {
+                                ExteriorSettingUI.this.activity.recreate();
+                            } catch (Throwable ignored) {
+                            }
+                        }
+                    }, 600L);
+        } catch (Throwable t) {
+            // 兜底：拿不到 Handler 时立刻重建
+            try {
+                this.activity.recreate();
+            } catch (Throwable ignored) {
+            }
+        }
+    }
+
+    /**
+     * ★★★★★ 2026-10-16 新增：应用「自定义字体颜色」。
+     *
+     * <p>用户要求「在外观那里加一个字体颜色自定义调节功能」。
+     *
+     * @param color 选中的颜色（含 alpha）。写盘后**立刻**对当前界面生效，
+     *              这样用户不用退出设置页就能看到效果。
+     */
+    private void applyFontColor(int color) {
+        try {
+            this.activity.launcherSetting.fontColor = QclColors.format(color);
+            GsonUtils.saveLauncherSetting(this.activity.launcherSetting,
+                    AppManifest.SETTING_DIR + "/launcher_setting.json");
+            com.qcl.launcher.utils.ui.FontColorUtils.apply(this.activity, color);
+            this.refreshFontColorUi();
+        } catch (Throwable ignored) {
+        }
+    }
+
+    /** 刷新字体颜色那一行的预览（色块颜色 + 十六进制文字）。 */
+    private void refreshFontColorUi() {
+        try {
+            int color = com.qcl.launcher.utils.ui.FontColorUtils.parse(
+                    this.activity.launcherSetting.fontColor);
+            boolean followTheme = (color == 0);
+            if (followTheme) {
+                // 跟随主题：用当前主题的正文色做预览（日间黑 / 夜间白）
+                color = this.context.getResources().getColor(R.color.colorPureBlack);
+            }
+            if (this.fontColorView != null) {
+                android.graphics.drawable.GradientDrawable gd = new android.graphics.drawable.GradientDrawable();
+                gd.setShape(android.graphics.drawable.GradientDrawable.RECTANGLE);
+                gd.setCornerRadius(4f);
+                gd.setColor(color);
+                gd.setStroke(2, 0x66FFFFFF);
+                this.fontColorView.setBackground(gd);
+            }
+            if (this.fontColorText != null) {
+                this.fontColorText.setText(followTheme
+                        ? this.context.getString(R.string.exterior_setting_ui_font_color_reset)
+                        : QclColors.format(color));
+            }
+        } catch (Throwable ignored) {
+        }
     }
 }
 

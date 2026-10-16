@@ -202,9 +202,13 @@ implements View.OnClickListener {
                     }
                     case R.id.manage_rename: {
                         RenameVersionDialog dialog = new RenameVersionDialog(this.context, this.versionName, name -> new Thread(() -> {
-                            FileUtils.rename(this.activity.launcherSetting.gameFileDirectory + "/versions/" + this.versionName + "/" + this.versionName + ".jar", name + ".jar");
-                            FileUtils.rename(this.activity.launcherSetting.gameFileDirectory + "/versions/" + this.versionName + "/" + this.versionName + ".json", name + ".json");
-                            FileUtils.rename(this.activity.launcherSetting.gameFileDirectory + "/versions/" + this.versionName, name);
+                            // ★★★★★ 2026-10-16 修「重命名实例后实例消失」（评测视频 33.0s）。
+                            //   原实现只改「与旧文件夹同名」的 jar/json，整合包实例的 jar/json
+                            //   往往不叫文件夹名 ⇒ 静默失败、文件夹照样改名
+                            //   ⇒ SettingUtils.getLocalVersionInfo() 的硬性条件不满足 ⇒ 实例消失。
+                            //   改用 FileUtils.renameVersionDir()：先改目录，再把里面 jar/json 统一改名。
+                            String versionsDir = this.activity.launcherSetting.gameFileDirectory + "/versions";
+                            FileUtils.renameVersionDir(versionsDir, this.versionName, name);
                             if (this.versionName.equals(this.activity.publicGameSetting.currentVersion.substring(this.activity.publicGameSetting.currentVersion.lastIndexOf("/") + 1))) {
                                 this.activity.publicGameSetting.currentVersion = this.activity.launcherSetting.gameFileDirectory + "/versions/" + name;
                                 GsonUtils.savePublicGameSetting(this.activity.publicGameSetting, AppManifest.SETTING_DIR + "/public_game_setting.json");
@@ -286,6 +290,29 @@ implements View.OnClickListener {
     }
 
     private void init() {
+        // ★★★★★ 2026-10-16 **修崩溃**：
+        //   「如果一个目录没有安装游戏，然后再点击游戏单独设置，启动器会直接反应不过来，然后崩溃」。
+        //
+        //   ★ 实测崩溃栈（用户提供）：
+        //     <pre>
+        //       NullPointerException: ... Version.getId() on a null object reference
+        //         at ModManagerUI.refresh(ModManagerUI.java:153)
+        //         at GameManagerUI.init(GameManagerUI.java:290)   ← 就是下面第一行
+        //         at GameManagerUI.onStart(GameManagerUI.java:92)
+        //     </pre>
+        //   ★ 根因：这个目录下**一个版本都没有**时 `versionName` 是 null / 空，
+        //     拼出的 json 路径取不到文件 ⇒ Gson 解析出 null Version ⇒ `getId()` NPE。
+        //   ⇒ 在这里就拦住：没有版本时**不做任何刷新**（避免一串空指针），
+        //     并明确告诉用户"先去装/选一个版本"，而不是黑屏崩溃。
+        if (this.versionName == null || this.versionName.isEmpty()) {
+            try {
+                android.widget.Toast.makeText(this.context,
+                        "这个目录还没有任何游戏版本，请先安装或选择一个版本再打开游戏设置。",
+                        android.widget.Toast.LENGTH_LONG).show();
+            } catch (Throwable ignored) {
+            }
+            return;
+        }
         String newVersionPath = this.activity.launcherSetting.gameFileDirectory + "/versions/" + this.versionName;
         this.gameManagerUIManager.modManagerUI.refresh(this.versionName);
         this.gameManagerUIManager.worldManagerUI.refresh(this.versionName);

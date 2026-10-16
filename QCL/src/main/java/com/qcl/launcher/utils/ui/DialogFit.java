@@ -108,6 +108,25 @@ public final class DialogFit {
             View root = window.getDecorView();
             if (root != null) {
                 clampMaxHeight(root, maxH);
+                // ★★★★★ 2026-10-16 **修「整合包安装弹窗的取消按钮在手机上跑出屏幕外」**
+                //   （评测视频 + 用户实测：「安装整合包的取消按钮在手机上根本显示不到，
+                //     因为弹出来的窗口尺寸比例太大了，取消按钮已经在下面了」）。
+                //
+                //   ★ 根因：`dialog_install_game.xml` 里那块列表是**写死的 360dp**：
+                //     <pre>
+                //       &lt;RecyclerView android:layout_height="360dp"
+                //                      android:id="@+id/download_task_list"/&gt;
+                //     </pre>
+                //     整个对话框高度 ≈ 标题 + 360dp + 速度行 + 按钮行 ≈ 450dp 以上。
+                //     手机横屏的可用高度经常只有 ~360~400dp ⇒ **底部按钮直接被挤出屏幕**。
+                //     上面只压了**窗口**高度，而 360dp 是**内容**的固定高度，
+                //     `wrap_content`/固定高混排时窗口变矮并不会让内容跟着变矮 ⇒ 按钮仍被顶出去。
+                //
+                //   ★ 修法：把布局里那些「固定高度且很高」的**可滚动视图**
+                //     （RecyclerView / ListView / ScrollView / NestedScrollView）的
+                //     `maxHeight` 压到「可用高度的 60%」，把剩下的空间留给标题与按钮行。
+                //     这类视图本身就能滚动，压矮不会丢内容，只是需要滑动查看 —— 但**按钮一定可见**。
+                constrainScrollables(root, (int) (maxH * 0.60f));
             }
         } catch (Throwable ignored) {
         }
@@ -128,6 +147,84 @@ public final class DialogFit {
             }
         } catch (Throwable ignored) {
         }
+    }
+
+    /**
+     * ★★★★★ 2026-10-16 新增：把布局里**固定高度且过高的「可滚动视图」**压到 maxH 以内。
+     *
+     * <p>为什么需要（用户实测原话）：
+     * 「安装整合包的取消按钮在手机上根本显示不到，因为弹出来的窗口尺寸比例太大了。
+     *   如果是手机屏幕比例太小，取消按钮已经在下面了，根本看不到」。
+     *
+     * <p>真凶：{@code dialog_install_game.xml} 里列表写死 {@code android:layout_height="360dp"}。
+     * 对话框总高 ≈ 标题 + 360dp + 速度行 + 按钮行，手机横屏可用高度装不下 ⇒ 按钮出屏。
+     * 上面已经把**窗口**压进屏幕了，但**内容的固定高度**不会跟着变
+     * （窗口变矮 + 内容 wrap/固定混排时，Android 不会自动等比缩小固定高的子视图）。
+     *
+     * <p>本方法只处理**本身就能滚动的视图**（RecyclerView / ListView / ScrollView /
+     * NestedScrollView 等）：给它们设 {@code maxHeight = maxH}。
+     * 这些视图压矮**不会丢内容**（可以滑动查看），但底部按钮因此一定留在屏幕内。
+     *
+     * <p>按类名匹配而不是 {@code instanceof}，是为了不引入 recyclerview / 各版本
+     * ListView 之外的编译期依赖（项目里 RecyclerView 来自 androidx，直接 instanceof 也行，
+     * 但按类名更稳、且对第三方滚动控件同样生效）。
+     */
+    private static void constrainScrollables(View view, int maxH) {
+        try {
+            if (view == null || maxH <= 0) {
+                return;
+            }
+            if (isScrollableView(view)) {
+                // ① 优先用 View.setMaximumHeight（部分控件支持）
+                try {
+                    view.getClass().getMethod("setMaximumHeight", int.class).invoke(view, maxH);
+                } catch (Throwable ignored) {
+                }
+                // ② 通用兜底：用 LayoutParams.maxHeight（Android 8.0+ 对 ViewGroup 生效；
+                //    高版本上的 RecyclerView/ListView 均支持）
+                try {
+                    ViewGroup.LayoutParams lp = view.getLayoutParams();
+                    if (lp != null) {
+                        boolean changed = false;
+                        // 固定高度超过上限 → 改成「最大上限」
+                        if (lp.height > maxH) {
+                            lp.height = maxH;
+                            changed = true;
+                        }
+                        try {
+                            java.lang.reflect.Field f = lp.getClass().getField("maxHeight");
+                            f.setInt(lp, maxH);
+                            changed = true;
+                        } catch (Throwable ignored) {
+                        }
+                        if (changed) {
+                            view.setLayoutParams(lp);
+                        }
+                    }
+                } catch (Throwable ignored) {
+                }
+            }
+            if (view instanceof ViewGroup) {
+                ViewGroup g = (ViewGroup) view;
+                for (int i = 0; i < g.getChildCount(); i++) {
+                    constrainScrollables(g.getChildAt(i), maxH);
+                }
+            }
+        } catch (Throwable ignored) {
+        }
+    }
+
+    /** 这个 View 是不是「本身可滚动」的容器（压矮不会丢内容）。 */
+    private static boolean isScrollableView(View v) {
+        if (v == null) {
+            return false;
+        }
+        String n = v.getClass().getName();
+        return n.contains("RecyclerView")
+                || n.contains("ListView")
+                || n.contains("ScrollView")
+                || n.contains("GridView")
+                || n.contains("ViewPager");
     }
 
     /**

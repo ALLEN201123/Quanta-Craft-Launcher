@@ -97,9 +97,7 @@ public class MKManager implements View.OnKeyListener, View.OnCapturedPointerList
             this.menuHelper.cursorY = f;
             this.menuHelper.pointerX = x;
             this.menuHelper.pointerY = f;
-            // ★ 2026-10-12：坐标**原样投递**（不乘 scaleFactor）—— 整条链路统一屏幕坐标，
-            //   任何一处单独缩放都会让 MC 算出的 delta 对不上、表现为视角被拉回中心。
-            InputBridge.setPointer(this.menuHelper.launcher, (int) x, (int) f);
+            InputBridge.setPointer(this.menuHelper.launcher, (int) (x * this.menuHelper.scaleFactor), (int) (f * this.menuHelper.scaleFactor));
         } else {
             this.menuHelper.pointerX += motionEvent.getX() * this.menuHelper.gameMenuSetting.mouseSpeed;
             this.menuHelper.pointerY += motionEvent.getY() * this.menuHelper.gameMenuSetting.mouseSpeed;
@@ -107,9 +105,7 @@ public class MKManager implements View.OnKeyListener, View.OnCapturedPointerList
             menuHelper.currentX = menuHelper.pointerX;
             MenuHelper menuHelper2 = this.menuHelper;
             menuHelper2.currentY = menuHelper2.pointerY;
-            // ★ 2026-10-12：同上，坐标原样投递。
-            InputBridge.setPointer(this.menuHelper.launcher,
-                    (int) this.menuHelper.pointerX, (int) this.menuHelper.pointerY);
+            InputBridge.setPointer(this.menuHelper.launcher, (int) (this.menuHelper.pointerX * this.menuHelper.scaleFactor), (int) (this.menuHelper.pointerY * this.menuHelper.scaleFactor));
         }
         return handleMouseEvent(motionEvent);
     }
