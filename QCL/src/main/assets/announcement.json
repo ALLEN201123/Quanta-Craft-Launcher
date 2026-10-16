@@ -1,6 +1,43 @@
 {
   "announcements": [
     {
+      "id": 101,
+      "significant": true,
+      "outdated": false,
+      "minVersion": 0,
+      "maxVersion": 2147483647,
+      "specificLang": [],
+      "title": [
+        {
+          "lang": "zh_CN",
+          "text": "QCL 1.5.1 更新说明（输入与视角修复 · 字体颜色）"
+        },
+        {
+          "lang": "zh_TW",
+          "text": "QCL 1.5.1 更新說明（輸入與視角修復 · 字型顏色）"
+        },
+        {
+          "lang": "en_US",
+          "text": "QCL 1.5.1 release notes (input & camera fixes, custom text colour)"
+        }
+      ],
+      "date": "2026-10-16",
+      "content": [
+        {
+          "lang": "zh_CN",
+          "text": "【26.4 修好了，26.3 还没】\n· MC 26.4 的「能进主菜单但按钮点不动、虚拟键盘失效」已修好\n· 26.3 仍然启动不了，原因尚未定位（这一版没有修好，如实说明）\n\n【输入与视角】\n· 修好「往左滑往右偏、快速滑只走一小段又归中」\n· 修好「滑到最左边/最右边就滑不动、像被焊住」\n· 修好「鼠标滑出屏幕之外」\n· 修好「打开背包→关闭背包→点左键或右键，视角大偏移」\n\n【修好的一批问题】\n· 重命名游戏实例后实例消失\n· 安装 Forge 整合包后加载器被认成 Fabric\n· 下载中断导致启动失败、进度一直显示 0 B/s\n· 整合包安装弹窗的取消按钮在小屏手机上跑出屏幕\n· 下载页 / 游戏列表 / 自动安装页打开后一片空白\n· 一个目录里没有游戏时点「游戏单独设置」会崩溃\n· 自动安装里选 Forge 点了没反应；Forge 版本列表加载不出来\n· 夜间模式残留白色背景，导致白色文字看不见\n· 切到夜间模式必须重启启动器才同步配色（现在会自动同步）\n· 切换新旧排版必须手动重启（现在会自动重启）\n\n【界面】\n· 左侧导航栏改为纯自适应：大屏占满、小屏自动压缩，不再需要滚动\n· 旧排版的主界面人物不再和上方按钮重叠\n· 外观页主题下拉框的文字在浅色模式下也能看清\n· 新增「字体颜色自定义调节」：设置 → 外观 → 字体颜色，可选任意颜色，\n  也可一键「跟随主题」\n"
+        },
+        {
+          "lang": "zh_TW",
+          "text": "【26.4 修好了，26.3 還沒】\n· MC 26.4 的「能進主選單但按鈕點不動、虛擬鍵盤失效」已修好\n· 26.3 仍然啟動不了，原因尚未定位（這一版沒有修好，如實說明）\n\n【輸入與視角】\n· 修好「往左滑往右偏、快速滑只走一小段又歸中」\n· 修好「滑到最左邊/最右邊就滑不動、像被焊住」\n· 修好「滑鼠滑出螢幕之外」\n· 修好「打開背包→關閉背包→點左鍵或右鍵，視角大偏移」\n\n【修好的一批問題】\n· 重新命名遊戲實例後實例消失\n· 安裝 Forge 整合包後載入器被認成 Fabric\n· 下載中斷導致啟動失敗、進度一直顯示 0 B/s\n· 整合包安裝對話框的取消按鈕在小螢幕手機上跑出畫面\n· 下載頁 / 遊戲清單 / 自動安裝頁打開後一片空白\n· 目錄裡沒有遊戲時點「遊戲單獨設定」會崩潰\n· 自動安裝裡選 Forge 點了沒反應；Forge 版本清單載入不出來\n· 夜間模式殘留白色背景，導致白色文字看不見\n· 切到夜間模式必須重啟啟動器才同步配色（現在會自動同步）\n· 切換新舊排版必須手動重啟（現在會自動重啟）\n\n【介面】\n· 左側導覽列改為純自適應：大螢幕佔滿、小螢幕自動壓縮，不再需要捲動\n· 舊排版的主介面人物不再和上方按鈕重疊\n· 外觀頁主題下拉框的文字在淺色模式下也能看清\n· 新增「字型顏色自訂調節」：設定 → 外觀 → 字型顏色\n"
+        },
+        {
+          "lang": "en_US",
+          "text": "[26.4 is fixed, 26.3 is not]\n- Minecraft 26.4's \"main menu opens but nothing is clickable / soft keyboard dead\" is fixed.\n- Minecraft 26.3 still does not start; the cause is not yet identified. It is NOT fixed in\n  this version, and we would rather say so than pretend.\n\n[Input and camera]\n- Fixed \"swiping left turns right, a fast swipe only moves a little then re-centres\".\n- Fixed \"sliding to the far left / far right stops working, as if welded in place\".\n- Fixed \"the mouse cursor escapes off-screen\".\n- Fixed \"open inventory, close it, then click left or right button - the camera jumps\".\n\n[Other fixes]\n- Renaming a game instance made it disappear.\n- A Forge modpack's loader was detected as Fabric.\n- Interrupted downloads broke launching; speed stayed at 0 B/s.\n- The modpack installer's Cancel button fell off-screen on small phones.\n- Download / game list / auto-install pages opened completely blank.\n- Opening \"game settings\" in a folder with no game installed crashed the launcher.\n- Choosing Forge in auto-install did nothing; the Forge version list never loaded.\n- Leftover white panels in night mode made white text unreadable.\n- Switching the system to night mode needed a restart to recolour (now automatic).\n- Switching between the old and new layouts needed a manual restart (now automatic).\n\n[Interface]\n- The left nav rail is now fully adaptive: it fills large screens and compresses on small\n  ones, so it never needs scrolling.\n- In the old layout the character no longer overlaps the buttons above it.\n- The theme drop-down text is readable in light mode now.\n- New: custom text colour in Settings - Appearance - Font colour (with a \"follow theme\" reset).\n"
+        }
+      ]
+    },
+    {
       "id": 100,
       "significant": true,
       "outdated": false,
