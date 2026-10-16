@@ -1,13 +1,16 @@
 {
-  "_note": "★ 注意：这个文件不是更新检查的真源。App 实际读取的是 main 分支上的同名文件（raw.githubusercontent.com/ALLEN201123/Quanta-Craft-Launcher/main/launcher_version.json）。这里保留一份当前值只是为了让克隆下来的人能看清格式，改版本时请一并同步，避免两份漂移。",
   "latestRelease": {
-    "versionCode": 321,
-    "versionName": "1.2.1",
-    "date": "2026-09-21",
+    "versionCode": 353,
+    "versionName": "1.5.1",
+    "date": "2026-10-16",
     "url": [
-      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.2.1/QCL-release-1.2.1-all.apk"
+      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.5.1/QCL-release-1.5.1-universal.apk",
+      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.5.1/QCL-release-1.5.1-arm64.apk",
+      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.5.1/QCL-release-1.5.1-arm.apk",
+      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.5.1/QCL-release-1.5.1-x86_64.apk",
+      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.5.1/QCL-release-1.5.1-x86.apk"
     ],
-    "updateLog": "<b>Quanta Craft Launcher 1.2.1</b><br/>· gradle-wrapper 改回官方地址（原来指向作者本机路径，别人 clone 后根本构建不了）<br/>· 修掉微软账号令牌被明文写进日志的问题（5 处）<br/>· 清理已删除功能的残留：manifest 里 3 个不存在的组件、拷贝不存在的 boat 资源<br/>· 统一「关于」页与更新检测的版本号；修好必挂的 CI（JDK 11→17）"
-  },
-  "latestPrerelease": null
+    "netdiskUrl": "https://pan.quark.cn/s/f2c26c4fb66f",
+    "updateLog": "1.5.1：输入桥与视角偏移收尾 + 字体颜色 + 一批崩溃/界面修复\n\n【26.4 修好了；26.3 还没】\n· Minecraft 26.4 的「能进主菜单但按钮点不动、虚拟键盘失效」已修好。\n· 26.3 仍然启动不了，原因尚未定位 —— 这一版**没有修好**，如实说明。\n\n【输入与视角】\n· 修好「往左滑往右偏、快速滑只走一小段又归中」。\n· 修好「滑到最左边/最右边就滑不动、像被焊住」。\n· 修好「鼠标滑出屏幕之外」。\n· 修好「打开背包→关闭背包→点左键或右键，视角大偏移」。\n· 这几条是原生 QCL 长期遗留的坐标系问题，本版彻底收尾。\n\n【修好的一批问题】\n· 重命名游戏实例后实例消失。\n· 安装 Forge 整合包后加载器被认成 Fabric。\n· 下载中断导致启动失败、进度一直显示 0 B/s。\n· 整合包安装弹窗的取消按钮在小屏手机上跑出屏幕。\n· 下载页 / 游戏列表 / 自动安装页打开后一片空白。\n· 一个目录里没有游戏时点「游戏单独设置」会崩溃。\n· 自动安装里选 Forge 点了没反应；Forge 版本列表加载不出来。\n· 夜间模式残留白色背景，导致白色文字看不见。\n· 切到夜间模式必须重启启动器才同步配色（现在会自动同步）。\n· 切换新旧排版必须手动重启（现在会自动重启）。\n\n【界面】\n· 左侧导航栏改为纯自适应：大屏占满、小屏自动压缩，不再需要滚动。\n· 旧排版的主界面人物不再和上方按钮重叠。\n· 外观页主题下拉框的文字在浅色模式下也能看清。\n· 新增「字体颜色自定义调节」：设置 → 外观 → 字体颜色，可选任意颜色，\n  也可一键「跟随主题」。\n\n【已知问题】Minecraft 26.3 仍不可用，原因未定位。26.2 及以下正常。"
+  }
 }
