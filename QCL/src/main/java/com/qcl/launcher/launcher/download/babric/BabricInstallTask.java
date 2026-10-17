@@ -180,7 +180,8 @@ public class BabricInstallTask extends AsyncTask<String, Integer, Version> {
     protected void onPreExecute() {
         super.onPreExecute();
         callback.onStart();
-        if (!isCancelled()) {
+        // ★ 2026-10-16：adapter 允许为 null（自动安装页复用本任务，那里没有下载任务列表）
+        if (!isCancelled() && adapter != null) {
             adapter.addDownloadTask(bean);
         }
     }
@@ -234,21 +235,22 @@ public class BabricInstallTask extends AsyncTask<String, Integer, Version> {
             DownloadUtil.DownloadMultipleFilesCallback downloadCallback = new DownloadUtil.DownloadMultipleFilesCallback() {
                 @Override
                 public void onTaskStart(DownloadTaskListBean bean) {
-                    if (!isCancelled()) {
+                    // ★ 2026-10-16：adapter 可为 null（自动安装页复用）
+                    if (!isCancelled() && adapter != null) {
                         adapter.addDownloadTask(bean);
                     }
                 }
 
                 @Override
                 public void onTaskProgress(DownloadTaskListBean bean) {
-                    if (!isCancelled()) {
+                    if (!isCancelled() && adapter != null) {
                         adapter.onProgress(bean);
                     }
                 }
 
                 @Override
                 public void onTaskFinish(DownloadTaskListBean bean) {
-                    if (!isCancelled()) {
+                    if (!isCancelled() && adapter != null) {
                         adapter.onComplete(bean);
                     }
                 }
@@ -297,7 +299,10 @@ public class BabricInstallTask extends AsyncTask<String, Integer, Version> {
         if (version == null) {
             callback.onFailed(new Exception("Unknown error"));
         } else {
-            adapter.onComplete(bean);
+            // ★ 2026-10-16：adapter 可为 null（自动安装页复用）
+            if (adapter != null) {
+                adapter.onComplete(bean);
+            }
             callback.onFinish(version);
         }
     }

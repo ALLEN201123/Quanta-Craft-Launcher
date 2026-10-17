@@ -56,29 +56,66 @@ public class ForgeDownloadTask extends AsyncTask<ForgeVersion,Integer,Exception>
             OkHttpClient.Builder builder = new OkHttpClient.Builder();
             builder.sslSocketFactory(SSLSocketClient.getSSLSocketFactory(),(X509TrustManager) SSLSocketClient.getTrustManager()[0]);
             builder.hostnameVerifier(SSLSocketClient.getHostnameVerifier());
-            builder.connectTimeout(10, TimeUnit.SECONDS);
-            builder.readTimeout(10, TimeUnit.SECONDS);
-            builder.writeTimeout(10, TimeUnit.SECONDS);
+            builder.connectTimeout(20, TimeUnit.SECONDS);
+            builder.readTimeout(20, TimeUnit.SECONDS);
+            builder.writeTimeout(20, TimeUnit.SECONDS);
             builder.followRedirects(false);
             builder.followSslRedirects(true);
             OkHttpClient okHttpClient = builder.build();
             Call call = okHttpClient.newCall(request);
             Response response = call.execute();
-            String redirectUrl = response.headers().get("Location").replace("/maven","");
-            String base;
-            if (DownloadUrlSource.getSource(activity.launcherSetting.downloadUrlSource) == 0) {
-                base = "https://maven.minecraftforge.net";
+
+            // ★★★★★ 2026-10-16 **修「安装 Forge 一直失败」**。
+            //
+            //   用户实测：「安装 Forge 还一直失败」。
+            //
+            //   ★ 根因：这里 `followRedirects(false)` **明确不跟随重定向**，
+            //     然后直接 `response.headers().get("Location").replace(...)`：
+            //     <pre>
+            //       String redirectUrl = response.headers().get("Location").replace("/maven","");
+            //                                              ↑ 头不存在时是 null
+            //     </pre>
+            //     只要镜像站这一次**直接返回 200**（不重定向）、或 302 但没带 `Location`、
+            //     或改成 307/308，这里就 **NPE**。而外层 `catch (IOException e)`
+            //     **抓不到 NullPointerException** ⇒ 异常直接抛出 AsyncTask
+            //     ⇒ 安装流程中断、上层只看到"失败" ⇒ **Forge 永远装不上**。
+            //
+            //   ★ 修法（三层兜底，任何一种服务端行为都能继续）：
+            //     ① `Location` 为 null / 空 → 说明**本身就是文件**，直接用 `baseUrl` 下载；
+            //     ② 有 `Location` → 照旧拼镜像；
+            //     ③ `catch` 从 `IOException` 放宽到 `Exception`，绝不让任何异常逃出去。
+            String location = response.headers().get("Location");
+            if (location == null || location.trim().isEmpty()) {
+                // 服务端直接给了内容（或至少没重定向）——直接下 baseUrl
+                mirror = baseUrl;
+            } else {
+                String redirectUrl = location.replace("/maven", "");
+                String base;
+                if (DownloadUrlSource.getSource(activity.launcherSetting.downloadUrlSource) == 0) {
+                    base = "https://maven.minecraftforge.net";
+                }
+                else if (DownloadUrlSource.getSource(activity.launcherSetting.downloadUrlSource) == 1) {
+                    base = "https://bmclapi2.bangbang93.com/maven";
+                }
+                else {
+                    base = "https://bmclapi2.bangbang93.com/maven";
+                }
+                mirror = base + redirectUrl;
             }
-            else if (DownloadUrlSource.getSource(activity.launcherSetting.downloadUrlSource) == 1) {
-                base = "https://bmclapi2.bangbang93.com/maven";
+            if (response.body() != null) {
+                try { response.close(); } catch (Throwable ignored) { }
             }
-            else {
-                base = "https://bmclapi2.bangbang93.com/maven";
-            }
-            mirror = base + redirectUrl;
-        } catch (IOException e) {
+        } catch (Exception e) {
+            // ★ 不再只抓 IOException —— NPE / IllegalArgumentException 等同样要兜住，
+            //   否则会直接把异常抛到 AsyncTask 之外，表现为"点了就失败且没有原因"。
             e.printStackTrace();
             if (!isCancelled()) return e;
+        }
+        if (mirror == null || mirror.trim().isEmpty()) {
+            Exception e = new Exception("无法解析 Forge 安装器的下载地址（镜像未返回 Location，且直连也不可用）");
+            e.printStackTrace();
+            if (!isCancelled()) return e;
+            return null;
         }
         String path = AppManifest.INSTALL_DIR + "/forge/forge-installer.jar";
         FileUtils.deleteDirectory(AppManifest.INSTALL_DIR);

@@ -545,6 +545,40 @@ implements View.OnClickListener {
             this.quiltVersion = null;
             this.uninstall("quilt");
         }
+        // ★★★★★ 2026-10-16 **修「自制的那两个模组加载器点了没效果、根本无法安装」**。
+        //
+        //   用户实测：「还有自制的那两个模组加载器，点了没效果，根本无法安装」。
+        //
+        //   ★ 根因：**控件绑了监听，但 onClick 里根本没有对应分支**。
+        //     构造函数里明明做了：
+        //       <pre>
+        //         this.selectModLoaderVersion.setOnClickListener((View.OnClickListener)this);
+        //         this.selectBabricVersion.setOnClickListener((View.OnClickListener)this);
+        //         this.deleteModLoaderVersion.setOnClickListener((View.OnClickListener)this);
+        //         this.deleteBabricVersion.setOnClickListener((View.OnClickListener)this);
+        //       </pre>
+        //     而 `onClick()` 从 L516 到末尾只处理了
+        //     installLocal / forge / neoforge / liteloader / optifine / fabric / quilt，
+        //     **ModLoader 与 Babric 一条都没有** ⇒ 点击进到 onClick 后什么都不匹配
+        //     ⇒ 无反应、无提示 ⇒ 用户看到的就是"点了没效果，根本无法安装"。
+        //
+        //   ★ 修法：把这两个「QCL 自制加载器」的安装/卸载分支补齐。
+        //     · ModLoader 是 Risugami's，往 minecraft.jar 里注入 class；
+        //     · Babric 是 b1.7.3 的 Fabric 分支，下一个加载器 + 改 mainClass + 写 .babric 标记。
+        //     两者的安装任务都允许 adapter 传 null（已在任务类里补判空），
+        //     因为自动安装页没有「下载任务列表」。
+        if (view == this.deleteModLoaderVersion) {
+            this.removeLoaderMarker("modloader");
+        }
+        if (view == this.deleteBabricVersion) {
+            this.removeLoaderMarker("babric");
+        }
+        if (view == this.selectModLoaderVersion) {
+            this.installModLoaderHere();
+        }
+        if (view == this.selectBabricVersion) {
+            this.installBabricHere();
+        }
         // ★★★★★ 2026-10-16 修「自动安装选 Forge 没反应 / 不能自己装」（评测视频 60s）。
         //
         //   用户实测：「去到版本设置里面的自动安装，选择 forge，还不能自己安装，里面全是空白的问题」。
@@ -635,6 +669,197 @@ implements View.OnClickListener {
                     + "，或新建一个版本再装 " + want + "。";
             android.widget.Toast.makeText(this.context, msg,
                     android.widget.Toast.LENGTH_LONG).show();
+        } catch (Throwable ignored) {
+        }
+    }
+
+    // ======================================================================
+    // ★★★★★ 2026-10-16 新增：**自制加载器（ModLoader / Babric）在自动安装页的安装与卸载**
+    //
+    //   用户实测：「自制的那两个模组加载器，点了没效果，根本无法安装」。
+    //   根因是 onClick 里没有对应分支（控件绑了监听却没人处理）——已在 onClick 补上分支，
+    //   这里补上真正干活的三个方法。
+    // ======================================================================
+
+    /**
+     * 在**当前这个版本**上安装 Risugami's ModLoader。
+     *
+     * <p>ModLoader 是往 {@code minecraft.jar} 里**注入 class**，并写一个 `.modloader` 标记文件
+     * （{@code ModLoaderDetector} 靠它认出「装了 ModLoader」）。安装任务允许 adapter 传 null。
+     */
+    private void installModLoaderHere() {
+        try {
+            // 已有 Forge 时不允许再装 RML：1.3 起 FML 已包含 RML，叠一起会崩
+            if (this.forgeVersion != null) {
+                toastConflict("ModLoader", "Forge");
+                return;
+            }
+            // 先确认这个 MC 版本有没有对应的 ModLoader 包
+            com.qcl.launcher.launcher.download.modloader.ModLoaderVersions.Entry entry =
+                    com.qcl.launcher.launcher.download.modloader.ModLoaderVersions.find(this.gameVersion);
+            if (entry == null) {
+                android.widget.Toast.makeText(this.context,
+                        "ModLoader 不支持 Minecraft " + this.gameVersion + "（只覆盖远古版本）",
+                        android.widget.Toast.LENGTH_LONG).show();
+                return;
+            }
+            android.widget.Toast.makeText(this.context, "正在安装 ModLoader…",
+                    android.widget.Toast.LENGTH_SHORT).show();
+
+            new com.qcl.launcher.launcher.download.modloader.ModLoaderInstallTask(
+                    this.activity,
+                    this.versionName,      // 版本目录名
+                    this.gameVersion,      // 查 ModLoader 表用的 MC 版本
+                    null,                  // ★ 自动安装页没有下载任务列表
+                    new com.qcl.launcher.launcher.download.modloader.ModLoaderInstallTask.Callback() {
+                        @Override
+                        public void onStart() {
+                        }
+
+                        @Override
+                        public void onFinish(int injected) {
+                            AutoInstallUI.this.onLoaderInstallDone(
+                                    "ModLoader 安装完成（写入 " + injected + " 个 class）");
+                        }
+
+                        @Override
+                        public void onFailed(Exception e) {
+                            AutoInstallUI.this.onLoaderInstallFailed("ModLoader", e);
+                        }
+                    }).execute();
+        } catch (Throwable t) {
+            onLoaderInstallFailed("ModLoader", t instanceof Exception ? (Exception) t : new Exception(t));
+        }
+    }
+
+    /**
+     * 在**当前这个版本**上安装 Babric（b1.7.3 的 Fabric 分支）。
+     *
+     * <p>Babric 只支持 b1.7.3；装完会写 `.babric` 标记（不写 0 字节文件，避免看着像坏文件）。
+     */
+    private void installBabricHere() {
+        try {
+            if (!"b1.7.3".equals(this.gameVersion)) {
+                android.widget.Toast.makeText(this.context,
+                        "Babric 只支持 b1.7.3，当前版本是 " + this.gameVersion,
+                        android.widget.Toast.LENGTH_LONG).show();
+                return;
+            }
+            android.widget.Toast.makeText(this.context, "正在安装 Babric…",
+                    android.widget.Toast.LENGTH_SHORT).show();
+
+            final java.io.File dir = new java.io.File(
+                    this.activity.launcherSetting.gameFileDirectory + "/versions/" + this.versionName);
+
+            new com.qcl.launcher.launcher.download.babric.BabricInstallTask(
+                    this.activity,
+                    null,                  // ★ 自动安装页没有下载任务列表
+                    this.gameVersion,
+                    new com.qcl.launcher.launcher.download.babric.BabricInstallTask.InstallBabricCallback() {
+                        @Override
+                        public void onStart() {
+                        }
+
+                        @Override
+                        public void onFailed(Exception e) {
+                            AutoInstallUI.this.onLoaderInstallFailed("Babric", e);
+                        }
+
+                        @Override
+                        public void onFinish(com.qcl.launcher.launcher.game.Version version) {
+                            try {
+                                // 写标记，让 ModLoaderDetector 认出这是 Babric
+                                // writeMarker(File versionDir, String mcVersion, String loaderVersion, int libraryCount)
+                                com.qcl.launcher.launcher.download.babric.BabricInstallTask.writeMarker(
+                                        dir,
+                                        AutoInstallUI.this.gameVersion,
+                                        version == null ? null : version.getVersion(),
+                                        (version == null || version.getLibraries() == null)
+                                                ? 0 : version.getLibraries().size());
+                            } catch (Throwable ignored) {
+                            }
+                            AutoInstallUI.this.onLoaderInstallDone("Babric 安装完成");
+                        }
+                    }).execute(new String[]{null});
+        } catch (Throwable t) {
+            onLoaderInstallFailed("Babric", t instanceof Exception ? (Exception) t : new Exception(t));
+        }
+    }
+
+    /**
+     * 卸载自制加载器：删掉它的标记文件，并尽量把对应 patch 从版本 json 里摘掉。
+     *
+     * @param which {@code "modloader"} 或 {@code "babric"}
+     */
+    private void removeLoaderMarker(String which) {
+        try {
+            java.io.File dir = new java.io.File(
+                    this.activity.launcherSetting.gameFileDirectory + "/versions/" + this.versionName);
+            if ("modloader".equals(which)) {
+                java.io.File marker = new java.io.File(
+                        dir, com.qcl.launcher.launcher.download.modloader.ModLoaderInstallTask.MARKER_NAME);
+                if (marker.exists()) {
+                    marker.delete();
+                }
+                android.widget.Toast.makeText(this.context,
+                        "已移除 ModLoader 标记（jar 内已注入的 class 无法自动还原，建议重装该版本）",
+                        android.widget.Toast.LENGTH_LONG).show();
+            } else {
+                java.io.File marker = new java.io.File(
+                        dir, com.qcl.launcher.launcher.download.modloader.ModLoaderDetector.BABRIC_MARKER);
+                if (marker.exists()) {
+                    marker.delete();
+                }
+                // Babric 同时是一个 patch，能从 json 里摘掉
+                this.uninstall("babric");
+                android.widget.Toast.makeText(this.context, "已卸载 Babric",
+                        android.widget.Toast.LENGTH_SHORT).show();
+                return;
+            }
+            this.refresh(this.versionName);
+            new Thread(() -> {
+                try {
+                    this.activity.uiManager.versionListUI.refreshVersionList();
+                } catch (Throwable ignored) {
+                }
+            }).start();
+        } catch (Throwable ignored) {
+        }
+    }
+
+    /** 加载器装完：Toast + 刷新本页状态 + 刷新版本列表。 */
+    private void onLoaderInstallDone(final String msg) {
+        try {
+            this.activity.runOnUiThread(() -> {
+                try {
+                    android.widget.Toast.makeText(this.context, msg,
+                            android.widget.Toast.LENGTH_LONG).show();
+                } catch (Throwable ignored) {
+                }
+                this.refresh(this.versionName);
+                new Thread(() -> {
+                    try {
+                        this.activity.uiManager.versionListUI.refreshVersionList();
+                    } catch (Throwable ignored) {
+                    }
+                }).start();
+            });
+        } catch (Throwable ignored) {
+        }
+    }
+
+    /** 加载器装失败：明确告知用户（绝不静默吞掉）。 */
+    private void onLoaderInstallFailed(final String which, final Exception e) {
+        try {
+            final String detail = (e == null || e.getMessage() == null)
+                    ? "未知原因" : e.getMessage();
+            this.activity.runOnUiThread(() -> {
+                try {
+                    android.widget.Toast.makeText(this.context,
+                            which + " 安装失败：" + detail, android.widget.Toast.LENGTH_LONG).show();
+                } catch (Throwable ignored) {
+                }
+            });
         } catch (Throwable ignored) {
         }
     }

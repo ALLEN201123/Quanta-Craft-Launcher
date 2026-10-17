@@ -1,4 +1,4 @@
-plugins {
+﻿plugins {
     id 'com.android.application'
     // ★ 1.5.0：glTF 人物管线（skin/gltf/*.kt，照搬 FCL）需要 Kotlin。
     id 'org.jetbrains.kotlin.android'
@@ -86,8 +86,15 @@ android {
         //   · 左栏纯自适应（去 ScrollView，按钮 weight 等分）；旧排版人物不再压按钮
         //   · 新增**字体颜色自定义调节**（外观页）
         //   ★ 口径：**26.4 的问题已解决；26.3 的问题仍未解决。**
-        versionCode 353
-        versionName "1.5.1"
+        // ★★★ 354 / 1.5.2（2026-10-17）：
+        //   · 修「安装 Forge 一直失败」（镜像没返回 Location 时 NPE，且 catch 只抓 IOException）
+        //   · 修「取消收藏后大退重进仍显示旧收藏」（只按 id 删、slug 命中时删不掉）
+        //   · 修「自制加载器（ModLoader / Babric）点了没效果」（onClick 里没有对应分支）
+        //   · 新增：Legacy Fabric / Legacy Fabric API / Cleanroom 加载器
+        //   · 新增：模组/整合包英文查询、跳转对应版本 Wiki 页、执行 Jar 文件
+        versionCode 354
+        versionName "1.5.2"
+
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }

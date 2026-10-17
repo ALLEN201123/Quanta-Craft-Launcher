@@ -111,18 +111,30 @@ public final class FavoriteManager {
             return false;
         }
         String id = item.ensureId();
-        if (IDS.contains(id) || (item.slug != null && !item.slug.isEmpty()
-                && SLUG_KEYS.contains(DownloadFavorite.makeId(item.source, item.slug)))) {
-            for (int i = 0; i < LIST.size(); i++) {
-                if (id.equals(LIST.get(i).id)) {
-                    LIST.remove(i);
-                    break;
-                }
-            }
-            IDS.remove(id);
-            if (item.slug != null) {
-                SLUG_KEYS.remove(DownloadFavorite.makeId(item.source, item.slug));
-            }
+        // ★★★★★ 2026-10-16 **修「取消收藏后大退重进，收藏页还显示旧的收藏」**。
+        //
+        //   用户实测：「取消收藏之后大退，然后重新点击收藏页，收藏页还是会显示之前的收藏」。
+        //
+        //   ★ 根因：判定「已收藏」有**两个键**，但删除时**只按 id 删**：
+        //     <pre>
+        //       判定： IDS.contains(id)                                  // 键A = "source:modId"
+        //           || SLUG_KEYS.contains(makeId(source, slug))         // 键B = "source:slug"
+        //       删除： for (...) if (id.equals(LIST.get(i).id)) LIST.remove(i);
+        //                                                    ↑ 只按【键A】比对
+        //     </pre>
+        //     当这次是靠**键B（slug）**命中时（典型：收藏时 modId 拿到的是 CurseForge 的数字 id，
+        //     取消时传进来的 modId 为空或不同，但 slug 一致），循环里 `id.equals(...)`
+        //     **匹配不到任何一项** ⇒ 列表项没被移除；随后 `save(context)` 又把这份
+        //     **未删除的列表**写回 `download_favorites.json` ⇒ **重启后旧收藏还在**。
+        //     （历史上 `download_favorites.json` 里 modId 为空/不一致的条目就会这样"删不掉"。）
+        //
+        //   ★ 修法：删除时**按 id 与 slug 两个键一起匹配**，命中就整条移除，
+        //     并用**被移除项自己的** id / slug 去清理两个索引，保证索引与列表不脱节。
+        String slugKey = (item.slug == null || item.slug.isEmpty())
+                ? null : DownloadFavorite.makeId(item.source, item.slug);
+        boolean already = IDS.contains(id) || (slugKey != null && SLUG_KEYS.contains(slugKey));
+        if (already) {
+            removeMatching(id, slugKey);
             save(context);
             return false;
         }
@@ -132,11 +144,47 @@ public final class FavoriteManager {
         }
         LIST.add(item);
         IDS.add(id);
-        if (item.slug != null && !item.slug.isEmpty()) {
-            SLUG_KEYS.add(DownloadFavorite.makeId(item.source, item.slug));
+        if (slugKey != null) {
+            SLUG_KEYS.add(slugKey);
         }
         save(context);
         return true;
+    }
+
+    /**
+     * ★ 2026-10-16 新增：从列表里移除所有「按 id **或** 按 slug」匹配的收藏项，
+     * 并同步清理两个索引。返回移除条数。
+     *
+     * <p>抽出来是因为 `toggle()`（取消收藏）和 `remove()` 都要用，
+     * 且必须保证「列表」与「IDS / SLUG_KEYS」两个索引**永远一致**。
+     */
+    private static int removeMatching(String id, String slugKey) {
+        int removed = 0;
+        for (int i = LIST.size() - 1; i >= 0; i--) {
+            DownloadFavorite f = LIST.get(i);
+            String fid = f.ensureId();
+            String fslug = (f.slug == null || f.slug.isEmpty())
+                    ? null : DownloadFavorite.makeId(f.source, f.slug);
+            boolean hit = (id != null && id.equals(fid))
+                    || (slugKey != null && slugKey.equals(fslug));
+            if (hit) {
+                LIST.remove(i);
+                IDS.remove(fid);
+                if (fslug != null) {
+                    SLUG_KEYS.remove(fslug);
+                }
+                removed++;
+            }
+        }
+        // 兜底：即使列表里没找到，也把这两个键从索引里剔掉，
+        // 避免"索引说已收藏、列表里却没有"的错位状态。
+        if (id != null) {
+            IDS.remove(id);
+        }
+        if (slugKey != null) {
+            SLUG_KEYS.remove(slugKey);
+        }
+        return removed;
     }
 
     /**
@@ -165,18 +213,20 @@ public final class FavoriteManager {
         }
     }
 
+    /**
+     * 按 id 移除一条收藏。
+     *
+     * ★★★★★ 2026-10-16 一并加固：原来同样**只按 id 删**，
+     * 遇到「json 里 modId 为空/与本次传入不一致」的老条目一样删不掉（取消收藏无效）。
+     * 现在改走 {@link #removeMatching}，并顺带按 slug 兜底匹配。
+     */
     public static synchronized void remove(Context context, String id) {
         init(context);
         if (id == null) {
             return;
         }
-        for (int i = 0; i < LIST.size(); i++) {
-            if (id.equals(LIST.get(i).id)) {
-                LIST.remove(i);
-                break;
-            }
-        }
-        IDS.remove(id);
+        // 先尝试把 id 直接当「平台:slug」再匹配一次（有些调用方传的是 slug 键）
+        removeMatching(id, id);
         save(context);
     }
 
