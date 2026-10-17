@@ -70,6 +70,13 @@ implements View.OnClickListener {
     private TextView optiFineVersionText;
     private TextView fabricVersionText;
     private TextView fabricAPIVersionText;
+    // ★ 1.5.2：Legacy Fabric（Fabric 为 MC 1.8.9~1.13.2 保留的旧分支）
+    private TextView legacyFabricVersionText;
+    private ImageButton deleteLegacyFabricVersion;
+    private LinearLayout selectLegacyFabricVersion;
+    private ImageView selectLegacyFabric;
+    /** 已安装的 Legacy Fabric 加载器版本（null = 没装）。 */
+    public String legacyFabricVersion;
     private TextView quiltVersionText;
     private TextView quiltAPIVersionText;
     private ImageButton deleteForgeVersion;
@@ -132,6 +139,17 @@ implements View.OnClickListener {
         this.optiFineVersionText = (TextView)this.activity.findViewById(R.id.current_optifine_version_text);
         this.fabricVersionText = (TextView)this.activity.findViewById(R.id.current_fabric_version_text);
         this.fabricAPIVersionText = (TextView)this.activity.findViewById(R.id.current_fabric_api_version_text);
+        // ★ 1.5.2：Legacy Fabric 那一行（布局里新加的）
+        this.legacyFabricVersionText = (TextView)this.activity.findViewById(R.id.current_legacy_fabric_version_text);
+        this.deleteLegacyFabricVersion = (ImageButton)this.activity.findViewById(R.id.uninstall_legacy_fabric);
+        this.selectLegacyFabricVersion = (LinearLayout)this.activity.findViewById(R.id.update_legacy_fabric_version);
+        this.selectLegacyFabric = (ImageView)this.activity.findViewById(R.id.update_legacy_fabric);
+        if (this.deleteLegacyFabricVersion != null) {
+            this.deleteLegacyFabricVersion.setOnClickListener((View.OnClickListener)this);
+        }
+        if (this.selectLegacyFabricVersion != null) {
+            this.selectLegacyFabricVersion.setOnClickListener((View.OnClickListener)this);
+        }
         this.quiltVersionText = (TextView)this.activity.findViewById(R.id.current_quilt_version_text);
         this.quiltAPIVersionText = (TextView)this.activity.findViewById(R.id.current_quilt_api_version_text);
         this.deleteForgeVersion = (ImageButton)this.activity.findViewById(R.id.uninstall_forge);
@@ -273,6 +291,44 @@ implements View.OnClickListener {
             this.gameVersion = this.version.getId();
         }
         this.refreshView();
+        // ★ 1.5.2：Legacy Fabric 那一行的状态（放在最后统一刷，不插手上面那串互斥 if-else）
+        this.refreshLegacyFabricRow();
+    }
+
+    /**
+     * ★★★★★ 2026-10-17（1.5.2 新增）刷新 Legacy Fabric 那一行。
+     *
+     * <p>★ 诚实说明：Legacy Fabric 装出来就是标准的 {@code fabric} patch
+     * （它本身就是 Fabric 官方为老版本保留的分支），所以这里**无法**从版本 json
+     * 里区分「装的是官方 Fabric 还是 Legacy Fabric」——
+     * 因此本行的状态与 Fabric 行保持一致：任一方装了都显示版本号。
+     * 想换另一方，先点 × 卸载再装。
+     */
+    private void refreshLegacyFabricRow() {
+        if (this.legacyFabricVersionText == null) {
+            return;
+        }
+        try {
+            boolean installed = this.fabricVersion != null;
+            if (installed) {
+                this.legacyFabricVersion = this.fabricVersion;
+                this.legacyFabricVersionText.setText(this.fabricVersion);
+            } else if (this.forgeVersion != null || this.optifineVersion != null
+                    || this.quiltVersion != null) {
+                this.legacyFabricVersionText.setText(
+                        this.context.getString(R.string.install_game_ui_fabric_not_compatible));
+            } else {
+                this.legacyFabricVersionText.setText(
+                        this.context.getString(R.string.install_game_ui_none));
+            }
+            if (this.deleteLegacyFabricVersion != null) {
+                this.deleteLegacyFabricVersion.setVisibility(installed ? 0 : 8);
+            }
+            if (this.selectLegacyFabric != null) {
+                this.selectLegacyFabric.setVisibility(installed ? 8 : 0);
+            }
+        } catch (Throwable ignored) {
+        }
     }
 
     @SuppressLint(value={"UseCompatLoadingForDrawables"})
@@ -625,7 +681,36 @@ implements View.OnClickListener {
         if (view == this.selectFabricVersion && this.forgeVersion == null && this.optifineVersion == null && this.quiltVersion == null) {
             this.activity.uiManager.downloadFabricUI.version = this.gameVersion;
             this.activity.uiManager.downloadFabricUI.install = true;
+            // ★ 1.5.2：从 Fabric 行进来 → 官方 Fabric
+            this.activity.uiManager.downloadFabricUI.legacy = false;
             this.activity.uiManager.switchMainUI(this.activity.uiManager.downloadFabricUI);
+        }
+        // ★★★★★ 2026-10-17（1.5.2 新增）Legacy Fabric 入口。
+        //   Legacy Fabric 与官方 Fabric 互斥（同一个 patch id = fabric），
+        //   所以已装 Fabric 时点它要先卸载，这里给明确提示而不是静默不响应。
+        if (view == this.selectLegacyFabricVersion) {
+            if (this.forgeVersion != null || this.optifineVersion != null || this.quiltVersion != null) {
+                toastConflict("Legacy Fabric",
+                        this.forgeVersion != null ? "Forge"
+                                : (this.optifineVersion != null ? "OptiFine" : "Quilt"));
+            } else if (this.fabricVersion != null) {
+                android.widget.Toast.makeText(this.context,
+                        "当前版本已安装 Fabric 加载器（Legacy Fabric 与它互斥）。"
+                                + "请先点右侧 × 卸载，再装 Legacy Fabric。",
+                        android.widget.Toast.LENGTH_LONG).show();
+            } else {
+                this.activity.uiManager.downloadFabricUI.version = this.gameVersion;
+                this.activity.uiManager.downloadFabricUI.install = true;
+                // ★ 关键：走 Legacy Fabric 的 meta 域名
+                this.activity.uiManager.downloadFabricUI.legacy = true;
+                this.activity.uiManager.switchMainUI(this.activity.uiManager.downloadFabricUI);
+            }
+        }
+        if (view == this.deleteLegacyFabricVersion) {
+            // Legacy Fabric 装出来就是 fabric patch，所以按 fabric 卸载
+            this.legacyFabricVersion = null;
+            this.fabricVersion = null;
+            this.uninstall("fabric");
         }
         if (view == this.selectFabricAPIVersion && this.forgeVersion == null && this.optifineVersion == null && this.quiltVersion == null) {
             this.activity.uiManager.downloadFabricAPIUI.version = this.gameVersion;

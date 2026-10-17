@@ -1277,6 +1277,8 @@
     <string name="ui_about_tungsten_main">Tungsten</string>
     <string name="ui_about_tungsten_sub">B 站 ID：@念小六</string>
     <string name="install_game_ui_fabric">Fabric</string>
+    <!-- 1.5.2: Legacy Fabric -->
+    <string name="install_game_ui_legacy_fabric">Legacy Fabric</string>
     <string name="install_game_ui_fabric_api">Fabric API</string>
     <string name="install_game_ui_forge">Forge</string>
     <string name="install_game_ui_quilt">Quilt</string>
