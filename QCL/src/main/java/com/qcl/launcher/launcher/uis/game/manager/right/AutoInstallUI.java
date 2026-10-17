@@ -77,6 +77,13 @@ implements View.OnClickListener {
     private ImageView selectLegacyFabric;
     /** 已安装的 Legacy Fabric 加载器版本（null = 没装）。 */
     public String legacyFabricVersion;
+    // ★ 1.5.2：Legacy Fabric API（Modrinth 项目 legacy-fabric-api）
+    private TextView legacyFabricAPIVersionText;
+    private ImageButton deleteLegacyFabricAPI;
+    private LinearLayout selectLegacyFabricAPIVersion;
+    private ImageView selectLegacyFabricAPI;
+    /** 已安装的 Legacy Fabric API 版本（null = 没装）。 */
+    public String legacyFabricAPIVersion;
     private TextView quiltVersionText;
     private TextView quiltAPIVersionText;
     private ImageButton deleteForgeVersion;
@@ -149,6 +156,17 @@ implements View.OnClickListener {
         }
         if (this.selectLegacyFabricVersion != null) {
             this.selectLegacyFabricVersion.setOnClickListener((View.OnClickListener)this);
+        }
+        // ★ 1.5.2：Legacy Fabric API 那一行
+        this.legacyFabricAPIVersionText = (TextView)this.activity.findViewById(R.id.current_legacy_fabric_api_version_text);
+        this.deleteLegacyFabricAPI = (ImageButton)this.activity.findViewById(R.id.uninstall_legacy_fabric_api);
+        this.selectLegacyFabricAPIVersion = (LinearLayout)this.activity.findViewById(R.id.update_legacy_fabric_api_version);
+        this.selectLegacyFabricAPI = (ImageView)this.activity.findViewById(R.id.update_legacy_fabric_api);
+        if (this.deleteLegacyFabricAPI != null) {
+            this.deleteLegacyFabricAPI.setOnClickListener((View.OnClickListener)this);
+        }
+        if (this.selectLegacyFabricAPIVersion != null) {
+            this.selectLegacyFabricAPIVersion.setOnClickListener((View.OnClickListener)this);
         }
         this.quiltVersionText = (TextView)this.activity.findViewById(R.id.current_quilt_version_text);
         this.quiltAPIVersionText = (TextView)this.activity.findViewById(R.id.current_quilt_api_version_text);
@@ -326,6 +344,25 @@ implements View.OnClickListener {
             }
             if (this.selectLegacyFabric != null) {
                 this.selectLegacyFabric.setVisibility(installed ? 8 : 0);
+            }
+        } catch (Throwable ignored) {
+        }
+        // ★ 1.5.2：Legacy Fabric API 那一行（它是个普通 mod，跟加载器状态无关）
+        try {
+            if (this.legacyFabricAPIVersionText != null) {
+                boolean apiInstalled = this.legacyFabricAPIVersion != null;
+                if (apiInstalled) {
+                    this.legacyFabricAPIVersionText.setText(this.legacyFabricAPIVersion);
+                } else {
+                    this.legacyFabricAPIVersionText.setText(
+                            this.context.getString(R.string.install_game_ui_none));
+                }
+                if (this.deleteLegacyFabricAPI != null) {
+                    this.deleteLegacyFabricAPI.setVisibility(apiInstalled ? 0 : 8);
+                }
+                if (this.selectLegacyFabricAPI != null) {
+                    this.selectLegacyFabricAPI.setVisibility(apiInstalled ? 8 : 0);
+                }
             }
         } catch (Throwable ignored) {
         }
@@ -711,6 +748,24 @@ implements View.OnClickListener {
             this.legacyFabricVersion = null;
             this.fabricVersion = null;
             this.uninstall("fabric");
+        }
+        // ★ 1.5.2：Legacy Fabric API（Modrinth 项目 legacy-fabric-api）
+        if (view == this.selectLegacyFabricAPIVersion) {
+            if (this.forgeVersion != null || this.optifineVersion != null || this.quiltVersion != null) {
+                toastConflict("Legacy Fabric API",
+                        this.forgeVersion != null ? "Forge"
+                                : (this.optifineVersion != null ? "OptiFine" : "Quilt"));
+            } else {
+                this.activity.uiManager.downloadFabricAPIUI.version = this.gameVersion;
+                this.activity.uiManager.downloadFabricAPIUI.install = true;
+                // ★ 关键：列 Legacy Fabric API（legacy-fabric-api）的版本
+                this.activity.uiManager.downloadFabricAPIUI.legacy = true;
+                this.activity.uiManager.switchMainUI(this.activity.uiManager.downloadFabricAPIUI);
+            }
+        }
+        if (view == this.deleteLegacyFabricAPI) {
+            this.legacyFabricAPIVersion = null;
+            this.uninstall("legacyfabric-api");
         }
         if (view == this.selectFabricAPIVersion && this.forgeVersion == null && this.optifineVersion == null && this.quiltVersion == null) {
             this.activity.uiManager.downloadFabricAPIUI.version = this.gameVersion;

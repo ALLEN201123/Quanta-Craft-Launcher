@@ -26,6 +26,21 @@ import com.qcl.launcher.R;
 /* loaded from: classes2.dex */
 public class DownloadFabricAPIUI extends BaseUI implements View.OnClickListener {
     private static final String FABRIC_API_ID = "P7dR8mSH";
+
+    /**
+     * ★★★★★ 2026-10-17（1.5.2 新增）**Legacy Fabric API 在 Modrinth 的 project id**。
+     *
+     * <p>用户需求里点名了「Legacy Fabric API」。
+     *
+     * <p>依据 FCL 最新源码 {@code LegacyFabricAPIVersionList}：
+     * <pre>
+     *   ModrinthRemoteModRepository.MODS.getRemoteVersionsById("legacy-fabric-api")
+     * </pre>
+     * 也就是说它就是一个**普通的 Modrinth 项目**，下载逻辑与 Fabric API 完全一样，
+     * 只是 project id 不同 ⇒ 本页只需按 {@link #legacy} 切换 id 即可复用整套流程。
+     */
+    private static final String LEGACY_FABRIC_API_ID = "legacy-fabric-api";
+
     private TextView back;
     public LinearLayout downloadFabricAPIUI;
     private ListView fabricAPIListView;
@@ -33,6 +48,9 @@ public class DownloadFabricAPIUI extends BaseUI implements View.OnClickListener 
     private final Handler loadingHandler;
     private ProgressBar progressBar;
     public String version;
+
+    /** ★ 1.5.2：true = 本页列 **Legacy** Fabric API 的版本。 */
+    public boolean legacy;
 
     /* JADX INFO: Access modifiers changed from: package-private */
     public static /* synthetic */ void lambda$init$0(DialogInterface dialogInterface, int i) {
@@ -129,7 +147,8 @@ public class DownloadFabricAPIUI extends BaseUI implements View.OnClickListener 
         ArrayList arrayList = new ArrayList();
         ArrayList arrayList2 = new ArrayList();
         try {
-            arrayList.addAll((List) ModrinthRemoteModRepository.MODS.getRemoteVersionsById("P7dR8mSH").collect(Collectors.toList()));
+            arrayList.addAll((List) ModrinthRemoteModRepository.MODS.getRemoteVersionsById(
+                    this.legacy ? LEGACY_FABRIC_API_ID : FABRIC_API_ID).collect(Collectors.toList()));
             Iterator it = arrayList.iterator();
             while (it.hasNext()) {
                 RemoteMod.Version version = (RemoteMod.Version) it.next();

@@ -1279,6 +1279,7 @@
     <string name="install_game_ui_fabric">Fabric</string>
     <!-- 1.5.2: Legacy Fabric -->
     <string name="install_game_ui_legacy_fabric">Legacy Fabric</string>
+    <string name="install_game_ui_legacy_fabric_api">Legacy Fabric API</string>
     <string name="install_game_ui_fabric_api">Fabric API</string>
     <string name="install_game_ui_forge">Forge</string>
     <string name="install_game_ui_quilt">Quilt</string>

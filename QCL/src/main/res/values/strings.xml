@@ -28,6 +28,7 @@
     <string name="install_game_ui_fabric_api" translatable="false">Fabric API</string>
     <!-- 1.5.2: Legacy Fabric -->
     <string name="install_game_ui_legacy_fabric" translatable="false">Legacy Fabric</string>
+    <string name="install_game_ui_legacy_fabric_api" translatable="false">Legacy Fabric API</string>
     <string name="install_game_ui_quilt" translatable="false">Quilt</string>
     <string name="install_game_ui_quilt_api" translatable="false">Quilt API</string>
     <string name="install_game_ui_babric" translatable="false">Babric</string>
