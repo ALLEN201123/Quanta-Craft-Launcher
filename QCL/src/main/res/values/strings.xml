@@ -1,4 +1,4 @@
-<resources xmlns:tools="http://schemas.android.com/tools">
+﻿<resources xmlns:tools="http://schemas.android.com/tools">
     <string name="app_name" translatable="false">Quanta Craft Launcher</string>
     <string name="app_name_pri" translatable="false">Quanta Craft Launcher</string>
     <string name="app_name_sec" translatable="false">量子方块启动器</string>
@@ -361,6 +361,8 @@
     <string name="menu_local_version_delete">Delete Instance</string>
     <string name="menu_local_version_export_pack">Export Modpack</string>
     <string name="menu_local_version_game_folder">Game Directory</string>
+    <!-- ★ 1.5.2：跳转该版本对应的 Minecraft Wiki 页面 -->
+    <string name="menu_local_version_wiki">View on Minecraft Wiki</string>
     <string name="dialog_rename_version_title">Please enter the new name for this instance</string>
     <string name="dialog_rename_version_confirm">OK</string>
     <string name="dialog_rename_version_cancel">Cancel</string>

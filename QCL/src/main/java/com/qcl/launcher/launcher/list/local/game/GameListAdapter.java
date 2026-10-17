@@ -321,6 +321,27 @@ public class GameListAdapter extends BaseAdapter {
                 this.activity.uiManager.switchMainUI(this.activity.uiManager.gameManagerUI);
                 this.activity.uiManager.gameManagerUI.gameManagerUIManager.switchGameManagerUIs(this.activity.uiManager.gameManagerUI.gameManagerUIManager.versionSettingUI);
                 return true;
+            // ★★★★★ 2026-10-17（1.5.2 新增）跳转该版本对应的 Minecraft Wiki 页面。
+            //
+            //   用户需求原话：「跳转对应版本 Wiki 页」。
+            //
+            //   版本名与 Wiki 页面名不是一回事（Beta / Alpha / Classic / Indev / Infdev 的
+            //   前缀规则全都不同），转换逻辑统一放在 WikiUtils.toWikiPageName() 里，
+            //   这里只负责发起 Intent；没有浏览器时明确提示，不静默失败。
+            case R.id.local_version_menu_wiki:
+                try {
+                    String wikiVid = this.list.get(i).name;
+                    if (!com.qcl.launcher.utils.game.WikiUtils.openWiki(this.context, wikiVid)) {
+                        android.widget.Toast.makeText(this.context,
+                                "没有找到可用的浏览器",
+                                android.widget.Toast.LENGTH_SHORT).show();
+                    }
+                } catch (Throwable t) {
+                    android.widget.Toast.makeText(this.context,
+                            "打开 Wiki 失败：" + t.getMessage(),
+                            android.widget.Toast.LENGTH_SHORT).show();
+                }
+                return true;
             case R.id.local_version_menu_rename:
                 new RenameVersionDialog(this.context, this.list.get(i).name, new RenameVersionDialog.OnVersionRenameListener() { // from class: com.qcl.launcher.launcher.list.local.game.GameListAdapter$$ExternalSyntheticLambda10
                     @Override // com.qcl.launcher.launcher.dialogs.RenameVersionDialog.OnVersionRenameListener

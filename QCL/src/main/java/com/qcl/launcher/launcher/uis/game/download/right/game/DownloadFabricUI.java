@@ -38,6 +38,21 @@ public class DownloadFabricUI extends BaseUI implements View.OnClickListener {
     private ProgressBar progressBar;
     public String version;
 
+    /**
+     * ★★★★★ 2026-10-17（1.5.2 新增）**是否列出 Legacy Fabric 的版本**。
+     *
+     * <p>Legacy Fabric 是 Fabric 官方为 MC **1.8.9 ~ 1.13.2** 保留的旧分支，
+     * 它的 meta 接口与官方 Fabric 完全同构，只有域名不同：
+     * <pre>
+     *   官方 Fabric   https://meta.fabricmc.net/v2/versions/{loader,game}
+     *   Legacy Fabric https://meta.legacyfabric.net/v2/versions/{loader,game}
+     * </pre>
+     * ⇒ 本页只需按这个开关换域名，列表/安装流程完全复用。
+     * <p>★ 注意：BMCLAPI 镜像**没有** legacyfabric 的镜像，
+     * 所以 Legacy 模式下强制走官方域名（否则会 404 且没人知道为什么）。
+     */
+    public boolean legacy;
+
     public DownloadFabricUI(Context context, MainActivity mainActivity) {
         super(context, mainActivity);
         this.loadingHandler = new Handler() { // from class: com.qcl.launcher.launcher.uis.game.download.right.game.DownloadFabricUI.1
@@ -106,7 +121,12 @@ public class DownloadFabricUI extends BaseUI implements View.OnClickListener {
         String str;
         String str2;
         this.loadingHandler.sendEmptyMessage(0);
-        if (DownloadUrlSource.getSource(this.activity.launcherSetting.downloadUrlSource) == 0) {
+        // ★ 1.5.2：Legacy Fabric 走官方 meta.legacyfabric.net
+        //   （BMCLAPI 没有 legacyfabric 镜像，强行用镜像只会 404）
+        if (this.legacy) {
+            str = "https://meta.legacyfabric.net/v2/versions/loader";
+            str2 = "https://meta.legacyfabric.net/v2/versions/game";
+        } else if (DownloadUrlSource.getSource(this.activity.launcherSetting.downloadUrlSource) == 0) {
             str = "https://meta.fabricmc.net/v2/versions/loader";
             str2 = "https://meta.fabricmc.net/v2/versions/game";
         } else {

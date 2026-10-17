@@ -13,6 +13,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
@@ -131,6 +132,72 @@ public final class ModTranslations {
                 return (ModTranslations.Mod) ((Pair) obj).getValue();
             }
         }).collect(Collectors.toList());
+    }
+
+    /**
+     * ★★★★★ 2026-10-17（1.5.2 新增）**按英文查询**。
+     *
+     * <p>用户需求原话：「模组/整合包英文查询」。
+     *
+     * <p>原来只有 {@link #searchMod(String)} —— 它拿**中文关键词**做最长公共子序列匹配
+     * （{@code keywords} 里全是中文名）。所以：
+     * <ul>
+     *   <li>输入中文 → 能命中，再转成英文名去查 API ✓</li>
+     *   <li>输入英文 → 对中文 keyword 的 LCS 得分几乎为 0 → **一条也匹配不到** ✗</li>
+     * </ul>
+     * 于是「翻译表」在英文查询里完全没用上：玩家拼错一个字母、或只记得英文名，
+     * 就拿不到对应的中文条目。
+     *
+     * <p>本方法改为遍历全部条目，按**英文名 / CurseForge slug / 缩写 / 平台 id**
+     * 做包含匹配（忽略大小写），这样英文也能查到。
+     */
+    public List<Mod> searchModByEnglish(String query) {
+        if (query == null) {
+            return Collections.emptyList();
+        }
+        final String q = query.trim().toLowerCase(Locale.ROOT);
+        if (q.isEmpty()) {
+            return Collections.emptyList();
+        }
+        // 复用 searchMod 的懒加载（loadKeywords 成功后 keywords 才可用）
+        if (!loadKeywords()) {
+            return Collections.emptyList();
+        }
+        List<Mod> out = new ArrayList<>();
+        for (Mod m : this.mods) {
+            if (m == null) {
+                continue;
+            }
+            if (matchesEnglish(m, q)) {
+                out.add(m);
+            }
+        }
+        return out;
+    }
+
+    /** 单条目的英文命中判定（英文名 / slug / 缩写 / 平台 id，忽略大小写）。 */
+    private static boolean matchesEnglish(Mod m, String q) {
+        String sub = m.getSubname();
+        if (sub != null && !sub.isEmpty() && sub.toLowerCase(Locale.ROOT).contains(q)) {
+            return true;
+        }
+        String slug = m.getCurseforge();
+        if (slug != null && !slug.isEmpty() && slug.toLowerCase(Locale.ROOT).contains(q)) {
+            return true;
+        }
+        String abbr = m.getAbbr();
+        if (abbr != null && !abbr.isEmpty() && abbr.toLowerCase(Locale.ROOT).contains(q)) {
+            return true;
+        }
+        List<String> ids = m.getModIds();
+        if (ids != null) {
+            for (String id : ids) {
+                if (id != null && !id.isEmpty() && id.toLowerCase(Locale.ROOT).contains(q)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     /* JADX INFO: Access modifiers changed from: package-private */

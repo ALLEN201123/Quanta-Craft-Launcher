@@ -31,11 +31,39 @@ public class FabricInstallTask extends AsyncTask<FabricLoaderVersion,Integer, Ve
 
     private DownloadTaskListBean bean;
 
+    /**
+     * ★★★★★ 2026-10-17（1.5.2 新增）**Legacy Fabric 开关**。
+     *
+     * <p>用户需求里点名了「Legacy Fabric」和「Legacy Fabric API」。
+     *
+     * <p>Legacy Fabric 是 Fabric 官方为 **MC 1.8.9 ~ 1.13.2** 保留的旧分支，
+     * 它的 meta 接口与官方 Fabric **完全同构**，只有域名不同：
+     * <pre>
+     *   官方 Fabric   https://meta.fabricmc.net/v2/versions/loader/{mc}/{loader}/profile/json
+     *   Legacy Fabric https://meta.legacyfabric.net/v2/versions/loader/{mc}/{loader}/profile/json
+     * </pre>
+     * ⇒ 所以不需要新写一份安装任务，把域名参数化即可
+     * （少一份重复代码，也避免两个文件日后各修一半的经典问题）。
+     */
+    private final boolean legacy;
+
+    /** 是否走 Legacy Fabric（1.8.9~1.13.2 的官方旧分支）。 */
+    public boolean isLegacy() {
+        return this.legacy;
+    }
+
+    /** 官方 Fabric 安装（原有行为，签名不变，避免动到已有调用点）。 */
     public FabricInstallTask(MainActivity activity, DownloadTaskListAdapter adapter, String mcVersion, InstallFabricCallback callback) {
+        this(activity, adapter, mcVersion, callback, false);
+    }
+
+    /** @param legacy true = 装 Legacy Fabric（1.8.9~1.13.2） */
+    public FabricInstallTask(MainActivity activity, DownloadTaskListAdapter adapter, String mcVersion, InstallFabricCallback callback, boolean legacy) {
         this.activity = activity;
         this.adapter = adapter;
         this.mcVersion = mcVersion;
         this.callback = callback;
+        this.legacy = legacy;
 
         bean = new DownloadTaskListBean(activity.getString(R.string.dialog_install_game_install_fabric),"","","");
     }
@@ -50,7 +78,11 @@ public class FabricInstallTask extends AsyncTask<FabricLoaderVersion,Integer, Ve
     @Override
     protected Version doInBackground(FabricLoaderVersion... fabricLoaderVersions) {
         FabricLoaderVersion fabricVersion = fabricLoaderVersions[0];
-        String patchUrl = "https://meta.fabricmc.net/v2/versions/loader/" + mcVersion + "/" + fabricVersion.version + "/profile/json";
+        // ★ 1.5.2：官方 Fabric 与 Legacy Fabric 只差域名（接口同构）
+        final String metaBase = this.legacy
+                ? "https://meta.legacyfabric.net"
+                : "https://meta.fabricmc.net";
+        String patchUrl = metaBase + "/v2/versions/loader/" + mcVersion + "/" + fabricVersion.version + "/profile/json";
         try {
             String patchStr = NetworkUtils.doGet(NetworkUtils.toURL(patchUrl));
             Gson gson = JsonUtils.defaultGsonBuilder()
