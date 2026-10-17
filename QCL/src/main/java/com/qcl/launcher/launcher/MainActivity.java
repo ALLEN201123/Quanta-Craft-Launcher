@@ -657,6 +657,26 @@ implements View.OnClickListener {
         if (SkinLibraryDialog.getInstance() != null) {
             SkinLibraryDialog.getInstance().onActivityResult(requestCode, resultCode, data);
         }
+        // ★★★★★ 2026-10-17（1.5.2 新增）JAR 启动：文件选择结果 → 用独立进程跑那个 jar。
+        //   请求码与 MainUI.REQUEST_PICK_JAR 保持一致（0x4A4152 = "JAR"）。
+        if (requestCode == 0x4A4152 && resultCode == RESULT_OK && data != null) {
+            try {
+                // ★ FileChooser 单选的返回键名就是 "path"（见 FileChooser.java:196）
+                String path = data.getStringExtra("path");
+                if (path == null && data.getData() != null) {
+                    path = data.getData().getPath();
+                }
+                if (path != null && !path.isEmpty()) {
+                    com.qcl.launcher.launcher.JarLaunchActivity.launch(this, path);
+                } else {
+                    android.widget.Toast.makeText(this, "没有拿到 jar 路径",
+                            android.widget.Toast.LENGTH_SHORT).show();
+                }
+            } catch (Throwable t) {
+                android.widget.Toast.makeText(this, "启动 jar 失败：" + t.getMessage(),
+                        android.widget.Toast.LENGTH_LONG).show();
+            }
+        }
     }
 
     public void onClick(View v) {

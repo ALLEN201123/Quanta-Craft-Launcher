@@ -63,6 +63,35 @@ public class MainUI extends BaseUI implements View.OnClickListener, AdapterView.
     // ★ 1.4.1：实验室入口（自 1.4.0 朋友源码包合并）
     // ★ 1.5.0：原来的 startLobbyUI（大厅）已整体移除（用户："没有实际用处"）。
     private LinearLayout startLabUI;
+    /** ★ 1.5.2：JAR 启动（FCL 那种独立功能，不是「启动游戏」）。
+     *  新排版左栏才有，旧排版没有 → 可能为 null，绑定时必须判空。 */
+    private LinearLayout startJarLaunchUI;
+
+    /** ★ 1.5.2：请求码，选 jar 用。 */
+    private static final int REQUEST_PICK_JAR = 0x4A4152;   // "JAR"
+
+    /**
+     * ★ 1.5.2 新增：选一个 .jar 然后用**独立进程**启动它。
+     *
+     * <p>为什么用工程自带的 {@code FileChooser} 而不是系统的文档选择器：
+     * 系统 SAF 返回的是 {@code content://} URI，JVM 根本读不了；
+     * 而 FileChooser 能给出真实文件路径（版本重命名、模组导入都用它）。
+     */
+    private void pickJarToLaunch() {
+        try {
+            android.content.Intent intent = new android.content.Intent(
+                    this.activity, com.tungsten.filepicker.FileChooser.class);
+            intent.putExtra("SELECTION_MODE", 0);              // SINGLE_SELECTION
+            intent.putExtra("ALLOWED_FILE_EXTENSIONS", "jar");
+            intent.putExtra("INITIAL_DIRECTORY",
+                    android.os.Environment.getExternalStorageDirectory().getAbsolutePath());
+            this.activity.startActivityForResult(intent, REQUEST_PICK_JAR);
+        } catch (Throwable t) {
+            android.widget.Toast.makeText(this.context,
+                    "打开文件选择器失败：" + t.getMessage(),
+                    android.widget.Toast.LENGTH_LONG).show();
+        }
+    }
     /** ★ 1.5.0 新排版独有：左侧导航最底部的「返回上一层」按钮（照 FCL 的 back）。
      *  ★ 是**层级式返回**（backToLastUI：出栈一层），不是一键回主页。
      *  旧排版没有这个控件 → findViewById 返回 null，切页时判空即可。 */
@@ -250,6 +279,8 @@ private void applyCachedVersionName() {
         // ★ 1.5.0 新排版独有：「回主界面」按钮（旧排版为 null）
         startHomeUI = activity.findViewById(R.id.start_ui_home);
         startHomePageUI = activity.findViewById(R.id.start_ui_home_page);
+        // ★ 1.5.2：JAR 启动入口（只有新排版左栏有，旧排版为 null）
+        startJarLaunchUI = activity.findViewById(R.id.start_ui_jar_launch);
 
         startGame = activity.findViewById(R.id.launcher_play_button);
         launchVersionText = activity.findViewById(R.id.launch_version_text);
@@ -337,6 +368,10 @@ private void applyCachedVersionName() {
         // ★ 1.5.0 新排版独有：左侧导航底部「回主界面」按钮（旧排版为 null → 跳过）
         if (startHomeUI != null) {
             startHomeUI.setOnClickListener(this);
+        }
+        // ★ 1.5.2：JAR 启动入口（新排版左栏才有，旧排版为 null → 跳过）
+        if (startJarLaunchUI != null) {
+            startJarLaunchUI.setOnClickListener(this);
         }
         // ★★★★★ 1.5.0 崩溃级 Bug 修复（用户实测「主界面按钮点不动」）：
         //   onClick() 里**有** `v == startHomePageUI → activity.backToHome()` 的分支，
@@ -1636,6 +1671,12 @@ public static void markLocalCapeChanged() {
         // ★ 1.4.1 新增：实验室（★ 1.5.0：「大厅」分支已随入口一起移除）
         else if (v == startLabUI){
             activity.uiManager.switchMainUI(activity.uiManager.labUI);
+        }
+        // ★★★★★ 2026-10-17（1.5.2 新增）JAR 启动 —— FCL 那种**独立功能**，
+        //   不是「启动游戏」按钮：选一个 .jar，用内置 Java 在**独立进程**里跑它，
+        //   跑完回到启动器还能照常启动 Minecraft（子进程 JVM 不污染主进程）。
+        else if (v == startJarLaunchUI){
+            pickJarToLaunch();
         }
         // ★★★ 1.5.0 新排版独有：左侧导航底部「返回上一层」→ **层级式返回**（backToLastUI：出栈一层）。
         //   ★ 用户明确要求：不是一键回主页，而是"退一层、再退一层，一直退到主界面"。

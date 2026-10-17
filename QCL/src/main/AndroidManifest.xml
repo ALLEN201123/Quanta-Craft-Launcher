@@ -146,6 +146,17 @@
             android:screenOrientation="sensorLandscape"
             android:theme="@style/Theme.HelloMinecraftLauncherPocketEdition"/>
 
+        <!-- ★ 1.5.2 新增：JAR 启动器（FCL 那种独立功能，不是「启动游戏」）。
+             ★★ 必须是独立进程：Android 一个进程只能启一次 JVM，而启动 Minecraft 也要在本进程启 JVM；
+                放在主进程会让「跑完一个 jar 就再也启动不了游戏」。 -->
+        <activity
+            android:name=".launcher.JarLaunchActivity"
+            android:exported="false"
+            android:process=":jarlaunch"
+            android:excludeFromRecents="true"
+            android:configChanges="keyboardHidden|orientation|screenSize|smallestScreenSize|screenLayout|keyboard|navigation|uiMode"
+            android:theme="@style/Theme.HelloMinecraftLauncherPocketEdition" />
+
     <!-- 远古版本「加载文件…」用的游戏内文件浏览器（cacio 的 AWT 对话框在安卓上画不出来） -->
     <activity
         android:name=".launcher.launch.pojav.LevelFileChooserActivity"

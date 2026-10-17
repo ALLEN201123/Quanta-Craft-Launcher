@@ -1306,4 +1306,10 @@
     <string name="download_favorite_removed">已取消收藏</string>
     <string name="game_setting_ui_vulkan_driver_system">使用系统 Vulkan 驱动</string>
     <string name="game_setting_ui_vulkan_driver_system_desc">用手机自带的 Vulkan 驱动。性能更好，但可能存在兼容问题。</string>
+    <!-- ★ 1.5.2：JAR 启动器（FCL 那种独立功能） -->
+    <string name="menu_jar_launch">JAR 启动</string>
+    <string name="jar_launch_title">JAR 启动器</string>
+    <string name="jar_launch_stop">停止</string>
+    <string name="jar_launch_exit">退出</string>
+    <string name="jar_launch_pick_hint">选择一个 .jar 文件来运行</string>
 </resources>

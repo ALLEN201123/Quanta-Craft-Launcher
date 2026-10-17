@@ -1190,4 +1190,10 @@ Multiplayer is powered by Terracotta (by BurningTNT). The multiplayer feature is
     <string name="download_favorite_removed">Removed from favorites</string>
     <string name="game_setting_ui_vulkan_driver_system">Use System Vulkan driver</string>
     <string name="game_setting_ui_vulkan_driver_system_desc">Use the system Vulkan driver. Better performance but may cause compatibility issues.</string>
+    <!-- ★ 1.5.2：JAR 启动器（FCL 那种独立功能） -->
+    <string name="menu_jar_launch">JAR Launch</string>
+    <string name="jar_launch_title">JAR Launcher</string>
+    <string name="jar_launch_stop">Stop</string>
+    <string name="jar_launch_exit">Exit</string>
+    <string name="jar_launch_pick_hint">Pick a .jar file to run</string>
 </resources>

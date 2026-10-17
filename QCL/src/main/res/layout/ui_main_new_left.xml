@@ -189,6 +189,28 @@
 
         </LinearLayout>
 
+        <!-- ★ 1.5.2 新增：JAR 启动（FCL 那种独立功能，选一个 jar 用内置 Java 跑，不是「启动游戏」） -->
+        <LinearLayout
+            android:background="@drawable/qcl_button_gray"
+            android:focusable="true"
+            android:id="@+id/start_ui_jar_launch"
+            android:clickable="true"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:padding="@dimen/qcl_nav_pad">
+
+            <ImageView
+                android:id="@+id/jar_launch_icon"
+                android:layout_gravity="center"
+                android:layout_width="@dimen/qcl_nav_icon"
+                android:layout_height="@dimen/qcl_nav_icon"
+                android:background="@drawable/ic_qcl_lab_white"/>
+
+        </LinearLayout>
+
         <!-- 7. 多人游戏（纯图标） -->
         <LinearLayout
             android:background="@drawable/qcl_button_gray"
