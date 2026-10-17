@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="dialog_outdated_warning_title">警告</string>
     <string name="dialog_outdated_warning_msg">QCL（量子方块启动器）是独立的 Minecraft Java 版启动器项目，仍在持续开发中。如果你遇到问题或有建议，欢迎到 QCL 的 GitHub 仓库反馈。</string>
@@ -1280,6 +1280,7 @@
     <!-- 1.5.2: Legacy Fabric -->
     <string name="install_game_ui_legacy_fabric">Legacy Fabric</string>
     <string name="install_game_ui_legacy_fabric_api">Legacy Fabric API</string>
+    <string name="install_game_ui_cleanroom">Cleanroom</string>
     <string name="install_game_ui_fabric_api">Fabric API</string>
     <string name="install_game_ui_forge">Forge</string>
     <string name="install_game_ui_quilt">Quilt</string>

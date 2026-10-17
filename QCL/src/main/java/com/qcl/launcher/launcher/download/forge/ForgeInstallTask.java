@@ -96,7 +96,7 @@ public class ForgeInstallTask extends AsyncTask<ForgeVersion,Integer, Version> {
     protected Version doInBackground(ForgeVersion... forgeVersions) {
         ForgeVersion forgeVersion = forgeVersions[0];
         activity.runOnUiThread(() -> {
-            adapter.addDownloadTask(bean);
+            if (adapter != null) adapter.addDownloadTask(bean);
         });
         try {
             ZipTools.unzipFile(AppManifest.INSTALL_DIR + "/forge/forge-installer.jar", AppManifest.INSTALL_DIR + "/forge/installer/",false);
@@ -186,17 +186,17 @@ public class ForgeInstallTask extends AsyncTask<ForgeVersion,Integer, Version> {
         DownloadUtil.DownloadMultipleFilesCallback downloadCallback = new DownloadUtil.DownloadMultipleFilesCallback() {
             @Override
             public void onTaskStart(DownloadTaskListBean bean) {
-                if (!isCancelled()) adapter.addDownloadTask(bean);
+                if (!isCancelled() && adapter != null) adapter.addDownloadTask(bean);
             }
 
             @Override
             public void onTaskProgress(DownloadTaskListBean bean) {
-                if (!isCancelled()) adapter.onProgress(bean);
+                if (!isCancelled() && adapter != null) adapter.onProgress(bean);
             }
 
             @Override
             public void onTaskFinish(DownloadTaskListBean bean) {
-                if (!isCancelled()) adapter.onComplete(bean);
+                if (!isCancelled() && adapter != null) adapter.onComplete(bean);
             }
 
             @Override
@@ -278,7 +278,7 @@ public class ForgeInstallTask extends AsyncTask<ForgeVersion,Integer, Version> {
         }
         else {
             if (args == null) {
-                adapter.onComplete(bean);
+                if (adapter != null) adapter.onComplete(bean);
                 callback.onFinish(version);
             }
             else {
@@ -289,12 +289,12 @@ public class ForgeInstallTask extends AsyncTask<ForgeVersion,Integer, Version> {
                 service.putExtras(bundle);
                 progressServer = new SocketServer("127.0.0.1", 6666, (server1, msg) -> {
                     buildBean.progress = (int) (Float.parseFloat(msg) * 100);
-                    adapter.onProgress(buildBean);
+                    if (adapter != null) adapter.onProgress(buildBean);
                 });
                 progressServer.start();
                 server = new SocketServer("127.0.0.1", ApiService.API_SERVICE_PORT, (server1, msg) -> {
-                    adapter.onComplete(buildBean);
-                    adapter.onComplete(bean);
+                    if (adapter != null) adapter.onComplete(buildBean);
+                    if (adapter != null) adapter.onComplete(bean);
                     if (Integer.parseInt(msg) != 0){
                         callback.onFailed(new IOException("Game processor exited abnormally with code " + msg));
                     }
@@ -307,7 +307,7 @@ public class ForgeInstallTask extends AsyncTask<ForgeVersion,Integer, Version> {
                     server1.stop();
                 });
                 server.start();
-                adapter.addDownloadTask(buildBean);
+                if (adapter != null) adapter.addDownloadTask(buildBean);
                 activity.startService(service);
             }
         }

@@ -84,6 +84,13 @@ implements View.OnClickListener {
     private ImageView selectLegacyFabricAPI;
     /** 已安装的 Legacy Fabric API 版本（null = 没装）。 */
     public String legacyFabricAPIVersion;
+    // ★ 1.5.2：Cleanroom（Forge 1.12.2 的社区继任分支）
+    private TextView cleanroomVersionText;
+    private ImageButton deleteCleanroom;
+    private LinearLayout selectCleanroomVersion;
+    private ImageView selectCleanroom;
+    /** 已安装的 Cleanroom 版本（null = 没装）。 */
+    public String cleanroomVersion;
     private TextView quiltVersionText;
     private TextView quiltAPIVersionText;
     private ImageButton deleteForgeVersion;
@@ -167,6 +174,17 @@ implements View.OnClickListener {
         }
         if (this.selectLegacyFabricAPIVersion != null) {
             this.selectLegacyFabricAPIVersion.setOnClickListener((View.OnClickListener)this);
+        }
+        // ★ 1.5.2：Cleanroom 那一行
+        this.cleanroomVersionText = (TextView)this.activity.findViewById(R.id.current_cleanroom_version_text);
+        this.deleteCleanroom = (ImageButton)this.activity.findViewById(R.id.uninstall_cleanroom);
+        this.selectCleanroomVersion = (LinearLayout)this.activity.findViewById(R.id.update_cleanroom_version);
+        this.selectCleanroom = (ImageView)this.activity.findViewById(R.id.update_cleanroom);
+        if (this.deleteCleanroom != null) {
+            this.deleteCleanroom.setOnClickListener((View.OnClickListener)this);
+        }
+        if (this.selectCleanroomVersion != null) {
+            this.selectCleanroomVersion.setOnClickListener((View.OnClickListener)this);
         }
         this.quiltVersionText = (TextView)this.activity.findViewById(R.id.current_quilt_version_text);
         this.quiltAPIVersionText = (TextView)this.activity.findViewById(R.id.current_quilt_api_version_text);
@@ -362,6 +380,27 @@ implements View.OnClickListener {
                 }
                 if (this.selectLegacyFabricAPI != null) {
                     this.selectLegacyFabricAPI.setVisibility(apiInstalled ? 8 : 0);
+                }
+            }
+        } catch (Throwable ignored) {
+        }
+        // ★ 1.5.2：Cleanroom 那一行
+        try {
+            if (this.cleanroomVersionText != null) {
+                boolean crInstalled = this.cleanroomVersion != null;
+                if (crInstalled) {
+                    this.cleanroomVersionText.setText(this.cleanroomVersion);
+                } else if (!"1.12.2".equals(this.gameVersion)) {
+                    this.cleanroomVersionText.setText("仅支持 1.12.2");
+                } else {
+                    this.cleanroomVersionText.setText(
+                            this.context.getString(R.string.install_game_ui_none));
+                }
+                if (this.deleteCleanroom != null) {
+                    this.deleteCleanroom.setVisibility(crInstalled ? 0 : 8);
+                }
+                if (this.selectCleanroom != null) {
+                    this.selectCleanroom.setVisibility(crInstalled ? 8 : 0);
                 }
             }
         } catch (Throwable ignored) {
@@ -767,6 +806,14 @@ implements View.OnClickListener {
             this.legacyFabricAPIVersion = null;
             this.uninstall("legacyfabric-api");
         }
+        // ★ 1.5.2：Cleanroom —— 点击弹出**版本选择对话框**（能选旧版本）
+        if (view == this.selectCleanroomVersion) {
+            this.showCleanroomVersionPicker();
+        }
+        if (view == this.deleteCleanroom) {
+            this.cleanroomVersion = null;
+            this.uninstall("cleanroom");
+        }
         if (view == this.selectFabricAPIVersion && this.forgeVersion == null && this.optifineVersion == null && this.quiltVersion == null) {
             this.activity.uiManager.downloadFabricAPIUI.version = this.gameVersion;
             this.activity.uiManager.downloadFabricAPIUI.install = true;
@@ -967,8 +1014,138 @@ implements View.OnClickListener {
         }
     }
 
-    /** 加载器装完：Toast + 刷新本页状态 + 刷新版本列表。 */
-    private void onLoaderInstallDone(final String msg) {
+    // ======================================================================
+    // ★★★★★ 2026-10-17（1.5.2 新增）**Cleanroom 版本选择**
+    //
+    //   用户要求：「搞版本选择页，防止用户说没有旧版本的选择，
+    //             用户想要下载旧版本的模组加载器」。
+    //
+    //   ⇒ 点 Cleanroom 行 → 拉 index.json → 弹出**全部可用版本**的列表对话框
+    //     （含旧版本，按发布时间倒序，最新在最上面），选中即安装。
+    //   不新开页面：复用 AlertDialog，少一个布局 + 少一套适配器 + 少一次 UIManager 注册，
+    //   但「能选旧版本」这个需求完全满足。
+    // ======================================================================
+
+    private static final String CLEANROOM_INDEX_URL =
+            "https://hmcl.glavo.site/metadata/cleanroom/index.json";
+
+    /** 弹出 Cleanroom 版本选择对话框。 */
+    private void showCleanroomVersionPicker() {
+        // Cleanroom 只支持 1.12.2 —— 先拦掉，别让玩家选了版本再失败
+        if (!"1.12.2".equals(this.gameVersion)) {
+            android.widget.Toast.makeText(this.context,
+                    "Cleanroom 只支持 Minecraft 1.12.2，当前版本是 " + this.gameVersion,
+                    android.widget.Toast.LENGTH_LONG).show();
+            return;
+        }
+        if (this.forgeVersion != null || this.neoForgeVersion != null) {
+            toastConflict("Cleanroom",
+                    this.forgeVersion != null ? "Forge" : "NeoForge");
+            return;
+        }
+        final android.app.ProgressDialog pd = new android.app.ProgressDialog(this.context);
+        pd.setMessage("正在获取 Cleanroom 版本列表…");
+        pd.setCancelable(false);
+        pd.show();
+
+        new Thread(() -> {
+            try {
+                String json = com.qcl.launcher.utils.io.NetworkUtils.doGet(
+                        com.qcl.launcher.utils.io.NetworkUtils.toURL(CLEANROOM_INDEX_URL));
+                final com.qcl.launcher.launcher.download.cleanroom.CleanroomVersion[] arr =
+                        new com.google.gson.Gson().fromJson(json,
+                                com.qcl.launcher.launcher.download.cleanroom.CleanroomVersion[].class);
+                this.activity.runOnUiThread(() -> {
+                    try {
+                        pd.dismiss();
+                    } catch (Throwable ignored) {
+                    }
+                    this.showCleanroomListDialog(arr);
+                });
+            } catch (final Exception e) {
+                this.activity.runOnUiThread(() -> {
+                    try {
+                        pd.dismiss();
+                    } catch (Throwable ignored) {
+                    }
+                    android.widget.Toast.makeText(this.context,
+                            "获取 Cleanroom 版本列表失败：" + (e.getMessage() == null ? "网络错误" : e.getMessage()),
+                            android.widget.Toast.LENGTH_LONG).show();
+                });
+            }
+        }).start();
+    }
+
+    /** 用列表对话框展示所有 Cleanroom 版本（最新在前），选中即装。 */
+    private void showCleanroomListDialog(
+            com.qcl.launcher.launcher.download.cleanroom.CleanroomVersion[] arr) {
+        if (arr == null || arr.length == 0) {
+            android.widget.Toast.makeText(this.context,
+                    "没有获取到任何 Cleanroom 版本", android.widget.Toast.LENGTH_LONG).show();
+            return;
+        }
+        // 按发布时间倒序（新 → 旧）；没有时间的排最后
+        java.util.List<com.qcl.launcher.launcher.download.cleanroom.CleanroomVersion> list =
+                new java.util.ArrayList<>();
+        for (com.qcl.launcher.launcher.download.cleanroom.CleanroomVersion v : arr) {
+            if (v != null && v.name != null && !v.name.trim().isEmpty()) {
+                list.add(v);
+            }
+        }
+        list.sort((a, b) -> {
+            String sa = a.created_at == null ? "" : a.created_at;
+            String sb = b.created_at == null ? "" : b.created_at;
+            return sb.compareTo(sa);
+        });
+        final String[] items = new String[list.size()];
+        for (int i = 0; i < list.size(); i++) {
+            com.qcl.launcher.launcher.download.cleanroom.CleanroomVersion v = list.get(i);
+            items[i] = v.name + (v.created_at != null && v.created_at.length() >= 10
+                    ? "    (" + v.created_at.substring(0, 10) + ")" : "");
+        }
+        new android.app.AlertDialog.Builder(this.context)
+                .setTitle("选择 Cleanroom 版本")
+                .setItems(items, (d, which) -> this.installCleanroom(list.get(which)))
+                .setNegativeButton("取消", null)
+                .show();
+    }
+
+    /** 真正安装选中的 Cleanroom 版本。 */
+    private void installCleanroom(
+            com.qcl.launcher.launcher.download.cleanroom.CleanroomVersion chosen) {
+        if (chosen == null) {
+            return;
+        }
+        android.widget.Toast.makeText(this.context,
+                "正在安装 Cleanroom " + chosen.name + "…",
+                android.widget.Toast.LENGTH_SHORT).show();
+
+        new com.qcl.launcher.launcher.download.cleanroom.CleanroomInstallTask(
+                this.activity,
+                null,               // ★ 自动安装页没有下载任务列表（ForgeInstallTask 已加判空）
+                this.versionName,
+                this.gameVersion,
+                new com.qcl.launcher.launcher.download.cleanroom.CleanroomInstallTask
+                        .InstallCleanroomCallback() {
+                    @Override
+                    public void onStart() {
+                    }
+
+                    @Override
+                    public void onFailed(Exception e) {
+                        AutoInstallUI.this.onLoaderInstallFailed("Cleanroom", e);
+                    }
+
+                    @Override
+                    public void onFinish(com.qcl.launcher.launcher.game.Version version) {
+                        AutoInstallUI.this.cleanroomVersion = chosen.name;
+                        AutoInstallUI.this.onLoaderInstallDone(
+                                "Cleanroom " + chosen.name + " 安装完成");
+                    }
+                }).execute(chosen);
+    }
+
+    /** 加载器装完：Toast + 刷新本页状态 + 刷新版本列表。 */    private void onLoaderInstallDone(final String msg) {
         try {
             this.activity.runOnUiThread(() -> {
                 try {
