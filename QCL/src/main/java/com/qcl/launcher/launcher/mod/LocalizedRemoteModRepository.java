@@ -16,6 +16,28 @@ import java.util.stream.Stream;
 public abstract class LocalizedRemoteModRepository implements RemoteModRepository {
     protected abstract RemoteModRepository getBackedRemoteModRepository();
 
+    /**
+     * ★★★★★ 1.5.2：**透传总条数**（不写这一条「共 N 页」永远显示不出来）。
+     *
+     * <p>用户反馈：「修复显示不了总数的问题」。
+     *
+     * <p>根因：UI 用的 repository 是这一层包装，它只覆写了 search()、没覆写
+     * getLastTotalCount() ⇒ 走 {@code RemoteModRepository} 的 default 实现
+     * ⇒ 恒返回 -1 ⇒ UI 判定"该源不提供总数" ⇒ 只显示「第 N 页」。
+     *
+     * <p>修法：把调用**原样转发**给被包装的真实 repository
+     * （Hybrid / CurseForge / Modrinth 三者已各自记录总数）。
+     */
+    @Override
+    public int getLastTotalCount() {
+        try {
+            RemoteModRepository backed = getBackedRemoteModRepository();
+            return backed == null ? -1 : backed.getLastTotalCount();
+        } catch (Throwable t) {
+            return -1;
+        }
+    }
+
     @Override // com.qcl.launcher.launcher.mod.RemoteModRepository
     public Stream<RemoteMod> search(String str, RemoteModRepository.Category category, int i, int i2, String str2, RemoteModRepository.SortType sortType, RemoteModRepository.SortOrder sortOrder) throws IOException {
         // ★★★★★ 2026-10-17（1.5.2）**重做搜索的关键词预处理**。
