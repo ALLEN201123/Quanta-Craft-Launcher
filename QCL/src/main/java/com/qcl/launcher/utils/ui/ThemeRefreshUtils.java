@@ -115,20 +115,22 @@ public final class ThemeRefreshUtils {
                     if (m instanceof GradientDrawable) {
                         ((GradientDrawable) m).setColor(color);
                     }
-                } else if (bg instanceof android.graphics.drawable.StateListDrawable) {
-                    // ★★★★★ 1.5.2：**Button / ImageButton 的背景是 <selector> 时也要染**。
+                } else {
+                    // ★★★★★ 1.5.2：**兜底 —— 任何其它背景也要染**。
                     //
-                    //   审计发现：全工程 402 个按钮类控件里有 381 个没有任何 tint tag，
-                    //   而且大量按钮的背景是 `@drawable/launcher_button_gray` 这类
-                    //   **StateListDrawable（selector）**，上面那句
-                    //   `if (bg instanceof GradientDrawable)` **完全命中不了** ⇒ 永远白着。
+                    //   用户反馈：「你加的那个选择 JAR 被启动的按钮也没有同步主题色」。
+                    //   根因：ui_jar_launcher.xml 里那个 <Button> **没有写 android:background**，
+                    //   用的是系统默认背景（RippleDrawable / MaterialButton 背景），
+                    //   既不是 GradientDrawable 也不是 StateListDrawable ⇒ 上面两条分支全落空。
                     //
-                    //   ⇒ 用 setTintList：它作用于 selector 的**每一个 state**，
-                    //     且不修改原资源文件。
-                    Drawable m = bg.mutate();
-                    m.setTintList(ColorStateList.valueOf(withAlpha(color, 0x33)));
-                    m.setTintMode(android.graphics.PorterDuff.Mode.SRC_IN);
-                    view.setBackground(m);
+                    //   ⇒ 其它类型一律走 setTintList（对 RippleDrawable / LayerDrawable 同样有效）。
+                    //     用保底色所以不会把图标类背景染成纯色块。
+                    Drawable m = bg == null ? null : bg.mutate();
+                    if (m != null) {
+                        m.setTintList(ColorStateList.valueOf(withAlpha(color, 0x55)));
+                        m.setTintMode(android.graphics.PorterDuff.Mode.SRC_IN);
+                        view.setBackground(m);
+                    }
                 }
             }
         } catch (Throwable ignored) {
