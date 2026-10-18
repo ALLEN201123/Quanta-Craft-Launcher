@@ -1,16 +1,16 @@
 {
   "latestRelease": {
-    "versionCode": 353,
-    "versionName": "1.5.1",
-    "date": "2026-10-16",
+    "versionCode": 354,
+    "versionName": "1.5.2",
+    "date": "2026-10-19",
     "url": [
-      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.5.1/QCL-release-1.5.1-universal.apk",
-      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.5.1/QCL-release-1.5.1-arm64.apk",
-      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.5.1/QCL-release-1.5.1-arm.apk",
-      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.5.1/QCL-release-1.5.1-x86_64.apk",
-      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.5.1/QCL-release-1.5.1-x86.apk"
+      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.5.2/QCL-release-1.5.2-universal.apk",
+      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.5.2/QCL-release-1.5.2-arm64.apk",
+      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.5.2/QCL-release-1.5.2-arm.apk",
+      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.5.2/QCL-release-1.5.2-x86_64.apk",
+      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.5.2/QCL-release-1.5.2-x86.apk"
     ],
     "netdiskUrl": "https://pan.quark.cn/s/f2c26c4fb66f",
-    "updateLog": "1.5.1：输入桥与视角偏移收尾 + 字体颜色 + 一批崩溃/界面修复\n\n【26.4 修好了；26.3 还没】\n· Minecraft 26.4 的「能进主菜单但按钮点不动、虚拟键盘失效」已修好。\n· 26.3 仍然启动不了，原因尚未定位 —— 这一版**没有修好**，如实说明。\n\n【输入与视角】\n· 修好「往左滑往右偏、快速滑只走一小段又归中」。\n· 修好「滑到最左边/最右边就滑不动、像被焊住」。\n· 修好「鼠标滑出屏幕之外」。\n· 修好「打开背包→关闭背包→点左键或右键，视角大偏移」。\n· 这几条是原生 QCL 长期遗留的坐标系问题，本版彻底收尾。\n\n【修好的一批问题】\n· 重命名游戏实例后实例消失。\n· 安装 Forge 整合包后加载器被认成 Fabric。\n· 下载中断导致启动失败、进度一直显示 0 B/s。\n· 整合包安装弹窗的取消按钮在小屏手机上跑出屏幕。\n· 下载页 / 游戏列表 / 自动安装页打开后一片空白。\n· 一个目录里没有游戏时点「游戏单独设置」会崩溃。\n· 自动安装里选 Forge 点了没反应；Forge 版本列表加载不出来。\n· 夜间模式残留白色背景，导致白色文字看不见。\n· 切到夜间模式必须重启启动器才同步配色（现在会自动同步）。\n· 切换新旧排版必须手动重启（现在会自动重启）。\n\n【界面】\n· 左侧导航栏改为纯自适应：大屏占满、小屏自动压缩，不再需要滚动。\n· 旧排版的主界面人物不再和上方按钮重叠。\n· 外观页主题下拉框的文字在浅色模式下也能看清。\n· 新增「字体颜色自定义调节」：设置 → 外观 → 字体颜色，可选任意颜色，\n  也可一键「跟随主题」。\n\n【已知问题】Minecraft 26.3 仍不可用，原因未定位。26.2 及以下正常。"
+    "updateLog": "1.5.2：JAR 启动 + 3 个新加载器 + 下载页大改 + 一批修复\n\n【26.3 仍未修好】\n· 26.3 启动不了的问题依然存在，原因尚未定位。这一版没有修好，如实说明。\n· 26.4 及之前的问题已在 1.5.1 修好。\n\n【新功能】\n· JAR 启动：独立页面 + 独立进程，可直接跑 .jar（左侧栏咖啡杯按钮），\n  并自动读取 jar 里的 Main-Class 判断需要的 Java 版本。\n· Java 管理：查看/删除本机各个 Java，手动选版本。\n· 新增 3 个模组加载器：Cleanroom、Legacy Fabric、Legacy Fabric API\n  （「安装游戏」界面已补齐，图标取自 FCL）。\n· 三个新加载器的版本选择改成独立列表页，与其它加载器一致，可装旧版本。\n· 外观 → 新增「启动等待界面图片」：6 格可单独换图，手机/平板自适应高度。\n· 外观 → 面板色新增「重置」按钮。\n· 游戏版本下载页新增搜索框：可按版本号 / 正式版 / 快照版 / 远古版 / 愚人节搜。\n· 模组 / 整合包 / 资源包 / 光影 / 世界 5 个下载页全部支持翻页，\n  并在「筛选」右侧显示「第 N / M 页」。\n· 下载模组时自动带上前置：只装「必需」，前置的前置也会递归装上；\n  已在任意版本 mods/ 里装过的会跳过，不重复下载。\n\n【修好的一批问题】\n· 安装 Forge 一直失败。\n· 取消收藏后大退仍显示旧收藏。\n· 自制的那两个加载器点了没效果。\n· 混合下载源刚进入只有 Modrinth，完全没有 CurseForge。\n· 主题色必须点进外观页才涂到界面上（现在启动即生效）。\n· 外观里一大堆白色按钮不跟随主题色（含 JAR 启动按钮、弹窗里的按钮）。\n· 改主题色/面板色必须退出重进才生效（现在立即生效）。\n· 新手教程气泡不随屏幕比例定位。\n· 等待界面退后台再回来变黑屏。\n· 已被撤销的等待界面轮播，退后台重进又自己回来。\n· 下载页 7 个标签在小屏只显示 3 个（改为等分自适应）。\n· 设置页 6 个标签在小屏溢出（改为等分自适应）。\n· 下载页列表一屏只能看 2~3 个（列表项改为紧凑单行，筛选区可折叠）。\n· 筛选区控件被 label 挤成一条竖线、输入框显示不出字。\n· 点「筛选」会重新加载一次列表。\n· 页码最多只显示 200 页。\n· 「共 N 页」显示不出来。\n· JAR 启动页面打开一片空白。\n\n【删除】\n· 外观 → 「透明标题栏」开关（该开关从未被任何代码读取，已彻底删除）。\n\n【默认值调整】\n· 默认主题色改为「斑驳森林」壁纸真实采样色 #865D58。\n\n【已知问题】Minecraft 26.3 仍不可用，原因未定位。"
   }
 }
