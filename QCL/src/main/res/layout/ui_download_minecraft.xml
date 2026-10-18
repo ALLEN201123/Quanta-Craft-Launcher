@@ -26,48 +26,6 @@
             android:orientation="vertical"
             android:background="@drawable/launcher_view_white">
 
-            <!-- ★★★★★ 1.5.2 新增：**版本搜索框**。
-                 用户要求：「在游戏下载那里加一个搜索框，可以搜索正式版、快照版、
-                 远古版、愚人节」。
-                 ★ 高 32dp，竖向占用很小（该机逻辑高度仅 ~315dp，列表项已压到 ~30dp）。 -->
-            <LinearLayout
-                android:paddingStart="15dp"
-                android:paddingEnd="15dp"
-                android:paddingTop="4dp"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal">
-
-                <EditText
-                    android:id="@+id/edit_version_search"
-                    android:layout_width="0dp"
-                    android:layout_weight="1"
-                    android:layout_height="32dp"
-                    android:singleLine="true"
-                    android:inputType="text"
-                    android:imeOptions="actionSearch"
-                    android:hint="@string/download_minecraft_ui_search_hint"
-                    android:background="@color/colorLightGray"
-                    android:paddingStart="8dp"
-                    android:paddingEnd="8dp"
-                    android:textSize="@dimen/text_size_middle"/>
-
-                <TextView
-                    android:id="@+id/clear_version_search"
-                    android:layout_width="wrap_content"
-                    android:layout_height="32dp"
-                    android:layout_marginStart="6dp"
-                    android:paddingLeft="10dp"
-                    android:paddingRight="10dp"
-                    android:gravity="center"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:background="@drawable/launcher_button_gray"
-                    android:text="@string/exterior_setting_ui_reset"
-                    android:textColor="@color/colorPureBlack"
-                    android:textSize="@dimen/text_size_small"/>
-
-            </LinearLayout>
 
             <LinearLayout
                 android:paddingStart="15dp"
@@ -120,10 +78,39 @@
                     android:text="@string/download_minecraft_ui_april"
                     android:id="@+id/checkbox_april"/>
 
-                <View
+                <!-- ★ 1.5.2：搜索框并进这一行（照 FCL page_install_version.xml 的排法），
+                     省掉一整个 32dp 的高度。weight=1 吃掉 checkbox 之后的剩余宽度。 -->
+                <EditText
+                    android:id="@+id/edit_version_search"
                     android:layout_width="0dp"
-                    android:layout_height="0dp"
-                    android:layout_weight="1"/>
+                    android:layout_weight="1"
+                    android:layout_height="30dp"
+                    android:layout_gravity="center_vertical"
+                    android:layout_marginStart="8dp"
+                    android:singleLine="true"
+                    android:inputType="text"
+                    android:imeOptions="actionSearch"
+                    android:hint="@string/download_minecraft_ui_search_hint"
+                    android:background="@color/colorLightGray"
+                    android:paddingStart="6dp"
+                    android:paddingEnd="6dp"
+                    android:textSize="@dimen/text_size_small"/>
+
+                <TextView
+                    android:id="@+id/clear_version_search"
+                    android:layout_width="wrap_content"
+                    android:layout_height="30dp"
+                    android:layout_gravity="center_vertical"
+                    android:layout_marginStart="4dp"
+                    android:paddingLeft="8dp"
+                    android:paddingRight="8dp"
+                    android:gravity="center"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:background="@drawable/launcher_button_gray"
+                    android:text="@string/exterior_setting_ui_reset"
+                    android:textColor="@color/colorPureBlack"
+                    android:textSize="@dimen/text_size_small"/>
 
                 <LinearLayout
                     android:id="@+id/refresh_game_list"
