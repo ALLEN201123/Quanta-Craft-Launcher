@@ -1,6 +1,43 @@
 {
   "announcements": [
     {
+      "id": 102,
+      "significant": true,
+      "outdated": false,
+      "minVersion": 0,
+      "maxVersion": 2147483647,
+      "specificLang": [],
+      "title": [
+        {
+          "lang": "zh_CN",
+          "text": "QCL 1.5.2 更新说明（JAR 启动 · 3 个新加载器 · 下载页大改）"
+        },
+        {
+          "lang": "zh_TW",
+          "text": "QCL 1.5.2 更新說明（JAR 啟動 · 3 個新載入器 · 下載頁大改）"
+        },
+        {
+          "lang": "en_US",
+          "text": "QCL 1.5.2 release notes (JAR launcher, 3 new loaders, download pages overhaul)"
+        }
+      ],
+      "date": "2026-10-19",
+      "content": [
+        {
+          "lang": "zh_CN",
+          "text": "【26.3 仍未修好】\n· 26.3 启动不了的问题依然存在，原因尚未定位。这一版没有修好，如实说明。\n· 26.4 及之前的问题已在 1.5.1 修好。\n\n【新功能】\n· JAR 启动：独立页面 + 独立进程，可以直接跑 .jar（左侧栏那个咖啡杯按钮），\n  并可自动读取 jar 里的 Main-Class 判断需要的 Java 版本\n· Java 管理：查看/删除本机各个 Java，手动选版本\n· 新增 3 个模组加载器：Cleanroom、Legacy Fabric、Legacy Fabric API\n  （「安装游戏」界面已补齐，图标取自 FCL）\n· 三个新加载器的版本选择改成独立列表页，与其它加载器一致，可装旧版本\n· 外观 → 新增「启动等待界面图片」：6 格可单独换图，手机/平板自适应高度\n· 外观 → 面板色新增「重置」按钮\n· 游戏版本下载页新增搜索框：可按版本号 / 正式版 / 快照版 / 远古版 / 愚人节搜\n· 模组 / 整合包 / 资源包 / 光影 / 世界 5 个下载页全部支持翻页，\n  并在「筛选」右侧显示「第 N / M 页」（总数取自 Modrinth total_hits / CurseForge totalCount）\n· 下载模组时自动带上前置：只装「必需」，前置的前置也会递归装上；\n  已在任意版本 mods/ 里装过的会跳过，不重复下载\n\n【修好的一批问题】\n· 安装 Forge 一直失败（镜像返回 200 无 Location 时 NPE）\n· 取消收藏后大退仍显示旧收藏\n· 自制的那两个加载器点了没效果\n· 混合下载源刚进入只有 Modrinth，完全没有 CurseForge（空 gameVersion 导致 0 条）\n· 主题色必须点进外观页才涂到界面上（现在启动即生效）\n· 外观里一大堆白色按钮不跟随主题色（含新加的 JAR 启动按钮、各种弹窗里的按钮）\n· 改主题色/面板色必须退出重进才生效（现在立即生效）\n· 新手教程气泡不随屏幕比例定位\n· 等待界面（启动游戏后的加载画面）退后台再回来变黑屏\n· 已被撤销的等待界面轮播，退后台重进又自己回来\n· 下载页 7 个标签在小屏只显示 3 个（改为等分自适应）\n· 设置页 6 个标签在小屏溢出（改为等分自适应）\n· 下载页列表一屏只能看 2~3 个（列表项改为紧凑单行，筛选区可折叠）\n· 筛选区控件被 label 挤成一条竖线、输入框显示不出字\n· 点「筛选」会重新加载一次列表\n· 页码最多只显示 200 页（10000 条上限只应对 CurseForge）\n· 「共 N 页」显示不出来（包装层没透传总条数）\n· JAR 启动页面打开一片空白\n\n【删除】\n· 外观 → 「透明标题栏」开关：该开关从加上那天起就没有任何代码读取\n  （标题栏透明由 windowFullscreen 实现，与此开关无关），已彻底删除\n\n【默认值调整】\n· 默认主题色改为「斑驳森林」壁纸真实采样色 #865D58（不再取水面雾色）"
+        },
+        {
+          "lang": "zh_TW",
+          "text": "【26.3 仍未修好】\n· 26.3 無法啟動的問題依然存在，原因尚未定位。這一版沒有修好，如實說明。\n· 26.4 及之前的問題已在 1.5.1 修好。\n\n【新功能】\n· JAR 啟動：獨立頁面 + 獨立進程，可以直接跑 .jar（左側欄那個咖啡杯按鈕），\n  並可自動讀取 jar 裡的 Main-Class 判斷需要的 Java 版本\n· Java 管理：檢視/刪除本機各個 Java，手動選版本\n· 新增 3 個模組載入器：Cleanroom、Legacy Fabric、Legacy Fabric API\n  （「安裝遊戲」介面已補齊，圖示取自 FCL）\n· 三個新載入器的版本選擇改成獨立列表頁，與其它載入器一致，可裝舊版本\n· 外觀 → 新增「啟動等待介面圖片」：6 格可單獨換圖，手機/平板自適應高度\n· 外觀 → 面板色新增「重設」按鈕\n· 遊戲版本下載頁新增搜尋框：可按版本號 / 正式版 / 快照版 / 遠古版 / 愚人節搜\n· 模組 / 整合包 / 資源包 / 光影 / 世界 5 個下載頁全部支援翻頁，\n  並在「篩選」右側顯示「第 N / M 頁」\n· 下載模組時自動帶上前置：只裝「必需」，前置的前置也會遞迴裝上；\n  已在任意版本 mods/ 裡裝過的會跳過，不重複下載\n\n【修好的一批問題】\n· 安裝 Forge 一直失敗\n· 取消收藏後大退仍顯示舊收藏\n· 自製的那兩個載入器點了沒效果\n· 混合下載源剛進入只有 Modrinth，完全沒有 CurseForge\n· 主題色必須點進外觀頁才塗到介面上（現在啟動即生效）\n· 外觀裡一大堆白色按鈕不跟隨主題色（含新加的 JAR 啟動按鈕、各種彈窗按鈕）\n· 改主題色/面板色必須退出重進才生效（現在立即生效）\n· 新手教學氣泡不隨螢幕比例定位\n· 等待介面退後台再回來變黑屏\n· 已被撤銷的等待介面輪播，退後台重進又自己回來\n· 下載頁 7 個標籤在小螢幕只顯示 3 個（改為等分自適應）\n· 設定頁 6 個標籤在小螢幕溢出（改為等分自適應）\n· 下載頁列表一屏只能看 2~3 個（列表項改為緊湊單行，篩選區可折疊）\n· 篩選區控件被 label 擠成一條豎線、輸入框顯示不出字\n· 點「篩選」會重新載入一次列表\n· 頁碼最多只顯示 200 頁\n· 「共 N 頁」顯示不出來\n· JAR 啟動頁面打開一片空白\n\n【刪除】\n· 外觀 → 「透明標題欄」開關：該開關從加上那天起就沒有任何程式碼讀取，已徹底刪除\n\n【預設值調整】\n· 預設主題色改為「斑駁森林」桌布真實取樣色 #865D58"
+        },
+        {
+          "lang": "en_US",
+          "text": "[26.3 is STILL not fixed]\n- Minecraft 26.3 still does not start; the cause is not yet identified. It is NOT fixed in\n  this version, and we would rather say so plainly than pretend otherwise.\n- 26.4 and earlier are already fixed as of 1.5.1.\n\n[NEW]\n- JAR launcher: a dedicated page on a dedicated process that runs a .jar directly\n  (the coffee-cup button in the left rail). It reads Main-Class from the jar manifest\n  to guess which Java version is needed.\n- Java manager: list / remove the Java runtimes on this device, pick one manually.\n- Three new mod loaders: Cleanroom, Legacy Fabric, Legacy Fabric API\n  (hooked into the \"Install game\" screen, icons taken from FCL).\n- Version pickers for those three loaders are now standalone list pages, consistent with\n  the other loaders, and can install older versions.\n- Appearance -> \"Launch waiting screen image\": 6 tiles, each replaceable individually,\n  height adapts to phone / tablet.\n- Appearance -> panel colour now has a Reset button.\n- Game version download page now has a search box: search by version id, release,\n  snapshot, old or April Fools.\n- Paging for all five download pages (mods / modpacks / resource packs / shaders / worlds),\n  with a \"Page N / M\" indicator placed to the right of the Filter button.\n- Downloading a mod now pulls its dependencies automatically: required only, recursively\n  (a dependency of a dependency is included), and anything already present in any\n  version's mods/ folder is skipped.\n\n[FIXED]\n- Forge installation always failed (NPE when a mirror returned 200 without Location).\n- Un-favouriting did not stick after a full restart.\n- The two home-made loaders did nothing when tapped.\n- Hybrid download source showed only Modrinth on first load, never CurseForge\n  (an empty gameVersion made CurseForge return zero results).\n- Theme colour only applied after visiting the Appearance page (now applies on launch).\n- Lots of white buttons did not follow the theme colour (including the new JAR button\n  and buttons inside dialogs).\n- Changing theme / panel colour required a restart (now applies immediately).\n- The onboarding bubble did not follow the screen aspect ratio.\n- The launch waiting screen turned black after backgrounding and returning.\n- An already-dismissed waiting-screen slideshow came back after backgrounding.\n- The 7 download tabs only showed 3 on small screens (now equal-width adaptive).\n- The 6 settings tabs overflowed on small screens (now equal-width adaptive).\n- Download lists only showed 2-3 rows per screen (compact single-line rows,\n  collapsible filter panel).\n- Filter controls were squeezed into a thin vertical line; text fields showed no text.\n- Tapping Filter re-ran the search every time.\n- Paging was capped at 200 pages (the 10,000-entry limit only applies to CurseForge).\n- \"Page N / M\" never showed the total (a wrapper class did not forward the count).\n- The JAR launcher page opened completely blank.\n\n[REMOVED]\n- Appearance -> \"Transparent title bar\" switch. No code ever read that flag\n  (title bar transparency comes from windowFullscreen), so it is gone for good.\n\n[DEFAULT CHANGED]\n- Default theme colour is now the real sampled colour of the \"Mottled Forest\" wallpaper,\n  #865D58 (no longer the water-haze colour)."
+        }
+      ]
+    },
+    {
       "id": 101,
       "significant": true,
       "outdated": false,
