@@ -684,6 +684,120 @@
 
                 </LinearLayout>
 
+                <!-- ★★★★★ 1.5.2 新增：**启动等待界面图片**（6 格，可单独换）。
+                     ★★★ 自适应要点（用户特别提醒「别忘记加自适应，不然图片过大超出屏幕」）：
+                       · 每格 layout_width=0dp + layout_weight=1 ⇒ 6 格**等分屏宽**，永不超屏；
+                       · layout_height 固定 46dp ⇒ **绝不按图片原始尺寸撑高**；
+                       · scaleType=centerCrop ⇒ 裁切填充，不变形不溢出；
+                       · ImageView 不设 adjustViewBounds（默认 false），防止按宽高比外扩。 -->
+                <LinearLayout
+                    android:layout_marginStart="15dp"
+                    android:layout_marginEnd="15dp"
+                    android:layout_marginTop="6dp"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <ImageView
+                        android:id="@+id/wait_bg_0"
+                        android:layout_width="0dp"
+                        android:layout_height="@dimen/wait_bg_slot_height"
+                        android:layout_weight="1"
+                        android:layout_marginEnd="4dp"
+                        android:scaleType="centerCrop"
+                        android:background="@drawable/launcher_button_gray"
+                        android:clickable="true"
+                        android:focusable="true"/>
+
+                    <ImageView
+                        android:id="@+id/wait_bg_1"
+                        android:layout_width="0dp"
+                        android:layout_height="@dimen/wait_bg_slot_height"
+                        android:layout_weight="1"
+                        android:layout_marginEnd="4dp"
+                        android:scaleType="centerCrop"
+                        android:background="@drawable/launcher_button_gray"
+                        android:clickable="true"
+                        android:focusable="true"/>
+
+                    <ImageView
+                        android:id="@+id/wait_bg_2"
+                        android:layout_width="0dp"
+                        android:layout_height="@dimen/wait_bg_slot_height"
+                        android:layout_weight="1"
+                        android:layout_marginEnd="4dp"
+                        android:scaleType="centerCrop"
+                        android:background="@drawable/launcher_button_gray"
+                        android:clickable="true"
+                        android:focusable="true"/>
+
+                    <ImageView
+                        android:id="@+id/wait_bg_3"
+                        android:layout_width="0dp"
+                        android:layout_height="@dimen/wait_bg_slot_height"
+                        android:layout_weight="1"
+                        android:layout_marginEnd="4dp"
+                        android:scaleType="centerCrop"
+                        android:background="@drawable/launcher_button_gray"
+                        android:clickable="true"
+                        android:focusable="true"/>
+
+                    <ImageView
+                        android:id="@+id/wait_bg_4"
+                        android:layout_width="0dp"
+                        android:layout_height="@dimen/wait_bg_slot_height"
+                        android:layout_weight="1"
+                        android:layout_marginEnd="4dp"
+                        android:scaleType="centerCrop"
+                        android:background="@drawable/launcher_button_gray"
+                        android:clickable="true"
+                        android:focusable="true"/>
+
+                    <ImageView
+                        android:id="@+id/wait_bg_5"
+                        android:layout_width="0dp"
+                        android:layout_height="@dimen/wait_bg_slot_height"
+                        android:layout_weight="1"
+                        android:scaleType="centerCrop"
+                        android:background="@drawable/launcher_button_gray"
+                        android:clickable="true"
+                        android:focusable="true"/>
+
+                </LinearLayout>
+
+                <!-- 等待界面图片：说明 + 恢复默认 -->
+                <LinearLayout
+                    android:layout_marginStart="15dp"
+                    android:layout_marginEnd="15dp"
+                    android:layout_marginTop="4dp"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:layout_height="wrap_content"
+                        android:text="@string/exterior_setting_ui_wait_bg_hint"
+                        android:textColor="@color/colorPureBlack"
+                        android:textSize="@dimen/text_size_small"/>
+
+                    <TextView
+                        android:id="@+id/reset_wait_bg"
+                        android:paddingLeft="10dp"
+                        android:paddingRight="10dp"
+                        android:gravity="center"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:background="@drawable/launcher_button_gray"
+                        android:layout_width="wrap_content"
+                        android:layout_height="28dp"
+                        android:text="@string/exterior_setting_ui_reset"
+                        android:textColor="@color/colorPureBlack"
+                        android:textSize="@dimen/text_size_small"/>
+
+                </LinearLayout>
+
             </LinearLayout>
 
         </LinearLayout>

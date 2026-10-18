@@ -1320,4 +1320,5 @@
     <string name="jar_launcher_no_java">还没有检测到任何 Java。请先在「设置 → 运行环境」里下载 Java 8 / 17 / 21 / 25。</string>
     <string name="jar_launcher_hint">提示：长按左栏的 JAR 按钮可以管理 Java。</string>
     <string name="exterior_setting_ui_reset">重置</string>
+    <string name="exterior_setting_ui_wait_bg_hint">点任意一格可单独换图（启动等待界面共 6 格）</string>
 </resources>

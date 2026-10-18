@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- ★ 1.5.2：启动等待界面「6 格图片」的高度，按屏幕最小宽度分档 -->
+    <!--   用户要求：小屏别撑爆屏幕，大屏别显得太小。 -->
+    <dimen name="wait_bg_slot_height">52dp</dimen>
+</resources>

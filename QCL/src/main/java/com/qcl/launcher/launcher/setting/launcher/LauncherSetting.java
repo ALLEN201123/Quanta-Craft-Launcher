@@ -19,6 +19,19 @@ public class LauncherSetting {
     public String launcherTheme;
     public int maxDownloadTask;
     public String panelColor;
+
+    /**
+     * ★★★★★ 1.5.2 新增：**启动等待界面（游戏加载画面）的 6 张背景图**。
+     *
+     * <p>用户需求：「等待界面的轮播根本没有在外观里加选择图片来切换按钮，
+     * 把 6 张图片展示出来，点击自定义按钮之后把 6 张图片展示出来，
+     * 然后点击想要换的那个图片」。
+     *
+     * <p>长度固定 6（对应 {@code LayoutPanel.BG_RES_IDS} 的 6 格）；
+     * 某格为 null/空/文件不存在 ⇒ 该格**回退内置图**（不会变黑）。
+     */
+    public String[] waitBgPaths;
+
     public boolean transBar;
     /**
      * ★★★★★ 2026-10-16 新增：**自定义字体颜色**

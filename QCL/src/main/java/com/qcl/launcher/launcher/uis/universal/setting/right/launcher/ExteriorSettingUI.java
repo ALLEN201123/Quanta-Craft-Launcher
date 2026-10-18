@@ -191,6 +191,23 @@ CompoundButton.OnCheckedChangeListener {
         if (this.resetThemeColor != null) {
             this.resetThemeColor.setOnClickListener((View.OnClickListener)this);
         }
+        // ★ 1.5.2：启动等待界面图片 —— 6 格绑定 + 点击单独换图
+        int[] slotIds = new int[]{
+                R.id.wait_bg_0, R.id.wait_bg_1, R.id.wait_bg_2,
+                R.id.wait_bg_3, R.id.wait_bg_4, R.id.wait_bg_5};
+        for (int si = 0; si < WAIT_BG_SLOTS; si++) {
+            this.waitBgSlots[si] = (android.widget.ImageView)
+                    this.activity.findViewById(slotIds[si]);
+            final int slot = si;
+            if (this.waitBgSlots[si] != null) {
+                this.waitBgSlots[si].setOnClickListener(v -> pickWaitBg(slot));
+            }
+        }
+        this.resetWaitBg = (TextView) this.activity.findViewById(R.id.reset_wait_bg);
+        if (this.resetWaitBg != null) {
+            this.resetWaitBg.setOnClickListener((View.OnClickListener) this);
+        }
+        refreshWaitBgSlots();
         setupThemeColorSpinner();
         this.transBarSwitch = (SwitchCompat)this.activity.findViewById(R.id.switch_trans_bar);
         this.fullscreenSwitch = (SwitchCompat)this.activity.findViewById(R.id.switch_full_screen);
@@ -476,6 +493,136 @@ CompoundButton.OnCheckedChangeListener {
         if (requestCode == 4000 && data != null && resultCode == -1) {
             Uri uri = data.getData();
             this.editBgPath.setText((CharSequence)UriUtils.getRealPathFromUri_AboveApi19(this.context, uri));
+            return;
+        }
+        // ★ 1.5.2：启动等待界面的 6 格图片（requestCode = WAIT_BG_BASE + 槽位下标）
+        if (requestCode >= WAIT_BG_BASE && requestCode < WAIT_BG_BASE + WAIT_BG_SLOTS
+                && resultCode == -1 && data != null) {
+            int slot = requestCode - WAIT_BG_BASE;
+            String path = data.getStringExtra("path");
+            if (path == null && data.getData() != null) {
+                path = UriUtils.getRealPathFromUri_AboveApi19(this.context, data.getData());
+            }
+            if (path != null && !path.isEmpty() && slot >= 0 && slot < WAIT_BG_SLOTS) {
+                String[] paths = ensureWaitBgArray();
+                paths[slot] = path;
+                this.activity.launcherSetting.waitBgPaths = paths;
+                GsonUtils.saveLauncherSetting(this.activity.launcherSetting,
+                        AppManifest.SETTING_DIR + "/launcher_setting.json");
+                refreshWaitBgSlots();
+            }
+        }
+    }
+
+    // ======================================================================
+    // ★★★★★ 1.5.2 新增：**启动等待界面图片（6 格）**
+    //   用户要求：外观里点自定义 → 展示 6 张图 → 点想换的那张单独换。
+    //   自适应由布局保证（等分宽 + 固定 46dp 高 + centerCrop），这里只做降采样解码，
+    //   保证**大图也不会把预览撑爆或 OOM**。
+    // ======================================================================
+
+    private static final int WAIT_BG_SLOTS = 6;
+    private static final int WAIT_BG_BASE = 0x5B00;   // "WB"
+
+    private final android.widget.ImageView[] waitBgSlots = new android.widget.ImageView[WAIT_BG_SLOTS];
+    /** ★ 1.5.2：等待界面图片的「恢复默认」按钮。 */
+    private TextView resetWaitBg;
+
+    /** 点某一格 → 打开文件选择器只换这一张。 */
+    private void pickWaitBg(int slot) {
+        try {
+            android.content.Intent intent = new android.content.Intent(
+                    this.context, com.tungsten.filepicker.FileChooser.class);
+            intent.putExtra("SELECTION_MODE", 0);              // 单选
+            intent.putExtra("ALLOWED_FILE_EXTENSIONS", "png;jpg;jpeg;webp");
+            intent.putExtra("INITIAL_DIRECTORY",
+                    android.os.Environment.getExternalStorageDirectory().getAbsolutePath());
+            this.activity.startActivityForResult(intent, WAIT_BG_BASE + slot);
+        } catch (Throwable t) {
+            Toast.makeText(this.context, "打开文件选择器失败：" + t.getMessage(),
+                    Toast.LENGTH_LONG).show();
+        }
+    }
+
+    /** 保证 waitBgPaths 长度是 6。 */
+    private String[] ensureWaitBgArray() {
+        String[] old = this.activity.launcherSetting.waitBgPaths;
+        if (old != null && old.length == WAIT_BG_SLOTS) {
+            return old;
+        }
+        String[] arr = new String[WAIT_BG_SLOTS];
+        if (old != null) {
+            for (int i = 0; i < Math.min(old.length, WAIT_BG_SLOTS); i++) {
+                arr[i] = old[i];
+            }
+        }
+        this.activity.launcherSetting.waitBgPaths = arr;
+        return arr;
+    }
+
+    /** 6 格预览：有自定义图就显示（**降采样**），没有就显示内置图。 */
+    private void refreshWaitBgSlots() {
+        String[] paths = ensureWaitBgArray();
+        // ★ 1.5.2：同时把这 6 格同步给轮播引擎（DynamicBackground.customFrames），
+        //   这样**启动等待界面**（LayoutPanel）用的就是你在这里选的图。
+        //   ★ 固定构建 6 个元素（没选的用内置图填充），保证槽位与 6 格严格一一对应，
+        //     不会因为只选了 2 张就变成 2 格循环。
+        java.util.List<android.graphics.drawable.Drawable> frames = new java.util.ArrayList<>();
+        for (int i = 0; i < WAIT_BG_SLOTS; i++) {
+            android.widget.ImageView iv = this.waitBgSlots[i];
+            try {
+                String p = paths[i];
+                android.graphics.Bitmap bmp = null;
+                if (p != null && !p.isEmpty() && new java.io.File(p).isFile()) {
+                    bmp = decodeSampled(p, 160);
+                }
+                if (bmp != null) {
+                    if (iv != null) {
+                        iv.setImageBitmap(bmp);
+                    }
+                    frames.add(new android.graphics.drawable.BitmapDrawable(
+                            this.context.getResources(), bmp));
+                } else {
+                    if (iv != null) {
+                        iv.setImageResource(
+                                com.qcl.launcher.launcher.uis.main.DynamicBackground.RES_IDS[i]);
+                    }
+                    android.graphics.drawable.Drawable d =
+                            androidx.core.content.ContextCompat.getDrawable(this.context,
+                                    com.qcl.launcher.launcher.uis.main.DynamicBackground.RES_IDS[i]);
+                    if (d != null) {
+                        frames.add(d);
+                    }
+                }
+            } catch (Throwable ignored) {
+            }
+        }
+        try {
+            com.qcl.launcher.launcher.uis.main.DynamicBackground.setCustomFrames(frames);
+        } catch (Throwable ignored) {
+        }
+    }
+
+    /** 降采样解码（maxSide 是目标最长边像素；预览只有 46dp，160 足够）。 */
+    private static android.graphics.Bitmap decodeSampled(String path, int maxSide) {
+        try {
+            android.graphics.BitmapFactory.Options o = new android.graphics.BitmapFactory.Options();
+            o.inJustDecodeBounds = true;
+            android.graphics.BitmapFactory.decodeFile(path, o);
+            if (o.outWidth <= 0 || o.outHeight <= 0) {
+                return null;
+            }
+            int sample = 1;
+            int longest = Math.max(o.outWidth, o.outHeight);
+            while (longest / (sample * 2) >= maxSide) {
+                sample *= 2;
+            }
+            android.graphics.BitmapFactory.Options d = new android.graphics.BitmapFactory.Options();
+            d.inSampleSize = sample;
+            d.inPreferredConfig = android.graphics.Bitmap.Config.RGB_565;
+            return android.graphics.BitmapFactory.decodeFile(path, d);
+        } catch (Throwable t) {
+            return null;
         }
     }
 
@@ -734,8 +881,15 @@ CompoundButton.OnCheckedChangeListener {
         //   用户要求：「还没有重置颜色按钮……玩家换了颜色没有重置按钮」。
         //   做法：把 launcherTheme 置 null（= 跟随内置默认 colorAccent），
         //   然后把默认色立即刷回界面（含左侧导航栏），最后把下拉框同步回默认项。
-        if (v == this.resetThemeColor) {
-            try {
+        // ★ 1.5.2：等待界面 6 格图片 → 恢复默认（全部清空，回内置图）
+        if (v == this.resetWaitBg) {
+            this.activity.launcherSetting.waitBgPaths = new String[WAIT_BG_SLOTS];
+            GsonUtils.saveLauncherSetting(this.activity.launcherSetting,
+                    AppManifest.SETTING_DIR + "/launcher_setting.json");
+            refreshWaitBgSlots();
+            Toast.makeText(this.context, "等待界面图片已恢复默认", Toast.LENGTH_SHORT).show();
+        }
+        if (v == this.resetThemeColor) {            try {
                 this.activity.launcherSetting.launcherTheme = null;
                 GsonUtils.saveLauncherSetting(this.activity.launcherSetting,
                         AppManifest.SETTING_DIR + "/launcher_setting.json");
