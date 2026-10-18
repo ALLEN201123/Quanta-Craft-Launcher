@@ -562,6 +562,15 @@ CompoundButton.OnCheckedChangeListener {
                     ExteriorSettingUI.this.activity.exteriorConfig.accentColor(color);
                     ExteriorSettingUI.this.activity.exteriorConfig.apply((Activity)ExteriorSettingUI.this.activity);
                     ExteriorSettingUI.this.applyThemeColorToViews(color);
+                    // ★★★★★ 1.5.2 修「改主题色必须退出重进才生效」：
+                    //   exteriorConfig.apply() 只改**主题定义**，已 inflate 的 View 不会重读
+                    //   （左侧导航栏背景是固定 color 资源，按钮 drawable 引用的 ?attr/colorAccent 同理）。
+                    //   ⇒ 这里当场把新色刷到已存在的 View 上：导航栏底色 + 勾选框/进度圈 + 纯色 shape 按钮。
+                    try {
+                        com.qcl.launcher.utils.ui.ThemeRefreshUtils.apply(
+                                (Activity) ExteriorSettingUI.this.activity, color);
+                    } catch (Throwable ignored) {
+                    }
                 }
 
                 @Override
@@ -626,6 +635,12 @@ CompoundButton.OnCheckedChangeListener {
                     ExteriorSettingUI.this.activity.exteriorConfig.accentColor(destColor);
                     ExteriorSettingUI.this.activity.exteriorConfig.apply((Activity)ExteriorSettingUI.this.activity);
                     ExteriorSettingUI.this.applyThemeColorToViews(destColor);
+                    // ★ 1.5.2：自定义颜色同样要**立即生效**，不能等重启
+                    try {
+                        com.qcl.launcher.utils.ui.ThemeRefreshUtils.apply(
+                                (Activity) ExteriorSettingUI.this.activity, destColor);
+                    } catch (Throwable ignored) {
+                    }
                 }
 
                 @Override
@@ -635,6 +650,12 @@ CompoundButton.OnCheckedChangeListener {
                     ExteriorSettingUI.this.activity.exteriorConfig.accentColor(initColor);
                     ExteriorSettingUI.this.activity.exteriorConfig.apply((Activity)ExteriorSettingUI.this.activity);
                     ExteriorSettingUI.this.applyThemeColorToViews(initColor);
+                    // ★ 1.5.2：取消（回滚颜色）时也要把界面刷回去
+                    try {
+                        com.qcl.launcher.utils.ui.ThemeRefreshUtils.apply(
+                                (Activity) ExteriorSettingUI.this.activity, initColor);
+                    } catch (Throwable ignored) {
+                    }
                 }
             });
             dialog.show();

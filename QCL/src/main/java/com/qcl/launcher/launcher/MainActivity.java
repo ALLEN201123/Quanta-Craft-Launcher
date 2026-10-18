@@ -783,7 +783,7 @@ implements View.OnClickListener {
                     com.qcl.launcher.launcher.uis.universal.setting.right.launcher
                             .ExteriorSettingUI.getThemeColor(this, this.launcherSetting.launcherTheme),
                     R.color.colorAccent);
-            com.qcl.launcher.utils.ui.CheckBoxTintUtils.apply(this, themeColor);
+            com.qcl.launcher.utils.ui.ThemeRefreshUtils.apply(this, themeColor);
         } catch (Throwable ignored) {
         }
         if (SkinPreviewDialog.getInstance() != null) {

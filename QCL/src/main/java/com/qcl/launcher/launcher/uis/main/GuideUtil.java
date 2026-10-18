@@ -230,15 +230,59 @@ public final class GuideUtil {
         private void showStep() {
             try {
                 Step s = steps.get(index);
+                // ★★★★★ 2026-10-17（1.5.2）修「新手教程的按钮/气泡不随屏幕比例变化，屏幕大就偏」。
+                //
+                //   ★ 原做法：直接 `s.view.getLocationOnScreen(loc)` 拿**屏幕绝对坐标**，
+                //     却当作**本 Overlay 内坐标**去算 leftMargin / topMargin。
+                //     只要 Overlay 不在屏幕原点（状态栏、导航栏、异形屏挖孔、窗口有偏移），
+                //     两者就差一个固定量 ⇒ 气泡/高亮环整体偏移；
+                //     **屏幕越大、这个差值越显眼**，正好对应用户说的"屏幕比例大就偏了"。
+                //
+                //   ⇒ 现在先取 Overlay 自己的屏幕位置作基准，把目标矩形**换算到 Overlay 坐标系**，
+                //     两个坐标就在同一基准上了。
+                int[] me = new int[2];
+                getLocationOnScreen(me);
                 int[] loc = new int[2];
                 s.view.getLocationOnScreen(loc);
-                targetRect.set(loc[0], loc[1], loc[0] + s.view.getWidth(), loc[1] + s.view.getHeight());
+                int left = loc[0] - me[0];
+                int top = loc[1] - me[1];
+                targetRect.set(left, top, left + s.view.getWidth(), top + s.view.getHeight());
                 titleView.setText(s.title == null ? "" : s.title);
                 bubble.setText(s.desc == null ? "" : s.desc);
                 layoutBubble((View) bubble.getTag());
                 invalidate();
             } catch (Throwable ignored) {
                 finish();
+            }
+        }
+
+        /**
+         * ★ 1.5.2：屏幕尺寸/比例变化后**重新算一遍**（原来只在 showStep 时算一次，
+         * 玩家转屏、分屏、或系统栏高度变化后，气泡就停在旧位置）。
+         */
+        @Override
+        protected void onSizeChanged(int w, int h, int oldw, int oldh) {
+            super.onSizeChanged(w, h, oldw, oldh);
+            if (w != oldw || h != oldh) {
+                // 等这一帧布局完成再重算，否则拿到的是旧尺寸
+                post(() -> {
+                    try {
+                        if (index >= 0 && index < steps.size()) {
+                            Step s = steps.get(index);
+                            int[] me = new int[2];
+                            getLocationOnScreen(me);
+                            int[] loc = new int[2];
+                            s.view.getLocationOnScreen(loc);
+                            int left = loc[0] - me[0];
+                            int top = loc[1] - me[1];
+                            targetRect.set(left, top,
+                                    left + s.view.getWidth(), top + s.view.getHeight());
+                            layoutBubble((View) bubble.getTag());
+                            invalidate();
+                        }
+                    } catch (Throwable ignored) {
+                    }
+                });
             }
         }
 
