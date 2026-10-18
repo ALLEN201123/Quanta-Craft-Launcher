@@ -38,6 +38,12 @@ import java.util.stream.Collectors;
 import com.qcl.launcher.R;
 /* loaded from: classes2.dex */
 public class DownloadResourcePackUI extends BaseUI implements View.OnClickListener, AdapterView.OnItemSelectedListener, TextView.OnEditorActionListener, TextWatcher {
+
+    // ★ 1.5.2（D 方案）：左侧可折叠筛选栏 + [☰ 筛选] 开关
+    private android.view.View filterPanel;
+    private android.view.View toggleFilter;
+    /** 切换筛选栏期间抑制 onItemSelected 里的 search()/reload（否则每点一次筛选就重载列表）。 */
+    private boolean suppressReload = false;
     private ArrayList<RemoteModRepository.Category> categoryList;
     private CategorySpinnerAdapter categoryListAdapter;
     private DownloadResourceAdapter downloadResourcePackListAdapter;
@@ -118,6 +124,21 @@ public class DownloadResourcePackUI extends BaseUI implements View.OnClickListen
     @Override // com.qcl.launcher.launcher.uis.tools.BaseUI, com.qcl.launcher.launcher.uis.tools.UILifecycleCallbacks
     public void onCreate() {
         super.onCreate();
+        // ★ 1.5.2（D 方案）：绑定左侧筛选栏与 [☰ 筛选] 开关
+        this.filterPanel = this.activity.findViewById(R.id.download_resource_pack_filter_panel);
+        this.toggleFilter = this.activity.findViewById(R.id.toggle_resource_pack_filter);
+        if (this.toggleFilter != null) {
+            this.toggleFilter.setOnClickListener((View.OnClickListener) this);
+            try {
+                if (this.toggleFilter instanceof android.widget.TextView) {
+                    int tc = com.qcl.launcher.launcher.uis.universal.setting.right.launcher.ExteriorSettingUI
+                            .parseThemeColorSafe(this.activity,
+                                    this.activity.launcherSetting.launcherTheme);
+                    ((android.widget.TextView) this.toggleFilter).setTextColor(tc);
+                }
+            } catch (Throwable ignored) {
+            }
+        }
         this.downloadResourcePackUI = (LinearLayout) this.activity.findViewById(R.id.ui_download_resource_pack);
         this.gameSpinner = (Spinner) this.activity.findViewById(R.id.download_resource_pack_arg_game);
         this.downloadSourceSpinner = (Spinner) this.activity.findViewById(R.id.download_resource_pack_arg_source);
@@ -333,6 +354,25 @@ public class DownloadResourcePackUI extends BaseUI implements View.OnClickListen
 
     @Override // android.view.View.OnClickListener
     public void onClick(View view) {
+        // ★ 1.5.2（D 方案）：[☰ 筛选] —— 折叠/展开左侧筛选栏。
+        //   切换期间抑制 onItemSelected 触发的重新查询（Spinner 重新测量会误触发）。
+        if (view == this.toggleFilter) {
+            this.suppressReload = true;
+            try {
+                if (this.filterPanel != null) {
+                    boolean show = this.filterPanel.getVisibility() != android.view.View.VISIBLE;
+                    this.filterPanel.setVisibility(show
+                            ? android.view.View.VISIBLE : android.view.View.GONE);
+                }
+            } catch (Throwable ignored) {
+            }
+            if (this.filterPanel != null) {
+                this.filterPanel.post(() -> this.suppressReload = false);
+            } else {
+                this.suppressReload = false;
+            }
+            return;
+        }
         if (view == this.search || view == this.refresh) {
             search();
         }
@@ -340,6 +380,10 @@ public class DownloadResourcePackUI extends BaseUI implements View.OnClickListen
 
     @Override // android.widget.AdapterView.OnItemSelectedListener
     public void onItemSelected(AdapterView<?> adapterView, View view, int i, long j) {
+        // ★ 1.5.2：切换筛选栏期间忽略 Spinner 的误触发
+        if (this.suppressReload) {
+            return;
+        }
         if (adapterView == this.downloadSourceSpinner) {
             search();
             return;

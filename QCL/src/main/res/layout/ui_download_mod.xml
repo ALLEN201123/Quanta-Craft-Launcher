@@ -80,12 +80,14 @@
 
                     <RelativeLayout
                         android:layout_gravity="center"
-                        android:layout_width="match_parent"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
                         android:layout_height="30dp"
                         android:background="@drawable/launcher_view_white">
 
                         <Spinner
                             android:layout_width="match_parent"
+                android:minWidth="80dp"
                             android:layout_height="match_parent"
                             android:id="@+id/download_mod_arg_game"/>
 
@@ -112,7 +114,9 @@
                     <EditText
                         android:singleLine="true"
                         android:layout_gravity="center"
-                        android:layout_width="match_parent"
+                        android:layout_width="0dp"
+                android:layout_weight="1"
+                android:minWidth="80dp"
                         android:layout_height="30dp"
                         android:paddingStart="9dp"
                         android:paddingEnd="9dp"
@@ -141,12 +145,14 @@
 
                     <RelativeLayout
                         android:layout_gravity="center"
-                        android:layout_width="match_parent"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
                         android:layout_height="30dp"
                         android:background="@drawable/launcher_view_white">
 
                         <Spinner
                             android:layout_width="match_parent"
+                android:minWidth="80dp"
                             android:layout_height="match_parent"
                             android:id="@+id/download_mod_arg_type"/>
 
@@ -178,12 +184,14 @@
 
                     <RelativeLayout
                         android:layout_gravity="center"
-                        android:layout_width="match_parent"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
                         android:layout_height="30dp"
                         android:background="@drawable/launcher_view_white">
 
                         <Spinner
                             android:layout_width="match_parent"
+                android:minWidth="80dp"
                             android:layout_height="match_parent"
                             android:id="@+id/download_mod_arg_source"/>
 
@@ -208,20 +216,24 @@
 
                     <RelativeLayout
                         android:layout_gravity="center"
-                        android:layout_width="match_parent"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
                         android:layout_height="30dp"
                         android:background="@drawable/launcher_view_white">
 
                         <Spinner
                             android:stateListAnimator="@null"
                             android:layout_width="match_parent"
+                android:minWidth="80dp"
                             android:layout_height="match_parent"
                             android:id="@+id/download_mod_arg_version"/>
 
                         <EditText
                             android:singleLine="true"
                             android:background="@drawable/launcher_view_white"
-                            android:layout_width="120dp"
+                            android:layout_width="0dp"
+                android:layout_weight="1"
+                android:minWidth="80dp"
                             android:layout_height="match_parent"
                             android:textSize="@dimen/text_size_middle"
                             android:paddingStart="9dp"
@@ -249,12 +261,14 @@
 
                     <RelativeLayout
                         android:layout_gravity="center"
-                        android:layout_width="match_parent"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
                         android:layout_height="30dp"
                         android:background="@drawable/launcher_view_white">
 
                         <Spinner
                             android:layout_width="match_parent"
+                android:minWidth="80dp"
                             android:layout_height="match_parent"
                             android:id="@+id/download_mod_arg_sort"/>
 
