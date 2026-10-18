@@ -14,7 +14,7 @@ Maintainer: **Rod123456** (bilibili UID 550905358).
 
 **English summary:** QCL focuses on *ancient* Minecraft versions (pre-classic / classic / indev / infdev /
 alpha / beta / RC) — **the only Android launcher that currently supports downloading every *archived* ancient
-version** (181 archived builds; builds the community never archived are not downloadable) — and the only one that ships Chinese patches for **all** ancient versions. Each archived build
+version** (258 archived builds; builds the community never archived are not downloadable) — and the only one that ships Chinese patches for **all** ancient versions. Each archived build
 is installed with its dependencies and assets fetched automatically. It also supports modern
 versions up to 26.x (Java 25). Pojav launch backend with native SDL3 windowing,
 automatic 32/64-bit runtime detection, dynamic memory clamping, a launch-log overlay, a crash screen, and
@@ -81,14 +81,14 @@ QCL 自己写的是**窗口 / Surface / EGL 上下文 / 输入桥 / 帧节奏**�
   自研渲染器落地后，QCL 将成为**唯一一个在远古版本上颜色完全正确的安卓启动器** ——
   这比"支持下载全部归档版"更硬，因为那是别人做不到，而不是没做。
 
-### 1.5.0 已完成 / 后续规划
+### 当前进展（1.5.2）
 - **界面与背景图已大重做**（1.5.0 落地）—— 新排版（左侧图标竖排常驻导航 + 右侧常驻账号与启动栏）、
   新主题与主题色、背景按时间自动切换昼夜，且**壁纸 / 面板底色 / 文字色成套随昼夜翻转**；
   想回到旧样子可在「设置 → 外观 → 排版」切回**旧排版**，**新旧两套都保留**。
 - **3D 人物换成 FCL 同款 glTF 管线**（1.5.0 落地）—— 骨骼待机动画、360° 旋转与缩放、纹理实时更新；
   微软账号的皮肤与披风现在会**自动跟随服务端**。
-- **Minecraft 26.3 的 Vulkan 检测与引导顺延到 1.5.1** —— 官方 26.3 对着色器要求更严格，
-  部分设备需要 Vulkan。本版本请用 **26.2 及以下**。
+- **Minecraft 26.4 及之前的问题已在 1.5.1 修好**；**26.3 仍然启动不了，原因尚未定位**，
+  1.5.2 也没有修好 —— 这一条如实说明，不粉饰。目前请用 **26.4 或 26.2 及以下**。
 
 ### 已知问题（如实列出）
 > 这里只放**当前版本仍未解决**的项，并且分清楚是哪种"没解决"：
@@ -184,12 +184,13 @@ QCL 自己写的是**窗口 / Surface / EGL 上下文 / 输入桥 / 帧节奏**�
 **每个版本改了什么，都在 GitHub Releases 里，README 不逐版记录：**
 
 - 全部版本：https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases
-- 当前版本：**1.5.1**（versionCode 353）
+- 当前版本：**1.5.2**（versionCode 354）
 
 > 建议先按下面这张表判断自己关心的问题是在哪一版修的，直接查对应 Release 的说明：
 >
 > | 关注点 | 去看 |
 > |---|---|
+> | **JAR 启动器（独立页面 + 独立进程，可直接跑 .jar，自动判断所需 Java 版本）** / **Java 管理（查看/删除本机 Java）** / **3 个新模组加载器：Cleanroom · Legacy Fabric · Legacy Fabric API**（「安装游戏」界面已补齐，图标取自 FCL；版本选择改为独立列表页，可装旧版本） / **外观「启动等待界面图片」6 格选择器（可单独换图，手机/平板自适应）** / **面板色「重置」按钮** / **游戏版本下载页搜索框（版本号 / 正式版 / 快照版 / 远古版 / 愚人节）** / **5 个下载页全部支持翻页 + 「第 N / M 页」** / **下载模组自动带前置（只装必需，前置的前置递归装，跨版本去重）** / 修复安装 Forge 一直失败 / 修复取消收藏后大退仍显示旧收藏 / 修复自制加载器点了没效果 / 修复混合下载源只有 Modrinth 没有 CurseForge / 修复主题色必须进外观页才生效 / 修复外观里一堆白按钮不跟主题色（含 JAR 启动按钮与弹窗按钮） / 修复改主题色需退出重进 / 修复新手教程气泡不随屏幕比例 / 修复等待界面退后台变黑屏 / 修复已撤销的等待界面轮播又回来 / 修复下载页 7 标签小屏只见 3 个 / 修复设置页 6 标签小屏溢出 / 修复下载列表一屏只看 2~3 个 / 修复筛选控件被 label 挤成竖线、输入框显示不出字 / 修复点「筛选」重载列表 / 修复页码最多只 200 页 / 修复「共 N 页」显示不出 / 修复 JAR 页面空白。**⚠️ 26.3 仍然启动不了，本版未修好（如实说明）** | **1.5.2** |
 > | **输入桥与视角偏移（26.4 按钮点不动 / 虚拟键盘失效 / 往左滑往右偏 / 滑到最边缘像被焊住 / 鼠标滑出屏幕 / 开背包关背包点鼠标视角大跳）** / **原生 QCL 视角偏移最后几个坑彻底收尾** / **外观页新增「字体颜色自定义调节」** / **左侧导航栏改纯自适应（大屏占满、小屏自动压缩，不再需要滚动）** / **切到夜间模式自动同步配色（不必再重启）** / **切换新旧排版自动重启** / **旧排版主界面人物不再与按钮重叠** / 修复重命名游戏实例后实例消失 / 修复 Forge 整合包加载器被认成 Fabric / 修复下载中断导致启动失败与进度一直显示 0 B/s / 修复整合包安装弹窗取消按钮在小屏手机上出屏 / 修复下载页·游戏列表·自动安装页打开后整页空白 / 修复目录里没有游戏时点「游戏单独设置」崩溃 / 修复自动安装选 Forge 点了没反应、Forge 版本列表加载不出来 / 修复夜间模式残留白色背景导致白色文字看不见。**⚠️ 26.3 仍然启动不了，本版未修好（如实说明）** | **1.5.1** |
 > | 整合包导入 / ModLoader / Babric / 改 class 模组注入与冲突 / Class 查看器 | 1.2.3 |
 > | 图标选择器 / 加载器图标（装哪个显示哪个）/ 下载页五页功能统一 | 1.2.4 |
