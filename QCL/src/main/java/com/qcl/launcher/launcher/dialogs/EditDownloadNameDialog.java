@@ -263,10 +263,27 @@ public class EditDownloadNameDialog extends Dialog implements View.OnClickListen
     }
 
     /**
-     * ★ 1.2.5：把「这个模组的前置」也加进同一批下载任务里。
+     * ★★★★★ 1.5.2 重写：把「这个模组的前置」以及**前置的前置**都加进同一批下载任务。
      *
-     * @param out    下载任务表（本体的那条已经在里面了）
-     * @param modsDir 模组目录（mods/）
+     * <p>用户要求：「反正前置的前置只下载必须，所有下载模组自动下载前置只下载必须，不下载可选」。
+     *
+     * <p>规则（**每一层都一样**）：
+     * <ul>
+     *   <li>{@code required} → 下载；</li>
+     *   <li>{@code optional} / {@code incompatible} / {@code embedded} → **跳过**；</li>
+     *   <li>类型未知（null）→ 按必需处理（保守，宁可多装必要件也不让玩家缺前置）。</li>
+     * </ul>
+     *
+     * <p>递归与去重：
+     * <ul>
+     *   <li>深度上限 {@link #MAX_DEP_DEPTH}（MC 依赖链一般 2~3 层）；</li>
+     *   <li>{@code visited} 用 **project id** 记录，防 A→B→A 循环与重复；</li>
+     *   <li>去重范围覆盖：本次任务表 + 当前版本 mods/ + 所有 versions/&lt;名字&gt;/mods/ + 共享 mods/，
+     *       按文件名**和** slug 双重判断。</li>
+     * </ul>
+     *
+     * @param out     下载任务表（本体的那条已经在里面了）
+     * @param modsDir 当前版本的模组目录（mods/）
      */
     private void appendDependencyTasks(List<DownloadTaskListBean> out, String modsDir) {
         List<RemoteMod> deps = this.ui.getDependencies();
@@ -274,54 +291,177 @@ public class EditDownloadNameDialog extends Dialog implements View.OnClickListen
             return;
         }
         String mcv = com.qcl.launcher.launcher.setting.SettingUtils.getCurrentGameVersion(this.ui.activity);
+        java.util.Set<String> visited = new java.util.HashSet<String>();
+
         for (RemoteMod dep : deps) {
             try {
-                // ★ 1.2.5：**只自动装「必需」的**前置。可选/不兼容/已内置的不动 ——
-                //   前置列表里已经标了「【可选前置】」，玩家想装自己点一下就下。
                 String depId = dep.getData() == null ? null : dep.getData().getRemoteId();
                 String depType = depId == null ? null : this.ui.getDependencyTypes().get(depId);
-                if ("optional".equals(depType) || "incompatible".equals(depType)
-                        || "embedded".equals(depType)) {
+                // ★ 第一层：只下必需
+                if (!isRequiredDependency(depType)) {
                     continue;
+                }
+                if (depId != null) {
+                    visited.add(depId);
                 }
                 RemoteMod.Version best = pickDependencyVersion(dep, mcv);
-                if (best == null || best.getFile() == null || best.getFile().getUrl() == null) {
+                if (best == null) {
                     continue;
                 }
-                String fileName = best.getFile().getFilename();
-                if (fileName == null || fileName.isEmpty()) {
-                    fileName = dep.getSlug() + ".jar";
+                if (enqueueDependency(out, modsDir, dep, best)) {
+                    // ★ 只有真的排进队列，才继续往下钻（避免为已装的前置白查一堆网络）
+                    collectTransitiveDependencies(out, modsDir, mcv, best, visited, 1);
                 }
-                // ★★★ 1.3.8 修复：先查**游戏 mods/ 目录**再排队 —— 这个前置本地已经装了就直接跳过。
-                //   原先只查本次下载任务表 out，没查磁盘：同一个前置（例如 Fabric API）
-                //   每下载一次模组都会被重新排一次队，玩家连着下两个模组就重复下两份前置。
-                if (modsDir != null && !modsDir.isEmpty()) {
-                    if (new File(modsDir, fileName).exists()) {
-                        continue;
-                    }
-                    // 同 slug 的另一版本已装（如已装 sodium-fabric-0.5.11.jar，这次要下 0.6.0）
-                    // 也视为「已存在」，避免同一个前置换个版本号又下一份。
-                    String depSlug = dep.getSlug();
-                    if (depSlug != null && !depSlug.isEmpty() && hasModBySlug(new File(modsDir), depSlug)) {
-                        continue;
-                    }
-                }
-                boolean dup = false;
-                for (DownloadTaskListBean bean : out) {
-                    if (fileName.equals(bean.name)) {
-                        dup = true;
-                        break;
-                    }
-                }
-                if (dup) {
+            } catch (Throwable ignored) {
+            }
+        }
+    }
+
+    /** 依赖递归深度上限（防病态数据爆栈）。 */
+    private static final int MAX_DEP_DEPTH = 5;
+
+    /**
+     * ★ 1.5.2：递归收集「前置的前置」。
+     *
+     * @param parentVer 上一层那个前置**已选中的版本**（依赖信息挂在 Version 上）
+     * @param depth     当前深度（1 = 第一层前置的前置）
+     */
+    private void collectTransitiveDependencies(List<DownloadTaskListBean> out, String modsDir,
+                                               String mcv, RemoteMod.Version parentVer,
+                                               java.util.Set<String> visited, int depth) {
+        if (depth > MAX_DEP_DEPTH || parentVer == null) {
+            return;
+        }
+        List<String> ids;
+        try {
+            ids = parentVer.getDependencies();
+        } catch (Throwable t) {
+            return;
+        }
+        if (ids == null || ids.isEmpty()) {
+            return;
+        }
+        for (String id : ids) {
+            try {
+                if (id == null || visited.contains(id)) {
                     continue;
                 }
-                out.add(new DownloadTaskListBean(fileName,
-                        com.qcl.launcher.utils.io.MirrorUtils.rewriteCdn(best.getFile().getUrl()),
-                        modsDir + fileName, "").withFallback(best.getFile().getUrl()));
+                visited.add(id);
+                // ★ 每一层都只下必需
+                if (!isRequiredDependency(parentVer.getDependencyType(id))) {
+                    continue;
+                }
+                RemoteMod depMod = this.ui.getRepository().getModById(id);
+                if (depMod == null) {
+                    continue;
+                }
+                RemoteMod.Version v = pickDependencyVersion(depMod, mcv);
+                if (v == null) {
+                    continue;
+                }
+                if (enqueueDependency(out, modsDir, depMod, v)) {
+                    collectTransitiveDependencies(out, modsDir, mcv, v, visited, depth + 1);
+                }
+            } catch (Throwable ignored) {
+                // 单个依赖查询/入队失败不影响其它
             }
-            catch (Throwable ignored) {
+        }
+    }
+
+    /** ★ 1.5.2：只认 required；null（未知）按必需处理。 */
+    private static boolean isRequiredDependency(String type) {
+        if (type == null || type.isEmpty()) {
+            return true;
+        }
+        return "required".equalsIgnoreCase(type);
+    }
+
+    /**
+     * ★ 1.5.2：把一个前置排进下载队列。
+     *
+     * @return true = 真的排进去了（调用方可以继续递归它的依赖）
+     */
+    private boolean enqueueDependency(List<DownloadTaskListBean> out, String modsDir,
+                                      RemoteMod mod, RemoteMod.Version ver) {
+        if (ver == null || ver.getFile() == null || ver.getFile().getUrl() == null) {
+            return false;
+        }
+        String fileName = ver.getFile().getFilename();
+        if (fileName == null || fileName.isEmpty()) {
+            fileName = mod.getSlug() + ".jar";
+        }
+        String slug = mod.getSlug();
+
+        // ★ 跨版本去重：当前版本 + 所有 versions/*/mods/ + 共享 mods/
+        if (isModInstalledAnywhere(modsDir, fileName, slug)) {
+            return false;
+        }
+        // 本次任务表去重
+        for (DownloadTaskListBean bean : out) {
+            if (fileName.equals(bean.name)) {
+                return false;
             }
+        }
+        out.add(new DownloadTaskListBean(fileName,
+                com.qcl.launcher.utils.io.MirrorUtils.rewriteCdn(ver.getFile().getUrl()),
+                modsDir + fileName, "").withFallback(ver.getFile().getUrl()));
+        return true;
+    }
+
+    /**
+     * ★ 1.5.2：这个模组是否已经装在**任意位置**（含其它版本的独立 mods/ 目录）。
+     *
+     * <p>用户要求：「如果检测到玩家各版本列表、版本独立列表有这个模组，就不再多余下载」。
+     */
+    private boolean isModInstalledAnywhere(String currentModsDir, String fileName, String slug) {
+        // ① 当前版本的 mods/
+        if (modsContains(currentModsDir, fileName, slug)) {
+            return true;
+        }
+        try {
+            String gameDir = this.ui.activity.launcherSetting.gameFileDirectory;
+            if (gameDir == null || gameDir.isEmpty()) {
+                return false;
+            }
+            File root = new File(gameDir);
+            // ② 所有版本独立目录 versions/<name>/mods/
+            File versionsDir = new File(root, "versions");
+            File[] versionDirs = versionsDir.listFiles();
+            if (versionDirs != null) {
+                for (File vd : versionDirs) {
+                    if (vd == null || !vd.isDirectory()) {
+                        continue;
+                    }
+                    if (modsContains(new File(vd, "mods").getAbsolutePath(), fileName, slug)) {
+                        return true;
+                    }
+                }
+            }
+            // ③ 共享 mods/（老布局）
+            if (modsContains(new File(root, "mods").getAbsolutePath(), fileName, slug)) {
+                return true;
+            }
+        } catch (Throwable ignored) {
+        }
+        return false;
+    }
+
+    /** mods/ 里是否有这个文件，或同 slug 的任意版本。 */
+    private static boolean modsContains(String modsDirPath, String fileName, String slug) {
+        try {
+            if (modsDirPath == null || modsDirPath.isEmpty()) {
+                return false;
+            }
+            File modsDir = new File(modsDirPath);
+            if (!modsDir.isDirectory()) {
+                return false;
+            }
+            if (fileName != null && !fileName.isEmpty() && new File(modsDir, fileName).exists()) {
+                return true;
+            }
+            return slug != null && !slug.isEmpty() && hasModBySlug(modsDir, slug);
+        } catch (Throwable ignored) {
+            return false;
         }
     }
 
