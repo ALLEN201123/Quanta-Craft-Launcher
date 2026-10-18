@@ -62,6 +62,22 @@ public final class CheckBoxTintUtils {
         }
     }
 
+    /**
+     * ★ 1.5.2：给**任意 View 树**染色（对话框专用）。
+     *
+     * <p>Dialog / AlertDialog 是独立 Window，其 view 树不在 Activity 里，
+     * 用 {@link #apply(Activity, int)} 遍历不到它们。
+     */
+    public static void apply(View root, int color) {
+        if (root == null || color == 0) {
+            return;
+        }
+        try {
+            tintRecursive(root, color);
+        } catch (Throwable ignored) {
+        }
+    }
+
     private static void tintRecursive(View view, int color) {
         if (view == null) {
             return;

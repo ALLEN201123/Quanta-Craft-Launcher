@@ -119,7 +119,6 @@ CompoundButton.OnCheckedChangeListener {
     private ThemeColorSpinnerAdapter themeColorAdapter;
     /** ★ 1.5.0：防止 onItemSelected 在初始化/程序化设值时误触发应用。 */
     private boolean themeSpinnerReady = false;
-    private SwitchCompat transBarSwitch;
     private SwitchCompat fullscreenSwitch;
     private SwitchCompat showAccountModelSwitch;
     private SwitchCompat transBgSwitch;
@@ -209,7 +208,6 @@ CompoundButton.OnCheckedChangeListener {
         }
         refreshWaitBgSlots();
         setupThemeColorSpinner();
-        this.transBarSwitch = (SwitchCompat)this.activity.findViewById(R.id.switch_trans_bar);
         this.fullscreenSwitch = (SwitchCompat)this.activity.findViewById(R.id.switch_full_screen);
         this.showAccountModelSwitch = (SwitchCompat)this.activity.findViewById(R.id.switch_show_account_model);
         this.transBgSwitch = (SwitchCompat)this.activity.findViewById(R.id.switch_transparent_bg);
@@ -304,7 +302,6 @@ CompoundButton.OnCheckedChangeListener {
         if (this.customPanelBlock != null) {
             this.customPanelBlock.setOnClickListener((View.OnClickListener)this);
         }
-        this.transBarSwitch.setOnCheckedChangeListener((CompoundButton.OnCheckedChangeListener)this);
         this.fullscreenSwitch.setOnCheckedChangeListener((CompoundButton.OnCheckedChangeListener)this);
         if (this.showAccountModelSwitch != null) {
             this.showAccountModelSwitch.setOnCheckedChangeListener((CompoundButton.OnCheckedChangeListener)this);
@@ -377,7 +374,6 @@ CompoundButton.OnCheckedChangeListener {
                 }).start();
             }
         });
-        this.transBarSwitch.setChecked(this.activity.launcherSetting.transBar);
         this.fullscreenSwitch.setChecked(this.activity.launcherSetting.fullscreen);
         if (this.showAccountModelSwitch != null) {
             this.showAccountModelSwitch.setChecked(this.activity.launcherSetting.showAccountModel);
@@ -998,13 +994,6 @@ CompoundButton.OnCheckedChangeListener {
 
     @SuppressLint(value={"UseCompatLoadingForDrawables"})
     public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-        if (buttonView == this.transBarSwitch) {
-            this.activity.launcherSetting.transBar = isChecked;
-            GsonUtils.saveLauncherSetting(this.activity.launcherSetting, AppManifest.SETTING_DIR + "/launcher_setting.json");
-            if (isChecked) {
-                // empty if block
-            }
-        }
         if (buttonView == this.fullscreenSwitch) {
             this.activity.launcherSetting.fullscreen = isChecked;
             GsonUtils.saveLauncherSetting(this.activity.launcherSetting, AppManifest.SETTING_DIR + "/launcher_setting.json");
@@ -1309,4 +1298,3 @@ CompoundButton.OnCheckedChangeListener {
         }
     }
 }
-

@@ -115,6 +115,47 @@ public final class ThemeRefreshUtils {
                     if (m instanceof GradientDrawable) {
                         ((GradientDrawable) m).setColor(color);
                     }
+                } else if (bg instanceof android.graphics.drawable.StateListDrawable) {
+                    // ★★★★★ 1.5.2：**Button / ImageButton 的背景是 <selector> 时也要染**。
+                    //
+                    //   审计发现：全工程 402 个按钮类控件里有 381 个没有任何 tint tag，
+                    //   而且大量按钮的背景是 `@drawable/launcher_button_gray` 这类
+                    //   **StateListDrawable（selector）**，上面那句
+                    //   `if (bg instanceof GradientDrawable)` **完全命中不了** ⇒ 永远白着。
+                    //
+                    //   ⇒ 用 setTintList：它作用于 selector 的**每一个 state**，
+                    //     且不修改原资源文件。
+                    Drawable m = bg.mutate();
+                    m.setTintList(ColorStateList.valueOf(withAlpha(color, 0x33)));
+                    m.setTintMode(android.graphics.PorterDuff.Mode.SRC_IN);
+                    view.setBackground(m);
+                }
+            }
+        } catch (Throwable ignored) {
+        }
+        try {
+            // ★★★★★ 1.5.2 新增：**可点击的 TextView 也要跟随主题色**。
+            //
+            //   用户反馈：「外观里面还有一大堆白色按钮，没有自动同步主题，需要修复」。
+            //
+            //   ★ 根因（读 drawable 文件确认）：外观页那些按钮背景是
+            //     {@code @drawable/launcher_button_gray} —— 它是 **<selector>**
+            //     （StateListDrawable：按下 #ECECEC / 常态浅灰），**不是 GradientDrawable**。
+            //     所以上面 `if (bg instanceof GradientDrawable)` 对它们**完全不生效**，
+            //     于是永远保持白色 ⇒ 玩家看到"一大堆白按钮没跟主题色"。
+            //
+            //   ★ 修法：Drawable.setTintList() —— 它作用于**整个 StateListDrawable
+            //     （含每个 state）**，也不改动原资源。颜色取主题色低透明度版，
+            //     能看出"跟着主题走"又不会太艳、压住文字。
+            if (view instanceof android.widget.TextView
+                    && !(view instanceof android.widget.CompoundButton)
+                    && view.isClickable()) {
+                Drawable tbg = view.getBackground();
+                if (tbg != null) {
+                    Drawable m = tbg.mutate();
+                    m.setTintList(ColorStateList.valueOf(withAlpha(color, 0x33)));
+                    m.setTintMode(android.graphics.PorterDuff.Mode.SRC_IN);
+                    view.setBackground(m);
                 }
             }
         } catch (Throwable ignored) {
@@ -125,6 +166,31 @@ public final class ThemeRefreshUtils {
             for (int i = 0; i < n; i++) {
                 retintButtons(g.getChildAt(i), color);
             }
+        }
+    }
+
+    /**
+     * ★★★★★ 1.5.2 新增：给**任意 View 树**染主题色（对话框专用）。
+     *
+     * <p>为什么需要：{@link #apply(Activity, int)} 走的是 Activity 的 content view，
+     * 而 {@link android.app.Dialog} / {@link android.app.AlertDialog} 是**独立的 Window**，
+     * 它们的 view 树**不在** Activity 里 —— 所以"安装游戏""下载模组"这些弹窗里的按钮
+     * 永远不会被染，玩家看到的就是一堆白按钮。
+     *
+     * <p>用法：对话框 setContentView / show 之后调
+     * {@code ThemeRefreshUtils.applyTo(dialog.getWindow().getDecorView(), color)}。
+     */
+    public static void applyTo(View root, int color) {
+        if (root == null || color == 0) {
+            return;
+        }
+        try {
+            retintButtons(root, color);
+        } catch (Throwable ignored) {
+        }
+        try {
+            CheckBoxTintUtils.apply(root, color);
+        } catch (Throwable ignored) {
         }
     }
 
