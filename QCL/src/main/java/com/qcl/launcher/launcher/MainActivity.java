@@ -771,6 +771,21 @@ implements View.OnClickListener {
                     com.qcl.launcher.utils.ui.FontColorUtils.parse(this.launcherSetting.fontColor));
         } catch (Throwable ignored) {
         }
+        // ★★★★★ 1.5.2：**让勾选框/开关/进度圈的强调色跟着「主题色」走**。
+        //
+        //   用户反馈：「还有一些勾选颜色的问题，还有一些颜色的问题都没有统一」。
+        //   根因：26 个 CheckBox 都没设 buttonTint，颜色全来自主题 colorAccent，
+        //   而 colorAccent 在 colors.xml 里写死 #556980 —— 玩家换主题色后勾选框不变。
+        //   ⇒ 这里在 onResume 用**当前主题色**重刷一遍（和上面的字体颜色同机制，可重复执行）。
+        try {
+            int themeColor = com.qcl.launcher.utils.QclColors.parseSafeTheme(
+                    this,
+                    com.qcl.launcher.launcher.uis.universal.setting.right.launcher
+                            .ExteriorSettingUI.getThemeColor(this, this.launcherSetting.launcherTheme),
+                    R.color.colorAccent);
+            com.qcl.launcher.utils.ui.CheckBoxTintUtils.apply(this, themeColor);
+        } catch (Throwable ignored) {
+        }
         if (SkinPreviewDialog.getInstance() != null) {
             SkinPreviewDialog.getInstance().onResume();
         }
