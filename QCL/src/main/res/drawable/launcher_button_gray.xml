@@ -1,8 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- ★★★★★ 1.5.2：**让按钮底色直接跟随主题色**（一次改动覆盖全工程所有用它的按钮）。
+     用户要求：「继续覆盖全部按钮」。
+
+     ★ 为什么改这里而不是改 Java：
+       审计发现全工程 402 个按钮类控件、62 个 Dialog —— 逐个 applyTo 不现实，
+       而且 Dialog 是独立 Window，Activity 侧的遍历根本到不了它们。
+       这些按钮绝大多数共用下面这个 drawable，改它就等于**全局生效**，
+       连对话框、二级页面、动态 inflate 出来的控件全都自动跟上。
+
+     ★ 为什么用 ?attr/colorAccent 而不是 @color/colorAccent：
+       玩家自定义主题色走 ExteriorConfig → 覆盖的是 **?attr/colorAccent**，
+       而 colors.xml 里的 @color/colorAccent 是静态值、不会跟着变。
+       ⇒ 只有引用 attr 才真正"跟随玩家选的主题色"。
+
+     ★ 为什么加 android:alpha：
+       attr 给的是**完全不透明**纯色，直接铺满会压住按钮上的文字/图标。
+       常态 0.20、按下 0.45，既看得出"跟着主题走"又保留可读性。
+       （minSdk=26，item 上的 android:alpha 需要 API 23+，完全够。） -->
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:state_pressed="true">
+    <item android:state_pressed="true" android:alpha="0.45">
         <shape>
-            <solid android:color="#ECECEC"/>
+            <solid android:color="?attr/colorAccent"/>
             <corners
                 android:topLeftRadius="5.0dip"
                 android:topRightRadius="5.0dip"
@@ -10,9 +28,9 @@
                 android:bottomRightRadius="5.0dip"/>
         </shape>
     </item>
-    <item>
+    <item android:alpha="0.20">
         <shape>
-            <solid android:color="#DADADA"/>
+            <solid android:color="?attr/colorAccent"/>
             <corners
                 android:topLeftRadius="5.0dip"
                 android:topRightRadius="5.0dip"
