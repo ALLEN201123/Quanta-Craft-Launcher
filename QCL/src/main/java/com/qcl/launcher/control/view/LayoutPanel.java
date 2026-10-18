@@ -50,6 +50,24 @@ extends RelativeLayout {
     private float[] xReference;
     private float[] yReference;
     private boolean showBackground = false;
+    /**
+     * ★★★★★ 1.5.2：**游戏是否已经渲染出第一帧**（永久性标志，只置一次 true）。
+     *
+     * <p>为什么需要它：`showBackground` **不能**用来判断"是不是还在等待界面"——
+     * <ul>
+     *   <li>{@code PojavMinecraftActivity} L151：{@code GameFrameProbe} 在游戏渲染出
+     *       第一帧时调 {@code hideBackground()}（= **撤销等待界面**）；</li>
+     *   <li>但 {@code MenuHelper} L272 在**玩家打开游戏内菜单**时又会调
+     *       {@code showBackground()}，把它设回 true。</li>
+     * </ul>
+     * 于是"用 showBackground 判断要不要恢复轮播"就会踩中用户的场景：
+     * 启动完 → 开过一次菜单 → 退后台 → 回前台 → **已经被撤销的轮播又回来了**。
+     *
+     * <p>⇒ 改用这个**只进不出**的标志：一旦游戏渲染出第一帧，就永久认为
+     * "等待阶段已结束"，之后无论 View 怎么重新 attach，
+     * {@link #onAttachedToWindow} 都**不再**重启轮播。
+     */
+    private boolean gameFrameRendered = false;
     private boolean showReference = false;
     private Paint linePaint;
     private Path path;
@@ -73,8 +91,18 @@ extends RelativeLayout {
             if (!LayoutPanel.this.bgRunning) {
                 return;
             }
-            LayoutPanel.this.bgIndex = (LayoutPanel.this.bgIndex + 1) % BG_RES_IDS.length;
-            LayoutPanel.this.bgPrev = LayoutPanel.this.bgCache[(LayoutPanel.this.bgIndex - 1 + BG_RES_IDS.length) % BG_RES_IDS.length];
+            // ★ 1.5.2：帧数按"有没有自定义图"决定，否则填了 2 张图时会在 6 格里乱跳
+            int total = BG_RES_IDS.length;
+            try {
+                int cc = DynamicBackground.getCustomFrameCount();
+                if (cc > 0) {
+                    total = cc;
+                }
+            } catch (Throwable ignored) {
+            }
+            LayoutPanel.this.bgIndex = (LayoutPanel.this.bgIndex + 1) % total;
+            LayoutPanel.this.bgPrev = LayoutPanel.this.getBg(
+                    (LayoutPanel.this.bgIndex - 1 + total) % total);
             LayoutPanel.this.bgFade = 0.0f;
             LayoutPanel.this.bgLastFrame = System.currentTimeMillis();
             LayoutPanel.this.invalidate();
@@ -137,6 +165,19 @@ extends RelativeLayout {
         if (i < 0 || i >= BG_RES_IDS.length) {
             return null;
         }
+        // ★★★★★ 1.5.2：**等待界面的轮播也支持玩家自定义图**。
+        //   只要外观 → 背景 → 网络里填过图，就优先用那些图（与启动器主界面完全一致）；
+        //   没填 / 不是 BitmapDrawable 时回退内置 qcl_bg_1~6。
+        try {
+            android.graphics.drawable.Drawable d = DynamicBackground.getCustomFrame(i);
+            if (d instanceof android.graphics.drawable.BitmapDrawable) {
+                Bitmap cb = ((android.graphics.drawable.BitmapDrawable) d).getBitmap();
+                if (cb != null && !cb.isRecycled()) {
+                    return cb;
+                }
+            }
+        } catch (Throwable ignored) {
+        }
         if (this.bgCache[i] == null) {
             this.bgCache[i] = this.decodeBg(i);
         }
@@ -163,6 +204,31 @@ extends RelativeLayout {
     protected void onDetachedFromWindow() {
         this.stopBgRotation();
         super.onDetachedFromWindow();
+    }
+
+    /**
+     * ★★★★★ 1.5.2 修「退后台重进，**已经被撤销的**等待界面轮播又自己回来」。
+     *
+     * <p>规则（关键，别改错）：
+     * <ul>
+     *   <li>**游戏还没渲染出第一帧**（还在等待阶段）→ 重新 attach 时把轮播拉起来，
+     *       并把 6 帧补齐；</li>
+     *   <li>**游戏已经渲染出第一帧**（{@code gameFrameRendered == true}，说明等待界面
+     *       早就被 {@code GameFrameProbe} 撤销了）→ **一律不重启**，
+     *       哪怕 {@code showBackground} 因为"玩家开过菜单"又变成了 true。</li>
+     * </ul>
+     * 这样既修了"等待阶段黑屏/不轮播"，又不会让已撤销的轮播死灰复燃。
+     */
+    @Override
+    protected void onAttachedToWindow() {
+        super.onAttachedToWindow();
+        try {
+            if (this.showBackground && !this.gameFrameRendered) {
+                this.startBgRotation();
+                this.invalidate();
+            }
+        } catch (Throwable ignored) {
+        }
     }
 
     public void setMenuOutsideCloseEnabled(boolean enabled) {
@@ -285,6 +351,10 @@ extends RelativeLayout {
 
     public void hideBackground() {
         this.showBackground = false;
+        // ★ 1.5.2：这里是 GameFrameProbe（游戏渲染出第一帧）与菜单关闭共用的"撤销"入口。
+        //   标记"游戏画面已经出来了" ⇒ 之后再 re-attach 也绝不重启轮播，
+        //   避免"已撤销的等待界面又回来"。
+        this.gameFrameRendered = true;
         this.stopBgRotation();
         this.postInvalidateOnAnimation();
     }

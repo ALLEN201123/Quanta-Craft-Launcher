@@ -75,6 +75,28 @@ public class DynamicBackground {
         return customFrames != null;
     }
 
+    /**
+     * ★ 1.5.2：给**游戏内等待界面**（{@code LayoutPanel}）取用自定义帧。
+     *
+     * <p>等待界面的那 6 格轮播原本永远只放内置 `qcl_bg_1~6`；现在只要玩家在
+     * 外观 → 背景 → 网络里填了图，这里就返回他的图，**两边一致**。
+     *
+     * @return 该下标的自定义帧；没有自定义图时返回 null（调用方回退内置图）
+     */
+    public static android.graphics.drawable.Drawable getCustomFrame(int index) {
+        java.util.List<android.graphics.drawable.Drawable> f = customFrames;
+        if (f == null || f.isEmpty()) {
+            return null;
+        }
+        return f.get(Math.abs(index) % f.size());
+    }
+
+    /** 自定义帧数量（0 = 没有自定义图）。 */
+    public static int getCustomFrameCount() {
+        java.util.List<android.graphics.drawable.Drawable> f = customFrames;
+        return f == null ? 0 : f.size();
+    }
+
     /** 当前轮播总帧数（自定义优先）。 */
     private static int frameCount() {
         java.util.List<Drawable> f = customFrames;
