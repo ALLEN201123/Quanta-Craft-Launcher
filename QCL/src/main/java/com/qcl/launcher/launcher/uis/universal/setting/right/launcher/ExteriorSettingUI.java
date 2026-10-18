@@ -228,7 +228,7 @@ CompoundButton.OnCheckedChangeListener {
             this.editBgPath.setEnabled(false);
             // ★ 1.5.2：URL 可编辑 —— 玩家可填自己的图；留空则仍用内置 6 张。
             //   只改「能不能编辑」，不碰任何启动/跳转流程。
-            this.editBgUrl.setEnabled(true);
+            this.editBgUrl.setEnabled(false);
             this.selectBgPath.setEnabled(false);
         } else if (this.activity.launcherSetting.launcherBackground.type == 1) {
             // ★ 1.5.0：默认 → 按现实时间自动切昼夜
@@ -1005,7 +1005,7 @@ CompoundButton.OnCheckedChangeListener {
             //     它**不是**"从网络拉图"。所以原来 URL 框被禁用后，玩家根本没法换图。
             //
             //   ★ 只改背景绘制，**不碰** dismiss / startActivity / 启动检查任何流程。
-            this.editBgUrl.setEnabled(true);
+            this.editBgUrl.setEnabled(false);
             this.selectBgPath.setEnabled(false);
             this.activity.launcherSetting.launcherBackground.type = 0;
             // 把当前输入的 URL 记下来（多行/逗号分隔都支持），再重启轮播

@@ -128,6 +128,24 @@ implements View.OnClickListener {
                 MainActivity.this.isLoaded = true;
                 MainActivity.this.onLoad();
                 ExteriorSettingUI.applyPanelTint((Context)MainActivity.this, MainActivity.this.getWindow().getDecorView(), ExteriorSettingUI.getPanelColor((Context)MainActivity.this, MainActivity.this.launcherSetting.panelColor));
+                // ★★★★★ 1.5.2 修「**必须点进外观页**才会把主题色涂到界面上，否则一直是白的」。
+                //
+                //   ★ 根因：上面 L125~127 只调了 exteriorConfig.apply() —— 那**只改主题定义**，
+                //     已经 inflate 出来的 View 不会重读主题（左栏背景是固定 color 资源，
+                //     按钮 drawable 引用的 ?attr/colorAccent 同理）。
+                //     而 onResume 里那次 ThemeRefreshUtils.apply 又发生在 isLoaded == false 时
+                //     （初始化是异步的，那时 UI 都还没 inflate）⇒ 等于没做。
+                //     于是只有"进一次外观页"才会触发刷新 —— 正是用户描述的现象。
+                //
+                //   ⇒ 在**初始化完成之后**这里补一次真正给 View 上色的调用。
+                try {
+                    int bootThemeColor = ExteriorSettingUI.parseThemeColorSafe(
+                            (Context) MainActivity.this,
+                            MainActivity.this.launcherSetting.launcherTheme);
+                    com.qcl.launcher.utils.ui.ThemeRefreshUtils.apply(
+                            MainActivity.this, bootThemeColor);
+                } catch (Throwable ignored) {
+                }
                 MainActivity.this.startDynamicBackgroundIfNeeded();
                 // ★ 1.3.0：**初始化完成后**扫一遍已装的远古版本，没打中文包的补上。
                 //   为什么放这儿：onResume 时 isLoaded 还是 false（初始化是异步的），
