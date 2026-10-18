@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ★ 1.5.2 新增：JAR 启动器**独立页面**。
+     用户反馈：「没有设置独立页面，玩家哪知道那个按钮是干啥的，就跳转到选择文件里面去了」。
+     ⇒ 现在点左栏进这里，先把「这是干什么的」讲清楚，再让玩家点按钮选文件。 -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/ui_jar_launcher"
+    android:orientation="vertical"
+    android:background="@color/launcher_ui_background"
+    android:padding="12dp"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <TextView
+        android:id="@+id/jar_launcher_title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/jar_launcher_title"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:textColor="@color/colorPureBlack"/>
+
+    <TextView
+        android:id="@+id/jar_launcher_desc"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:lineSpacingExtra="3dp"
+        android:text="@string/jar_launcher_desc"
+        android:textSize="12sp"
+        android:textColor="@color/colorPureBlack"/>
+
+    <!-- 主按钮：选择 jar 并启动 -->
+    <Button
+        android:id="@+id/jar_launcher_pick"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="14dp"
+        android:text="@string/jar_launcher_pick"
+        android:textSize="15sp"/>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="@string/jar_launcher_java_title"
+        android:textSize="13sp"
+        android:textStyle="bold"
+        android:textColor="@color/colorPureBlack"/>
+
+    <!-- 本机 Java 列表 -->
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:layout_marginTop="6dp"
+        android:background="@drawable/launcher_view_white">
+
+        <LinearLayout
+            android:id="@+id/jar_launcher_java_list"
+            android:orientation="vertical"
+            android:padding="10dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+    </ScrollView>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="@string/jar_launcher_hint"
+        android:textSize="11sp"
+        android:textColor="@color/colorLinkBlue"/>
+
+</LinearLayout>

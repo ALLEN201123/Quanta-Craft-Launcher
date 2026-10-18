@@ -207,7 +207,7 @@
                 android:layout_gravity="center"
                 android:layout_width="@dimen/qcl_nav_icon"
                 android:layout_height="@dimen/qcl_nav_icon"
-                android:background="@drawable/ic_qcl_lab_white"/>
+                android:background="@drawable/ic_qcl_jar_white"/>
 
         </LinearLayout>
 

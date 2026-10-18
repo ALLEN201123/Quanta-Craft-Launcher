@@ -1687,10 +1687,11 @@ public static void markLocalCapeChanged() {
             activity.uiManager.switchMainUI(activity.uiManager.labUI);
         }
         // ★★★★★ 2026-10-17（1.5.2 新增）JAR 启动 —— FCL 那种**独立功能**，
-        //   不是「启动游戏」按钮：选一个 .jar，用内置 Java 在**独立进程**里跑它，
-        //   跑完回到启动器还能照常启动 Minecraft（子进程 JVM 不污染主进程）。
+        //   不是「启动游戏」按钮。
+        //   ★ 用户反馈修正：原来点左栏**直接弹文件选择器**，玩家根本不知道这个按钮是干啥的。
+        //     ⇒ 现在先进入**独立页面**（JarLauncherUI：写清用途 + 列出本机 Java + 一个明确的主按钮）。
         else if (v == startJarLaunchUI){
-            pickJarToLaunch();
+            activity.uiManager.switchMainUI(activity.uiManager.jarLauncherUI);
         }
         // ★★★ 1.5.0 新排版独有：左侧导航底部「返回上一层」→ **层级式返回**（backToLastUI：出栈一层）。
         //   ★ 用户明确要求：不是一键回主页，而是"退一层、再退一层，一直退到主界面"。

@@ -101,6 +101,8 @@ CompoundButton.OnCheckedChangeListener {
     private View fontColorView;
     private TextView fontColorText;
     private Button resetFontColor;
+    /** ★ 1.5.2：重置主题色的按钮（玩家换过颜色后一键回默认）。 */
+    private TextView resetThemeColor;
     private View colorView;
     private TextView colorText;
     private LinearLayout selectPanelColor;
@@ -177,6 +179,11 @@ CompoundButton.OnCheckedChangeListener {
             this.resetFontColor.setOnClickListener((View.OnClickListener)this);
         }
         refreshFontColorUi();
+        // ★ 1.5.2 新增：**重置主题色**按钮（用户要求：换了颜色后要能一键回默认）
+        this.resetThemeColor = (TextView)this.activity.findViewById(R.id.reset_theme_color);
+        if (this.resetThemeColor != null) {
+            this.resetThemeColor.setOnClickListener((View.OnClickListener)this);
+        }
         setupThemeColorSpinner();
         this.transBarSwitch = (SwitchCompat)this.activity.findViewById(R.id.switch_trans_bar);
         this.fullscreenSwitch = (SwitchCompat)this.activity.findViewById(R.id.switch_full_screen);
@@ -695,6 +702,34 @@ CompoundButton.OnCheckedChangeListener {
                 }
             });
             dialog.show();
+        }
+        // ★★★★★ 1.5.2 新增：**重置主题色**。
+        //   用户要求：「还没有重置颜色按钮……玩家换了颜色没有重置按钮」。
+        //   做法：把 launcherTheme 置 null（= 跟随内置默认 colorAccent），
+        //   然后把默认色立即刷回界面（含左侧导航栏），最后把下拉框同步回默认项。
+        if (v == this.resetThemeColor) {
+            try {
+                this.activity.launcherSetting.launcherTheme = null;
+                GsonUtils.saveLauncherSetting(this.activity.launcherSetting,
+                        AppManifest.SETTING_DIR + "/launcher_setting.json");
+                int def = this.context.getResources().getColor(R.color.colorAccent);
+                this.activity.exteriorConfig.primaryColor(def);
+                this.activity.exteriorConfig.accentColor(def);
+                this.activity.exteriorConfig.apply((Activity) this.activity);
+                this.applyThemeColorToViews(def);
+                com.qcl.launcher.utils.ui.ThemeRefreshUtils.apply(
+                        (Activity) this.activity, def);
+                // 下拉框同步回默认项（初始化标志先置 false，避免又被当成"玩家选择"）
+                try {
+                    this.themeSpinnerReady = false;
+                    this.setupThemeColorSpinner();
+                    this.themeSpinnerReady = true;
+                } catch (Throwable ignored) {
+                }
+                Toast.makeText(this.context, "主题色已恢复默认",
+                        Toast.LENGTH_SHORT).show();
+            } catch (Throwable ignored) {
+            }
         }
         if (v == this.resetFontColor) {
             this.activity.launcherSetting.fontColor = null;   // null = 跟随主题

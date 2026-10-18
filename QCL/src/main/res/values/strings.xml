@@ -1196,4 +1196,12 @@ Multiplayer is powered by Terracotta (by BurningTNT). The multiplayer feature is
     <string name="jar_launch_stop">Stop</string>
     <string name="jar_launch_exit">Exit</string>
     <string name="jar_launch_pick_hint">Pick a .jar file to run</string>
+    <!-- ★ 1.5.2：JAR 启动器独立页面 -->
+    <string name="jar_launcher_title">JAR Launcher</string>
+    <string name="jar_launcher_desc">Run any .jar file with the launcher\'s built-in Java — tools, modpack installers, small games, etc.\n\nThis is NOT "Launch Game": your Minecraft versions are untouched. It runs in a separate process, so when the jar exits you can go right back and start Minecraft as usual.</string>
+    <string name="jar_launcher_pick">Pick a .jar file and run it</string>
+    <string name="jar_launcher_java_title">Java runtimes on this device</string>
+    <string name="jar_launcher_no_java">No Java runtime found yet. Download Java 8 / 17 / 21 / 25 in Settings first.</string>
+    <string name="jar_launcher_hint">Tip: long-press the JAR button on the left to manage Java runtimes.</string>
+    <string name="exterior_setting_ui_reset">Reset</string>
 </resources>

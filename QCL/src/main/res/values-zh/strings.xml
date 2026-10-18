@@ -1312,4 +1312,12 @@
     <string name="jar_launch_stop">停止</string>
     <string name="jar_launch_exit">退出</string>
     <string name="jar_launch_pick_hint">选择一个 .jar 文件来运行</string>
+    <!-- ★ 1.5.2：JAR 启动器独立页面 -->
+    <string name="jar_launcher_title">JAR 启动器</string>
+    <string name="jar_launcher_desc">用启动器自带的 Java 运行任意 .jar 文件 —— 工具、整合包安装器、小游戏都可以。\n\n这**不是**「启动游戏」：你的 Minecraft 版本完全不受影响。它跑在独立进程里，jar 退出后可以照常回来启动 Minecraft。</string>
+    <string name="jar_launcher_pick">选择 JAR 文件并启动</string>
+    <string name="jar_launcher_java_title">本机可用的 Java</string>
+    <string name="jar_launcher_no_java">还没有检测到任何 Java。请先在「设置 → 运行环境」里下载 Java 8 / 17 / 21 / 25。</string>
+    <string name="jar_launcher_hint">提示：长按左栏的 JAR 按钮可以管理 Java。</string>
+    <string name="exterior_setting_ui_reset">重置</string>
 </resources>

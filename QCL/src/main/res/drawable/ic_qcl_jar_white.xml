@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 1.5.2: JAR 启动器专属图标 = Java 咖啡杯（自己画的 vector，不引外部资源、无版权问题）。
+     造型照 Java 官方标志的语汇：三条蒸汽 + 实心杯身 + 右侧圆环把手。
+     这样玩家一眼就能认出「这是跑 Java 程序的地方」，而不是实验室的工具箱。 -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+
+    <!-- 三条蒸汽（描边，圆头） -->
+    <path
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="1.6"
+        android:strokeLineCap="round"
+        android:pathData="M8.2,6.6 Q9.2,5.1 8.2,3.6" />
+    <path
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="1.6"
+        android:strokeLineCap="round"
+        android:pathData="M12,6 Q13,4.4 12,2.8" />
+    <path
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="1.6"
+        android:strokeLineCap="round"
+        android:pathData="M15.8,6.6 Q16.8,5.1 15.8,3.6" />
+
+    <!-- 杯身（实心，底部圆角） -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M3.6,8.6 H15.9 V15.4 A4.1,4.1 0 0 1 11.8,19.5 H7.7 A4.1,4.1 0 0 1 3.6,15.4 Z" />
+
+    <!-- 把手（描边圆环） -->
+    <path
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="1.7"
+        android:strokeLineCap="round"
+        android:pathData="M16.4,10.6 H18 A2.9,2.9 0 0 1 18,16.4 H16.4" />
+
+</vector>

@@ -28,6 +28,7 @@ import com.qcl.launcher.launcher.uis.game.version.universal.ExportPackageTypeUI;
 import com.qcl.launcher.launcher.uis.game.version.universal.InstallPackageUI;
 // ★ 1.4.1 新增页面（自 1.4.0 朋友源码包合并）
 import com.qcl.launcher.launcher.uis.lab.LabUI;
+import com.qcl.launcher.launcher.uis.jar.JarLauncherUI;
 import com.qcl.launcher.launcher.uis.main.MainUI;
 // ★ 1.5.0 新增：多人联机二级页面（照 FCL 的 MultiplayerUI 重做）
 import com.qcl.launcher.launcher.uis.multiplayer.MultiplayerUI;
@@ -46,6 +47,8 @@ public class UIManager {
 
     // ★ 1.4.1 新增：实验室（★ 1.5.0：原「大厅」LobbyUI 已整体移除，用户说没实际用处）
     public LabUI labUI;
+    /** ★ 1.5.2：JAR 启动器独立页面。 */
+    public JarLauncherUI jarLauncherUI;
 
     // ★ 1.5.0 新增：多人联机页（不再是一个小弹窗）
     public MultiplayerUI multiplayerUI;
@@ -82,6 +85,7 @@ public class UIManager {
         settingUI = new SettingUI(context, activity);
 
         // ★ 1.4.1 新增页面（★ 1.5.0：「大厅」已移除）
+        jarLauncherUI = new JarLauncherUI(context, activity);
         labUI = new LabUI(context, activity);
 
         // ★ 1.5.0 新增页面
@@ -113,6 +117,7 @@ public class UIManager {
         downloadUI.onCreate();
         settingUI.onCreate();
 
+        jarLauncherUI.onCreate();
         // ★ 1.4.1 新增页面（★ 1.5.0：「大厅」已移除）
         labUI.onCreate();
 
@@ -151,6 +156,7 @@ public class UIManager {
                 accountUI,
                 gameManagerUI,
                 versionListUI,
+                jarLauncherUI,
                 downloadUI,
                 settingUI,
                 labUI,

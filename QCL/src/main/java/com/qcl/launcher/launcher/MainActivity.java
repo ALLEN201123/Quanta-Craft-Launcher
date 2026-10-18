@@ -642,6 +642,30 @@ implements View.OnClickListener {
         }
     }
 
+    /** ★ 1.5.2：选 jar 用的请求码（与 JarLauncherUI / onActivityResult 保持一致）。 */
+    public static final int REQUEST_PICK_JAR = 0x4A4152;   // "JAR"
+
+    /**
+     * ★ 1.5.2 新增：打开文件选择器，让玩家选一个 .jar。
+     *
+     * <p>由 {@code JarLauncherUI} 的「选择 JAR 文件并启动」按钮调用。
+     * 结果在 {@link #onActivityResult} 里处理（FileChooser 单选返回键名是 {@code "path"}）。
+     */
+    public void startPickJar() {
+        try {
+            Intent intent = new Intent(this, com.tungsten.filepicker.FileChooser.class);
+            intent.putExtra("SELECTION_MODE", 0);              // SINGLE_SELECTION
+            intent.putExtra("ALLOWED_FILE_EXTENSIONS", "jar");
+            intent.putExtra("INITIAL_DIRECTORY",
+                    android.os.Environment.getExternalStorageDirectory().getAbsolutePath());
+            startActivityForResult(intent, REQUEST_PICK_JAR);
+        } catch (Throwable t) {
+            android.widget.Toast.makeText(this,
+                    "打开文件选择器失败：" + t.getMessage(),
+                    android.widget.Toast.LENGTH_LONG).show();
+        }
+    }
+
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (this.isLoaded) {
