@@ -55,6 +55,38 @@ public class DownloadModUI extends BaseUI implements View.OnClickListener, Adapt
     private android.view.View toggleFilter;
     /** 切换筛选栏期间抑制 onItemSelected 里的 search()（否则每点一次筛选就重载列表）。 */
     private boolean suppressReload = false;
+
+    // ★ 1.5.2：分页（用户指出「忘记加下一页/上一页，只能永远看第一页」）
+    //   原来 search(..., **0**, 50, ...) —— offset 写死 0。
+    private static final int PAGE_SIZE = 50;
+    private int pageOffset = 0;
+    private android.widget.TextView pagePrev;
+    private android.widget.TextView pageNext;
+    private android.widget.TextView pageInfo;
+
+    /**
+     * ★ 1.5.2：刷新「第 N 页 / 共 M 页」。
+     *
+     * @param total 总条数；-1 表示该源不提供（只显示页码）
+     */
+    private void updatePageInfo(int total) {
+        if (this.pageInfo == null) {
+            return;
+        }
+        int pageNo = this.pageOffset / PAGE_SIZE + 1;
+        try {
+            if (total > 0) {
+                // 照 FCL：CurseForge 上限 10000
+                int totalPages = (int) Math.ceil((double) Math.min(total, 10000) / PAGE_SIZE);
+                this.pageInfo.setText(String.format(
+                        this.context.getString(R.string.download_page_info), pageNo, totalPages));
+            } else {
+                this.pageInfo.setText(String.format(
+                        this.context.getString(R.string.download_page_current), pageNo));
+            }
+        } catch (Throwable ignored) {
+        }
+    }
     public String gameVersion;
     private boolean isSearching;
     public String lastVersion;
@@ -170,6 +202,16 @@ public class DownloadModUI extends BaseUI implements View.OnClickListener, Adapt
         // ★ 1.5.2（D 方案）：左侧可折叠筛选栏 + 顶部的 [☰ 筛选] 开关
         this.filterPanel = this.activity.findViewById(R.id.download_mod_filter_panel);
         this.toggleFilter = this.activity.findViewById(R.id.toggle_mod_filter);
+        // ★ 1.5.2：翻页栏
+        this.pagePrev = (android.widget.TextView) this.activity.findViewById(R.id.mod_page_prev);
+        this.pageNext = (android.widget.TextView) this.activity.findViewById(R.id.mod_page_next);
+        this.pageInfo = (android.widget.TextView) this.activity.findViewById(R.id.mod_page_info);
+        if (this.pagePrev != null) {
+            this.pagePrev.setOnClickListener((View.OnClickListener) this);
+        }
+        if (this.pageNext != null) {
+            this.pageNext.setOnClickListener((View.OnClickListener) this);
+        }
         if (this.toggleFilter != null) {
             this.toggleFilter.setOnClickListener((View.OnClickListener) this);
             // ★ 1.5.2：筛选按钮同步主题色（用户反馈「筛选没同步主题颜色」）
@@ -297,6 +339,19 @@ public class DownloadModUI extends BaseUI implements View.OnClickListener, Adapt
         //     而那个方法里有 `search()` ⇒ 玩家每点一次「筛选」就白重载一次列表。
         //     用 suppressReload 挡住，并在下一帧（post）才解除，
         //     因为 Spinner 的选中回调可能延后一帧才派发。
+        // ★ 1.5.2：上一页 / 下一页
+        if (view == this.pagePrev) {
+            if (this.pageOffset >= PAGE_SIZE) {
+                this.pageOffset -= PAGE_SIZE;
+                search();
+            }
+            return;
+        }
+        if (view == this.pageNext) {
+            this.pageOffset += PAGE_SIZE;
+            search();
+            return;
+        }
         if (view == this.toggleFilter) {
             this.suppressReload = true;
             try {
@@ -409,7 +464,7 @@ public class DownloadModUI extends BaseUI implements View.OnClickListener, Adapt
             RemoteModRepository.Category category = hybrid
                     ? null
                     : (RemoteModRepository.Category) this.categoryListAdapter.getItem(this.typeSpinner.getSelectedItemPosition());
-            List list = (List) this.repository.search(this.editVersion.getText().toString(), category, 0, 50, this.editName.getText().toString(), RemoteMod.getSortTypeByPosition(this.sortSpinner.getSelectedItemPosition()), RemoteModRepository.SortOrder.DESC).collect(Collectors.toList());
+            List list = (List) this.repository.search(this.editVersion.getText().toString(), category, this.pageOffset, PAGE_SIZE, this.editName.getText().toString(), RemoteMod.getSortTypeByPosition(this.sortSpinner.getSelectedItemPosition()), RemoteModRepository.SortOrder.DESC).collect(Collectors.toList());
             List list2 = (List) this.repository.getCategories().collect(Collectors.toList());
             // ★★★★★ 2026-10-11 关键修复（用户实测「模组页刷新后一片空白，还会感染其他页面」）：
             //
@@ -458,6 +513,12 @@ public class DownloadModUI extends BaseUI implements View.OnClickListener, Adapt
                 }
             }
             this.searchHandler.sendEmptyMessage(1);
+            // ★ 1.5.2：刷新「第 N 页 / 共 M 页」
+            //   总数来源照 FCL：Modrinth total_hits、CurseForge pagination.totalCount（上限 10000）
+            try {
+                updatePageInfo(DownloadModUI.this.repository.getLastTotalCount());
+            } catch (Throwable ignored) {
+            }
             } catch (Throwable uiErr) {
                 // 主线程里出问题也要复位，别让界面永远卡在转圈
                 this.searchHandler.sendEmptyMessage(2);

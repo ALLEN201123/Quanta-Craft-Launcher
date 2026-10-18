@@ -34,6 +34,15 @@ import java.util.stream.Stream;
 
 /* loaded from: classes2.dex */
 public final class ModrinthRemoteModRepository implements RemoteModRepository {
+
+    /** ★ 1.5.2：最近一次 search() 命中的总条数（-1 = 未知）。 */
+    private int lastTotalCount = -1;
+
+    @Override
+    public int getLastTotalCount() {
+        return this.lastTotalCount;
+    }
+
     private static final String PREFIX = "https://api.modrinth.com";
     private final String projectType;
     public static final ModrinthRemoteModRepository MODS = new ModrinthRemoteModRepository("mod");
@@ -124,8 +133,17 @@ public final class ModrinthRemoteModRepository implements RemoteModRepository {
         if (category != null && StringUtils.isNotBlank(category.getId()) && !category.getId().equals("all") && !category.getId().equals("0")) {
             arrayList.add(Collections.singletonList("categories:" + category.getId()));
         }
-        return ((Response) HttpRequest.GET(NetworkUtils.withQuery("https://api.modrinth.com/v2/search", Lang.mapOf(Pair.pair("query", str2), Pair.pair("facets", JsonUtils.UGLY_GSON.toJson(arrayList)), Pair.pair("offset", Integer.toString(i)), Pair.pair("limit", Integer.toString(i2)), Pair.pair("index", convertSortType(sortType))))).getJson(new TypeToken<Response<ProjectSearchResult>>() { // from class: com.qcl.launcher.launcher.mod.modrinth.ModrinthRemoteModRepository.1
-        }.getType())).getHits().stream().map(new Function() { // from class: com.qcl.launcher.launcher.mod.modrinth.ModrinthRemoteModRepository$$ExternalSyntheticLambda1
+        // ★★★★★ 1.5.2：照 FCL ModrinthRemoteModRepository L113 的写法，
+        //   把 total_hits 记下来给 UI 算「共 N 页」：
+        //     new SearchResult(hits.stream()..., (int) Math.ceil((double) totalHits / limit))
+        //   QCL 原来把整个 SearchResult 简化成了 Stream，总数在这里就丢了。
+        Response _sr = (Response) HttpRequest.GET(NetworkUtils.withQuery("https://api.modrinth.com/v2/search", Lang.mapOf(Pair.pair("query", str2), Pair.pair("facets", JsonUtils.UGLY_GSON.toJson(arrayList)), Pair.pair("offset", Integer.toString(i)), Pair.pair("limit", Integer.toString(i2)), Pair.pair("index", convertSortType(sortType))))).getJson(new TypeToken<Response<ProjectSearchResult>>() { // from class: com.qcl.launcher.launcher.mod.modrinth.ModrinthRemoteModRepository.1
+        }.getType());
+        try {
+            this.lastTotalCount = _sr.getTotalHits();
+        } catch (Throwable ignored) {
+        }
+        return _sr.getHits().stream().map(new Function() { // from class: com.qcl.launcher.launcher.mod.modrinth.ModrinthRemoteModRepository$$ExternalSyntheticLambda1
             @Override // java.util.function.Function
             public final Object apply(Object obj) {
                 return ((ModrinthRemoteModRepository.ProjectSearchResult) obj).toMod();

@@ -45,6 +45,32 @@ public class DownloadPackageUI extends BaseUI implements View.OnClickListener, A
     private android.view.View toggleFilter;
     /** 切换筛选栏期间抑制 onItemSelected 里的 search()/reload（否则每点一次筛选就重载列表）。 */
     private boolean suppressReload = false;
+    // ★ 1.5.2：分页（offset 原来写死 0 ⇒ 永远第一页）
+    private static final int PAGE_SIZE = 50;
+    private int pageOffset = 0;
+    private android.widget.TextView pagePrev;
+    private android.widget.TextView pageNext;
+    private android.widget.TextView pageInfo;
+
+    /** ★ 1.5.2：刷新「第 N 页 / 共 M 页」。total = -1 表示该源不提供总数。 */
+    private void updatePageInfo(int total) {
+        if (this.pageInfo == null) {
+            return;
+        }
+        int pageNo = this.pageOffset / PAGE_SIZE + 1;
+        try {
+            if (total > 0) {
+                int totalPages = (int) Math.ceil((double) Math.min(total, 10000) / PAGE_SIZE);
+                this.pageInfo.setText(String.format(
+                        this.context.getString(R.string.download_page_info), pageNo, totalPages));
+            } else {
+                this.pageInfo.setText(String.format(
+                        this.context.getString(R.string.download_page_current), pageNo));
+            }
+        } catch (Throwable ignored) {
+        }
+    }
+
     private ArrayList<RemoteModRepository.Category> categoryList;
     private CategorySpinnerAdapter categoryListAdapter;
     private DownloadResourceAdapter downloadPackageListAdapter;
@@ -162,6 +188,16 @@ public class DownloadPackageUI extends BaseUI implements View.OnClickListener, A
         // ★ 1.5.2（D 方案）：绑定左侧筛选栏与 [☰ 筛选] 开关
         this.filterPanel = this.activity.findViewById(R.id.download_package_filter_panel);
         this.toggleFilter = this.activity.findViewById(R.id.toggle_package_filter);
+        // ★ 1.5.2：翻页栏
+        this.pagePrev = (android.widget.TextView) this.activity.findViewById(R.id.package_page_prev);
+        this.pageNext = (android.widget.TextView) this.activity.findViewById(R.id.package_page_next);
+        this.pageInfo = (android.widget.TextView) this.activity.findViewById(R.id.package_page_info);
+        if (this.pagePrev != null) {
+            this.pagePrev.setOnClickListener((View.OnClickListener) this);
+        }
+        if (this.pageNext != null) {
+            this.pageNext.setOnClickListener((View.OnClickListener) this);
+        }
         if (this.toggleFilter != null) {
             this.toggleFilter.setOnClickListener((View.OnClickListener) this);
             try {
@@ -307,7 +343,7 @@ public class DownloadPackageUI extends BaseUI implements View.OnClickListener, A
             RemoteModRepository.Category category = hybrid
                     ? null
                     : (RemoteModRepository.Category) this.categoryListAdapter.getItem(this.editCategory.getSelectedItemPosition());
-            List list = (List) this.repository.search(this.editVersion.getText().toString(), category, 0, 50, this.editName.getText().toString(), RemoteMod.getSortTypeByPosition(this.editSort.getSelectedItemPosition()), RemoteModRepository.SortOrder.DESC).collect(Collectors.toList());
+            List list = (List) this.repository.search(this.editVersion.getText().toString(), category, this.pageOffset, PAGE_SIZE, this.editName.getText().toString(), RemoteMod.getSortTypeByPosition(this.editSort.getSelectedItemPosition()), RemoteModRepository.SortOrder.DESC).collect(Collectors.toList());
             List list2 = (List) this.repository.getCategories().collect(Collectors.toList());
             // ★★★★★ 2026-10-11 修「跨线程改 UI」崩溃（与模组页同因，logcat 实锤）：
             //   ViewRootImpl$CalledFromWrongThreadException: Only the original thread
@@ -336,6 +372,11 @@ public class DownloadPackageUI extends BaseUI implements View.OnClickListener, A
                 }
             }
             this.searchHandler.sendEmptyMessage(1);
+            // ★ 1.5.2：刷新「第 N 页 / 共 M 页」
+            try {
+                updatePageInfo(this.repository.getLastTotalCount());
+            } catch (Throwable ignored) {
+            }
             } catch (Throwable uiErr) {
                 // 主线程里出问题也要复位，别让界面永远卡在转圈
                 this.searchHandler.sendEmptyMessage(2);
@@ -370,6 +411,19 @@ public class DownloadPackageUI extends BaseUI implements View.OnClickListener, A
     public void onClick(View view) {
         // ★ 1.5.2（D 方案）：[☰ 筛选] —— 折叠/展开左侧筛选栏。
         //   切换期间抑制 onItemSelected 触发的重新查询（Spinner 重新测量会误触发）。
+        // ★ 1.5.2：上一页 / 下一页
+        if (view == this.pagePrev) {
+            if (this.pageOffset >= PAGE_SIZE) {
+                this.pageOffset -= PAGE_SIZE;
+                search();
+            }
+            return;
+        }
+        if (view == this.pageNext) {
+            this.pageOffset += PAGE_SIZE;
+            search();
+            return;
+        }
         if (view == this.toggleFilter) {
             this.suppressReload = true;
             try {

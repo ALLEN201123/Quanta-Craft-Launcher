@@ -187,6 +187,33 @@ public class HybridRemoteModRepository implements RemoteModRepository {
         return this.type;
     }
 
+    /**
+     * ★ 1.5.2：聚合搜索的总条数 = 两个源相加（给 UI 算「共 N 页」）。
+     *
+     * <p>照 FCL 的口径：totalPages = ceil(totalCount / limit)（CurseForge 上限 10000）。
+     * 任一方未知（-1）就用另一方。
+     */
+    @Override
+    public int getLastTotalCount() {
+        int a = -1;
+        int b = -1;
+        try {
+            a = this.curseForge.getLastTotalCount();
+        } catch (Throwable ignored) {
+        }
+        try {
+            b = this.modrinth.getLastTotalCount();
+        } catch (Throwable ignored) {
+        }
+        if (a < 0) {
+            return b;
+        }
+        if (b < 0) {
+            return a;
+        }
+        return a + b;
+    }
+
     @Override
     public Stream<RemoteMod> search(String gameVersion, Category category, int offset, int limit,
                                     String keyword, SortType sortType, SortOrder sortOrder) throws IOException {

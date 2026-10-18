@@ -25,6 +25,15 @@ import java.util.stream.Stream;
 
 /* loaded from: classes2.dex */
 public final class CurseForgeRemoteModRepository implements RemoteModRepository {
+
+    /** ★ 1.5.2：最近一次 search() 命中的总条数（-1 = 未知）。 */
+    private int lastTotalCount = -1;
+
+    @Override
+    public int getLastTotalCount() {
+        return this.lastTotalCount;
+    }
+
     private static final String PREFIX = "https://api.curseforge.com";
     public static final int SECTION_ADDONS = 4559;
     public static final int SECTION_BUKKIT_PLUGIN = 5;
@@ -168,8 +177,16 @@ public final class CurseForgeRemoteModRepository implements RemoteModRepository 
         query.add(Pair.pair("index", Integer.toString(i)));
         query.add(Pair.pair("pageSize", Integer.toString(i2)));
 
-        return ((List) ((Response) HttpRequest.GET("https://api.curseforge.com/v1/mods/search", query.toArray(new Pair[0])).header("X-API-KEY", "$2a$10$fgjXkx00bZZ5ypMONic.Uu7/Be1KFjmMcprkzelHhjjs7FErXt7i6").getJson(new TypeToken<Response<List<CurseAddon>>>() { // from class: com.qcl.launcher.launcher.mod.curse.CurseForgeRemoteModRepository.1
-        }.getType())).getData()).stream().map(new Function() { // from class: com.qcl.launcher.launcher.mod.curse.CurseForgeRemoteModRepository$$ExternalSyntheticLambda1
+        Response _resp = (Response) HttpRequest.GET("https://api.curseforge.com/v1/mods/search", query.toArray(new Pair[0])).header("X-API-KEY", "$2a$10$fgjXkx00bZZ5ypMONic.Uu7/Be1KFjmMcprkzelHhjjs7FErXt7i6").getJson(new TypeToken<Response<List<CurseAddon>>>() { // from class: com.qcl.launcher.launcher.mod.curse.CurseForgeRemoteModRepository.1
+        }.getType());
+        // ★ 1.5.2：记录总条数，供 UI 算总页数
+        try {
+            if (_resp != null && _resp.getPagination() != null) {
+                this.lastTotalCount = _resp.getPagination().getTotalCount();
+            }
+        } catch (Throwable ignored) {
+        }
+        return ((List) _resp.getData()).stream().map(new Function() { // from class: com.qcl.launcher.launcher.mod.curse.CurseForgeRemoteModRepository$$ExternalSyntheticLambda1
             @Override // java.util.function.Function
             public final Object apply(Object obj) {
                 return ((CurseAddon) obj).toMod();

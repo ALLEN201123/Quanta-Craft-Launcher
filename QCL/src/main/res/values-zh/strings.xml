@@ -1322,4 +1322,9 @@
     <string name="exterior_setting_ui_wait_bg_hint">点任意一格可单独换图（启动等待界面共 6 格）</string>
     <string name="download_minecraft_ui_search_hint">搜索版本（如 1.20.1 / 快照 / 远古）</string>
     <string name="download_mod_ui_filter">筛选</string>
+    <string name="download_page_prev">上一页</string>
+    <string name="download_page_next">下一页</string>
+    <string name="download_page_first">第 1 页</string>
+    <string name="download_page_info">第 %1$d / %2$d 页</string>
+    <string name="download_page_current">第 %1$d 页</string>
 </resources>

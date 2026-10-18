@@ -32,6 +32,54 @@
             android:layout_width="0dp"
             android:layout_height="0dp"
             android:layout_weight="1"/>
+        <View
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_weight="1"/>
+
+        <!-- ★ 1.5.2：翻页栏（用户要求放在「筛选」右侧） -->
+        <TextView
+            android:id="@+id/mod_page_prev"
+            android:layout_width="wrap_content"
+            android:layout_height="28dp"
+            android:layout_gravity="center_vertical"
+            android:paddingLeft="10dp"
+            android:paddingRight="10dp"
+            android:gravity="center"
+            android:clickable="true"
+            android:focusable="true"
+            android:background="@drawable/launcher_button_gray"
+            android:text="@string/download_page_prev"
+            android:textColor="@color/colorPureBlack"
+            android:textSize="@dimen/text_size_small"/>
+
+        <TextView
+            android:id="@+id/mod_page_info"
+            android:layout_width="wrap_content"
+            android:layout_height="28dp"
+            android:layout_gravity="center_vertical"
+            android:paddingLeft="8dp"
+            android:paddingRight="8dp"
+            android:gravity="center"
+            android:text="@string/download_page_first"
+            android:textColor="@color/colorPureBlack"
+            android:textSize="@dimen/text_size_small"/>
+
+        <TextView
+            android:id="@+id/mod_page_next"
+            android:layout_width="wrap_content"
+            android:layout_height="28dp"
+            android:layout_gravity="center_vertical"
+            android:paddingLeft="10dp"
+            android:paddingRight="10dp"
+            android:gravity="center"
+            android:clickable="true"
+            android:focusable="true"
+            android:background="@drawable/launcher_button_gray"
+            android:text="@string/download_page_next"
+            android:textColor="@color/colorPureBlack"
+            android:textSize="@dimen/text_size_small"/>
+
 
     </LinearLayout>
 
@@ -71,8 +119,7 @@
                     <TextView
                         android:singleLine="true"
                         android:layout_gravity="center"
-                        android:layout_width="wrap_content"
-                android:minWidth="40dp"
+                        android:layout_width="62dp"
                         android:layout_height="wrap_content"
                         android:textSize="@dimen/text_size_middle"
                         android:textColor="@color/colorPureBlack"
@@ -105,8 +152,7 @@
                     <TextView
                         android:singleLine="true"
                         android:layout_gravity="center"
-                        android:layout_width="wrap_content"
-                android:minWidth="40dp"
+                        android:layout_width="62dp"
                         android:layout_height="wrap_content"
                         android:textSize="@dimen/text_size_middle"
                         android:textColor="@color/colorPureBlack"
@@ -138,8 +184,7 @@
                     <TextView
                         android:singleLine="true"
                         android:layout_gravity="center"
-                        android:layout_width="wrap_content"
-                android:minWidth="40dp"
+                        android:layout_width="62dp"
                         android:layout_height="wrap_content"
                         android:textSize="@dimen/text_size_middle"
                         android:textColor="@color/colorPureBlack"
@@ -178,8 +223,7 @@
                     <TextView
                         android:singleLine="true"
                         android:layout_gravity="center"
-                        android:layout_width="wrap_content"
-                android:minWidth="40dp"
+                        android:layout_width="62dp"
                         android:layout_height="wrap_content"
                         android:textSize="@dimen/text_size_middle"
                         android:textColor="@color/colorPureBlack"
@@ -211,8 +255,7 @@
                     <TextView
                         android:singleLine="true"
                         android:layout_gravity="center"
-                        android:layout_width="wrap_content"
-                android:minWidth="40dp"
+                        android:layout_width="62dp"
                         android:layout_height="wrap_content"
                         android:textSize="@dimen/text_size_middle"
                         android:textColor="@color/colorPureBlack"
@@ -257,8 +300,7 @@
                     <TextView
                         android:singleLine="true"
                         android:layout_gravity="center"
-                        android:layout_width="wrap_content"
-                android:minWidth="40dp"
+                        android:layout_width="62dp"
                         android:layout_height="wrap_content"
                         android:textSize="@dimen/text_size_middle"
                         android:textColor="@color/colorPureBlack"
