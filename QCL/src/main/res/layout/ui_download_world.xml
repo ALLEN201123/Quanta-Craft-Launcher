@@ -54,12 +54,11 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal">
+            android:orientation="vertical">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
                 android:orientation="vertical">
 
                 <LinearLayout
@@ -71,7 +70,7 @@
                     <TextView
                         android:singleLine="true"
                         android:layout_gravity="center"
-                        android:layout_width="65dp"
+                        android:layout_width="52dp"
                         android:layout_height="wrap_content"
                         android:textSize="@dimen/text_size_middle"
                         android:textColor="@color/colorPureBlack"
@@ -103,7 +102,7 @@
                     <TextView
                         android:singleLine="true"
                         android:layout_gravity="center"
-                        android:layout_width="65dp"
+                        android:layout_width="52dp"
                         android:layout_height="wrap_content"
                         android:textSize="@dimen/text_size_middle"
                         android:textColor="@color/colorPureBlack"
