@@ -782,7 +782,6 @@
     <string name="exterior_setting_ui_font_color_hint">Tap to pick a custom text color for body text</string>
     <string name="exterior_setting_ui_font_color_reset">Follow theme</string>
     <string name="exterior_setting_ui_transparent_bg">透明界面背景（关闭恢复灰色）</string>
-    <string name="exterior_setting_ui_bar_trans">Transparent titlebar</string>
     <string name="exterior_setting_ui_layout_style">Layout</string>
     <string name="exterior_setting_ui_layout_old">Classic layout</string>
     <string name="exterior_setting_ui_layout_new">New layout</string>

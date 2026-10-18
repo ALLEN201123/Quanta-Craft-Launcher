@@ -796,7 +796,6 @@
     <string name="exterior_setting_ui_font_color">字体颜色</string>
     <string name="exterior_setting_ui_font_color_hint">点击选择自定义文字颜色（作用于正文文字）</string>
     <string name="exterior_setting_ui_font_color_reset">跟随主题</string>
-    <string name="exterior_setting_ui_bar_trans">标题栏透明</string>
     <string name="exterior_setting_ui_layout_style">排版</string>
     <string name="exterior_setting_ui_layout_old">旧排版</string>
     <string name="exterior_setting_ui_layout_new">新排版</string>

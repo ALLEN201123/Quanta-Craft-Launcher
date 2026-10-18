@@ -32,7 +32,14 @@ public class LauncherSetting {
      */
     public String[] waitBgPaths;
 
-    public boolean transBar;
+    // ★★★★★ 1.5.2：`transBar`（透明标题栏）字段**已彻底删除**。
+    //   用户原话：「那个透明开关本身没用，开了也等于白开」。
+    //   ★ 取证：删除前全工程只有「字段定义」和「构造里 this.transBar = z5」两处，
+    //     **没有任何一行代码读它** ⇒ 这个开关从头到尾就没起过作用。
+    //   ★ 标题栏透明真正的实现是 values/themes.xml 的 android:windowFullscreen=true，
+    //     那个**没动**（git status 可证）。
+    //   ★ 旧配置文件里残留的 "transBar" 键会被 Gson 当未知字段忽略，不影响启动。
+
     /**
      * ★★★★★ 2026-10-16 新增：**自定义字体颜色**
      * （用户要求「在外观那里加一个字体颜色自定义调节功能」）。
@@ -112,7 +119,6 @@ public class LauncherSetting {
         this.autoCheckUpdate = z2;
         this.getBetaVersion = z3;
         this.fullscreen = z4;
-        this.transBar = z5;
         this.launcherTheme = str2;
         this.panelColor = str3;
         this.launcherBackground = backgroundSetting;

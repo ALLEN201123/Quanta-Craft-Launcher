@@ -638,7 +638,6 @@
     <string name="dialog_update_ignore">Ignoriši</string>
     <string name="exterior_setting_ui_theme_title">Izgled</string>
     <string name="exterior_setting_ui_theme">Teme</string>
-    <string name="exterior_setting_ui_bar_trans">Transparetan bar titla</string>
     <string name="exterior_setting_ui_full_screen">Ignore notch</string>
     <string name="exterior_setting_ui_bg_title">pozadinska slika</string>
     <string name="exterior_setting_ui_bg_default">Podrazumevano (automatski dan/noć)</string>

@@ -667,7 +667,6 @@
     <string name="dialog_update_negative">以後再說</string>
     <string name="exterior_setting_ui_theme_title">外觀</string>
     <string name="exterior_setting_ui_theme">主題</string>
-    <string name="exterior_setting_ui_bar_trans">標題欄透明</string>
     <string name="exterior_setting_ui_full_screen">忽略劉海屏</string>
     <string name="exterior_setting_ui_bg_title">背景地址</string>
     <string name="exterior_setting_ui_bg_default">默認（按時間自動切換晝夜）</string>

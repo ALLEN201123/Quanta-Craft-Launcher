@@ -650,7 +650,6 @@
     <string name="export_world_ui_sub_title">Thế giới xuất khẩu</string>
     <string name="export_world_ui_title">Thế giới xuất khẩu</string>
     <string name="export_world_ui_world_name">Tên thế giới</string>
-    <string name="exterior_setting_ui_bar_trans">Thanh tiêu đề trong suốt</string>
     <string name="exterior_setting_ui_bg_classic">Ban đêm</string>
     <string name="exterior_setting_ui_bg_day">Ban ngày</string>
     <string name="exterior_setting_ui_bg_custom">Phong tục</string>

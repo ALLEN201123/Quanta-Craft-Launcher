@@ -638,7 +638,6 @@
     <string name="dialog_update_ignore">ignorar</string>
     <string name="exterior_setting_ui_theme_title">Aparência</string>
     <string name="exterior_setting_ui_theme">Tema</string>
-    <string name="exterior_setting_ui_bar_trans">Barra de título transparente</string>
     <string name="exterior_setting_ui_full_screen">Ignorar entalhe</string>
     <string name="exterior_setting_ui_bg_title">Imagem de fundo</string>
     <string name="exterior_setting_ui_bg_default">Padrao (dia/noite automatico)</string>
