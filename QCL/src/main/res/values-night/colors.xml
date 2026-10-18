@@ -11,7 +11,7 @@
        只翻一个就会出现「深底黑字」/「白底白字」→ 玩家根本看不见
        （用户特别强调：版本文字、数字之类绝不能看不见）。
 
-     ★ 保持不变的：主题色 colorPrimary / colorAccent（斑驳森林 #556980 在深浅底上都成立）、
+     ★ 保持不变的：主题色 colorPrimary / colorAccent（斑驳森林 #865D58 在深浅底上都成立）、
        纯白 colorPureWhite（白色图标 / 白色描边用，本来就在深底上）。 -->
 <resources>
     <!-- ================= 面板 / 背景（成对翻转的「底」） ================= -->
@@ -71,10 +71,10 @@
 
 <!-- ★★★ 1.5.0：按钮跟随主题（夜间态）。
      ★ 用户明确要求：**底色日夜都是深色**，**字不跟着转深**（始终浅色）。
-     ★ 底色本身引用主题 `?android:attr/colorAccent`（斑驳森林 #556980，
+     ★ 底色本身引用主题 `?android:attr/colorAccent`（斑驳森林 #865D58，
        夜间刻意保持不变 —— 该色在深浅底上都成立），这里只定义按下态与文字色。 -->
     <color name="qcl_dialog_btn_pressed">#FF161D25</color>
-    <!-- ★ 深色兜底底色：与日间同值（斑驳森林 #556980 在深浅底上都成立）。 -->
-    <color name="qcl_dialog_btn_fallback">#FF556980</color>
+    <!-- ★ 深色兜底底色：与日间同值（斑驳森林 #865D58 在深浅底上都成立）。 -->
+    <color name="qcl_dialog_btn_fallback">#FF865D58</color>
     <color name="qcl_dialog_btn_text">#FFF2F6FA</color>
 </resources>

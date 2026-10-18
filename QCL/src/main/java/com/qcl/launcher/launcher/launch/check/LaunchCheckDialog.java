@@ -615,7 +615,7 @@ public class LaunchCheckDialog extends Dialog implements View.OnClickListener, H
                     .getThemeColor(getContext(), this.activity.launcherSetting.launcherTheme);
             return android.graphics.Color.parseColor(s);
         } catch (Throwable t) {
-            return 0xFF556980;
+            return 0xFF865D58;
         }
     }
 

@@ -1,19 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- ★★★ 1.5.0：默认主题色 → 斑驳森林（Pale Garden）水体色 #556980。
-         依据：Minecraft Wiki 斑驳森林官方配色 water fog color = #556980；
-         与 1.5.0 新昼夜背景（黑夜图主色 #0F1F27 深青、白天图暖褐红橙）同色系/互为补色，
-         比原来的中性灰 #6E6E6E（像"没配置"）更有辨识度。
-         注意：colorAccent 是默认主题色的真正来源（ExteriorSettingUI.getThemeColor 的 fallback），
-         存量用户配置里存的是 "DEFAULT" 字符串 → 会自动跟着变，无需迁移。 -->
-    <color name="colorPrimary">#556980</color>
+    <!-- ★★★★★ 1.5.2 修正（用户要求）：
+          「末日斑驳森林的颜色，主题色白天能不能取斑驳森林真实的颜色，别取那个水的颜色了」。
+          ★ 1.5.0 当初用的是 #865D58 —— 依据是 Minecraft Wiki 里 Pale Garden 的
+            **water fog color（水的雾色）**。那确实是"水"的颜色，不是森林本身的色调。
+          ⇒ 现在改成从**实际壁纸** ic_background.jpg（斑驳森林 2560x1600）实测取样：
+              整体平均色 #7D5753 / 中间调平均 #865D58
+            → 取 #865D58（略亮一档，保证按钮/勾选框在深浅底上都看得见）。
+          对照：经典背景 ic_background_classic.jpg 中间调是 #1E3441（深蓝），
+               所以原来的蓝灰其实更接近"经典"那张图。
+          注意：colorAccent 是默认主题色的真正来源（ExteriorSettingUI.getThemeColor 的 fallback），
+          存量用户配置里存的是 "DEFAULT" 字符串 → 会自动跟着变，无需迁移。 -->
+    <color name="colorPrimary">#865D58</color>
     <color name="colorSecondary">#283593</color>
     <color name="colorThird">#43A047</color>
     <color name="colorForth">#E67E22</color>
     <color name="colorFifth">#9C27B0</color>
     <color name="colorSixth">#B71C1C</color>
     <color name="colorPrimaryDark">#CB4A4A4A</color>
-    <color name="colorAccent">#556980</color>
+    <color name="colorAccent">#865D58</color>
 
     <color name="colorTransparent">#00FFFFFF</color>
     <color name="colorPureWhite">#FFFFFF</color>
@@ -92,7 +97,7 @@
        配套 drawable/ + drawable-night/ 成对文件都必须存在。 -->
     <color name="qcl_dialog_btn_pressed">#FF1E2833</color>
     <!-- ★ 深色兜底底色：drawable 里用它，运行时代码再 setTint 成玩家主题色。
-         取值就是主题色 colorAccent 的斑驳森林 #556980（日夜都成立），保证绝不会渲染成白块。 -->
-    <color name="qcl_dialog_btn_fallback">#FF556980</color>
+         取值就是主题色 colorAccent 的斑驳森林 #865D58（日夜都成立），保证绝不会渲染成白块。 -->
+    <color name="qcl_dialog_btn_fallback">#FF865D58</color>
     <color name="qcl_dialog_btn_text">#FFF2F6FA</color>
 </resources>

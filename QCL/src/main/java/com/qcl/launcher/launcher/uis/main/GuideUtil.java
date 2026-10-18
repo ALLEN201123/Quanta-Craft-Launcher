@@ -64,7 +64,7 @@ public final class GuideUtil {
         if (activity == null || steps == null || steps.length == 0) {
             return;
         }
-        int accent = 0xFF556980;
+        int accent = 0xFF865D58;
         try {
             com.qcl.launcher.launcher.MainActivity a =
                     (com.qcl.launcher.launcher.MainActivity) activity;
