@@ -8,6 +8,7 @@ import com.qcl.launcher.launcher.uis.account.AccountUI;
 import com.qcl.launcher.launcher.uis.game.download.DownloadUI;
 import com.qcl.launcher.launcher.uis.game.download.right.game.DownloadFabricAPIUI;
 import com.qcl.launcher.launcher.uis.game.download.right.game.DownloadFabricUI;
+import com.qcl.launcher.launcher.uis.game.download.right.game.DownloadSimpleListUI;
 import com.qcl.launcher.launcher.uis.game.download.right.game.DownloadForgeUI;
 import com.qcl.launcher.launcher.uis.game.download.right.game.DownloadNeoForgeUI;
 import com.qcl.launcher.launcher.uis.game.download.right.game.DownloadLiteLoaderUI;
@@ -66,6 +67,8 @@ public class UIManager {
     public DownloadForgeUI downloadForgeUI;
     public DownloadNeoForgeUI downloadNeoForgeUI;
     public DownloadFabricUI downloadFabricUI;
+    /** ★ 1.5.2：通用版本选择列表页（三个新加载器共用）。 */
+    public DownloadSimpleListUI simpleListUI;
     public DownloadFabricAPIUI downloadFabricAPIUI;
     public DownloadLiteLoaderUI downloadLiteLoaderUI;
     public DownloadOptifineUI downloadOptifineUI;
@@ -104,6 +107,7 @@ public class UIManager {
         downloadForgeUI = new DownloadForgeUI(context, activity);
         downloadNeoForgeUI = new DownloadNeoForgeUI(context, activity);
         downloadFabricUI = new DownloadFabricUI(context, activity);
+        simpleListUI = new DownloadSimpleListUI(context, activity);
         downloadFabricAPIUI = new DownloadFabricAPIUI(context, activity);
         downloadLiteLoaderUI = new DownloadLiteLoaderUI(context, activity);
         downloadOptifineUI = new DownloadOptifineUI(context, activity);
@@ -137,6 +141,7 @@ public class UIManager {
         downloadForgeUI.onCreate();
         downloadNeoForgeUI.onCreate();
         downloadFabricUI.onCreate();
+        simpleListUI.onCreate();
         downloadFabricAPIUI.onCreate();
         downloadLiteLoaderUI.onCreate();
         downloadOptifineUI.onCreate();
@@ -165,6 +170,7 @@ public class UIManager {
                 downloadForgeUI,
                 downloadNeoForgeUI,
                 downloadFabricUI,
+                simpleListUI,
                 downloadLiteLoaderUI,
                 downloadOptifineUI,
                 downloadFabricAPIUI,

@@ -811,14 +811,16 @@ public class InstallGameUI extends BaseUI implements View.OnClickListener, TextW
                         items[i] = arr[i].name;
                     }
                     final com.qcl.launcher.launcher.download.cleanroom.CleanroomVersion[] data = arr;
-                    new android.app.AlertDialog.Builder(this.context)
-                            .setTitle("选择 Cleanroom 版本")
-                            .setItems(items, (d, which) -> {
-                                this.cleanroomVersion = data[which];
-                                refreshNewLoaderRows();
-                            })
-                            .setNegativeButton("取消", null)
-                            .show();
+                    // ★ 1.5.2：改成与其它加载器**一致的独立列表页**（原来是 AlertDialog 弹窗）
+                    com.qcl.launcher.launcher.uis.game.download.right.game.DownloadSimpleListUI ui =
+                            this.activity.uiManager.simpleListUI;
+                    ui.listTitle = "选择 Cleanroom 版本";
+                    ui.listItems = items;
+                    ui.onPick = which -> {
+                        this.cleanroomVersion = data[which];
+                        refreshNewLoaderRows();
+                    };
+                    this.activity.uiManager.switchMainUI(ui);
                 });
             } catch (final Exception e) {
                 this.activity.runOnUiThread(() -> android.widget.Toast.makeText(this.context,
@@ -852,14 +854,16 @@ public class InstallGameUI extends BaseUI implements View.OnClickListener, TextW
                     for (int i = 0; i < arr.length; i++) {
                         items[i] = arr[i].version;
                     }
-                    new android.app.AlertDialog.Builder(this.context)
-                            .setTitle("选择 Legacy Fabric 版本")
-                            .setItems(items, (d, which) -> {
-                                this.legacyFabricVersion = arr[which];
-                                refreshNewLoaderRows();
-                            })
-                            .setNegativeButton("取消", null)
-                            .show();
+                    // ★ 1.5.2：独立列表页（与 Fabric/Forge 列表同款）
+                    com.qcl.launcher.launcher.uis.game.download.right.game.DownloadSimpleListUI ui =
+                            this.activity.uiManager.simpleListUI;
+                    ui.listTitle = "选择 Legacy Fabric 版本";
+                    ui.listItems = items;
+                    ui.onPick = which -> {
+                        this.legacyFabricVersion = arr[which];
+                        refreshNewLoaderRows();
+                    };
+                    this.activity.uiManager.switchMainUI(ui);
                 });
             } catch (final Exception e) {
                 this.activity.runOnUiThread(() -> android.widget.Toast.makeText(this.context,
@@ -894,14 +898,16 @@ public class InstallGameUI extends BaseUI implements View.OnClickListener, TextW
                     for (int i = 0; i < filtered.size(); i++) {
                         items[i] = filtered.get(i).getVersion();
                     }
-                    new android.app.AlertDialog.Builder(this.context)
-                            .setTitle("选择 Legacy Fabric API 版本")
-                            .setItems(items, (d, which) -> {
-                                this.legacyFabricAPIVersion = filtered.get(which);
-                                refreshNewLoaderRows();
-                            })
-                            .setNegativeButton("取消", null)
-                            .show();
+                    // ★ 1.5.2：独立列表页（与 Fabric API 列表同款）
+                    com.qcl.launcher.launcher.uis.game.download.right.game.DownloadSimpleListUI ui =
+                            this.activity.uiManager.simpleListUI;
+                    ui.listTitle = "选择 Legacy Fabric API 版本";
+                    ui.listItems = items;
+                    ui.onPick = which -> {
+                        this.legacyFabricAPIVersion = filtered.get(which);
+                        refreshNewLoaderRows();
+                    };
+                    this.activity.uiManager.switchMainUI(ui);
                 });
             } catch (final Exception e) {
                 this.activity.runOnUiThread(() -> android.widget.Toast.makeText(this.context,
