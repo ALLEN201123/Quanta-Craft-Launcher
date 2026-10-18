@@ -42,6 +42,10 @@ public class DownloadMinecraftUI extends BaseUI implements View.OnClickListener,
     private ListView mcList;
     private LinearLayout refresh;
 
+    // ★ 1.5.2：版本搜索框 + 清空按钮
+    private android.widget.EditText editVersionSearch;
+    private android.widget.TextView clearVersionSearch;
+
     public DownloadMinecraftUI(Context context, MainActivity mainActivity) {
         super(context, mainActivity);
         this.allList = new ArrayList<>();
@@ -72,6 +76,35 @@ public class DownloadMinecraftUI extends BaseUI implements View.OnClickListener,
         this.checkOld.setOnCheckedChangeListener(this);
         this.checkApril.setOnCheckedChangeListener(this);
         this.refresh.setOnClickListener(this);
+        // ★ 1.5.2：版本搜索框（边打边筛）+ 清空按钮
+        this.editVersionSearch = (android.widget.EditText)
+                this.activity.findViewById(R.id.edit_version_search);
+        this.clearVersionSearch = (android.widget.TextView)
+                this.activity.findViewById(R.id.clear_version_search);
+        if (this.editVersionSearch != null) {
+            this.editVersionSearch.addTextChangedListener(new android.text.TextWatcher() {
+                @Override
+                public void beforeTextChanged(CharSequence s, int a, int b, int c) {
+                }
+
+                @Override
+                public void onTextChanged(CharSequence s, int a, int b, int c) {
+                }
+
+                @Override
+                public void afterTextChanged(android.text.Editable e) {
+                    refresh();
+                }
+            });
+        }
+        if (this.clearVersionSearch != null) {
+            this.clearVersionSearch.setOnClickListener(v -> {
+                if (this.editVersionSearch != null) {
+                    this.editVersionSearch.setText("");
+                }
+                refresh();
+            });
+        }
     }
 
     @Override // com.qcl.launcher.launcher.uis.tools.BaseUI, com.qcl.launcher.launcher.uis.tools.UILifecycleCallbacks
@@ -193,6 +226,14 @@ public class DownloadMinecraftUI extends BaseUI implements View.OnClickListener,
         if (this.mcList == null) {
             return;
         }
+        // ★ 1.5.2：搜索关键词（大小写不敏感；可搜正式版/快照版/远古版/愚人节版的版本号）
+        String kw = "";
+        try {
+            if (this.editVersionSearch != null && this.editVersionSearch.getText() != null) {
+                kw = this.editVersionSearch.getText().toString().trim().toLowerCase();
+            }
+        } catch (Throwable ignored) {
+        }
         ArrayList arrayList = new ArrayList();
         Iterator<VersionManifest.Version> it = this.allList.iterator();
         while (it.hasNext()) {
@@ -222,6 +263,28 @@ public class DownloadMinecraftUI extends BaseUI implements View.OnClickListener,
                 show = this.checkSnapshot.isChecked();
             } else {
                 show = this.checkOld.isChecked();
+            }
+            if (show) {
+                // ★ 1.5.2：关键词过滤 —— 按版本 id 匹配（正式版/快照版/远古版/愚人节版都能搜到），
+                //   同时把"类型"也纳入匹配，方便直接搜 release / snapshot / april 这类词。
+                if (!kw.isEmpty()) {
+                    String id = next.id == null ? "" : next.id.toLowerCase();
+                    String type = next.type == null ? "" : next.type.toLowerCase();
+                    boolean hit = id.contains(kw) || type.contains(kw);
+                    if (!hit) {
+                        if (april && ("愚人节".contains(kw) || "april".contains(kw))) {
+                            hit = true;
+                        } else if (release && ("正式".contains(kw) || "release".contains(kw))) {
+                            hit = true;
+                        } else if (snapshotLike && ("快照".contains(kw) || "snapshot".contains(kw))) {
+                            hit = true;
+                        } else if (!release && !snapshotLike && !april
+                                && ("远古".contains(kw) || "old".contains(kw))) {
+                            hit = true;
+                        }
+                    }
+                    show = hit;
+                }
             }
             if (show) {
                 arrayList.add(next);
