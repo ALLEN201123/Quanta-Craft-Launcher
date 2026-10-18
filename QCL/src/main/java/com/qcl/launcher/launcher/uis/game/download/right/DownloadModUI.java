@@ -1,5 +1,7 @@
 package com.qcl.launcher.launcher.uis.game.download.right;
 
+import com.qcl.launcher.launcher.uis.universal.setting.right.launcher.ExteriorSettingUI;
+
 import android.content.Context;
 import android.os.Handler;
 import android.os.Message;
@@ -170,6 +172,16 @@ public class DownloadModUI extends BaseUI implements View.OnClickListener, Adapt
         this.toggleFilter = this.activity.findViewById(R.id.toggle_mod_filter);
         if (this.toggleFilter != null) {
             this.toggleFilter.setOnClickListener((View.OnClickListener) this);
+            // ★ 1.5.2：筛选按钮同步主题色（用户反馈「筛选没同步主题颜色」）
+            try {
+                if (this.toggleFilter instanceof android.widget.TextView) {
+                    // ★ getThemeColor 返回 String，必须再 parse 成 int
+                    int tc = ExteriorSettingUI.parseThemeColorSafe(this.activity,
+                            this.activity.launcherSetting.launcherTheme);
+                    ((android.widget.TextView) this.toggleFilter).setTextColor(tc);
+                }
+            } catch (Throwable ignored) {
+            }
         }
         this.gameSpinner = (Spinner) this.activity.findViewById(R.id.download_mod_arg_game);
         this.downloadSourceSpinner = (Spinner) this.activity.findViewById(R.id.download_mod_arg_source);

@@ -15,6 +15,7 @@
 
         <TextView
             android:id="@+id/toggle_mod_filter"
+            android:tag="tint_accent_color"
             android:layout_width="wrap_content"
             android:layout_height="28dp"
             android:paddingLeft="12dp"
