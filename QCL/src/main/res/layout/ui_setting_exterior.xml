@@ -133,6 +133,23 @@
 
                     </LinearLayout>
 
+                    <!-- ★ 1.5.2 新增：**重置面板（背景板）色**（用户要求：换了颜色要能一键回默认） -->
+                    <TextView
+                        android:id="@+id/reset_panel_color"
+                        android:layout_width="wrap_content"
+                        android:layout_height="28dp"
+                        android:layout_gravity="center"
+                        android:layout_marginStart="8dp"
+                        android:paddingLeft="10dp"
+                        android:paddingRight="10dp"
+                        android:gravity="center"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:background="@drawable/launcher_button_gray"
+                        android:text="@string/exterior_setting_ui_font_color_reset"
+                        android:textColor="@color/colorPureBlack"
+                        android:textSize="@dimen/text_size_small"/>
+
                 </LinearLayout>
 
                 <!-- ★★★ 1.5.0 用户要求：下拉框**下面显示两个自定义色块**

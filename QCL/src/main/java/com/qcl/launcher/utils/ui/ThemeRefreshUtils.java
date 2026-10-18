@@ -58,8 +58,16 @@ public final class ThemeRefreshUtils {
             return;
         }
         try {
-            // ① 左侧导航栏：它是"主栏主题色"的直接载体，优先刷
+            // ① 左侧导航栏：它是"主栏主题色"的直接载体，优先刷。
+            //   ★ 新排版下左栏是**运行时 inflate** 到 new_left_nav_host 里的，
+            //     所以既可能是 new_left_nav 本身，也可能要先从 host 里取唯一子 View。
             View nav = activity.findViewById(R.id.new_left_nav);
+            if (nav == null) {
+                View host = activity.findViewById(R.id.new_left_nav_host);
+                if (host instanceof ViewGroup && ((ViewGroup) host).getChildCount() > 0) {
+                    nav = ((ViewGroup) host).getChildAt(0);
+                }
+            }
             if (nav != null) {
                 // 与原来的 qcl_nav_panel_bg 同样的层次：主题色 + 80% 不透明，
                 // 保证壁纸还透得出来一点，同时图标/文字清晰。

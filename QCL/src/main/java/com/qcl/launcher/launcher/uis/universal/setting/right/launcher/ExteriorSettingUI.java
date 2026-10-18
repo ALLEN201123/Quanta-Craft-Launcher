@@ -108,6 +108,8 @@ CompoundButton.OnCheckedChangeListener {
     private LinearLayout selectPanelColor;
     private View panelColorView;
     private TextView panelColorText;
+    /** ★ 1.5.2：重置**面板（背景板）色**的按钮。 */
+    private TextView resetPanelColor;
     /** ★ 1.5.0 新增：下拉框下面那两个「自定义色块」（点进去开调色板）。 */
     private LinearLayout customThemeBlock;
     private LinearLayout customPanelBlock;
@@ -161,6 +163,11 @@ CompoundButton.OnCheckedChangeListener {
         this.selectPanelColor = (LinearLayout)this.activity.findViewById(R.id.select_panel_color);
         this.panelColorView = this.activity.findViewById(R.id.panel_color_view);
         this.panelColorText = (TextView)this.activity.findViewById(R.id.panel_color_text);
+        // ★ 1.5.2：面板（背景板）色的重置按钮
+        this.resetPanelColor = (TextView)this.activity.findViewById(R.id.reset_panel_color);
+        if (this.resetPanelColor != null) {
+            this.resetPanelColor.setOnClickListener((View.OnClickListener)this);
+        }
         // ★ 1.5.0：下拉框下方的两个自定义色块
         this.customThemeBlock = (LinearLayout)this.activity.findViewById(R.id.custom_theme_block);
         this.customPanelBlock = (LinearLayout)this.activity.findViewById(R.id.custom_panel_block);
@@ -569,13 +576,19 @@ CompoundButton.OnCheckedChangeListener {
                     ExteriorSettingUI.this.activity.exteriorConfig.accentColor(color);
                     ExteriorSettingUI.this.activity.exteriorConfig.apply((Activity)ExteriorSettingUI.this.activity);
                     ExteriorSettingUI.this.applyThemeColorToViews(color);
-                    // ★★★★★ 1.5.2 修「改主题色必须退出重进才生效」：
-                    //   exteriorConfig.apply() 只改**主题定义**，已 inflate 的 View 不会重读
-                    //   （左侧导航栏背景是固定 color 资源，按钮 drawable 引用的 ?attr/colorAccent 同理）。
-                    //   ⇒ 这里当场把新色刷到已存在的 View 上：导航栏底色 + 勾选框/进度圈 + 纯色 shape 按钮。
+                    // ★★★★★ 1.5.2 修「改主题色必须退出重进才生效 / 左侧栏要重进外观页才变色」：
+                    //   exteriorConfig.apply() 只改**主题定义**，已 inflate 的 View 不会重读；
+                    //   而且 apply() 之后可能还有一次异步的主题应用会把我们刚设的背景盖掉。
+                    //   ⇒ 用 **post 延迟一帧**再刷，确保排在 apply 之后，且只刷新已存在的 View。
+                    final android.app.Activity act = (android.app.Activity) ExteriorSettingUI.this.activity;
+                    final int newColor = color;
                     try {
-                        com.qcl.launcher.utils.ui.ThemeRefreshUtils.apply(
-                                (Activity) ExteriorSettingUI.this.activity, color);
+                        act.getWindow().getDecorView().post(() -> {
+                            try {
+                                com.qcl.launcher.utils.ui.ThemeRefreshUtils.apply(act, newColor);
+                            } catch (Throwable ignored) {
+                            }
+                        });
                     } catch (Throwable ignored) {
                     }
                 }
@@ -644,8 +657,14 @@ CompoundButton.OnCheckedChangeListener {
                     ExteriorSettingUI.this.applyThemeColorToViews(destColor);
                     // ★ 1.5.2：自定义颜色同样要**立即生效**，不能等重启
                     try {
-                        com.qcl.launcher.utils.ui.ThemeRefreshUtils.apply(
-                                (Activity) ExteriorSettingUI.this.activity, destColor);
+                        {
+                            final android.app.Activity _act = (android.app.Activity) ExteriorSettingUI.this.activity;
+                            final int _c = destColor;
+                            _act.getWindow().getDecorView().post(() -> {
+                                try { com.qcl.launcher.utils.ui.ThemeRefreshUtils.apply(_act, _c); }
+                                catch (Throwable ignored) { }
+                            });
+                        }
                     } catch (Throwable ignored) {
                     }
                 }
@@ -659,8 +678,14 @@ CompoundButton.OnCheckedChangeListener {
                     ExteriorSettingUI.this.applyThemeColorToViews(initColor);
                     // ★ 1.5.2：取消（回滚颜色）时也要把界面刷回去
                     try {
-                        com.qcl.launcher.utils.ui.ThemeRefreshUtils.apply(
-                                (Activity) ExteriorSettingUI.this.activity, initColor);
+                        {
+                            final android.app.Activity _act = (android.app.Activity) ExteriorSettingUI.this.activity;
+                            final int _c = initColor;
+                            _act.getWindow().getDecorView().post(() -> {
+                                try { com.qcl.launcher.utils.ui.ThemeRefreshUtils.apply(_act, _c); }
+                                catch (Throwable ignored) { }
+                            });
+                        }
                     } catch (Throwable ignored) {
                     }
                 }
@@ -717,8 +742,14 @@ CompoundButton.OnCheckedChangeListener {
                 this.activity.exteriorConfig.accentColor(def);
                 this.activity.exteriorConfig.apply((Activity) this.activity);
                 this.applyThemeColorToViews(def);
-                com.qcl.launcher.utils.ui.ThemeRefreshUtils.apply(
-                        (Activity) this.activity, def);
+                {
+                        final android.app.Activity _act = (android.app.Activity) this.activity;
+                        final int _c = def;
+                        _act.getWindow().getDecorView().post(() -> {
+                            try { com.qcl.launcher.utils.ui.ThemeRefreshUtils.apply(_act, _c); }
+                            catch (Throwable ignored) { }
+                        });
+                    }
                 // 下拉框同步回默认项（初始化标志先置 false，避免又被当成"玩家选择"）
                 try {
                     this.themeSpinnerReady = false;
@@ -742,6 +773,30 @@ CompoundButton.OnCheckedChangeListener {
             }
         }
         // ★ 1.5.0：面板色的两个入口都走这里 —— 右侧小按钮 + 下拉框下方的第二个自定义色块。
+        if (v == this.resetPanelColor) {
+            // ★★★★★ 1.5.2 新增：**重置面板（背景板）色**。
+            //   用户要求：「背景板颜色你也没加重置按钮」。
+            //   做法：panelColor 置 null（= 跟随昼夜默认 qcl_panel_gray），
+            //   然后立刻把默认色刷回预览块与整个界面（与手动选色走同一套 applyPanelTint）。
+            try {
+                this.activity.launcherSetting.panelColor = null;
+                GsonUtils.saveLauncherSetting(this.activity.launcherSetting,
+                        AppManifest.SETTING_DIR + "/launcher_setting.json");
+                int def = ExteriorSettingUI.getPanelColor(this.context, null);
+                if (this.panelColorView != null) {
+                    this.panelColorView.setBackgroundColor(def);
+                }
+                if (this.panelColorText != null) {
+                    this.panelColorText.setText(QclColors.format(def));
+                }
+                this.applyPanelColorToBlock(def);
+                ExteriorSettingUI.applyPanelTint(this.context, this.exteriorSettingUI, def);
+                ExteriorSettingUI.applyPanelTint(this.context,
+                        this.activity.getWindow().getDecorView(), def);
+                Toast.makeText(this.context, "面板色已恢复默认", Toast.LENGTH_SHORT).show();
+            } catch (Throwable ignored) {
+            }
+        }
         if (v == this.selectPanelColor || v == this.customPanelBlock) {
             dialog = new ColorSelectorDialog(this.context, true, ExteriorSettingUI.getPanelColor(this.context, this.activity.launcherSetting.panelColor));
             dialog.setColorSelectorDialogListener(new ColorSelectorDialog.ColorSelectorDialogListener(){
