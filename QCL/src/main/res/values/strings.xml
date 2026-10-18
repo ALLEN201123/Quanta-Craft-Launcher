@@ -1206,4 +1206,5 @@ Multiplayer is powered by Terracotta (by BurningTNT). The multiplayer feature is
     <string name="exterior_setting_ui_reset">Reset</string>
     <string name="exterior_setting_ui_wait_bg_hint">Tap a tile to change that one (6 slots for the launch waiting screen)</string>
     <string name="download_minecraft_ui_search_hint">Search version (e.g. 1.20.1 / 快照 / 远古)</string>
+    <string name="download_mod_ui_filter">Filter</string>
 </resources>

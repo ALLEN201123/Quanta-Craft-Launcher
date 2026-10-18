@@ -84,6 +84,7 @@
                     android:id="@+id/edit_version_search"
                     android:layout_width="0dp"
                     android:layout_weight="1"
+                    android:minWidth="130dp"
                     android:layout_height="30dp"
                     android:layout_gravity="center_vertical"
                     android:layout_marginStart="8dp"

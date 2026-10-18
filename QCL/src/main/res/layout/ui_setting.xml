@@ -8,12 +8,13 @@
     android:layout_height="match_parent">
 
     <HorizontalScrollView
+        android:fillViewport="true"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:scrollbars="none">
 
         <LinearLayout
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:paddingStart="12dp"
             android:paddingEnd="12dp"
@@ -22,195 +23,189 @@
             android:orientation="horizontal">
 
             <LinearLayout
-                android:layout_height="72dp"
-                android:minWidth="84dp"
-                android:layout_marginStart="12dp"
+                android:layout_height="56dp"
                 android:gravity="center"
-                android:padding="10dp"
+                android:padding="2dp"
                 android:background="@drawable/launcher_button_parent"
                 android:focusable="true"
                 android:clickable="true"
                 android:id="@+id/start_global_game_setting_ui"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
+                android:layout_weight="1"
                 android:orientation="vertical">
 
                 <ImageView
                     android:layout_gravity="center_horizontal"
-                    android:layout_width="22dp"
-                    android:layout_height="22dp"
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
                     android:background="@drawable/ic_baseline_game_pad_black"/>
 
                 <TextView
-                    android:layout_marginTop="6dp"
+                    android:layout_marginTop="2dp"
                     android:gravity="center_horizontal"
                     android:singleLine="true"
                     android:layout_gravity="center_horizontal"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/setting_ui_public_game_setting"
-                    android:textSize="14sp"
+                    android:textSize="10sp"
                     android:textColor="@color/colorPureBlack"/>
 
             </LinearLayout>
 
 
             <LinearLayout
-                android:layout_height="72dp"
-                android:minWidth="84dp"
-                android:layout_marginStart="8dp"
+                android:layout_height="56dp"
                 android:gravity="center"
-                android:padding="10dp"
+                android:padding="2dp"
                 android:background="@drawable/launcher_button_parent"
                 android:focusable="true"
                 android:clickable="true"
                 android:id="@+id/start_exterior_setting_ui"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
+                android:layout_weight="1"
                 android:orientation="vertical">
 
                 <ImageView
                     android:layout_gravity="center_horizontal"
-                    android:layout_width="22dp"
-                    android:layout_height="22dp"
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
                     android:background="@drawable/ic_baseline_exterior_black"/>
 
                 <TextView
-                    android:layout_marginTop="6dp"
+                    android:layout_marginTop="2dp"
                     android:gravity="center_horizontal"
                     android:singleLine="true"
                     android:layout_gravity="center_horizontal"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/setting_ui_exterior"
-                    android:textSize="14sp"
+                    android:textSize="10sp"
                     android:textColor="@color/colorPureBlack"/>
 
             </LinearLayout>
 
             <LinearLayout
-                android:layout_height="72dp"
-                android:minWidth="84dp"
-                android:layout_marginStart="8dp"
+                android:layout_height="56dp"
                 android:gravity="center"
-                android:padding="10dp"
+                android:padding="2dp"
                 android:background="@drawable/launcher_button_parent"
                 android:focusable="true"
                 android:clickable="true"
                 android:id="@+id/start_download_setting_ui"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
+                android:layout_weight="1"
                 android:orientation="vertical">
 
                 <ImageView
                     android:layout_gravity="center_horizontal"
-                    android:layout_width="22dp"
-                    android:layout_height="22dp"
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
                     android:background="@drawable/ic_outline_download_black"/>
 
                 <TextView
-                    android:layout_marginTop="6dp"
+                    android:layout_marginTop="2dp"
                     android:gravity="center_horizontal"
                     android:singleLine="true"
                     android:layout_gravity="center_horizontal"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/setting_ui_download"
-                    android:textSize="14sp"
+                    android:textSize="10sp"
                     android:textColor="@color/colorPureBlack"/>
 
             </LinearLayout>
 
 
             <LinearLayout
-                android:layout_height="72dp"
-                android:minWidth="84dp"
-                android:layout_marginStart="8dp"
+                android:layout_height="56dp"
                 android:gravity="center"
-                android:padding="10dp"
+                android:padding="2dp"
                 android:background="@drawable/launcher_button_parent"
                 android:focusable="true"
                 android:clickable="true"
                 android:id="@+id/start_feedback_ui"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
+                android:layout_weight="1"
                 android:orientation="vertical">
 
                 <ImageView
                     android:layout_gravity="center_horizontal"
-                    android:layout_width="22dp"
-                    android:layout_height="22dp"
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
                     android:background="@drawable/ic_outline_feedback_black"/>
 
                 <TextView
-                    android:layout_marginTop="6dp"
+                    android:layout_marginTop="2dp"
                     android:gravity="center_horizontal"
                     android:singleLine="true"
                     android:layout_gravity="center_horizontal"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/setting_ui_feedback"
-                    android:textSize="14sp"
+                    android:textSize="10sp"
                     android:textColor="@color/colorPureBlack"/>
 
             </LinearLayout>
 
             <LinearLayout
-                android:layout_height="72dp"
-                android:minWidth="84dp"
-                android:layout_marginStart="8dp"
+                android:layout_height="56dp"
                 android:gravity="center"
-                android:padding="10dp"
+                android:padding="2dp"
                 android:background="@drawable/launcher_button_parent"
                 android:focusable="true"
                 android:clickable="true"
                 android:id="@+id/start_donate_ui"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
+                android:layout_weight="1"
                 android:orientation="vertical">
 
                 <ImageView
                     android:layout_gravity="center_horizontal"
-                    android:layout_width="22dp"
-                    android:layout_height="22dp"
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
                     android:background="@drawable/ic_baseline_donate_black"/>
 
                 <TextView
-                    android:layout_marginTop="6dp"
+                    android:layout_marginTop="2dp"
                     android:gravity="center_horizontal"
                     android:singleLine="true"
                     android:layout_gravity="center_horizontal"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/setting_ui_donate"
-                    android:textSize="14sp"
+                    android:textSize="10sp"
                     android:textColor="@color/colorPureBlack"/>
 
             </LinearLayout>
 
             <LinearLayout
-                android:layout_height="72dp"
-                android:minWidth="84dp"
-                android:layout_marginStart="8dp"
+                android:layout_height="56dp"
                 android:gravity="center"
-                android:padding="10dp"
+                android:padding="2dp"
                 android:background="@drawable/launcher_button_parent"
                 android:focusable="true"
                 android:clickable="true"
                 android:id="@+id/start_about_ui"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
+                android:layout_weight="1"
                 android:orientation="vertical">
 
                 <ImageView
                     android:layout_gravity="center_horizontal"
-                    android:layout_width="22dp"
-                    android:layout_height="22dp"
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
                     android:background="@drawable/ic_outline_about_black"/>
 
                 <TextView
-                    android:layout_marginTop="6dp"
+                    android:layout_marginTop="2dp"
                     android:gravity="center_horizontal"
                     android:singleLine="true"
                     android:layout_gravity="center_horizontal"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/setting_ui_about"
-                    android:textSize="14sp"
+                    android:textSize="10sp"
                     android:textColor="@color/colorPureBlack"/>
 
             </LinearLayout>

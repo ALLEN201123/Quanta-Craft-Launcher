@@ -23,9 +23,9 @@
             android:orientation="horizontal">
 
             <LinearLayout
-                android:layout_height="48dp"
+                android:layout_height="56dp"
                 android:gravity="center"
-                android:padding="4dp"
+                android:padding="2dp"
                 android:background="@drawable/launcher_button_parent"
                 android:focusable="true"
                 android:clickable="true"
@@ -36,12 +36,12 @@
 
                 <ImageView
                     android:layout_gravity="center_horizontal"
-                    android:layout_width="18dp"
-                    android:layout_height="18dp"
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
                     android:background="@drawable/ic_baseline_game_pad_black"/>
 
                 <TextView
-                    android:layout_marginTop="6dp"
+                    android:layout_marginTop="2dp"
                     android:gravity="center_horizontal"
                     android:singleLine="true"
                     android:layout_gravity="center_horizontal"
@@ -54,7 +54,7 @@
             </LinearLayout>
 
             <LinearLayout
-                android:layout_height="48dp"
+                android:layout_height="56dp"
                 android:layout_marginStart="8dp"
                 android:gravity="center"
                 android:padding="6dp"
@@ -68,12 +68,12 @@
 
                 <ImageView
                     android:layout_gravity="center_horizontal"
-                    android:layout_width="18dp"
-                    android:layout_height="18dp"
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
                     android:background="@drawable/ic_baseline_pack_black"/>
 
                 <TextView
-                    android:layout_marginTop="6dp"
+                    android:layout_marginTop="2dp"
                     android:gravity="center_horizontal"
                     android:singleLine="true"
                     android:layout_gravity="center_horizontal"
@@ -86,7 +86,7 @@
             </LinearLayout>
 
             <LinearLayout
-                android:layout_height="48dp"
+                android:layout_height="56dp"
                 android:layout_marginStart="8dp"
                 android:gravity="center"
                 android:padding="6dp"
@@ -100,12 +100,12 @@
 
                 <ImageView
                     android:layout_gravity="center_horizontal"
-                    android:layout_width="18dp"
-                    android:layout_height="18dp"
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
                     android:background="@drawable/ic_outline_extension_black"/>
 
                 <TextView
-                    android:layout_marginTop="6dp"
+                    android:layout_marginTop="2dp"
                     android:gravity="center_horizontal"
                     android:singleLine="true"
                     android:layout_gravity="center_horizontal"
@@ -118,7 +118,7 @@
             </LinearLayout>
 
             <LinearLayout
-                android:layout_height="48dp"
+                android:layout_height="56dp"
                 android:layout_marginStart="8dp"
                 android:gravity="center"
                 android:padding="6dp"
@@ -137,7 +137,7 @@
                     android:background="@drawable/ic_baseline_texture_black"/>
 
                 <TextView
-                    android:layout_marginTop="6dp"
+                    android:layout_marginTop="2dp"
                     android:gravity="center_horizontal"
                     android:singleLine="true"
                     android:layout_gravity="center_horizontal"
@@ -150,7 +150,7 @@
             </LinearLayout>
 
             <LinearLayout
-                android:layout_height="48dp"
+                android:layout_height="56dp"
                 android:layout_marginStart="8dp"
                 android:gravity="center"
                 android:padding="6dp"
@@ -169,7 +169,7 @@
                     android:background="@drawable/ic_baseline_shader_black"/>
 
                 <TextView
-                    android:layout_marginTop="6dp"
+                    android:layout_marginTop="2dp"
                     android:gravity="center_horizontal"
                     android:singleLine="true"
                     android:layout_gravity="center_horizontal"
@@ -183,7 +183,7 @@
 
             <!-- ★ 2026-10-09 用户要求：下载页新增「收藏」标签（照 FCL 的收藏页入口） -->
             <LinearLayout
-                android:layout_height="48dp"
+                android:layout_height="56dp"
                 android:layout_marginStart="8dp"
                 android:gravity="center"
                 android:padding="6dp"
@@ -197,15 +197,15 @@
 
                 <TextView
                     android:layout_gravity="center_horizontal"
-                    android:layout_width="18dp"
-                    android:layout_height="18dp"
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
                     android:gravity="center"
                     android:textSize="16sp"
                     android:textColor="@color/colorPureBlack"
                     android:text="★"/>
 
                 <TextView
-                    android:layout_marginTop="6dp"
+                    android:layout_marginTop="2dp"
                     android:gravity="center_horizontal"
                     android:singleLine="true"
                     android:layout_gravity="center_horizontal"
@@ -218,7 +218,7 @@
             </LinearLayout>
 
             <LinearLayout
-                android:layout_height="48dp"
+                android:layout_height="56dp"
                 android:layout_marginStart="8dp"
                 android:gravity="center"
                 android:padding="6dp"
@@ -233,11 +233,11 @@
                 <ImageView
                     android:background="@drawable/ic_baseline_earth_black"
                     android:layout_gravity="center_horizontal"
-                    android:layout_width="18dp"
-                    android:layout_height="18dp" />
+                    android:layout_width="16dp"
+                    android:layout_height="16dp" />
 
                 <TextView
-                    android:layout_marginTop="6dp"
+                    android:layout_marginTop="2dp"
                     android:gravity="center_horizontal"
                     android:singleLine="true"
                     android:layout_gravity="center_horizontal"
