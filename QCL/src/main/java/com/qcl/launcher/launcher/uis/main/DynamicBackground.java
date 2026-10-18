@@ -54,6 +54,33 @@ public class DynamicBackground {
     private final Drawable[] cache = new Drawable[RES_IDS.length];
     private int index = 0;
     private boolean running = false;
+
+    // ★★★★★ 1.5.2 新增：**自定义背景图**（「网络」模式下玩家自己指定的图）。
+    //
+    //   用户需求：「网络自动切换背景图，没有自定义的更改选项，
+    //             只有普通的背景图是有自定义更改」。
+    //
+    //   ★ 范围严格限定：**只影响背景怎么画**，不碰任何启动/关闭/跳转流程。
+    //     外部把 URL 下载解码成 Drawable 后塞进来，轮播就改用它们；
+    //     塞空 = 回到内置 6 张（下载失败也走这条路降级）。
+    private static volatile java.util.List<Drawable> customFrames = null;
+
+    /** 由外部调用：设置「网络」模式要轮播的自定义图（传 null/空 = 恢复内置 6 张）。 */
+    public static void setCustomFrames(java.util.List<Drawable> frames) {
+        customFrames = (frames == null || frames.isEmpty()) ? null : frames;
+    }
+
+    /** 当前是否在用自定义图。 */
+    public static boolean hasCustomFrames() {
+        return customFrames != null;
+    }
+
+    /** 当前轮播总帧数（自定义优先）。 */
+    private static int frameCount() {
+        java.util.List<Drawable> f = customFrames;
+        return (f == null) ? RES_IDS.length : f.size();
+    }
+
     private final Runnable tick = new Runnable(){
 
         @Override
@@ -61,7 +88,8 @@ public class DynamicBackground {
             if (!DynamicBackground.this.running) {
                 return;
             }
-            DynamicBackground.this.index = (DynamicBackground.this.index + 1) % RES_IDS.length;
+            DynamicBackground.this.index =
+                    (DynamicBackground.this.index + 1) % Math.max(1, frameCount());
             DynamicBackground.this.apply(DynamicBackground.this.index, true);
             DynamicBackground.this.handler.postDelayed((Runnable)this, 10000L);
         }
@@ -128,8 +156,20 @@ public class DynamicBackground {
         if (this.cache[i] != null) {
             return this.cache[i];
         }
+        // ★ 1.5.2：有自定义图时优先用它（内置 6 张完全不参与）
+        java.util.List<Drawable> custom = customFrames;
+        if (custom != null && !custom.isEmpty()) {
+            Drawable d = custom.get(i % custom.size());
+            if (d != null) {
+                return d;
+            }
+        }
+        int safe = (i < 0 || i >= this.cache.length) ? 0 : i;
+        if (this.cache[safe] != null) {
+            return this.cache[safe];
+        }
         try {
-            Bitmap bmp = this.decodeScaled(RES_IDS[i]);
+            Bitmap bmp = this.decodeScaled(RES_IDS[safe]);
             if (bmp == null) {
                 return null;
             }
@@ -137,12 +177,12 @@ public class DynamicBackground {
             if (processed != bmp) {
                 bmp.recycle();
             }
-            this.cache[i] = new BitmapDrawable(this.activity.getResources(), processed);
+            this.cache[safe] = new BitmapDrawable(this.activity.getResources(), processed);
         }
         catch (Throwable t) {
-            this.cache[i] = new ColorDrawable(-1184275);
+            this.cache[safe] = new ColorDrawable(-1184275);
         }
-        return this.cache[i];
+        return this.cache[safe];
     }
 
     private Bitmap decodeScaled(int resId) {

@@ -302,6 +302,10 @@ implements View.OnClickListener {
                     this.dynamicBackground.stop();
                 }
             } else if (type == 0) {
+                // ★ 1.5.2：先看「网络」模式有没有填自定义 URL。
+                //   填了 → 后台下载解码后交给轮播引擎；没填/失败 → 内置 6 张。
+                //   ★ 只影响背景怎么画，不碰任何启动/跳转流程。
+                loadCustomBackgroundFramesIfAny();
                 this.startDynamicBackgroundIfNeeded();
             } else if (this.dynamicBackground != null) {
                 this.dynamicBackground.stop();
@@ -310,6 +314,67 @@ implements View.OnClickListener {
         catch (Throwable throwable) {
             // empty catch block
         }
+    }
+
+    /**
+     * ★ 1.5.2 新增：把「网络」模式里玩家填的 URL 下载成本地 Drawable 交给轮播引擎。
+     *
+     * <p>支持**多行 / 逗号 / 分号**分隔的多个 URL（可让它轮流放几张自己的图）。
+     * <p>全部在后台线程下载解码；某张失败就跳过；一张都没成功则降级为内置 6 张。
+     * <p>★ 本方法**只改背景数据**，不触碰启动检查、Activity 跳转等任何流程。
+     */
+    private void loadCustomBackgroundFramesIfAny() {
+        final String raw = this.launcherSetting.launcherBackground.url;
+        final String text = raw == null ? "" : raw.trim();
+        if (text.isEmpty()) {
+            com.qcl.launcher.launcher.uis.main.DynamicBackground.setCustomFrames(null);
+            return;
+        }
+        final java.util.List<String> urls = new java.util.ArrayList<>();
+        for (String part : text.split("[\\r\\n,;，；]+")) {
+            String u = part.trim();
+            if (!u.isEmpty() && (u.startsWith("http://") || u.startsWith("https://"))) {
+                urls.add(u);
+            }
+        }
+        if (urls.isEmpty()) {
+            com.qcl.launcher.launcher.uis.main.DynamicBackground.setCustomFrames(null);
+            return;
+        }
+        new Thread(() -> {
+            final java.util.List<android.graphics.drawable.Drawable> frames =
+                    new java.util.ArrayList<>();
+            for (String u : urls) {
+                try {
+                    java.io.InputStream in = com.qcl.launcher.utils.io.NetworkUtils
+                            .toURL(u).openStream();
+                    android.graphics.Bitmap bmp = android.graphics.BitmapFactory.decodeStream(in);
+                    try {
+                        in.close();
+                    } catch (Throwable ignored) {
+                    }
+                    if (bmp != null) {
+                        frames.add(new android.graphics.drawable.BitmapDrawable(
+                                getResources(), bmp));
+                    }
+                } catch (Throwable ignored) {
+                    // 单张失败不影响其它
+                }
+            }
+            final boolean ok = !frames.isEmpty();
+            runOnUiThread(() -> {
+                try {
+                    com.qcl.launcher.launcher.uis.main.DynamicBackground
+                            .setCustomFrames(ok ? frames : null);
+                    // 已经跑着的轮播要重启一次才会用上新图源
+                    if (this.dynamicBackground != null) {
+                        this.dynamicBackground.stop();
+                        this.dynamicBackground.start();
+                    }
+                } catch (Throwable ignored) {
+                }
+            });
+        }, "qcl-custom-bg").start();
     }
 
     /**

@@ -226,7 +226,9 @@ CompoundButton.OnCheckedChangeListener {
             // 动态背景（自动切换）→ 选中「网络」
             this.onlineRadio.setChecked(true);
             this.editBgPath.setEnabled(false);
-            this.editBgUrl.setEnabled(false);
+            // ★ 1.5.2：URL 可编辑 —— 玩家可填自己的图；留空则仍用内置 6 张。
+            //   只改「能不能编辑」，不碰任何启动/跳转流程。
+            this.editBgUrl.setEnabled(true);
             this.selectBgPath.setEnabled(false);
         } else if (this.activity.launcherSetting.launcherBackground.type == 1) {
             // ★ 1.5.0：默认 → 按现实时间自动切昼夜
@@ -995,10 +997,20 @@ CompoundButton.OnCheckedChangeListener {
             }
             this.customRadio.setChecked(false);
             this.editBgPath.setEnabled(false);
-            this.editBgUrl.setEnabled(false);
+            // ★★★★★ 1.5.2：启用 URL —— 「网络」模式终于能换玩家自己的图了。
+            //
+            //   ★ 「网络」的真实含义（读 DynamicBackground 源码确认）：
+            //     轮播内置的 6 张图（qcl_bg_1~6），每 10 秒一张；
+            //     并用**网络时间**（HTTP 响应头 Date）判断昼夜 —— 这才是"网络"一词的由来，
+            //     它**不是**"从网络拉图"。所以原来 URL 框被禁用后，玩家根本没法换图。
+            //
+            //   ★ 只改背景绘制，**不碰** dismiss / startActivity / 启动检查任何流程。
+            this.editBgUrl.setEnabled(true);
             this.selectBgPath.setEnabled(false);
-            // ★ 1.3.4：「网络」= 自动切换的动态背景（type 0，图片由 DynamicBackground 从网络拉取）
             this.activity.launcherSetting.launcherBackground.type = 0;
+            // 把当前输入的 URL 记下来（多行/逗号分隔都支持），再重启轮播
+            this.activity.launcherSetting.launcherBackground.url =
+                    this.editBgUrl.getText() == null ? null : this.editBgUrl.getText().toString();
             this.activity.refreshDynamicBackground();
         }
         GsonUtils.saveLauncherSetting(this.activity.launcherSetting, AppManifest.SETTING_DIR + "/launcher_setting.json");
