@@ -176,7 +176,73 @@
                     android:layout_height="1px"
                     android:background="@color/colorGray"/>
 
-                <!-- ★ 1.4.2：NeoForge 加载器行（照 FCL InstallerItemGroup：紧跟在 Forge 之后） -->
+                
+                <!-- ★ 1.5.2 新增：install_game_ui_cleanroom（图标抄 FCL） -->
+                <LinearLayout
+                    android:background="@drawable/launcher_button_parent"
+                    android:id="@+id/select_cleanroom_version"
+                    android:padding="12dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <ImageView
+                        android:src="@drawable/ic_cleanroom"
+                        android:layout_gravity="center"
+                        android:layout_width="30dp"
+                        android:layout_height="30dp"
+                        android:scaleType="centerInside" />
+
+                    <TextView
+                        android:singleLine="true"
+                        android:layout_marginStart="12dp"
+                        android:layout_gravity="center"
+                        android:layout_width="100dp"
+                        android:layout_height="wrap_content"
+                        android:text="@string/install_game_ui_cleanroom"
+                        android:textSize="@dimen/text_size_middle"
+                        android:textColor="@color/colorPureBlack"/>
+
+                    <TextView
+                        android:singleLine="true"
+                        android:id="@+id/cleanroom_version_text"
+                        android:layout_gravity="center"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/install_game_ui_none"
+                        android:textSize="@dimen/text_size_middle"
+                        android:textColor="@color/colorPureBlack"/>
+
+                    <View
+                        android:layout_width="0dp"
+                        android:layout_height="0dp"
+                        android:layout_weight="1"/>
+
+                    <ImageButton
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:layout_gravity="center"
+                        android:visibility="gone"
+                        android:background="@drawable/ic_baseline_close_black"
+                        android:id="@+id/call_off_install_cleanroom"/>
+
+                    <ImageView
+                        android:id="@+id/select_cleanroom"
+                        android:layout_marginStart="12dp"
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:layout_gravity="center"
+                        android:background="@drawable/ic_baseline_arrow_forward_black" />
+
+                </LinearLayout>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1px"
+                    android:background="@color/colorGray"/>
+<!-- ★ 1.4.2：NeoForge 加载器行（照 FCL InstallerItemGroup：紧跟在 Forge 之后） -->
                 <LinearLayout
                     android:background="@drawable/launcher_button_parent"
                     android:id="@+id/select_neoforge_version"
@@ -437,7 +503,73 @@
                     android:layout_height="1px"
                     android:background="@color/colorGray"/>
 
+                
+                <!-- ★ 1.5.2 新增：install_game_ui_legacy_fabric（图标抄 FCL） -->
                 <LinearLayout
+                    android:background="@drawable/launcher_button_parent"
+                    android:id="@+id/select_legacy_fabric_version"
+                    android:padding="12dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <ImageView
+                        android:src="@drawable/ic_legacy_fabric"
+                        android:layout_gravity="center"
+                        android:layout_width="30dp"
+                        android:layout_height="30dp"
+                        android:scaleType="centerInside" />
+
+                    <TextView
+                        android:singleLine="true"
+                        android:layout_marginStart="12dp"
+                        android:layout_gravity="center"
+                        android:layout_width="100dp"
+                        android:layout_height="wrap_content"
+                        android:text="@string/install_game_ui_legacy_fabric"
+                        android:textSize="@dimen/text_size_middle"
+                        android:textColor="@color/colorPureBlack"/>
+
+                    <TextView
+                        android:singleLine="true"
+                        android:id="@+id/legacy_fabric_version_text"
+                        android:layout_gravity="center"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/install_game_ui_none"
+                        android:textSize="@dimen/text_size_middle"
+                        android:textColor="@color/colorPureBlack"/>
+
+                    <View
+                        android:layout_width="0dp"
+                        android:layout_height="0dp"
+                        android:layout_weight="1"/>
+
+                    <ImageButton
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:layout_gravity="center"
+                        android:visibility="gone"
+                        android:background="@drawable/ic_baseline_close_black"
+                        android:id="@+id/call_off_install_legacy_fabric"/>
+
+                    <ImageView
+                        android:id="@+id/select_legacy_fabric"
+                        android:layout_marginStart="12dp"
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:layout_gravity="center"
+                        android:background="@drawable/ic_baseline_arrow_forward_black" />
+
+                </LinearLayout>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1px"
+                    android:background="@color/colorGray"/>
+<LinearLayout
                     android:background="@drawable/launcher_button_parent"
                     android:id="@+id/select_fabric_api_version"
                     android:padding="12dp"
@@ -502,7 +634,73 @@
                     android:layout_height="1px"
                     android:background="@color/colorGray"/>
 
+                
+                <!-- ★ 1.5.2 新增：install_game_ui_legacy_fabric_api（图标抄 FCL） -->
                 <LinearLayout
+                    android:background="@drawable/launcher_button_parent"
+                    android:id="@+id/select_legacy_fabric_api_version"
+                    android:padding="12dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <ImageView
+                        android:src="@drawable/ic_legacy_fabric_api"
+                        android:layout_gravity="center"
+                        android:layout_width="30dp"
+                        android:layout_height="30dp"
+                        android:scaleType="centerInside" />
+
+                    <TextView
+                        android:singleLine="true"
+                        android:layout_marginStart="12dp"
+                        android:layout_gravity="center"
+                        android:layout_width="100dp"
+                        android:layout_height="wrap_content"
+                        android:text="@string/install_game_ui_legacy_fabric_api"
+                        android:textSize="@dimen/text_size_middle"
+                        android:textColor="@color/colorPureBlack"/>
+
+                    <TextView
+                        android:singleLine="true"
+                        android:id="@+id/legacy_fabric_api_version_text"
+                        android:layout_gravity="center"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/install_game_ui_none"
+                        android:textSize="@dimen/text_size_middle"
+                        android:textColor="@color/colorPureBlack"/>
+
+                    <View
+                        android:layout_width="0dp"
+                        android:layout_height="0dp"
+                        android:layout_weight="1"/>
+
+                    <ImageButton
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:layout_gravity="center"
+                        android:visibility="gone"
+                        android:background="@drawable/ic_baseline_close_black"
+                        android:id="@+id/call_off_install_legacy_fabric_api"/>
+
+                    <ImageView
+                        android:id="@+id/select_legacy_fabric_api"
+                        android:layout_marginStart="12dp"
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:layout_gravity="center"
+                        android:background="@drawable/ic_baseline_arrow_forward_black" />
+
+                </LinearLayout>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1px"
+                    android:background="@color/colorGray"/>
+<LinearLayout
                     android:background="@drawable/launcher_button_parent"
                     android:id="@+id/select_quilt_version"
                     android:padding="12dp"

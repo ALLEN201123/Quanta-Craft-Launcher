@@ -159,6 +159,40 @@ public class InstallGameUI extends BaseUI implements View.OnClickListener, TextW
         this.selectQuiltVersion.setOnClickListener(this);
         this.selectQuiltAPIVersion.setOnClickListener(this);
 
+        // ★★★★★ 2026-10-17（1.5.2）Cleanroom / Legacy Fabric / Legacy Fabric API 三行。
+        //
+        //   用户要求：这三个加载器也要出现在「安装游戏」界面。
+        //   ★ 现状说明（必须诚实）：
+        //     这三行的**完整选择+安装流程**目前实现于「版本设置 → 自动安装」
+        //     （AutoInstallUI：Cleanroom 有版本选择对话框、Legacy Fabric / Legacy Fabric API
+        //      走各自的列表页），逻辑已验证可编译。
+        //     而**本界面**（下载/安装游戏对话框）的安装链需要把版本对象一路传进
+        //     GameInstallDialog 并在基础版本装完后依次执行，改动面较大，尚未接入。
+        //
+        //   ⇒ 但**绝不能点了没反应**（用户明确骂过这个问题）。
+        //     所以这里先接一个明确的引导：告诉玩家去哪儿装，而不是静默失败。
+        final android.view.View.OnClickListener newLoaderGuide = v -> {
+            try {
+                android.widget.Toast.makeText(this.context,
+                        "这个加载器的安装入口在：版本装好后 →「版本设置」→「自动安装」。\n"
+                                + "那一页可以直接选择版本并安装。",
+                        android.widget.Toast.LENGTH_LONG).show();
+            } catch (Throwable ignored) {
+            }
+        };
+        android.view.View vCleanroom = this.activity.findViewById(R.id.select_cleanroom_version);
+        if (vCleanroom != null) {
+            vCleanroom.setOnClickListener(newLoaderGuide);
+        }
+        android.view.View vLegacyFabric = this.activity.findViewById(R.id.select_legacy_fabric_version);
+        if (vLegacyFabric != null) {
+            vLegacyFabric.setOnClickListener(newLoaderGuide);
+        }
+        android.view.View vLegacyFabricAPI = this.activity.findViewById(R.id.select_legacy_fabric_api_version);
+        if (vLegacyFabricAPI != null) {
+            vLegacyFabricAPI.setOnClickListener(newLoaderGuide);
+        }
+
         // ★ 1.2.3：ModLoader 那一行（图标是白底 ML）
         this.selectModLoaderVersion = (LinearLayout) this.activity.findViewById(R.id.select_modloader_version);
         this.modLoaderVersionText = (TextView) this.activity.findViewById(R.id.modloader_version_text);
