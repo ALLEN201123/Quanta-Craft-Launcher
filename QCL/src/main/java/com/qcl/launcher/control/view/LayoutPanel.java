@@ -192,6 +192,21 @@ extends RelativeLayout {
         this.bgIndex = 0;
         this.getBg(0);
         this.getBg(1);
+        // ★★★★★ 1.5.2 修「等待阶段退后台再回来，等待界面黑屏」：
+        //   原来只预加载第 0、1 帧，之后 bgIndex 走到 2~5 时是在 **onDraw 里同步解码**；
+        //   内存紧张时 BitmapFactory 返回 null ⇒ onDraw 什么都不画 ⇒ 整片黑。
+        //   ⇒ 启动时把**所有会用到**的帧全部预加载（自定义图有几张就加载几张）。
+        int preload = BG_RES_IDS.length;
+        try {
+            int cc = DynamicBackground.getCustomFrameCount();
+            if (cc > 0) {
+                preload = cc;
+            }
+        } catch (Throwable ignored) {
+        }
+        for (int i = 2; i < preload; i++) {
+            this.getBg(i);
+        }
         this.bgHandler.removeCallbacks(this.bgTick);
         this.bgHandler.postDelayed(this.bgTick, 10000L);
     }
@@ -282,6 +297,19 @@ extends RelativeLayout {
                 }
             } else if (cur != null) {
                 this.drawBgBitmap(canvas, cur, 255);
+            } else {
+                // ★★★★★ 1.5.2：**绝不空画**（这是"退后台回来等待界面全黑"的直接原因）。
+                //   原来 cur == null 时这里什么都不做 ⇒ 露出底层黑底 ⇒ 玩家看到黑屏。
+                //   ⇒ 先用第 0 帧兜底；连第 0 帧都拿不到就画一层深色底，
+                //     至少保证画面不是异常纯黑，且下一帧解码成功会立刻恢复。
+                Bitmap fallback = this.getBg(0);
+                if (fallback != null) {
+                    this.bgIndex = 0;
+                    this.bgPrev = null;
+                    this.drawBgBitmap(canvas, fallback, 255);
+                } else {
+                    canvas.drawColor(0xFF0F161C);   // 与经典夜背景同色系
+                }
             }
         }
         if (this.showReference) {
