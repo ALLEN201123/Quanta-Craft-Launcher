@@ -96,6 +96,16 @@ Handler.Callback {
     public boolean installBabric;
     /** ★ 1.4.2：勾选的 NeoForge 版本（null = 不装）。装法同 ModLoader —— 链末单独跑。 */
     public com.qcl.launcher.launcher.download.neoforge.NeoForgeVersion neoForgeVersion;
+
+    // ★★★★★ 2026-10-17（1.5.2 新增）三个新加载器。
+    //   与 neoForgeVersion 同样用 **public 字段** 而不是构造参数 ——
+    //   这样不用改构造函数签名、也不动已有的 6 个调用点（改构造参数是这次最容易翻车的地方）。
+    /** 勾选的 Cleanroom 版本（null = 不装）。仅 MC 1.12.2。 */
+    public com.qcl.launcher.launcher.download.cleanroom.CleanroomVersion cleanroomVersion;
+    /** 勾选的 Legacy Fabric 加载器版本（null = 不装）。 */
+    public com.qcl.launcher.launcher.download.fabric.FabricLoaderVersion legacyFabricVersion;
+    /** 勾选的 Legacy Fabric API 版本（null = 不装）。 */
+    public com.qcl.launcher.launcher.mod.RemoteMod.Version legacyFabricAPIVersion;
     private BabricInstallTask babricInstallTask;
     private final ForgeVersion forgeVersion;
     private final OptifineVersion optifineVersion;
@@ -558,7 +568,117 @@ Handler.Callback {
             installNeoForgeThenFinish();
             return;
         }
+        // ★ 1.5.2：勾了 Cleanroom —— 等基础版本（1.12.2）装完再跑它的安装器
+        if (this.cleanroomVersion != null) {
+            installCleanroomThenFinish();
+            return;
+        }
+        // ★ 1.5.2：勾了 Legacy Fabric —— 走 legacyfabric meta 装加载器
+        if (this.legacyFabricVersion != null) {
+            installLegacyFabricThenFinish();
+            return;
+        }
+        // ★ 1.5.2：勾了 Legacy Fabric API —— 只是往 mods 里放一个 jar
+        if (this.legacyFabricAPIVersion != null) {
+            installLegacyFabricAPIThenFinish();
+            return;
+        }
         showInstallSuccess();
+    }
+
+    /**
+     * ★ 1.5.2：装 Cleanroom（Forge 1.12.2 的社区分支）。
+     *
+     * <p>复用 {@link com.qcl.launcher.launcher.download.cleanroom.CleanroomInstallTask}：
+     * 它先下载官方安装器到 Forge 期望的位置，再交给 ForgeInstallTask 跑，
+     * 与「版本设置 → 自动安装」用的是**同一套**逻辑。
+     */
+    private void installCleanroomThenFinish() {
+        final com.qcl.launcher.launcher.download.cleanroom.CleanroomVersion chosen = this.cleanroomVersion;
+        new com.qcl.launcher.launcher.download.cleanroom.CleanroomInstallTask(
+                this.activity,
+                this.downloadTaskListAdapter,
+                this.name,
+                this.version != null ? this.version.id : this.name,
+                new com.qcl.launcher.launcher.download.cleanroom.CleanroomInstallTask
+                        .InstallCleanroomCallback() {
+                    @Override
+                    public void onStart() {
+                    }
+
+                    @Override
+                    public void onFailed(Exception e) {
+                        GameInstallDialog.this.throwException(e);
+                    }
+
+                    @Override
+                    public void onFinish(com.qcl.launcher.launcher.game.Version version) {
+                        GameInstallDialog.this.showInstallSuccess();
+                    }
+                }).execute(chosen);
+    }
+
+    /**
+     * ★ 1.5.2：装 Legacy Fabric 加载器。
+     *
+     * <p>直接复用 {@code FabricInstallTask} 的 legacy 开关（它内部只换 meta 域名：
+     * {@code meta.legacyfabric.net}），安装流程与官方 Fabric 完全一致。
+     */
+    private void installLegacyFabricThenFinish() {
+        final com.qcl.launcher.launcher.download.fabric.FabricLoaderVersion chosen = this.legacyFabricVersion;
+        // legacy = true → 走 meta.legacyfabric.net
+        com.qcl.launcher.launcher.download.fabric.FabricInstallTask task =
+                new com.qcl.launcher.launcher.download.fabric.FabricInstallTask(
+                        this.activity,
+                        this.downloadTaskListAdapter,
+                        this.version != null ? this.version.id : this.name,
+                        new com.qcl.launcher.launcher.download.fabric.FabricInstallTask
+                                .InstallFabricCallback() {
+                            @Override
+                            public void onStart() {
+                            }
+
+                            @Override
+                            public void onFailed(Exception e) {
+                                GameInstallDialog.this.throwException(e);
+                            }
+
+                            @Override
+                            public void onFinish(com.qcl.launcher.launcher.game.Version version) {
+                                GameInstallDialog.this.showInstallSuccess();
+                            }
+                        },
+                        true);
+        task.execute(chosen);
+    }
+
+    /**
+     * ★ 1.5.2：装 Legacy Fabric API（就是一个 Modrinth 模组 jar，放进 mods/）。
+     */
+    private void installLegacyFabricAPIThenFinish() {
+        final com.qcl.launcher.launcher.mod.RemoteMod.Version chosen = this.legacyFabricAPIVersion;
+        com.qcl.launcher.launcher.download.fabric.FabricAPIInstallTask task =
+                new com.qcl.launcher.launcher.download.fabric.FabricAPIInstallTask(
+                        this.activity,
+                        this.name,
+                        this.downloadTaskListAdapter,
+                        new com.qcl.launcher.launcher.download.fabric.FabricAPIInstallTask
+                                .InstallFabricAPICallback() {
+                            @Override
+                            public void onStart() {
+                            }
+
+                            // ★ 它的接口是 onFinish(Exception e)：e != null 表示失败
+                            @Override
+                            public void onFinish(Exception e) {
+                                if (e != null) {
+                                    GameInstallDialog.this.throwException(e);
+                                } else {
+                                    GameInstallDialog.this.showInstallSuccess();
+                                }
+                            }
+                        });
+        task.execute(chosen);
     }
 
     /** 安装成功提示（原 installJson 的收尾部分） */

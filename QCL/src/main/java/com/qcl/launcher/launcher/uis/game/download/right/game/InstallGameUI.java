@@ -48,6 +48,18 @@ public class InstallGameUI extends BaseUI implements View.OnClickListener, TextW
     public NeoForgeVersion neoForgeVersion;
     private TextView neoForgeVersionText;
     private ImageButton deleteNeoForgeVersion;
+
+    // ★★★★★ 2026-10-17（1.5.2 新增）Cleanroom / Legacy Fabric / Legacy Fabric API
+    //   用户要求这三个也要能在「安装游戏」界面里选。
+    public com.qcl.launcher.launcher.download.cleanroom.CleanroomVersion cleanroomVersion;
+    private TextView cleanroomVersionText;
+    private ImageButton deleteCleanroomVersion;
+    public FabricLoaderVersion legacyFabricVersion;
+    private TextView legacyFabricVersionText;
+    private ImageButton deleteLegacyFabricVersion;
+    public RemoteMod.Version legacyFabricAPIVersion;
+    private TextView legacyFabricAPIVersionText;
+    private ImageButton deleteLegacyFabricAPIVersion;
     private LinearLayout selectNeoForgeVersion;
     private ImageView selectNeoForge;
     private TextView gameVersionText;
@@ -173,11 +185,17 @@ public class InstallGameUI extends BaseUI implements View.OnClickListener, TextW
         //     所以这里先接一个明确的引导：告诉玩家去哪儿装，而不是静默失败。
         final android.view.View.OnClickListener newLoaderGuide = v -> {
             try {
+                if (v.getId() == R.id.select_cleanroom_version) {
+                    pickCleanroomVersion();
+                } else if (v.getId() == R.id.select_legacy_fabric_version) {
+                    pickLegacyFabricVersion();
+                } else if (v.getId() == R.id.select_legacy_fabric_api_version) {
+                    pickLegacyFabricAPIVersion();
+                }
+            } catch (Throwable t) {
                 android.widget.Toast.makeText(this.context,
-                        "这个加载器的安装入口在：版本装好后 →「版本设置」→「自动安装」。\n"
-                                + "那一页可以直接选择版本并安装。",
+                        "打开选择失败：" + t.getMessage(),
                         android.widget.Toast.LENGTH_LONG).show();
-            } catch (Throwable ignored) {
             }
         };
         android.view.View vCleanroom = this.activity.findViewById(R.id.select_cleanroom_version);
@@ -191,6 +209,31 @@ public class InstallGameUI extends BaseUI implements View.OnClickListener, TextW
         android.view.View vLegacyFabricAPI = this.activity.findViewById(R.id.select_legacy_fabric_api_version);
         if (vLegacyFabricAPI != null) {
             vLegacyFabricAPI.setOnClickListener(newLoaderGuide);
+        }
+        // 绑定这三行的「版本文字」与「取消按钮」
+        this.cleanroomVersionText = (TextView) this.activity.findViewById(R.id.cleanroom_version_text);
+        this.deleteCleanroomVersion = (ImageButton) this.activity.findViewById(R.id.call_off_install_cleanroom);
+        this.legacyFabricVersionText = (TextView) this.activity.findViewById(R.id.legacy_fabric_version_text);
+        this.deleteLegacyFabricVersion = (ImageButton) this.activity.findViewById(R.id.call_off_install_legacy_fabric);
+        this.legacyFabricAPIVersionText = (TextView) this.activity.findViewById(R.id.legacy_fabric_api_version_text);
+        this.deleteLegacyFabricAPIVersion = (ImageButton) this.activity.findViewById(R.id.call_off_install_legacy_fabric_api);
+        if (this.deleteCleanroomVersion != null) {
+            this.deleteCleanroomVersion.setOnClickListener(v -> {
+                this.cleanroomVersion = null;
+                refreshNewLoaderRows();
+            });
+        }
+        if (this.deleteLegacyFabricVersion != null) {
+            this.deleteLegacyFabricVersion.setOnClickListener(v -> {
+                this.legacyFabricVersion = null;
+                refreshNewLoaderRows();
+            });
+        }
+        if (this.deleteLegacyFabricAPIVersion != null) {
+            this.deleteLegacyFabricAPIVersion.setOnClickListener(v -> {
+                this.legacyFabricAPIVersion = null;
+                refreshNewLoaderRows();
+            });
         }
 
         // ★ 1.2.3：ModLoader 那一行（图标是白底 ML）
@@ -355,6 +398,10 @@ public class InstallGameUI extends BaseUI implements View.OnClickListener, TextW
             dialog.neoForgeVersion = this.neoForgeVersion;
             dialog.installModLoader = this.installModLoader;
             dialog.installBabric = this.installBabric;
+            // ★ 1.5.2：三个新加载器也一并交给 dialog，基础版本装完后依次执行
+            dialog.cleanroomVersion = this.cleanroomVersion;
+            dialog.legacyFabricVersion = this.legacyFabricVersion;
+            dialog.legacyFabricAPIVersion = this.legacyFabricAPIVersion;
             dialog.show();
         }
     }
@@ -693,5 +740,173 @@ public class InstallGameUI extends BaseUI implements View.OnClickListener, TextW
     @Override // android.text.TextWatcher
     public void afterTextChanged(Editable editable) {
         this.name = this.editName.getText().toString();
+    }
+
+    // ======================================================================
+    // ★★★★★ 2026-10-17（1.5.2 新增）Cleanroom / Legacy Fabric / Legacy Fabric API
+    //   在「安装游戏」界面里选版本。三者都在后台线程拉列表，再回 UI 线程弹对话框。
+    // ======================================================================
+
+    /** 刷新这三行的文字与「取消」按钮可见性。 */
+    private void refreshNewLoaderRows() {
+        try {
+            if (this.cleanroomVersionText != null) {
+                this.cleanroomVersionText.setText(this.cleanroomVersion == null
+                        ? this.context.getString(R.string.install_game_ui_none)
+                        : this.cleanroomVersion.name);
+            }
+            if (this.deleteCleanroomVersion != null) {
+                this.deleteCleanroomVersion.setVisibility(this.cleanroomVersion == null ? 8 : 0);
+            }
+            if (this.legacyFabricVersionText != null) {
+                this.legacyFabricVersionText.setText(this.legacyFabricVersion == null
+                        ? this.context.getString(R.string.install_game_ui_none)
+                        : this.legacyFabricVersion.version);
+            }
+            if (this.deleteLegacyFabricVersion != null) {
+                this.deleteLegacyFabricVersion.setVisibility(this.legacyFabricVersion == null ? 8 : 0);
+            }
+            if (this.legacyFabricAPIVersionText != null) {
+                this.legacyFabricAPIVersionText.setText(this.legacyFabricAPIVersion == null
+                        ? this.context.getString(R.string.install_game_ui_none)
+                        : this.legacyFabricAPIVersion.getVersion());
+            }
+            if (this.deleteLegacyFabricAPIVersion != null) {
+                this.deleteLegacyFabricAPIVersion.setVisibility(
+                        this.legacyFabricAPIVersion == null ? 8 : 0);
+            }
+        } catch (Throwable ignored) {
+        }
+    }
+
+    /** 选 Cleanroom 版本（拉 index.json）。仅 MC 1.12.2。 */
+    private void pickCleanroomVersion() {
+        if (this.version == null || !"1.12.2".equals(this.version.id)) {
+            android.widget.Toast.makeText(this.context,
+                    "Cleanroom 只支持 Minecraft 1.12.2", android.widget.Toast.LENGTH_LONG).show();
+            return;
+        }
+        if (this.forgeVersion != null || this.neoForgeVersion != null) {
+            android.widget.Toast.makeText(this.context,
+                    "Cleanroom 与 Forge / NeoForge 不能共存，请先取消勾选",
+                    android.widget.Toast.LENGTH_LONG).show();
+            return;
+        }
+        new Thread(() -> {
+            try {
+                String json = com.qcl.launcher.utils.io.NetworkUtils.doGet(
+                        com.qcl.launcher.utils.io.NetworkUtils.toURL(
+                                "https://hmcl.glavo.site/metadata/cleanroom/index.json"));
+                final com.qcl.launcher.launcher.download.cleanroom.CleanroomVersion[] arr =
+                        new com.google.gson.Gson().fromJson(json,
+                                com.qcl.launcher.launcher.download.cleanroom.CleanroomVersion[].class);
+                this.activity.runOnUiThread(() -> {
+                    if (arr == null || arr.length == 0) {
+                        android.widget.Toast.makeText(this.context, "没有获取到 Cleanroom 版本",
+                                android.widget.Toast.LENGTH_LONG).show();
+                        return;
+                    }
+                    final String[] items = new String[arr.length];
+                    for (int i = 0; i < arr.length; i++) {
+                        items[i] = arr[i].name;
+                    }
+                    final com.qcl.launcher.launcher.download.cleanroom.CleanroomVersion[] data = arr;
+                    new android.app.AlertDialog.Builder(this.context)
+                            .setTitle("选择 Cleanroom 版本")
+                            .setItems(items, (d, which) -> {
+                                this.cleanroomVersion = data[which];
+                                refreshNewLoaderRows();
+                            })
+                            .setNegativeButton("取消", null)
+                            .show();
+                });
+            } catch (final Exception e) {
+                this.activity.runOnUiThread(() -> android.widget.Toast.makeText(this.context,
+                        "获取失败：" + e.getMessage(), android.widget.Toast.LENGTH_LONG).show());
+            }
+        }).start();
+    }
+
+    /** 选 Legacy Fabric 加载器版本（拉 meta.legacyfabric.net）。 */
+    private void pickLegacyFabricVersion() {
+        if (this.fabricVersion != null) {
+            android.widget.Toast.makeText(this.context,
+                    "已选官方 Fabric，Legacy Fabric 与它不能共存，请先取消",
+                    android.widget.Toast.LENGTH_LONG).show();
+            return;
+        }
+        new Thread(() -> {
+            try {
+                String json = com.qcl.launcher.utils.io.NetworkUtils.doGet(
+                        com.qcl.launcher.utils.io.NetworkUtils.toURL(
+                                "https://meta.legacyfabric.net/v2/versions/loader"));
+                final FabricLoaderVersion[] arr = new com.google.gson.Gson().fromJson(
+                        json, FabricLoaderVersion[].class);
+                this.activity.runOnUiThread(() -> {
+                    if (arr == null || arr.length == 0) {
+                        android.widget.Toast.makeText(this.context, "没有获取到 Legacy Fabric 版本",
+                                android.widget.Toast.LENGTH_LONG).show();
+                        return;
+                    }
+                    final String[] items = new String[arr.length];
+                    for (int i = 0; i < arr.length; i++) {
+                        items[i] = arr[i].version;
+                    }
+                    new android.app.AlertDialog.Builder(this.context)
+                            .setTitle("选择 Legacy Fabric 版本")
+                            .setItems(items, (d, which) -> {
+                                this.legacyFabricVersion = arr[which];
+                                refreshNewLoaderRows();
+                            })
+                            .setNegativeButton("取消", null)
+                            .show();
+                });
+            } catch (final Exception e) {
+                this.activity.runOnUiThread(() -> android.widget.Toast.makeText(this.context,
+                        "获取失败：" + e.getMessage(), android.widget.Toast.LENGTH_LONG).show());
+            }
+        }).start();
+    }
+
+    /** 选 Legacy Fabric API 版本（Modrinth 项目 legacy-fabric-api）。 */
+    private void pickLegacyFabricAPIVersion() {
+        new Thread(() -> {
+            try {
+                java.util.List<RemoteMod.Version> list =
+                        com.qcl.launcher.launcher.mod.modrinth.ModrinthRemoteModRepository.MODS
+                                .getRemoteVersionsById("legacy-fabric-api")
+                                .collect(java.util.stream.Collectors.toList());
+                final java.util.List<RemoteMod.Version> filtered = new java.util.ArrayList<>();
+                final String mc = this.version == null ? "" : this.version.id;
+                for (RemoteMod.Version v : list) {
+                    if (v.getGameVersions() != null && v.getGameVersions().contains(mc)) {
+                        filtered.add(v);
+                    }
+                }
+                this.activity.runOnUiThread(() -> {
+                    if (filtered.isEmpty()) {
+                        android.widget.Toast.makeText(this.context,
+                                "没有适用于 " + mc + " 的 Legacy Fabric API 版本",
+                                android.widget.Toast.LENGTH_LONG).show();
+                        return;
+                    }
+                    final String[] items = new String[filtered.size()];
+                    for (int i = 0; i < filtered.size(); i++) {
+                        items[i] = filtered.get(i).getVersion();
+                    }
+                    new android.app.AlertDialog.Builder(this.context)
+                            .setTitle("选择 Legacy Fabric API 版本")
+                            .setItems(items, (d, which) -> {
+                                this.legacyFabricAPIVersion = filtered.get(which);
+                                refreshNewLoaderRows();
+                            })
+                            .setNegativeButton("取消", null)
+                            .show();
+                });
+            } catch (final Exception e) {
+                this.activity.runOnUiThread(() -> android.widget.Toast.makeText(this.context,
+                        "获取失败：" + e.getMessage(), android.widget.Toast.LENGTH_LONG).show());
+            }
+        }).start();
     }
 }
