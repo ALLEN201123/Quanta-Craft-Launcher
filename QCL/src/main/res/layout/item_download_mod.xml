@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical"
-    android:paddingTop="2dp"
-    android:paddingBottom="2dp"
+    android:paddingTop="0dp"
+    android:paddingBottom="0dp"
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
 
     <LinearLayout
         android:id="@+id/item"
         android:clickable="true"
-        android:padding="6dp"
+        android:padding="3dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@drawable/launcher_button_gray_blue"
@@ -19,8 +19,8 @@
         <ImageView
             android:src="@drawable/launcher_background_color_white"
             android:layout_gravity="center"
-            android:layout_width="30dp"
-            android:layout_height="30dp"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
             android:scaleType="centerInside"
             android:id="@+id/mod_icon"/>
 
@@ -44,7 +44,7 @@
                     android:layout_width="0dp"
                     android:layout_weight="1"
                     android:layout_height="wrap_content"
-                    android:textSize="14sp"
+                    android:textSize="13sp"
                     android:textColor="@color/colorPureBlack"
                     android:id="@+id/mod_name"/>
 
@@ -72,7 +72,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:singleLine="true"
-                android:textSize="12sp"
+                android:textSize="10sp"
                 android:textColor="@color/colorLightWhite"
                 android:id="@+id/mod_introduction"/>
 
@@ -87,9 +87,9 @@
             android:layout_marginStart="6dp"
             android:paddingStart="8dp"
             android:paddingEnd="4dp"
-            android:paddingTop="6dp"
-            android:paddingBottom="6dp"
-            android:textSize="18sp"
+            android:paddingTop="2dp"
+            android:paddingBottom="2dp"
+            android:textSize="15sp"
             android:textColor="@color/colorAccent"
             android:text="☆"/>
 

@@ -147,8 +147,22 @@ public final class CurseForgeRemoteModRepository implements RemoteModRepository 
         if (categoryId != 0) {
             query.add(Pair.pair("categoryId", Integer.toString(categoryId)));
         }
-        query.add(Pair.pair("gameVersion", str));
-        query.add(Pair.pair("searchFilter", str2));
+        // ★★★★★ 1.5.2 修「混合下载源刚进入只有 Modrinth，完全没有 CurseForge」。
+        //
+        //   ★ 根因：这里原来**无条件**把 gameVersion / searchFilter 塞进 query。
+        //     "刚进入下载页"时 gameVersion 是**空串**、keyword 也是空串；
+        //     CurseForge 对 `gameVersion=`（空值）会返回 0 条 / 400，
+        //     异常又被 HybridRemoteModRepository 的 catch 吞成空列表 ⇒
+        //     玩家看到的就是「只有 Modrinth 的结果，CurseForge 一条都没有」。
+        //     （Modrinth 容忍空参数，所以它那一半正常。）
+        //
+        //   ★ 修法：与上面 categoryId 完全同一口径 —— **只有非空才带**。
+        if (str != null && !str.trim().isEmpty()) {
+            query.add(Pair.pair("gameVersion", str.trim()));
+        }
+        if (str2 != null && !str2.trim().isEmpty()) {
+            query.add(Pair.pair("searchFilter", str2.trim()));
+        }
         query.add(Pair.pair("sortField", Integer.toString(toModsSearchSortField(sortType))));
         query.add(Pair.pair("sortOrder", toSortOrder(sortOrder)));
         query.add(Pair.pair("index", Integer.toString(i)));
