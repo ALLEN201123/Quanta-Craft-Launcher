@@ -372,6 +372,20 @@ private void applyCachedVersionName() {
         // ★ 1.5.2：JAR 启动入口（新排版左栏才有，旧排版为 null → 跳过）
         if (startJarLaunchUI != null) {
             startJarLaunchUI.setOnClickListener(this);
+            // ★★★★★ 1.5.2：**长按**这个按钮 = 打开「Java 管理」对话框（照 FCL 的 JavaManageDialog）。
+            //   FCL 把「Java 版本列表 + 删除 + 执行 Jar」都放在同一个对话框里；
+            //   这里长按进入 —— 既不多占一个导航位，也不用改布局。
+            startJarLaunchUI.setOnLongClickListener(v -> {
+                try {
+                    new com.qcl.launcher.launcher.dialogs.JavaManageDialog(
+                            this.context, this::pickJarToLaunch).show();
+                } catch (Throwable t) {
+                    android.widget.Toast.makeText(this.context,
+                            "打开 Java 管理失败：" + t.getMessage(),
+                            android.widget.Toast.LENGTH_LONG).show();
+                }
+                return true;
+            });
         }
         // ★★★★★ 1.5.0 崩溃级 Bug 修复（用户实测「主界面按钮点不动」）：
         //   onClick() 里**有** `v == startHomePageUI → activity.backToHome()` 的分支，
