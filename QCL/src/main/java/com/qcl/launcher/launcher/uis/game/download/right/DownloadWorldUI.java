@@ -59,7 +59,8 @@ public class DownloadWorldUI extends BaseUI implements View.OnClickListener, Ada
         int pageNo = this.pageOffset / PAGE_SIZE + 1;
         try {
             if (total > 0) {
-                int totalPages = (int) Math.ceil((double) Math.min(total, 10000) / PAGE_SIZE);
+                // ★ 不再对所有源统一限 10000；真正的上限在 CurseForge 自己那一层
+                int totalPages = (int) Math.ceil((double) total / PAGE_SIZE);
                 this.pageInfo.setText(String.format(
                         this.context.getString(R.string.download_page_info), pageNo, totalPages));
             } else {

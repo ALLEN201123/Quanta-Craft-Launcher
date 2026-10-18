@@ -77,7 +77,8 @@ public class DownloadModUI extends BaseUI implements View.OnClickListener, Adapt
         try {
             if (total > 0) {
                 // 照 FCL：CurseForge 上限 10000
-                int totalPages = (int) Math.ceil((double) Math.min(total, 10000) / PAGE_SIZE);
+                // ★ 不再对所有源统一限 10000；真正的上限在 CurseForge 自己那一层
+                int totalPages = (int) Math.ceil((double) total / PAGE_SIZE);
                 this.pageInfo.setText(String.format(
                         this.context.getString(R.string.download_page_info), pageNo, totalPages));
             } else {

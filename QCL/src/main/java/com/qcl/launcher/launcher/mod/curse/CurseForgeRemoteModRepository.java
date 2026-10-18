@@ -31,7 +31,14 @@ public final class CurseForgeRemoteModRepository implements RemoteModRepository 
 
     @Override
     public int getLastTotalCount() {
-        return this.lastTotalCount;
+        // ★★★★★ 1.5.2：CurseForge 的 search API 硬上限就是 **10000 条**，
+        //   超过它也翻不动（后续页返回空），
+        //   所以上限应该**只在这一层**，而不是到 UI 层统一压所有源。
+        //   （Modrinth 的 total_hits 没有这个限制。）
+        if (this.lastTotalCount < 0) {
+            return -1;
+        }
+        return Math.min(this.lastTotalCount, 10000);
     }
 
     private static final String PREFIX = "https://api.curseforge.com";
