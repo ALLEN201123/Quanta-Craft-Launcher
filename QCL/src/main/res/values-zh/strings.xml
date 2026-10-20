@@ -1331,4 +1331,11 @@
     <string name="qcl_compliance_banned_title">功能暂不可用</string>
     <string name="qcl_compliance_banned_message">根据相关法律法规，中国大陆地区暂不支持在启动器内下载游戏、下载并安装整合包，以及使用陶瓦联机。\n\n如果你身处中国大陆以外却看到此提示，可能是地区检测出现异常，请重启启动器后重试。</string>
     <string name="qcl_compliance_banned_short">根据相关法律法规，中国大陆地区暂不支持此功能</string>
+    <!-- ★★★★★ 2026-10-20：强制正版校验提示（仅微软正版账号可启动游戏） -->
+    <string name="qcl_genuine_required_title">请使用正版账号</string>
+    <string name="qcl_genuine_required_message">QCL 已启用正版验证，仅支持微软正版账号启动游戏。
+
+当前账号不是微软正版账号（可能是离线账号或第三方登录）。
+请先添加一个微软正版账号再启动游戏。</string>
+    <string name="qcl_genuine_required_go">去添加账号</string>
 </resources>

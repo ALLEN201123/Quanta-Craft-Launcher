@@ -194,6 +194,17 @@ public class UIManager {
      * 改成 {@code return new BaseUI[0]} 即可，不需要还原任何被删的代码。
      */
     private BaseUI[] complianceBannedUIs() {
+        // ★★★★★ 2026-10-20 晚：**已撤销封禁**。
+        //
+        //   用户转述：「有人告诉我没事 —— 禁用离线账户、支持正版就行」。
+        //   ⇒ 真正的风险点是「绕过正版验证（离线登录）」，不是「下载」。
+        //   所以下载页 / 陶瓷联机 / 安装游戏 全部恢复；
+        //   改由「强制正版」来管控 —— 见 LaunchTools.launch() 开头的正版校验。
+        //
+        //   原封禁清单**原样保留在下面（注释状态）**，
+        //   万一以后又要封，把那两行注释去掉即可，不需要重写。
+        return new BaseUI[0];
+        /*
         return new BaseUI[]{
                 // —— 下载页（游戏版本 / 整合包 / 模组 / 资源包 / 光影 / 收藏 / 世界）——
                 this.downloadUI,
@@ -214,6 +225,7 @@ public class UIManager {
                 // —— 三个新加载器共用的版本列表页 ——
                 this.simpleListUI,
         };
+        */
     }
 
     /** 目标页面是否在合规封禁清单里。 */
