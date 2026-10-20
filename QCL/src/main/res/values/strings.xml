@@ -1213,7 +1213,7 @@ Multiplayer is powered by Terracotta (by BurningTNT). The multiplayer feature is
     <string name="download_page_current">Page %1$d</string>
     <!-- 2026-10-20 compliance hold: notices for download / multiplayer pages -->
     <string name="qcl_compliance_banned_title">Feature unavailable</string>
-    <string name="qcl_compliance_banned_message">Due to applicable laws and regulations, downloading the game, downloading/installing modpacks, and Terracotta multiplayer are temporarily unavailable in mainland China.\n\nIf you are outside mainland China and still see this message, the region check may have failed - please restart the launcher and try again.</string>
+    <string name="qcl_compliance_banned_message">Due to applicable laws and regulations, downloading the game, downloading/installing modpacks, and Terracotta multiplayer are unavailable in mainland China without a genuine account.\n\nSign in with a genuine Microsoft account to use these features normally.\nIf you are outside mainland China and still see this message, the region check may have failed - please restart the launcher.</string>
     <string name="qcl_compliance_banned_short">Temporarily unavailable in mainland China</string>
     <!-- 2026-10-20: genuine account requirement -->
     <string name="qcl_genuine_required_title">Genuine account required</string>

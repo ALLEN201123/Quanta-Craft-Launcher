@@ -228,6 +228,34 @@ public class UIManager {
         };
     }
 
+    /**
+     * ★★★★★ 2026-10-20：**是否持有微软正版账号**。
+     *
+     * <p>用户要求：「是不是现在能让微软账户下载游戏版本，使用这些功能？」
+     * ⇒ 有微软正版账号的玩家应当**放行**，不该被合规限制一起罚。
+     *
+     * <p>{@code loginType} 取值：
+     * <ul>
+     *   <li>0 = 未登录</li>
+     *   <li>1 = 离线账号</li>
+     *   <li>2 = 旧 Mojang 账号</li>
+     *   <li><b>3 = 微软正版账号 ← 只有这个算"有正版授权"</b></li>
+     *   <li>4 = 第三方 authlib-injector（外置登录）</li>
+     *   <li>5 = Nide8Auth</li>
+     * </ul>
+     */
+    private boolean hasGenuineAccount(MainActivity activity) {
+        try {
+            if (activity == null || activity.publicGameSetting == null) {
+                return false;
+            }
+            com.qcl.launcher.auth.Account acc = activity.publicGameSetting.account;
+            return acc != null && acc.loginType == 3;
+        } catch (Throwable t) {
+            return false;
+        }
+    }
+
     /** 目标页面是否在合规封禁清单里。 */
     private boolean isComplianceBanned(BaseUI ui) {
         if (ui == null) {
@@ -256,10 +284,16 @@ public class UIManager {
         //
         //   ★ 原逻辑一行未删，只是前面多了这道闸。
         //
-        //   ★★★★★ 2026-10-20 修正（用户实测）：「ZL 启动器显示的是针对中国大陆法律法规，
-        //     而不是外国人。你这不等于把外国人也针对了吗？」
-        //     ⇒ 封禁**必须按地区**：只有中国大陆暂停，其它国家或地区正常可用。
-        //     判断依据是公网出口 IP 的归属国（见 RegionChecker，缓存 24 小时）。
+        //   ★★★★★ 2026-10-20 最终（用户实测）：
+        //     「是不是现在能让微软账户下载游戏版本，使用这些功能？」
+        //
+        //     ⇒ 拦截条件从「只看地区」改成「**地区 且 非正版**」：
+        //        · 中国大陆 + **微软正版账号** → **放行**（能下载 / 联机 / 安装游戏）
+        //        · 中国大陆 + 离线 / 第三方 / 无账号 → **拦下并提示**
+        //        · 中国大陆以外 → **一律放行**
+        //
+        //     这才是"支持正版"的正确姿势：合规限制只落在"没有正版授权"的路径上，
+        //     不惩罚已经买了游戏的玩家。
         if (isComplianceBanned(ui)) {
             boolean mainland = true;
             try {
@@ -267,7 +301,9 @@ public class UIManager {
                         ui == null ? null : ui.activity);
             } catch (Throwable ignored) {
             }
-            if (mainland) {
+            boolean genuine = hasGenuineAccount(ui == null ? null : ui.activity);
+            // 只有「在中国大陆」且「当前账号不是微软正版」才拦
+            if (mainland && !genuine) {
                 try {
                     com.qcl.launcher.utils.ui.ComplianceNotice.show(
                             ui == null ? null : ui.activity);
@@ -275,7 +311,8 @@ public class UIManager {
                 }
                 return;
             }
-            // 非中国大陆：直接放行，走原有逻辑
+            // 中国大陆 + 正版  → 放行
+            // 中国大陆以外      → 放行
         }
         // ★★★ 1.5.0 修复（用户实测）：**重复点击同一个按钮 → 页面"弹起又关闭"**。
         //
