@@ -1328,7 +1328,7 @@
     <string name="download_page_info">第 %1$d / %2$d 页</string>
     <string name="download_page_current">第 %1$d 页</string>
     <!-- ★★★★★ 2026-10-20 合规性临时封禁：下载页 / 陶瓷联机 等功能的提示 -->
-    <string name="qcl_compliance_banned_title">功能已暂停</string>
-    <string name="qcl_compliance_banned_message">QCL 遵守相关法律法规，此功能已被禁止。\n\n如后续政策允许，会恢复该功能。</string>
-    <string name="qcl_compliance_banned_short">QCL 遵守相关法律法规，此页面已被禁止</string>
+    <string name="qcl_compliance_banned_title">功能暂不可用</string>
+    <string name="qcl_compliance_banned_message">根据相关法律法规，中国大陆地区暂不支持在启动器内下载游戏、下载并安装整合包，以及使用陶瓦联机。\n\n如果你身处中国大陆以外却看到此提示，可能是地区检测出现异常，请重启启动器后重试。</string>
+    <string name="qcl_compliance_banned_short">根据相关法律法规，中国大陆地区暂不支持此功能</string>
 </resources>

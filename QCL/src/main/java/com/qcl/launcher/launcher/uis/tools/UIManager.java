@@ -243,13 +243,27 @@ public class UIManager {
         //   拦在 switchMainUI 上 = **一处封死所有路径**，恢复时也只需改一处。
         //
         //   ★ 原逻辑一行未删，只是前面多了这道闸。
+        //
+        //   ★★★★★ 2026-10-20 修正（用户实测）：「ZL 启动器显示的是针对中国大陆法律法规，
+        //     而不是外国人。你这不等于把外国人也针对了吗？」
+        //     ⇒ 封禁**必须按地区**：只有中国大陆暂停，其它国家或地区正常可用。
+        //     判断依据是公网出口 IP 的归属国（见 RegionChecker，缓存 24 小时）。
         if (isComplianceBanned(ui)) {
+            boolean mainland = true;
             try {
-                com.qcl.launcher.utils.ui.ComplianceNotice.show(
+                mainland = com.qcl.launcher.utils.net.RegionChecker.isMainlandChina(
                         ui == null ? null : ui.activity);
             } catch (Throwable ignored) {
             }
-            return;
+            if (mainland) {
+                try {
+                    com.qcl.launcher.utils.ui.ComplianceNotice.show(
+                            ui == null ? null : ui.activity);
+                } catch (Throwable ignored) {
+                }
+                return;
+            }
+            // 非中国大陆：直接放行，走原有逻辑
         }
         // ★★★ 1.5.0 修复（用户实测）：**重复点击同一个按钮 → 页面"弹起又关闭"**。
         //
