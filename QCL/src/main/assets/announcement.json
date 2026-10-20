@@ -1,6 +1,43 @@
 {
   "announcements": [
     {
+      "id": 103,
+      "significant": true,
+      "outdated": false,
+      "minVersion": 0,
+      "maxVersion": 2147483647,
+      "specificLang": [],
+      "title": [
+        {
+          "lang": "zh_CN",
+          "text": "QCL 1.5.3：部分功能已暂停（合规性原因）"
+        },
+        {
+          "lang": "zh_TW",
+          "text": "QCL 1.5.3：部分功能已暫停（合規性原因）"
+        },
+        {
+          "lang": "en_US",
+          "text": "QCL 1.5.3: some features paused (compliance)"
+        }
+      ],
+      "date": "2026-10-20",
+      "content": [
+        {
+          "lang": "zh_CN",
+          "text": "【重要：部分功能已暂停】\n\nQCL 遵守中华人民共和国相关法律法规。\n\n自 2026 年 10 月 20 日起，包括 PCL、HMCL 在内的多款第三方 Minecraft 启动器\n因合规性原因关停了 Minecraft 核心文件与资源包的下载功能。\n为遵守相关法律法规，QCL 从本版起**临时暂停**以下功能：\n\n· 下载页（游戏版本 / 整合包 / 模组 / 资源包 / 光影 / 收藏 / 世界）\n· 陶瓷联机（Terracotta）\n· 安装游戏 / 安装整合包\n· 各模组加载器的版本下载（Forge / NeoForge / Fabric / Fabric API /\n  LiteLoader / OptiFine / Quilt / Quilt API / Cleanroom / Legacy Fabric）\n\n**仍然可以正常使用**：\n· 启动本地已安装的游戏版本\n· 版本列表、游戏管理、账号、设置、实验室、JAR 启动\n\n**代码全部保留，没有删除。** 若后续政策允许，会在后续版本中恢复上述功能。\n\n【说明】\n· 本版（1.5.3）除上述暂停外，与 1.5.2 相比**没有任何其他改动**。\n· 请通过官方渠道（minecraft.net 或网易我的世界中国版）获取游戏本体。\n· 请勿下载任何来源不明的「修复版启动器」，那类文件存在被篡改、植入后门的风险。\n\n【26.3 仍未修好】\n· 26.3 启动不了的问题依然存在，原因尚未定位。"
+        },
+        {
+          "lang": "zh_TW",
+          "text": "【重要：部分功能已暫停】\n\nQCL 遵守相關法律法規。\n\n自 2026 年 10 月 20 日起，包括 PCL、HMCL 在內的多款第三方 Minecraft 啟動器\n因合規性原因關停了 Minecraft 核心檔案與資源包的下載功能。\n為遵守相關法律法規，QCL 從本版起**臨時暫停**以下功能：\n\n· 下載頁（遊戲版本 / 整合包 / 模組 / 資源包 / 光影 / 收藏 / 世界）\n· 陶瓷聯機（Terracotta）\n· 安裝遊戲 / 安裝整合包\n· 各模組載入器的版本下載（Forge / NeoForge / Fabric / Fabric API /\n  LiteLoader / OptiFine / Quilt / Quilt API / Cleanroom / Legacy Fabric）\n\n**仍然可以正常使用**：\n· 啟動本機已安裝的遊戲版本\n· 版本列表、遊戲管理、帳號、設定、實驗室、JAR 啟動\n\n**程式碼全部保留，沒有刪除。** 若後續政策允許，會在後續版本中恢復上述功能。\n\n【說明】\n· 本版（1.5.3）除上述暫停外，與 1.5.2 相比**沒有任何其他改動**。\n· 請透過官方管道取得遊戲本體。\n· 請勿下載任何來源不明的「修復版啟動器」。\n\n【26.3 仍未修好】\n· 26.3 無法啟動的問題依然存在，原因尚未定位。"
+        },
+        {
+          "lang": "en_US",
+          "text": "[Important: some features are paused]\n\nQCL complies with applicable laws and regulations.\n\nSince 2026-10-20, several third-party Minecraft launchers operating in mainland China\n(including PCL and HMCL) have suspended downloading Minecraft core files and resources\nfor compliance reasons. To comply with applicable laws and regulations, QCL is\n**temporarily disabling** the following features starting with this version:\n\n- The download pages (game versions / modpacks / mods / resource packs / shaders /\n  favourites / worlds)\n- Terracotta multiplayer\n- Install game / install modpack\n- Loader version downloads (Forge / NeoForge / Fabric / Fabric API /\n  LiteLoader / OptiFine / Quilt / Quilt API / Cleanroom / Legacy Fabric)\n\n**Still working normally:**\n- Launching game versions already installed on your device\n- Version list, game management, accounts, settings, lab, JAR launcher\n\n**No code was deleted.** All of it is preserved and will be re-enabled in a later\nrelease if policy allows.\n\n[Notes]\n- Apart from these suspensions, 1.5.3 contains **no other changes** versus 1.5.2.\n- Please obtain Minecraft itself through official channels (minecraft.net or the\n  official China edition).\n- Do not download any \"fixed launcher\" from unknown sources.\n\n[26.3 is still not fixed]\n- Minecraft 26.3 still does not start; the cause is not yet identified."
+        }
+      ]
+    },
+    {
       "id": 102,
       "significant": true,
       "outdated": false,
