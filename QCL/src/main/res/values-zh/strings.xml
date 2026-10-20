@@ -1327,4 +1327,8 @@
     <string name="download_page_first">第 1 页</string>
     <string name="download_page_info">第 %1$d / %2$d 页</string>
     <string name="download_page_current">第 %1$d 页</string>
+    <!-- ★★★★★ 2026-10-20 合规性临时封禁：下载页 / 陶瓷联机 等功能的提示 -->
+    <string name="qcl_compliance_banned_title">功能已暂停</string>
+    <string name="qcl_compliance_banned_message">QCL 遵守相关法律法规，此功能已被禁止。\n\n如后续政策允许，会恢复该功能。</string>
+    <string name="qcl_compliance_banned_short">QCL 遵守相关法律法规，此页面已被禁止</string>
 </resources>

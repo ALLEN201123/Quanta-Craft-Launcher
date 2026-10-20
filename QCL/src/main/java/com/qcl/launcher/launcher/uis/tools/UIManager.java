@@ -181,7 +181,76 @@ public class UIManager {
         switchMainUI(mainUI);
     }
 
+    /**
+     * ★★★★★ 2026-10-20：**合规性临时封禁清单**。
+     *
+     * <p>背景：2026-10-20 起 PCL / HMCL 等在中国大陆展业的第三方启动器
+     * 因合规性原因关停了 Minecraft 核心文件与资源包的下载功能
+     * （MineBBS 官方公告 2026-10-20 17:55；公告原文明确「与网易游戏、
+     * Mojang Studio 与 Microsoft 均无直接关联」，且各开发组未公布具体原因）。
+     *
+     * <p>凡是「会下载 Minecraft 本体 / 分发核心文件 / 联机」的页面，全部临时封禁。
+     * <p>★★★ **代码全部保留**，这里只是列出要封的页面；恢复时把本方法
+     * 改成 {@code return new BaseUI[0]} 即可，不需要还原任何被删的代码。
+     */
+    private BaseUI[] complianceBannedUIs() {
+        return new BaseUI[]{
+                // —— 下载页（游戏版本 / 整合包 / 模组 / 资源包 / 光影 / 收藏 / 世界）——
+                this.downloadUI,
+                // —— 陶瓷联机（Terracotta）——
+                this.multiplayerUI,
+                // —— 安装游戏 / 安装整合包（都会下 MC 本体与核心文件）——
+                this.installGameUI,
+                this.installPackageUI,
+                // —— 各加载器的版本下载页 ——
+                this.downloadForgeUI,
+                this.downloadNeoForgeUI,
+                this.downloadFabricUI,
+                this.downloadFabricAPIUI,
+                this.downloadLiteLoaderUI,
+                this.downloadOptifineUI,
+                this.downloadQuiltUI,
+                this.downloadQuiltAPIUI,
+                // —— 三个新加载器共用的版本列表页 ——
+                this.simpleListUI,
+        };
+    }
+
+    /** 目标页面是否在合规封禁清单里。 */
+    private boolean isComplianceBanned(BaseUI ui) {
+        if (ui == null) {
+            return false;
+        }
+        try {
+            BaseUI[] banned = complianceBannedUIs();
+            for (BaseUI b : banned) {
+                if (b != null && b == ui) {
+                    return true;
+                }
+            }
+        } catch (Throwable ignored) {
+        }
+        return false;
+    }
+
     public void switchMainUI(BaseUI ui) {
+        // ★★★★★ 2026-10-20：**合规性临时封禁 —— 所有进入被封页面的路径都在这里被拦住**。
+        //
+        //   为什么拦在这一层：下载页 / 联机页的入口不止一个 ——
+        //   左侧栏按钮、主界面"当前版本"那一行、游戏管理入口、
+        //   版本列表页的"下载游戏"按钮、没有游戏时的引导弹窗……
+        //   在每个入口各改一遍既容易漏、以后恢复也要一处处还原。
+        //   拦在 switchMainUI 上 = **一处封死所有路径**，恢复时也只需改一处。
+        //
+        //   ★ 原逻辑一行未删，只是前面多了这道闸。
+        if (isComplianceBanned(ui)) {
+            try {
+                com.qcl.launcher.utils.ui.ComplianceNotice.show(
+                        ui == null ? null : ui.activity);
+            } catch (Throwable ignored) {
+            }
+            return;
+        }
         // ★★★ 1.5.0 修复（用户实测）：**重复点击同一个按钮 → 页面"弹起又关闭"**。
         //
         //   根因在下面的执行顺序：
