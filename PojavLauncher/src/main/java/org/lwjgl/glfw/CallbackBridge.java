@@ -62,12 +62,6 @@ public class CallbackBridge {
     }
 
     public static boolean sendCursorPos(float x, float y) {
-        // ★★★★★ 2026-10-21：同步物理坐标给 lwjglx（grab 模式下它算的是 mouseX - mouseLastX，
-        //   不写这两个字段的话 1.1 的视角永远不转）。
-        try {
-            LwjglXBridge.cursorPos((int) x, (int) y);
-        } catch (Throwable ignored) {
-        }
         DEBUG_STRING.append("CursorPos=").append(x).append(", ").append(y).append("\n");
         float dx = x - mouseX;
         float dy = y - mouseY;
@@ -193,12 +187,6 @@ public class CallbackBridge {
     }
 
     public static void sendKeyPress(int keyCode, int modifiers, boolean status) {
-        // ★★★★★ 2026-10-21：键盘也补一份给 lwjglx（1.1 的 org.lwjgl.input.Keyboard
-        //   同样是等外部调 putKeyboardEvent 喂的，native 那条只喂 GLFW）。
-        try {
-            LwjglXBridge.key(keyCode, status);
-        } catch (Throwable ignored) {
-        }
         CallbackBridge.sendKeyPress(keyCode, 0, modifiers, status);
     }
 
@@ -222,20 +210,6 @@ public class CallbackBridge {
     public static void sendMouseKeycode(int button, int modifiers, boolean isDown) {
         DEBUG_STRING.append("MouseKey=").append(button).append(", down=").append(isDown).append("\n");
         CallbackBridge.nativeSendMouseButton(button, isDown ? 1 : 0, modifiers);
-        // ★★★★★ 2026-10-21「LWJGL2 时代输入修复」（1.1 / ≤1.12 鼠标点不动）：
-        //
-        //   上面那条 nativeSendMouseButton 只把事件喂给 **GLFW**（LWJGL 3 那套）。
-        //   而 LWJGL2 时代的版本（1.1 ~ 1.12）走的是 `lwjgl-lwjglx.jar` 兼容层，
-        //   它的 `org.lwjgl.input.Mouse` 从 `GLFWInputImplementation.pollMouse()`
-        //   取数据 —— 而 `GLFWInputImplementation.createMouse()` **从不注册
-        //   glfwSetMouseButtonCallback**，也就是说它设计上就是**等外部主动喂事件**的。
-        //   我们从来没喂过 ⇒ 1.1 的鼠标点击根本进不了游戏。
-        //
-        //   ⇒ 这里再补一份给 lwjglx（反射，找不到类就静默跳过，不影响现代版本）。
-        try {
-            LwjglXBridge.mouseButton(button, isDown, -1, -1);
-        } catch (Throwable ignored) {
-        }
         // ★★★★★ 2026-10-11「SDL 输入双路」第 2 条（**这条才是按钮点得动的关键**）：
         //   GLFW 那条已经发了，但 SDL 版 MC（26.3+）只读 SDL 事件队列 ⇒ 必须再投一份。
         //   SDL 要的是 **buttonState 位掩码**（不是单个按键），所以这里累积后再上报

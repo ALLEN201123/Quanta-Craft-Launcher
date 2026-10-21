@@ -182,11 +182,25 @@ extends BaseMainActivity {
                 //   注意：只在缺失时补 —— 玩家在游戏里改过语言的话不会被覆盖。
                 try {
                     String qclLang = MCOptionUtils.get("lang");
+                    String ver = new java.io.File(
+                            ((PojavMinecraftActivity)PojavMinecraftActivity.this).gameLaunchSetting.currentVersion).getName();
                     if (qclLang == null || qclLang.trim().isEmpty()) {
-                        String ver = new java.io.File(
-                                ((PojavMinecraftActivity)PojavMinecraftActivity.this).gameLaunchSetting.currentVersion).getName();
-                        MCOptionUtils.set("lang", com.qcl.launcher.utils.LocaleUtils.normalizeMinecraftLang(
-                                ver, com.qcl.launcher.utils.LocaleUtils.getMinecraftLang((Context)PojavMinecraftActivity.this)));
+                        qclLang = com.qcl.launcher.utils.LocaleUtils.getMinecraftLang((Context)PojavMinecraftActivity.this);
+                    }
+                    // ★★★★★ 2026-10-21：**始终规范化大小写**，不只是「lang 为空」时。
+                    //
+                    //   1.1 卡在 Mojang 图标的真因：旧逻辑只补默认语言、不修大小写，
+                    //   而 normalizeMinecraftLang 里 `v < 1.1` 对 1.1（编码成 1.01）
+                    //   恒为 true ⇒ options.txt 被写成 `zh_cn`（小写），
+                    //   但 1.1 的 jar 里只有 `zh_CN.lang` ⇒ StringTranslate 读到 null
+                    //   ⇒ NPE(abn.a(62)) ⇒ 崩溃循环。
+                    //
+                    //   这里改成：无论 lang 来自默认值还是 options.txt，都过一遍
+                    //   normalizeMinecraftLang —— 它**只改地区码大小写，不改语言本身**，
+                    //   所以玩家在游戏里选的语言不会被覆盖。
+                    String normalized = com.qcl.launcher.utils.LocaleUtils.normalizeMinecraftLang(ver, qclLang);
+                    if (normalized != null && !normalized.equals(MCOptionUtils.get("lang"))) {
+                        MCOptionUtils.set("lang", normalized);
                     }
                 } catch (Throwable t) {
                     android.util.Log.w("jrelog", "[默认语言] 写入 lang 失败", t);

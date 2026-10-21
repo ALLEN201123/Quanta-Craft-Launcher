@@ -71,7 +71,19 @@ public class LocaleUtils {
             return lang;
         }
         double v = parseMcVersion(versionId);
-        if (v <= 0.0 || v < 1.1) {
+        // ★★★★★ 2026-10-21 修：**1.1 卡在 Mojang 图标的真因**。
+        //
+        //   parseMcVersion 把 "1.1" 编码成 1.01（1 + 1/100.0），
+        //   而这里原来写的是 `v < 1.1` —— 1.01 < 1.1 恒为 true，
+        //   于是 **1.1 被误判成"1.1 以前"**，直接 return lang，不转大写。
+        //   结果 options.txt 里被写成 `zh_cn`（小写），
+        //   而 1.1 的 jar 里只有 `zh_CN.lang`（大写）⇒ StringTranslate
+        //   读 /lang/zh_cn.lang 拿到 null ⇒ NPE（abn.a(SourceFile:62)）
+        //   ⇒ 崩溃循环 ⇒ 永远卡在 Mojang 图标。
+        //
+        //   编码规则：1.0→1.00、1.1→1.01、1.2→1.02、1.10→1.10、1.11→1.11。
+        //   所以"1.1 以前"应写成 `v < 1.01`，1.1 本身要走下面的转大写分支。
+        if (v <= 0.0 || v < 1.01) {
             return lang;
         }
         boolean toUpper = v < 1.11;
