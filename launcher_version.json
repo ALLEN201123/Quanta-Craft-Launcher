@@ -1,16 +1,16 @@
 {
   "latestRelease": {
-    "versionCode": 354,
-    "versionName": "1.5.2",
-    "date": "2026-10-19",
+    "versionCode": 356,
+    "versionName": "1.5.4",
+    "date": "2026-10-21",
     "url": [
-      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.5.2/QCL-release-1.5.2-universal.apk",
-      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.5.2/QCL-release-1.5.2-arm64.apk",
-      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.5.2/QCL-release-1.5.2-arm.apk",
-      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.5.2/QCL-release-1.5.2-x86_64.apk",
-      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.5.2/QCL-release-1.5.2-x86.apk"
+      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.5.4/QCL-release-1.5.4-universal.apk",
+      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.5.4/QCL-release-1.5.4-arm64.apk",
+      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.5.4/QCL-release-1.5.4-arm.apk",
+      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.5.4/QCL-release-1.5.4-x86_64.apk",
+      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.5.4/QCL-release-1.5.4-x86.apk"
     ],
-    "netdiskUrl": "https://pan.quark.cn/s/f2c26c4fb66f",
-    "updateLog": "1.5.2：JAR 启动 + 3 个新加载器 + 下载页大改 + 一批修复\n\n【26.3 仍未修好】\n· 26.3 启动不了的问题依然存在，原因尚未定位。这一版没有修好，如实说明。\n· 26.4 及之前的问题已在 1.5.1 修好。\n\n【新功能】\n· JAR 启动：独立页面 + 独立进程，可直接跑 .jar（左侧栏咖啡杯按钮），\n  并自动读取 jar 里的 Main-Class 判断需要的 Java 版本。\n· Java 管理：查看/删除本机各个 Java，手动选版本。\n· 新增 3 个模组加载器：Cleanroom、Legacy Fabric、Legacy Fabric API\n  （「安装游戏」界面已补齐，图标取自 FCL）。\n· 三个新加载器的版本选择改成独立列表页，与其它加载器一致，可装旧版本。\n· 外观 → 新增「启动等待界面图片」：6 格可单独换图，手机/平板自适应高度。\n· 外观 → 面板色新增「重置」按钮。\n· 游戏版本下载页新增搜索框：可按版本号 / 正式版 / 快照版 / 远古版 / 愚人节搜。\n· 模组 / 整合包 / 资源包 / 光影 / 世界 5 个下载页全部支持翻页，\n  并在「筛选」右侧显示「第 N / M 页」。\n· 下载模组时自动带上前置：只装「必需」，前置的前置也会递归装上；\n  已在任意版本 mods/ 里装过的会跳过，不重复下载。\n\n【修好的一批问题】\n· 安装 Forge 一直失败。\n· 取消收藏后大退仍显示旧收藏。\n· 自制的那两个加载器点了没效果。\n· 混合下载源刚进入只有 Modrinth，完全没有 CurseForge。\n· 主题色必须点进外观页才涂到界面上（现在启动即生效）。\n· 外观里一大堆白色按钮不跟随主题色（含 JAR 启动按钮、弹窗里的按钮）。\n· 改主题色/面板色必须退出重进才生效（现在立即生效）。\n· 新手教程气泡不随屏幕比例定位。\n· 等待界面退后台再回来变黑屏。\n· 已被撤销的等待界面轮播，退后台重进又自己回来。\n· 下载页 7 个标签在小屏只显示 3 个（改为等分自适应）。\n· 设置页 6 个标签在小屏溢出（改为等分自适应）。\n· 下载页列表一屏只能看 2~3 个（列表项改为紧凑单行，筛选区可折叠）。\n· 筛选区控件被 label 挤成一条竖线、输入框显示不出字。\n· 点「筛选」会重新加载一次列表。\n· 页码最多只显示 200 页。\n· 「共 N 页」显示不出来。\n· JAR 启动页面打开一片空白。\n\n【删除】\n· 外观 → 「透明标题栏」开关（该开关从未被任何代码读取，已彻底删除）。\n\n【默认值调整】\n· 默认主题色改为「斑驳森林」壁纸真实采样色 #865D58。\n\n【已知问题】Minecraft 26.3 仍不可用，原因未定位。"
+    "netdiskUrl": "https://pan.quark.cn/s/f2c26c4fb66b",
+    "updateLog": "【1.5.4：所有功能已恢复 + 修复 1.1 卡在 Mojang 图标】\n\n一、所有合规限制已撤销\n· 下载页（游戏版本/整合包/模组/资源包/光影/收藏/世界）全部恢复\n· 陶瓷联机（Terracotta）恢复\n· 安装游戏 / 安装整合包 恢复\n· 各加载器版本下载（Forge/NeoForge/Fabric/FabricAPI/LiteLoader/OptiFine/Quilt/QuiltAPI/Cleanroom/LegacyFabric）恢复\n· 不再做地区限制，也不要求正版账号；离线账号照常使用\n\n二、★ 修复 MC 1.1 卡在 Mojang 图标（真 BUG）\n真因：LocaleUtils.parseMcVersion(\"1.1\") 返回 1.01（1+1/100），\n      而 normalizeMinecraftLang 判断写的是 v < 1.1 ⇒ 1.01 < 1.1 恒真\n      ⇒ 1.1 被误判成「1.1 以前」，不把地区码转大写\n      ⇒ options.txt 写成 lang:zh_cn（小写），但 1.1.jar 里只有 zh_CN.lang（大写）\n      ⇒ StringTranslate 读 /lang/zh_cn.lang 拿到 null\n      ⇒ NPE(abn.a(SourceFile:62)) → 崩溃循环 → 卡 Mojang 图标\n修法：v < 1.1 → v < 1.01；并让 PojavMinecraftActivity 始终规范化大小写\n实测：MuMu x86_64 / Android 12 上 1.1 已能进中文主菜单，点「单人游戏」→「选择世界」正常\n\n三、关于测试版那三次错误改动\n曾错误改动 CallbackBridge + 新增 LwjglXBridge，方向全错（1.1 走 cacio + InfdevMouse，\n不经过 GLFWInputImplementation），已全部删除；PojavLauncher 与 1.5.3 发布版零差异。\n\n【26.3 仍未修好】\n26.3 启动不了的问题依然存在，原因尚未定位。"
   }
 }
