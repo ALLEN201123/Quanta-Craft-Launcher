@@ -1,16 +1,16 @@
 {
   "latestRelease": {
-    "versionCode": 355,
-    "versionName": "1.5.3",
-    "date": "2026-10-20",
+    "versionCode": 356,
+    "versionName": "1.5.4",
+    "date": "2026-10-21",
     "url": [
-      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.5.3/QCL-release-1.5.3-universal.apk",
-      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.5.3/QCL-release-1.5.3-arm64.apk",
-      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.5.3/QCL-release-1.5.3-arm.apk",
-      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.5.3/QCL-release-1.5.3-x86_64.apk",
-      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.5.3/QCL-release-1.5.3-x86.apk"
+      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.5.4/QCL-release-1.5.4-universal.apk",
+      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.5.4/QCL-release-1.5.4-arm64.apk",
+      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.5.4/QCL-release-1.5.4-arm.apk",
+      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.5.4/QCL-release-1.5.4-x86_64.apk",
+      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.5.4/QCL-release-1.5.4-x86.apk"
     ],
-    "netdiskUrl": "https://pan.quark.cn/s/f2c26c4fb66f",
-    "updateLog": "【中国大陆地区：下载与联机功能暂停】\n\nQCL 遵守中华人民共和国相关法律法规。\n\n自 2026-10-20 起，PCL / HMCL 等在中国大陆展业的第三方启动器因合规性原因关停了 MC 核心文件下载功能（MineBBS 公告：与网易/Mojang/Microsoft 无直接关联）。\n\n为遵守相关法律法规，QCL 从本版起在中国大陆地区暂停：\n· 下载页（游戏版本/整合包/模组/资源包/光影/收藏/世界）\n· 陶瓷联机（Terracotta）\n· 安装游戏 / 安装整合包\n· 各加载器版本下载（Forge/NeoForge/Fabric/FabricAPI/LiteLoader/OptiFine/Quilt/QuiltAPI/Cleanroom/LegacyFabric）\n\n★ 微软正版账号全部放开：中国大陆 + 微软正版账号，上面 13 个页面全部可用。\n★ 离线模式完全不受影响：本地已下载版本照常启动，离线账号也能玩。\n★ 中国大陆以外不受影响（按公网出口 IP 判断）。\n\n请通过官方渠道获取游戏本体（minecraft.net 或网易我的世界中国版）。\n请勿下载任何来源不明的「修复版启动器」。\n\n【26.3 仍未修好】\n26.3 启动不了的问题依然存在，原因尚未定位。\n除上述暂停外，1.5.3 与 1.5.2 相比没有任何功能改动。"
+    "netdiskUrl": "https://pan.quark.cn/s/f2c26c4fb66b",
+    "updateLog": "【1.5.4：所有功能已恢复 + 修复 1.1 卡在 Mojang 图标】\n\n一、所有合规限制已撤销\n· 下载页（游戏版本/整合包/模组/资源包/光影/收藏/世界）全部恢复\n· 陶瓷联机（Terracotta）恢复\n· 安装游戏 / 安装整合包 恢复\n· 各加载器版本下载（Forge/NeoForge/Fabric/FabricAPI/LiteLoader/OptiFine/Quilt/QuiltAPI/Cleanroom/LegacyFabric）恢复\n· 不再做地区限制，也不要求正版账号；离线账号照常使用\n\n二、★ 修复 MC 1.1 卡在 Mojang 图标（真 BUG）\n真因：LocaleUtils.parseMcVersion(\"1.1\") 返回 1.01（1+1/100），\n      而 normalizeMinecraftLang 判断写的是 v < 1.1 ⇒ 1.01 < 1.1 恒真\n      ⇒ 1.1 被误判成「1.1 以前」，不把地区码转大写\n      ⇒ options.txt 写成 lang:zh_cn（小写），但 1.1.jar 里只有 zh_CN.lang（大写）\n      ⇒ StringTranslate 读 /lang/zh_cn.lang 拿到 null\n      ⇒ NPE(abn.a(SourceFile:62)) → 崩溃循环 → 卡 Mojang 图标\n修法：v < 1.1 → v < 1.01；并让 PojavMinecraftActivity 始终规范化大小写\n实测：MuMu x86_64 / Android 12 上 1.1 已能进中文主菜单，点「单人游戏」→「选择世界」正常\n\n三、关于测试版那三次错误改动\n曾错误改动 CallbackBridge + 新增 LwjglXBridge，方向全错（1.1 走 cacio + InfdevMouse，\n不经过 GLFWInputImplementation），已全部删除；PojavLauncher 与 1.5.3 发布版零差异。\n\n【26.3 仍未修好】\n26.3 启动不了的问题依然存在，原因尚未定位。"
   }
 }
