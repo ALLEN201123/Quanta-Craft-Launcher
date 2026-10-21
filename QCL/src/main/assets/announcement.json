@@ -1,6 +1,43 @@
 {
   "announcements": [
     {
+      "id": 104,
+      "significant": true,
+      "outdated": false,
+      "minVersion": 0,
+      "maxVersion": 2147483647,
+      "specificLang": [],
+      "title": [
+        {
+          "lang": "zh_CN",
+          "text": "QCL 1.5.4：所有功能已恢复 + 修复 1.1 鼠标点不动"
+        },
+        {
+          "lang": "zh_TW",
+          "text": "QCL 1.5.4：所有功能已恢復 + 修復 1.1 滑鼠點不動"
+        },
+        {
+          "lang": "en_US",
+          "text": "QCL 1.5.4: all features restored + 1.1 mouse-click fix"
+        }
+      ],
+      "date": "2026-10-21",
+      "content": [
+        {
+          "lang": "zh_CN",
+          "text": "【1.5.4：所有功能已全部恢复】\n\n上一版（1.5.3）出于谨慎，曾在中国大陆地区临时暂停了下载与联机功能。\n\n现在**全部撤销**：\n· 下载页（游戏版本 / 整合包 / 模组 / 资源包 / 光影 / 收藏 / 世界）\n· 陶瓷联机（Terracotta）\n· 安装游戏 / 安装整合包\n· 各加载器版本下载（Forge / NeoForge / Fabric / Fabric API /\n  LiteLoader / OptiFine / Quilt / Quilt API / Cleanroom / Legacy Fabric）\n\n**不再做地区限制，也不要求正版账号。** 离线账号照常使用。\n\n（背景：2026-10-20 的风波只影响到 HMCL / PCL / ZL 等启动器，\n并没有波及 QCL，也没有针对我们的举报。若日后确有需要，再作处置也不迟。）\n\n【★ 修好了一个真 BUG：1.1 等老版本鼠标点不动】\n\n根因：1.1 ~ 1.12 属于 LWJGL 2 时代，走的是 `lwjgl-lwjglx.jar` 兼容层。\n它的 `org.lwjgl.input.Mouse` 从 `GLFWInputImplementation.pollMouse()` 取数据，\n而 `GLFWInputImplementation.createMouse()` **从不注册 GLFW 回调** ——\n它设计上是等外部主动喂事件的。而 QCL 的 `CallbackBridge` 只把事件喂给了\nnative 的 GLFW（LWJGL 3 那套），**从来没有喂给 lwjglx**。\n\n⇒ 所以 1.1 ~ 1.12 的鼠标点击、键盘输入、视角转动全部无效。\n本版新增 `LwjglXBridge`（反射调用 `putMouseEventWithCoords` /\n`putKeyboardEvent`），把鼠标 / 键盘 / 光标三路都补喂给 lwjglx。\n\n【26.3 仍未修好】\n· 26.3 启动不了的问题依然存在，原因尚未定位。"
+        },
+        {
+          "lang": "zh_TW",
+          "text": "【1.5.4：所有功能已全部恢復】\n\n上一版（1.5.3）出於謹慎，曾在中國大陸地區臨時暫停了下載與聯機功能。\n\n現在**全部撤銷**：下載頁 / 陶瓷聯機 / 安裝遊戲 / 安裝整合包 / 各載入器版本下載。\n\n**不再做地區限制，也不要求正版帳號。** 離線帳號照常使用。\n\n【★ 修好了一個真 BUG：1.1 等老版本滑鼠點不動】\n\n根因：1.1 ~ 1.12 屬於 LWJGL 2 時代，走的是 `lwjgl-lwjglx.jar` 相容層。\n它的 `Mouse` 從 `GLFWInputImplementation.pollMouse()` 取資料，而\n`createMouse()` **從不註冊 GLFW 回呼** —— 設計上是等外部主動餵事件。\n而 `CallbackBridge` 只餵給 native 的 GLFW（LWJGL 3），**從未餵給 lwjglx**。\n\n本版新增 `LwjglXBridge`，把滑鼠 / 鍵盤 / 游標三路都補餵給 lwjglx。\n\n【26.3 仍未修好】\n· 26.3 無法啟動的問題依然存在，原因尚未定位。"
+        },
+        {
+          "lang": "en_US",
+          "text": "[1.5.4: all features restored]\n\nVersion 1.5.3 cautiously paused downloads and multiplayer in mainland China.\n\nThat is now **fully reverted**:\n- Download pages (game versions / modpacks / mods / resource packs / shaders /\n  favourites / worlds)\n- Terracotta multiplayer\n- Install game / install modpack\n- Loader version downloads (Forge / NeoForge / Fabric / Fabric API / LiteLoader /\n  OptiFine / Quilt / Quilt API / Cleanroom / Legacy Fabric)\n\n**No regional restrictions, no genuine-account requirement.** Offline accounts\nwork as before.\n\n[*] Real bug fixed: mouse clicks did nothing on 1.1 and other LWJGL2-era versions\n\nRoot cause: 1.1 - 1.12 are LWJGL 2 era and use the `lwjgl-lwjglx.jar` shim.\nIts `org.lwjgl.input.Mouse` reads from `GLFWInputImplementation.pollMouse()`, but\n`GLFWInputImplementation.createMouse()` **never registers GLFW callbacks** - it is\ndesigned to be fed events externally. QCL's `CallbackBridge` only fed the native\nGLFW path (LWJGL 3) and **never fed lwjglx**.\n\nThis release adds `LwjglXBridge`, which feeds mouse, keyboard and cursor events to\nlwjglx as well.\n\n[26.3 is still not fixed]\n- Minecraft 26.3 still does not start; the cause is not yet identified."
+        }
+      ]
+    },
+    {
       "id": 103,
       "significant": true,
       "outdated": false,

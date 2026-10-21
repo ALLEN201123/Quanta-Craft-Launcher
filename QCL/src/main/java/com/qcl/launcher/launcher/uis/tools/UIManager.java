@@ -194,40 +194,28 @@ public class UIManager {
      * 改成 {@code return new BaseUI[0]} 即可，不需要还原任何被删的代码。
      */
     private BaseUI[] complianceBannedUIs() {
-        // ★★★★★ 2026-10-20 最终版：**下载类入口封禁，离线模式不动**。
+        // ★★★★★ 2026-10-21：**全部撤销**。
         //
-        //   用户最终要求：「必须发，离线模式现在是不是已经严厉禁止了
-        //   下载的入口？遵守了法规法律」。
-        //   ⇒ 规则：
-        //     · **下载类页面全部封禁**（合规姿态）：下载页 7 标签 / 陶瓷联机 /
-        //       安装游戏 / 安装整合包 / 各加载器版本下载；
-        //     · **离线模式不做限制** —— 本地已经下载好的版本照常启动
-        //       （LaunchTools 里没有加任何正版校验）。
+        //   用户：「暂时移除对离线模式之类的任何限制，加的那些限制全部移除，
+        //   因为那个 20 号的风波没有影响到我们的 QCL，没有举报到我们头上，
+        //   只有 HMCL、PCL、ZL 被影响了，FCL 啥事也没有。
+        //   如果找上门来了，我们再加那个限制也不迟。」
         //
-        //   ★ 封禁只发生在「进入这些页面」这一步，代码一行未删；
-        //     恢复时把本方法改成 `return new BaseUI[0];` 即可。
+        //   ⇒ 下载页 / 陶瓷联机 / 安装游戏 / 各加载器下载 全部恢复；
+        //     不再做地区检测，也不要求正版账号。
+        //
+        //   ★ 原封禁清单与地区/正版判断代码**全部保留在下面（注释状态）**，
+        //     真要再加回来时，去掉注释 + 把这里改回清单即可。
+        return new BaseUI[0];
+        /*
         return new BaseUI[]{
-                // —— 下载页（游戏版本 / 整合包 / 模组 / 资源包 / 光影 / 收藏 / 世界）——
-                this.downloadUI,
-                // —— 陶瓷联机（Terracotta）——
-                this.multiplayerUI,
-                // —— 安装游戏 / 安装整合包（都会下 MC 本体与核心文件）——
-                this.installGameUI,
-                this.installPackageUI,
-                // —— 各加载器的版本下载页 ——
-                this.downloadForgeUI,
-                this.downloadNeoForgeUI,
-                this.downloadFabricUI,
-                this.downloadFabricAPIUI,
-                this.downloadLiteLoaderUI,
-                this.downloadOptifineUI,
-                this.downloadQuiltUI,
-                this.downloadQuiltAPIUI,
-                // —— 三个新加载器共用的版本列表页 ——
-                this.simpleListUI,
+                downloadUI, multiplayerUI, installGameUI, installPackageUI,
+                downloadForgeUI, downloadNeoForgeUI, downloadFabricUI,
+                downloadFabricAPIUI, downloadLiteLoaderUI, downloadOptifineUI,
+                downloadQuiltUI, downloadQuiltAPIUI, simpleListUI,
         };
+        */
     }
-
     /**
      * ★★★★★ 2026-10-20：**是否持有微软正版账号**。
      *
@@ -294,26 +282,28 @@ public class UIManager {
         //
         //     这才是"支持正版"的正确姿势：合规限制只落在"没有正版授权"的路径上，
         //     不惩罚已经买了游戏的玩家。
-        if (isComplianceBanned(ui)) {
-            boolean mainland = true;
-            try {
-                mainland = com.qcl.launcher.utils.net.RegionChecker.isMainlandChina(
-                        ui == null ? null : ui.activity);
-            } catch (Throwable ignored) {
-            }
-            boolean genuine = hasGenuineAccount(ui == null ? null : ui.activity);
-            // 只有「在中国大陆」且「当前账号不是微软正版」才拦
-            if (mainland && !genuine) {
+        /* ★★★★★ 2026-10-21 合规闸已撤销（用户：风波没影响到 QCL，找上门来再加）
+            if (isComplianceBanned(ui)) {
+                boolean mainland = true;
                 try {
-                    com.qcl.launcher.utils.ui.ComplianceNotice.show(
+                    mainland = com.qcl.launcher.utils.net.RegionChecker.isMainlandChina(
                             ui == null ? null : ui.activity);
                 } catch (Throwable ignored) {
                 }
-                return;
+                boolean genuine = hasGenuineAccount(ui == null ? null : ui.activity);
+                // 只有「在中国大陆」且「当前账号不是微软正版」才拦
+                if (mainland && !genuine) {
+                    try {
+                        com.qcl.launcher.utils.ui.ComplianceNotice.show(
+                                ui == null ? null : ui.activity);
+                    } catch (Throwable ignored) {
+                    }
+                    return;
+                }
+                // 中国大陆 + 正版  → 放行
+                // 中国大陆以外      → 放行
             }
-            // 中国大陆 + 正版  → 放行
-            // 中国大陆以外      → 放行
-        }
+        */
         // ★★★ 1.5.0 修复（用户实测）：**重复点击同一个按钮 → 页面"弹起又关闭"**。
         //
         //   根因在下面的执行顺序：
