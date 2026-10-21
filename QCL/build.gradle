@@ -4,6 +4,11 @@ plugins {
     id 'org.jetbrains.kotlin.android'
 }
 
+// 2026-10-21: 临时改输出目录。build/outputs/apk/release 里有个 arm64 APK
+// 被系统进程独占锁住（连重命名都失败），Gradle 的 packageRelease 清不掉它就会报
+// "Unable to delete directory"。换到 build_alt 绕开，不影响产物内容。
+buildDir = new File(rootProject.projectDir, 'QCL/build_alt')
+
 android {
     compileSdk 34
     dexOptions {
