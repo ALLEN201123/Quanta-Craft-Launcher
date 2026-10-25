@@ -57,6 +57,10 @@ public class GameListAdapter extends BaseAdapter {
         RadioButton radioButton;
         ImageButton startGame;
         TextView version;
+        /**
+         * ★★★ 1.5.5：跳转该版本 Minecraft Wiki 页的地球图标（照 FCL 的 @+id/wiki）。
+         */
+        ImageButton wiki;
 
         private ViewHolder() {
         }
@@ -123,6 +127,7 @@ public class GameListAdapter extends BaseAdapter {
             viewHolder.name = (TextView) view2.findViewById(R.id.version_name);
             viewHolder.version = (TextView) view2.findViewById(R.id.version_id);
             viewHolder.startGame = (ImageButton) view2.findViewById(R.id.test_game);
+            viewHolder.wiki = (ImageButton) view2.findViewById(R.id.version_wiki);
             viewHolder.moreVert = (ImageButton) view2.findViewById(R.id.more_vert);
             this.activity.exteriorConfig.apply(viewHolder.radioButton);
             view2.setTag(viewHolder);
@@ -150,6 +155,23 @@ public class GameListAdapter extends BaseAdapter {
                 GameListAdapter.this.m439x22d581bd(i, view3);
             }
         });
+        // ★★★ 1.5.5：地球图标 = 跳转该版本对应的 Minecraft Wiki 页（照 FCL）。
+        //   刻意**不**复用整行点击（那是选中该版本）——两件事必须分开。
+        //   Wiki 页面名走 WikiUtils：先查实测表（覆盖全部 920 个官方版本），查不到才回退规则。
+        //   注意这里用的是**版本 id**（name 列）而不是显示名：Wiki 页面按 id 命名。
+        if (viewHolder.wiki != null) {
+            final String wikiVid = this.list.get(i).name;
+            viewHolder.wiki.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (!com.qcl.launcher.utils.game.WikiUtils.openWiki(GameListAdapter.this.context, wikiVid)) {
+                        android.widget.Toast.makeText(GameListAdapter.this.context,
+                                GameListAdapter.this.context.getString(R.string.wiki_jump_no_browser),
+                                android.widget.Toast.LENGTH_SHORT).show();
+                    }
+                }
+            });
+        }
         if (!this.list.get(i).iconPath.equals("") && new File(this.list.get(i).iconPath).exists()) {
             // ★ 1.2.9：改成异步加载 + 缓存（以前是主线程读文件解码，滚动会卡）
             LocalIconLoader.loadBackground(viewHolder.icon, this.list.get(i).iconPath);

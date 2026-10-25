@@ -928,4 +928,27 @@
     <!-- ★ 1.5.0：公告栏 -->
     <string name="qcl_announcement">Obaveštenje</string>
     <string name="qcl_announcement_hide">Sakrij</string>
+
+    <!-- 1.5.5: remote version list wiki jump icon (FCL @+id/wiki) -->
+    <string name="wiki_jump_desc">Pogledajte ovu verziju na Minecraft Wiki</string>
+
+    <!-- 1.5.5: wiki jump failed to open a browser -->
+    <string name="wiki_jump_no_browser">Nema dostupnog pretrazivaca</string>
+
+    <!-- 1.5.5: mod/modpack English-name lookup dialog (FCL TranslationDialog) -->
+    <string name="translation_dialog_title">Pretraga anglickog imena moda/整合 paketa</string>
+    <string name="translation_dialog_hint">Unesite kinesko ili englesko ime da biste izdvojili odgovarajuce anglicke stavke</string>
+
+    <!-- 1.5.5: mod search English-name lookup entry -->
+    <string name="download_mod_ui_translation">EN ime</string>
+
+    <!-- 1.5.5: translation dialog failed -->
+    <string name="translation_dialog_failed">Otvaranje dijaloga za engleski naziv nije uspelo</string>
+
+    <!-- 1.5.5: source badge on mod/modpack list rows -->
+    <string name="mod_source_curseforge">CurseForge</string>
+    <string name="mod_source_modrinth">Modrinth</string>
+
+    <!-- 1.5.5: translation dialog cancel button -->
+    <string name="translation_dialog_cancel">Otkazi</string>
 </resources>

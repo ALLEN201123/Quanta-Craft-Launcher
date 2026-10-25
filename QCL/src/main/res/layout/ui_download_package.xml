@@ -331,7 +331,36 @@
                 android:gravity="center"
                 android:id="@+id/search_package"/>
 
+                  <!-- ★★★ 2026-10-25（1.5.5）：「英文查询」入口（照 FCL 的 TranslationDialog）。
+                       整合包这一页用的是 modpack_data.txt 那张表，与模组页不同。 -->
+
                 <Button
+
+                    android:singleLine="true"
+
+                    android:textAllCaps="false"
+
+                    android:tag="tint_accent_color"
+
+                    android:layout_marginStart="8dp"
+
+                    android:layout_width="wrap_content"
+
+                    android:layout_height="30dp"
+
+                    android:background="@drawable/launcher_button_transparent"
+
+                    android:text="@string/download_mod_ui_translation"
+
+                    android:textColor="@color/colorPureWhite"
+
+                    android:textSize="15sp"
+
+                    android:gravity="center"
+
+                    android:id="@+id/translation_package_search"/>
+
+<Button
                     android:singleLine="true"
                     android:textAllCaps="false"
                     android:tag="tint_accent_color"

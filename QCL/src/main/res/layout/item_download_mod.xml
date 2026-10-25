@@ -59,6 +59,18 @@
                     android:textSize="@dimen/text_size_small"
                     android:textColor="@color/colorAccent"
                     android:id="@+id/mod_categories"/>
+                  <!-- ★★★ 2026-10-25（1.5.5）：来源徽标（CurseForge / Modrinth）。
+                       照 FCL 的列表：聚合搜索时两站的结果并排显示，必须一眼看出这条来自哪站。 -->
+                    <TextView
+                        android:layout_marginStart="6dp"
+                        android:layout_gravity="center"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:singleLine="true"
+                        android:ellipsize="end"
+                        android:textSize="10sp"
+                        android:textColor="@color/colorLightWhite"
+                        android:id="@+id/mod_source"/>
 
             </LinearLayout>
 

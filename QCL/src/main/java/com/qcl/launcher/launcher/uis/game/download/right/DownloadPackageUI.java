@@ -21,6 +21,8 @@ import android.widget.Spinner;
 import android.widget.SpinnerAdapter;
 import android.widget.TextView;
 import com.qcl.launcher.launcher.MainActivity;
+import com.qcl.launcher.launcher.dialogs.ModTranslationDialog;
+import com.qcl.launcher.utils.string.ModTranslations;
 import com.qcl.launcher.launcher.list.download.DownloadResourceAdapter;
 import com.qcl.launcher.launcher.mod.HybridRemoteModRepository;
 import com.qcl.launcher.launcher.mod.LocalizedRemoteModRepository;
@@ -89,6 +91,10 @@ public class DownloadPackageUI extends BaseUI implements View.OnClickListener, A
     private ProgressBar progressBar;
     private RemoteModRepository repository;
     private Button search;
+    /**
+     * ★★★ 1.5.5：「英文查询」按钮（照 FCL 的 TranslationDialog 入口）。
+     */
+    private Button translation;
     private Button refresh;
     private final Handler searchHandler;
     private ArrayList<String> sortList;
@@ -226,6 +232,11 @@ public class DownloadPackageUI extends BaseUI implements View.OnClickListener, A
         // ★ 1.2.3：搜索旁的「刷新」——和搜索走同一条查询路
 
         this.refresh = (Button) this.activity.findViewById(R.id.refresh_package_search);
+        // ★★★ 1.5.5：英文查询弹窗入口
+        this.translation = (Button) this.activity.findViewById(R.id.translation_package_search);
+        if (this.translation != null) {
+            this.translation.setOnClickListener(this);
+        }
 
         if (this.refresh != null) {
 
@@ -318,6 +329,37 @@ public class DownloadPackageUI extends BaseUI implements View.OnClickListener, A
     private void init() {
         if (this.packageList.size() == 0 && this.editName.getText().toString().equals("")) {
             search();
+        }
+    }
+
+    /**
+     * ★★★ 2026-10-25（1.5.5）**弹「模组/整合包对应英文查询」窗口**（照 FCL 的 TranslationDialog）。
+     *
+     * <p>整合包这一页取的是 {@code modpack_data.txt} 那张表（{@code Type.MODPACK}），
+     * 与模组页（{@code mod_data.txt}）**不是同一张** —— 同一个中文名在两张表里
+     * 指向的英文名可能不同，所以这里必须按当前页的类型取表。
+     */
+    private void openTranslationDialog() {
+        try {
+            ModTranslations translations = ModTranslations.getTranslationsByRepositoryType(repository.getType());
+            ModTranslationDialog dialog = new ModTranslationDialog(this.context, this.activity, translations,
+                    new ModTranslationDialog.OnPickListener() {
+                        @Override
+                        public void onPick(String englishName) {
+                            if (englishName == null || englishName.trim().isEmpty()) {
+                                return;
+                            }
+                            DownloadPackageUI.this.editName.setText(englishName.trim());
+                            DownloadPackageUI.this.pageOffset = 0;
+                            DownloadPackageUI.this.search();
+                        }
+                    });
+            dialog.setInitialKeyword(this.editName == null ? "" : this.editName.getText().toString());
+            dialog.show();
+        } catch (Throwable t) {
+            android.widget.Toast.makeText(this.context,
+                    this.context.getString(R.string.translation_dialog_failed),
+                    android.widget.Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -447,6 +489,10 @@ public class DownloadPackageUI extends BaseUI implements View.OnClickListener, A
         }
         if (view == this.search || view == this.refresh) {
             search();
+        }
+        // ★★★ 1.5.5：弹「模组/整合包对应英文查询」窗口（整合包用 modpack_data.txt 那张表）
+        if (view == this.translation) {
+            openTranslationDialog();
         }
     }
 

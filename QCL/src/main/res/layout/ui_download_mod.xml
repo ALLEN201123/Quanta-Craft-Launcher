@@ -351,7 +351,23 @@
                 android:gravity="center"
                 android:id="@+id/search_mod"/>
 
-                <Button
+                  <!-- ★★★ 2026-10-25（1.5.5）：「英文查询」入口（照 FCL 的 TranslationDialog）。
+                       搜中文搜不到时，弹窗列出翻译表里的英文候选，点一条就把搜索词换掉。 -->
+                      <Button
+                          android:singleLine="true"
+                          android:textAllCaps="false"
+                          android:tag="tint_accent_color"
+                          android:layout_marginStart="8dp"
+                          android:layout_width="wrap_content"
+                          android:layout_height="30dp"
+                          android:background="@drawable/launcher_button_transparent"
+                          android:text="@string/download_mod_ui_translation"
+                          android:textColor="@color/colorPureWhite"
+                          android:textSize="15sp"
+                          android:gravity="center"
+                          android:id="@+id/translation_mod_search"/>
+
+<Button
                     android:singleLine="true"
                     android:textAllCaps="false"
                     android:tag="tint_accent_color"

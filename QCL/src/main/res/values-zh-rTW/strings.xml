@@ -1040,4 +1040,27 @@
     <string name="download_favorite_removed">已取消收藏</string>
     <string name="game_setting_ui_vulkan_driver_system">使用系統 Vulkan 驅動</string>
     <string name="game_setting_ui_vulkan_driver_system_desc">用手機內建的 Vulkan 驅動。效能更好，但可能有相容問題。</string>
+
+    <!-- ★ 1.5.5：远程版本列表的 Wiki 跳转图标（照 FCL 的 @+id/wiki） -->
+    <string name="wiki_jump_desc">跳轉該版本的 Minecraft Wiki 頁</string>
+
+    <!-- 1.5.5: wiki jump failed to open a browser -->
+    <string name="wiki_jump_no_browser">沒有找到可用的瀏覽器</string>
+
+    <!-- 1.5.5: mod/modpack English-name lookup dialog (FCL TranslationDialog) -->
+    <string name="translation_dialog_title">模組/整合包對應英文查詢</string>
+    <string name="translation_dialog_hint">輸入中文或英文名，列出可選的英文對應項</string>
+
+    <!-- 1.5.5: mod search English-name lookup entry -->
+    <string name="download_mod_ui_translation">英文查詢</string>
+
+    <!-- 1.5.5: translation dialog failed -->
+    <string name="translation_dialog_failed">開啟英文查詢視窗失敗</string>
+
+    <!-- 1.5.5: source badge on mod/modpack list rows -->
+    <string name="mod_source_curseforge">CurseForge</string>
+    <string name="mod_source_modrinth">Modrinth</string>
+
+    <!-- 1.5.5: translation dialog cancel button -->
+    <string name="translation_dialog_cancel">取消</string>
 </resources>

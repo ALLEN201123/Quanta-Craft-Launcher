@@ -50,6 +50,18 @@
 
     </LinearLayout>
 
+    <!-- ★★★ 2026-10-25（1.5.5）：跳转该版本对应的 Minecraft Wiki 页。
+         照 FCL 的 item_remote_version.xml（@+id/wiki，地球图标）。
+         放在「启动」按钮左边，与它同款 20dp 图标按钮。 -->
+    <ImageButton
+        android:layout_marginStart="10dp"
+        android:layout_width="20dp"
+        android:layout_height="20dp"
+        android:background="@drawable/ic_baseline_earth_black"
+        android:layout_gravity="center"
+        android:contentDescription="@string/wiki_jump_desc"
+        android:id="@+id/version_wiki"/>
+
     <ImageButton
         android:layout_marginStart="10dp"
         android:layout_width="20dp"

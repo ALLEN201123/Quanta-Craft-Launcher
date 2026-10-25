@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ★★★ 2026-10-25（1.5.5）「模组/整合包对应英文查询」弹窗。
+     照 FCL 的 dialog_translation.xml，但用 QCL 自己的控件
+     （FCL 用的是 FCLConstraintLayout / FCLEditText，QCL 没有这套自定义控件）。
+     布局做成纵向 LinearLayout：标题 + 输入框 + 候选列表 + 取消。 -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <TextView
+        android:id="@+id/translation_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/translation_dialog_title"
+        android:textSize="16sp"
+        android:textColor="@color/colorPureBlack" />
+
+    <EditText
+        android:id="@+id/translation_search_input"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:hint="@string/translation_dialog_hint"
+        android:inputType="text"
+        android:maxLines="1"
+        android:textSize="15sp"
+        android:textColor="@color/colorPureBlack"
+        android:textColorHint="@color/colorLightWhite" />
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:layout_marginTop="8dp"
+        android:minHeight="160dp">
+
+        <LinearLayout
+            android:id="@+id/translation_results"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical" />
+
+    </ScrollView>
+
+    <Button
+        android:id="@+id/translation_cancel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="end"
+        android:layout_marginTop="12dp"
+        android:text="@string/translation_dialog_cancel" />
+
+</LinearLayout>

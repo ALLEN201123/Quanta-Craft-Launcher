@@ -68,4 +68,20 @@
         android:textSize="10sp"
         android:textColor="@color/colorLightWhite" />
 
+    <!-- ★★★ 2026-10-25（1.5.5）：跳转该版本对应的 Minecraft Wiki 页。
+         照 FCL 的 item_remote_version.xml（@+id/wiki，ic_baseline_earth_24）。
+         点它只开浏览器，不触发整行的「进入安装页」——两件事必须分开，
+         否则玩家想看 Wiki 却直接跳进了下载流程。 -->
+    <ImageView
+        android:id="@+id/wiki"
+        android:layout_gravity="center_vertical"
+        android:layout_marginStart="8dp"
+        android:layout_width="20dp"
+        android:layout_height="20dp"
+        android:padding="2dp"
+        android:scaleType="centerInside"
+        android:src="@drawable/ic_baseline_earth_black"
+        android:background="?android:attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/wiki_jump_desc" />
+
 </LinearLayout>

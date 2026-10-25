@@ -52,6 +52,14 @@ public class DownloadResourceAdapter extends BaseAdapter {
         TextView introduction;
         /** ★ 2026-10-09：收藏星标 */
         TextView favorite;
+
+        /**
+
+         * ★ 1.5.5：来源徽标（CurseForge / Modrinth）。
+
+         */
+
+        TextView source;
     }
 
     public DownloadResourceAdapter(Context context, MainActivity activity, RemoteModRepository repository, ArrayList<RemoteMod> modList, int type){
@@ -90,6 +98,8 @@ public class DownloadResourceAdapter extends BaseAdapter {
             viewHolder.categories = convertView.findViewById(R.id.mod_categories);
             viewHolder.introduction = convertView.findViewById(R.id.mod_introduction);
             viewHolder.favorite = convertView.findViewById(R.id.mod_favorite);
+
+            viewHolder.source = convertView.findViewById(R.id.mod_source);
             activity.exteriorConfig.apply(viewHolder.categories);
             convertView.setTag(viewHolder);
         }
@@ -119,6 +129,28 @@ public class DownloadResourceAdapter extends BaseAdapter {
             categories.append(c).append("   ");
         }
         viewHolder.categories.setText(categories.toString());
+
+            // ★★★ 2026-10-25（1.5.5）**来源徽标**（照 FCL 的列表）。
+            //   聚合搜索（Hybrid）会把 CurseForge 与 Modrinth 两站的结果并排显示，
+            //   玩家必须一眼看出这条来自哪站 —— 否则同一个模组的两个条目分不清，
+            //   详情页也会跳错源。
+            //   判定用 HybridRemoteModRepository.platformOf()（按数据对象的真实类型判，
+            //   不是靠 slug 猜；单源时它返回 UNKNOWN，此时不显示徽标）。
+            try {
+                String platform = com.qcl.launcher.launcher.mod.HybridRemoteModRepository.platformOf(modList.get(position));
+                if ("CURSEFORGE".equals(platform)) {
+                    viewHolder.source.setText(context.getString(R.string.mod_source_curseforge));
+                    viewHolder.source.setVisibility(View.VISIBLE);
+                } else if ("MODRINTH".equals(platform)) {
+                    viewHolder.source.setText(context.getString(R.string.mod_source_modrinth));
+                    viewHolder.source.setVisibility(View.VISIBLE);
+                } else {
+                    viewHolder.source.setText("");
+                    viewHolder.source.setVisibility(View.GONE);
+                }
+            } catch (Throwable ignored) {
+                viewHolder.source.setVisibility(View.GONE);
+            }
 
         // ★ 1.2.3：按「你当前的版本」装的加载器，给不兼容的模组卡片标红字警告（只对模组页生效）。
         //   规则（用户定的）：没装加载器 → 只有不依赖加载器的（纯 class 型）不标；

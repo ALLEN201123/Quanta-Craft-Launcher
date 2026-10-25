@@ -35,6 +35,10 @@ public class DownloadGameListAdapter extends BaseAdapter {
         TextView mcId;
         TextView releaseTime;
         TextView type;
+        /**
+         * ★★★ 1.5.5：跳转该版本 Minecraft Wiki 页的地球图标（照 FCL 的 @+id/wiki）。
+         */
+        ImageView wiki;
 
         private ViewHolder() {
         }
@@ -117,6 +121,7 @@ public class DownloadGameListAdapter extends BaseAdapter {
             viewHolder.mcId = (TextView) view2.findViewById(R.id.id);
             viewHolder.type = (TextView) view2.findViewById(R.id.type);
             viewHolder.releaseTime = (TextView) view2.findViewById(R.id.release_time);
+            viewHolder.wiki = (ImageView) view2.findViewById(R.id.wiki);
             this.activity.exteriorConfig.apply(viewHolder.type);
             view2.setTag(viewHolder);
         } else {
@@ -134,6 +139,25 @@ public class DownloadGameListAdapter extends BaseAdapter {
                 DownloadGameListAdapter.this.m414x716a5e8(version, view3);
             }
         });
+        // ★★★ 1.5.5：地球图标 = 跳转该版本对应的 Minecraft Wiki 页（照 FCL 的 RemoteVersionListAdapter）。
+        //   刻意**不**复用整行的点击（那是「进入安装页」）：两件事必须分开，
+        //   否则玩家想查资料却直接被推进下载流程。
+        //   Wiki 页面名走 WikiUtils —— 内部先查实测表（覆盖全部 920 个官方版本），
+        //   查不到才回退规则推导。
+        if (viewHolder.wiki != null) {
+            final VersionManifest.Version wikiVersion = version;
+            viewHolder.wiki.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    String vid = wikiVersion == null ? null : wikiVersion.id;
+                    if (!com.qcl.launcher.utils.game.WikiUtils.openWiki(DownloadGameListAdapter.this.context, vid)) {
+                        android.widget.Toast.makeText(DownloadGameListAdapter.this.context,
+                                DownloadGameListAdapter.this.context.getString(R.string.wiki_jump_no_browser),
+                                android.widget.Toast.LENGTH_SHORT).show();
+                    }
+                }
+            });
+        }
         return view2;
     }
 

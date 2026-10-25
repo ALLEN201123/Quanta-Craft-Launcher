@@ -97,8 +97,8 @@ android {
         //   · 修「自制加载器（ModLoader / Babric）点了没效果」（onClick 里没有对应分支）
         //   · 新增：Legacy Fabric / Legacy Fabric API / Cleanroom 加载器
         //   · 新增：模组/整合包英文查询、跳转对应版本 Wiki 页、执行 Jar 文件
-        versionCode 356
-        versionName "1.5.4"
+        versionCode 357
+        versionName "1.5.5"
 
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"

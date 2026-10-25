@@ -21,6 +21,8 @@ import android.widget.Spinner;
 import android.widget.SpinnerAdapter;
 import android.widget.TextView;
 import com.qcl.launcher.launcher.MainActivity;
+import com.qcl.launcher.launcher.dialogs.ModTranslationDialog;
+import com.qcl.launcher.utils.string.ModTranslations;
 import com.qcl.launcher.launcher.list.download.DownloadResourceAdapter;
 import com.qcl.launcher.launcher.mod.HybridRemoteModRepository;
 import com.qcl.launcher.launcher.mod.LocalizedRemoteModRepository;
@@ -98,6 +100,10 @@ public class DownloadModUI extends BaseUI implements View.OnClickListener, Adapt
     private RemoteModRepository repository;
     private Button search;
     private Button refresh;
+    /**
+     * ★★★ 1.5.5：「英文查询」按钮（照 FCL 的 TranslationDialog 入口）。
+     */
+    private Button translation;
     private final Handler searchHandler;
     private ArrayList<String> sortList;
     private ArrayAdapter<String> sortListAdapter;
@@ -299,6 +305,11 @@ public class DownloadModUI extends BaseUI implements View.OnClickListener, Adapt
         if (refreshBtn != null) {
             refreshBtn.setOnClickListener(this);
         }
+        // ★★★ 1.5.5：英文查询弹窗入口（照 FCL 的 TranslationDialog）
+        this.translation = (Button) this.activity.findViewById(R.id.translation_mod_search);
+        if (this.translation != null) {
+            this.translation.setOnClickListener(this);
+        }
         button.setOnClickListener(this);
         this.editName.setOnEditorActionListener(this);
         this.editVersion.setOnEditorActionListener(this);
@@ -367,6 +378,12 @@ public class DownloadModUI extends BaseUI implements View.OnClickListener, Adapt
         }
         if (view == this.search || view == this.refresh) {
             search();
+        }
+        // ★★★ 1.5.5：弹「模组/整合包对应英文查询」窗口。
+        //   玩家搜中文搜不到时，在这里列出翻译表里的英文候选；
+        //   点一条 → 把搜索词换成那个英文名 → 立刻重搜。
+        if (view == this.translation) {
+            openTranslationDialog();
         }
     }
 
@@ -439,6 +456,42 @@ public class DownloadModUI extends BaseUI implements View.OnClickListener, Adapt
             }
         }
         this.gameVersion = null;
+    }
+
+    /**
+     * ★★★ 2026-10-25（1.5.5）**弹「模组/整合包对应英文查询」窗口**（照 FCL 的 TranslationDialog）。
+     *
+     * <p>为什么需要它：1.5.2 的搜索是**静默**翻译 —— 中文关键词只取翻译表里
+     * LCS 得分最高的那一条替换掉。玩家搜「暮色森林」时，表里沾边的有本体、法术包、
+     * 附属模组、传送门催化剂好几条，取哪条玩家**看不见也换不了**；
+     * 搜不到想要的那个时，唯一办法是自己猜英文名。
+     * ⇒ 这个窗口把候选**摆出来给玩家点**，把「猜英文名」变成「点一下」。
+     *
+     * <p>翻译表按当前搜索页的**类型**取（模组 → mod_data.txt，整合包 → modpack_data.txt），
+     * 与搜索页的自动翻译**同源**，所以这里选中的英文名搜索页一定认得。
+     */
+    private void openTranslationDialog() {
+        try {
+            ModTranslations translations = ModTranslations.getTranslationsByRepositoryType(repository.getType());
+            ModTranslationDialog dialog = new ModTranslationDialog(this.context, this.activity, translations,
+                    new ModTranslationDialog.OnPickListener() {
+                        @Override
+                        public void onPick(String englishName) {
+                            if (englishName == null || englishName.trim().isEmpty()) {
+                                return;
+                            }
+                            DownloadModUI.this.editName.setText(englishName.trim());
+                            DownloadModUI.this.pageOffset = 0;
+                            DownloadModUI.this.search();
+                        }
+                    });
+            dialog.setInitialKeyword(this.editName == null ? "" : this.editName.getText().toString());
+            dialog.show();
+        } catch (Throwable t) {
+            android.widget.Toast.makeText(this.context,
+                    this.context.getString(R.string.translation_dialog_failed),
+                    android.widget.Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void search() {

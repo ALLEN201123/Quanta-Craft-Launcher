@@ -928,4 +928,27 @@
     <!-- ★ 1.5.0：公告栏 -->
     <string name="qcl_announcement">Aviso</string>
     <string name="qcl_announcement_hide">Ocultar</string>
+
+    <!-- ★ 1.5.5：远程版本列表的 Wiki 跳转图标（照 FCL 的 @+id/wiki） -->
+    <string name="wiki_jump_desc">Ver esta versão no Minecraft Wiki</string>
+
+    <!-- 1.5.5: wiki jump failed to open a browser -->
+    <string name="wiki_jump_no_browser">Nenhum navegador disponivel</string>
+
+    <!-- 1.5.5: mod/modpack English-name lookup dialog (FCL TranslationDialog) -->
+    <string name="translation_dialog_title">Consulta de nome em ingles de mod/整合包</string>
+    <string name="translation_dialog_hint">Digite um nome em chines ou ingles para listar as opcoes em ingles</string>
+
+    <!-- 1.5.5: mod search English-name lookup entry -->
+    <string name="download_mod_ui_translation">Nome EN</string>
+
+    <!-- 1.5.5: translation dialog failed -->
+    <string name="translation_dialog_failed">Falha ao abrir a janela de consulta de nome em ingles</string>
+
+    <!-- 1.5.5: source badge on mod/modpack list rows -->
+    <string name="mod_source_curseforge">CurseForge</string>
+    <string name="mod_source_modrinth">Modrinth</string>
+
+    <!-- 1.5.5: translation dialog cancel button -->
+    <string name="translation_dialog_cancel">Cancelar</string>
 </resources>
