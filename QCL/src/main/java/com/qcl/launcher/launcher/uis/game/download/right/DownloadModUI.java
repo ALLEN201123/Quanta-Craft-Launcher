@@ -209,6 +209,14 @@ public class DownloadModUI extends BaseUI implements View.OnClickListener, Adapt
         // ★ 1.5.2（D 方案）：左侧可折叠筛选栏 + 顶部的 [☰ 筛选] 开关
         this.filterPanel = this.activity.findViewById(R.id.download_mod_filter_panel);
         this.toggleFilter = this.activity.findViewById(R.id.toggle_mod_filter);
+        // ★★★ 1.5.5：筛选栏常驻左栏 ⇒ 「☰ 筛选」开关没有意义了，隐藏掉。
+        if (this.toggleFilter != null) {
+            this.toggleFilter.setVisibility(View.GONE);
+        }
+        // 强制显示筛选栏（原来是默认 GONE，点「☰ 筛选」才展开）
+        if (this.filterPanel != null) {
+            this.filterPanel.setVisibility(View.VISIBLE);
+        }
         // ★ 1.5.2：翻页栏
         this.pagePrev = (android.widget.TextView) this.activity.findViewById(R.id.mod_page_prev);
         this.pageNext = (android.widget.TextView) this.activity.findViewById(R.id.mod_page_next);
@@ -365,15 +373,8 @@ public class DownloadModUI extends BaseUI implements View.OnClickListener, Adapt
             return;
         }
         if (view == this.toggleFilter) {
-            this.suppressReload = true;
-            try {
-                if (this.filterPanel != null) {
-                    boolean show = this.filterPanel.getVisibility() != View.VISIBLE;
-                    this.filterPanel.setVisibility(show ? View.VISIBLE : View.GONE);
-                }
-            } catch (Throwable ignored) {
-            }
-            this.filterPanel.post(() -> this.suppressReload = false);
+            // ★★★ 2026-10-25（1.5.5）：筛选栏已改成**常驻左侧竖排**（照 FCL 的 page_download.xml），
+            //   不再需要「☰ 筛选」折叠 —— 保留分支只为不让它误折叠。
             return;
         }
         if (view == this.search || view == this.refresh) {
