@@ -195,14 +195,11 @@
                 android:layout_weight="1"
                 android:orientation="vertical">
 
-                <TextView
+                <ImageView
                     android:layout_gravity="center_horizontal"
-                    android:layout_width="16dp"
-                    android:layout_height="16dp"
-                    android:gravity="center"
-                    android:textSize="16sp"
-                    android:textColor="@color/colorPureBlack"
-                    android:text="★"/>
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:background="@drawable/ic_baseline_star_black"/>
 
                 <TextView
                     android:layout_marginTop="2dp"
