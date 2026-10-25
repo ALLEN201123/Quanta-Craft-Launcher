@@ -92,196 +92,211 @@
             android:layout_height="match_parent"
             android:padding="10dp"
             android:orientation="vertical">
-        
-            <TextView
-                android:singleLine="true"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textSize="@dimen/text_size_middle"
-                android:textColor="@color/colorPureBlack"
-                android:text="@string/download_package_ui_source"/>
-        
-            <RelativeLayout
+            <ScrollView
                 android:layout_width="match_parent"
-                android:layout_height="30dp"
-                android:layout_marginTop="4dp"
-                android:background="@drawable/launcher_view_white">
-        
-                <Spinner
-                    android:layout_width="match_parent"
-                    android:minWidth="80dp"
-                    android:layout_height="match_parent"
-                    android:id="@+id/download_package_arg_source"/>
-        
-            </RelativeLayout>
-        
-            <TextView
-                android:singleLine="true"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:textSize="@dimen/text_size_middle"
-                android:textColor="@color/colorPureBlack"
-                android:text="@string/download_package_ui_name"/>
-        
-            <EditText
-                android:singleLine="true"
-                android:layout_width="match_parent"
-                android:layout_height="30dp"
-                android:layout_marginTop="4dp"
-                android:paddingStart="9dp"
-                android:paddingEnd="9dp"
-                android:textSize="@dimen/text_size_middle"
-                android:hint="@string/download_package_ui_name_hint"
-                android:id="@+id/download_package_arg_name"/>
-                android:background="@drawable/launcher_view_white"/>
-        
-            <TextView
-                android:singleLine="true"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:textSize="@dimen/text_size_middle"
-                android:textColor="@color/colorPureBlack"
-                android:text="@string/download_package_ui_type"/>
-        
-            <RelativeLayout
-                android:layout_width="match_parent"
-                android:layout_height="30dp"
-                android:layout_marginTop="4dp"
-                android:background="@drawable/launcher_view_white">
-        
-                <Spinner
-                    android:layout_width="match_parent"
-                    android:minWidth="80dp"
-                    android:layout_height="match_parent"
-                    android:id="@+id/download_package_arg_type"/>
-        
-            </RelativeLayout>
-        
-            <TextView
-                android:singleLine="true"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:textSize="@dimen/text_size_middle"
-                android:textColor="@color/colorPureBlack"
-                android:text="@string/download_package_ui_version"/>
-        
-            <RelativeLayout
-                android:layout_width="match_parent"
-                android:layout_height="30dp"
-                android:layout_marginTop="4dp"
-                android:background="@drawable/launcher_view_white">
-        
-                <Spinner
-                    android:layout_width="match_parent"
-                    android:minWidth="80dp"
-                    android:layout_height="match_parent"
-                    android:id="@+id/download_package_arg_version"/>
-        
-            </RelativeLayout>
-        
-            <EditText
-                android:singleLine="true"
-                android:layout_width="match_parent"
-                android:layout_height="30dp"
-                android:layout_marginTop="4dp"
-                android:paddingStart="9dp"
-                android:paddingEnd="9dp"
-                android:textSize="@dimen/text_size_middle"
-                android:hint="@string/download_package_ui_version"
-                android:id="@+id/edit_download_package_arg_version"/>
-                android:background="@drawable/launcher_view_white"/>
-        
-            <TextView
-                android:singleLine="true"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:textSize="@dimen/text_size_middle"
-                android:textColor="@color/colorPureBlack"
-                android:text="@string/download_package_ui_sort"/>
-        
-            <RelativeLayout
-                android:layout_width="match_parent"
-                android:layout_height="30dp"
-                android:layout_marginTop="4dp"
-                android:background="@drawable/launcher_view_white">
-        
-                <Spinner
-                    android:layout_width="match_parent"
-                    android:minWidth="80dp"
-                    android:layout_height="match_parent"
-                    android:id="@+id/download_package_arg_sort"/>
-        
-            </RelativeLayout>
-        
-            <!-- ★ 1.5.5：从下载页导入整合包（竖排改造时保留，Java 的 onClick 引用了它） -->
-            <Button
-                android:singleLine="true"
-                android:textAllCaps="false"
-                android:tag="tint_accent_color"
-                android:layout_width="match_parent"
-                android:layout_height="30dp"
-                android:layout_marginTop="14dp"
-                android:background="@drawable/launcher_button_transparent"
-                android:text="@string/download_package_ui_install"
-                android:textColor="@color/colorPureWhite"
-                android:textSize="15sp"
-                android:gravity="center"
-                android:id="@+id/install_package_from_download_page"/>
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:scrollbars="none"
+                android:fillViewport="true">
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="14dp"
-                android:orientation="horizontal">
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
         
+                <TextView
+                    android:singleLine="true"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="@dimen/text_size_middle"
+                    android:textColor="@color/colorPureBlack"
+                    android:text="@string/download_package_ui_source"/>
+        
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="30dp"
+                    android:layout_marginTop="4dp"
+                    android:background="@drawable/launcher_view_white">
+        
+                    <Spinner
+                        android:layout_width="match_parent"
+                        android:minWidth="80dp"
+                        android:layout_height="match_parent"
+                        android:id="@+id/download_package_arg_source"/>
+        
+                </RelativeLayout>
+        
+                <TextView
+                    android:singleLine="true"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:textSize="@dimen/text_size_middle"
+                    android:textColor="@color/colorPureBlack"
+                    android:text="@string/download_package_ui_name"/>
+        
+                <EditText
+                    android:singleLine="true"
+                    android:layout_width="match_parent"
+                    android:layout_height="30dp"
+                    android:layout_marginTop="4dp"
+                    android:paddingStart="9dp"
+                    android:paddingEnd="9dp"
+                    android:textSize="@dimen/text_size_middle"
+                    android:hint="@string/download_package_ui_name_hint"
+                    android:id="@+id/download_package_arg_name"/>
+                    android:background="@drawable/launcher_view_white"/>
+        
+                <TextView
+                    android:singleLine="true"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:textSize="@dimen/text_size_middle"
+                    android:textColor="@color/colorPureBlack"
+                    android:text="@string/download_package_ui_type"/>
+        
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="30dp"
+                    android:layout_marginTop="4dp"
+                    android:background="@drawable/launcher_view_white">
+        
+                    <Spinner
+                        android:layout_width="match_parent"
+                        android:minWidth="80dp"
+                        android:layout_height="match_parent"
+                        android:id="@+id/download_package_arg_type"/>
+        
+                </RelativeLayout>
+        
+                <TextView
+                    android:singleLine="true"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:textSize="@dimen/text_size_middle"
+                    android:textColor="@color/colorPureBlack"
+                    android:text="@string/download_package_ui_version"/>
+        
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="30dp"
+                    android:layout_marginTop="4dp"
+                    android:background="@drawable/launcher_view_white">
+        
+                    <Spinner
+                        android:layout_width="match_parent"
+                        android:minWidth="80dp"
+                        android:layout_height="match_parent"
+                        android:id="@+id/download_package_arg_version"/>
+        
+                </RelativeLayout>
+        
+                <EditText
+                    android:singleLine="true"
+                    android:layout_width="match_parent"
+                    android:layout_height="30dp"
+                    android:layout_marginTop="4dp"
+                    android:paddingStart="9dp"
+                    android:paddingEnd="9dp"
+                    android:textSize="@dimen/text_size_middle"
+                    android:hint="@string/download_package_ui_version"
+                    android:id="@+id/edit_download_package_arg_version"/>
+                    android:background="@drawable/launcher_view_white"/>
+        
+                <TextView
+                    android:singleLine="true"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:textSize="@dimen/text_size_middle"
+                    android:textColor="@color/colorPureBlack"
+                    android:text="@string/download_package_ui_sort"/>
+        
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="30dp"
+                    android:layout_marginTop="4dp"
+                    android:background="@drawable/launcher_view_white">
+        
+                    <Spinner
+                        android:layout_width="match_parent"
+                        android:minWidth="80dp"
+                        android:layout_height="match_parent"
+                        android:id="@+id/download_package_arg_sort"/>
+        
+                </RelativeLayout>
+        
+                <!-- ★ 1.5.5：从下载页导入整合包（竖排改造时保留，Java 的 onClick 引用了它） -->
                 <Button
                     android:singleLine="true"
                     android:textAllCaps="false"
                     android:tag="tint_accent_color"
-                    android:layout_width="0dp"
-                    android:layout_weight="1"
+                    android:layout_width="match_parent"
                     android:layout_height="30dp"
+                    android:layout_marginTop="14dp"
                     android:background="@drawable/launcher_button_transparent"
-                    android:text="@string/download_package_ui_search"
+                    android:text="@string/download_package_ui_install"
                     android:textColor="@color/colorPureWhite"
                     android:textSize="15sp"
                     android:gravity="center"
-                    android:id="@+id/search_package"/>
+                    android:id="@+id/install_package_from_download_page"/>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:orientation="horizontal">
         
-                <Button
-                    android:singleLine="true"
-                    android:textAllCaps="false"
-                    android:tag="tint_accent_color"
-                    android:layout_width="0dp"
-                    android:layout_weight="1"
-                    android:layout_height="30dp"
-                    android:background="@drawable/launcher_button_transparent"
-                    android:text="@string/download_mod_ui_translation"
-                    android:textColor="@color/colorPureWhite"
-                    android:textSize="15sp"
-                    android:gravity="center"
-                    android:id="@+id/translation_package_search"/>
+                    <Button
+                        android:singleLine="true"
+                        android:textAllCaps="false"
+                        android:tag="tint_accent_color"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:layout_height="30dp"
+                        android:background="@drawable/launcher_button_transparent"
+                        android:text="@string/download_package_ui_search"
+                        android:textColor="@color/colorPureWhite"
+                        android:textSize="15sp"
+                        android:gravity="center"
+                        android:id="@+id/search_package"/>
         
-                <Button
-                    android:singleLine="true"
-                    android:textAllCaps="false"
-                    android:tag="tint_accent_color"
-                    android:layout_width="0dp"
-                    android:layout_weight="1"
-                    android:layout_height="30dp"
-                    android:background="@drawable/launcher_button_transparent"
-                    android:text="@string/download_mod_ui_refresh"
-                    android:textColor="@color/colorPureWhite"
-                    android:textSize="15sp"
-                    android:gravity="center"
-                    android:id="@+id/refresh_package_search"/>
+                    <Button
+                        android:singleLine="true"
+                        android:textAllCaps="false"
+                        android:tag="tint_accent_color"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:layout_height="30dp"
+                        android:background="@drawable/launcher_button_transparent"
+                        android:text="@string/download_mod_ui_translation"
+                        android:textColor="@color/colorPureWhite"
+                        android:textSize="15sp"
+                        android:gravity="center"
+                        android:id="@+id/translation_package_search"/>
         
-            </LinearLayout>
+                    <Button
+                        android:singleLine="true"
+                        android:textAllCaps="false"
+                        android:tag="tint_accent_color"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:layout_height="30dp"
+                        android:background="@drawable/launcher_button_transparent"
+                        android:text="@string/download_mod_ui_refresh"
+                        android:textColor="@color/colorPureWhite"
+                        android:textSize="15sp"
+                        android:gravity="center"
+                        android:id="@+id/refresh_package_search"/>
         
+                </LinearLayout>
+        
+                </LinearLayout>
+
+            </ScrollView>
         </LinearLayout>
 
     <RelativeLayout

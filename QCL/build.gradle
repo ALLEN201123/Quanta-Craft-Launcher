@@ -6,6 +6,9 @@ plugins {
 
 
 
+// 2026-10-25：输出目录改回 QCL/build_alt —— 用户要求新包继续出现在 build_alt
+// （QCL/build 下的旧包被资源管理器占用过，清不干净）。不影响产物内容。
+buildDir = new File(rootProject.projectDir, 'QCL/build_alt')
 android {
     compileSdk 34
     dexOptions {
