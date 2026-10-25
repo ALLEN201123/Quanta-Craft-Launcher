@@ -1,17 +1,17 @@
 {
   "latestRelease": {
-    "versionCode": 357,
-    "versionName": "1.5.5",
+    "versionCode": 358,
+    "versionName": "1.5.6",
     "date": "2026-10-25",
     "url": [
-      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.5.5/QCL-release-1.5.5-universal.apk",
-      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.5.5/QCL-release-1.5.5-arm64.apk",
-      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.5.5/QCL-release-1.5.5-arm.apk",
-      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.5.5/QCL-release-1.5.5-x86_64.apk",
-      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.5.5/QCL-release-1.5.5-x86.apk"
+      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.5.6/QCL-release-1.5.6-universal.apk",
+      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.5.6/QCL-release-1.5.6-arm64.apk",
+      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.5.6/QCL-release-1.5.6-arm.apk",
+      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.5.6/QCL-release-1.5.6-x86_64.apk",
+      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.5.6/QCL-release-1.5.6-x86.apk"
     ],
     "netdiskUrl": "https://pan.quark.cn/s/f2c26c4fb66b",
-    "updateLog": "【1.5.5：版本 Wiki 跳转 + 英文查询弹窗 + 下载页竖排筛选】\n\n一、版本列表新增「跳该版本 Wiki 页」\n· 下载页版本列表、首页本地版本列表，每行右侧新增地球图标，点它用浏览器打开该版本对应的 Wiki 页\n· 点整行行为不变（进入安装页 / 选中版本）\n· 以前跳不对的根因：Wiki 页面名 ≠ 版本号（Beta/Alpha/Classic/Indev/Infdev 各有规则，快照/预发布/候选版又各有写法，1.0 在 Wiki 上是 1.0.0）\n· 本版内置 920 条实测对照表（Mojang 官方清单全部版本，含 26.4 快照、26.x 正式版、1.21.x、全部远古版与归档版），逐条实测命中 920/920\n\n二、模组 / 整合包搜索新增「英文查询」弹窗\n· 搜中文搜不到时点搜索框旁的「英文查询」，列出翻译表里所有对应英文名，点一条即换词重搜\n· 此前是静默翻译（只取最匹配一条），玩家看不见也换不了；模组页与整合包页各有一个入口，用不同的翻译表\n\n三、下载页筛选栏改成 FCL 式左侧竖排\n· 模组 / 整合包 / 世界 / 光影 / 资源包 五个下载页统一改为左侧常驻竖排，左栏可上下滑动\n· 「☰ 筛选」开关不再需要（已隐藏）\n\n四、模组列表新增来源角标\n· 聚合搜索时 CurseForge 与 Modrinth 并排显示，每行标出来源\n\n五、修复\n· 修复左栏内容超出屏幕无法上下滑动、输入框文字被压掉半截\n· 修复收藏页顶部标题被压\n· 修复部分下拉框文字被压（输入框 30→40dp、下拉框 30→36dp）\n· 修复下载页「收藏」Tab 图标与文字整体偏低（★ 字符 TextView 换成与其它 Tab 同规格的 20dp ImageView）\n"
+    "updateLog": "【1.5.6：修好「检查更新时直接崩」】\n\n★ 真机实测崩溃（HUAWEI PAR-AL00 / Android 9）\n  android.view.WindowManager$BadTokenException:\n    Unable to add window -- token ... is not valid; is your activity running?\n      at android.app.Dialog.show(Dialog.java:556)\n      at ...update.UpdateChecker.showUpdateDialog(UpdateChecker.java:244)\n\n一、根因\n更新检查跑在后台线程，要依次试 8 个下载源（Gitee / jsDelivr 各家镜像 /\nGitHub 直连 / ghproxy）取 versionCode 最大的那份。网络慢时这一趟要好几秒。\n等它 handler.post 回来弹「发现新版本」时，Activity 可能已经销毁了\n（按返回键退出、切横竖屏、或被系统回收）—— 这时窗口 token 已失效，\nDialog 往一个死窗口上 addView 就抛 BadTokenException。\n旧代码那里既没判存活也没 try-catch ⇒ 异常冒到 Handler.handleCallback\n⇒ 整个进程崩掉。\n\n二、修法（三道，缺一不可）\n1) 弹窗前先判 Activity 存活（isFinishing / isDestroyed），\n   已经不在了就干脆不弹；\n2) dialog.show() 外面套 try-catch —— 挡「最后一秒才被销毁」；\n3) UpdateDialog 的构造也放进 try（构造里要 getWindow/setContentView）。\n\n三、顺带修掉同一类的两处\n· 「正在检查更新」「已是最新版」两个 Toast 也从后台线程回来，\n  Activity 销毁后拿死 context 去 makeText/show 同样会抛，已加固；\n· 下载完 APK 后跳安装界面的 startActivity 没有保护 ——\n  下载要等网络，回来的路上 Activity 可能已死，已补上。\n\n四、关于 26.3\n仍未修好，原因未定位 —— 如实说明，不粉饰。\n目前请用 26.4 或 26.2 及以下。\n\n验证\n· compileDebugJavaWithJavac BUILD SUCCESSFUL\n· 五架构包（arm / arm64 / x86 / x86_64 / universal）逐个校验\n  PK 魔数、ZIP 完整性、classes.dex\n· 公告 JSON：合法、id 唯一递增（106）、三语齐全、换行全用 \\n\n"
   },
   "latestPrerelease": null
 }
