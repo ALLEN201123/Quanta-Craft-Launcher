@@ -85,6 +85,16 @@ QCL 自己写的是**窗口 / Surface / EGL 上下文 / 输入桥 / 帧节奏**�
 
 ### 当前进展（1.5.5）
 
+### 当前进展（1.5.6）
+
+- **修好「检查更新时直接崩」**（真机实测：HUAWEI PAR-AL00 / Android 9）—— `BadTokenException`。
+  根因：更新检查跑后台线程，要依次试 8 个下载源，网络慢时好几秒；等它回来弹「发现新版本」时
+  Activity 可能已销毁（返回键 / 横竖屏 / 被系统回收），窗口 token 失效，`Dialog.show()` 往死窗口
+  addView 就抛异常，而旧代码既没判存活也没 try-catch ⇒ 整个进程崩掉。
+  修了三道：弹窗前判 `isFinishing()/isDestroyed()`；`show()` 外套 try-catch；`UpdateDialog` 构造也进 try。
+- 顺带修掉同类两处：「正在检查更新 / 已是最新版」两个 Toast、下载完 APK 后跳安装界面的 `startActivity`。
+- **26.3 仍未修好**，原因未定位 —— 如实说明，不粉饰。目前请用 26.4 或 26.2 及以下。
+
 - **版本列表可直接跳该版本的 Minecraft Wiki 页**（1.5.5 新增）—— 下载页版本列表、首页本地版本列表，每行右侧一个地球图标，点它用浏览器打开该版本的 Wiki 页。
   以前跳不对的根因：Wiki 页面名 ≠ 版本号（Beta/Alpha/Classic/Indev/Infdev 各有规则，快照/预发布/候选版又各有写法，1.0 在 Wiki 上是 1.0.0）。
   ⇒ 内置 **920 条实测对照表**（Mojang 官方版本清单的全部版本，含 26.4 快照、26.x 正式版、1.21.x、全部远古版与归档版），逐条实测命中 920/920。
@@ -197,7 +207,7 @@ QCL 自己写的是**窗口 / Surface / EGL 上下文 / 输入桥 / 帧节奏**�
 **每个版本改了什么，都在 GitHub Releases 里，README 不逐版记录：**
 
 - 全部版本：https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases
-- 当前版本：**1.5.5**（versionCode 357）
+- 当前版本：**1.5.6**（versionCode 358）
 
 > 建议先按下面这张表判断自己关心的问题是在哪一版修的，直接查对应 Release 的说明：
 >
