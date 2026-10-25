@@ -116,7 +116,7 @@
         
                     <RelativeLayout
                         android:layout_width="match_parent"
-                        android:layout_height="30dp"
+                        android:layout_height="36dp"
                         android:layout_marginTop="4dp"
                         android:background="@drawable/launcher_view_white">
         
@@ -140,10 +140,10 @@
                     <EditText
                         android:singleLine="true"
                         android:layout_width="match_parent"
-                        android:layout_height="30dp"
+                        android:layout_height="40dp"
                         android:layout_marginTop="4dp"
-                        android:paddingStart="9dp"
-                        android:paddingEnd="9dp"
+                        android:paddingStart="6dp"
+                        android:paddingEnd="6dp"
                         android:textSize="@dimen/text_size_middle"
                         android:hint="@string/download_resource_pack_ui_name_hint"
                         android:id="@+id/download_resource_pack_arg_name"/>
@@ -160,7 +160,7 @@
         
                     <RelativeLayout
                         android:layout_width="match_parent"
-                        android:layout_height="30dp"
+                        android:layout_height="36dp"
                         android:layout_marginTop="4dp"
                         android:background="@drawable/launcher_view_white">
         
@@ -183,7 +183,7 @@
         
                     <RelativeLayout
                         android:layout_width="match_parent"
-                        android:layout_height="30dp"
+                        android:layout_height="36dp"
                         android:layout_marginTop="4dp"
                         android:background="@drawable/launcher_view_white">
         
@@ -198,10 +198,10 @@
                     <EditText
                         android:singleLine="true"
                         android:layout_width="match_parent"
-                        android:layout_height="30dp"
+                        android:layout_height="40dp"
                         android:layout_marginTop="4dp"
-                        android:paddingStart="9dp"
-                        android:paddingEnd="9dp"
+                        android:paddingStart="6dp"
+                        android:paddingEnd="6dp"
                         android:textSize="@dimen/text_size_middle"
                         android:hint="@string/download_resource_pack_ui_version"
                         android:id="@+id/edit_download_resource_pack_arg_version"/>
@@ -218,7 +218,7 @@
         
                     <RelativeLayout
                         android:layout_width="match_parent"
-                        android:layout_height="30dp"
+                        android:layout_height="36dp"
                         android:layout_marginTop="4dp"
                         android:background="@drawable/launcher_view_white">
         
@@ -241,7 +241,7 @@
         
                     <RelativeLayout
                         android:layout_width="match_parent"
-                        android:layout_height="30dp"
+                        android:layout_height="36dp"
                         android:layout_marginTop="4dp"
                         android:background="@drawable/launcher_view_white">
         

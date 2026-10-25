@@ -1,6 +1,43 @@
 {
   "announcements": [
     {
+      "id": 105,
+      "significant": true,
+      "outdated": false,
+      "minVersion": 0,
+      "maxVersion": 2147483647,
+      "specificLang": [],
+      "title": [
+        {
+          "lang": "zh_CN",
+          "text": "QCL 1.5.5：版本 Wiki 跳转 + 英文查询弹窗 + 下载页竖排筛选"
+        },
+        {
+          "lang": "zh_TW",
+          "text": "QCL 1.5.5：版本 Wiki 跳轉 + 英文查詢彈窗 + 下載頁豎排篩選"
+        },
+        {
+          "lang": "en_US",
+          "text": "QCL 1.5.5: version Wiki jump, English-name lookup, vertical filters"
+        }
+      ],
+      "date": "2026-10-25",
+      "content": [
+        {
+          "lang": "zh_CN",
+          "text": "【★ 版本列表新增：直接跳该版本的 Minecraft Wiki 页】\n\n下载页的版本列表、首页的本地版本列表，每一行右侧新增一个**地球图标**，\n点它直接用浏览器打开该版本对应的 Wiki 页面（点整行的行为不变：仍是进入安装页 / 选中版本）。\n\n**为什么之前跳不对**：Wiki 的页面名和版本号不是一回事，\n正式版之外还有 Beta / Alpha / Classic / Indev / Infdev / pre-Classic 各种前缀规则，\n快照（26.4-snapshot-5）、预发布（1.21.5-pre2）、候选版（1.16.5-rc1）又各有各的写法，\n连分隔符都不一样（Beta 1.8.1 用的是空格不是下划线），1.0 在 Wiki 上的页面名还是 1.0.0。\n\n⇒ 本版内置了 **920 条实测对照表**（Mojang 官方版本清单里的全部版本，\n含 26.4 快照、26.x 正式版、1.21.x、全部远古版与归档版），\n用 MediaWiki 接口逐条验证过，**命中 920/920**。以后出新版本往表里加一条即可。\n\n【★ 模组 / 整合包搜索：新增「英文查询」弹窗】\n\n搜中文搜不到时，可以点搜索框旁的「英文查询」，\n弹窗会**列出翻译表里所有对应的英文名**（例如「暮色森林」会列出本体、法术包、\n动态的树附属、传送门催化剂等好几条），点其中一条即换成该英文名重新搜索。\n\n此前搜索是**静默**翻译：中文关键词只自动取最匹配的一条替换掉，\n玩家看不见候选、也换不了 —— 现在把候选摆出来自己点。\n模组页与整合包页各有一个入口；两页用的是**不同的翻译表**（模组 / 整合包各一张）。\n\n【★ 下载页筛选栏改成 FCL 式左侧竖排】\n\n模组 / 整合包 / 世界 / 光影 / 资源包 **五个下载页**的筛选栏，\n从「右侧可折叠横排」改成**左侧常驻竖排**（照 FCL 版式）：\n名称 / 下载源 / 类别 / 游戏版本 / 排序逐项竖着排，左栏可上下滑动。\n「☰ 筛选」开关不再需要（已隐藏）。\n\n【★ 模组列表新增来源角标】\n\n聚合搜索时 CurseForge 与 Modrinth 的结果并排显示，\n每行现在标出来源，一眼能分清是哪一站的条目。\n\n【修复】\n· 修复左栏内容超出屏幕后无法上下滑动、输入框文字被压掉半截\n· 修复收藏页顶部标题被压\n· 修复部分下拉框里的文字被压（输入框与下拉框高度已按正文尺寸放宽）\n\n（本版为 1.5.5，versionCode 357。）\n"
+        },
+        {
+          "lang": "zh_TW",
+          "text": "【★ 版本列表新增：直接跳該版本的 Minecraft Wiki 頁】\n\n下載頁的版本清單、首頁的本機版本清單，每一行右側新增一個**地球圖示**，\n點它直接用瀏覽器開啟該版本對應的 Wiki 頁面（點整列的行為不變：仍是進入安裝頁 / 選中版本）。\n\n**為什麼之前跳不對**：Wiki 的頁面名和版本號不是一回事，\n正式版之外還有 Beta / Alpha / Classic / Indev / Infdev / pre-Classic 各種前綴規則，\n快照、預發布、候選版又各有各的寫法，連分隔符都不一樣，1.0 在 Wiki 上的頁面名還是 1.0.0。\n\n⇒ 本版內建了 **920 條實測對照表**（Mojang 官方版本清單裡的全部版本），\n逐條驗證過，**命中 920/920**。\n\n【★ 模組 / 整合包搜尋：新增「英文查詢」彈窗】\n\n搜中文搜不到時，可以點搜尋框旁的「英文查詢」，\n彈窗會**列出翻譯表裡所有對應的英文名**，點其中一條即換成該英文名重新搜尋。\n此前搜尋是**靜默**翻譯，玩家看不見候選、也換不了 —— 現在把候選擺出來自己點。\n\n【★ 下載頁篩選欄改成 FCL 式左側豎排】\n\n模組 / 整合包 / 世界 / 光影 / 資源包 **五個下載頁**的篩選欄，\n從「右側可摺疊橫排」改成**左側常駐豎排**，左欄可上下滑動。\n「☰ 篩選」開關不再需要（已隱藏）。\n\n【★ 模組清單新增來源角標】\n\n聚合搜尋時 CurseForge 與 Modrinth 的結果並排顯示，每行現在標出來源。\n\n【修復】\n· 修復左欄內容超出螢幕後無法上下滑動、輸入框文字被壓掉半截\n· 修復收藏頁頂部標題被壓\n· 修復部分下拉框裡的文字被壓\n\n（本版為 1.5.5，versionCode 357。）\n"
+        },
+        {
+          "lang": "en_US",
+          "text": "[New: jump straight to a version's Minecraft Wiki page]\nEvery row in the version lists (download page and local version list) now has an earth icon.\nTap it to open that version's Wiki page in the browser. Tapping the row itself is unchanged\n(install page / select version).\n\nWhy it used to land on the wrong page: Wiki page names are not version names. Besides the\nplain releases there are Beta / Alpha / Classic / Indev / Infdev / pre-Classic prefixes, and\nsnapshots (26.4-snapshot-5), pre-releases (1.21.5-pre2) and release candidates (1.16.5-rc1)\neach use their own wording - even the separator differs (Beta 1.8.1 uses a space, not an\nunderscore), and 1.0 lives at 1.0.0 on the wiki.\n\n=> This release ships a **920-entry verified table** covering every version in Mojang's\nofficial manifest (including 26.4 snapshots, the 26.x releases, 1.21.x, all the old alpha\nand beta builds and the archived ones). Every entry was checked against the MediaWiki API:\n**920/920 hit**.\n\n[New: \"English name\" lookup for mods and modpacks]\nWhen a Chinese search finds nothing, tap \"English\" next to the search box: a dialog lists\nevery matching English name from the translation table (searching for a Chinese title\nreturns the pack itself, its addon, its companion mods and so on). Tap one and the search\nreruns with that English name.\n\nPreviously the translation was silent - only the single best match was substituted, so the\nother candidates were never visible and could not be chosen. The mod and modpack pages use\n**different** translation tables, and each now has its own entry point.\n\n[New: FCL-style vertical filter column on the download pages]\nThe filter column of all five download pages (mods / modpacks / worlds / shaders /\nresource packs) moved from a collapsible horizontal strip to a **permanent vertical column\non the left**, and it can be scrolled. The \"filter\" toggle is no longer needed.\n\n[New: source badge on mod rows]\nWith aggregate search the CurseForge and Modrinth results sit next to each other;\neach row now says which site it came from.\n\n[Fixes]\n- The filter column could not be scrolled when its content was taller than the screen,\n  and the search field text was cut in half.\n- The favorites page title was clipped.\n- Text in some drop-downs was clipped (search fields and drop-downs are now sized to\n  their content).\n\n(This release is 1.5.5, versionCode 357.)\n"
+        }
+      ]
+    },
+    {
       "id": 104,
       "significant": true,
       "outdated": false,
