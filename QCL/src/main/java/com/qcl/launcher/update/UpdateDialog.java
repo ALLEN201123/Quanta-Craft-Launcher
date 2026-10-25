@@ -207,7 +207,16 @@ implements View.OnClickListener {
                                 Uri apkUri = FileProvider.getUriForFile((Context)UpdateDialog.this.getContext(), (String)UpdateDialog.this.getContext().getString(R.string.filebrowser_provider), apk);
                                 intent.addFlags(1);
                                 intent.setDataAndType(apkUri, "application/vnd.android.package-archive");
-                                UpdateDialog.this.getContext().startActivity(intent);
+                                // ★★★ 1.5.6：下载要等网络，回来的路上 Activity 可能已被销毁。
+                                //   死 context 上 startActivity 同样会抛（和更新弹窗那个
+                                //   BadTokenException 是同一类问题），接住即可 —— 包已经下好了，
+                                //   用户重开启动器再检查一次就能装上，不该为此崩掉。
+                                try {
+                                    UpdateDialog.this.getContext().startActivity(intent);
+                                }
+                                catch (Throwable e) {
+                                    android.util.Log.w("jrelog", "[更新] 安装界面跳转失败（已忽略）", e);
+                                }
                             });
                         }
 

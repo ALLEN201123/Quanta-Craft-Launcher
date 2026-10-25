@@ -110,7 +110,7 @@ public class UpdateChecker {
                         }
                         UpdateChecker.this.isChecking = true;
                         if (showAlert) {
-                            UpdateChecker.this.handler.post(() -> Toast.makeText((Context)UpdateChecker.this.context, (CharSequence)UpdateChecker.this.context.getString(R.string.update_checking), (int)0).show());
+                            UpdateChecker.this.handler.post(() -> UpdateChecker.this.toastSafely(R.string.update_checking));
                         }
 
                         // 1) 取远程文件。
@@ -206,7 +206,7 @@ public class UpdateChecker {
 
                         // 4) 没有新版本
                         if (showAlert) {
-                            UpdateChecker.this.handler.post(() -> Toast.makeText((Context)UpdateChecker.this.context, (CharSequence)UpdateChecker.this.context.getString(R.string.update_not_exist), (int)0).show());
+                            UpdateChecker.this.handler.post(() -> UpdateChecker.this.toastSafely(R.string.update_not_exist));
                         }
                         UpdateChecker.this.isChecking = false;
                         if (callback != null) {
@@ -238,11 +238,67 @@ public class UpdateChecker {
         }
     }
 
+    /**
+     * ★★★ 1.5.6：修 BadTokenException 崩溃（用户真机实测，HUAWEI PAR-AL00 / Android 9）。
+     *
+     *   android.view.WindowManager$BadTokenException:
+     *     Unable to add window -- token android.os.BinderProxy@xxx for displayid = 0
+     *     is not valid; is your activity running?
+     *
+     *   根因：更新检查跑在后台线程里，要依次试 8 个 URL（Gitee / jsDelivr 各家镜像 /
+     *     GitHub 直连），网络慢的时候这一趟要好几秒。等它 handler.post 回来弹窗时，
+     *     Activity 可能已经销毁了（用户按返回键退出、切横竖屏、或被系统回收）——
+     *     这时 activity 的窗口 token 已经失效，Dialog.show() 往一个死窗口上 addView
+     *     就抛 BadTokenException。旧代码这里既没判存活也没 try-catch，
+     *     异常直接冒到 Handler.handleCallback ⇒ 整个进程崩掉。
+     *
+     *   修法（三道，缺一不可）：
+     *     1) post 里判 Activity 存活：isFinishing() / isDestroyed() 命中就干脆不弹
+     *        （用户都走了，弹给他也看不见，还白崩一次）；
+     *     2) dialog.show() 外面套 try-catch，接住 BadTokenException 及其它 RuntimeException
+     *        —— 这是"最后一秒才被销毁"的兜底，判存活也挡不住；
+     *     3) 连 UpdateDialog 的构造也放进 try 里：构造里会 getWindow()/setContentView，
+     *        同样可能因为 activity 已死而抛异常。
+     */
     public void showUpdateDialog(LauncherVersion version, boolean isBeta) {
         this.handler.post(() -> {
-            UpdateDialog dialog = new UpdateDialog(this.context, this.activity, version, isBeta);
-            dialog.show();
+            // 1) Activity 已经没了 ⇒ 不弹。检查放在 post 里（而非方法入口），
+            //    因为"发消息"到"执行"之间还隔着一个网络往返的时间。
+            MainActivity act = UpdateChecker.this.activity;
+            if (act == null || act.isFinishing() || act.isDestroyed()) {
+                Log.w("jrelog", "[更新] Activity 已销毁，跳过更新弹窗");
+                return;
+            }
+            // 2) + 3) 构造与显示都兜住：最后一秒被销毁时 token 失效，show() 会抛
+            try {
+                UpdateDialog dialog = new UpdateDialog(UpdateChecker.this.context, act, version, isBeta);
+                dialog.show();
+            }
+            catch (Throwable e) {
+                // BadTokenException 是 WindowManager 抛的，其它 RuntimeException
+                // （例如 setContentView 时 token 已失效）也一并接住。
+                Log.w("jrelog", "[更新] 更新弹窗显示失败（已忽略）", e);
+            }
         });
+    }
+
+    /**
+     * ★★★ 1.5.6：后台线程 post 回来的 Toast，也要防 BadTokenException。
+     *   更新检查要依次试 8 个 URL，等 Toast 真的要显示时 Activity 可能已销毁，
+     *   拿死 context 去 makeText/show 同样会抛（Android 9 上尤其容易）。
+     *   接住即可：提示语而已，显示不出来不影响任何功能。
+     */
+    private void toastSafely(int resId) {
+        try {
+            if (UpdateChecker.this.activity != null
+                    && (UpdateChecker.this.activity.isFinishing() || UpdateChecker.this.activity.isDestroyed())) {
+                return;
+            }
+            Toast.makeText(UpdateChecker.this.context, UpdateChecker.this.context.getString(resId), 0).show();
+        }
+        catch (Throwable e) {
+            Log.w("jrelog", "[更新] Toast 显示失败（已忽略）", e);
+        }
     }
 
     public static boolean isIgnore(Context context, int versionCode) {

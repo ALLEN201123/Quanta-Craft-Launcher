@@ -1,6 +1,43 @@
 {
   "announcements": [
     {
+      "id": 106,
+      "significant": true,
+      "outdated": false,
+      "minVersion": 0,
+      "maxVersion": 2147483647,
+      "specificLang": [],
+      "title": [
+        {
+          "lang": "zh_CN",
+          "text": "QCL 1.5.6：修好检查更新时的崩溃（BadTokenException）+ 界面细节"
+        },
+        {
+          "lang": "zh_TW",
+          "text": "QCL 1.5.6：修好檢查更新時的崩潰（BadTokenException）+ 介面細節"
+        },
+        {
+          "lang": "en_US",
+          "text": "QCL 1.5.6: fixed the update-check crash (BadTokenException) + UI details"
+        }
+      ],
+      "date": "2026-10-25",
+      "content": [
+        {
+          "lang": "zh_CN",
+          "text": "【1.5.6：修好更新检查时的崩溃 + 一批界面细节】\n\n★ 一、修好「检查更新时直接崩」（真机实测，HUAWEI PAR-AL00 / Android 9）\n\n崩溃日志长这样：\n  android.view.WindowManager$BadTokenException:\n    Unable to add window -- token ... is not valid; is your activity running?\n    at android.app.Dialog.show(Dialog.java:556)\n    at ...update.UpdateChecker.showUpdateDialog(UpdateChecker.java:244)\n\n根因：更新检查跑在后台线程里，要依次试 8 个下载源\n（Gitee、jsDelivr 各家镜像、GitHub 直连、ghproxy……）取版本号最大的那份。\n网络慢的时候这一趟要好几秒。等它回来弹「发现新版本」时，\nActivity 可能已经销毁了（按返回键退出、切横竖屏、或被系统回收），\n这时窗口 token 已经失效，Dialog 往一个死窗口上贴就抛 BadTokenException，\n而旧代码那里既没判断存活也没 try-catch ⇒ 整个进程直接崩。\n\n修法（三道）：\n  · 弹窗前先看 Activity 是否还活着（isFinishing / isDestroyed），\n    已经不在了就干脆不弹；\n  · dialog.show() 外面兜住异常（判存活也挡不住\"最后一秒才被销毁\"）；\n  · 连 UpdateDialog 的构造也放进 try（构造里要 getWindow/setContentView）。\n\n★ 二、顺带修掉同一类的两处\n  · 「正在检查更新」「已是最新版」两个 Toast 也从后台线程回来，\n    同样会在 Activity 销毁后抛异常，已一并加固；\n  · 下载完 APK 后跳安装界面的 startActivity 没有保护 ——\n    下载要等网络，回来的路上 Activity 可能已死，已补上。\n\n★ 三、界面细节\n  · 下载页「收藏」Tab 图标与文字整体偏低，已与其它 Tab 对齐\n    （★ 字符的 TextView 换成和其它 Tab 同规格的 20dp ImageView）；\n  · 下载页左侧筛选栏：输入框与下拉框里的文字被压掉半截，\n    已按项目主流尺寸放宽（输入框 30→40dp、下拉框 30→36dp）；\n  · 收藏页顶部标题被压，已抬高。\n\n（本版为 1.5.6，versionCode 358。）\n"
+        },
+        {
+          "lang": "zh_TW",
+          "text": "【1.5.6：修好檢查更新時的崩潰 + 一批介面細節】\n\n★ 一、修好「檢查更新時直接崩」（真機實測）\n\n  android.view.WindowManager$BadTokenException:\n    Unable to add window -- token ... is not valid; is your activity running?\n\n根因：更新檢查跑在背景執行緒裡，要依序試 8 個下載源，網路慢時要好幾秒。\n等它回來彈「發現新版本」時，Activity 可能已經銷毀（按返回鍵退出、切橫豎屏、\n或被系統回收），視窗 token 已失效，Dialog 往死視窗上貼就拋 BadTokenException，\n而舊程式碼那裡既沒判斷存活也沒 try-catch ⇒ 整個處理程序直接崩。\n\n修法：彈窗前先看 Activity 是否還活著；dialog.show() 外面兜住異常；\nUpdateDialog 的建構也放進 try。\n\n★ 二、順帶修掉同一類的兩處\n  · 「正在檢查更新」「已是最新版」兩個 Toast 也從背景執行緒回來，一併加固；\n  · 下載完 APK 後跳安裝介面的 startActivity 沒有保護，已補上。\n\n★ 三、介面細節\n  · 下載頁「收藏」Tab 圖示與文字整體偏低，已與其它 Tab 對齊；\n  · 左側篩選欄的輸入框與下拉框文字被壓掉半截，已放寬\n    （輸入框 30→40dp、下拉框 30→36dp）；\n  · 收藏頁頂部標題被壓，已抬高。\n\n（本版為 1.5.6，versionCode 358。）\n"
+        },
+        {
+          "lang": "en_US",
+          "text": "[1.5.6: update-check crash fix + a batch of UI fixes]\n\n[Fixed: hard crash while checking for updates] (real device, HUAWEI PAR-AL00 / Android 9)\n\n  android.view.WindowManager$BadTokenException:\n    Unable to add window -- token ... is not valid; is your activity running?\n    at android.app.Dialog.show(Dialog.java:556)\n    at ...update.UpdateChecker.showUpdateDialog(UpdateChecker.java:244)\n\nRoot cause: the update check runs on a background thread and tries 8 sources in\norder (Gitee, several jsDelivr mirrors, GitHub direct, ghproxy...), keeping the\nhighest versionCode. On a slow network that takes several seconds. By the time it\ncomes back to show \"new version available\", the activity may already be gone\n(back pressed, orientation change, or reclaimed by the system) - the window token\nis then invalid, so attaching the dialog throws BadTokenException. The old code\nhad neither a liveness check nor a try-catch there, so the whole process died.\n\nThree guards now:\n  - check isFinishing()/isDestroyed() before showing, and skip if it is gone;\n  - wrap dialog.show() (the check cannot catch a \"destroyed one second ago\" case);\n  - the UpdateDialog constructor is inside the try too (it calls\n    getWindow()/setContentView()).\n\n[Also fixed, same class]\n  - the \"checking for updates\" and \"already up to date\" toasts also come back on\n    the main thread from the background thread; both are guarded now;\n  - the startActivity that launches the installer after the APK download had no\n    protection (the download waits on the network, so the activity can die while\n    it runs); guarded now.\n\n[UI details]\n  - the download page's Favorites tab icon and label sat lower than the other\n    tabs; now aligned (the star character TextView is a 20dp ImageView like the\n    rest);\n  - text in the left filter column's search fields and drop-downs was cut in\n    half; widened to the project's normal sizes (fields 30->40dp, drop-downs\n    30->36dp);\n  - the favorites page title was clipped; raised.\n\n(This release is 1.5.6, versionCode 358.)\n"
+        }
+      ]
+    },
+    {
       "id": 105,
       "significant": true,
       "outdated": false,
