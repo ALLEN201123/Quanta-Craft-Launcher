@@ -60,6 +60,14 @@ public class InstallGameUI extends BaseUI implements View.OnClickListener, TextW
     public RemoteMod.Version legacyFabricAPIVersion;
     private TextView legacyFabricAPIVersionText;
     private ImageButton deleteLegacyFabricAPIVersion;
+    /**
+     * ★ 1.5.7：Legacy Fabric / Legacy Fabric API 两个**整行**的引用。
+     *
+     * <p>为什么要存整行：版本限制的做法是「当前选的 MC 版本不支持 → 整行藏起来」，
+     * 而不是把文案改成「不支持」还留着箭头（那样玩家照样点得进去）。
+     */
+    private View legacyFabricRow;
+    private View legacyFabricAPIRow;
     private LinearLayout selectNeoForgeVersion;
     private ImageView selectNeoForge;
     private TextView gameVersionText;
@@ -210,6 +218,9 @@ public class InstallGameUI extends BaseUI implements View.OnClickListener, TextW
         if (vLegacyFabricAPI != null) {
             vLegacyFabricAPI.setOnClickListener(newLoaderGuide);
         }
+        // ★ 1.5.7：留住「整行」引用，供版本限制里 setVisibility 用（见 applyLegacyFabricExclusion）
+        this.legacyFabricRow = vLegacyFabric;
+        this.legacyFabricAPIRow = vLegacyFabricAPI;
         // 绑定这三行的「版本文字」与「取消按钮」
         this.cleanroomVersionText = (TextView) this.activity.findViewById(R.id.cleanroom_version_text);
         this.deleteCleanroomVersion = (ImageButton) this.activity.findViewById(R.id.call_off_install_cleanroom);
@@ -672,6 +683,57 @@ public class InstallGameUI extends BaseUI implements View.OnClickListener, TextW
         //   把 NeoForge 逻辑插在中间会被后面 setText(none) 冲掉 → 表现就是「没有互斥」。
         //   依据 FCL InstallerItemGroup：NeoForge 与 Forge/Fabric/Quilt/OptiFine/LiteLoader 全互斥。
         applyNeoForgeExclusion();
+        // ★★★★★ 1.5.7（2026-10-27）：Legacy Fabric / Legacy Fabric API 的**版本限制**。
+        //   必须和 applyNeoForgeExclusion 一样放在 init() 最末尾：
+        //   上面那几段是「层层覆盖式」的 setVisibility(0)，写在中间会被后面的分支重新点亮。
+        applyLegacyFabricExclusion();
+    }
+
+    /**
+     * ★★★★★ 1.5.7（2026-10-27）【Legacy Fabric / Legacy Fabric API 版本限制】。
+     *
+     * <p><b>用户反馈</b>（QQ 群友 @5G-NR 转达）：
+     * 「能不能给 Legacy Fabric 和 Legacy Fabric API 加个版本限制，
+     * 这两个就只支持 1.3-1.13.2 以及部分快照版本和愚人节版本」。
+     *
+     * <p><b>旧行为</b>：这两行**永远显示**，不管你在「安装游戏」里选的是 1.20.1 还是 26.3。
+     * 玩家点了 →
+     * <ul>
+     *   <li>Legacy Fabric：拉到的是 meta 里的**全部** loader 版本（不按游戏版本过滤），
+     *       选完去装，构建出来的 profile 引用了根本不存在的中介映射 ⇒ 装失败/装出一个进不去的实例；</li>
+     *   <li>Legacy Fabric API：Modrinth 那边按游戏版本过滤后是空列表 ⇒ 提示「没有适用于 X 的版本」，
+     *       但玩家已经白点了一次。</li>
+     * </ul>
+     *
+     * <p><b>现在的行为</b>：当前选中的 MC 版本不在权威支持表里 → <b>整行隐藏</b>；
+     * 如果之前在这里选过 Legacy 版本、之后又把游戏版本切成不支持的版本，
+     * 顺带把那次选择**清掉**（否则会带着一个不可能的加载器继续往下走）。
+     * 支持表的来源见 {@code LegacyFabricSupport}：两个上游接口直接落成常量。
+     */
+    private void applyLegacyFabricExclusion() {
+        try {
+            final String mc = (this.version == null || this.version.id == null)
+                    ? "" : this.version.id.trim();
+            final boolean loaderOk =
+                    com.qcl.launcher.launcher.download.fabric.LegacyFabricSupport
+                            .isLoaderSupported(mc);
+            final boolean apiOk =
+                    com.qcl.launcher.launcher.download.fabric.LegacyFabricSupport
+                            .isApiSupported(mc);
+            if (this.legacyFabricRow != null) {
+                this.legacyFabricRow.setVisibility(loaderOk ? View.VISIBLE : View.GONE);
+            }
+            if (this.legacyFabricAPIRow != null) {
+                this.legacyFabricAPIRow.setVisibility(apiOk ? View.VISIBLE : View.GONE);
+            }
+            if (!loaderOk) {
+                this.legacyFabricVersion = null;
+            }
+            if (!apiOk) {
+                this.legacyFabricAPIVersion = null;
+            }
+        } catch (Throwable ignored) {
+        }
     }
 
     /**
@@ -831,6 +893,18 @@ public class InstallGameUI extends BaseUI implements View.OnClickListener, TextW
 
     /** 选 Legacy Fabric 加载器版本（拉 meta.legacyfabric.net）。 */
     private void pickLegacyFabricVersion() {
+        // ★ 1.5.7：版本限制第一道闸（正常路径下行已被隐藏，这里是防御性兜底——
+        //   比如玩家在别处改了游戏版本、或走的是旧缓存布局）。
+        final String mcForCheck = (this.version == null || this.version.id == null)
+                ? "" : this.version.id.trim();
+        if (!com.qcl.launcher.launcher.download.fabric.LegacyFabricSupport
+                .isLoaderSupported(mcForCheck)) {
+            android.widget.Toast.makeText(this.context,
+                    com.qcl.launcher.launcher.download.fabric.LegacyFabricSupport
+                            .loaderUnsupportedText(mcForCheck),
+                    android.widget.Toast.LENGTH_LONG).show();
+            return;
+        }
         if (this.fabricVersion != null) {
             android.widget.Toast.makeText(this.context,
                     "已选官方 Fabric，Legacy Fabric 与它不能共存，请先取消",
@@ -874,6 +948,18 @@ public class InstallGameUI extends BaseUI implements View.OnClickListener, TextW
 
     /** 选 Legacy Fabric API 版本（Modrinth 项目 legacy-fabric-api）。 */
     private void pickLegacyFabricAPIVersion() {
+        // ★ 1.5.7：版本限制。Legacy Fabric API 只覆盖到 1.12.2，
+        //   1.13+ 点进来 Modrinth 必然返回空列表 ⇒ 这里提前挡掉并说明原因。
+        final String mcForApi = (this.version == null || this.version.id == null)
+                ? "" : this.version.id.trim();
+        if (!com.qcl.launcher.launcher.download.fabric.LegacyFabricSupport
+                .isApiSupported(mcForApi)) {
+            android.widget.Toast.makeText(this.context,
+                    com.qcl.launcher.launcher.download.fabric.LegacyFabricSupport
+                            .apiUnsupportedText(mcForApi),
+                    android.widget.Toast.LENGTH_LONG).show();
+            return;
+        }
         new Thread(() -> {
             try {
                 java.util.List<RemoteMod.Version> list =

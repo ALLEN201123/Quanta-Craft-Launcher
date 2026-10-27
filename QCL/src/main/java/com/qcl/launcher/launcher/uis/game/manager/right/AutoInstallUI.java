@@ -765,6 +765,23 @@ implements View.OnClickListener {
         //   Legacy Fabric 与官方 Fabric 互斥（同一个 patch id = fabric），
         //   所以已装 Fabric 时点它要先卸载，这里给明确提示而不是静默不响应。
         if (view == this.selectLegacyFabricVersion) {
+            // ★★★★★ 1.5.7（2026-10-27）【版本限制】用户反馈：
+            //   「能不能给 Legacy Fabric 和 Legacy Fabric API 加个版本限制，
+            //     这两个就只支持 1.3-1.13.2 以及部分快照版本和愚人节版本」。
+            //   旧行为：不管这个实例是 1.20.1 还是 26.3，这一行都点得开 ⇒
+            //   legacyfabric 的 meta 里没有该游戏版本 ⇒ 进列表页后
+            //   `arrayList3.contains(version)` 不成立 → 直接 sendEmptyMessage(2)
+            //   （列表隐藏 + 只留返回键）= 玩家眼里就是「点进去一片空白」。
+            //   ⇒ 现在先用权威版本表挡一道，并把支持范围明确说清楚。
+            final String legacyMc = this.gameVersion == null ? "" : this.gameVersion;
+            if (!com.qcl.launcher.launcher.download.fabric.LegacyFabricSupport
+                    .isLoaderSupported(legacyMc)) {
+                android.widget.Toast.makeText(this.context,
+                        com.qcl.launcher.launcher.download.fabric.LegacyFabricSupport
+                                .loaderUnsupportedText(legacyMc),
+                        android.widget.Toast.LENGTH_LONG).show();
+                return;
+            }
             if (this.forgeVersion != null || this.optifineVersion != null || this.quiltVersion != null) {
                 toastConflict("Legacy Fabric",
                         this.forgeVersion != null ? "Forge"
@@ -790,6 +807,18 @@ implements View.OnClickListener {
         }
         // ★ 1.5.2：Legacy Fabric API（Modrinth 项目 legacy-fabric-api）
         if (view == this.selectLegacyFabricAPIVersion) {
+            // ★ 1.5.7【版本限制】Legacy Fabric API 在 Modrinth 上只声明到 1.12.2
+            //   （168 个版本，含 13w16a~17w31a 快照与 2point0/15w14a 愚人节版）。
+            //   1.13 及以后点进去会拉到一个空列表 = 玩家眼里「明明点了没反应」。
+            final String apiMc = this.gameVersion == null ? "" : this.gameVersion;
+            if (!com.qcl.launcher.launcher.download.fabric.LegacyFabricSupport
+                    .isApiSupported(apiMc)) {
+                android.widget.Toast.makeText(this.context,
+                        com.qcl.launcher.launcher.download.fabric.LegacyFabricSupport
+                                .apiUnsupportedText(apiMc),
+                        android.widget.Toast.LENGTH_LONG).show();
+                return;
+            }
             if (this.forgeVersion != null || this.optifineVersion != null || this.quiltVersion != null) {
                 toastConflict("Legacy Fabric API",
                         this.forgeVersion != null ? "Forge"

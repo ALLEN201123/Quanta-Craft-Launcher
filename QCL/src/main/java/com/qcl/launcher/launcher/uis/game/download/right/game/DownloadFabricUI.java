@@ -146,6 +146,25 @@ public class DownloadFabricUI extends BaseUI implements View.OnClickListener {
             }
             arrayList2.addAll(Arrays.asList((FabricLoaderVersion[]) gson.fromJson(NetworkUtils.doGet(NetworkUtils.toURL(str)), FabricLoaderVersion[].class)));
             if (!arrayList3.contains(this.version)) {
+                // ★★★★★ 1.5.7（2026-10-27）：原来这里只 sendEmptyMessage(2) ——
+                //   列表隐藏、只留一个返回键，玩家看到的是「点进去一片空白」，
+                //   完全不知道是版本不支持。现在至少说清楚原因（Legacy 走专门文案）。
+                final String badMc = this.version;
+                final boolean isLegacy = this.legacy;
+                this.activity.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            String tip = isLegacy
+                                    ? com.qcl.launcher.launcher.download.fabric.LegacyFabricSupport
+                                            .loaderUnsupportedText(badMc)
+                                    : "Fabric 没有适用于 Minecraft " + badMc + " 的加载器版本。";
+                            android.widget.Toast.makeText(DownloadFabricUI.this.context, tip,
+                                    android.widget.Toast.LENGTH_LONG).show();
+                        } catch (Throwable ignored) {
+                        }
+                    }
+                });
                 this.loadingHandler.sendEmptyMessage(2);
                 return;
             }

@@ -230,6 +230,43 @@ public final class FavoriteManager {
         save(context);
     }
 
+    /**
+     * ★★★★★ 1.5.7（2026-10-27）新增：**按整个对象**取消收藏，返回是否真的删掉了。
+     *
+     * <p><b>为什么需要这个重载</b>：收藏页的「★」按钮原本调的是
+     * {@code remove(context, f.id)}，只拿一个字符串。只要 `f.id` 与内存/文件里的条目
+     * 有一点不一致（历史数据里 `id` 与 `source:modId` 脱节、`modId` 为空只剩 slug、
+     * 或者条目是从旧版本 json 读出来的），`removeMatching` 就**一条都命中不了**，
+     * 于是 `save()` 把**没变的列表**写回去 —— 界面上（`rebuild()`）看起来"删掉了"，
+     * 一重启原样回来。这就是用户报的「取消收藏，大退重进还在」的另一半原因。
+     *
+     * <p>这里改成**三路兜底**：`id` → `source:slug` → `source:modId`，任意一路命中就删掉；
+     * 全都命中不了时打一条 warn（带全部候选键），方便下一次复现时直接从日志定位。
+     */
+    public static synchronized boolean remove(Context context, DownloadFavorite f) {
+        init(context);
+        if (f == null) {
+            return false;
+        }
+        final String id = f.ensureId();
+        final String slugKey = (f.slug == null || f.slug.isEmpty())
+                ? null : DownloadFavorite.makeId(f.source, f.slug);
+        int removed = removeMatching(id, slugKey);
+        if (removed == 0 && f.modId != null && !f.modId.isEmpty()) {
+            // 第 3 路：历史数据里 `id` 字段可能与 `source:modId` 不一致，再按 modId 试一次
+            removed += removeMatching(DownloadFavorite.makeId(f.source, f.modId), slugKey);
+        }
+        if (removed == 0) {
+            android.util.Log.w("jrelog", "[收藏] 取消收藏没有命中任何条目！id=" + id
+                    + " slugKey=" + slugKey + " modId=" + f.modId + " title=" + f.title
+                    + " 当前共 " + LIST.size() + " 条");
+        } else {
+            android.util.Log.d("jrelog", "[收藏] 已取消收藏 " + removed + " 条，剩余 " + LIST.size() + " 条");
+        }
+        save(context);
+        return removed > 0;
+    }
+
     /** 收藏列表（按收藏时间倒序，最新在前 —— 与 FCL 一致）。 */
     public static synchronized List<DownloadFavorite> list() {
         List<DownloadFavorite> out = new ArrayList<>(LIST);
@@ -264,16 +301,30 @@ public final class FavoriteManager {
     private static void save(Context context) {
         try {
             File f = file(context);
-            // ★★ 防丢数据守卫：没成功读取过、或要把「有内容的文件」写成空列表 → 一律拒绝写。
-            if (!loaded && LIST.isEmpty()) {
+            // ★★ 防丢数据守卫：没成功读取过 → 拒绝写（内存里的空列表不代表真实情况）。
+            if (!loaded) {
                 android.util.Log.w("jrelog", "[收藏] 尚未成功读取收藏文件，拒绝写入以免清空历史");
                 return;
             }
-            if (LIST.isEmpty() && f.isFile() && f.length() > 0 && lastLoadedCount > 0) {
-                android.util.Log.w("jrelog",
-                        "[收藏] 内存列表为空但文件里有 " + lastLoadedCount + " 条，拒绝覆盖（防丢数据）");
-                return;
-            }
+            // ★★★★★ 1.5.7（2026-10-27）**删除旧守卫**：
+            //   <pre>
+            //     if (LIST.isEmpty() && f.isFile() && f.length() > 0 && lastLoadedCount > 0) {
+            //         Log.w("...内存列表为空但文件里有 N 条，拒绝覆盖（防丢数据）");
+            //         return;     // ← 不写盘
+            //     }
+            //   </pre>
+            //   这条「防丢数据」守卫本身就是**取消收藏不生效**的根因：
+            //   玩家在收藏页把收藏一条条取消，取消到最后一条时 `LIST.isEmpty()` 成立 ⇒
+            //   `save()` 直接 return，`download_favorites.json` **保持旧内容** ⇒
+            //   大退重进，之前取消掉的收藏**全部复活**（用户报的就是这个）。
+            //
+            //   为什么可以放心删：`loaded == true` 的语义是「内存列表是文件的忠实镜像」
+            //   （`init()` 只在**读取成功**或**文件确实不存在**时才置真，解析异常一律不置真），
+            //   所以此后的空列表是**玩家的真实意图**，必须落盘。
+            //   真正防丢数据靠三件事，不靠这条守卫：
+            //     ① `loaded == false` 时拒写（上面那条，保留）；
+            //     ② 原子写 + 旧文件先改名成 `.bak`（下面，保留）；
+            //     ③ 写后回读校验（本方法末尾，1.5.7 新增）。
             File parent = f.getParentFile();
             if (parent != null && !parent.isDirectory() && !parent.mkdirs()) {
                 return;
@@ -299,6 +350,27 @@ public final class FavoriteManager {
                     out.write(GSON.toJson(LIST).getBytes(StandardCharsets.UTF_8));
                     out.getFD().sync();
                 }
+            }
+            // ★★★★★ 1.5.7（2026-10-27）：**写后回读校验**。
+            //   为什么加：用户报「取消收藏大退重进又回来」，光看代码很难判断到底是
+            //   「没删对」还是「删对了但没写进去」。这里把**文件里最终有几条**打进日志，
+            //   下次复现前先看 `jrelog` 就能定位，不用靠猜。
+            //   （`jrelog` 是 QCL 现有的统一日志 tag，用户拉 logcat 时按它过滤。）
+            final int expect = LIST.size();
+            try {
+                String back = new String(readAll(f), StandardCharsets.UTF_8).trim();
+                List<DownloadFavorite> verify = GSON.fromJson(back,
+                        new TypeToken<List<DownloadFavorite>>() { }.getType());
+                int got = verify == null ? 0 : verify.size();
+                if (got == expect) {
+                    android.util.Log.d("jrelog", "[收藏] 写盘校验通过：文件内 " + got
+                            + " 条（内存 " + expect + " 条）");
+                } else {
+                    android.util.Log.w("jrelog", "[收藏] 写盘校验不一致！文件内 " + got
+                            + " 条，内存 " + expect + " 条，文件内容="
+                            + (back.length() > 300 ? back.substring(0, 300) + "…" : back));
+                }
+            } catch (Throwable ignored) {
             }
             lastLoadedCount = LIST.size();
         } catch (Throwable t) {

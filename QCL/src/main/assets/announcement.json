@@ -1,6 +1,43 @@
 {
   "announcements": [
     {
+      "id": 107,
+      "significant": true,
+      "outdated": false,
+      "minVersion": 0,
+      "maxVersion": 2147483647,
+      "specificLang": [],
+      "title": [
+        {
+          "lang": "zh_CN",
+          "text": "QCL 1.5.7：Legacy Fabric / Legacy Fabric API 加版本限制 + 修好取消收藏失效"
+        },
+        {
+          "lang": "zh_TW",
+          "text": "QCL 1.5.7：Legacy Fabric / Legacy Fabric API 加版本限制 + 修好取消收藏失效"
+        },
+        {
+          "lang": "en_US",
+          "text": "QCL 1.5.7: version limits for Legacy Fabric / Legacy Fabric API + un-favorite fix"
+        }
+      ],
+      "date": "2026-10-27",
+      "content": [
+        {
+          "lang": "zh_CN",
+          "text": "【1.5.7：Legacy Fabric 版本限制 + 修好「取消收藏又复活」】\n\n一、Legacy Fabric / Legacy Fabric API 只支持 1.3 – 1.13.2\n按上游 meta.legacyfabric.net 和 Modrinth 的真实版本表加了限制：\n· 选 1.3 – 1.13.2 以外（含部分快照、愚人节版本）的游戏版本时，安装页不再显示这两个加载器；\n· 给已有实例补装加载器时会先校验，不支持就直接提示支持范围。\n以前选中后会进到一个空列表，只剩返回键，完全不知道发生了什么。\n\n二、修好「收藏页取消收藏，大退重进又回来」\n· 根因一：写盘处的「防丢数据」守卫，在玩家把收藏取消到一条不剩时拒绝写入\n  （内存列表为空、文件非空 ⇒ 直接 return），磁盘文件保持旧内容，重启自然全部复活。\n  现在只在「从未成功读取过收藏文件」时才拒绝写入，空列表是玩家的真实意图，必须落盘；\n  防丢数据改由「加载失败拒写 + 原子写并保留 .bak + 写后回读校验」三件事承担。\n· 根因二：收藏页那个 ★ 只按单个 id 删除，历史数据里 id 和 source:modId 一旦对不上就一条都删不掉，\n  但界面照样刷新 —— 看着删掉了、重启又回来。\n  现在按 id → source:slug → source:modId 三路兜底，删不掉会明确提示，不再假装成功。\n\n三、其它\n· versionCode 359"
+        },
+        {
+          "lang": "zh_TW",
+          "text": "【1.5.7：Legacy Fabric 版本限制 + 修好「取消收藏又復活」】\n\n一、Legacy Fabric / Legacy Fabric API 只支援 1.3 – 1.13.2\n依上游 meta.legacyfabric.net 與 Modrinth 的真實版本表加上限制：\n· 選 1.3 – 1.13.2 以外（含部分快照、愚人節版本）的遊戲版本時，安裝頁不再顯示這兩個載入器；\n· 為既有執行個體補裝載入器時會先驗證，不支援就直接提示支援範圍。\n以前選中後會進到一個空清單，只剩返回鍵，完全不知道發生什麼事。\n\n二、修好「收藏頁取消收藏，大退重進又回來」\n· 根因一：寫入磁碟處的「防遺失資料」守衛，在玩家把收藏取消到一條不剩時拒絕寫入\n  （記憶體清單為空、檔案非空 ⇒ 直接 return），磁碟檔案保持舊內容，重啟自然全部復活。\n  現在只在「從未成功讀取過收藏檔案」時才拒絕寫入，空清單是玩家的真實意圖，必須寫入磁碟；\n  防遺失資料改由「載入失敗拒寫 + 原子寫入並保留 .bak + 寫後回讀驗證」三件事承擔。\n· 根因二：收藏頁那個 ★ 只依單一 id 刪除，歷史資料裡 id 和 source:modId 一旦對不上就一條都刪不掉，\n  但介面照樣重新整理 —— 看著刪掉了、重啟又回來。\n  現在依 id → source:slug → source:modId 三路備援，刪不掉會明確提示，不再假裝成功。\n\n三、其它\n· versionCode 359"
+        },
+        {
+          "lang": "en_US",
+          "text": "[1.5.7: Legacy Fabric version limits + fixed \"un-favorite comes back\"]\n\n1. Legacy Fabric / Legacy Fabric API now only support 1.3 - 1.13.2\nLimits follow the real upstream version tables (meta.legacyfabric.net and Modrinth):\n- When the selected game version is outside 1.3 - 1.13.2 (plus some snapshots and\n  April Fools versions), these two loaders are no longer listed on the install page.\n- Installing a loader into an existing instance is validated first; if unsupported,\n  the supported range is shown right away.\nPreviously the entry led to an empty list with only a Back button, which explained nothing.\n\n2. Fixed \"un-favorited items come back after a full restart\"\n- Cause 1: the anti-data-loss guard in the save path refused to write when the\n  in-memory list became empty while the file was not (it simply returned), so the file\n  kept the old content and everything came back on restart. Now writing is refused only\n  when the favorites file has never been read successfully; an empty list is a real user\n  intent and must be persisted. Data safety is handled by refusing to write after a load\n  failure, atomic writes that keep a .bak of the old file, and read-back verification.\n- Cause 2: the star button on the favorites page removed entries by a single id only, so\n  when old records had a mismatched source:modId nothing was actually removed while the\n  UI refreshed anyway. Removal now falls back across id -> source:slug -> source:modId and\n  reports a failure instead of pretending success.\n\n3. Misc\n- versionCode 359"
+        }
+      ]
+    },
+    {
       "id": 106,
       "significant": true,
       "outdated": false,

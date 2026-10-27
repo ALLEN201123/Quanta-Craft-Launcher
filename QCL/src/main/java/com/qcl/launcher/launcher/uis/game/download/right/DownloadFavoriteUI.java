@@ -437,8 +437,19 @@ public class DownloadFavoriteUI extends BaseUI {
         del.setPadding(dp(8), dp(6), dp(4), dp(6));
         del.setOnClickListener(v -> {
             try {
-                FavoriteManager.remove(this.context, f.id);
+                // ★★★★★ 1.5.7（2026-10-27）：改传**整个对象**而不是 `f.id`。
+                //   旧写法 `FavoriteManager.remove(context, f.id)` 只认一个字符串键，
+                //   一旦 `f.id` 与文件里的条目有一点不一致（历史数据 id/modId 脱节、
+                //   modId 为空只剩 slug……）就**一条都删不掉**，但下面照样 rebuild()，
+                //   于是界面上"没了"、重启又回来 —— 正是用户报的 bug。
+                //   新重载按 id → slug → modId 三路兜底，并返回是否真的删掉。
+                final boolean ok = FavoriteManager.remove(this.context, f);
                 rebuild();
+                if (!ok) {
+                    android.widget.Toast.makeText(this.context,
+                            "取消失败：没在收藏里找到这一项（已写日志 jrelog）",
+                            android.widget.Toast.LENGTH_SHORT).show();
+                }
             } catch (Throwable ignored) {
             }
         });
