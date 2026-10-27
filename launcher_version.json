@@ -1,17 +1,17 @@
 {
   "latestRelease": {
-    "versionCode": 358,
-    "versionName": "1.5.6",
-    "date": "2026-10-25",
+    "versionCode": 359,
+    "versionName": "1.5.7",
+    "date": "2026-10-27",
     "url": [
-      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.5.6/QCL-release-1.5.6-universal.apk",
-      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.5.6/QCL-release-1.5.6-arm64.apk",
-      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.5.6/QCL-release-1.5.6-arm.apk",
-      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.5.6/QCL-release-1.5.6-x86_64.apk",
-      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.5.6/QCL-release-1.5.6-x86.apk"
+      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.5.7/QCL-release-1.5.7-universal.apk",
+      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.5.7/QCL-release-1.5.7-arm64.apk",
+      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.5.7/QCL-release-1.5.7-arm.apk",
+      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.5.7/QCL-release-1.5.7-x86_64.apk",
+      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.5.7/QCL-release-1.5.7-x86.apk"
     ],
     "netdiskUrl": "https://pan.quark.cn/s/f2c26c4fb66b",
-    "updateLog": "【1.5.6：修好「检查更新时直接崩」】\n\n★ 真机实测崩溃（HUAWEI PAR-AL00 / Android 9）\n  android.view.WindowManager$BadTokenException:\n    Unable to add window -- token ... is not valid; is your activity running?\n      at android.app.Dialog.show(Dialog.java:556)\n      at ...update.UpdateChecker.showUpdateDialog(UpdateChecker.java:244)\n\n一、根因\n更新检查跑在后台线程，要依次试 8 个下载源（Gitee / jsDelivr 各家镜像 /\nGitHub 直连 / ghproxy）取 versionCode 最大的那份。网络慢时这一趟要好几秒。\n等它 handler.post 回来弹「发现新版本」时，Activity 可能已经销毁了\n（按返回键退出、切横竖屏、或被系统回收）—— 这时窗口 token 已失效，\nDialog 往一个死窗口上 addView 就抛 BadTokenException。\n旧代码那里既没判存活也没 try-catch ⇒ 异常冒到 Handler.handleCallback\n⇒ 整个进程崩掉。\n\n二、修法（三道，缺一不可）\n1) 弹窗前先判 Activity 存活（isFinishing / isDestroyed），\n   已经不在了就干脆不弹；\n2) dialog.show() 外面套 try-catch —— 挡「最后一秒才被销毁」；\n3) UpdateDialog 的构造也放进 try（构造里要 getWindow/setContentView）。\n\n三、顺带修掉同一类的两处\n· 「正在检查更新」「已是最新版」两个 Toast 也从后台线程回来，\n  Activity 销毁后拿死 context 去 makeText/show 同样会抛，已加固；\n· 下载完 APK 后跳安装界面的 startActivity 没有保护 ——\n  下载要等网络，回来的路上 Activity 可能已死，已补上。\n\n四、关于 26.3\n仍未修好，原因未定位 —— 如实说明，不粉饰。\n目前请用 26.4 或 26.2 及以下。\n\n验证\n· compileDebugJavaWithJavac BUILD SUCCESSFUL\n· 五架构包（arm / arm64 / x86 / x86_64 / universal）逐个校验\n  PK 魔数、ZIP 完整性、classes.dex\n· 公告 JSON：合法、id 唯一递增（106）、三语齐全、换行全用 \\n\n"
+    "updateLog": "【1.5.7：Legacy Fabric 版本限制 + 修好「取消收藏又复活」】\n\n一、Legacy Fabric / Legacy Fabric API 只支持 1.3 – 1.13.2\n按上游 meta.legacyfabric.net 和 Modrinth 的真实版本表加了限制：\n· 选 1.3 – 1.13.2 以外（含部分快照、愚人节版本）的游戏版本时，\n  安装页不再显示这两个加载器；\n· 给已有实例补装加载器时会先校验，不支持就直接提示支持范围。\n以前选中后会进到一个空列表，只剩返回键，完全不知道发生了什么。\n\n二、修好「收藏页取消收藏，大退重进又回来」\n· 根因一：写盘处的「防丢数据」守卫，在玩家把收藏取消到一条不剩时拒绝写入\n  （内存列表为空、文件非空 ⇒ 直接 return），磁盘文件保持旧内容，重启自然全部复活。\n  现在只在「从未成功读取过收藏文件」时才拒绝写入，空列表是玩家的真实意图，必须落盘；\n  防丢数据改由「加载失败拒写 + 原子写并保留 .bak + 写后回读校验」三件事承担。\n· 根因二：收藏页那个 ★ 只按单个 id 删除，历史数据里 id 和 source:modId 一旦对不上\n  就一条都删不掉，但界面照样刷新 —— 看着删掉了、重启又回来。\n  现在按 id → source:slug → source:modId 三路兜底，删不掉会明确提示，不再假装成功。\n\n三、其它\n· versionCode 359\n\n验证\n· compileReleaseJavaWithJavac BUILD SUCCESSFUL\n· 五架构包（arm / arm64 / x86 / x86_64 / universal）逐个校验\n  PK 魔数、ZIP 完整性、classes.dex\n· 公告 JSON：合法、id 唯一递增（107）、三语齐全、换行全用 \\n\n· arm64 包真机实测通过后才发版\n"
   },
   "latestPrerelease": null
 }
