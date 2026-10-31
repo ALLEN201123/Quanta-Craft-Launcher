@@ -1,6 +1,43 @@
 {
   "announcements": [
     {
+      "id": 109,
+      "significant": true,
+      "outdated": false,
+      "minVersion": 0,
+      "maxVersion": 2147483647,
+      "specificLang": [],
+      "title": [
+        {
+          "lang": "zh_CN",
+          "text": "QCL 1.5.9：公告「展开」按钮修好了 + 首次显示不再铺满半屏"
+        },
+        {
+          "lang": "zh_TW",
+          "text": "QCL 1.5.9：公告「展開」按鈕修好了 + 首次顯示不再鋪滿半屏"
+        },
+        {
+          "lang": "en_US",
+          "text": "QCL 1.5.9: announcement Show-more button fixed + no more half-screen fill"
+        }
+      ],
+      "date": "2026-10-31",
+      "content": [
+        {
+          "lang": "zh_CN",
+          "text": "【1.5.9：公告的「展开」按钮修好了，首次启动不再铺满半屏】\n\n这一版修的，是 1.5.8 我自己改出来的问题。\n\n一、公告「展开 / 收起」按钮，现在真的能看见了\n\n1.5.8 里我为了修「公告把半屏铺满」，写了一句「撤销折叠」，结果改过头了：\n\n· 每次显示公告，代码都把正文设成「不限行数」；\n· 然后**把展开按钮直接隐藏掉**。\n\n于是 XML 里明明写好的「展开」按钮，你根本看不见，更点不到；\n而且每翻一页还会再隐藏一次 —— 这个功能等于被我废掉了。\n\n现在改回正规做法：\n· 公告正文**默认只显示 6 行**，末尾省略号；\n· 下面的按钮**可见**，显示「Show more」；\n· 点一下 → 显示全文，按钮文字变「Show less」；\n· 再点一下 → 收回 6 行；\n· 换一条公告 / 翻页 → 自动回到折叠态，按钮文字也跟着复位。\n\n二、修「首次启动时公告铺满半个屏幕」\n\n原因是我把顺序写反了：\n· 先设置正文（这一步会触发一次重新排版）；\n· 再做入场动画；\n· 最后才让公告栏可见。\n结果公告栏是**带着「还没折叠的满高正文」**进场的，首帧就撑满了半屏。\n\n现在改成：\n· 先把折叠状态和按钮文字/可见性全部落定；\n· 再请求一次排版，让高度按 6 行算准；\n· 最后才做入场动画。\n首帧就是「6 行 + Show more」，不会再抖一下。\n\n三、本版其它\n\n· 1.5.8 的内容全部保留（26.3 能启动、MobileGlues 内置、日志查看器等）。\n· 26.3 的真根因与修法见 1.5.8 的说明：\n  26.3 默认仍走 OpenGL → 经 libmobileglues.so 的 glGetString 返回 NULL\n  → 调用方 strlen(NULL) → 原生 SIGSEGV；\n  QCL 从 26.3 起自动追加官方启动参数 --graphicsBackend vulkan。\n\n四、已知问题（不变）\n\n· 无 Vulkan 的设备，26.3 可能仍无法启动（设备能力，不是启动器缺陷）。\n· 点两次 ESC 视角偶发偏移 —— 需要一份可复现的日志才能定位。\n· 远古版本颜色异常 —— 第三方转译路线共有的天花板，彻底解决依赖自研渲染器。\n\n（本版为 1.5.9，versionCode 361。）"
+        },
+        {
+          "lang": "zh_TW",
+          "text": "【1.5.9：公告的「展開」按鈕修好了，首次啟動不再鋪滿半屏】\n\n這一版修的，是 1.5.8 我自己改出來的問題。\n\n一、公告「展開 / 收起」按鈕，現在真的能看見了\n\n1.5.8 裡我為了修「公告把半屏鋪滿」，寫了一句「撤銷折疊」，結果改過頭了：\n\n· 每次顯示公告，程式碼都把正文設成「不限行數」；\n· 然後**把展開按鈕直接隱藏掉**。\n\n於是 XML 裡明明寫好的「展開」按鈕，你根本看不見，更點不到；\n而且每翻一頁還會再隱藏一次 —— 這個功能等於被我廢掉了。\n\n現在改回正規做法：\n· 公告正文**預設只顯示 6 行**，末尾省略號；\n· 下面的按鈕**可見**，顯示「Show more」；\n· 點一下 → 顯示全文，按鈕文字變「Show less」；\n· 再點一下 → 收回 6 行；\n· 換一條公告 / 翻頁 → 自動回到折疊態，按鈕文字也跟著復位。\n\n二、修「首次啟動時公告鋪滿半個螢幕」\n\n原因是我把順序寫反了：\n· 先設定正文（這一步會觸發一次重新排版）；\n· 再做入場動畫；\n· 最後才讓公告欄可見。\n結果公告欄是**帶著「還沒折疊的滿高正文」**進場的，首幀就撐滿了半屏。\n\n現在改成：\n· 先把折疊狀態和按鈕文字/可見性全部落定；\n· 再請求一次排版，讓高度按 6 行算準；\n· 最後才做入場動畫。\n首幀就是「6 行 + Show more」，不會再抖一下。\n\n三、本版其它\n\n· 1.5.8 的內容全部保留（26.3 能啟動、MobileGlues 內建、日誌檢視器等）。\n· 26.3 的真根因與修法見 1.5.8 的說明：\n  26.3 預設仍走 OpenGL → 經 libmobileglues.so 的 glGetString 回傳 NULL\n  → 呼叫方 strlen(NULL) → 原生 SIGSEGV；\n  QCL 從 26.3 起自動追加官方啟動參數 --graphicsBackend vulkan。\n\n四、已知問題（不變）\n\n· 無 Vulkan 的裝置，26.3 可能仍無法啟動（裝置能力，不是啟動器缺陷）。\n· 點兩次 ESC 視角偶發偏移 —— 需要一份可重現的日誌才能定位。\n· 遠古版本顏色異常 —— 第三方轉譯路線共有的天花板，徹底解決依賴自研渲染器。\n\n（本版為 1.5.9，versionCode 361。）"
+        },
+        {
+          "lang": "en_US",
+          "text": "[1.5.9: the announcement \"Show more\" button works again, and the announcement no\nlonger fills half the screen on first launch]\n\nThis release fixes a problem I introduced myself in 1.5.8.\n\n1. The \"Show more / Show less\" button is actually visible now\n\nIn 1.5.8, to fix \"the announcement fills half the screen\", I wrote \"undo the\ncollapse\" - and overdid it:\n\n- every time an announcement was shown, the body was set to \"unlimited lines\";\n- and then the Show more button was hidden outright.\n\nSo the button that was properly declared in the XML was invisible and\nunclickable, and it was hidden again on every page change - the feature was\neffectively dead.\n\nNow it works the proper way:\n- the announcement body defaults to 6 lines with a trailing ellipsis;\n- the button below is visible and reads \"Show more\";\n- tap it -> full text, button becomes \"Show less\";\n- tap again -> back to 6 lines;\n- switching announcements / paging -> returns to the collapsed state and the\n  button label resets with it.\n\n2. Fixed \"the announcement fills half the screen on first launch\"\n\nThe order was wrong:\n- set the text first (which triggers a re-layout);\n- then run the entrance animation;\n- and only then make the announcement visible.\nThe panel therefore entered while still carrying the full-height, uncollapsed\nbody, filling the screen on the very first frame.\n\nNow:\n- the collapsed state plus button label/visibility are settled first;\n- a layout pass runs so the height is computed for 6 lines;\n- the entrance animation runs last.\nThe first frame is \"6 lines + Show more\", with no flicker.\n\n3. Other notes\n\n- everything from 1.5.8 is kept (26.3 launches, MobileGlues built in, the\n  last-launch-log viewer, etc.);\n- the real root cause and fix for 26.3 are described in the 1.5.8 notes:\n  26.3 still defaults to OpenGL -> the GL path goes through libmobileglues.so's\n  glGetString, which returns NULL -> the caller does strlen(NULL) -> a native\n  SIGSEGV; QCL appends the official launch argument --graphicsBackend vulkan\n  from 26.3 onward.\n\n4. Known issues (unchanged)\n\n- on devices without Vulkan, 26.3 may still fail to start (a device limitation,\n  not a launcher defect);\n- the view occasionally drifts after pressing ESC twice - needs a reproducible\n  log to pin down;\n- ancient-version colour anomalies are a ceiling shared by every third-party\n  translation stack; the real fix depends on our own renderer.\n\n(This release is 1.5.9, versionCode 361.)"
+        }
+      ]
+    },
+    {
       "id": 108,
       "significant": true,
       "outdated": false,
