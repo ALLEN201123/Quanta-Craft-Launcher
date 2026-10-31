@@ -133,8 +133,11 @@ public final class RendererPicker {
                                     + (gameDir != null ? gameDir : "<游戏目录>") + "/renderer/mg/\n\n"
                                     + "要求：设备需支持 OpenGL ES 3.0 以上（3.2 推荐）。\n\n"
                                     + "【26.3 及更新版本】\n"
-                                    + "QCL 会自动为 MobileGlues 写好配置（ignoreError=1），\n"
-                                    + "这是 26.3 能启动的必要条件，你不需要手动改。";
+                                    + "26.3 默认走 OpenGL，这条 GL 路径会经过 MobileGlues 的 glGetString，\n"
+                                    + "该函数在部分查询上返回 NULL，调用方对 NULL 取 strlen 就原生崩溃（SIGSEGV），\n"
+                                    + "表现是黑屏 —— 这才是 26.3 起不来的真正原因。\n"
+                                    + "QCL 从 26.3 起自动追加官方启动参数 --graphicsBackend vulkan 绕开这条路径，\n"
+                                    + "并自动写好 enableNoError=2 的 MG 配置；这两件事你都不需要手动改。";
                             warnText = (warnText == null) ? mgTip : (mgTip + "\n\n" + warnText);
                         }
                         if (warnText != null) {

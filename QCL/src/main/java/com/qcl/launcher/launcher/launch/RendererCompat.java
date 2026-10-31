@@ -10,7 +10,11 @@ public final class RendererCompat {
     /**
      * 外部渲染器库是否就位。
      *
-     * <p>MobileGlues（mg）是**外部渲染器**：它的 {@code libmobileglues.so} 不进 APK，
+     * <p><b>1.5.8 起 MobileGlues（mg）已**内置**在 APK 里</b>（{@code QCL/libs/MobileGlues-release.aar}），
+     * Gradle 会把它解到 {@code nativeLibraryDir}，因此正常路径下一定能找到。
+     * 下面这套「外部目录 / 插件 APK」的逻辑现在退化为**兜底**：
+     * 内置库异常缺失时，仍允许玩家自己放一份到 {@code <游戏目录>/renderer/mg/}，或装 MG 的插件 APK。
+     * 历史背景：1.5.8 之前 mg 确实是外部渲染器，{@code libmobileglues.so} 不进 APK，
      * 由玩家自行下载后放进 {@code <游戏目录>/renderer/mg/}（该目录会在启动时挂进
      * java.library.path，见 PojavLauncher）。因此不能用 APK 的 nativeLibraryDir 判断，
      * 否则列表里永远看不到 mg（玩家反馈"检测不到"的根因）。
@@ -186,7 +190,7 @@ public final class RendererCompat {
     //   recommended：之前 5 个都标 ★推荐，现只保留 Krypton（用户指定的"最好的"）。
     //     · Krypton Wrapper：**最好的，支持全部历史版本（含远古），但不支持 26.3** ——
     //       min 留空 ⇒ 保留「含远古版本」；max 填 26.2 ⇒ 不会误导成支持 26.3
-    public static final Info[] ALL = {new Info("opengles2", "Holy-GL4ES", "Holy GL4ES (OpenGL 2.1)", "libgl4es_114.so", "libEGL.so", "", "1.21.4", "1.21.4", true, false), new Info("ng_gl4es", "Krypton Wrapper", "Krypton Wrapper (OpenGL 3.1+；支持所有历史版本含远古，不支持 26.3)", "libng_gl4es.so", "libEGL.so", "", "26.2", "26.2", true, true), new Info("zink", "Zink", "Kopper Zink (OpenGL 4.6, Mesa zink on Vulkan；26.3+ 唯一有希望的选项，需要设备有可用 Vulkan)", "libglxshim.so", "libEGL_mesa.so", "1.8", "26.4", "26.4", true, false), new Info("opengles3_virgl", "VirGLRenderer", "VirGLRenderer (OpenGL 4.3, Mesa 软渲染；上限已放开至 26.4，但真机能否跑 26.3+ 未实测)", "libOSMesa_81.so", "libEGL.so", "1.8", "26.4", "26.4", true, false), new Info("opengles3_virgl_osmesa8", "Freedreno", "Freedreno (OpenGL 4.6, 仅高通 adreno616-a660；超出该型号的 Adreno 不可用)", "libOSMesa_8.so", "libEGL.so", "1.8", "26.4", "26.4", true, false), new Info("opengles3_vgpu", "VGPU", "VGPU (OpenGL 2.1+)", "libvgpu.so", "libEGL.so", "", "1.16.5", "1.16.5", true, false), new Info("mg", "MobileGlues", "MobileGlues (外部渲染器；26.3+ 可能因 GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT=0 崩溃，建议改用 Zink / Freedreno)", "libmobileglues.so", "libEGL.so", "1.17", "26.4", "26.4", false, false)};
+    public static final Info[] ALL = {new Info("opengles2", "Holy-GL4ES", "Holy GL4ES (OpenGL 2.1)", "libgl4es_114.so", "libEGL.so", "", "1.21.4", "1.21.4", true, false), new Info("ng_gl4es", "Krypton Wrapper", "Krypton Wrapper (OpenGL 3.1+；支持所有历史版本含远古，不支持 26.3)", "libng_gl4es.so", "libEGL.so", "", "26.2", "26.2", true, true), new Info("zink", "Zink", "Kopper Zink (OpenGL 4.6, Mesa zink on Vulkan；26.3+ 唯一有希望的选项，需要设备有可用 Vulkan)", "libglxshim.so", "libEGL_mesa.so", "1.8", "26.4", "26.4", true, false), new Info("opengles3_virgl", "VirGLRenderer", "VirGLRenderer (OpenGL 4.3, Mesa 软渲染；上限已放开至 26.4，但真机能否跑 26.3+ 未实测)", "libOSMesa_81.so", "libEGL.so", "1.8", "26.4", "26.4", true, false), new Info("opengles3_virgl_osmesa8", "Freedreno", "Freedreno (OpenGL 4.6, 仅高通 adreno616-a660；超出该型号的 Adreno 不可用)", "libOSMesa_8.so", "libEGL.so", "1.8", "26.4", "26.4", true, false), new Info("opengles3_vgpu", "VGPU", "VGPU (OpenGL 2.1+)", "libvgpu.so", "libEGL.so", "", "1.16.5", "1.16.5", true, false), new Info("mg", "MobileGlues", "MobileGlues (已内置，无需另装插件；26.3 及以上可用 —— QCL 自动追加 --graphicsBackend vulkan)", "libmobileglues.so", "libEGL.so", "1.17", "26.4", "26.4", false, false)};
 
     public static String defaultRendererId() {
         // ★★★ 1.4.9 修正：原来这里返回 "opengles2"（Holy-GL4ES），但

@@ -1,17 +1,18 @@
 {
   "latestRelease": {
-    "versionCode": 359,
-    "versionName": "1.5.7",
-    "date": "2026-10-27",
+    "versionCode": 360,
+    "versionName": "1.5.8",
+    "date": "2026-10-31",
     "url": [
-      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.5.7/QCL-release-1.5.7-universal.apk",
-      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.5.7/QCL-release-1.5.7-arm64.apk",
-      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.5.7/QCL-release-1.5.7-arm.apk",
-      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.5.7/QCL-release-1.5.7-x86_64.apk",
-      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.5.7/QCL-release-1.5.7-x86.apk"
+      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.5.8/QCL-release-1.5.8-universal.apk",
+      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.5.8/QCL-release-1.5.8-arm64.apk",
+      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.5.8/QCL-release-1.5.8-arm.apk",
+      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.5.8/QCL-release-1.5.8-x86_64.apk",
+      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.5.8/QCL-release-1.5.8-x86.apk"
     ],
     "netdiskUrl": "https://pan.quark.cn/s/f2c26c4fb66b",
-    "updateLog": "【1.5.7：Legacy Fabric 版本限制 + 修好「取消收藏又复活」】\n\n一、Legacy Fabric / Legacy Fabric API 只支持 1.3 – 1.13.2\n按上游 meta.legacyfabric.net 和 Modrinth 的真实版本表加了限制：\n· 选 1.3 – 1.13.2 以外（含部分快照、愚人节版本）的游戏版本时，\n  安装页不再显示这两个加载器；\n· 给已有实例补装加载器时会先校验，不支持就直接提示支持范围。\n以前选中后会进到一个空列表，只剩返回键，完全不知道发生了什么。\n\n二、修好「收藏页取消收藏，大退重进又回来」\n· 根因一：写盘处的「防丢数据」守卫，在玩家把收藏取消到一条不剩时拒绝写入\n  （内存列表为空、文件非空 ⇒ 直接 return），磁盘文件保持旧内容，重启自然全部复活。\n  现在只在「从未成功读取过收藏文件」时才拒绝写入，空列表是玩家的真实意图，必须落盘；\n  防丢数据改由「加载失败拒写 + 原子写并保留 .bak + 写后回读校验」三件事承担。\n· 根因二：收藏页那个 ★ 只按单个 id 删除，历史数据里 id 和 source:modId 一旦对不上\n  就一条都删不掉，但界面照样刷新 —— 看着删掉了、重启又回来。\n  现在按 id → source:slug → source:modId 三路兜底，删不掉会明确提示，不再假装成功。\n\n三、其它\n· versionCode 359\n\n验证\n· compileReleaseJavaWithJavac BUILD SUCCESSFUL\n· 五架构包（arm / arm64 / x86 / x86_64 / universal）逐个校验\n  PK 魔数、ZIP 完整性、classes.dex\n· 公告 JSON：合法、id 唯一递增（107）、三语齐全、换行全用 \\n\n· arm64 包真机实测通过后才发版\n"
+    "updateLog": "【1.5.8：Minecraft 26.3 终于能启动了】\n\n从 1.5.1 起，这项一直挂着「26.3 启动不了，原因未定位」。\n这一版，它修好了。先说清楚真根因 —— 这不是 QCL 的 bug。\n\n一、26.3 崩的真正原因\n\n是「官方默认值 + 渲染器」的组合问题：\n\n· Minecraft 26.2 引入了 Vulkan 渲染后端，但 26.3 的默认图形 API 仍然是 DEFAULT（= OpenGL）；\n· 26.3 走 OpenGL 时，这条 GL 路径会经过 MobileGlues 的 glGetString；\n· MG 的这个函数在部分查询上返回 NULL，调用方对 NULL 取 strlen；\n· 结果是原生 SIGSEGV（空指针解引用），表现为黑屏崩溃。\n  tombstone 铁证：__strlen_aarch64 ← glGetString ← libmobileglues.so\n\n而 26.4 官方把「Default」改成了等同「Prefer Vulkan」，所以同一台手机、同一份 MG，\n26.4 一直能进 —— 这就是「崩 26.3、不崩 26.4」的全部原因。\n\n二、修法：用官方启动参数，不写 options.txt\n\nQCL 从 26.3 起，启动时追加游戏自己支持的启动参数：\n\n    --graphicsBackend vulkan\n\n为什么不能写 options.txt（三条实测证据）：\n· 写根目录无效 —— QCL 默认各版本独立，游戏读的是 versions/\u003cver\u003e/options.txt；\n· 写版本目录那份会被重置 —— 26.3 在上次异常关闭后会主动打回 Default：\n  Detected unexpected shutdown during last game startup:\n  resetting preferred graphics API to Default\n· 写进 onCreate / onSurfaceTextureAvailable 也不行 —— 26.3 走 SDL3，该回调根本不触发。\n\n启动参数的优先级高于游戏内设置，且不受异常关闭重置影响。\n26.2 及以下一律不碰（那些版本没有 Vulkan 后端，OpenGL 路径是好的）。\n\n三、MobileGlues 已内置\n\n以前要让 MG 生效，得自己去装 MG 的插件 APK。\n现在 MG 随启动器打包（约 7.8 MB，含四 ABI），选中即可用，无需额外安装。\n库解析顺序：内置（APK 自带）→ 外部插件 APK → renderer/\u003cid\u003e/ 手放目录。\n\n四、另一条独立崩溃：MG 配置键名\n\n26.3 除零崩溃的完整因果：\nenableNoError=0 → 不吞 GL 错误 → GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT 拿不到\n→ minUniformOffsetAlignment() 返回 0 → Mth.positiveCeilDiv 除零\n→ DynamicGpuDataStorageMapped.\u003cinit\u003e 抛 ArithmeticException\n\n键名踩过的坑：MG 源码 settings.cpp 读的是 enableNoError，不是 ignoreError。\n日志里那句 [MobileGlues] Setting: ignoreError = 0 是内部枚举值（0=None），不是配置键名。\nQCL 现在自动写 enableNoError=2。\nMG_DIR_PATH 指向 \u003cfiles\u003e/mobileglues，顺带让 MG 的「不支持的启动器」分支恒假，\n因此不需要伪造 FCL_VERSION_CODE。\n\n五、这一版还修了\n\n· 首次进入世界时转视角会「大片移一下」—— 根因是光标增量基准没有重置。\n· 自定义背景图不再整张解码（防大内存占用），解码失败也不会再崩。\n· 安装器（Forge / NeoForge / Cleanroom）启动异常时不再卡住不动。\n· 新增「查看上次启动日志」（左侧栏第 7 个按钮）——\n  游戏在等待界面就崩、连崩溃弹窗都弹不出来时，用它把日志复制出来。\n· 日志现在会记录原生崩溃（之前 logcat 白名单把 F/DEBUG、F/libc、E/AndroidRuntime 全过滤掉了）。\n· 26.4 快照的 JNA 5.19.1 崩溃（NoClassDefFoundError: NativeLong）已修。\n· 26.3+ 写 config/fml.toml 的 earlyWindowControl=false，避免 FML 抢先建窗口。\n· 公告恢复完整显示，不再限 6 行（1.5.7 那次折叠导致大部分内容看不见，已撤销）。\n\n六、已知问题\n\n· 无 Vulkan 的设备，26.3 可能仍无法启动（这是设备能力，不是启动器缺陷）。\n· 部分老旧设备（Android 12 及以下）的 Vulkan 驱动可能不完整，请自行测试。\n\n（本版为 1.5.8，versionCode 360。）",
+    "latestPrerelease": null
   },
   "latestPrerelease": null
 }
