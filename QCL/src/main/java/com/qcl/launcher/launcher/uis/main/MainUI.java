@@ -755,6 +755,21 @@ private void applyCachedVersionName() {
             return;
         }
         showAnnouncementAt(0);
+        // ★★★★★ 1.5.8 修「公告初始化问题（首次显示时拉得巨长 / 按钮状态不对）」：
+        //
+        //   原来顺序是：
+        //     showAnnouncementAt(0)        ← 这里 setText() 会触发一次重新布局
+        //     showViewFromLeft(...)        ← 动画开始时正文还没折叠好
+        //     setVisibility(VISIBLE)       ← 容器带着「未折叠的满高正文」入场
+        //   结果就是首帧按全文高度撑开，玩家看到公告铺满半屏；
+        //   而且那时 announcementExpanded / 按钮文字还是上一轮的值。
+        //
+        //   现在：先把**折叠态 + 按钮文字/可见性**全部落定（showAnnouncementAt 内已做），
+        //   再 requestLayout 一次让高度按 maxLines=6 算准，**然后**才做入场动画。
+        //   这样首帧就是「6 行 + Show more」，不会再抖。
+        if (announcementText != null) {
+            announcementText.requestLayout();
+        }
         CustomAnimationUtils.showViewFromLeft(announcementContainer, activity, context, false);
         announcementContainer.setVisibility(View.VISIBLE);
     }
@@ -789,12 +804,26 @@ private void applyCachedVersionName() {
             //   （上一版实测：限制了 6 行反而把内容藏了）。
             //   真正的兜底在 XML：正文外层 ScrollView 是 0dp+weight=1，
             //   高度天然被父容器约束，不会「无上限撑高」。
-            announcementText.setMaxLines(Integer.MAX_VALUE);
-            announcementText.setEllipsize(null);
-            this.announcementExpanded = true;
+            //
+            // ★★★★★ 1.5.8 二次修正（用户要求「把打开按钮给搞回来」）：
+            //   上面那条「撤销折叠」过头了 —— 它把正文设成 MAX_VALUE **并且把按钮
+            //   setVisibility(GONE)**，于是：
+            //     · 玩家看不到「展开」按钮（XML 里明明写了），点不到；
+            //     · 而且每次翻页/刷新都会重新 GONE 一次，等于彻底废掉这个功能。
+            //   现在改成**默认折叠 6 行 + 按钮可见**的正规做法：
+            //     · 正文默认 maxLines=6，末尾省略号；
+            //     · 按钮显示「Show more」，点开 → MAX_VALUE + 「Show less」；
+            //     · 换公告/翻页时回到折叠态（并同步按钮文字），状态自洽。
+            //   展开按钮在点击时已由 410~429 行的监听器接管，这里只负责**初始态**。
+            boolean shouldShowExpand = picked.getDisplayContent(context) != null
+                    && picked.getDisplayContent(context).length() > 0;
+            this.announcementExpanded = false;
+            announcementText.setMaxLines(6);
+            announcementText.setEllipsize(android.text.TextUtils.TruncateAt.END);
             if (this.announcementExpand != null) {
-                // 折叠已取消 ⇒ 按钮没必要再显示
-                this.announcementExpand.setVisibility(View.GONE);
+                // 正文太短就没必要给「展开」按钮（省得点了一点反应都没有）
+                this.announcementExpand.setVisibility(shouldShowExpand ? View.VISIBLE : View.GONE);
+                this.announcementExpand.setText(R.string.qcl_announcement_expand);
             }
         }
         if (announcementDate != null) {
