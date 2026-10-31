@@ -136,7 +136,22 @@ public class JREUtils {
             public void run() {
                 try {
                     if (this.logcatPb == null) {
-                        this.logcatPb = new ProcessBuilder(new String[0]).command("logcat", "-v", "brief", "-s", "jrelog:I", "LIBGL:I").redirectErrorStream(true);
+                        // ★★★★★ 1.5.8 修「崩了却什么都不输出」：
+                        //   原来只白名单 jrelog / LIBGL 两个 tag，而 JVM 原生崩溃打印的
+                        //   是 F/DEBUG（tombstone）、F/libc（致命信号）、E/AndroidRuntime、A/art，
+                        //   全被 -s 过滤掉 ⇒ 日志在 -cp 之后就断，玩家抓不到任何错误。
+                        //   现在把崩溃相关的 tag 一并加进来，并把 -v brief 换成 threadtime
+                        //   （带时间戳，便于和启动器自己的日志对齐）。
+                        this.logcatPb = new ProcessBuilder(new String[0])
+                                .command("logcat", "-v", "threadtime",
+                                        "-s",
+                                        "jrelog:I", "jrelog-logcat:I", "LIBGL:I",
+                                        "DEBUG:*", "libc:*",
+                                        "AndroidRuntime:*", "art:*", "A/DEBUG:*",
+                                        "OpenGLRenderer:*", "SurfaceFlinger:E",
+                                        "vulkan:*", "OpenAL:*",
+                                        "mobileglues:*", "MobileGlues:*")
+                                .redirectErrorStream(true);
                     }
                     Log.i("jrelog-logcat", "Clearing logcat");
                     new ProcessBuilder(new String[0]).command("logcat", "-c").redirectErrorStream(true).start();
@@ -375,6 +390,50 @@ public class JREUtils {
             if (qclEglCand.isFile()) {
                 arrayMap.put("SDL_EGL_LIBRARY", qclEglCand.getAbsolutePath());
             }
+        }
+        // ★★★★★ 1.5.8：**MobileGlues 配置注入 —— 26.3 启动崩溃（除零）的最终修复**。
+        //
+        //   实测日志（26.3 + MG / Android 16 aarch64）：
+        //     MG_DIR_PATH = /sdcard/MG                  ← MG 默认读这里
+        //     [MobileGlues] Setting: ignoreError = 0    ← 编译默认值，不是 1
+        //
+        //     java.lang.ArithmeticException: / by zero
+        //         at net.minecraft.util.Mth.positiveCeilDiv(Mth.java:815)
+        //         at net.minecraft.client.renderer.DynamicGpuDataStorageMapped.<init>(:32)
+        //         at com.mojang.blaze3d.systems.RenderSystem.initRenderer(:246)
+        //
+        //   因果链：
+        //     ① MG 官方 release note：**26.3-snapshot-3+ 必须开 ignoreError**
+        //     ② QCL 从没给 MG 写过配置 ⇒ 用默认 ignoreError=0
+        //     ③ 不吞 GL 错误 ⇒ GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT 不返回 ⇒
+        //        DeviceLimits.minUniformOffsetAlignment() 返回 0
+        //     ④ Mth.roundToward(x, 0) → floorDiv → 除零
+        //
+        //   修法（照搬 FCL FCLauncher L416-420）：
+        //     · 用 **app 私有目录**（/sdcard/MG 在 Android 11+ 分区存储下写不进去）
+        //     · 只覆盖显式配置的键，其余交给 MG 自管
+        //     · 通过 MG_DIR_PATH 指过去
+        try {
+            if ("mg".equals(str6)) {
+                // ★ 2026-10-31（用户要求 A）：**不再伪造 FCL_VERSION_CODE**。
+                //   MG 的「不支持的启动器」分支有五个并列条件（settings.cpp L122）：
+                //     isInPluginApp==0 && fclVersion==0 && zlVersion==0
+                //     && pgwVersion==0 && !is_custom_mg_dir
+                //   其中 is_custom_mg_dir 在 config.cpp 里由 **getenv("MG_DIR_PATH")** 决定；
+                //   我们已经设了 MG_DIR_PATH ⇒ 它是 true ⇒ 整个 if 恒假，那个分支进不去。
+                //   ⇒ 不需要假冒 FCL 身份，只靠 MG_DIR_PATH 就够（test5 实测 ignoreError=1）。
+
+                java.io.File qclMgDir = MobileGluesConfig.ensureConfig(activity);
+                if (qclMgDir != null) {
+                    arrayMap.put("MG_DIR_PATH", qclMgDir.getAbsolutePath());
+                    android.util.Log.i("jrelog", "[MG] MG_DIR_PATH = "
+                            + qclMgDir.getAbsolutePath());
+                } else {
+                    android.util.Log.w("jrelog", "[MG] 私有配置目录不可用，沿用 MG 默认");
+                }
+            }
+        } catch (Throwable qclMgT) {
+            android.util.Log.w("jrelog", "[MG] 配置注入失败（不影响启动）: " + qclMgT);
         }
         arrayMap.put("AWTSTUB_WIDTH", Integer.toString(CallbackBridge.windowWidth > 0 ? CallbackBridge.windowWidth : CallbackBridge.physicalWidth));
         arrayMap.put("AWTSTUB_HEIGHT", Integer.toString(CallbackBridge.windowHeight > 0 ? CallbackBridge.windowHeight : CallbackBridge.physicalHeight));

@@ -65,7 +65,13 @@ public class MainUI extends BaseUI implements View.OnClickListener, AdapterView.
     private LinearLayout startLabUI;
     /** ★ 1.5.2：JAR 启动（FCL 那种独立功能，不是「启动游戏」）。
      *  新排版左栏才有，旧排版没有 → 可能为 null，绑定时必须判空。 */
-    private LinearLayout startJarLaunchUI;
+        /** ★ 1.5.8：公告正文「展开/收起」按钮与展开状态。
+     *  （announcementText 本来就有字段，这里不再重复声明。） */
+    private TextView announcementExpand;
+    private boolean announcementExpanded = false;
+private LinearLayout startJarLaunchUI;
+    /** ★ 1.5.8：查看上次启动日志（左侧栏独立按钮）。 */
+    private LinearLayout startLastLogUI;
 
     /** ★ 1.5.2：请求码，选 jar 用。 */
     private static final int REQUEST_PICK_JAR = 0x4A4152;   // "JAR"
@@ -281,6 +287,7 @@ private void applyCachedVersionName() {
         startHomePageUI = activity.findViewById(R.id.start_ui_home_page);
         // ★ 1.5.2：JAR 启动入口（只有新排版左栏有，旧排版为 null）
         startJarLaunchUI = activity.findViewById(R.id.start_ui_jar_launch);
+        startLastLogUI = activity.findViewById(R.id.start_ui_last_log);
 
         startGame = activity.findViewById(R.id.launcher_play_button);
         launchVersionText = activity.findViewById(R.id.launch_version_text);
@@ -396,6 +403,30 @@ private void applyCachedVersionName() {
         }
 
         startGame.setOnClickListener(this);
+        // ★ 1.5.8：左侧栏「查看上次启动日志」按钮
+        if (startLastLogUI != null) {
+            startLastLogUI.setOnClickListener(this);
+        }
+        // ★★★★★ 1.5.8：公告正文「展开 / 收起」。
+        //
+        //   为什么加：公告正文有 600~1600 字，原布局里 announcement_container
+        //   是 match_parent 高度，正文会把整块内容区顶满（用户实测截图：
+        //   公告铺满半个屏幕，把版本选择器和启动按钮都压在下面）。
+        //   现在默认只显示 6 行，点这里看全文。
+        this.announcementExpand = activity.findViewById(R.id.announcement_expand);
+        this.announcementText = activity.findViewById(R.id.announcement_text);
+        if (this.announcementExpand != null && this.announcementText != null) {
+            this.announcementExpand.setOnClickListener(v -> {
+                boolean expanded = this.announcementExpanded;
+                this.announcementExpanded = !expanded;
+                this.announcementText.setMaxLines(expanded ? 6 : Integer.MAX_VALUE);
+                this.announcementText.setEllipsize(expanded
+                        ? android.text.TextUtils.TruncateAt.END : null);
+                this.announcementExpand.setText(expanded
+                        ? R.string.qcl_announcement_expand
+                        : R.string.qcl_announcement_collapse);
+            });
+        }
         // ★ 1.5.0：公告栏「隐藏」按钮 —— 记住这条公告 id，以后不再显示（新排版独有）
         if (announcementHide != null) {
             announcementHide.setOnClickListener(v -> hideAnnouncement());
@@ -744,6 +775,27 @@ private void applyCachedVersionName() {
             // 每次翻页回到顶部，否则会停在上一篇的滚动位置
             announcementText.setText(picked.getDisplayContent(context));
             announcementText.setScrollY(0);
+            // ★★★★★ 1.5.8 修正（用户实测「公告里面大部分内容看不见」）：
+            //
+            //   我上一版把正文默认钉成 maxLines=6，结果 600~1600 字的公告
+            //   只剩 6 行可见 —— 玩家抱怨「大部分内容看不见」。
+            //
+            //   ⇒ **撤销折叠**：恢复成完整显示（正文靠外层 ScrollView 滚动，
+            //     这本来就是原设计的交互）。同时保留「展开/收起」按钮但隐藏它，
+            //     不再干预正文行数。
+            //
+            //   至于「首次启动公告拉得巨长」：那是首帧布局未测量完、
+            //   maxLines 尚未应用导致的**一次性渲染抖动**，与行数限制无关
+            //   （上一版实测：限制了 6 行反而把内容藏了）。
+            //   真正的兜底在 XML：正文外层 ScrollView 是 0dp+weight=1，
+            //   高度天然被父容器约束，不会「无上限撑高」。
+            announcementText.setMaxLines(Integer.MAX_VALUE);
+            announcementText.setEllipsize(null);
+            this.announcementExpanded = true;
+            if (this.announcementExpand != null) {
+                // 折叠已取消 ⇒ 按钮没必要再显示
+                this.announcementExpand.setVisibility(View.GONE);
+            }
         }
         if (announcementDate != null) {
             // 多条时把「第 x / y 条」也标出来，玩家才知道还有别的
@@ -1692,6 +1744,13 @@ public static void markLocalCapeChanged() {
         //     ⇒ 现在先进入**独立页面**（JarLauncherUI：写清用途 + 列出本机 Java + 一个明确的主按钮）。
         else if (v == startJarLaunchUI){
             activity.uiManager.switchMainUI(activity.uiManager.jarLauncherUI);
+        }
+        // ★★★★★ 1.5.8：弹「上次启动日志」对话框。
+        //   玩家反馈「崩了之后连崩溃弹窗都不给我弹出来」——那种在**等待界面**
+        //   就死掉的早期崩溃还没到写 crash-reports 那一步，所以没有弹窗。
+        //   这个入口不依赖游戏进程活着，直接读日志文件末尾。
+        else if (v == startLastLogUI){
+            com.qcl.launcher.launcher.dialogs.LastLaunchLogDialog.show(activity);
         }
         // ★★★ 1.5.0 新排版独有：左侧导航底部「返回上一层」→ **层级式返回**（backToLastUI：出栈一层）。
         //   ★ 用户明确要求：不是一键回主页，而是"退一层、再退一层，一直退到主界面"。

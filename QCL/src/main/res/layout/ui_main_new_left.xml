@@ -211,6 +211,37 @@
 
         </LinearLayout>
 
+        <!--
+          ★★★★★ 1.5.8 新增：查看上次启动日志。
+
+          为什么加它：玩家反馈「崩了之后连崩溃弹窗都不给我弹出来 —— 就是在
+          游戏启动中的等待界面就崩了」。那种早期死亡：
+            · LaunchLogWindow 的浮窗跟着活动一起没了
+            · 崩溃弹窗要等游戏把堆栈写进 crash-reports/ 才弹，而这种
+              「还没到写崩溃报告那一步」的死亡根本没有报告
+          所以只能让玩家自己去看日志文件（<外部files>/debug/pojav_latest_log.txt）。
+        -->
+        <LinearLayout
+            android:background="@drawable/qcl_button_gray"
+            android:focusable="true"
+            android:id="@+id/start_ui_last_log"
+            android:clickable="true"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:padding="@dimen/qcl_nav_pad">
+
+            <ImageView
+                android:id="@+id/last_log_icon"
+                android:layout_gravity="center"
+                android:layout_width="@dimen/qcl_nav_icon"
+                android:layout_height="@dimen/qcl_nav_icon"
+                android:background="@drawable/ic_qcl_last_log_white"/>
+
+        </LinearLayout>
+
         <!-- 7. 多人游戏（纯图标） -->
         <LinearLayout
             android:background="@drawable/qcl_button_gray"

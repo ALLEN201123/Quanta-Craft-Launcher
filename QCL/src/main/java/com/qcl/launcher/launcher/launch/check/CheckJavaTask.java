@@ -62,6 +62,80 @@ public class CheckJavaTask extends AsyncTask<Object,Integer,Exception> {
             if (!privateGameSetting.notCheckForge) {
                 FileStringUtils.writeFile(gameDir + "/config/splash.properties","enabled=false");
             }
+            // ★★★★★ 1.5.8：**26.3 启动 UI 冻死/崩溃的真根因修复**（照搬 FCL 1.3.4.0 + 1.3.4.1）。
+            //
+            //   背景：NeoForge 12（MC 26.3 用的）**移除了 `-Dfml.earlyprogresswindow`
+            //   属性通道** —— FMLConfig 现在**只读 `config/fml.toml`**，所以 QCL 在
+            //   PojavLauncher 里加的那个 `-Dfml.earlyprogresswindow=false` **完全失效**。
+            //   早期加载屏照样起来，它的 ANGLE/Vulkan 渲染在启动扫描期反复分配 gralloc
+            //   缓冲，与启动器 UI 的 present 在 vendor gralloc 锁上互堵
+            //   ⇒ **UI 冻死直至 ANR**（这就是「26.3 启动不了」的真根因）。
+            //
+            //   修法（对齐 FCL）：**直接写 `config/fml.toml` 的 `earlyWindowControl = false`**，
+            //   且**只对 26.3+ 写**（更早版本无此冲突，写了会误伤它们的模组加载进度动画
+            //   —— 这就是 FCL 1.3.4.1 修的那个问题）。
+            //
+            //   键置于文件**头部**，不会落入任何 TOML 表作用域；FML 加载后会按 spec
+            //   回写补全注释与其余键。
+            try {
+                String qclVerName = new File(launchVersion).getName();
+                if (isFmlEarlyWindowConflict(qclVerName)) {
+                    File cfgDir = new File(gameDir, "config");
+                    if (!cfgDir.isDirectory()) {
+                        cfgDir.mkdirs();
+                    }
+                    File fmlToml = new File(cfgDir, "fml.toml");
+                    StringBuilder sb = new StringBuilder("earlyWindowControl = false\n");
+                    if (fmlToml.isFile()) {
+                        // 已存在：保留原有内容，但删掉任何旧的 earlyWindowControl 行（防重复键）
+                        java.io.BufferedReader br = null;
+                        try {
+                            br = new java.io.BufferedReader(new java.io.InputStreamReader(
+                                    new java.io.FileInputStream(fmlToml), "UTF-8"));
+                            String line;
+                            while ((line = br.readLine()) != null) {
+                                if (!line.trim().startsWith("earlyWindowControl")) {
+                                    sb.append(line).append('\n');
+                                }
+                            }
+                        } finally {
+                            if (br != null) {
+                                try { br.close(); } catch (Throwable ignored) { }
+                            }
+                        }
+                    }
+                    FileStringUtils.writeFile(fmlToml.getAbsolutePath(), sb.toString());
+                } else {
+                    // 26.3 以下：**清掉**残留的 earlyWindowControl 行（防上一版写坏后不恢复）
+                    File fmlToml = new File(new File(gameDir, "config"), "fml.toml");
+                    if (fmlToml.isFile()) {
+                        StringBuilder sb = new StringBuilder();
+                        java.io.BufferedReader br = null;
+                        boolean changed = false;
+                        try {
+                            br = new java.io.BufferedReader(new java.io.InputStreamReader(
+                                    new java.io.FileInputStream(fmlToml), "UTF-8"));
+                            String line;
+                            while ((line = br.readLine()) != null) {
+                                if (line.trim().startsWith("earlyWindowControl")) {
+                                    changed = true;
+                                    continue;
+                                }
+                                sb.append(line).append('\n');
+                            }
+                        } finally {
+                            if (br != null) {
+                                try { br.close(); } catch (Throwable ignored) { }
+                            }
+                        }
+                        if (changed) {
+                            FileStringUtils.writeFile(fmlToml.getAbsolutePath(), sb.toString());
+                        }
+                    }
+                }
+            } catch (Throwable qclFmlToml) {
+                // 写不了也不影响启动
+            }
             int expectedJava;
             int java;
             String versionJson = FileStringUtils.getStringFromFile(launchVersion + "/" + new File(launchVersion).getName() + ".json");
@@ -129,5 +203,59 @@ public class CheckJavaTask extends AsyncTask<Object,Integer,Exception> {
     public interface CheckJavaCallback{
         void onStart();
         void onFinish(Exception e);
+    }
+
+    /**
+     * ★★★★★ 1.5.8：**这个版本是否需要关闭 FML 早期加载屏**（即 MC ≥ 26.3）。
+     *
+     * <p>为什么要关：NeoForge 12（26.3 用的）的早期加载屏会在启动扫描期用
+     * ANGLE/Vulkan 反复分配 gralloc 缓冲，与启动器 UI 的 present 在 vendor
+     * gralloc 锁上互堵 ⇒ **UI 冻死直至 ANR**。这就是「26.3 启动不了」的真根因。
+     *
+     * <p>为什么不无脑对所有版本关：更早的 Forge 也认这个键，关掉会
+     * **误伤它们的模组加载进度动画**（FCL 1.3.4.1 就是这个修复）。
+     *
+     * <p>版本名可能的形态：
+     * <ul>
+     *   <li>{@code 26.3} / {@code 26.4-snapshot-3} —— 直接</li>
+     *   <li>{@code 26.2fa} / {@code 26.3-forge-1.2.3} —— 带后缀</li>
+     *   <li>{@code fabric-loader-0.19.5-26.3} —— 加载器前缀，要取最后一段版本</li>
+     *   <li>{@code Fabulously.Optimized-v15.0.0-alpha.3} —— 整合包名，**判不了，一律当需要关**
+     *       （因为整合包多为高版本，宁可多关一次也不要冻死）</li>
+     * </ul>
+     */
+    private static boolean isFmlEarlyWindowConflict(String versionId) {
+        if (versionId == null) {
+            return false;
+        }
+        String v = versionId.trim();
+        if (v.isEmpty()) {
+            return false;
+        }
+        // 取「最后一个像 MC 版本号的片段」：26.3 / 1.21.11 / 26.4
+        java.util.regex.Matcher m = java.util.regex.Pattern
+                .compile("(\\d{1,2})\\.(\\d{1,2})(?:\\.(\\d{1,2}))?")
+                .matcher(v);
+        int major = -1;
+        int minor = -1;
+        int patch = 0;
+        while (m.find()) {
+            // 一直覆盖到最后一个匹配（加载器前缀里也有版本号，MC 的版本号在最后）
+            try {
+                major = Integer.parseInt(m.group(1));
+                minor = Integer.parseInt(m.group(2));
+                patch = m.group(3) == null ? 0 : Integer.parseInt(m.group(3));
+            } catch (Throwable ignored) {
+            }
+        }
+        if (major < 0) {
+            // 完全没有版本号形状（例如纯整合包名）：**保守按需要关**处理
+            return true;
+        }
+        // 26.x 全线需要关（26.1 起就是新版本号体系）
+        if (major >= 26) {
+            return true;
+        }
+        return false;
     }
 }

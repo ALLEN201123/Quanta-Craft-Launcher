@@ -23,6 +23,7 @@ import android.util.Log;
 import com.qcl.launcher.launcher.launch.AccountPatch;
 import com.qcl.launcher.launcher.launch.LaunchVersion;
 import com.qcl.launcher.launcher.launch.Lwjgl333Helper;
+import com.qcl.launcher.launcher.launch.JnaNatives;
 import com.qcl.launcher.launcher.launch.QCLHooks;
 import com.qcl.launcher.launcher.launch.TouchInjector;
 import com.qcl.launcher.launcher.setting.RuntimeUtils;
@@ -359,6 +360,32 @@ public class PojavLauncher {
                     } else {
                         qclJna = Lwjgl333Helper.jnaDir(context);
                     }
+                    // ★★★★★ 1.5.8：**JNA natives 兜底**（照搬 FCL 的 JnaNatives.kt）。
+                    //
+                    //   修「26.4 快照启动崩溃」：MC 升级会引入 QCL assets 里没带的
+                    //   JNA 版本（26.4 快照是 **5.19.1**）。那时 jna.boot.library.path
+                    //   指向的目录里没有 libjnidispatch.so，JNA 就会从 MC 的 jar 里
+                    //   抽取 **glibc 链接的桌面版 so** —— 那个 so 在 Android 上
+                    //   dlopen 必然失败：
+                    //     NoClassDefFoundError: Could not initialize class com.sun.jna.NativeLong
+                    //   兜底逻辑：先复制 APK 内 assets 的同版本 so，缺失再从
+                    //   Maven Central 镜像下 jna-<版本>.aar 提取当前架构的 so。
+                    //   全程失败只记日志，不阻塞启动（行为退回改动前）。
+                    try {
+                        String qclJnaVer = detectJnaVersion(version);
+                        if (qclJnaVer != null) {
+                            android.util.Log.i("jrelog", "[JNA] 版本 json 声明的 jna = " + qclJnaVer);
+                            File qclJnaEnsured = JnaNatives.ensure(context, qclJnaVer, qclJna);
+                            if (qclJnaEnsured != null) {
+                                android.util.Log.i("jrelog", "[JNA] natives 就绪: "
+                                        + qclJnaEnsured.getAbsolutePath());
+                            } else {
+                                android.util.Log.w("jrelog", "[JNA] 兜底未命中，退回 JNA 自行解析");
+                            }
+                        }
+                    } catch (Throwable qclJnaT) {
+                        android.util.Log.w("jrelog", "[JNA] 兜底异常（忽略）: " + qclJnaT);
+                    }
                     if (qclJna.isDirectory() && qclJna.list() != null && qclJna.list().length > 0) {
                         args.add("-Djna.boot.library.path=" + qclJna.getAbsolutePath());
                     } else {
@@ -520,6 +547,34 @@ public class PojavLauncher {
             args.add(version.mainClass);
             String[] minecraftArgs = version.getMinecraftArguments(gameLaunchSetting, GameLaunchSetting.isHighVersion(gameLaunchSetting));
             Collections.addAll(args, minecraftArgs);
+            // ★★★★★ 1.5.8：**26.3+ 用启动参数强制 Vulkan**。
+            //
+            //   为什么必须用启动参数、不能写 options.txt（两条实测证据）：
+            //     ① 26.3 会在上次异常关闭后**主动重置** options.txt 里的值：
+            //          [WARN] Detected unexpected shutdown during last game startup:
+            //                 resetting preferred graphics API to Default
+            //        ⇒ 只要上一轮崩过，下一轮就被打回 Default，写文件白费。
+            //     ② Minecraft.class 里明确支持启动参数强制：
+            //          "Graphics backend forced to {} by launch argument,
+            //           in-game preferred graphics backend setting ..."
+            //        它对应 GameConfig$GameData.forcedGraphicsApi，
+            //        Main.class 的 jopt-simple 选项名就是 `graphicsBackend`。
+            //
+            //   为什么需要 Vulkan：26.3 默认 DEFAULT→OpenGL→经 libmobileglues.so 的
+            //   glGetString 返回 NULL → strlen(NULL) → SIGSEGV（黑屏崩溃，tombstone 实证）。
+            //   26.4 官方把 Default 改成等同 Prefer Vulkan，所以 26.4 能进。
+            //
+            //   ★ 只对 26.3+ 加；26.2 及以下没有 Vulkan 后端，加了会找不到后端起不来。
+            try {
+                if (qclNeedsVulkanForced(new java.io.File(gameLaunchSetting.currentVersion).getName())) {
+                    args.add("--graphicsBackend");
+                    args.add("vulkan");
+                    android.util.Log.i("jrelog",
+                            "[图形后端] 追加启动参数 --graphicsBackend vulkan（26.3+ 必需）");
+                }
+            } catch (Throwable qclGfxArg) {
+                android.util.Log.w("jrelog", "[图形后端] 追加参数失败（不影响启动）", qclGfxArg);
+            }
             args.add("--width");
             args.add(Integer.toString(width));
             args.add("--height");
@@ -738,5 +793,83 @@ public class PojavLauncher {
         }
         return (name == null || name.trim().isEmpty()) ? Build.HARDWARE : name;
     }
+
+    /**
+     * ★ 1.5.8：从版本 json 的 libraries 里探测 JNA 版本号。
+     *
+     * <p>找 {@code net.java.dev.jna:jna:<版本>} 这一条（FCL 用同样的匹配）。
+     * 找不到返回 null（表示这个版本不带 JNA，不需要兜底）。
+     */
+    private static String detectJnaVersion(com.qcl.launcher.launcher.launch.LaunchVersion version) {
+        if (version == null) {
+            return null;
+        }
+        try {
+            // LaunchVersion.libraries 是它**内部类** Library[] 字段（不是 game.Library）
+            com.qcl.launcher.launcher.launch.LaunchVersion.Library[] libs = version.libraries;
+            if (libs == null) {
+                return null;
+            }
+            for (com.qcl.launcher.launcher.launch.LaunchVersion.Library lib : libs) {
+                // LaunchVersion.Library 只有 name 字段（形如 net.java.dev.jna:jna:5.19.1）
+                String name = lib == null ? null : lib.name;
+                if (name == null) {
+                    continue;
+                }
+                if (name.startsWith("net.java.dev.jna:jna:")) {
+                    String[] parts = name.split(":");
+                    if (parts.length >= 3) {
+                        String v = parts[2].trim();
+                        if (!v.isEmpty()) {
+                            return v;
+                        }
+                    }
+                }
+            }
+        } catch (Throwable ignored) {
+        }
+        return null;
+    }
+
+
+    /**
+     * ★ 1.5.8：这个版本是否需要强制 Vulkan（MC 26.3 及以上）。
+     *
+     * <p>26.3 首次引入 Vulkan 后端，但默认仍走 OpenGL；它的 OpenGL 路径在
+     * MobileGlues 下会 strlen(NULL) 崩溃（tombstone 实证：
+     * __strlen_aarch64 ← glGetString ← libmobileglues.so）。
+     * 26.4 官方把 Default 改成 Prefer Vulkan 才没事。
+     *
+     * <p>26.2 及以下没有 Vulkan 后端，**绝不能加**。
+     *
+     * <p>版本名可能是 26.3 / 26.4-snapshot-3 / fabric-loader-x-26.3 / 纯整合包名
+     * —— 取最后一个像 MC 版本号的片段；判不出来就不动。
+     */
+    private static boolean qclNeedsVulkanForced(String versionId) {
+        if (versionId == null) {
+            return false;
+        }
+        String v = versionId.trim();
+        if (v.isEmpty()) {
+            return false;
+        }
+        java.util.regex.Matcher m = java.util.regex.Pattern
+                .compile("(\\d{1,2})\\.(\\d{1,2})(?:\\.(\\d{1,2}))?")
+                .matcher(v);
+        int major = -1;
+        int minor = -1;
+        while (m.find()) {
+            try {
+                major = Integer.parseInt(m.group(1));
+                minor = Integer.parseInt(m.group(2));
+            } catch (Throwable ignored) {
+            }
+        }
+        if (major < 0) {
+            return false;
+        }
+        return major > 26 || (major == 26 && minor >= 3);
+    }
+
 }
 

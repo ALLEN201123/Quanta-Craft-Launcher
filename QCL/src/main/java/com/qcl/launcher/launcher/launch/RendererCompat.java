@@ -110,6 +110,18 @@ public final class RendererCompat {
      */
     public static String resolveRendererLibDir(android.content.Context context, String id,
                                               String versionPath, String gameDir) {
+        // ★★★★★ 1.5.8：**内置渲染器优先**（照 FCL 1.3.4.3 的「内置 MobileGlues」）。
+        //
+        //   顺序改成：APK 自带（nativeLibraryDir） → 外部插件 APK → 手放目录。
+        //
+        //   为什么把内置放最前：内置的 libmobileglues.so 是随 APK 编译进去的，
+        //   与当前 QCL 版本、JNI 接口天然匹配；而外部插件 APK 的版本不受控
+        //   （玩家可能装了个很旧的 MG），混用容易出现符号不匹配。
+        //   玩家如果确实想用自己装的插件版，仍可通过下面的分支命中（内置缺失时）。
+        String fromBuiltin = findBuiltinRendererLibDir(context, id);
+        if (fromBuiltin != null) {
+            return fromBuiltin;
+        }
         String fromPlugin = findInstalledRendererLibDir(context, id);
         if (fromPlugin != null) {
             return fromPlugin;
@@ -301,4 +313,52 @@ public final class RendererCompat {
         }
         return "当前渲染器「" + str + "」不支持该游戏版本（" + str2 + "）。\n\n该渲染器最高支持到 " + (find != null ? find.displayMax : "?") + "，继续使用可能导致画面错误、贴图错乱或游戏崩溃！\n\n是否仍要使用这个渲染器？";
     }
+
+    /**
+     * ★ 1.5.8：内置渲染器（APK 自带）的库目录。
+     *
+     * <p>QCL 把 MobileGlues 的 AAR 打进了 APK，Gradle 会把
+     * {@code jni/<abi>/libmobileglues.so} 解到 {@code nativeLibraryDir}。
+     * 因此只要那个目录里有目标 so，就认为「内置可用」。
+     *
+     * @return 目录绝对路径；没有内置库时返回 null
+     */
+    public static String findBuiltinRendererLibDir(android.content.Context context, String id) {
+        if (context == null) {
+            return null;
+        }
+        Info info = find(id);
+        if (info == null || info.glName == null || info.glName.isEmpty()) {
+            return null;
+        }
+        try {
+            String nativeDir = context.getApplicationInfo().nativeLibraryDir;
+            if (nativeDir == null || nativeDir.isEmpty()) {
+                return null;
+            }
+            java.io.File dir = new java.io.File(nativeDir);
+            if (!dir.isDirectory()) {
+                return null;
+            }
+            // 不区分大小写地找一遍（部分设备/ABI 会带前缀）
+            java.io.File[] files = dir.listFiles();
+            if (files == null) {
+                return null;
+            }
+            for (java.io.File f : files) {
+                if (f != null && f.isFile()
+                        && f.getName().equalsIgnoreCase(info.glName)) {
+                    return dir.getAbsolutePath();
+                }
+            }
+        } catch (Throwable ignored) {
+        }
+        return null;
+    }
+
+    /** 内置渲染器是否可用（给渲染器选择列表标注「内置」用）。 */
+    public static boolean isBuiltinLibPresent(android.content.Context context, String id) {
+        return findBuiltinRendererLibDir(context, id) != null;
+    }
+
 }

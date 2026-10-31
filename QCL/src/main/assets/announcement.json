@@ -1,6 +1,43 @@
 {
   "announcements": [
     {
+      "id": 108,
+      "significant": true,
+      "outdated": false,
+      "minVersion": 0,
+      "maxVersion": 2147483647,
+      "specificLang": [],
+      "title": [
+        {
+          "lang": "zh_CN",
+          "text": "QCL 1.5.8：Minecraft 26.3 终于能启动了"
+        },
+        {
+          "lang": "zh_TW",
+          "text": "QCL 1.5.8：Minecraft 26.3 終於能啟動了"
+        },
+        {
+          "lang": "en_US",
+          "text": "QCL 1.5.8: Minecraft 26.3 finally launches"
+        }
+      ],
+      "date": "2026-10-31",
+      "content": [
+        {
+          "lang": "zh_CN",
+          "text": "【1.5.8：26.3 终于能启动了】\n\n从 1.5.1 起，公告里一直挂着「26.3 启动不了，原因未定位」。\n这一版，它修好了。\n\n一、26.3 崩溃的真根因\n\n不是 QCL 的 bug，是「官方默认值 + 渲染器」的组合问题：\n\n· Minecraft 26.2 引入了 Vulkan 渲染后端，但 26.3 的默认图形 API 仍是 OpenGL；\n· 26.3 走 OpenGL 时，会经过 MobileGlues 的 glGetString；\n· MG 的这个函数在某些查询上返回 NULL，调用方对它 strlen(NULL)；\n· 结果是原生 SIGSEGV（空指针解引用），表现为黑屏崩溃。\n\n而 26.4 官方把「Default」改成了等同「Prefer Vulkan」，所以 26.4 一直能进 ——\n这就是为什么同一台手机、同一份 MG，26.3 崩而 26.4 正常。\n\n二、修法\n\nQCL 从 26.3 起，启动时会追加官方支持的启动参数：\n\n    --graphicsBackend vulkan\n\n这是游戏自己识别的参数（优先级高于游戏内设置），\n不受「上次异常关闭会把设置重置回 Default」的影响。\n26.2 及以下不受任何影响（那些版本没有 Vulkan 后端，OpenGL 是好的）。\n\n三、MobileGlues 已经内置\n\n以前要让 MG 生效，你得自己去装 MG 的插件 APK。\n现在 MG 已经随启动器打包（约 5.8 MB），选中即可用，无需额外安装。\n\n同时启动器会自动为 MG 写好配置（enableNoError=2），\n这是 26.3 能启动的必要条件之一，你不需要手动改。\n\n四、这一版还修了\n\n· 首次进入世界时，转动视角会「大片移一下」——根因是光标增量基准没有重置。\n· 自定义背景图不再整张解码（防大内存占用），解码失败也不会再崩。\n· 安装器（Forge / NeoForge / Cleanroom）启动异常时不再卡住不动。\n· 新增「查看上次启动日志」（左侧栏第 7 个按钮）——\n  游戏在等待界面就崩掉、连崩溃弹窗都弹不出来时，用它把日志复制出来。\n· 日志现在会记录原生崩溃（之前只记启动器自己的输出，崩溃信息全被过滤掉了）。\n· 26.4 快照的 JNA 5.19.1 崩溃（NoClassDefFoundError: NativeLong）已修。\n\n五、已知问题\n\n· 26.3 请用 Vulkan 后端；如果你的设备不支持 Vulkan，26.3 仍可能无法启动。\n· 部分老旧设备（Android 12 及以下）的 Vulkan 驱动可能不完整，请自行测试。\n\n【26.4 及更早版本】\n除上述修复外，1.5.8 与 1.5.7 相比没有其它功能改动。"
+        },
+        {
+          "lang": "zh_TW",
+          "text": "【1.5.8：26.3 終於能啟動了】\n\n從 1.5.1 起，公告裡一直掛著「26.3 啟動不了，原因未定位」。\n這一版，它修好了。\n\n一、26.3 崩潰的真根因\n\n不是 QCL 的 bug，是「官方預設值 + 渲染器」的組合問題：\n\n· Minecraft 26.2 引入了 Vulkan 渲染後端，但 26.3 的預設圖形 API 仍是 OpenGL；\n· 26.3 走 OpenGL 時，會經過 MobileGlues 的 glGetString；\n· MG 的這個函式在某些查詢上回傳 NULL，呼叫方對它 strlen(NULL)；\n· 結果是原生 SIGSEGV（空指標解引用），表現為黑屏崩潰。\n\n而 26.4 官方把「Default」改成了等同「Prefer Vulkan」，所以 26.4 一直能進。\n\n二、修法\n\nQCL 從 26.3 起，啟動時會追加官方支援的啟動參數：\n\n    --graphicsBackend vulkan\n\n這是遊戲自己識別的參數，不受「上次異常關閉會把設定重設回 Default」的影響。\n26.2 及以下不受任何影響。\n\n三、MobileGlues 已經內建\n\n以前要讓 MG 生效，你得自己去裝 MG 的插件 APK。\n現在 MG 已經隨啟動器打包，選中即可用，無需額外安裝。\n\n四、這一版還修了\n\n· 首次進入世界時，轉動視角會「大片移一下」。\n· 自訂背景圖不再整張解碼（防大記憶體佔用），解碼失敗也不會再崩。\n· 安裝器啟動異常時不再卡住不動。\n· 新增「查看上次啟動日誌」（左側欄第 7 個按鈕）。\n· 日誌現在會記錄原生崩潰。\n· 26.4 快照的 JNA 5.19.1 崩潰已修。"
+        },
+        {
+          "lang": "en_US",
+          "text": "[1.5.8: Minecraft 26.3 finally launches]\n\nSince 1.5.1 our announcements kept saying \"26.3 does not start; the cause is not\nidentified\". This release fixes it.\n\n1. The real root cause\n\nIt is not a QCL bug - it is a combination of an official default and the renderer:\n\n- Minecraft 26.2 introduced a Vulkan rendering backend, but 26.3 still defaults to\n  OpenGL for its Graphics API setting.\n- When 26.3 uses OpenGL it goes through MobileGlues' glGetString.\n- That function returns NULL for some queries, and the caller runs strlen(NULL).\n- The result is a native SIGSEGV (null pointer dereference) - a black-screen crash.\n\nVersion 26.4 changed \"Default\" to behave the same as \"Prefer Vulkan\", which is why\n26.4 has always worked on the same phone with the same MG build.\n\n2. The fix\n\nStarting with 26.3, QCL appends the official launch argument:\n\n    --graphicsBackend vulkan\n\nThis is recognised by the game itself, takes precedence over the in-game setting,\nand is unaffected by the \"resetting preferred graphics API to Default\" behaviour\nthat triggers after an unexpected shutdown. Versions 26.2 and below are untouched -\nthey have no Vulkan backend and their OpenGL path works fine.\n\n3. MobileGlues is now built in\n\nPreviously you had to install the MobileGlues plugin APK yourself. MG now ships with\nthe launcher (~5.8 MB) and works once selected - no extra installation needed.\n\nThe launcher also writes the required MG config automatically (enableNoError=2);\nthis is one of the prerequisites for 26.3 to start, and you do not need to change it\nmanually.\n\n4. Other fixes in this release\n\n- The camera snapped a large amount when you first entered a world and moved your\n  view; the cursor delta baseline was never initialised.\n- Custom background images are no longer decoded at full size (saves memory), and a\n  failed decode no longer crashes.\n- Installer (Forge / NeoForge / Cleanroom) no longer hangs when its JVM fails to start.\n- New \"View last launch log\" entry (the 7th button in the left sidebar) - use it when\n  the game dies on the loading screen and no crash dialog appears.\n- Logs now capture native crashes (previously only the launcher's own output was\n  recorded, so the crash report was filtered out entirely).\n- Fixed the JNA 5.19.1 crash on 26.4 snapshots\n  (NoClassDefFoundError: NativeLong).\n\n5. Known issues\n\n- Use the Vulkan backend for 26.3. If your device does not support Vulkan, 26.3 may\n  still fail to start.\n- Some older devices (Android 12 and below) have incomplete Vulkan drivers - test\n  at your own discretion.\n\n[26.4 and earlier]\nApart from the fixes above, 1.5.8 contains no other functional changes versus 1.5.7."
+        }
+      ]
+    },
+    {
       "id": 107,
       "significant": true,
       "outdated": false,

@@ -25,7 +25,8 @@
     <!-- ★★★ 公告卡片（照 FCL announcement_container）：
          标题「公告」+ 可滚动正文（可点链接）+ 更新时间 + 「隐藏」按钮。
          ★ 没公告时整体 GONE（MainUI 控制），人物会自动回到中间。
-         ★ 宽度 0dp + weight=1.05 与人物区（weight=0.95）大致 52:48 分。 -->
+         ★ 1.5.8：宽度改成 weight=0.68（≈40%），人物区 1.32 —— 对齐 FCL 的
+            layout_constraintWidth_percent="0.4"。原来 52:48 会让公告显得又宽又长。 -->
     <LinearLayout
         android:id="@+id/announcement_container"
         android:layout_width="0dp"
@@ -58,11 +59,17 @@
                 android:layout_height="1dp"
                 android:background="#33FFFFFF"/>
 
+            <!-- ★ 1.5.8：ScrollView 保留（展开后可滚动），但它不再「越高越撑」——
+                 真正的限制在正文的 maxLines 上（折叠时只占 6 行高度）。 -->
             <ScrollView
+                android:id="@+id/announcement_scroll"
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
                 android:layout_weight="1">
 
+                <!-- ★★★★★ 1.5.8 修「公告拉太长，挡住半屏」：
+                     默认只显示 6 行 + 末尾省略号，玩家想读全文点下面的「展开」。
+                     maxLines 由 MainUI 在展开/收起时切换。 -->
                 <TextView
                     android:id="@+id/announcement_text"
                     android:autoLink="web"
@@ -79,6 +86,23 @@
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
                 android:background="#33FFFFFF"/>
+
+            <!-- ★★★★★ 1.5.8：「展开 / 收起」按钮（正文默认 6 行，点它看全文）。 -->
+            <TextView
+                android:id="@+id/announcement_expand"
+                android:singleLine="true"
+                android:focusable="true"
+                android:clickable="true"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:paddingTop="6dp"
+                android:paddingBottom="6dp"
+                android:paddingLeft="10dp"
+                android:paddingRight="10dp"
+                android:text="@string/qcl_announcement_expand"
+                android:textColor="#88FFFFFF"
+                android:textSize="@dimen/text_size_small"/>
 
             <!-- ★★★ 1.5.0（2026-10-10 用户要求）：「加一个左右切换公告按钮」。
                  公告栏原来一次只显示**一条**（applyAnnouncement 里 for+break 只取第一条），

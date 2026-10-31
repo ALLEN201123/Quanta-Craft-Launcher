@@ -1361,4 +1361,17 @@
 
     <!-- 1.5.5: translation dialog cancel button -->
     <string name="translation_dialog_cancel">取消</string>
+    <!-- ★★★★★ 1.5.8：查看上次启动日志（崩溃后连弹窗都没有时用） -->
+    <string name="qcl_last_log_title">上次启动日志</string>
+    <string name="qcl_last_log_header">文件 %1$s · 修改于 %2$s（崩溃通常在最后几行）</string>
+    <string name="qcl_last_log_empty">日志文件是空的。\n\n可能原因：\n• 还没启动过游戏\n• 游戏在写日志前就崩了\n• 已被「清空」按钮删掉</string>
+    <string name="qcl_last_log_no_external_dir">找不到外部存储目录，无法读取日志。</string>
+    <string name="qcl_last_log_copy">复制全部</string>
+    <string name="qcl_last_log_copied">已复制到剪贴板</string>
+    <string name="qcl_last_log_clear">清空</string>
+    <string name="qcl_last_log_cleared">日志已清空</string>
+    <string name="qcl_last_log_entry">查看上次启动日志</string>
+    <!-- ★ 1.5.8：公告正文折叠 -->
+    <string name="qcl_announcement_expand">展开全文</string>
+    <string name="qcl_announcement_collapse">收起</string>
 </resources>

@@ -273,8 +273,29 @@ CompoundButton.OnCheckedChangeListener {
             this.editBgUrl.setEnabled(false);
             this.selectBgPath.setEnabled(true);
             if (new File(this.activity.launcherSetting.launcherBackground.path).exists() && ExteriorSettingUI.isImageFile(this.activity.launcherSetting.launcherBackground.path)) {
-                Bitmap bitmap = BitmapFactory.decodeFile((String)this.activity.launcherSetting.launcherBackground.path);
-                this.activity.launcherLayout.setBackground((Drawable)new BitmapDrawable(bitmap));
+                // ★★★★★ 1.5.8（照 FCL 1.3.4.3 的「自持位图 + 防回收」思路）：
+                //
+                //   ① **降采样**：原来 decodeFile 不做采样，手机相册里 4000x3000 的图
+                //      会整张解成 48 MB 的 ARGB_8888，低内存设备上直接 OOM 或返回 null。
+                //      现在按屏幕尺寸算 inSampleSize（只解到够铺满屏幕的大小）。
+                //   ② **null 兜底**：decodeFile 返回 null 时，原代码
+                //      `new BitmapDrawable(bitmap)` 会在构造里 bitmap.getDensity() 处 NPE
+                //      （文件损坏/内存不足都会走到这里）。现在退回经典背景。
+                //   ③ **换背景前回收旧位图**：BitmapDrawable 自己不会 recycle 位图，
+                //      反复换背景会一直累积。这里把旧的那张回收掉。
+                Bitmap qclNewBg = decodeSampledBackground(
+                        (String) this.activity.launcherSetting.launcherBackground.path);
+                if (qclNewBg != null) {
+                    recycleOldBackground(this.activity.launcherLayout);
+                    this.activity.launcherLayout.setBackground((Drawable) new BitmapDrawable(
+                            this.activity.getResources(), qclNewBg));
+                } else {
+                    // 解码失败（损坏 / 内存不足）→ 退回经典背景，绝不留 null
+                    android.util.Log.w("jrelog", "[背景] 自定义背景解码失败，退回经典:" 
+                            + this.activity.launcherSetting.launcherBackground.path);
+                    this.activity.launcherLayout.setBackground(
+                            this.context.getDrawable(R.drawable.ic_background_classic));
+                }
             } else {
                 // ★ 1.5.0：自定义路径无效时的占位图 → 换成经典（黑夜）那张
                 this.activity.launcherLayout.setBackground(this.context.getDrawable(R.drawable.ic_background_classic));
@@ -1293,6 +1314,70 @@ CompoundButton.OnCheckedChangeListener {
                 this.fontColorText.setText(followTheme
                         ? this.context.getString(R.string.exterior_setting_ui_font_color_reset)
                         : QclColors.format(color));
+            }
+        } catch (Throwable ignored) {
+        }
+    }
+
+    /**
+     * ★ 1.5.8：按屏幕尺寸降采样解码背景图（照 FCL 的「不整张大图进内存」）。
+     *
+     * <p>为什么必须做：手机相册的照片常见 4000x3000，整张解成 ARGB_8888 约 48 MB；
+     * 低内存设备上极易 OOM，或 decodeFile 直接返回 null
+     * （原代码随后 new BitmapDrawable(null) 会 NPE）。
+     *
+     * <p>算法：先只读边界（inJustDecodeBounds），按目标宽高算 2 的幂次 inSampleSize，
+     * 再真正解码 —— 安卓官方推荐的省内存写法。
+     *
+     * @return 解码后的 Bitmap；失败返回 null（调用方负责兜底）
+     */
+    private static Bitmap decodeSampledBackground(String path) {
+        try {
+            android.graphics.BitmapFactory.Options probe =
+                    new android.graphics.BitmapFactory.Options();
+            probe.inJustDecodeBounds = true;
+            android.graphics.BitmapFactory.decodeFile(path, probe);
+            if (probe.outWidth <= 0 || probe.outHeight <= 0) {
+                return null;
+            }
+            int targetW = Math.max(probe.outWidth / 2, 720);
+            int targetH = Math.max(probe.outHeight / 2, 1280);
+            int sample = 1;
+            while ((probe.outWidth / sample) > targetW * 2
+                    || (probe.outHeight / sample) > targetH * 2) {
+                sample *= 2;
+            }
+            android.graphics.BitmapFactory.Options opts =
+                    new android.graphics.BitmapFactory.Options();
+            opts.inSampleSize = Math.max(1, sample);
+            opts.inPreferredConfig = android.graphics.Bitmap.Config.ARGB_8888;
+            return android.graphics.BitmapFactory.decodeFile(path, opts);
+        } catch (Throwable t) {
+            return null;
+        }
+    }
+
+    /**
+     * ★ 1.5.8：换背景前把旧的 BitmapDrawable 持有的位图回收。
+     *
+     * <p>BitmapDrawable 不会替我们 recycle 位图 —— 反复「选图 → 换背景」
+     * 会让旧位图一直留在堆里（每张几十 MB）。
+     *
+     * <p>安全前提：只回收我们自己 new 出来的 BitmapDrawable
+     * （getDrawable() 返回的 selector/vector 不是 BitmapDrawable，不会命中），
+     * 且只在视图未挂载时回收，避免「正在绘制时被回收」崩溃。
+     */
+    private static void recycleOldBackground(android.view.View view) {
+        try {
+            if (view == null) {
+                return;
+            }
+            android.graphics.drawable.Drawable old = view.getBackground();
+            if (old instanceof BitmapDrawable) {
+                Bitmap bmp = ((BitmapDrawable) old).getBitmap();
+                if (bmp != null && !bmp.isRecycled() && !view.isAttachedToWindow()) {
+                    bmp.recycle();
+                }
             }
         } catch (Throwable ignored) {
         }

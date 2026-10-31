@@ -109,8 +109,8 @@ android {
         //           取消到 0 条时直接拒写 ⇒ 文件保持旧内容 ⇒ 重启全部复活；
         //     根因② 收藏页的 ★ 只传 f.id 一个键，命中不了就一条都删不掉，
         //           但界面照样 rebuild() ⇒ 看起来删掉了、重启又回来。
-        versionCode 359
-        versionName "1.5.7"
+        versionCode 360
+        versionName "1.5.8"
 
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
@@ -265,6 +265,10 @@ android {
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
+    // ★★★★★ 1.5.8：**内置 MobileGlues 渲染器**（照 FCL 1.3.4.3）。
+    //   原来 mg 是外部插件 APK，玩家得自己装；现在直接打进来。
+    //   AAR 里带 jni/{arm64-v8a,armeabi-v7a,x86,x86_64}/libmobileglues.so。
+    implementation files('libs/MobileGlues-release.aar')
     implementation project(path: ':FilePicker')
     implementation project(path: ':Terracotta')
     implementation project(path: ':ZipTools')

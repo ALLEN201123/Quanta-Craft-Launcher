@@ -63,6 +63,28 @@ public class CallbackBridge {
 
     public static boolean sendCursorPos(float x, float y) {
         DEBUG_STRING.append("CursorPos=").append(x).append(", ").append(y).append("\n");
+        // ★★★★★ 1.5.8 修「第一次进世界转视角，视角大片移一下，之后正常」。
+        //
+        //   原来：float dx = x - mouseX; 而 mouseX 初始值 0、且全工程只有这里赋值
+        //   ⇒ 第一次滑动的 dx = x - 0 = 整个屏幕宽度（上千像素）
+        //   ⇒ 游戏视角瞬间甩一大截（正好就是你描述的现象）。
+        //
+        //   现在：mouseX 被 onGrabStateChanged 重成 Float.NaN（哨兵）。
+        //   第一次 sendCursorPos 见到 NaN ⇒ 当前位置直接当基准、delta 记 0 ⇒ 不甩。
+        if (Float.isNaN(mouseX) || Float.isNaN(mouseY)) {
+            mouseX = x;
+            mouseY = y;
+            CallbackBridge.nativeSendCursorPos(mouseX, mouseY);
+            if (!SdlBridge.getSdlEnabled()) {
+                return true;
+            }
+            try {
+                org.libsdl.app.SDLActivity.onNativeMouse(0, android.view.MotionEvent.ACTION_MOVE,
+                        mouseX, mouseY, false);
+            } catch (Throwable ignored) {
+            }
+            return true;
+        }
         float dx = x - mouseX;
         float dy = y - mouseY;
         mouseX = x;
@@ -375,6 +397,18 @@ public class CallbackBridge {
         grabStatePushed = true;
         if (grabbing) {
             grabEverReported = true;   // ★ 1.4.3：一旦报过 grab，就不再抑制绝对光标推送
+            // ★★★★★ 1.5.8：**进入抓取时把光标增量基准清成哨兵**。
+            //
+            //   为什么必须在这里做：grab = 游戏开始接管鼠标/视角。
+            //   此刻 mouseX/mouseY 可能还是 0（刚进世界、或从菜单回到游戏），
+            //   下一次 sendCursorPos 就会算出 dx = x - 0 = 整屏宽度
+            //   ⇒ 视角瞬间甩一大截（用户实测：「第一次进入世界时，转动视角，
+            //     他的视角会大片移一下，然后后面会正常」）。
+            //
+            //   置 NaN 后，sendCursorPos 的哨兵分支会把当前位置直接当基准、
+            //   delta 记 0 —— 只有从**第二次**移动起才产生真正的增量。
+            mouseX = Float.NaN;
+            mouseY = Float.NaN;
         }
         GrabStateListener listener = grabStateListener;
         if (listener != null) {

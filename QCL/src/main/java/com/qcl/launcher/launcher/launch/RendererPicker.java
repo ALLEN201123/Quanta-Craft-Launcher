@@ -95,15 +95,17 @@ public final class RendererPicker {
             final String gameDir = RendererCompat.gameDirOf(versionPath);
             for (RendererCompat.Info info : RendererCompat.ALL) {
                 boolean libOk = true;
+                boolean builtin = false;
                 if (info.glName != null && !info.glName.isEmpty()) {
-                    boolean inApk = new File(nativeDir, info.glName).isFile();
-                    // 外部渲染器（mg）：优先从「已安装的插件应用」取（与 FCL 一致），
-                    // 其次才是 <gameDir>/renderer/<id>/ 手工放置
+                    // ★ 1.5.8：内置优先（APK 自带）→ 外部插件 → 手放目录
+                    builtin = RendererCompat.isBuiltinLibPresent(activity, info.id);
+                    boolean inApk = builtin || new File(nativeDir, info.glName).isFile();
                     boolean external = RendererCompat.resolveRendererLibDir(activity, info.id, versionPath, gameDir) != null;
                     libOk = inApk || external;
                 }
                 String line = info.displayName + "\n（" + info.supportRangeText() + "）"
                         + (info.recommended ? " ★推荐" : "")
+                        + (builtin ? "  【内置】" : "")
                         + (info.id.equals(current) ? "  ✓当前" : "")
                         + (RendererCompat.supports(info.id, mcVer) ? "" : "  ⚠不支持当前版本")
                         + (libOk ? "" : "  ⚠缺少库文件");
@@ -117,22 +119,22 @@ public final class RendererPicker {
                         final String id = ids.get(which);
                         String warnText = RendererCompat.warningOf(id, mcVer);
                         // ★ mg 是外部渲染器：缺库时明确告诉玩家放哪里
-                        if ("mg".equals(id) && RendererCompat.resolveRendererLibDir(activity, id, versionPath, gameDir) == null) {
+                        // ★ 1.5.8：MG 已内置（随 APK 打包）。只有**内置库也缺失**时
+                        //   才提示玩家（正常情况下内置库一定在，这个分支走不到）。
+                        boolean mgBuiltin = RendererCompat.isBuiltinLibPresent(activity, id);
+                        if ("mg".equals(id) && !mgBuiltin
+                                && RendererCompat.resolveRendererLibDir(activity, id, versionPath, gameDir) == null) {
                             String mgTip = "未检测到 MobileGlues 渲染器库（libmobileglues.so）。\n\n"
-                                    + "【推荐】按官方方式安装（与 FCL 用法一致）：\n"
-                                    + "1. 下载并安装 MobileGlues 插件 APK：\n"
-                                    + "     github.com/MobileGL-Dev/MobileGlues-release/releases\n"
-                                    + "     （选文件名以 .apk 结尾的那个）\n"
-                                    + "2. 装好后【打开一次】该应用，允许存储权限（会创建 /MG 目录）\n"
-                                    + "3. 回到本列表重新打开即可选中 MobileGlues\n"
-                                    + "     （QCL 每次打开都会重新扫描，无需重启启动器）\n\n"
+                                    + "【说明】从 1.5.8 起 MobileGlues 已经**内置**在 QCL 里，\n"
+                                    + "正常情况下不需要你做任何事，选中即可用。\n\n"
+                                    + "你现在看到这个提示，说明内置库异常（极罕见），\n"
+                                    + "可以尝试：重新安装本启动器。\n\n"
                                     + "【兜底】也可以把 libmobileglues.so 手动放到：\n"
                                     + (gameDir != null ? gameDir : "<游戏目录>") + "/renderer/mg/\n\n"
                                     + "要求：设备需支持 OpenGL ES 3.0 以上（3.2 推荐）。\n\n"
-                                    + "【玩 26.3 / 26.3-snapshot-3 及更新版本】\n"
-                                    + "MobileGlues 官方说明：必须在 MobileGlues 应用里开启\n"
-                                    + "「Ignore shader/program error」（忽略着色器/程序错误），\n"
-                                    + "否则 26.3 及之后的版本会因着色器报错而无法进入世界。";
+                                    + "【26.3 及更新版本】\n"
+                                    + "QCL 会自动为 MobileGlues 写好配置（ignoreError=1），\n"
+                                    + "这是 26.3 能启动的必要条件，你不需要手动改。";
                             warnText = (warnText == null) ? mgTip : (mgTip + "\n\n" + warnText);
                         }
                         if (warnText != null) {

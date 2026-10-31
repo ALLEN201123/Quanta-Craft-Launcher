@@ -1245,4 +1245,17 @@ Please add a Microsoft account first.</string>
 
     <!-- 1.5.5: translation dialog cancel button -->
     <string name="translation_dialog_cancel">取消</string>
+    <!-- 1.5.8: last launch log viewer -->
+    <string name="qcl_last_log_title">Last launch log</string>
+    <string name="qcl_last_log_header">File %1$s · modified %2$s (crashes are usually at the end)</string>
+    <string name="qcl_last_log_empty">The log file is empty.\n\nPossible reasons:\n• The game has never been launched\n• The game crashed before writing anything\n• It was deleted by the \"Clear\" button</string>
+    <string name="qcl_last_log_no_external_dir">External storage directory not found; cannot read the log.</string>
+    <string name="qcl_last_log_copy">Copy all</string>
+    <string name="qcl_last_log_copied">Copied to clipboard</string>
+    <string name="qcl_last_log_clear">Clear</string>
+    <string name="qcl_last_log_cleared">Log cleared</string>
+    <string name="qcl_last_log_entry">View last launch log</string>
+    <!-- 1.5.8: announcement body folding -->
+    <string name="qcl_announcement_expand">Show more</string>
+    <string name="qcl_announcement_collapse">Show less</string>
 </resources>
