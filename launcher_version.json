@@ -1,18 +1,17 @@
-{
-  "latestRelease": {
-    "versionCode": 360,
-    "versionName": "1.5.8",
-    "date": "2026-10-31",
-    "url": [
-      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.5.8/QCL-release-1.5.8-universal.apk",
-      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.5.8/QCL-release-1.5.8-arm64.apk",
-      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.5.8/QCL-release-1.5.8-arm.apk",
-      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.5.8/QCL-release-1.5.8-x86_64.apk",
-      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.5.8/QCL-release-1.5.8-x86.apk"
-    ],
-    "netdiskUrl": "https://pan.quark.cn/s/f2c26c4fb66b",
-    "updateLog": "【1.5.8：Minecraft 26.3 终于能启动了】\n\n从 1.5.1 起，这项一直挂着「26.3 启动不了，原因未定位」。\n这一版，它修好了。先说清楚真根因 —— 这不是 QCL 的 bug。\n\n一、26.3 崩的真正原因\n\n是「官方默认值 + 渲染器」的组合问题：\n\n· Minecraft 26.2 引入了 Vulkan 渲染后端，但 26.3 的默认图形 API 仍然是 DEFAULT（= OpenGL）；\n· 26.3 走 OpenGL 时，这条 GL 路径会经过 MobileGlues 的 glGetString；\n· MG 的这个函数在部分查询上返回 NULL，调用方对 NULL 取 strlen；\n· 结果是原生 SIGSEGV（空指针解引用），表现为黑屏崩溃。\n  tombstone 铁证：__strlen_aarch64 ← glGetString ← libmobileglues.so\n\n而 26.4 官方把「Default」改成了等同「Prefer Vulkan」，所以同一台手机、同一份 MG，\n26.4 一直能进 —— 这就是「崩 26.3、不崩 26.4」的全部原因。\n\n二、修法：用官方启动参数，不写 options.txt\n\nQCL 从 26.3 起，启动时追加游戏自己支持的启动参数：\n\n    --graphicsBackend vulkan\n\n为什么不能写 options.txt（三条实测证据）：\n· 写根目录无效 —— QCL 默认各版本独立，游戏读的是 versions/\u003cver\u003e/options.txt；\n· 写版本目录那份会被重置 —— 26.3 在上次异常关闭后会主动打回 Default：\n  Detected unexpected shutdown during last game startup:\n  resetting preferred graphics API to Default\n· 写进 onCreate / onSurfaceTextureAvailable 也不行 —— 26.3 走 SDL3，该回调根本不触发。\n\n启动参数的优先级高于游戏内设置，且不受异常关闭重置影响。\n26.2 及以下一律不碰（那些版本没有 Vulkan 后端，OpenGL 路径是好的）。\n\n三、MobileGlues 已内置\n\n以前要让 MG 生效，得自己去装 MG 的插件 APK。\n现在 MG 随启动器打包（约 7.8 MB，含四 ABI），选中即可用，无需额外安装。\n库解析顺序：内置（APK 自带）→ 外部插件 APK → renderer/\u003cid\u003e/ 手放目录。\n\n四、另一条独立崩溃：MG 配置键名\n\n26.3 除零崩溃的完整因果：\nenableNoError=0 → 不吞 GL 错误 → GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT 拿不到\n→ minUniformOffsetAlignment() 返回 0 → Mth.positiveCeilDiv 除零\n→ DynamicGpuDataStorageMapped.\u003cinit\u003e 抛 ArithmeticException\n\n键名踩过的坑：MG 源码 settings.cpp 读的是 enableNoError，不是 ignoreError。\n日志里那句 [MobileGlues] Setting: ignoreError = 0 是内部枚举值（0=None），不是配置键名。\nQCL 现在自动写 enableNoError=2。\nMG_DIR_PATH 指向 \u003cfiles\u003e/mobileglues，顺带让 MG 的「不支持的启动器」分支恒假，\n因此不需要伪造 FCL_VERSION_CODE。\n\n五、这一版还修了\n\n· 首次进入世界时转视角会「大片移一下」—— 根因是光标增量基准没有重置。\n· 自定义背景图不再整张解码（防大内存占用），解码失败也不会再崩。\n· 安装器（Forge / NeoForge / Cleanroom）启动异常时不再卡住不动。\n· 新增「查看上次启动日志」（左侧栏第 7 个按钮）——\n  游戏在等待界面就崩、连崩溃弹窗都弹不出来时，用它把日志复制出来。\n· 日志现在会记录原生崩溃（之前 logcat 白名单把 F/DEBUG、F/libc、E/AndroidRuntime 全过滤掉了）。\n· 26.4 快照的 JNA 5.19.1 崩溃（NoClassDefFoundError: NativeLong）已修。\n· 26.3+ 写 config/fml.toml 的 earlyWindowControl=false，避免 FML 抢先建窗口。\n· 公告恢复完整显示，不再限 6 行（1.5.7 那次折叠导致大部分内容看不见，已撤销）。\n\n六、已知问题\n\n· 无 Vulkan 的设备，26.3 可能仍无法启动（这是设备能力，不是启动器缺陷）。\n· 部分老旧设备（Android 12 及以下）的 Vulkan 驱动可能不完整，请自行测试。\n\n（本版为 1.5.8，versionCode 360。）",
-    "latestPrerelease": null
-  },
-  "latestPrerelease": null
+﻿{
+    "latestRelease":  {
+                          "versionCode":  361,
+                          "versionName":  "1.5.9",
+                          "date":  "2026-10-31",
+                          "url":  [
+                                      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.5.9/QCL-release-1.5.9-universal.apk",
+                                      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.5.9/QCL-release-1.5.9-arm64.apk",
+                                      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.5.9/QCL-release-1.5.9-arm.apk",
+                                      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.5.9/QCL-release-1.5.9-x86_64.apk",
+                                      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.5.9/QCL-release-1.5.9-x86.apk"
+                                  ],
+                          "netdiskUrl":  "https://pan.quark.cn/s/f2c26c4fb66b",
+                          "updateLog":  "【1.5.9：公告「展开」按钮修好了 + 首次显示不再铺满半屏】\n\n一、公告的「展开 / 收起」按钮现在真的能看见了\n\n1.5.8 那版我说「撤销折叠」，结果改过头了：\n· 每次显示公告，代码都把正文设成「不限行数」（Integer.MAX_VALUE），\n  然后**把展开按钮直接隐藏掉**（setVisibility(GONE)）；\n· 于是 XML 里明明写好的「展开」按钮，玩家根本看不见，更点不到；\n· 而且每翻一页还会再隐藏一次 —— 这个功能等于被我废掉了。\n\n现在改回正规做法：\n· 公告正文**默认只显示 6 行**，末尾省略号；\n· 下面的按钮**可见**，显示「Show more」；\n· 点一下 → 显示全文，按钮文字变「Show less」；\n· 再点一下 → 收回 6 行；\n· 换一条公告 / 翻页 → 自动回到折叠态，按钮文字也跟着复位。\n\n二、修「首次启动时公告铺满半个屏幕」\n\n原因是我把顺序写反了：\n· 先 setText()（这一步会触发一次重新排版）\n· 再做入场动画\n· 最后才让公告栏可见\n结果公告栏是**带着「还没折叠的满高正文」**进场的，首帧就撑满了半屏。\n\n现在改成：\n· 先把折叠状态和按钮文字/可见性全部落定；\n· 再请求一次排版，让高度按 6 行算准；\n· 最后才做入场动画。\n首帧就是「6 行 + Show more」，不会再抖一下。\n\n三、本版其它\n\n· 1.5.8 的内容全部保留（26.3 能启动、MobileGlues 内置、日志查看器等）。\n· 26.3 的真根因与修法见 1.5.8 的说明：\n  26.3 默认仍走 OpenGL → 经 libmobileglues.so 的 glGetString 返回 NULL\n  → 调用方 strlen(NULL) → 原生 SIGSEGV；\n  QCL 从 26.3 起自动追加官方启动参数 --graphicsBackend vulkan。\n\n四、已知问题（不变）\n\n· 无 Vulkan 的设备，26.3 可能仍无法启动（设备能力，不是启动器缺陷）。\n· 点两次 ESC 视角偶发偏移 —— 需要一份可复现的日志才能定位。\n· 远古版本颜色异常 —— 第三方转译路线共有的天花板，彻底解决依赖自研渲染器。\n\n（本版为 1.5.9，versionCode 361。）"
+                      },
+    "latestPrerelease":  null
 }
