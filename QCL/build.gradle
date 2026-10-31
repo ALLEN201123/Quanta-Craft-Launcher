@@ -109,8 +109,8 @@ android {
         //           取消到 0 条时直接拒写 ⇒ 文件保持旧内容 ⇒ 重启全部复活；
         //     根因② 收藏页的 ★ 只传 f.id 一个键，命中不了就一条都删不掉，
         //           但界面照样 rebuild() ⇒ 看起来删掉了、重启又回来。
-        versionCode 360
-        versionName "1.5.8"
+        versionCode 361
+        versionName "1.5.9"
 
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
