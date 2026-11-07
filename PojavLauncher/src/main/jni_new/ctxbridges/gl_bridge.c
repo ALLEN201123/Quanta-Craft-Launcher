@@ -21,6 +21,38 @@ static const char *g_LogTag = "GLBridge";
 static __thread gl_render_window_t *currentBundle;
 static EGLDisplay g_EglDisplay;
 
+// ★★★★★ 1.6.0：**SFPEW 兼容层转发**（照 FCL 1.3.4.4 ctxbridges/gl_bridge.c）。
+//
+//   为什么必须包一层：QCL 原来所有调用点都**直接**用 eglMakeCurrent_p / eglSwapBuffers_p，
+//   于是 SFPEW 包装层即使被 dlopen 了也拿不到调用 —— 它必须**看到**每一次
+//   makeCurrent 与 swap 才能：
+//     · 记录线程本地上下文（SFPEW_RELAXED_CONTEXT 的严格/宽松模式据此判定）；
+//     · 在 swap 前把积攒的立即模式批次（glBegin/glEnd）翻译并提交给后端 GLES。
+//   这就是「给老版本补固定管线」的实际落地点，改 Java 或只注入 env 都不会生效。
+//
+//   未启用兼容层时 sfpew_* 恒为 NULL → 原样回落系统 EGL，行为与改动前完全一致。
+static EGLBoolean bridge_eglMakeCurrent(EGLDisplay dpy, EGLSurface draw, EGLSurface read, EGLContext ctx) {
+    if (sfpew_eglMakeCurrent_p != NULL) return sfpew_eglMakeCurrent_p(dpy, draw, read, ctx);
+    return eglMakeCurrent_p(dpy, draw, read, ctx);
+}
+
+static EGLBoolean bridge_eglSwapBuffers(EGLDisplay dpy, EGLSurface draw) {
+    if (sfpew_eglSwapBuffers_p != NULL) return sfpew_eglSwapBuffers_p(dpy, draw);
+    return eglSwapBuffers_p(dpy, draw);
+}
+
+// 建/毁上下文同样经包装层：逐上下文自动开关以「包装层看到建上下文请求」为前提；
+// 包装库缺入口（NULL）时回落底座，避免「包装层创建、底座销毁」的所有权错配。
+static EGLContext bridge_eglCreateContext(EGLDisplay dpy, EGLConfig config, EGLContext share, const EGLint *attrib_list) {
+    if (sfpew_eglCreateContext_p != NULL) return sfpew_eglCreateContext_p(dpy, config, share, attrib_list);
+    return eglCreateContext_p(dpy, config, share, attrib_list);
+}
+
+static EGLBoolean bridge_eglDestroyContext(EGLDisplay dpy, EGLContext ctx) {
+    if (sfpew_eglDestroyContext_p != NULL) return sfpew_eglDestroyContext_p(dpy, ctx);
+    return eglDestroyContext_p(dpy, ctx);
+}
+
 bool gl_init() {
     __android_log_print(ANDROID_LOG_ERROR, "QCL_DBG", "gl_init: enter, calling dlsym_EGL");
     if (!dlsym_EGL()) {
@@ -113,9 +145,9 @@ gl_render_window_t *gl_init_context(gl_render_window_t *share) {
     int libgl_es = libglEsEnv != NULL ? (int) strtol(libglEsEnv, NULL, 0) : 2; // ★ 1.1.0 QCL：NULL 兜底
     if (libgl_es < 0 || libgl_es > INT16_MAX) libgl_es = 2;
     const EGLint egl_context_attributes[] = {EGL_CONTEXT_CLIENT_VERSION, libgl_es, EGL_NONE};
-    bundle->context = eglCreateContext_p(g_EglDisplay, bundle->config,
-                                         share == NULL ? EGL_NO_CONTEXT : share->context,
-                                         egl_context_attributes);
+    bundle->context = bridge_eglCreateContext(g_EglDisplay, bundle->config,
+                                              share == NULL ? EGL_NO_CONTEXT : share->context,
+                                              egl_context_attributes);
 
     if (bundle->context == EGL_NO_CONTEXT) {
         __android_log_print(ANDROID_LOG_ERROR, g_LogTag,
@@ -175,7 +207,7 @@ void gl_swap_surface(gl_render_window_t *bundle) {
 
 void gl_make_current(gl_render_window_t *bundle) {
     if (bundle == NULL) {
-        if (eglMakeCurrent_p(g_EglDisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT)) {
+        if (bridge_eglMakeCurrent(g_EglDisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT)) {
             currentBundle = NULL;
         }
         return;
@@ -194,7 +226,7 @@ void gl_make_current(gl_render_window_t *bundle) {
     if (bundle->surface == NULL) { //it likely will be on the first run
         gl_swap_surface(bundle);
     }
-    if (eglMakeCurrent_p(g_EglDisplay, bundle->surface, bundle->surface, bundle->context)) {
+    if (bridge_eglMakeCurrent(g_EglDisplay, bundle->surface, bundle->surface, bundle->context)) {
         currentBundle = bundle;
         // ★★★ 2026-09-17：swap interval 在这里设（EGL display/context 已就绪）。
         // 不能放在 pojavInit 里：那时 g_EglDisplay 还是 NULL。
@@ -214,21 +246,21 @@ void gl_make_current(gl_render_window_t *bundle) {
 
 void gl_swap_buffers() {
     if (currentBundle->state == STATE_RENDERER_NEW_WINDOW) {
-        eglMakeCurrent_p(g_EglDisplay, EGL_NO_SURFACE, EGL_NO_SURFACE,
-                         EGL_NO_CONTEXT); //detach everything to destroy the old EGLSurface
+        bridge_eglMakeCurrent(g_EglDisplay, EGL_NO_SURFACE, EGL_NO_SURFACE,
+                              EGL_NO_CONTEXT); //detach everything to destroy the old EGLSurface
         gl_swap_surface(currentBundle);
-        eglMakeCurrent_p(g_EglDisplay, currentBundle->surface, currentBundle->surface,
-                         currentBundle->context);
+        bridge_eglMakeCurrent(g_EglDisplay, currentBundle->surface, currentBundle->surface,
+                              currentBundle->context);
         currentBundle->state = STATE_RENDERER_ALIVE;
     }
     if (currentBundle->surface != NULL)
-        if (!eglSwapBuffers_p(g_EglDisplay, currentBundle->surface) &&
+        if (!bridge_eglSwapBuffers(g_EglDisplay, currentBundle->surface) &&
             eglGetError_p() == EGL_BAD_SURFACE) {
-            eglMakeCurrent_p(g_EglDisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+            bridge_eglMakeCurrent(g_EglDisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
             currentBundle->newNativeSurface = NULL;
             gl_swap_surface(currentBundle);
-            eglMakeCurrent_p(g_EglDisplay, currentBundle->surface, currentBundle->surface,
-                             currentBundle->context);
+            bridge_eglMakeCurrent(g_EglDisplay, currentBundle->surface, currentBundle->surface,
+                                  currentBundle->context);
             __android_log_print(ANDROID_LOG_INFO, g_LogTag,
                                 "The window has died, awaiting window change");
         }

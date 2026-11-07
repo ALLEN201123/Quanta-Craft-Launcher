@@ -1,374 +1,411 @@
 {
-  "announcements": [
+ "announcements": [
+  {
+   "id": 110,
+   "significant": true,
+   "outdated": false,
+   "minVersion": 0,
+   "maxVersion": 2147483647,
+   "specificLang": [],
+   "title": [
     {
-      "id": 109,
-      "significant": true,
-      "outdated": false,
-      "minVersion": 0,
-      "maxVersion": 2147483647,
-      "specificLang": [],
-      "title": [
-        {
-          "lang": "zh_CN",
-          "text": "QCL 1.5.9：公告「展开」按钮修好了 + 首次显示不再铺满半屏"
-        },
-        {
-          "lang": "zh_TW",
-          "text": "QCL 1.5.9：公告「展開」按鈕修好了 + 首次顯示不再鋪滿半屏"
-        },
-        {
-          "lang": "en_US",
-          "text": "QCL 1.5.9: announcement Show-more button fixed + no more half-screen fill"
-        }
-      ],
-      "date": "2026-10-31",
-      "content": [
-        {
-          "lang": "zh_CN",
-          "text": "【1.5.9：公告的「展开」按钮修好了，首次启动不再铺满半屏】\n\n这一版修的，是 1.5.8 我自己改出来的问题。\n\n一、公告「展开 / 收起」按钮，现在真的能看见了\n\n1.5.8 里我为了修「公告把半屏铺满」，写了一句「撤销折叠」，结果改过头了：\n\n· 每次显示公告，代码都把正文设成「不限行数」；\n· 然后**把展开按钮直接隐藏掉**。\n\n于是 XML 里明明写好的「展开」按钮，你根本看不见，更点不到；\n而且每翻一页还会再隐藏一次 —— 这个功能等于被我废掉了。\n\n现在改回正规做法：\n· 公告正文**默认只显示 6 行**，末尾省略号；\n· 下面的按钮**可见**，显示「Show more」；\n· 点一下 → 显示全文，按钮文字变「Show less」；\n· 再点一下 → 收回 6 行；\n· 换一条公告 / 翻页 → 自动回到折叠态，按钮文字也跟着复位。\n\n二、修「首次启动时公告铺满半个屏幕」\n\n原因是我把顺序写反了：\n· 先设置正文（这一步会触发一次重新排版）；\n· 再做入场动画；\n· 最后才让公告栏可见。\n结果公告栏是**带着「还没折叠的满高正文」**进场的，首帧就撑满了半屏。\n\n现在改成：\n· 先把折叠状态和按钮文字/可见性全部落定；\n· 再请求一次排版，让高度按 6 行算准；\n· 最后才做入场动画。\n首帧就是「6 行 + Show more」，不会再抖一下。\n\n三、本版其它\n\n· 1.5.8 的内容全部保留（26.3 能启动、MobileGlues 内置、日志查看器等）。\n· 26.3 的真根因与修法见 1.5.8 的说明：\n  26.3 默认仍走 OpenGL → 经 libmobileglues.so 的 glGetString 返回 NULL\n  → 调用方 strlen(NULL) → 原生 SIGSEGV；\n  QCL 从 26.3 起自动追加官方启动参数 --graphicsBackend vulkan。\n\n四、已知问题（不变）\n\n· 无 Vulkan 的设备，26.3 可能仍无法启动（设备能力，不是启动器缺陷）。\n· 点两次 ESC 视角偶发偏移 —— 需要一份可复现的日志才能定位。\n· 远古版本颜色异常 —— 第三方转译路线共有的天花板，彻底解决依赖自研渲染器。\n\n（本版为 1.5.9，versionCode 361。）"
-        },
-        {
-          "lang": "zh_TW",
-          "text": "【1.5.9：公告的「展開」按鈕修好了，首次啟動不再鋪滿半屏】\n\n這一版修的，是 1.5.8 我自己改出來的問題。\n\n一、公告「展開 / 收起」按鈕，現在真的能看見了\n\n1.5.8 裡我為了修「公告把半屏鋪滿」，寫了一句「撤銷折疊」，結果改過頭了：\n\n· 每次顯示公告，程式碼都把正文設成「不限行數」；\n· 然後**把展開按鈕直接隱藏掉**。\n\n於是 XML 裡明明寫好的「展開」按鈕，你根本看不見，更點不到；\n而且每翻一頁還會再隱藏一次 —— 這個功能等於被我廢掉了。\n\n現在改回正規做法：\n· 公告正文**預設只顯示 6 行**，末尾省略號；\n· 下面的按鈕**可見**，顯示「Show more」；\n· 點一下 → 顯示全文，按鈕文字變「Show less」；\n· 再點一下 → 收回 6 行；\n· 換一條公告 / 翻頁 → 自動回到折疊態，按鈕文字也跟著復位。\n\n二、修「首次啟動時公告鋪滿半個螢幕」\n\n原因是我把順序寫反了：\n· 先設定正文（這一步會觸發一次重新排版）；\n· 再做入場動畫；\n· 最後才讓公告欄可見。\n結果公告欄是**帶著「還沒折疊的滿高正文」**進場的，首幀就撐滿了半屏。\n\n現在改成：\n· 先把折疊狀態和按鈕文字/可見性全部落定；\n· 再請求一次排版，讓高度按 6 行算準；\n· 最後才做入場動畫。\n首幀就是「6 行 + Show more」，不會再抖一下。\n\n三、本版其它\n\n· 1.5.8 的內容全部保留（26.3 能啟動、MobileGlues 內建、日誌檢視器等）。\n· 26.3 的真根因與修法見 1.5.8 的說明：\n  26.3 預設仍走 OpenGL → 經 libmobileglues.so 的 glGetString 回傳 NULL\n  → 呼叫方 strlen(NULL) → 原生 SIGSEGV；\n  QCL 從 26.3 起自動追加官方啟動參數 --graphicsBackend vulkan。\n\n四、已知問題（不變）\n\n· 無 Vulkan 的裝置，26.3 可能仍無法啟動（裝置能力，不是啟動器缺陷）。\n· 點兩次 ESC 視角偶發偏移 —— 需要一份可重現的日誌才能定位。\n· 遠古版本顏色異常 —— 第三方轉譯路線共有的天花板，徹底解決依賴自研渲染器。\n\n（本版為 1.5.9，versionCode 361。）"
-        },
-        {
-          "lang": "en_US",
-          "text": "[1.5.9: the announcement \"Show more\" button works again, and the announcement no\nlonger fills half the screen on first launch]\n\nThis release fixes a problem I introduced myself in 1.5.8.\n\n1. The \"Show more / Show less\" button is actually visible now\n\nIn 1.5.8, to fix \"the announcement fills half the screen\", I wrote \"undo the\ncollapse\" - and overdid it:\n\n- every time an announcement was shown, the body was set to \"unlimited lines\";\n- and then the Show more button was hidden outright.\n\nSo the button that was properly declared in the XML was invisible and\nunclickable, and it was hidden again on every page change - the feature was\neffectively dead.\n\nNow it works the proper way:\n- the announcement body defaults to 6 lines with a trailing ellipsis;\n- the button below is visible and reads \"Show more\";\n- tap it -> full text, button becomes \"Show less\";\n- tap again -> back to 6 lines;\n- switching announcements / paging -> returns to the collapsed state and the\n  button label resets with it.\n\n2. Fixed \"the announcement fills half the screen on first launch\"\n\nThe order was wrong:\n- set the text first (which triggers a re-layout);\n- then run the entrance animation;\n- and only then make the announcement visible.\nThe panel therefore entered while still carrying the full-height, uncollapsed\nbody, filling the screen on the very first frame.\n\nNow:\n- the collapsed state plus button label/visibility are settled first;\n- a layout pass runs so the height is computed for 6 lines;\n- the entrance animation runs last.\nThe first frame is \"6 lines + Show more\", with no flicker.\n\n3. Other notes\n\n- everything from 1.5.8 is kept (26.3 launches, MobileGlues built in, the\n  last-launch-log viewer, etc.);\n- the real root cause and fix for 26.3 are described in the 1.5.8 notes:\n  26.3 still defaults to OpenGL -> the GL path goes through libmobileglues.so's\n  glGetString, which returns NULL -> the caller does strlen(NULL) -> a native\n  SIGSEGV; QCL appends the official launch argument --graphicsBackend vulkan\n  from 26.3 onward.\n\n4. Known issues (unchanged)\n\n- on devices without Vulkan, 26.3 may still fail to start (a device limitation,\n  not a launcher defect);\n- the view occasionally drifts after pressing ESC twice - needs a reproducible\n  log to pin down;\n- ancient-version colour anomalies are a ceiling shared by every third-party\n  translation stack; the real fix depends on our own renderer.\n\n(This release is 1.5.9, versionCode 361.)"
-        }
-      ]
+     "lang": "zh_CN",
+     "text": "QCL 1.6.0：老版本也能用 MobileGlues —— 内置 SFPEW 兼容层 + 渲染器选择改卡片"
     },
     {
-      "id": 108,
-      "significant": true,
-      "outdated": false,
-      "minVersion": 0,
-      "maxVersion": 2147483647,
-      "specificLang": [],
-      "title": [
-        {
-          "lang": "zh_CN",
-          "text": "QCL 1.5.8：Minecraft 26.3 终于能启动了"
-        },
-        {
-          "lang": "zh_TW",
-          "text": "QCL 1.5.8：Minecraft 26.3 終於能啟動了"
-        },
-        {
-          "lang": "en_US",
-          "text": "QCL 1.5.8: Minecraft 26.3 finally launches"
-        }
-      ],
-      "date": "2026-10-31",
-      "content": [
-        {
-          "lang": "zh_CN",
-          "text": "【1.5.8：26.3 终于能启动了】\n\n从 1.5.1 起，公告里一直挂着「26.3 启动不了，原因未定位」。\n这一版，它修好了。\n\n一、26.3 崩溃的真根因\n\n不是 QCL 的 bug，是「官方默认值 + 渲染器」的组合问题：\n\n· Minecraft 26.2 引入了 Vulkan 渲染后端，但 26.3 的默认图形 API 仍是 OpenGL；\n· 26.3 走 OpenGL 时，会经过 MobileGlues 的 glGetString；\n· MG 的这个函数在某些查询上返回 NULL，调用方对它 strlen(NULL)；\n· 结果是原生 SIGSEGV（空指针解引用），表现为黑屏崩溃。\n\n而 26.4 官方把「Default」改成了等同「Prefer Vulkan」，所以 26.4 一直能进 ——\n这就是为什么同一台手机、同一份 MG，26.3 崩而 26.4 正常。\n\n二、修法\n\nQCL 从 26.3 起，启动时会追加官方支持的启动参数：\n\n    --graphicsBackend vulkan\n\n这是游戏自己识别的参数（优先级高于游戏内设置），\n不受「上次异常关闭会把设置重置回 Default」的影响。\n26.2 及以下不受任何影响（那些版本没有 Vulkan 后端，OpenGL 是好的）。\n\n三、MobileGlues 已经内置\n\n以前要让 MG 生效，你得自己去装 MG 的插件 APK。\n现在 MG 已经随启动器打包（约 5.8 MB），选中即可用，无需额外安装。\n\n同时启动器会自动为 MG 写好配置（enableNoError=2），\n这是 26.3 能启动的必要条件之一，你不需要手动改。\n\n四、这一版还修了\n\n· 首次进入世界时，转动视角会「大片移一下」——根因是光标增量基准没有重置。\n· 自定义背景图不再整张解码（防大内存占用），解码失败也不会再崩。\n· 安装器（Forge / NeoForge / Cleanroom）启动异常时不再卡住不动。\n· 新增「查看上次启动日志」（左侧栏第 7 个按钮）——\n  游戏在等待界面就崩掉、连崩溃弹窗都弹不出来时，用它把日志复制出来。\n· 日志现在会记录原生崩溃（之前只记启动器自己的输出，崩溃信息全被过滤掉了）。\n· 26.4 快照的 JNA 5.19.1 崩溃（NoClassDefFoundError: NativeLong）已修。\n\n五、已知问题\n\n· 26.3 请用 Vulkan 后端；如果你的设备不支持 Vulkan，26.3 仍可能无法启动。\n· 部分老旧设备（Android 12 及以下）的 Vulkan 驱动可能不完整，请自行测试。\n\n【26.4 及更早版本】\n除上述修复外，1.5.8 与 1.5.7 相比没有其它功能改动。"
-        },
-        {
-          "lang": "zh_TW",
-          "text": "【1.5.8：26.3 終於能啟動了】\n\n從 1.5.1 起，公告裡一直掛著「26.3 啟動不了，原因未定位」。\n這一版，它修好了。\n\n一、26.3 崩潰的真根因\n\n不是 QCL 的 bug，是「官方預設值 + 渲染器」的組合問題：\n\n· Minecraft 26.2 引入了 Vulkan 渲染後端，但 26.3 的預設圖形 API 仍是 OpenGL；\n· 26.3 走 OpenGL 時，會經過 MobileGlues 的 glGetString；\n· MG 的這個函式在某些查詢上回傳 NULL，呼叫方對它 strlen(NULL)；\n· 結果是原生 SIGSEGV（空指標解引用），表現為黑屏崩潰。\n\n而 26.4 官方把「Default」改成了等同「Prefer Vulkan」，所以 26.4 一直能進。\n\n二、修法\n\nQCL 從 26.3 起，啟動時會追加官方支援的啟動參數：\n\n    --graphicsBackend vulkan\n\n這是遊戲自己識別的參數，不受「上次異常關閉會把設定重設回 Default」的影響。\n26.2 及以下不受任何影響。\n\n三、MobileGlues 已經內建\n\n以前要讓 MG 生效，你得自己去裝 MG 的插件 APK。\n現在 MG 已經隨啟動器打包，選中即可用，無需額外安裝。\n\n四、這一版還修了\n\n· 首次進入世界時，轉動視角會「大片移一下」。\n· 自訂背景圖不再整張解碼（防大記憶體佔用），解碼失敗也不會再崩。\n· 安裝器啟動異常時不再卡住不動。\n· 新增「查看上次啟動日誌」（左側欄第 7 個按鈕）。\n· 日誌現在會記錄原生崩潰。\n· 26.4 快照的 JNA 5.19.1 崩潰已修。"
-        },
-        {
-          "lang": "en_US",
-          "text": "[1.5.8: Minecraft 26.3 finally launches]\n\nSince 1.5.1 our announcements kept saying \"26.3 does not start; the cause is not\nidentified\". This release fixes it.\n\n1. The real root cause\n\nIt is not a QCL bug - it is a combination of an official default and the renderer:\n\n- Minecraft 26.2 introduced a Vulkan rendering backend, but 26.3 still defaults to\n  OpenGL for its Graphics API setting.\n- When 26.3 uses OpenGL it goes through MobileGlues' glGetString.\n- That function returns NULL for some queries, and the caller runs strlen(NULL).\n- The result is a native SIGSEGV (null pointer dereference) - a black-screen crash.\n\nVersion 26.4 changed \"Default\" to behave the same as \"Prefer Vulkan\", which is why\n26.4 has always worked on the same phone with the same MG build.\n\n2. The fix\n\nStarting with 26.3, QCL appends the official launch argument:\n\n    --graphicsBackend vulkan\n\nThis is recognised by the game itself, takes precedence over the in-game setting,\nand is unaffected by the \"resetting preferred graphics API to Default\" behaviour\nthat triggers after an unexpected shutdown. Versions 26.2 and below are untouched -\nthey have no Vulkan backend and their OpenGL path works fine.\n\n3. MobileGlues is now built in\n\nPreviously you had to install the MobileGlues plugin APK yourself. MG now ships with\nthe launcher (~5.8 MB) and works once selected - no extra installation needed.\n\nThe launcher also writes the required MG config automatically (enableNoError=2);\nthis is one of the prerequisites for 26.3 to start, and you do not need to change it\nmanually.\n\n4. Other fixes in this release\n\n- The camera snapped a large amount when you first entered a world and moved your\n  view; the cursor delta baseline was never initialised.\n- Custom background images are no longer decoded at full size (saves memory), and a\n  failed decode no longer crashes.\n- Installer (Forge / NeoForge / Cleanroom) no longer hangs when its JVM fails to start.\n- New \"View last launch log\" entry (the 7th button in the left sidebar) - use it when\n  the game dies on the loading screen and no crash dialog appears.\n- Logs now capture native crashes (previously only the launcher's own output was\n  recorded, so the crash report was filtered out entirely).\n- Fixed the JNA 5.19.1 crash on 26.4 snapshots\n  (NoClassDefFoundError: NativeLong).\n\n5. Known issues\n\n- Use the Vulkan backend for 26.3. If your device does not support Vulkan, 26.3 may\n  still fail to start.\n- Some older devices (Android 12 and below) have incomplete Vulkan drivers - test\n  at your own discretion.\n\n[26.4 and earlier]\nApart from the fixes above, 1.5.8 contains no other functional changes versus 1.5.7."
-        }
-      ]
+     "lang": "zh_TW",
+     "text": "QCL 1.6.0：老版本也能用 MobileGlues —— 內建 SFPEW 相容層 + 渲染器選擇改卡片"
     },
     {
-      "id": 107,
-      "significant": true,
-      "outdated": false,
-      "minVersion": 0,
-      "maxVersion": 2147483647,
-      "specificLang": [],
-      "title": [
-        {
-          "lang": "zh_CN",
-          "text": "QCL 1.5.7：Legacy Fabric / Legacy Fabric API 加版本限制 + 修好取消收藏失效"
-        },
-        {
-          "lang": "zh_TW",
-          "text": "QCL 1.5.7：Legacy Fabric / Legacy Fabric API 加版本限制 + 修好取消收藏失效"
-        },
-        {
-          "lang": "en_US",
-          "text": "QCL 1.5.7: version limits for Legacy Fabric / Legacy Fabric API + un-favorite fix"
-        }
-      ],
-      "date": "2026-10-27",
-      "content": [
-        {
-          "lang": "zh_CN",
-          "text": "【1.5.7：Legacy Fabric 版本限制 + 修好「取消收藏又复活」】\n\n一、Legacy Fabric / Legacy Fabric API 只支持 1.3 – 1.13.2\n按上游 meta.legacyfabric.net 和 Modrinth 的真实版本表加了限制：\n· 选 1.3 – 1.13.2 以外（含部分快照、愚人节版本）的游戏版本时，安装页不再显示这两个加载器；\n· 给已有实例补装加载器时会先校验，不支持就直接提示支持范围。\n以前选中后会进到一个空列表，只剩返回键，完全不知道发生了什么。\n\n二、修好「收藏页取消收藏，大退重进又回来」\n· 根因一：写盘处的「防丢数据」守卫，在玩家把收藏取消到一条不剩时拒绝写入\n  （内存列表为空、文件非空 ⇒ 直接 return），磁盘文件保持旧内容，重启自然全部复活。\n  现在只在「从未成功读取过收藏文件」时才拒绝写入，空列表是玩家的真实意图，必须落盘；\n  防丢数据改由「加载失败拒写 + 原子写并保留 .bak + 写后回读校验」三件事承担。\n· 根因二：收藏页那个 ★ 只按单个 id 删除，历史数据里 id 和 source:modId 一旦对不上就一条都删不掉，\n  但界面照样刷新 —— 看着删掉了、重启又回来。\n  现在按 id → source:slug → source:modId 三路兜底，删不掉会明确提示，不再假装成功。\n\n三、其它\n· versionCode 359"
-        },
-        {
-          "lang": "zh_TW",
-          "text": "【1.5.7：Legacy Fabric 版本限制 + 修好「取消收藏又復活」】\n\n一、Legacy Fabric / Legacy Fabric API 只支援 1.3 – 1.13.2\n依上游 meta.legacyfabric.net 與 Modrinth 的真實版本表加上限制：\n· 選 1.3 – 1.13.2 以外（含部分快照、愚人節版本）的遊戲版本時，安裝頁不再顯示這兩個載入器；\n· 為既有執行個體補裝載入器時會先驗證，不支援就直接提示支援範圍。\n以前選中後會進到一個空清單，只剩返回鍵，完全不知道發生什麼事。\n\n二、修好「收藏頁取消收藏，大退重進又回來」\n· 根因一：寫入磁碟處的「防遺失資料」守衛，在玩家把收藏取消到一條不剩時拒絕寫入\n  （記憶體清單為空、檔案非空 ⇒ 直接 return），磁碟檔案保持舊內容，重啟自然全部復活。\n  現在只在「從未成功讀取過收藏檔案」時才拒絕寫入，空清單是玩家的真實意圖，必須寫入磁碟；\n  防遺失資料改由「載入失敗拒寫 + 原子寫入並保留 .bak + 寫後回讀驗證」三件事承擔。\n· 根因二：收藏頁那個 ★ 只依單一 id 刪除，歷史資料裡 id 和 source:modId 一旦對不上就一條都刪不掉，\n  但介面照樣重新整理 —— 看著刪掉了、重啟又回來。\n  現在依 id → source:slug → source:modId 三路備援，刪不掉會明確提示，不再假裝成功。\n\n三、其它\n· versionCode 359"
-        },
-        {
-          "lang": "en_US",
-          "text": "[1.5.7: Legacy Fabric version limits + fixed \"un-favorite comes back\"]\n\n1. Legacy Fabric / Legacy Fabric API now only support 1.3 - 1.13.2\nLimits follow the real upstream version tables (meta.legacyfabric.net and Modrinth):\n- When the selected game version is outside 1.3 - 1.13.2 (plus some snapshots and\n  April Fools versions), these two loaders are no longer listed on the install page.\n- Installing a loader into an existing instance is validated first; if unsupported,\n  the supported range is shown right away.\nPreviously the entry led to an empty list with only a Back button, which explained nothing.\n\n2. Fixed \"un-favorited items come back after a full restart\"\n- Cause 1: the anti-data-loss guard in the save path refused to write when the\n  in-memory list became empty while the file was not (it simply returned), so the file\n  kept the old content and everything came back on restart. Now writing is refused only\n  when the favorites file has never been read successfully; an empty list is a real user\n  intent and must be persisted. Data safety is handled by refusing to write after a load\n  failure, atomic writes that keep a .bak of the old file, and read-back verification.\n- Cause 2: the star button on the favorites page removed entries by a single id only, so\n  when old records had a mismatched source:modId nothing was actually removed while the\n  UI refreshed anyway. Removal now falls back across id -> source:slug -> source:modId and\n  reports a failure instead of pretending success.\n\n3. Misc\n- versionCode 359"
-        }
-      ]
-    },
-    {
-      "id": 106,
-      "significant": true,
-      "outdated": false,
-      "minVersion": 0,
-      "maxVersion": 2147483647,
-      "specificLang": [],
-      "title": [
-        {
-          "lang": "zh_CN",
-          "text": "QCL 1.5.6：修好检查更新时的崩溃（BadTokenException）+ 界面细节"
-        },
-        {
-          "lang": "zh_TW",
-          "text": "QCL 1.5.6：修好檢查更新時的崩潰（BadTokenException）+ 介面細節"
-        },
-        {
-          "lang": "en_US",
-          "text": "QCL 1.5.6: fixed the update-check crash (BadTokenException) + UI details"
-        }
-      ],
-      "date": "2026-10-25",
-      "content": [
-        {
-          "lang": "zh_CN",
-          "text": "【1.5.6：修好更新检查时的崩溃 + 一批界面细节】\n\n★ 一、修好「检查更新时直接崩」（真机实测，HUAWEI PAR-AL00 / Android 9）\n\n崩溃日志长这样：\n  android.view.WindowManager$BadTokenException:\n    Unable to add window -- token ... is not valid; is your activity running?\n    at android.app.Dialog.show(Dialog.java:556)\n    at ...update.UpdateChecker.showUpdateDialog(UpdateChecker.java:244)\n\n根因：更新检查跑在后台线程里，要依次试 8 个下载源\n（Gitee、jsDelivr 各家镜像、GitHub 直连、ghproxy……）取版本号最大的那份。\n网络慢的时候这一趟要好几秒。等它回来弹「发现新版本」时，\nActivity 可能已经销毁了（按返回键退出、切横竖屏、或被系统回收），\n这时窗口 token 已经失效，Dialog 往一个死窗口上贴就抛 BadTokenException，\n而旧代码那里既没判断存活也没 try-catch ⇒ 整个进程直接崩。\n\n修法（三道）：\n  · 弹窗前先看 Activity 是否还活着（isFinishing / isDestroyed），\n    已经不在了就干脆不弹；\n  · dialog.show() 外面兜住异常（判存活也挡不住\"最后一秒才被销毁\"）；\n  · 连 UpdateDialog 的构造也放进 try（构造里要 getWindow/setContentView）。\n\n★ 二、顺带修掉同一类的两处\n  · 「正在检查更新」「已是最新版」两个 Toast 也从后台线程回来，\n    同样会在 Activity 销毁后抛异常，已一并加固；\n  · 下载完 APK 后跳安装界面的 startActivity 没有保护 ——\n    下载要等网络，回来的路上 Activity 可能已死，已补上。\n\n★ 三、界面细节\n  · 下载页「收藏」Tab 图标与文字整体偏低，已与其它 Tab 对齐\n    （★ 字符的 TextView 换成和其它 Tab 同规格的 20dp ImageView）；\n  · 下载页左侧筛选栏：输入框与下拉框里的文字被压掉半截，\n    已按项目主流尺寸放宽（输入框 30→40dp、下拉框 30→36dp）；\n  · 收藏页顶部标题被压，已抬高。\n\n（本版为 1.5.6，versionCode 358。）\n"
-        },
-        {
-          "lang": "zh_TW",
-          "text": "【1.5.6：修好檢查更新時的崩潰 + 一批介面細節】\n\n★ 一、修好「檢查更新時直接崩」（真機實測）\n\n  android.view.WindowManager$BadTokenException:\n    Unable to add window -- token ... is not valid; is your activity running?\n\n根因：更新檢查跑在背景執行緒裡，要依序試 8 個下載源，網路慢時要好幾秒。\n等它回來彈「發現新版本」時，Activity 可能已經銷毀（按返回鍵退出、切橫豎屏、\n或被系統回收），視窗 token 已失效，Dialog 往死視窗上貼就拋 BadTokenException，\n而舊程式碼那裡既沒判斷存活也沒 try-catch ⇒ 整個處理程序直接崩。\n\n修法：彈窗前先看 Activity 是否還活著；dialog.show() 外面兜住異常；\nUpdateDialog 的建構也放進 try。\n\n★ 二、順帶修掉同一類的兩處\n  · 「正在檢查更新」「已是最新版」兩個 Toast 也從背景執行緒回來，一併加固；\n  · 下載完 APK 後跳安裝介面的 startActivity 沒有保護，已補上。\n\n★ 三、介面細節\n  · 下載頁「收藏」Tab 圖示與文字整體偏低，已與其它 Tab 對齊；\n  · 左側篩選欄的輸入框與下拉框文字被壓掉半截，已放寬\n    （輸入框 30→40dp、下拉框 30→36dp）；\n  · 收藏頁頂部標題被壓，已抬高。\n\n（本版為 1.5.6，versionCode 358。）\n"
-        },
-        {
-          "lang": "en_US",
-          "text": "[1.5.6: update-check crash fix + a batch of UI fixes]\n\n[Fixed: hard crash while checking for updates] (real device, HUAWEI PAR-AL00 / Android 9)\n\n  android.view.WindowManager$BadTokenException:\n    Unable to add window -- token ... is not valid; is your activity running?\n    at android.app.Dialog.show(Dialog.java:556)\n    at ...update.UpdateChecker.showUpdateDialog(UpdateChecker.java:244)\n\nRoot cause: the update check runs on a background thread and tries 8 sources in\norder (Gitee, several jsDelivr mirrors, GitHub direct, ghproxy...), keeping the\nhighest versionCode. On a slow network that takes several seconds. By the time it\ncomes back to show \"new version available\", the activity may already be gone\n(back pressed, orientation change, or reclaimed by the system) - the window token\nis then invalid, so attaching the dialog throws BadTokenException. The old code\nhad neither a liveness check nor a try-catch there, so the whole process died.\n\nThree guards now:\n  - check isFinishing()/isDestroyed() before showing, and skip if it is gone;\n  - wrap dialog.show() (the check cannot catch a \"destroyed one second ago\" case);\n  - the UpdateDialog constructor is inside the try too (it calls\n    getWindow()/setContentView()).\n\n[Also fixed, same class]\n  - the \"checking for updates\" and \"already up to date\" toasts also come back on\n    the main thread from the background thread; both are guarded now;\n  - the startActivity that launches the installer after the APK download had no\n    protection (the download waits on the network, so the activity can die while\n    it runs); guarded now.\n\n[UI details]\n  - the download page's Favorites tab icon and label sat lower than the other\n    tabs; now aligned (the star character TextView is a 20dp ImageView like the\n    rest);\n  - text in the left filter column's search fields and drop-downs was cut in\n    half; widened to the project's normal sizes (fields 30->40dp, drop-downs\n    30->36dp);\n  - the favorites page title was clipped; raised.\n\n(This release is 1.5.6, versionCode 358.)\n"
-        }
-      ]
-    },
-    {
-      "id": 105,
-      "significant": true,
-      "outdated": false,
-      "minVersion": 0,
-      "maxVersion": 2147483647,
-      "specificLang": [],
-      "title": [
-        {
-          "lang": "zh_CN",
-          "text": "QCL 1.5.5：版本 Wiki 跳转 + 英文查询弹窗 + 下载页竖排筛选"
-        },
-        {
-          "lang": "zh_TW",
-          "text": "QCL 1.5.5：版本 Wiki 跳轉 + 英文查詢彈窗 + 下載頁豎排篩選"
-        },
-        {
-          "lang": "en_US",
-          "text": "QCL 1.5.5: version Wiki jump, English-name lookup, vertical filters"
-        }
-      ],
-      "date": "2026-10-25",
-      "content": [
-        {
-          "lang": "zh_CN",
-          "text": "【★ 版本列表新增：直接跳该版本的 Minecraft Wiki 页】\n\n下载页的版本列表、首页的本地版本列表，每一行右侧新增一个**地球图标**，\n点它直接用浏览器打开该版本对应的 Wiki 页面（点整行的行为不变：仍是进入安装页 / 选中版本）。\n\n**为什么之前跳不对**：Wiki 的页面名和版本号不是一回事，\n正式版之外还有 Beta / Alpha / Classic / Indev / Infdev / pre-Classic 各种前缀规则，\n快照（26.4-snapshot-5）、预发布（1.21.5-pre2）、候选版（1.16.5-rc1）又各有各的写法，\n连分隔符都不一样（Beta 1.8.1 用的是空格不是下划线），1.0 在 Wiki 上的页面名还是 1.0.0。\n\n⇒ 本版内置了 **920 条实测对照表**（Mojang 官方版本清单里的全部版本，\n含 26.4 快照、26.x 正式版、1.21.x、全部远古版与归档版），\n用 MediaWiki 接口逐条验证过，**命中 920/920**。以后出新版本往表里加一条即可。\n\n【★ 模组 / 整合包搜索：新增「英文查询」弹窗】\n\n搜中文搜不到时，可以点搜索框旁的「英文查询」，\n弹窗会**列出翻译表里所有对应的英文名**（例如「暮色森林」会列出本体、法术包、\n动态的树附属、传送门催化剂等好几条），点其中一条即换成该英文名重新搜索。\n\n此前搜索是**静默**翻译：中文关键词只自动取最匹配的一条替换掉，\n玩家看不见候选、也换不了 —— 现在把候选摆出来自己点。\n模组页与整合包页各有一个入口；两页用的是**不同的翻译表**（模组 / 整合包各一张）。\n\n【★ 下载页筛选栏改成 FCL 式左侧竖排】\n\n模组 / 整合包 / 世界 / 光影 / 资源包 **五个下载页**的筛选栏，\n从「右侧可折叠横排」改成**左侧常驻竖排**（照 FCL 版式）：\n名称 / 下载源 / 类别 / 游戏版本 / 排序逐项竖着排，左栏可上下滑动。\n「☰ 筛选」开关不再需要（已隐藏）。\n\n【★ 模组列表新增来源角标】\n\n聚合搜索时 CurseForge 与 Modrinth 的结果并排显示，\n每行现在标出来源，一眼能分清是哪一站的条目。\n\n【修复】\n· 修复左栏内容超出屏幕后无法上下滑动、输入框文字被压掉半截\n· 修复收藏页顶部标题被压\n· 修复部分下拉框里的文字被压（输入框与下拉框高度已按正文尺寸放宽）\n\n（本版为 1.5.5，versionCode 357。）\n"
-        },
-        {
-          "lang": "zh_TW",
-          "text": "【★ 版本列表新增：直接跳該版本的 Minecraft Wiki 頁】\n\n下載頁的版本清單、首頁的本機版本清單，每一行右側新增一個**地球圖示**，\n點它直接用瀏覽器開啟該版本對應的 Wiki 頁面（點整列的行為不變：仍是進入安裝頁 / 選中版本）。\n\n**為什麼之前跳不對**：Wiki 的頁面名和版本號不是一回事，\n正式版之外還有 Beta / Alpha / Classic / Indev / Infdev / pre-Classic 各種前綴規則，\n快照、預發布、候選版又各有各的寫法，連分隔符都不一樣，1.0 在 Wiki 上的頁面名還是 1.0.0。\n\n⇒ 本版內建了 **920 條實測對照表**（Mojang 官方版本清單裡的全部版本），\n逐條驗證過，**命中 920/920**。\n\n【★ 模組 / 整合包搜尋：新增「英文查詢」彈窗】\n\n搜中文搜不到時，可以點搜尋框旁的「英文查詢」，\n彈窗會**列出翻譯表裡所有對應的英文名**，點其中一條即換成該英文名重新搜尋。\n此前搜尋是**靜默**翻譯，玩家看不見候選、也換不了 —— 現在把候選擺出來自己點。\n\n【★ 下載頁篩選欄改成 FCL 式左側豎排】\n\n模組 / 整合包 / 世界 / 光影 / 資源包 **五個下載頁**的篩選欄，\n從「右側可摺疊橫排」改成**左側常駐豎排**，左欄可上下滑動。\n「☰ 篩選」開關不再需要（已隱藏）。\n\n【★ 模組清單新增來源角標】\n\n聚合搜尋時 CurseForge 與 Modrinth 的結果並排顯示，每行現在標出來源。\n\n【修復】\n· 修復左欄內容超出螢幕後無法上下滑動、輸入框文字被壓掉半截\n· 修復收藏頁頂部標題被壓\n· 修復部分下拉框裡的文字被壓\n\n（本版為 1.5.5，versionCode 357。）\n"
-        },
-        {
-          "lang": "en_US",
-          "text": "[New: jump straight to a version's Minecraft Wiki page]\nEvery row in the version lists (download page and local version list) now has an earth icon.\nTap it to open that version's Wiki page in the browser. Tapping the row itself is unchanged\n(install page / select version).\n\nWhy it used to land on the wrong page: Wiki page names are not version names. Besides the\nplain releases there are Beta / Alpha / Classic / Indev / Infdev / pre-Classic prefixes, and\nsnapshots (26.4-snapshot-5), pre-releases (1.21.5-pre2) and release candidates (1.16.5-rc1)\neach use their own wording - even the separator differs (Beta 1.8.1 uses a space, not an\nunderscore), and 1.0 lives at 1.0.0 on the wiki.\n\n=> This release ships a **920-entry verified table** covering every version in Mojang's\nofficial manifest (including 26.4 snapshots, the 26.x releases, 1.21.x, all the old alpha\nand beta builds and the archived ones). Every entry was checked against the MediaWiki API:\n**920/920 hit**.\n\n[New: \"English name\" lookup for mods and modpacks]\nWhen a Chinese search finds nothing, tap \"English\" next to the search box: a dialog lists\nevery matching English name from the translation table (searching for a Chinese title\nreturns the pack itself, its addon, its companion mods and so on). Tap one and the search\nreruns with that English name.\n\nPreviously the translation was silent - only the single best match was substituted, so the\nother candidates were never visible and could not be chosen. The mod and modpack pages use\n**different** translation tables, and each now has its own entry point.\n\n[New: FCL-style vertical filter column on the download pages]\nThe filter column of all five download pages (mods / modpacks / worlds / shaders /\nresource packs) moved from a collapsible horizontal strip to a **permanent vertical column\non the left**, and it can be scrolled. The \"filter\" toggle is no longer needed.\n\n[New: source badge on mod rows]\nWith aggregate search the CurseForge and Modrinth results sit next to each other;\neach row now says which site it came from.\n\n[Fixes]\n- The filter column could not be scrolled when its content was taller than the screen,\n  and the search field text was cut in half.\n- The favorites page title was clipped.\n- Text in some drop-downs was clipped (search fields and drop-downs are now sized to\n  their content).\n\n(This release is 1.5.5, versionCode 357.)\n"
-        }
-      ]
-    },
-    {
-      "id": 104,
-      "significant": true,
-      "outdated": false,
-      "minVersion": 0,
-      "maxVersion": 2147483647,
-      "specificLang": [],
-      "title": [
-        {
-          "lang": "zh_CN",
-          "text": "QCL 1.5.4：所有功能已恢复 + 修复 1.1 鼠标点不动"
-        },
-        {
-          "lang": "zh_TW",
-          "text": "QCL 1.5.4：所有功能已恢復 + 修復 1.1 滑鼠點不動"
-        },
-        {
-          "lang": "en_US",
-          "text": "QCL 1.5.4: all features restored + 1.1 mouse-click fix"
-        }
-      ],
-      "date": "2026-10-21",
-      "content": [
-        {
-          "lang": "zh_CN",
-          "text": "【1.5.4：所有功能已全部恢复】\n\n上一版（1.5.3）出于谨慎，曾在中国大陆地区临时暂停了下载与联机功能。\n\n现在**全部撤销**：\n· 下载页（游戏版本 / 整合包 / 模组 / 资源包 / 光影 / 收藏 / 世界）\n· 陶瓷联机（Terracotta）\n· 安装游戏 / 安装整合包\n· 各加载器版本下载（Forge / NeoForge / Fabric / Fabric API /\n  LiteLoader / OptiFine / Quilt / Quilt API / Cleanroom / Legacy Fabric）\n\n**不再做地区限制，也不要求正版账号。** 离线账号照常使用。\n\n（背景：2026-10-20 的风波只影响到 HMCL / PCL / ZL 等启动器，\n并没有波及 QCL，也没有针对我们的举报。若日后确有需要，再作处置也不迟。）\n\n【★ 修好了一个真 BUG：1.1 等老版本鼠标点不动】\n\n根因：1.1 ~ 1.12 属于 LWJGL 2 时代，走的是 `lwjgl-lwjglx.jar` 兼容层。\n它的 `org.lwjgl.input.Mouse` 从 `GLFWInputImplementation.pollMouse()` 取数据，\n而 `GLFWInputImplementation.createMouse()` **从不注册 GLFW 回调** ——\n它设计上是等外部主动喂事件的。而 QCL 的 `CallbackBridge` 只把事件喂给了\nnative 的 GLFW（LWJGL 3 那套），**从来没有喂给 lwjglx**。\n\n⇒ 所以 1.1 ~ 1.12 的鼠标点击、键盘输入、视角转动全部无效。\n本版新增 `LwjglXBridge`（反射调用 `putMouseEventWithCoords` /\n`putKeyboardEvent`），把鼠标 / 键盘 / 光标三路都补喂给 lwjglx。\n\n【26.3 仍未修好】\n· 26.3 启动不了的问题依然存在，原因尚未定位。"
-        },
-        {
-          "lang": "zh_TW",
-          "text": "【1.5.4：所有功能已全部恢復】\n\n上一版（1.5.3）出於謹慎，曾在中國大陸地區臨時暫停了下載與聯機功能。\n\n現在**全部撤銷**：下載頁 / 陶瓷聯機 / 安裝遊戲 / 安裝整合包 / 各載入器版本下載。\n\n**不再做地區限制，也不要求正版帳號。** 離線帳號照常使用。\n\n【★ 修好了一個真 BUG：1.1 等老版本滑鼠點不動】\n\n根因：1.1 ~ 1.12 屬於 LWJGL 2 時代，走的是 `lwjgl-lwjglx.jar` 相容層。\n它的 `Mouse` 從 `GLFWInputImplementation.pollMouse()` 取資料，而\n`createMouse()` **從不註冊 GLFW 回呼** —— 設計上是等外部主動餵事件。\n而 `CallbackBridge` 只餵給 native 的 GLFW（LWJGL 3），**從未餵給 lwjglx**。\n\n本版新增 `LwjglXBridge`，把滑鼠 / 鍵盤 / 游標三路都補餵給 lwjglx。\n\n【26.3 仍未修好】\n· 26.3 無法啟動的問題依然存在，原因尚未定位。"
-        },
-        {
-          "lang": "en_US",
-          "text": "[1.5.4: all features restored]\n\nVersion 1.5.3 cautiously paused downloads and multiplayer in mainland China.\n\nThat is now **fully reverted**:\n- Download pages (game versions / modpacks / mods / resource packs / shaders /\n  favourites / worlds)\n- Terracotta multiplayer\n- Install game / install modpack\n- Loader version downloads (Forge / NeoForge / Fabric / Fabric API / LiteLoader /\n  OptiFine / Quilt / Quilt API / Cleanroom / Legacy Fabric)\n\n**No regional restrictions, no genuine-account requirement.** Offline accounts\nwork as before.\n\n[*] Real bug fixed: mouse clicks did nothing on 1.1 and other LWJGL2-era versions\n\nRoot cause: 1.1 - 1.12 are LWJGL 2 era and use the `lwjgl-lwjglx.jar` shim.\nIts `org.lwjgl.input.Mouse` reads from `GLFWInputImplementation.pollMouse()`, but\n`GLFWInputImplementation.createMouse()` **never registers GLFW callbacks** - it is\ndesigned to be fed events externally. QCL's `CallbackBridge` only fed the native\nGLFW path (LWJGL 3) and **never fed lwjglx**.\n\nThis release adds `LwjglXBridge`, which feeds mouse, keyboard and cursor events to\nlwjglx as well.\n\n[26.3 is still not fixed]\n- Minecraft 26.3 still does not start; the cause is not yet identified."
-        }
-      ]
-    },
-    {
-      "id": 103,
-      "significant": true,
-      "outdated": false,
-      "minVersion": 0,
-      "maxVersion": 2147483647,
-      "specificLang": [],
-      "title": [
-        {
-          "lang": "zh_CN",
-          "text": "QCL 1.5.3：中国大陆地区下载与联机功能暂停（离线可玩）"
-        },
-        {
-          "lang": "zh_TW",
-          "text": "QCL 1.5.3：中國大陸地區下載與聯機功能暫停（離線可玩）"
-        },
-        {
-          "lang": "en_US",
-          "text": "QCL 1.5.3: downloads & multiplayer paused in mainland China (offline still works)"
-        }
-      ],
-      "date": "2026-10-20",
-      "content": [
-        {
-          "lang": "zh_CN",
-          "text": "【中国大陆地区：下载与联机功能暂停】\n\nQCL 遵守中华人民共和国相关法律法规。\n\n自 2026 年 10 月 20 日起，包括 PCL、HMCL 在内的多款在中国大陆展业的第三方\nMinecraft 启动器，因合规性原因关停了 Minecraft 核心文件与资源包的下载功能。\n（据 MineBBS 官方公告 2026-10-20 17:55：本次事件与网易游戏、Mojang Studio\n与 Microsoft 均无直接关联，各开发组也均未公布具体原因。）\n\n为遵守相关法律法规，QCL 从本版起**在中国大陆地区**暂停以下功能：\n\n· 下载页（游戏版本 / 整合包 / 模组 / 资源包 / 光影 / 收藏 / 世界）\n· 陶瓷联机（Terracotta）\n· 安装游戏 / 安装整合包\n· 各模组加载器的版本下载（Forge / NeoForge / Fabric / Fabric API /\n  LiteLoader / OptiFine / Quilt / Quilt API / Cleanroom / Legacy Fabric）\n\n【★ 离线模式完全不受影响】\n\n· **本地已经下载好的游戏版本，可以照常启动** —— 包括离线账号。\n· 版本列表、游戏管理、账号、设置、实验室、JAR 启动 全部正常可用。\n\n【★ 如果你不在中国大陆】\n\n· 上述功能**不受影响**，可以正常使用。\n· 若你身处中国大陆以外却看到「功能暂不可用」，那是地区检测出现异常\n  （判断依据是公网出口 IP 归属地），请重启启动器后重试。\n\n【给玩家的提醒】\n\n· 请通过官方渠道获取 Minecraft 本体（minecraft.net，或网易我的世界中国版）。\n· 请勿下载任何来源不明的「修复版启动器」——\n  那类文件存在被二次篡改、捆绑恶意程序、植入后门的风险。\n\n【26.3 仍未修好】\n· 26.3 启动不了的问题依然存在，原因尚未定位。"
-        },
-        {
-          "lang": "zh_TW",
-          "text": "【中國大陸地區：下載與聯機功能暫停】\n\nQCL 遵守中華人民共和國相關法律法規。\n\n自 2026 年 10 月 20 日起，包括 PCL、HMCL 在內的多款在中國大陸展業的第三方\nMinecraft 啟動器，因合規性原因關停了 Minecraft 核心檔案與資源包的下載功能。\n（據 MineBBS 官方公告 2026-10-20 17:55：本次事件與網易遊戲、Mojang Studio\n與 Microsoft 均無直接關聯，各開發組也均未公布具體原因。）\n\n為遵守相關法律法規，QCL 從本版起**在中國大陸地區**暫停以下功能：\n\n· 下載頁（遊戲版本 / 整合包 / 模組 / 資源包 / 光影 / 收藏 / 世界）\n· 陶瓷聯機（Terracotta）\n· 安裝遊戲 / 安裝整合包\n· 各模組載入器的版本下載\n\n【★ 離線模式完全不受影響】\n\n· **本機已經下載好的遊戲版本，可以照常啟動** —— 包括離線帳號。\n· 版本列表、遊戲管理、帳號、設定、實驗室、JAR 啟動 全部正常可用。\n\n【★ 如果你不在中國大陸】\n\n· 上述功能**不受影響**。\n· 若你身處中國大陸以外卻看到提示，那是地區檢測異常，請重啟啟動器重試。\n\n【26.3 仍未修好】\n· 26.3 無法啟動的問題依然存在，原因尚未定位。"
-        },
-        {
-          "lang": "en_US",
-          "text": "[Mainland China: downloads and multiplayer are paused]\n\nQCL complies with applicable laws and regulations.\n\nSince 2026-10-20, several third-party Minecraft launchers operating in mainland China\n(including PCL and HMCL) have suspended downloading Minecraft core files and resources\nfor compliance reasons. (Per the official MineBBS announcement of 2026-10-20 17:55:\nthis incident has no direct connection with NetEase, Mojang Studio or Microsoft, and no\ndevelopment team has published the specific reason.)\n\nTo comply with applicable laws and regulations, QCL is **pausing the following features\nin mainland China** starting with this version:\n\n- Download pages (game versions / modpacks / mods / resource packs / shaders /\n  favourites / worlds)\n- Terracotta multiplayer\n- Install game / install modpack\n- Loader version downloads (Forge / NeoForge / Fabric / Fabric API / LiteLoader /\n  OptiFine / Quilt / Quilt API / Cleanroom / Legacy Fabric)\n\n**[*] Offline mode is NOT affected**\n\n- **Versions already installed on your device can still be launched**, including\n  with an offline account.\n- The version list, game management, accounts, settings, lab and the JAR launcher\n  all keep working normally.\n\n**[*] If you are outside mainland China**\n\n- The features above are **not** restricted for you.\n- If you are outside mainland China and still see the \"feature unavailable\" message,\n  the region check (based on your public egress IP) failed - please restart the\n  launcher and try again.\n\n[Reminders]\n\n- Please obtain Minecraft itself through official channels (minecraft.net or the\n  official China edition).\n- Do not download any \"fixed launcher\" from unknown sources.\n\n[26.3 is still not fixed]\n- Minecraft 26.3 still does not start; the cause is not yet identified."
-        }
-      ]
-    },
-    {
-      "id": 102,
-      "significant": true,
-      "outdated": false,
-      "minVersion": 0,
-      "maxVersion": 2147483647,
-      "specificLang": [],
-      "title": [
-        {
-          "lang": "zh_CN",
-          "text": "QCL 1.5.2 更新说明（JAR 启动 · 3 个新加载器 · 下载页大改）"
-        },
-        {
-          "lang": "zh_TW",
-          "text": "QCL 1.5.2 更新說明（JAR 啟動 · 3 個新載入器 · 下載頁大改）"
-        },
-        {
-          "lang": "en_US",
-          "text": "QCL 1.5.2 release notes (JAR launcher, 3 new loaders, download pages overhaul)"
-        }
-      ],
-      "date": "2026-10-19",
-      "content": [
-        {
-          "lang": "zh_CN",
-          "text": "【26.3 仍未修好】\n· 26.3 启动不了的问题依然存在，原因尚未定位。这一版没有修好，如实说明。\n· 26.4 及之前的问题已在 1.5.1 修好。\n\n【新功能】\n· JAR 启动：独立页面 + 独立进程，可以直接跑 .jar（左侧栏那个咖啡杯按钮），\n  并可自动读取 jar 里的 Main-Class 判断需要的 Java 版本\n· Java 管理：查看/删除本机各个 Java，手动选版本\n· 新增 3 个模组加载器：Cleanroom、Legacy Fabric、Legacy Fabric API\n  （「安装游戏」界面已补齐，图标取自 FCL）\n· 三个新加载器的版本选择改成独立列表页，与其它加载器一致，可装旧版本\n· 外观 → 新增「启动等待界面图片」：6 格可单独换图，手机/平板自适应高度\n· 外观 → 面板色新增「重置」按钮\n· 游戏版本下载页新增搜索框：可按版本号 / 正式版 / 快照版 / 远古版 / 愚人节搜\n· 模组 / 整合包 / 资源包 / 光影 / 世界 5 个下载页全部支持翻页，\n  并在「筛选」右侧显示「第 N / M 页」（总数取自 Modrinth total_hits / CurseForge totalCount）\n· 下载模组时自动带上前置：只装「必需」，前置的前置也会递归装上；\n  已在任意版本 mods/ 里装过的会跳过，不重复下载\n\n【修好的一批问题】\n· 安装 Forge 一直失败（镜像返回 200 无 Location 时 NPE）\n· 取消收藏后大退仍显示旧收藏\n· 自制的那两个加载器点了没效果\n· 混合下载源刚进入只有 Modrinth，完全没有 CurseForge（空 gameVersion 导致 0 条）\n· 主题色必须点进外观页才涂到界面上（现在启动即生效）\n· 外观里一大堆白色按钮不跟随主题色（含新加的 JAR 启动按钮、各种弹窗里的按钮）\n· 改主题色/面板色必须退出重进才生效（现在立即生效）\n· 新手教程气泡不随屏幕比例定位\n· 等待界面（启动游戏后的加载画面）退后台再回来变黑屏\n· 已被撤销的等待界面轮播，退后台重进又自己回来\n· 下载页 7 个标签在小屏只显示 3 个（改为等分自适应）\n· 设置页 6 个标签在小屏溢出（改为等分自适应）\n· 下载页列表一屏只能看 2~3 个（列表项改为紧凑单行，筛选区可折叠）\n· 筛选区控件被 label 挤成一条竖线、输入框显示不出字\n· 点「筛选」会重新加载一次列表\n· 页码最多只显示 200 页（10000 条上限只应对 CurseForge）\n· 「共 N 页」显示不出来（包装层没透传总条数）\n· JAR 启动页面打开一片空白\n\n【删除】\n· 外观 → 「透明标题栏」开关：该开关从加上那天起就没有任何代码读取\n  （标题栏透明由 windowFullscreen 实现，与此开关无关），已彻底删除\n\n【默认值调整】\n· 默认主题色改为「斑驳森林」壁纸真实采样色 #865D58（不再取水面雾色）"
-        },
-        {
-          "lang": "zh_TW",
-          "text": "【26.3 仍未修好】\n· 26.3 無法啟動的問題依然存在，原因尚未定位。這一版沒有修好，如實說明。\n· 26.4 及之前的問題已在 1.5.1 修好。\n\n【新功能】\n· JAR 啟動：獨立頁面 + 獨立進程，可以直接跑 .jar（左側欄那個咖啡杯按鈕），\n  並可自動讀取 jar 裡的 Main-Class 判斷需要的 Java 版本\n· Java 管理：檢視/刪除本機各個 Java，手動選版本\n· 新增 3 個模組載入器：Cleanroom、Legacy Fabric、Legacy Fabric API\n  （「安裝遊戲」介面已補齊，圖示取自 FCL）\n· 三個新載入器的版本選擇改成獨立列表頁，與其它載入器一致，可裝舊版本\n· 外觀 → 新增「啟動等待介面圖片」：6 格可單獨換圖，手機/平板自適應高度\n· 外觀 → 面板色新增「重設」按鈕\n· 遊戲版本下載頁新增搜尋框：可按版本號 / 正式版 / 快照版 / 遠古版 / 愚人節搜\n· 模組 / 整合包 / 資源包 / 光影 / 世界 5 個下載頁全部支援翻頁，\n  並在「篩選」右側顯示「第 N / M 頁」\n· 下載模組時自動帶上前置：只裝「必需」，前置的前置也會遞迴裝上；\n  已在任意版本 mods/ 裡裝過的會跳過，不重複下載\n\n【修好的一批問題】\n· 安裝 Forge 一直失敗\n· 取消收藏後大退仍顯示舊收藏\n· 自製的那兩個載入器點了沒效果\n· 混合下載源剛進入只有 Modrinth，完全沒有 CurseForge\n· 主題色必須點進外觀頁才塗到介面上（現在啟動即生效）\n· 外觀裡一大堆白色按鈕不跟隨主題色（含新加的 JAR 啟動按鈕、各種彈窗按鈕）\n· 改主題色/面板色必須退出重進才生效（現在立即生效）\n· 新手教學氣泡不隨螢幕比例定位\n· 等待介面退後台再回來變黑屏\n· 已被撤銷的等待介面輪播，退後台重進又自己回來\n· 下載頁 7 個標籤在小螢幕只顯示 3 個（改為等分自適應）\n· 設定頁 6 個標籤在小螢幕溢出（改為等分自適應）\n· 下載頁列表一屏只能看 2~3 個（列表項改為緊湊單行，篩選區可折疊）\n· 篩選區控件被 label 擠成一條豎線、輸入框顯示不出字\n· 點「篩選」會重新載入一次列表\n· 頁碼最多只顯示 200 頁\n· 「共 N 頁」顯示不出來\n· JAR 啟動頁面打開一片空白\n\n【刪除】\n· 外觀 → 「透明標題欄」開關：該開關從加上那天起就沒有任何程式碼讀取，已徹底刪除\n\n【預設值調整】\n· 預設主題色改為「斑駁森林」桌布真實取樣色 #865D58"
-        },
-        {
-          "lang": "en_US",
-          "text": "[26.3 is STILL not fixed]\n- Minecraft 26.3 still does not start; the cause is not yet identified. It is NOT fixed in\n  this version, and we would rather say so plainly than pretend otherwise.\n- 26.4 and earlier are already fixed as of 1.5.1.\n\n[NEW]\n- JAR launcher: a dedicated page on a dedicated process that runs a .jar directly\n  (the coffee-cup button in the left rail). It reads Main-Class from the jar manifest\n  to guess which Java version is needed.\n- Java manager: list / remove the Java runtimes on this device, pick one manually.\n- Three new mod loaders: Cleanroom, Legacy Fabric, Legacy Fabric API\n  (hooked into the \"Install game\" screen, icons taken from FCL).\n- Version pickers for those three loaders are now standalone list pages, consistent with\n  the other loaders, and can install older versions.\n- Appearance -> \"Launch waiting screen image\": 6 tiles, each replaceable individually,\n  height adapts to phone / tablet.\n- Appearance -> panel colour now has a Reset button.\n- Game version download page now has a search box: search by version id, release,\n  snapshot, old or April Fools.\n- Paging for all five download pages (mods / modpacks / resource packs / shaders / worlds),\n  with a \"Page N / M\" indicator placed to the right of the Filter button.\n- Downloading a mod now pulls its dependencies automatically: required only, recursively\n  (a dependency of a dependency is included), and anything already present in any\n  version's mods/ folder is skipped.\n\n[FIXED]\n- Forge installation always failed (NPE when a mirror returned 200 without Location).\n- Un-favouriting did not stick after a full restart.\n- The two home-made loaders did nothing when tapped.\n- Hybrid download source showed only Modrinth on first load, never CurseForge\n  (an empty gameVersion made CurseForge return zero results).\n- Theme colour only applied after visiting the Appearance page (now applies on launch).\n- Lots of white buttons did not follow the theme colour (including the new JAR button\n  and buttons inside dialogs).\n- Changing theme / panel colour required a restart (now applies immediately).\n- The onboarding bubble did not follow the screen aspect ratio.\n- The launch waiting screen turned black after backgrounding and returning.\n- An already-dismissed waiting-screen slideshow came back after backgrounding.\n- The 7 download tabs only showed 3 on small screens (now equal-width adaptive).\n- The 6 settings tabs overflowed on small screens (now equal-width adaptive).\n- Download lists only showed 2-3 rows per screen (compact single-line rows,\n  collapsible filter panel).\n- Filter controls were squeezed into a thin vertical line; text fields showed no text.\n- Tapping Filter re-ran the search every time.\n- Paging was capped at 200 pages (the 10,000-entry limit only applies to CurseForge).\n- \"Page N / M\" never showed the total (a wrapper class did not forward the count).\n- The JAR launcher page opened completely blank.\n\n[REMOVED]\n- Appearance -> \"Transparent title bar\" switch. No code ever read that flag\n  (title bar transparency comes from windowFullscreen), so it is gone for good.\n\n[DEFAULT CHANGED]\n- Default theme colour is now the real sampled colour of the \"Mottled Forest\" wallpaper,\n  #865D58 (no longer the water-haze colour)."
-        }
-      ]
-    },
-    {
-      "id": 101,
-      "significant": true,
-      "outdated": false,
-      "minVersion": 0,
-      "maxVersion": 2147483647,
-      "specificLang": [],
-      "title": [
-        {
-          "lang": "zh_CN",
-          "text": "QCL 1.5.1 更新说明（输入与视角修复 · 字体颜色）"
-        },
-        {
-          "lang": "zh_TW",
-          "text": "QCL 1.5.1 更新說明（輸入與視角修復 · 字型顏色）"
-        },
-        {
-          "lang": "en_US",
-          "text": "QCL 1.5.1 release notes (input & camera fixes, custom text colour)"
-        }
-      ],
-      "date": "2026-10-16",
-      "content": [
-        {
-          "lang": "zh_CN",
-          "text": "【26.4 修好了，26.3 还没】\n· MC 26.4 的「能进主菜单但按钮点不动、虚拟键盘失效」已修好\n· 26.3 仍然启动不了，原因尚未定位（这一版没有修好，如实说明）\n\n【输入与视角】\n· 修好「往左滑往右偏、快速滑只走一小段又归中」\n· 修好「滑到最左边/最右边就滑不动、像被焊住」\n· 修好「鼠标滑出屏幕之外」\n· 修好「打开背包→关闭背包→点左键或右键，视角大偏移」\n\n【修好的一批问题】\n· 重命名游戏实例后实例消失\n· 安装 Forge 整合包后加载器被认成 Fabric\n· 下载中断导致启动失败、进度一直显示 0 B/s\n· 整合包安装弹窗的取消按钮在小屏手机上跑出屏幕\n· 下载页 / 游戏列表 / 自动安装页打开后一片空白\n· 一个目录里没有游戏时点「游戏单独设置」会崩溃\n· 自动安装里选 Forge 点了没反应；Forge 版本列表加载不出来\n· 夜间模式残留白色背景，导致白色文字看不见\n· 切到夜间模式必须重启启动器才同步配色（现在会自动同步）\n· 切换新旧排版必须手动重启（现在会自动重启）\n\n【界面】\n· 左侧导航栏改为纯自适应：大屏占满、小屏自动压缩，不再需要滚动\n· 旧排版的主界面人物不再和上方按钮重叠\n· 外观页主题下拉框的文字在浅色模式下也能看清\n· 新增「字体颜色自定义调节」：设置 → 外观 → 字体颜色，可选任意颜色，\n  也可一键「跟随主题」\n"
-        },
-        {
-          "lang": "zh_TW",
-          "text": "【26.4 修好了，26.3 還沒】\n· MC 26.4 的「能進主選單但按鈕點不動、虛擬鍵盤失效」已修好\n· 26.3 仍然啟動不了，原因尚未定位（這一版沒有修好，如實說明）\n\n【輸入與視角】\n· 修好「往左滑往右偏、快速滑只走一小段又歸中」\n· 修好「滑到最左邊/最右邊就滑不動、像被焊住」\n· 修好「滑鼠滑出螢幕之外」\n· 修好「打開背包→關閉背包→點左鍵或右鍵，視角大偏移」\n\n【修好的一批問題】\n· 重新命名遊戲實例後實例消失\n· 安裝 Forge 整合包後載入器被認成 Fabric\n· 下載中斷導致啟動失敗、進度一直顯示 0 B/s\n· 整合包安裝對話框的取消按鈕在小螢幕手機上跑出畫面\n· 下載頁 / 遊戲清單 / 自動安裝頁打開後一片空白\n· 目錄裡沒有遊戲時點「遊戲單獨設定」會崩潰\n· 自動安裝裡選 Forge 點了沒反應；Forge 版本清單載入不出來\n· 夜間模式殘留白色背景，導致白色文字看不見\n· 切到夜間模式必須重啟啟動器才同步配色（現在會自動同步）\n· 切換新舊排版必須手動重啟（現在會自動重啟）\n\n【介面】\n· 左側導覽列改為純自適應：大螢幕佔滿、小螢幕自動壓縮，不再需要捲動\n· 舊排版的主介面人物不再和上方按鈕重疊\n· 外觀頁主題下拉框的文字在淺色模式下也能看清\n· 新增「字型顏色自訂調節」：設定 → 外觀 → 字型顏色\n"
-        },
-        {
-          "lang": "en_US",
-          "text": "[26.4 is fixed, 26.3 is not]\n- Minecraft 26.4's \"main menu opens but nothing is clickable / soft keyboard dead\" is fixed.\n- Minecraft 26.3 still does not start; the cause is not yet identified. It is NOT fixed in\n  this version, and we would rather say so than pretend.\n\n[Input and camera]\n- Fixed \"swiping left turns right, a fast swipe only moves a little then re-centres\".\n- Fixed \"sliding to the far left / far right stops working, as if welded in place\".\n- Fixed \"the mouse cursor escapes off-screen\".\n- Fixed \"open inventory, close it, then click left or right button - the camera jumps\".\n\n[Other fixes]\n- Renaming a game instance made it disappear.\n- A Forge modpack's loader was detected as Fabric.\n- Interrupted downloads broke launching; speed stayed at 0 B/s.\n- The modpack installer's Cancel button fell off-screen on small phones.\n- Download / game list / auto-install pages opened completely blank.\n- Opening \"game settings\" in a folder with no game installed crashed the launcher.\n- Choosing Forge in auto-install did nothing; the Forge version list never loaded.\n- Leftover white panels in night mode made white text unreadable.\n- Switching the system to night mode needed a restart to recolour (now automatic).\n- Switching between the old and new layouts needed a manual restart (now automatic).\n\n[Interface]\n- The left nav rail is now fully adaptive: it fills large screens and compresses on small\n  ones, so it never needs scrolling.\n- In the old layout the character no longer overlaps the buttons above it.\n- The theme drop-down text is readable in light mode now.\n- New: custom text colour in Settings - Appearance - Font colour (with a \"follow theme\" reset).\n"
-        }
-      ]
-    },
-    {
-      "id": 100,
-      "significant": true,
-      "outdated": false,
-      "minVersion": 0,
-      "maxVersion": 2147483647,
-      "specificLang": [],
-      "title": [
-        {
-          "lang": "zh_CN",
-          "text": "QCL 1.5.0 正式版更新说明（界面大重做）"
-        },
-        {
-          "lang": "zh_TW",
-          "text": "QCL 1.5.0 正式版更新說明（介面大重做）"
-        },
-        {
-          "lang": "en_US",
-          "text": "QCL 1.5.0 release notes (major UI overhaul)"
-        }
-      ],
-      "date": "2026-10-10",
-      "content": [
-        {
-          "lang": "zh_CN",
-          "text": "【界面大重做】\n· 全新主界面排版：左侧纯图标竖排导航常驻可见，切到版本列表 / 下载 / 设置等二级页面也不用先退回主界面\n· 右侧常驻「账号 + 版本名 + 启动游戏」区块，照 FCL 版式重做（版本名独立显示在启动按钮上方）\n· 排版可在「设置 → 外观 → 排版」里切换 新排版 / 旧排版，随时退回你习惯的样子\n· 主题可在「设置 → 外观 → 主题」里切换，并可选主题色\n· 背景支持 默认（按时间自动切换昼夜）/ 白天 / 黑夜 / 自定义 / 网络\n· 主界面新增公告栏（可隐藏），随时看到更新说明\n· 没有任何版本时，点「启动游戏」会直接跳到下载版本页，不再没反应\n\n【昼夜与配色】\n· 壁纸、面板底色、文字色**成套随昼夜翻转**，不再出现深底黑字看不见的情况\n· 修复夜间模式下多处「深底黑字 / 白块」：对话框改用成对的日/夜配色\n· 修复换肤对话框里的白块（drawable 取不到主题色）与按钮颜色不统一\n· 修复账号页「认证服务器」下方的说明文字夜间看不见\n· 全项目共 53 处文字补齐昼夜配色（列表描述、设置页路径、存档信息…）\n\n【3D 人物：换成 FCL 同款】\n· 主界面人物改用 FCL 的 glTF 模型与骨骼动画（经典 / 细臂两套模型自动切换）\n· 真正的待机动画：站立待机 + 3 个变体，每 8~15 秒随机播一个（FCL 原版规则）\n· 单指拖动可 360° 旋转，双指捏合可缩放\n· 纹理实时更新：离线 / 微软 / Mojang / 外置认证切换皮肤都会立刻反映到人物身上\n· 修复微软账号「手臂粗细不对」「先粗后细」「选了经典又变回苗条」\n· 修复「换了皮肤之后披风消失」\n\n【微软账号：皮肤与披风】\n· 微软披风此前**从未被拉取过**（接口分支被注释、账号也没有存它的字段），现已完整接入\n· 修复披风取错项（原来永远取列表第 1 件，所以「怎么切都是同一件」）\n· 换肤对话框的「确定」改为「上传」（照 FCL：选完文件先预览，点上传才提交）\n· 模型选择（经典 / 苗条）现在会被记住，并用服务端声明的模型为准\n· 皮肤与披风会**自动跟随微软服务端**：在官网或别的启动器改过，回主界面就会同步\n\n【下载页】\n· 修复「模组名一个中文也没有」：翻译表（3 万条）此前被误判成\"非中文环境\"而从不查表\n· 模组 / 整合包名显示为「中文名（英文原名）」，不再重复两遍英文\n· 修复「模组页刷新后一片空白，还会把整合包 / 资源包 / 账号页一起弄空白」\n· 彻底移除「加载版本列表失败，点击此处重试」提示：界面本来就有转圈，网络恢复后自己会出结果\n· 点击模组 / 整合包详情页不再「加载半天」：版本列表立刻显示，前置列表随后补上\n· 收藏按钮新增点击反馈动效；收藏页进场动画与其它页面统一\n· 列表切分类统一为逐行滑入（与收藏夹一致）\n\n【整合包安装】\n· 修复「进度条根本不动」：原来单个文件的下载进度从不上报\n· 每个文件单独一行，并实时显示该文件的下载进度\n· 修复取消按钮点了没反应、文件列表只显示一行\n\n【多人联机】\n· 改为完整的二级页面，含房主教程（7 步）与房客教程（5 步），全文照搬 FCL\n· 修复「启用多人联机」确认框白底白字、文字看不见\n\n【稳定性】\n· 修复「启动游戏时突然竖屏→闪退→回到横屏启动器」\n· 修复 26.3 / 26.4 崩溃（JNA 版本错配 + MC 降级死循环）\n· 适配 Android 15（平台 35）与 32 位设备；新增 26.2+ 的 Vulkan 支持检测\n· 内置 ANGLE / VirGL 等渲染器与驱动库，四架构齐全，开箱可用\n· 防杀后台：加前台服务 specialUse，切后台不易被系统回收\n· 版本分类补齐 41 条缺失版本，并新增 2.0（愚人节）三个版本\n· 中文覆盖补齐，界面已做到 0 缺失\n"
-        },
-        {
-          "lang": "zh_TW",
-          "text": "【介面大重做】\n· 全新主介面排版：左側純圖示直排導覽常駐可見，切到版本清單 / 下載 / 設定等次級頁面也不用先退回主介面\n· 右側常駐「帳號 + 版本名 + 啟動遊戲」區塊，照 FCL 版式重做\n· 排版可在「設定 → 外觀 → 排版」切換 新排版 / 舊排版\n· 主題可在「設定 → 外觀 → 主題」切換，並可選主題色\n· 背景支援 預設（依時間自動切換晝夜）/ 白天 / 黑夜 / 自訂 / 網路\n· 修復夜間模式下多處「深底黑字 / 白塊」\n\n【3D 人物：換成 FCL 同款】\n· 改用 FCL 的 glTF 模型與骨骼動畫（經典 / 細臂兩套自動切換）\n· 真正的待機動畫（站立待機 + 3 個變體，每 8~15 秒隨機播一個）\n· 單指拖曳 360° 旋轉、雙指縮放；紋理即時更新\n· 修復微軟帳號手臂粗細不對、換皮膚後披風消失\n\n【微軟帳號：外觀與披風】\n· 微軟披風此前從未被抓取過，現已完整接入\n· 修復披風取錯項（原本永遠取清單第 1 件）\n· 換膚對話框的「確定」改為「上傳」；模型選擇會被記住\n· 外觀與披風會自動跟隨微軟伺服器\n\n【下載頁】\n· 修復「模組名一個中文也沒有」、修復名稱英文重複兩遍\n· 修復重新整理後整頁空白並影響其他頁面\n· 移除「載入失敗，點此重試」提示\n· 詳情頁不再載入半天；收藏按鈕新增動效\n\n【整合包安裝】\n· 修復進度條不動；每個檔案單獨一行並顯示下載進度\n· 修復取消按鈕沒反應\n\n【穩定性】\n· 修復啟動時豎屏閃退、26.3 / 26.4 崩潰\n· 適配 Android 15 與 32 位裝置；內建渲染器開箱可用\n· 防殺後台；版本分類補齊 41 條缺失版本並新增 2.0（愚人節）三個版本\n"
-        },
-        {
-          "lang": "en_US",
-          "text": "[Major UI overhaul]\n- New main screen layout: a permanent icon-only nav rail on the left, so you no longer have to go\n  back to the main screen to reach the version list, downloads or settings.\n- Persistent account + version + launch block on the right, redone after FCL's layout.\n- Layout is switchable in Settings - Appearance - Layout (new / old).\n- Theme and accent colour are selectable in Settings - Appearance - Theme.\n- Background supports Default (auto day/night by time), Day, Night, Custom and Online.\n- Fixed many \"dark text on a dark panel\" and white-block issues in night mode.\n- 53 text elements across the project now carry day/night colours.\n\n[3D character: now the FCL pipeline]\n- Switched to FCL's glTF model with skeletal animation (classic / slim auto-switching).\n- Real idle animations (standing idle plus 3 variants, one every 8-15 seconds).\n- One-finger 360-degree rotation, pinch to zoom, live texture updates.\n- Fixed wrong arm width, \"thick then thin\", and the cape disappearing after a skin change.\n\n[Microsoft account: skin and cape]\n- Microsoft capes were never fetched before (the API branch was commented out and the account had\n  no field for it). They are now fully supported.\n- Fixed picking the wrong cape entry (it always used the first one, so switching never worked).\n- The skin dialog's OK button is now an Upload button; the model choice is remembered.\n- Skin and cape now follow the Microsoft server automatically.\n\n[Download pages]\n- Fixed \"no mod name is translated at all\", and fixed duplicated English names.\n- Fixed the blank page after a refresh that also broke other pages.\n- Removed the \"failed to load, tap to retry\" hint.\n- Detail pages load immediately now; the favourite button has feedback animation.\n\n[Modpack install]\n- Fixed frozen progress bars; each file gets its own row with live progress.\n- Fixed the dead cancel button.\n\n[Stability]\n- Fixed the portrait-orientation crash at launch and the 26.3 / 26.4 crashes.\n- Android 15 and 32-bit support; bundled renderers work out of the box.\n- Foreground service to survive being killed in the background; 41 missing versions added,\n  plus the three 2.0 (April Fools) versions.\n"
-        }
-      ]
+     "lang": "en_US",
+     "text": "QCL 1.6.0: old versions on MobileGlues — built-in SFPEW layer + card-style renderer picker"
     }
-  ]
+   ],
+   "date": "2026-11-07",
+   "content": [
+    {
+     "lang": "zh_CN",
+     "text": "【1.6.0：老版本也能用 MobileGlues 了 —— 内置 SFPEW 兼容层】\n\n这一版的核心是：**把 SimpleFPEWrapper 当成兼容层叠在渲染器上**，让原本只能跑 1.17+ 的\nMobileGlues 也能跑 1.8.9、b1.x 这些远古/固定管线版本。\n\n一、为什么以前 MG 跑不了老版本\n\nMobileGlues 只实现 GLES 3.x，**没有固定管线**（glBegin/glEnd、glMatrixMode 这类即时模式）。\n而 1.16 及更早的游戏大量依赖固定管线 —— 所以以前 MG 的最低版本被卡在 1.17。\n\n现在 SFPEW 补上了这一层：游戏经 libSimpleFPEWrapper.so 解析 GL 符号，\n固定管线调用被翻译成 GLES，MG 只承担 EGL 与驱动。\n\n**真机实测通过**：inf-20100618（infdev 远古版）+ MobileGlues，\n日志显示 GL RENDERER: Adreno 750 | OpenGL ES 3.2 (SFPEW 26.11-dev)。\n\n二、怎么用\n\n1. 渲染器选 MobileGlues；\n2. 直接启动老版本 —— **不需要开任何开关**（内置渲染器是自动叠加的）。\n\n自带固定管线的渲染器（Krypton Wrapper / Holy GL4ES / VGPU / Zink）会自动不叠加，\n避免多一层透传开销。装了 Angelica / Actinium 这类自带 FPE 的模组时，整层跳过。\n\n三、渲染器选择界面改成卡片式\n\n以前一行纯文本塞「名称 / 版本区间 / 推荐 / 内置 / 当前 / 警告」六七项，读起来像乱码。\n现在每条是一张卡片：名称 + 状态徽章、版本区间 + 一句说明、有问题时才出现的红色警告；\n当前使用的整卡浅蓝高亮。「高级设置」独立成灰卡，不会跟渲染器混淆。\n\n四、更正一处此前的错误结论\n\n1.5.8 曾把 26.3 崩溃归因到 MobileGlues 的 glGetString 返回 NULL，**那个结论是错的**。\n真正起作用的是追加官方参数 --graphicsBackend vulkan，它跟渲染器无关 ——\n换任何渲染器都同样生效。README 已按事实更正，不再把 26.3 的启动问题算在 MG 头上。\n\n（本版为 1.6.0，versionCode 362）"
+    },
+    {
+     "lang": "zh_TW",
+     "text": "【1.6.0：老版本也能用 MobileGlues 了 —— 內建 SFPEW 相容層】\n\n這一版的核心是：**把 SimpleFPEWrapper 當成相容層疊在渲染器上**，讓原本只能跑 1.17+ 的\nMobileGlues 也能跑 1.8.9、b1.x 這些遠古/固定管線版本。\n\n一、為什麼以前 MG 跑不了老版本\n\nMobileGlues 只實作 GLES 3.x，**沒有固定管線**（glBegin/glEnd、glMatrixMode 這類即時模式）。\n而 1.16 及更早的遊戲大量依賴固定管線 —— 所以以前 MG 的最低版本被卡在 1.17。\n\n現在 SFPEW 補上了這一層：遊戲經 libSimpleFPEWrapper.so 解析 GL 符號，\n固定管線呼叫被翻譯成 GLES，MG 只承擔 EGL 與驅動。\n\n**真機實測通過**：inf-20100618（infdev 遠古版）+ MobileGlues，\n日誌顯示 GL RENDERER: Adreno 750 | OpenGL ES 3.2 (SFPEW 26.11-dev)。\n\n二、怎麼用\n\n1. 渲染器選 MobileGlues；\n2. 直接啟動老版本 —— **不需要開任何開關**（內建渲染器是自動疊加的）。\n\n自帶固定管線的渲染器（Krypton Wrapper / Holy GL4ES / VGPU / Zink）會自動不疊加，\n避免多一層透傳開銷。裝了 Angelica / Actinium 這類自帶 FPE 的模組時，整層跳過。\n\n三、渲染器選擇介面改成卡片式\n\n以前一行純文字塞「名稱 / 版本區間 / 推薦 / 內建 / 目前 / 警告」六七項，讀起來像亂碼。\n現在每條是一張卡片：名稱 + 狀態徽章、版本區間 + 一句說明、有問題時才出現的紅色警告；\n目前使用的整卡淺藍高亮。「進階設定」獨立成灰卡，不會跟渲染器混淆。\n\n四、更正一處此前的錯誤結論\n\n1.5.8 曾把 26.3 崩潰歸因到 MobileGlues 的 glGetString 回傳 NULL，**那個結論是錯的**。\n真正起作用的是追加官方參數 --graphicsBackend vulkan，它跟渲染器無關 ——\n換任何渲染器都同樣生效。README 已按事實更正，不再把 26.3 的啟動問題算在 MG 頭上。\n\n（本版為 1.6.0，versionCode 362）"
+    },
+    {
+     "lang": "en_US",
+     "text": "[1.6.0: Older versions now work with MobileGlues — built-in SFPEW compatibility layer]\n\nThe core of this release: **SimpleFPEWrapper is now a compatibility layer stacked on top of a\nrenderer**, letting MobileGlues — previously limited to 1.17+ — run 1.8.9, b1.x and other\nfixed-function-pipeline era versions.\n\n1. Why MG could not run old versions before\n\nMobileGlues implements GLES 3.x only and has **no fixed-function pipeline**\n(glBegin/glEnd, glMatrixMode and other immediate-mode calls). Games up to 1.16 rely heavily on\nthat pipeline — which is why MG's minimum version was pinned at 1.17.\n\nSFPEW now supplies that layer: the game resolves GL symbols through libSimpleFPEWrapper.so,\nfixed-function calls are translated to GLES, and MG only handles EGL and the driver.\n\n**Verified on a real device**: inf-20100618 (infdev) + MobileGlues,\nlog shows: GL RENDERER: Adreno 750 | OpenGL ES 3.2 (SFPEW 26.11-dev).\n\n2. How to use\n\n1. Pick MobileGlues as the renderer;\n2. Launch an old version directly — **no switch to toggle** (built-in renderers stack it automatically).\n\nRenderers that already provide fixed-function (Krypton Wrapper / Holy GL4ES / VGPU / Zink) are\nautomatically excluded, avoiding an extra pass-through. If a mod supplies its own FPE\n(Angelica / Actinium), the layer is skipped entirely.\n\n3. Renderer picker redesigned as cards\n\nPreviously a single line of plain text crammed in name / version range / recommended / built-in /\ncurrent / warnings — hard to read. Now each renderer is a card: name + status badge, version range\nplus a one-line note, and a red warning only when something is wrong; the active one is highlighted\nin light blue. \"Advanced settings\" is a separate grey card so it is not mistaken for a renderer.\n\n4. Correcting an earlier wrong conclusion\n\n1.5.8 attributed the 26.3 crash to MobileGlues' glGetString returning NULL. **That was wrong.**\nWhat actually fixed it was appending the official --graphicsBackend vulkan argument, which is\nrenderer-independent — it works with any renderer. The README has been corrected accordingly.\n\n(This release is 1.6.0, versionCode 362)"
+    }
+   ]
+  },
+  {
+   "id": 109,
+   "significant": true,
+   "outdated": false,
+   "minVersion": 0,
+   "maxVersion": 2147483647,
+   "specificLang": [],
+   "title": [
+    {
+     "lang": "zh_CN",
+     "text": "QCL 1.5.9：公告「展开」按钮修好了 + 首次显示不再铺满半屏"
+    },
+    {
+     "lang": "zh_TW",
+     "text": "QCL 1.5.9：公告「展開」按鈕修好了 + 首次顯示不再鋪滿半屏"
+    },
+    {
+     "lang": "en_US",
+     "text": "QCL 1.5.9: announcement Show-more button fixed + no more half-screen fill"
+    }
+   ],
+   "date": "2026-10-31",
+   "content": [
+    {
+     "lang": "zh_CN",
+     "text": "【1.5.9：公告的「展开」按钮修好了，首次启动不再铺满半屏】\n\n这一版修的，是 1.5.8 我自己改出来的问题。\n\n一、公告「展开 / 收起」按钮，现在真的能看见了\n\n1.5.8 里我为了修「公告把半屏铺满」，写了一句「撤销折叠」，结果改过头了：\n\n· 每次显示公告，代码都把正文设成「不限行数」；\n· 然后**把展开按钮直接隐藏掉**。\n\n于是 XML 里明明写好的「展开」按钮，你根本看不见，更点不到；\n而且每翻一页还会再隐藏一次 —— 这个功能等于被我废掉了。\n\n现在改回正规做法：\n· 公告正文**默认只显示 6 行**，末尾省略号；\n· 下面的按钮**可见**，显示「Show more」；\n· 点一下 → 显示全文，按钮文字变「Show less」；\n· 再点一下 → 收回 6 行；\n· 换一条公告 / 翻页 → 自动回到折叠态，按钮文字也跟着复位。\n\n二、修「首次启动时公告铺满半个屏幕」\n\n原因是我把顺序写反了：\n· 先设置正文（这一步会触发一次重新排版）；\n· 再做入场动画；\n· 最后才让公告栏可见。\n结果公告栏是**带着「还没折叠的满高正文」**进场的，首帧就撑满了半屏。\n\n现在改成：\n· 先把折叠状态和按钮文字/可见性全部落定；\n· 再请求一次排版，让高度按 6 行算准；\n· 最后才做入场动画。\n首帧就是「6 行 + Show more」，不会再抖一下。\n\n三、本版其它\n\n· 1.5.8 的内容全部保留（26.3 能启动、MobileGlues 内置、日志查看器等）。\n· 26.3 的真根因与修法见 1.5.8 的说明：\n  26.3 默认仍走 OpenGL → 经 libmobileglues.so 的 glGetString 返回 NULL\n  → 调用方 strlen(NULL) → 原生 SIGSEGV；\n  QCL 从 26.3 起自动追加官方启动参数 --graphicsBackend vulkan。\n\n四、已知问题（不变）\n\n· 无 Vulkan 的设备，26.3 可能仍无法启动（设备能力，不是启动器缺陷）。\n· 点两次 ESC 视角偶发偏移 —— 需要一份可复现的日志才能定位。\n· 远古版本颜色异常 —— 第三方转译路线共有的天花板，彻底解决依赖自研渲染器。\n\n（本版为 1.5.9，versionCode 361。）"
+    },
+    {
+     "lang": "zh_TW",
+     "text": "【1.5.9：公告的「展開」按鈕修好了，首次啟動不再鋪滿半屏】\n\n這一版修的，是 1.5.8 我自己改出來的問題。\n\n一、公告「展開 / 收起」按鈕，現在真的能看見了\n\n1.5.8 裡我為了修「公告把半屏鋪滿」，寫了一句「撤銷折疊」，結果改過頭了：\n\n· 每次顯示公告，程式碼都把正文設成「不限行數」；\n· 然後**把展開按鈕直接隱藏掉**。\n\n於是 XML 裡明明寫好的「展開」按鈕，你根本看不見，更點不到；\n而且每翻一頁還會再隱藏一次 —— 這個功能等於被我廢掉了。\n\n現在改回正規做法：\n· 公告正文**預設只顯示 6 行**，末尾省略號；\n· 下面的按鈕**可見**，顯示「Show more」；\n· 點一下 → 顯示全文，按鈕文字變「Show less」；\n· 再點一下 → 收回 6 行；\n· 換一條公告 / 翻頁 → 自動回到折疊態，按鈕文字也跟著復位。\n\n二、修「首次啟動時公告鋪滿半個螢幕」\n\n原因是我把順序寫反了：\n· 先設定正文（這一步會觸發一次重新排版）；\n· 再做入場動畫；\n· 最後才讓公告欄可見。\n結果公告欄是**帶著「還沒折疊的滿高正文」**進場的，首幀就撐滿了半屏。\n\n現在改成：\n· 先把折疊狀態和按鈕文字/可見性全部落定；\n· 再請求一次排版，讓高度按 6 行算準；\n· 最後才做入場動畫。\n首幀就是「6 行 + Show more」，不會再抖一下。\n\n三、本版其它\n\n· 1.5.8 的內容全部保留（26.3 能啟動、MobileGlues 內建、日誌檢視器等）。\n· 26.3 的真根因與修法見 1.5.8 的說明：\n  26.3 預設仍走 OpenGL → 經 libmobileglues.so 的 glGetString 回傳 NULL\n  → 呼叫方 strlen(NULL) → 原生 SIGSEGV；\n  QCL 從 26.3 起自動追加官方啟動參數 --graphicsBackend vulkan。\n\n四、已知問題（不變）\n\n· 無 Vulkan 的裝置，26.3 可能仍無法啟動（裝置能力，不是啟動器缺陷）。\n· 點兩次 ESC 視角偶發偏移 —— 需要一份可重現的日誌才能定位。\n· 遠古版本顏色異常 —— 第三方轉譯路線共有的天花板，徹底解決依賴自研渲染器。\n\n（本版為 1.5.9，versionCode 361。）"
+    },
+    {
+     "lang": "en_US",
+     "text": "[1.5.9: the announcement \"Show more\" button works again, and the announcement no\nlonger fills half the screen on first launch]\n\nThis release fixes a problem I introduced myself in 1.5.8.\n\n1. The \"Show more / Show less\" button is actually visible now\n\nIn 1.5.8, to fix \"the announcement fills half the screen\", I wrote \"undo the\ncollapse\" - and overdid it:\n\n- every time an announcement was shown, the body was set to \"unlimited lines\";\n- and then the Show more button was hidden outright.\n\nSo the button that was properly declared in the XML was invisible and\nunclickable, and it was hidden again on every page change - the feature was\neffectively dead.\n\nNow it works the proper way:\n- the announcement body defaults to 6 lines with a trailing ellipsis;\n- the button below is visible and reads \"Show more\";\n- tap it -> full text, button becomes \"Show less\";\n- tap again -> back to 6 lines;\n- switching announcements / paging -> returns to the collapsed state and the\n  button label resets with it.\n\n2. Fixed \"the announcement fills half the screen on first launch\"\n\nThe order was wrong:\n- set the text first (which triggers a re-layout);\n- then run the entrance animation;\n- and only then make the announcement visible.\nThe panel therefore entered while still carrying the full-height, uncollapsed\nbody, filling the screen on the very first frame.\n\nNow:\n- the collapsed state plus button label/visibility are settled first;\n- a layout pass runs so the height is computed for 6 lines;\n- the entrance animation runs last.\nThe first frame is \"6 lines + Show more\", with no flicker.\n\n3. Other notes\n\n- everything from 1.5.8 is kept (26.3 launches, MobileGlues built in, the\n  last-launch-log viewer, etc.);\n- the real root cause and fix for 26.3 are described in the 1.5.8 notes:\n  26.3 still defaults to OpenGL -> the GL path goes through libmobileglues.so's\n  glGetString, which returns NULL -> the caller does strlen(NULL) -> a native\n  SIGSEGV; QCL appends the official launch argument --graphicsBackend vulkan\n  from 26.3 onward.\n\n4. Known issues (unchanged)\n\n- on devices without Vulkan, 26.3 may still fail to start (a device limitation,\n  not a launcher defect);\n- the view occasionally drifts after pressing ESC twice - needs a reproducible\n  log to pin down;\n- ancient-version colour anomalies are a ceiling shared by every third-party\n  translation stack; the real fix depends on our own renderer.\n\n(This release is 1.5.9, versionCode 361.)"
+    }
+   ]
+  },
+  {
+   "id": 108,
+   "significant": true,
+   "outdated": false,
+   "minVersion": 0,
+   "maxVersion": 2147483647,
+   "specificLang": [],
+   "title": [
+    {
+     "lang": "zh_CN",
+     "text": "QCL 1.5.8：Minecraft 26.3 终于能启动了"
+    },
+    {
+     "lang": "zh_TW",
+     "text": "QCL 1.5.8：Minecraft 26.3 終於能啟動了"
+    },
+    {
+     "lang": "en_US",
+     "text": "QCL 1.5.8: Minecraft 26.3 finally launches"
+    }
+   ],
+   "date": "2026-10-31",
+   "content": [
+    {
+     "lang": "zh_CN",
+     "text": "【1.5.8：26.3 终于能启动了】\n\n从 1.5.1 起，公告里一直挂着「26.3 启动不了，原因未定位」。\n这一版，它修好了。\n\n一、26.3 崩溃的真根因\n\n不是 QCL 的 bug，是「官方默认值 + 渲染器」的组合问题：\n\n· Minecraft 26.2 引入了 Vulkan 渲染后端，但 26.3 的默认图形 API 仍是 OpenGL；\n· 26.3 走 OpenGL 时，会经过 MobileGlues 的 glGetString；\n· MG 的这个函数在某些查询上返回 NULL，调用方对它 strlen(NULL)；\n· 结果是原生 SIGSEGV（空指针解引用），表现为黑屏崩溃。\n\n而 26.4 官方把「Default」改成了等同「Prefer Vulkan」，所以 26.4 一直能进 ——\n这就是为什么同一台手机、同一份 MG，26.3 崩而 26.4 正常。\n\n二、修法\n\nQCL 从 26.3 起，启动时会追加官方支持的启动参数：\n\n    --graphicsBackend vulkan\n\n这是游戏自己识别的参数（优先级高于游戏内设置），\n不受「上次异常关闭会把设置重置回 Default」的影响。\n26.2 及以下不受任何影响（那些版本没有 Vulkan 后端，OpenGL 是好的）。\n\n三、MobileGlues 已经内置\n\n以前要让 MG 生效，你得自己去装 MG 的插件 APK。\n现在 MG 已经随启动器打包（约 5.8 MB），选中即可用，无需额外安装。\n\n同时启动器会自动为 MG 写好配置（enableNoError=2），\n这是 26.3 能启动的必要条件之一，你不需要手动改。\n\n四、这一版还修了\n\n· 首次进入世界时，转动视角会「大片移一下」——根因是光标增量基准没有重置。\n· 自定义背景图不再整张解码（防大内存占用），解码失败也不会再崩。\n· 安装器（Forge / NeoForge / Cleanroom）启动异常时不再卡住不动。\n· 新增「查看上次启动日志」（左侧栏第 7 个按钮）——\n  游戏在等待界面就崩掉、连崩溃弹窗都弹不出来时，用它把日志复制出来。\n· 日志现在会记录原生崩溃（之前只记启动器自己的输出，崩溃信息全被过滤掉了）。\n· 26.4 快照的 JNA 5.19.1 崩溃（NoClassDefFoundError: NativeLong）已修。\n\n五、已知问题\n\n· 26.3 请用 Vulkan 后端；如果你的设备不支持 Vulkan，26.3 仍可能无法启动。\n· 部分老旧设备（Android 12 及以下）的 Vulkan 驱动可能不完整，请自行测试。\n\n【26.4 及更早版本】\n除上述修复外，1.5.8 与 1.5.7 相比没有其它功能改动。"
+    },
+    {
+     "lang": "zh_TW",
+     "text": "【1.5.8：26.3 終於能啟動了】\n\n從 1.5.1 起，公告裡一直掛著「26.3 啟動不了，原因未定位」。\n這一版，它修好了。\n\n一、26.3 崩潰的真根因\n\n不是 QCL 的 bug，是「官方預設值 + 渲染器」的組合問題：\n\n· Minecraft 26.2 引入了 Vulkan 渲染後端，但 26.3 的預設圖形 API 仍是 OpenGL；\n· 26.3 走 OpenGL 時，會經過 MobileGlues 的 glGetString；\n· MG 的這個函式在某些查詢上回傳 NULL，呼叫方對它 strlen(NULL)；\n· 結果是原生 SIGSEGV（空指標解引用），表現為黑屏崩潰。\n\n而 26.4 官方把「Default」改成了等同「Prefer Vulkan」，所以 26.4 一直能進。\n\n二、修法\n\nQCL 從 26.3 起，啟動時會追加官方支援的啟動參數：\n\n    --graphicsBackend vulkan\n\n這是遊戲自己識別的參數，不受「上次異常關閉會把設定重設回 Default」的影響。\n26.2 及以下不受任何影響。\n\n三、MobileGlues 已經內建\n\n以前要讓 MG 生效，你得自己去裝 MG 的插件 APK。\n現在 MG 已經隨啟動器打包，選中即可用，無需額外安裝。\n\n四、這一版還修了\n\n· 首次進入世界時，轉動視角會「大片移一下」。\n· 自訂背景圖不再整張解碼（防大記憶體佔用），解碼失敗也不會再崩。\n· 安裝器啟動異常時不再卡住不動。\n· 新增「查看上次啟動日誌」（左側欄第 7 個按鈕）。\n· 日誌現在會記錄原生崩潰。\n· 26.4 快照的 JNA 5.19.1 崩潰已修。"
+    },
+    {
+     "lang": "en_US",
+     "text": "[1.5.8: Minecraft 26.3 finally launches]\n\nSince 1.5.1 our announcements kept saying \"26.3 does not start; the cause is not\nidentified\". This release fixes it.\n\n1. The real root cause\n\nIt is not a QCL bug - it is a combination of an official default and the renderer:\n\n- Minecraft 26.2 introduced a Vulkan rendering backend, but 26.3 still defaults to\n  OpenGL for its Graphics API setting.\n- When 26.3 uses OpenGL it goes through MobileGlues' glGetString.\n- That function returns NULL for some queries, and the caller runs strlen(NULL).\n- The result is a native SIGSEGV (null pointer dereference) - a black-screen crash.\n\nVersion 26.4 changed \"Default\" to behave the same as \"Prefer Vulkan\", which is why\n26.4 has always worked on the same phone with the same MG build.\n\n2. The fix\n\nStarting with 26.3, QCL appends the official launch argument:\n\n    --graphicsBackend vulkan\n\nThis is recognised by the game itself, takes precedence over the in-game setting,\nand is unaffected by the \"resetting preferred graphics API to Default\" behaviour\nthat triggers after an unexpected shutdown. Versions 26.2 and below are untouched -\nthey have no Vulkan backend and their OpenGL path works fine.\n\n3. MobileGlues is now built in\n\nPreviously you had to install the MobileGlues plugin APK yourself. MG now ships with\nthe launcher (~5.8 MB) and works once selected - no extra installation needed.\n\nThe launcher also writes the required MG config automatically (enableNoError=2);\nthis is one of the prerequisites for 26.3 to start, and you do not need to change it\nmanually.\n\n4. Other fixes in this release\n\n- The camera snapped a large amount when you first entered a world and moved your\n  view; the cursor delta baseline was never initialised.\n- Custom background images are no longer decoded at full size (saves memory), and a\n  failed decode no longer crashes.\n- Installer (Forge / NeoForge / Cleanroom) no longer hangs when its JVM fails to start.\n- New \"View last launch log\" entry (the 7th button in the left sidebar) - use it when\n  the game dies on the loading screen and no crash dialog appears.\n- Logs now capture native crashes (previously only the launcher's own output was\n  recorded, so the crash report was filtered out entirely).\n- Fixed the JNA 5.19.1 crash on 26.4 snapshots\n  (NoClassDefFoundError: NativeLong).\n\n5. Known issues\n\n- Use the Vulkan backend for 26.3. If your device does not support Vulkan, 26.3 may\n  still fail to start.\n- Some older devices (Android 12 and below) have incomplete Vulkan drivers - test\n  at your own discretion.\n\n[26.4 and earlier]\nApart from the fixes above, 1.5.8 contains no other functional changes versus 1.5.7."
+    }
+   ]
+  },
+  {
+   "id": 107,
+   "significant": true,
+   "outdated": false,
+   "minVersion": 0,
+   "maxVersion": 2147483647,
+   "specificLang": [],
+   "title": [
+    {
+     "lang": "zh_CN",
+     "text": "QCL 1.5.7：Legacy Fabric / Legacy Fabric API 加版本限制 + 修好取消收藏失效"
+    },
+    {
+     "lang": "zh_TW",
+     "text": "QCL 1.5.7：Legacy Fabric / Legacy Fabric API 加版本限制 + 修好取消收藏失效"
+    },
+    {
+     "lang": "en_US",
+     "text": "QCL 1.5.7: version limits for Legacy Fabric / Legacy Fabric API + un-favorite fix"
+    }
+   ],
+   "date": "2026-10-27",
+   "content": [
+    {
+     "lang": "zh_CN",
+     "text": "【1.5.7：Legacy Fabric 版本限制 + 修好「取消收藏又复活」】\n\n一、Legacy Fabric / Legacy Fabric API 只支持 1.3 – 1.13.2\n按上游 meta.legacyfabric.net 和 Modrinth 的真实版本表加了限制：\n· 选 1.3 – 1.13.2 以外（含部分快照、愚人节版本）的游戏版本时，安装页不再显示这两个加载器；\n· 给已有实例补装加载器时会先校验，不支持就直接提示支持范围。\n以前选中后会进到一个空列表，只剩返回键，完全不知道发生了什么。\n\n二、修好「收藏页取消收藏，大退重进又回来」\n· 根因一：写盘处的「防丢数据」守卫，在玩家把收藏取消到一条不剩时拒绝写入\n  （内存列表为空、文件非空 ⇒ 直接 return），磁盘文件保持旧内容，重启自然全部复活。\n  现在只在「从未成功读取过收藏文件」时才拒绝写入，空列表是玩家的真实意图，必须落盘；\n  防丢数据改由「加载失败拒写 + 原子写并保留 .bak + 写后回读校验」三件事承担。\n· 根因二：收藏页那个 ★ 只按单个 id 删除，历史数据里 id 和 source:modId 一旦对不上就一条都删不掉，\n  但界面照样刷新 —— 看着删掉了、重启又回来。\n  现在按 id → source:slug → source:modId 三路兜底，删不掉会明确提示，不再假装成功。\n\n三、其它\n· versionCode 359"
+    },
+    {
+     "lang": "zh_TW",
+     "text": "【1.5.7：Legacy Fabric 版本限制 + 修好「取消收藏又復活」】\n\n一、Legacy Fabric / Legacy Fabric API 只支援 1.3 – 1.13.2\n依上游 meta.legacyfabric.net 與 Modrinth 的真實版本表加上限制：\n· 選 1.3 – 1.13.2 以外（含部分快照、愚人節版本）的遊戲版本時，安裝頁不再顯示這兩個載入器；\n· 為既有執行個體補裝載入器時會先驗證，不支援就直接提示支援範圍。\n以前選中後會進到一個空清單，只剩返回鍵，完全不知道發生什麼事。\n\n二、修好「收藏頁取消收藏，大退重進又回來」\n· 根因一：寫入磁碟處的「防遺失資料」守衛，在玩家把收藏取消到一條不剩時拒絕寫入\n  （記憶體清單為空、檔案非空 ⇒ 直接 return），磁碟檔案保持舊內容，重啟自然全部復活。\n  現在只在「從未成功讀取過收藏檔案」時才拒絕寫入，空清單是玩家的真實意圖，必須寫入磁碟；\n  防遺失資料改由「載入失敗拒寫 + 原子寫入並保留 .bak + 寫後回讀驗證」三件事承擔。\n· 根因二：收藏頁那個 ★ 只依單一 id 刪除，歷史資料裡 id 和 source:modId 一旦對不上就一條都刪不掉，\n  但介面照樣重新整理 —— 看著刪掉了、重啟又回來。\n  現在依 id → source:slug → source:modId 三路備援，刪不掉會明確提示，不再假裝成功。\n\n三、其它\n· versionCode 359"
+    },
+    {
+     "lang": "en_US",
+     "text": "[1.5.7: Legacy Fabric version limits + fixed \"un-favorite comes back\"]\n\n1. Legacy Fabric / Legacy Fabric API now only support 1.3 - 1.13.2\nLimits follow the real upstream version tables (meta.legacyfabric.net and Modrinth):\n- When the selected game version is outside 1.3 - 1.13.2 (plus some snapshots and\n  April Fools versions), these two loaders are no longer listed on the install page.\n- Installing a loader into an existing instance is validated first; if unsupported,\n  the supported range is shown right away.\nPreviously the entry led to an empty list with only a Back button, which explained nothing.\n\n2. Fixed \"un-favorited items come back after a full restart\"\n- Cause 1: the anti-data-loss guard in the save path refused to write when the\n  in-memory list became empty while the file was not (it simply returned), so the file\n  kept the old content and everything came back on restart. Now writing is refused only\n  when the favorites file has never been read successfully; an empty list is a real user\n  intent and must be persisted. Data safety is handled by refusing to write after a load\n  failure, atomic writes that keep a .bak of the old file, and read-back verification.\n- Cause 2: the star button on the favorites page removed entries by a single id only, so\n  when old records had a mismatched source:modId nothing was actually removed while the\n  UI refreshed anyway. Removal now falls back across id -> source:slug -> source:modId and\n  reports a failure instead of pretending success.\n\n3. Misc\n- versionCode 359"
+    }
+   ]
+  },
+  {
+   "id": 106,
+   "significant": true,
+   "outdated": false,
+   "minVersion": 0,
+   "maxVersion": 2147483647,
+   "specificLang": [],
+   "title": [
+    {
+     "lang": "zh_CN",
+     "text": "QCL 1.5.6：修好检查更新时的崩溃（BadTokenException）+ 界面细节"
+    },
+    {
+     "lang": "zh_TW",
+     "text": "QCL 1.5.6：修好檢查更新時的崩潰（BadTokenException）+ 介面細節"
+    },
+    {
+     "lang": "en_US",
+     "text": "QCL 1.5.6: fixed the update-check crash (BadTokenException) + UI details"
+    }
+   ],
+   "date": "2026-10-25",
+   "content": [
+    {
+     "lang": "zh_CN",
+     "text": "【1.5.6：修好更新检查时的崩溃 + 一批界面细节】\n\n★ 一、修好「检查更新时直接崩」（真机实测，HUAWEI PAR-AL00 / Android 9）\n\n崩溃日志长这样：\n  android.view.WindowManager$BadTokenException:\n    Unable to add window -- token ... is not valid; is your activity running?\n    at android.app.Dialog.show(Dialog.java:556)\n    at ...update.UpdateChecker.showUpdateDialog(UpdateChecker.java:244)\n\n根因：更新检查跑在后台线程里，要依次试 8 个下载源\n（Gitee、jsDelivr 各家镜像、GitHub 直连、ghproxy……）取版本号最大的那份。\n网络慢的时候这一趟要好几秒。等它回来弹「发现新版本」时，\nActivity 可能已经销毁了（按返回键退出、切横竖屏、或被系统回收），\n这时窗口 token 已经失效，Dialog 往一个死窗口上贴就抛 BadTokenException，\n而旧代码那里既没判断存活也没 try-catch ⇒ 整个进程直接崩。\n\n修法（三道）：\n  · 弹窗前先看 Activity 是否还活着（isFinishing / isDestroyed），\n    已经不在了就干脆不弹；\n  · dialog.show() 外面兜住异常（判存活也挡不住\"最后一秒才被销毁\"）；\n  · 连 UpdateDialog 的构造也放进 try（构造里要 getWindow/setContentView）。\n\n★ 二、顺带修掉同一类的两处\n  · 「正在检查更新」「已是最新版」两个 Toast 也从后台线程回来，\n    同样会在 Activity 销毁后抛异常，已一并加固；\n  · 下载完 APK 后跳安装界面的 startActivity 没有保护 ——\n    下载要等网络，回来的路上 Activity 可能已死，已补上。\n\n★ 三、界面细节\n  · 下载页「收藏」Tab 图标与文字整体偏低，已与其它 Tab 对齐\n    （★ 字符的 TextView 换成和其它 Tab 同规格的 20dp ImageView）；\n  · 下载页左侧筛选栏：输入框与下拉框里的文字被压掉半截，\n    已按项目主流尺寸放宽（输入框 30→40dp、下拉框 30→36dp）；\n  · 收藏页顶部标题被压，已抬高。\n\n（本版为 1.5.6，versionCode 358。）\n"
+    },
+    {
+     "lang": "zh_TW",
+     "text": "【1.5.6：修好檢查更新時的崩潰 + 一批介面細節】\n\n★ 一、修好「檢查更新時直接崩」（真機實測）\n\n  android.view.WindowManager$BadTokenException:\n    Unable to add window -- token ... is not valid; is your activity running?\n\n根因：更新檢查跑在背景執行緒裡，要依序試 8 個下載源，網路慢時要好幾秒。\n等它回來彈「發現新版本」時，Activity 可能已經銷毀（按返回鍵退出、切橫豎屏、\n或被系統回收），視窗 token 已失效，Dialog 往死視窗上貼就拋 BadTokenException，\n而舊程式碼那裡既沒判斷存活也沒 try-catch ⇒ 整個處理程序直接崩。\n\n修法：彈窗前先看 Activity 是否還活著；dialog.show() 外面兜住異常；\nUpdateDialog 的建構也放進 try。\n\n★ 二、順帶修掉同一類的兩處\n  · 「正在檢查更新」「已是最新版」兩個 Toast 也從背景執行緒回來，一併加固；\n  · 下載完 APK 後跳安裝介面的 startActivity 沒有保護，已補上。\n\n★ 三、介面細節\n  · 下載頁「收藏」Tab 圖示與文字整體偏低，已與其它 Tab 對齊；\n  · 左側篩選欄的輸入框與下拉框文字被壓掉半截，已放寬\n    （輸入框 30→40dp、下拉框 30→36dp）；\n  · 收藏頁頂部標題被壓，已抬高。\n\n（本版為 1.5.6，versionCode 358。）\n"
+    },
+    {
+     "lang": "en_US",
+     "text": "[1.5.6: update-check crash fix + a batch of UI fixes]\n\n[Fixed: hard crash while checking for updates] (real device, HUAWEI PAR-AL00 / Android 9)\n\n  android.view.WindowManager$BadTokenException:\n    Unable to add window -- token ... is not valid; is your activity running?\n    at android.app.Dialog.show(Dialog.java:556)\n    at ...update.UpdateChecker.showUpdateDialog(UpdateChecker.java:244)\n\nRoot cause: the update check runs on a background thread and tries 8 sources in\norder (Gitee, several jsDelivr mirrors, GitHub direct, ghproxy...), keeping the\nhighest versionCode. On a slow network that takes several seconds. By the time it\ncomes back to show \"new version available\", the activity may already be gone\n(back pressed, orientation change, or reclaimed by the system) - the window token\nis then invalid, so attaching the dialog throws BadTokenException. The old code\nhad neither a liveness check nor a try-catch there, so the whole process died.\n\nThree guards now:\n  - check isFinishing()/isDestroyed() before showing, and skip if it is gone;\n  - wrap dialog.show() (the check cannot catch a \"destroyed one second ago\" case);\n  - the UpdateDialog constructor is inside the try too (it calls\n    getWindow()/setContentView()).\n\n[Also fixed, same class]\n  - the \"checking for updates\" and \"already up to date\" toasts also come back on\n    the main thread from the background thread; both are guarded now;\n  - the startActivity that launches the installer after the APK download had no\n    protection (the download waits on the network, so the activity can die while\n    it runs); guarded now.\n\n[UI details]\n  - the download page's Favorites tab icon and label sat lower than the other\n    tabs; now aligned (the star character TextView is a 20dp ImageView like the\n    rest);\n  - text in the left filter column's search fields and drop-downs was cut in\n    half; widened to the project's normal sizes (fields 30->40dp, drop-downs\n    30->36dp);\n  - the favorites page title was clipped; raised.\n\n(This release is 1.5.6, versionCode 358.)\n"
+    }
+   ]
+  },
+  {
+   "id": 105,
+   "significant": true,
+   "outdated": false,
+   "minVersion": 0,
+   "maxVersion": 2147483647,
+   "specificLang": [],
+   "title": [
+    {
+     "lang": "zh_CN",
+     "text": "QCL 1.5.5：版本 Wiki 跳转 + 英文查询弹窗 + 下载页竖排筛选"
+    },
+    {
+     "lang": "zh_TW",
+     "text": "QCL 1.5.5：版本 Wiki 跳轉 + 英文查詢彈窗 + 下載頁豎排篩選"
+    },
+    {
+     "lang": "en_US",
+     "text": "QCL 1.5.5: version Wiki jump, English-name lookup, vertical filters"
+    }
+   ],
+   "date": "2026-10-25",
+   "content": [
+    {
+     "lang": "zh_CN",
+     "text": "【★ 版本列表新增：直接跳该版本的 Minecraft Wiki 页】\n\n下载页的版本列表、首页的本地版本列表，每一行右侧新增一个**地球图标**，\n点它直接用浏览器打开该版本对应的 Wiki 页面（点整行的行为不变：仍是进入安装页 / 选中版本）。\n\n**为什么之前跳不对**：Wiki 的页面名和版本号不是一回事，\n正式版之外还有 Beta / Alpha / Classic / Indev / Infdev / pre-Classic 各种前缀规则，\n快照（26.4-snapshot-5）、预发布（1.21.5-pre2）、候选版（1.16.5-rc1）又各有各的写法，\n连分隔符都不一样（Beta 1.8.1 用的是空格不是下划线），1.0 在 Wiki 上的页面名还是 1.0.0。\n\n⇒ 本版内置了 **920 条实测对照表**（Mojang 官方版本清单里的全部版本，\n含 26.4 快照、26.x 正式版、1.21.x、全部远古版与归档版），\n用 MediaWiki 接口逐条验证过，**命中 920/920**。以后出新版本往表里加一条即可。\n\n【★ 模组 / 整合包搜索：新增「英文查询」弹窗】\n\n搜中文搜不到时，可以点搜索框旁的「英文查询」，\n弹窗会**列出翻译表里所有对应的英文名**（例如「暮色森林」会列出本体、法术包、\n动态的树附属、传送门催化剂等好几条），点其中一条即换成该英文名重新搜索。\n\n此前搜索是**静默**翻译：中文关键词只自动取最匹配的一条替换掉，\n玩家看不见候选、也换不了 —— 现在把候选摆出来自己点。\n模组页与整合包页各有一个入口；两页用的是**不同的翻译表**（模组 / 整合包各一张）。\n\n【★ 下载页筛选栏改成 FCL 式左侧竖排】\n\n模组 / 整合包 / 世界 / 光影 / 资源包 **五个下载页**的筛选栏，\n从「右侧可折叠横排」改成**左侧常驻竖排**（照 FCL 版式）：\n名称 / 下载源 / 类别 / 游戏版本 / 排序逐项竖着排，左栏可上下滑动。\n「☰ 筛选」开关不再需要（已隐藏）。\n\n【★ 模组列表新增来源角标】\n\n聚合搜索时 CurseForge 与 Modrinth 的结果并排显示，\n每行现在标出来源，一眼能分清是哪一站的条目。\n\n【修复】\n· 修复左栏内容超出屏幕后无法上下滑动、输入框文字被压掉半截\n· 修复收藏页顶部标题被压\n· 修复部分下拉框里的文字被压（输入框与下拉框高度已按正文尺寸放宽）\n\n（本版为 1.5.5，versionCode 357。）\n"
+    },
+    {
+     "lang": "zh_TW",
+     "text": "【★ 版本列表新增：直接跳該版本的 Minecraft Wiki 頁】\n\n下載頁的版本清單、首頁的本機版本清單，每一行右側新增一個**地球圖示**，\n點它直接用瀏覽器開啟該版本對應的 Wiki 頁面（點整列的行為不變：仍是進入安裝頁 / 選中版本）。\n\n**為什麼之前跳不對**：Wiki 的頁面名和版本號不是一回事，\n正式版之外還有 Beta / Alpha / Classic / Indev / Infdev / pre-Classic 各種前綴規則，\n快照、預發布、候選版又各有各的寫法，連分隔符都不一樣，1.0 在 Wiki 上的頁面名還是 1.0.0。\n\n⇒ 本版內建了 **920 條實測對照表**（Mojang 官方版本清單裡的全部版本），\n逐條驗證過，**命中 920/920**。\n\n【★ 模組 / 整合包搜尋：新增「英文查詢」彈窗】\n\n搜中文搜不到時，可以點搜尋框旁的「英文查詢」，\n彈窗會**列出翻譯表裡所有對應的英文名**，點其中一條即換成該英文名重新搜尋。\n此前搜尋是**靜默**翻譯，玩家看不見候選、也換不了 —— 現在把候選擺出來自己點。\n\n【★ 下載頁篩選欄改成 FCL 式左側豎排】\n\n模組 / 整合包 / 世界 / 光影 / 資源包 **五個下載頁**的篩選欄，\n從「右側可摺疊橫排」改成**左側常駐豎排**，左欄可上下滑動。\n「☰ 篩選」開關不再需要（已隱藏）。\n\n【★ 模組清單新增來源角標】\n\n聚合搜尋時 CurseForge 與 Modrinth 的結果並排顯示，每行現在標出來源。\n\n【修復】\n· 修復左欄內容超出螢幕後無法上下滑動、輸入框文字被壓掉半截\n· 修復收藏頁頂部標題被壓\n· 修復部分下拉框裡的文字被壓\n\n（本版為 1.5.5，versionCode 357。）\n"
+    },
+    {
+     "lang": "en_US",
+     "text": "[New: jump straight to a version's Minecraft Wiki page]\nEvery row in the version lists (download page and local version list) now has an earth icon.\nTap it to open that version's Wiki page in the browser. Tapping the row itself is unchanged\n(install page / select version).\n\nWhy it used to land on the wrong page: Wiki page names are not version names. Besides the\nplain releases there are Beta / Alpha / Classic / Indev / Infdev / pre-Classic prefixes, and\nsnapshots (26.4-snapshot-5), pre-releases (1.21.5-pre2) and release candidates (1.16.5-rc1)\neach use their own wording - even the separator differs (Beta 1.8.1 uses a space, not an\nunderscore), and 1.0 lives at 1.0.0 on the wiki.\n\n=> This release ships a **920-entry verified table** covering every version in Mojang's\nofficial manifest (including 26.4 snapshots, the 26.x releases, 1.21.x, all the old alpha\nand beta builds and the archived ones). Every entry was checked against the MediaWiki API:\n**920/920 hit**.\n\n[New: \"English name\" lookup for mods and modpacks]\nWhen a Chinese search finds nothing, tap \"English\" next to the search box: a dialog lists\nevery matching English name from the translation table (searching for a Chinese title\nreturns the pack itself, its addon, its companion mods and so on). Tap one and the search\nreruns with that English name.\n\nPreviously the translation was silent - only the single best match was substituted, so the\nother candidates were never visible and could not be chosen. The mod and modpack pages use\n**different** translation tables, and each now has its own entry point.\n\n[New: FCL-style vertical filter column on the download pages]\nThe filter column of all five download pages (mods / modpacks / worlds / shaders /\nresource packs) moved from a collapsible horizontal strip to a **permanent vertical column\non the left**, and it can be scrolled. The \"filter\" toggle is no longer needed.\n\n[New: source badge on mod rows]\nWith aggregate search the CurseForge and Modrinth results sit next to each other;\neach row now says which site it came from.\n\n[Fixes]\n- The filter column could not be scrolled when its content was taller than the screen,\n  and the search field text was cut in half.\n- The favorites page title was clipped.\n- Text in some drop-downs was clipped (search fields and drop-downs are now sized to\n  their content).\n\n(This release is 1.5.5, versionCode 357.)\n"
+    }
+   ]
+  },
+  {
+   "id": 104,
+   "significant": true,
+   "outdated": false,
+   "minVersion": 0,
+   "maxVersion": 2147483647,
+   "specificLang": [],
+   "title": [
+    {
+     "lang": "zh_CN",
+     "text": "QCL 1.5.4：所有功能已恢复 + 修复 1.1 鼠标点不动"
+    },
+    {
+     "lang": "zh_TW",
+     "text": "QCL 1.5.4：所有功能已恢復 + 修復 1.1 滑鼠點不動"
+    },
+    {
+     "lang": "en_US",
+     "text": "QCL 1.5.4: all features restored + 1.1 mouse-click fix"
+    }
+   ],
+   "date": "2026-10-21",
+   "content": [
+    {
+     "lang": "zh_CN",
+     "text": "【1.5.4：所有功能已全部恢复】\n\n上一版（1.5.3）出于谨慎，曾在中国大陆地区临时暂停了下载与联机功能。\n\n现在**全部撤销**：\n· 下载页（游戏版本 / 整合包 / 模组 / 资源包 / 光影 / 收藏 / 世界）\n· 陶瓷联机（Terracotta）\n· 安装游戏 / 安装整合包\n· 各加载器版本下载（Forge / NeoForge / Fabric / Fabric API /\n  LiteLoader / OptiFine / Quilt / Quilt API / Cleanroom / Legacy Fabric）\n\n**不再做地区限制，也不要求正版账号。** 离线账号照常使用。\n\n（背景：2026-10-20 的风波只影响到 HMCL / PCL / ZL 等启动器，\n并没有波及 QCL，也没有针对我们的举报。若日后确有需要，再作处置也不迟。）\n\n【★ 修好了一个真 BUG：1.1 等老版本鼠标点不动】\n\n根因：1.1 ~ 1.12 属于 LWJGL 2 时代，走的是 `lwjgl-lwjglx.jar` 兼容层。\n它的 `org.lwjgl.input.Mouse` 从 `GLFWInputImplementation.pollMouse()` 取数据，\n而 `GLFWInputImplementation.createMouse()` **从不注册 GLFW 回调** ——\n它设计上是等外部主动喂事件的。而 QCL 的 `CallbackBridge` 只把事件喂给了\nnative 的 GLFW（LWJGL 3 那套），**从来没有喂给 lwjglx**。\n\n⇒ 所以 1.1 ~ 1.12 的鼠标点击、键盘输入、视角转动全部无效。\n本版新增 `LwjglXBridge`（反射调用 `putMouseEventWithCoords` /\n`putKeyboardEvent`），把鼠标 / 键盘 / 光标三路都补喂给 lwjglx。\n\n【26.3 仍未修好】\n· 26.3 启动不了的问题依然存在，原因尚未定位。"
+    },
+    {
+     "lang": "zh_TW",
+     "text": "【1.5.4：所有功能已全部恢復】\n\n上一版（1.5.3）出於謹慎，曾在中國大陸地區臨時暫停了下載與聯機功能。\n\n現在**全部撤銷**：下載頁 / 陶瓷聯機 / 安裝遊戲 / 安裝整合包 / 各載入器版本下載。\n\n**不再做地區限制，也不要求正版帳號。** 離線帳號照常使用。\n\n【★ 修好了一個真 BUG：1.1 等老版本滑鼠點不動】\n\n根因：1.1 ~ 1.12 屬於 LWJGL 2 時代，走的是 `lwjgl-lwjglx.jar` 相容層。\n它的 `Mouse` 從 `GLFWInputImplementation.pollMouse()` 取資料，而\n`createMouse()` **從不註冊 GLFW 回呼** —— 設計上是等外部主動餵事件。\n而 `CallbackBridge` 只餵給 native 的 GLFW（LWJGL 3），**從未餵給 lwjglx**。\n\n本版新增 `LwjglXBridge`，把滑鼠 / 鍵盤 / 游標三路都補餵給 lwjglx。\n\n【26.3 仍未修好】\n· 26.3 無法啟動的問題依然存在，原因尚未定位。"
+    },
+    {
+     "lang": "en_US",
+     "text": "[1.5.4: all features restored]\n\nVersion 1.5.3 cautiously paused downloads and multiplayer in mainland China.\n\nThat is now **fully reverted**:\n- Download pages (game versions / modpacks / mods / resource packs / shaders /\n  favourites / worlds)\n- Terracotta multiplayer\n- Install game / install modpack\n- Loader version downloads (Forge / NeoForge / Fabric / Fabric API / LiteLoader /\n  OptiFine / Quilt / Quilt API / Cleanroom / Legacy Fabric)\n\n**No regional restrictions, no genuine-account requirement.** Offline accounts\nwork as before.\n\n[*] Real bug fixed: mouse clicks did nothing on 1.1 and other LWJGL2-era versions\n\nRoot cause: 1.1 - 1.12 are LWJGL 2 era and use the `lwjgl-lwjglx.jar` shim.\nIts `org.lwjgl.input.Mouse` reads from `GLFWInputImplementation.pollMouse()`, but\n`GLFWInputImplementation.createMouse()` **never registers GLFW callbacks** - it is\ndesigned to be fed events externally. QCL's `CallbackBridge` only fed the native\nGLFW path (LWJGL 3) and **never fed lwjglx**.\n\nThis release adds `LwjglXBridge`, which feeds mouse, keyboard and cursor events to\nlwjglx as well.\n\n[26.3 is still not fixed]\n- Minecraft 26.3 still does not start; the cause is not yet identified."
+    }
+   ]
+  },
+  {
+   "id": 103,
+   "significant": true,
+   "outdated": false,
+   "minVersion": 0,
+   "maxVersion": 2147483647,
+   "specificLang": [],
+   "title": [
+    {
+     "lang": "zh_CN",
+     "text": "QCL 1.5.3：中国大陆地区下载与联机功能暂停（离线可玩）"
+    },
+    {
+     "lang": "zh_TW",
+     "text": "QCL 1.5.3：中國大陸地區下載與聯機功能暫停（離線可玩）"
+    },
+    {
+     "lang": "en_US",
+     "text": "QCL 1.5.3: downloads & multiplayer paused in mainland China (offline still works)"
+    }
+   ],
+   "date": "2026-10-20",
+   "content": [
+    {
+     "lang": "zh_CN",
+     "text": "【中国大陆地区：下载与联机功能暂停】\n\nQCL 遵守中华人民共和国相关法律法规。\n\n自 2026 年 10 月 20 日起，包括 PCL、HMCL 在内的多款在中国大陆展业的第三方\nMinecraft 启动器，因合规性原因关停了 Minecraft 核心文件与资源包的下载功能。\n（据 MineBBS 官方公告 2026-10-20 17:55：本次事件与网易游戏、Mojang Studio\n与 Microsoft 均无直接关联，各开发组也均未公布具体原因。）\n\n为遵守相关法律法规，QCL 从本版起**在中国大陆地区**暂停以下功能：\n\n· 下载页（游戏版本 / 整合包 / 模组 / 资源包 / 光影 / 收藏 / 世界）\n· 陶瓷联机（Terracotta）\n· 安装游戏 / 安装整合包\n· 各模组加载器的版本下载（Forge / NeoForge / Fabric / Fabric API /\n  LiteLoader / OptiFine / Quilt / Quilt API / Cleanroom / Legacy Fabric）\n\n【★ 离线模式完全不受影响】\n\n· **本地已经下载好的游戏版本，可以照常启动** —— 包括离线账号。\n· 版本列表、游戏管理、账号、设置、实验室、JAR 启动 全部正常可用。\n\n【★ 如果你不在中国大陆】\n\n· 上述功能**不受影响**，可以正常使用。\n· 若你身处中国大陆以外却看到「功能暂不可用」，那是地区检测出现异常\n  （判断依据是公网出口 IP 归属地），请重启启动器后重试。\n\n【给玩家的提醒】\n\n· 请通过官方渠道获取 Minecraft 本体（minecraft.net，或网易我的世界中国版）。\n· 请勿下载任何来源不明的「修复版启动器」——\n  那类文件存在被二次篡改、捆绑恶意程序、植入后门的风险。\n\n【26.3 仍未修好】\n· 26.3 启动不了的问题依然存在，原因尚未定位。"
+    },
+    {
+     "lang": "zh_TW",
+     "text": "【中國大陸地區：下載與聯機功能暫停】\n\nQCL 遵守中華人民共和國相關法律法規。\n\n自 2026 年 10 月 20 日起，包括 PCL、HMCL 在內的多款在中國大陸展業的第三方\nMinecraft 啟動器，因合規性原因關停了 Minecraft 核心檔案與資源包的下載功能。\n（據 MineBBS 官方公告 2026-10-20 17:55：本次事件與網易遊戲、Mojang Studio\n與 Microsoft 均無直接關聯，各開發組也均未公布具體原因。）\n\n為遵守相關法律法規，QCL 從本版起**在中國大陸地區**暫停以下功能：\n\n· 下載頁（遊戲版本 / 整合包 / 模組 / 資源包 / 光影 / 收藏 / 世界）\n· 陶瓷聯機（Terracotta）\n· 安裝遊戲 / 安裝整合包\n· 各模組載入器的版本下載\n\n【★ 離線模式完全不受影響】\n\n· **本機已經下載好的遊戲版本，可以照常啟動** —— 包括離線帳號。\n· 版本列表、遊戲管理、帳號、設定、實驗室、JAR 啟動 全部正常可用。\n\n【★ 如果你不在中國大陸】\n\n· 上述功能**不受影響**。\n· 若你身處中國大陸以外卻看到提示，那是地區檢測異常，請重啟啟動器重試。\n\n【26.3 仍未修好】\n· 26.3 無法啟動的問題依然存在，原因尚未定位。"
+    },
+    {
+     "lang": "en_US",
+     "text": "[Mainland China: downloads and multiplayer are paused]\n\nQCL complies with applicable laws and regulations.\n\nSince 2026-10-20, several third-party Minecraft launchers operating in mainland China\n(including PCL and HMCL) have suspended downloading Minecraft core files and resources\nfor compliance reasons. (Per the official MineBBS announcement of 2026-10-20 17:55:\nthis incident has no direct connection with NetEase, Mojang Studio or Microsoft, and no\ndevelopment team has published the specific reason.)\n\nTo comply with applicable laws and regulations, QCL is **pausing the following features\nin mainland China** starting with this version:\n\n- Download pages (game versions / modpacks / mods / resource packs / shaders /\n  favourites / worlds)\n- Terracotta multiplayer\n- Install game / install modpack\n- Loader version downloads (Forge / NeoForge / Fabric / Fabric API / LiteLoader /\n  OptiFine / Quilt / Quilt API / Cleanroom / Legacy Fabric)\n\n**[*] Offline mode is NOT affected**\n\n- **Versions already installed on your device can still be launched**, including\n  with an offline account.\n- The version list, game management, accounts, settings, lab and the JAR launcher\n  all keep working normally.\n\n**[*] If you are outside mainland China**\n\n- The features above are **not** restricted for you.\n- If you are outside mainland China and still see the \"feature unavailable\" message,\n  the region check (based on your public egress IP) failed - please restart the\n  launcher and try again.\n\n[Reminders]\n\n- Please obtain Minecraft itself through official channels (minecraft.net or the\n  official China edition).\n- Do not download any \"fixed launcher\" from unknown sources.\n\n[26.3 is still not fixed]\n- Minecraft 26.3 still does not start; the cause is not yet identified."
+    }
+   ]
+  },
+  {
+   "id": 102,
+   "significant": true,
+   "outdated": false,
+   "minVersion": 0,
+   "maxVersion": 2147483647,
+   "specificLang": [],
+   "title": [
+    {
+     "lang": "zh_CN",
+     "text": "QCL 1.5.2 更新说明（JAR 启动 · 3 个新加载器 · 下载页大改）"
+    },
+    {
+     "lang": "zh_TW",
+     "text": "QCL 1.5.2 更新說明（JAR 啟動 · 3 個新載入器 · 下載頁大改）"
+    },
+    {
+     "lang": "en_US",
+     "text": "QCL 1.5.2 release notes (JAR launcher, 3 new loaders, download pages overhaul)"
+    }
+   ],
+   "date": "2026-10-19",
+   "content": [
+    {
+     "lang": "zh_CN",
+     "text": "【26.3 仍未修好】\n· 26.3 启动不了的问题依然存在，原因尚未定位。这一版没有修好，如实说明。\n· 26.4 及之前的问题已在 1.5.1 修好。\n\n【新功能】\n· JAR 启动：独立页面 + 独立进程，可以直接跑 .jar（左侧栏那个咖啡杯按钮），\n  并可自动读取 jar 里的 Main-Class 判断需要的 Java 版本\n· Java 管理：查看/删除本机各个 Java，手动选版本\n· 新增 3 个模组加载器：Cleanroom、Legacy Fabric、Legacy Fabric API\n  （「安装游戏」界面已补齐，图标取自 FCL）\n· 三个新加载器的版本选择改成独立列表页，与其它加载器一致，可装旧版本\n· 外观 → 新增「启动等待界面图片」：6 格可单独换图，手机/平板自适应高度\n· 外观 → 面板色新增「重置」按钮\n· 游戏版本下载页新增搜索框：可按版本号 / 正式版 / 快照版 / 远古版 / 愚人节搜\n· 模组 / 整合包 / 资源包 / 光影 / 世界 5 个下载页全部支持翻页，\n  并在「筛选」右侧显示「第 N / M 页」（总数取自 Modrinth total_hits / CurseForge totalCount）\n· 下载模组时自动带上前置：只装「必需」，前置的前置也会递归装上；\n  已在任意版本 mods/ 里装过的会跳过，不重复下载\n\n【修好的一批问题】\n· 安装 Forge 一直失败（镜像返回 200 无 Location 时 NPE）\n· 取消收藏后大退仍显示旧收藏\n· 自制的那两个加载器点了没效果\n· 混合下载源刚进入只有 Modrinth，完全没有 CurseForge（空 gameVersion 导致 0 条）\n· 主题色必须点进外观页才涂到界面上（现在启动即生效）\n· 外观里一大堆白色按钮不跟随主题色（含新加的 JAR 启动按钮、各种弹窗里的按钮）\n· 改主题色/面板色必须退出重进才生效（现在立即生效）\n· 新手教程气泡不随屏幕比例定位\n· 等待界面（启动游戏后的加载画面）退后台再回来变黑屏\n· 已被撤销的等待界面轮播，退后台重进又自己回来\n· 下载页 7 个标签在小屏只显示 3 个（改为等分自适应）\n· 设置页 6 个标签在小屏溢出（改为等分自适应）\n· 下载页列表一屏只能看 2~3 个（列表项改为紧凑单行，筛选区可折叠）\n· 筛选区控件被 label 挤成一条竖线、输入框显示不出字\n· 点「筛选」会重新加载一次列表\n· 页码最多只显示 200 页（10000 条上限只应对 CurseForge）\n· 「共 N 页」显示不出来（包装层没透传总条数）\n· JAR 启动页面打开一片空白\n\n【删除】\n· 外观 → 「透明标题栏」开关：该开关从加上那天起就没有任何代码读取\n  （标题栏透明由 windowFullscreen 实现，与此开关无关），已彻底删除\n\n【默认值调整】\n· 默认主题色改为「斑驳森林」壁纸真实采样色 #865D58（不再取水面雾色）"
+    },
+    {
+     "lang": "zh_TW",
+     "text": "【26.3 仍未修好】\n· 26.3 無法啟動的問題依然存在，原因尚未定位。這一版沒有修好，如實說明。\n· 26.4 及之前的問題已在 1.5.1 修好。\n\n【新功能】\n· JAR 啟動：獨立頁面 + 獨立進程，可以直接跑 .jar（左側欄那個咖啡杯按鈕），\n  並可自動讀取 jar 裡的 Main-Class 判斷需要的 Java 版本\n· Java 管理：檢視/刪除本機各個 Java，手動選版本\n· 新增 3 個模組載入器：Cleanroom、Legacy Fabric、Legacy Fabric API\n  （「安裝遊戲」介面已補齊，圖示取自 FCL）\n· 三個新載入器的版本選擇改成獨立列表頁，與其它載入器一致，可裝舊版本\n· 外觀 → 新增「啟動等待介面圖片」：6 格可單獨換圖，手機/平板自適應高度\n· 外觀 → 面板色新增「重設」按鈕\n· 遊戲版本下載頁新增搜尋框：可按版本號 / 正式版 / 快照版 / 遠古版 / 愚人節搜\n· 模組 / 整合包 / 資源包 / 光影 / 世界 5 個下載頁全部支援翻頁，\n  並在「篩選」右側顯示「第 N / M 頁」\n· 下載模組時自動帶上前置：只裝「必需」，前置的前置也會遞迴裝上；\n  已在任意版本 mods/ 裡裝過的會跳過，不重複下載\n\n【修好的一批問題】\n· 安裝 Forge 一直失敗\n· 取消收藏後大退仍顯示舊收藏\n· 自製的那兩個載入器點了沒效果\n· 混合下載源剛進入只有 Modrinth，完全沒有 CurseForge\n· 主題色必須點進外觀頁才塗到介面上（現在啟動即生效）\n· 外觀裡一大堆白色按鈕不跟隨主題色（含新加的 JAR 啟動按鈕、各種彈窗按鈕）\n· 改主題色/面板色必須退出重進才生效（現在立即生效）\n· 新手教學氣泡不隨螢幕比例定位\n· 等待介面退後台再回來變黑屏\n· 已被撤銷的等待介面輪播，退後台重進又自己回來\n· 下載頁 7 個標籤在小螢幕只顯示 3 個（改為等分自適應）\n· 設定頁 6 個標籤在小螢幕溢出（改為等分自適應）\n· 下載頁列表一屏只能看 2~3 個（列表項改為緊湊單行，篩選區可折疊）\n· 篩選區控件被 label 擠成一條豎線、輸入框顯示不出字\n· 點「篩選」會重新載入一次列表\n· 頁碼最多只顯示 200 頁\n· 「共 N 頁」顯示不出來\n· JAR 啟動頁面打開一片空白\n\n【刪除】\n· 外觀 → 「透明標題欄」開關：該開關從加上那天起就沒有任何程式碼讀取，已徹底刪除\n\n【預設值調整】\n· 預設主題色改為「斑駁森林」桌布真實取樣色 #865D58"
+    },
+    {
+     "lang": "en_US",
+     "text": "[26.3 is STILL not fixed]\n- Minecraft 26.3 still does not start; the cause is not yet identified. It is NOT fixed in\n  this version, and we would rather say so plainly than pretend otherwise.\n- 26.4 and earlier are already fixed as of 1.5.1.\n\n[NEW]\n- JAR launcher: a dedicated page on a dedicated process that runs a .jar directly\n  (the coffee-cup button in the left rail). It reads Main-Class from the jar manifest\n  to guess which Java version is needed.\n- Java manager: list / remove the Java runtimes on this device, pick one manually.\n- Three new mod loaders: Cleanroom, Legacy Fabric, Legacy Fabric API\n  (hooked into the \"Install game\" screen, icons taken from FCL).\n- Version pickers for those three loaders are now standalone list pages, consistent with\n  the other loaders, and can install older versions.\n- Appearance -> \"Launch waiting screen image\": 6 tiles, each replaceable individually,\n  height adapts to phone / tablet.\n- Appearance -> panel colour now has a Reset button.\n- Game version download page now has a search box: search by version id, release,\n  snapshot, old or April Fools.\n- Paging for all five download pages (mods / modpacks / resource packs / shaders / worlds),\n  with a \"Page N / M\" indicator placed to the right of the Filter button.\n- Downloading a mod now pulls its dependencies automatically: required only, recursively\n  (a dependency of a dependency is included), and anything already present in any\n  version's mods/ folder is skipped.\n\n[FIXED]\n- Forge installation always failed (NPE when a mirror returned 200 without Location).\n- Un-favouriting did not stick after a full restart.\n- The two home-made loaders did nothing when tapped.\n- Hybrid download source showed only Modrinth on first load, never CurseForge\n  (an empty gameVersion made CurseForge return zero results).\n- Theme colour only applied after visiting the Appearance page (now applies on launch).\n- Lots of white buttons did not follow the theme colour (including the new JAR button\n  and buttons inside dialogs).\n- Changing theme / panel colour required a restart (now applies immediately).\n- The onboarding bubble did not follow the screen aspect ratio.\n- The launch waiting screen turned black after backgrounding and returning.\n- An already-dismissed waiting-screen slideshow came back after backgrounding.\n- The 7 download tabs only showed 3 on small screens (now equal-width adaptive).\n- The 6 settings tabs overflowed on small screens (now equal-width adaptive).\n- Download lists only showed 2-3 rows per screen (compact single-line rows,\n  collapsible filter panel).\n- Filter controls were squeezed into a thin vertical line; text fields showed no text.\n- Tapping Filter re-ran the search every time.\n- Paging was capped at 200 pages (the 10,000-entry limit only applies to CurseForge).\n- \"Page N / M\" never showed the total (a wrapper class did not forward the count).\n- The JAR launcher page opened completely blank.\n\n[REMOVED]\n- Appearance -> \"Transparent title bar\" switch. No code ever read that flag\n  (title bar transparency comes from windowFullscreen), so it is gone for good.\n\n[DEFAULT CHANGED]\n- Default theme colour is now the real sampled colour of the \"Mottled Forest\" wallpaper,\n  #865D58 (no longer the water-haze colour)."
+    }
+   ]
+  },
+  {
+   "id": 101,
+   "significant": true,
+   "outdated": false,
+   "minVersion": 0,
+   "maxVersion": 2147483647,
+   "specificLang": [],
+   "title": [
+    {
+     "lang": "zh_CN",
+     "text": "QCL 1.5.1 更新说明（输入与视角修复 · 字体颜色）"
+    },
+    {
+     "lang": "zh_TW",
+     "text": "QCL 1.5.1 更新說明（輸入與視角修復 · 字型顏色）"
+    },
+    {
+     "lang": "en_US",
+     "text": "QCL 1.5.1 release notes (input & camera fixes, custom text colour)"
+    }
+   ],
+   "date": "2026-10-16",
+   "content": [
+    {
+     "lang": "zh_CN",
+     "text": "【26.4 修好了，26.3 还没】\n· MC 26.4 的「能进主菜单但按钮点不动、虚拟键盘失效」已修好\n· 26.3 仍然启动不了，原因尚未定位（这一版没有修好，如实说明）\n\n【输入与视角】\n· 修好「往左滑往右偏、快速滑只走一小段又归中」\n· 修好「滑到最左边/最右边就滑不动、像被焊住」\n· 修好「鼠标滑出屏幕之外」\n· 修好「打开背包→关闭背包→点左键或右键，视角大偏移」\n\n【修好的一批问题】\n· 重命名游戏实例后实例消失\n· 安装 Forge 整合包后加载器被认成 Fabric\n· 下载中断导致启动失败、进度一直显示 0 B/s\n· 整合包安装弹窗的取消按钮在小屏手机上跑出屏幕\n· 下载页 / 游戏列表 / 自动安装页打开后一片空白\n· 一个目录里没有游戏时点「游戏单独设置」会崩溃\n· 自动安装里选 Forge 点了没反应；Forge 版本列表加载不出来\n· 夜间模式残留白色背景，导致白色文字看不见\n· 切到夜间模式必须重启启动器才同步配色（现在会自动同步）\n· 切换新旧排版必须手动重启（现在会自动重启）\n\n【界面】\n· 左侧导航栏改为纯自适应：大屏占满、小屏自动压缩，不再需要滚动\n· 旧排版的主界面人物不再和上方按钮重叠\n· 外观页主题下拉框的文字在浅色模式下也能看清\n· 新增「字体颜色自定义调节」：设置 → 外观 → 字体颜色，可选任意颜色，\n  也可一键「跟随主题」\n"
+    },
+    {
+     "lang": "zh_TW",
+     "text": "【26.4 修好了，26.3 還沒】\n· MC 26.4 的「能進主選單但按鈕點不動、虛擬鍵盤失效」已修好\n· 26.3 仍然啟動不了，原因尚未定位（這一版沒有修好，如實說明）\n\n【輸入與視角】\n· 修好「往左滑往右偏、快速滑只走一小段又歸中」\n· 修好「滑到最左邊/最右邊就滑不動、像被焊住」\n· 修好「滑鼠滑出螢幕之外」\n· 修好「打開背包→關閉背包→點左鍵或右鍵，視角大偏移」\n\n【修好的一批問題】\n· 重新命名遊戲實例後實例消失\n· 安裝 Forge 整合包後載入器被認成 Fabric\n· 下載中斷導致啟動失敗、進度一直顯示 0 B/s\n· 整合包安裝對話框的取消按鈕在小螢幕手機上跑出畫面\n· 下載頁 / 遊戲清單 / 自動安裝頁打開後一片空白\n· 目錄裡沒有遊戲時點「遊戲單獨設定」會崩潰\n· 自動安裝裡選 Forge 點了沒反應；Forge 版本清單載入不出來\n· 夜間模式殘留白色背景，導致白色文字看不見\n· 切到夜間模式必須重啟啟動器才同步配色（現在會自動同步）\n· 切換新舊排版必須手動重啟（現在會自動重啟）\n\n【介面】\n· 左側導覽列改為純自適應：大螢幕佔滿、小螢幕自動壓縮，不再需要捲動\n· 舊排版的主介面人物不再和上方按鈕重疊\n· 外觀頁主題下拉框的文字在淺色模式下也能看清\n· 新增「字型顏色自訂調節」：設定 → 外觀 → 字型顏色\n"
+    },
+    {
+     "lang": "en_US",
+     "text": "[26.4 is fixed, 26.3 is not]\n- Minecraft 26.4's \"main menu opens but nothing is clickable / soft keyboard dead\" is fixed.\n- Minecraft 26.3 still does not start; the cause is not yet identified. It is NOT fixed in\n  this version, and we would rather say so than pretend.\n\n[Input and camera]\n- Fixed \"swiping left turns right, a fast swipe only moves a little then re-centres\".\n- Fixed \"sliding to the far left / far right stops working, as if welded in place\".\n- Fixed \"the mouse cursor escapes off-screen\".\n- Fixed \"open inventory, close it, then click left or right button - the camera jumps\".\n\n[Other fixes]\n- Renaming a game instance made it disappear.\n- A Forge modpack's loader was detected as Fabric.\n- Interrupted downloads broke launching; speed stayed at 0 B/s.\n- The modpack installer's Cancel button fell off-screen on small phones.\n- Download / game list / auto-install pages opened completely blank.\n- Opening \"game settings\" in a folder with no game installed crashed the launcher.\n- Choosing Forge in auto-install did nothing; the Forge version list never loaded.\n- Leftover white panels in night mode made white text unreadable.\n- Switching the system to night mode needed a restart to recolour (now automatic).\n- Switching between the old and new layouts needed a manual restart (now automatic).\n\n[Interface]\n- The left nav rail is now fully adaptive: it fills large screens and compresses on small\n  ones, so it never needs scrolling.\n- In the old layout the character no longer overlaps the buttons above it.\n- The theme drop-down text is readable in light mode now.\n- New: custom text colour in Settings - Appearance - Font colour (with a \"follow theme\" reset).\n"
+    }
+   ]
+  },
+  {
+   "id": 100,
+   "significant": true,
+   "outdated": false,
+   "minVersion": 0,
+   "maxVersion": 2147483647,
+   "specificLang": [],
+   "title": [
+    {
+     "lang": "zh_CN",
+     "text": "QCL 1.5.0 正式版更新说明（界面大重做）"
+    },
+    {
+     "lang": "zh_TW",
+     "text": "QCL 1.5.0 正式版更新說明（介面大重做）"
+    },
+    {
+     "lang": "en_US",
+     "text": "QCL 1.5.0 release notes (major UI overhaul)"
+    }
+   ],
+   "date": "2026-10-10",
+   "content": [
+    {
+     "lang": "zh_CN",
+     "text": "【界面大重做】\n· 全新主界面排版：左侧纯图标竖排导航常驻可见，切到版本列表 / 下载 / 设置等二级页面也不用先退回主界面\n· 右侧常驻「账号 + 版本名 + 启动游戏」区块，照 FCL 版式重做（版本名独立显示在启动按钮上方）\n· 排版可在「设置 → 外观 → 排版」里切换 新排版 / 旧排版，随时退回你习惯的样子\n· 主题可在「设置 → 外观 → 主题」里切换，并可选主题色\n· 背景支持 默认（按时间自动切换昼夜）/ 白天 / 黑夜 / 自定义 / 网络\n· 主界面新增公告栏（可隐藏），随时看到更新说明\n· 没有任何版本时，点「启动游戏」会直接跳到下载版本页，不再没反应\n\n【昼夜与配色】\n· 壁纸、面板底色、文字色**成套随昼夜翻转**，不再出现深底黑字看不见的情况\n· 修复夜间模式下多处「深底黑字 / 白块」：对话框改用成对的日/夜配色\n· 修复换肤对话框里的白块（drawable 取不到主题色）与按钮颜色不统一\n· 修复账号页「认证服务器」下方的说明文字夜间看不见\n· 全项目共 53 处文字补齐昼夜配色（列表描述、设置页路径、存档信息…）\n\n【3D 人物：换成 FCL 同款】\n· 主界面人物改用 FCL 的 glTF 模型与骨骼动画（经典 / 细臂两套模型自动切换）\n· 真正的待机动画：站立待机 + 3 个变体，每 8~15 秒随机播一个（FCL 原版规则）\n· 单指拖动可 360° 旋转，双指捏合可缩放\n· 纹理实时更新：离线 / 微软 / Mojang / 外置认证切换皮肤都会立刻反映到人物身上\n· 修复微软账号「手臂粗细不对」「先粗后细」「选了经典又变回苗条」\n· 修复「换了皮肤之后披风消失」\n\n【微软账号：皮肤与披风】\n· 微软披风此前**从未被拉取过**（接口分支被注释、账号也没有存它的字段），现已完整接入\n· 修复披风取错项（原来永远取列表第 1 件，所以「怎么切都是同一件」）\n· 换肤对话框的「确定」改为「上传」（照 FCL：选完文件先预览，点上传才提交）\n· 模型选择（经典 / 苗条）现在会被记住，并用服务端声明的模型为准\n· 皮肤与披风会**自动跟随微软服务端**：在官网或别的启动器改过，回主界面就会同步\n\n【下载页】\n· 修复「模组名一个中文也没有」：翻译表（3 万条）此前被误判成\"非中文环境\"而从不查表\n· 模组 / 整合包名显示为「中文名（英文原名）」，不再重复两遍英文\n· 修复「模组页刷新后一片空白，还会把整合包 / 资源包 / 账号页一起弄空白」\n· 彻底移除「加载版本列表失败，点击此处重试」提示：界面本来就有转圈，网络恢复后自己会出结果\n· 点击模组 / 整合包详情页不再「加载半天」：版本列表立刻显示，前置列表随后补上\n· 收藏按钮新增点击反馈动效；收藏页进场动画与其它页面统一\n· 列表切分类统一为逐行滑入（与收藏夹一致）\n\n【整合包安装】\n· 修复「进度条根本不动」：原来单个文件的下载进度从不上报\n· 每个文件单独一行，并实时显示该文件的下载进度\n· 修复取消按钮点了没反应、文件列表只显示一行\n\n【多人联机】\n· 改为完整的二级页面，含房主教程（7 步）与房客教程（5 步），全文照搬 FCL\n· 修复「启用多人联机」确认框白底白字、文字看不见\n\n【稳定性】\n· 修复「启动游戏时突然竖屏→闪退→回到横屏启动器」\n· 修复 26.3 / 26.4 崩溃（JNA 版本错配 + MC 降级死循环）\n· 适配 Android 15（平台 35）与 32 位设备；新增 26.2+ 的 Vulkan 支持检测\n· 内置 ANGLE / VirGL 等渲染器与驱动库，四架构齐全，开箱可用\n· 防杀后台：加前台服务 specialUse，切后台不易被系统回收\n· 版本分类补齐 41 条缺失版本，并新增 2.0（愚人节）三个版本\n· 中文覆盖补齐，界面已做到 0 缺失\n"
+    },
+    {
+     "lang": "zh_TW",
+     "text": "【介面大重做】\n· 全新主介面排版：左側純圖示直排導覽常駐可見，切到版本清單 / 下載 / 設定等次級頁面也不用先退回主介面\n· 右側常駐「帳號 + 版本名 + 啟動遊戲」區塊，照 FCL 版式重做\n· 排版可在「設定 → 外觀 → 排版」切換 新排版 / 舊排版\n· 主題可在「設定 → 外觀 → 主題」切換，並可選主題色\n· 背景支援 預設（依時間自動切換晝夜）/ 白天 / 黑夜 / 自訂 / 網路\n· 修復夜間模式下多處「深底黑字 / 白塊」\n\n【3D 人物：換成 FCL 同款】\n· 改用 FCL 的 glTF 模型與骨骼動畫（經典 / 細臂兩套自動切換）\n· 真正的待機動畫（站立待機 + 3 個變體，每 8~15 秒隨機播一個）\n· 單指拖曳 360° 旋轉、雙指縮放；紋理即時更新\n· 修復微軟帳號手臂粗細不對、換皮膚後披風消失\n\n【微軟帳號：外觀與披風】\n· 微軟披風此前從未被抓取過，現已完整接入\n· 修復披風取錯項（原本永遠取清單第 1 件）\n· 換膚對話框的「確定」改為「上傳」；模型選擇會被記住\n· 外觀與披風會自動跟隨微軟伺服器\n\n【下載頁】\n· 修復「模組名一個中文也沒有」、修復名稱英文重複兩遍\n· 修復重新整理後整頁空白並影響其他頁面\n· 移除「載入失敗，點此重試」提示\n· 詳情頁不再載入半天；收藏按鈕新增動效\n\n【整合包安裝】\n· 修復進度條不動；每個檔案單獨一行並顯示下載進度\n· 修復取消按鈕沒反應\n\n【穩定性】\n· 修復啟動時豎屏閃退、26.3 / 26.4 崩潰\n· 適配 Android 15 與 32 位裝置；內建渲染器開箱可用\n· 防殺後台；版本分類補齊 41 條缺失版本並新增 2.0（愚人節）三個版本\n"
+    },
+    {
+     "lang": "en_US",
+     "text": "[Major UI overhaul]\n- New main screen layout: a permanent icon-only nav rail on the left, so you no longer have to go\n  back to the main screen to reach the version list, downloads or settings.\n- Persistent account + version + launch block on the right, redone after FCL's layout.\n- Layout is switchable in Settings - Appearance - Layout (new / old).\n- Theme and accent colour are selectable in Settings - Appearance - Theme.\n- Background supports Default (auto day/night by time), Day, Night, Custom and Online.\n- Fixed many \"dark text on a dark panel\" and white-block issues in night mode.\n- 53 text elements across the project now carry day/night colours.\n\n[3D character: now the FCL pipeline]\n- Switched to FCL's glTF model with skeletal animation (classic / slim auto-switching).\n- Real idle animations (standing idle plus 3 variants, one every 8-15 seconds).\n- One-finger 360-degree rotation, pinch to zoom, live texture updates.\n- Fixed wrong arm width, \"thick then thin\", and the cape disappearing after a skin change.\n\n[Microsoft account: skin and cape]\n- Microsoft capes were never fetched before (the API branch was commented out and the account had\n  no field for it). They are now fully supported.\n- Fixed picking the wrong cape entry (it always used the first one, so switching never worked).\n- The skin dialog's OK button is now an Upload button; the model choice is remembered.\n- Skin and cape now follow the Microsoft server automatically.\n\n[Download pages]\n- Fixed \"no mod name is translated at all\", and fixed duplicated English names.\n- Fixed the blank page after a refresh that also broke other pages.\n- Removed the \"failed to load, tap to retry\" hint.\n- Detail pages load immediately now; the favourite button has feedback animation.\n\n[Modpack install]\n- Fixed frozen progress bars; each file gets its own row with live progress.\n- Fixed the dead cancel button.\n\n[Stability]\n- Fixed the portrait-orientation crash at launch and the 26.3 / 26.4 crashes.\n- Android 15 and 32-bit support; bundled renderers work out of the box.\n- Foreground service to survive being killed in the background; 41 missing versions added,\n  plus the three 2.0 (April Fools) versions.\n"
+    }
+   ]
+  }
+ ]
 }

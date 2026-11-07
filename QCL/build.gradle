@@ -109,8 +109,8 @@ android {
         //           取消到 0 条时直接拒写 ⇒ 文件保持旧内容 ⇒ 重启全部复活；
         //     根因② 收藏页的 ★ 只传 f.id 一个键，命中不了就一条都删不掉，
         //           但界面照样 rebuild() ⇒ 看起来删掉了、重启又回来。
-        versionCode 361
-        versionName "1.5.9"
+        versionCode 362
+        versionName "1.6.0"
 
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
@@ -269,6 +269,11 @@ dependencies {
     //   原来 mg 是外部插件 APK，玩家得自己装；现在直接打进来。
     //   AAR 里带 jni/{arm64-v8a,armeabi-v7a,x86,x86_64}/libmobileglues.so。
     implementation files('libs/MobileGlues-release.aar')
+    // ★★★★★ 1.6.0：**内置 SimpleFPEWrapper 兼容层**（照 FCL 1.3.4.4 / #1983）。
+    //   SFPEW 不是独立渲染器，而是**叠加在真实后端之上**的 OpenGL 固定管线（FPE）兼容包装层：
+    //   游戏经 libSimpleFPEWrapper.so 解析 GL 符号，后端（如 MobileGlues）只承担 EGL 与驱动。
+    //   AAR 里带 jni/{arm64-v8a,armeabi-v7a,x86,x86_64}/libSimpleFPEWrapper.so。
+    implementation files('libs/SimpleFPEWrapper-release.aar')
     implementation project(path: ':FilePicker')
     implementation project(path: ':Terracotta')
     implementation project(path: ':ZipTools')

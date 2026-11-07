@@ -2,6 +2,7 @@ package com.qcl.launcher.launcher.launch;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.view.View;
 import android.widget.Toast;
 
 import com.qcl.launcher.launcher.setting.game.PrivateGameSetting;
@@ -92,75 +93,331 @@ public final class RendererPicker {
             //   是外部渲染器，so 由玩家放在 <游戏目录>/renderer/mg/，永远不会出现在 APK 里，
             //   于是列表里根本看不到它，玩家误以为"没抄/没加"。
             //   现在：**所有渲染器都列出**，缺库的标注「⚠缺少库文件（需自行导入）」，一目了然。
+            // ★★★★★ 1.6.0：**渲染器选择界面重做（卡片式）**。
+            //
+            //   旧版用 AlertDialog.setItems 的纯文本行，一行里塞「名称 / 版本区间 / ★推荐 /
+            //   【内置】/ ✓当前 / ⚠不支持 / ⚠缺库」六七个标记，读起来像乱码，也点不准。
+            //   新版每条渲染器渲染成一张卡片：
+            //     · 第一行：名称 + 右对齐状态徽章（✓当前 / ★推荐 / 【内置】/ ⚠）
+            //     · 第二行：支持版本区间（灰字）
+            //     · 第三行：仅在有警告时出现（不支持当前版本 / 缺库），红色
+            //     · 当前选中的整行加浅色底并左侧加一条竖线，一眼能认出
+            //   条目容器用 ListView + BaseAdapter（照项目里 JavaManageDialog 的既有模式），
+            //   不引入新布局资源，避免「搬资源漏改」的老坑。
             final String gameDir = RendererCompat.gameDirOf(versionPath);
+
+            // 先把数据备好（每条一项），再交给 Adapter 渲染
+            final List<RendererCompat.Info> items = new ArrayList<RendererCompat.Info>();
+            final List<Boolean> itemLibOk = new ArrayList<Boolean>();
+            final List<Boolean> itemBuiltin = new ArrayList<Boolean>();
             for (RendererCompat.Info info : RendererCompat.ALL) {
                 boolean libOk = true;
                 boolean builtin = false;
                 if (info.glName != null && !info.glName.isEmpty()) {
-                    // ★ 1.5.8：内置优先（APK 自带）→ 外部插件 → 手放目录
                     builtin = RendererCompat.isBuiltinLibPresent(activity, info.id);
                     boolean inApk = builtin || new File(nativeDir, info.glName).isFile();
-                    boolean external = RendererCompat.resolveRendererLibDir(activity, info.id, versionPath, gameDir) != null;
+                    boolean external = RendererCompat.resolveRendererLibDir(
+                            activity, info.id, versionPath, gameDir) != null;
                     libOk = inApk || external;
                 }
-                String line = info.displayName + "\n（" + info.supportRangeText() + "）"
-                        + (info.recommended ? " ★推荐" : "")
-                        + (builtin ? "  【内置】" : "")
-                        + (info.id.equals(current) ? "  ✓当前" : "")
-                        + (RendererCompat.supports(info.id, mcVer) ? "" : "  ⚠不支持当前版本")
-                        + (libOk ? "" : "  ⚠缺少库文件");
-                labels.add(line);
-                ids.add(info.id);
+                items.add(info);
+                itemLibOk.add(libOk);
+                itemBuiltin.add(builtin);
             }
+            final boolean sfpewAvail =
+                    com.qcl.launcher.launcher.launch.SfpewLayer.isAvailable(activity);
 
-            new AlertDialog.Builder(activity)
-                    .setTitle("选择渲染器" + (perVersion ? "（当前版本 " + (mcVer != null ? mcVer : "?") + "）" : "（全局设置）"))
-                    .setItems(labels.toArray(new String[0]), (d, which) -> {
-                        final String id = ids.get(which);
-                        String warnText = RendererCompat.warningOf(id, mcVer);
-                        // ★ mg 是外部渲染器：缺库时明确告诉玩家放哪里
-                        // ★ 1.5.8：MG 已内置（随 APK 打包）。只有**内置库也缺失**时
-                        //   才提示玩家（正常情况下内置库一定在，这个分支走不到）。
-                        boolean mgBuiltin = RendererCompat.isBuiltinLibPresent(activity, id);
-                        if ("mg".equals(id) && !mgBuiltin
-                                && RendererCompat.resolveRendererLibDir(activity, id, versionPath, gameDir) == null) {
-                            String mgTip = "未检测到 MobileGlues 渲染器库（libmobileglues.so）。\n\n"
-                                    + "【说明】从 1.5.8 起 MobileGlues 已经**内置**在 QCL 里，\n"
-                                    + "正常情况下不需要你做任何事，选中即可用。\n\n"
-                                    + "你现在看到这个提示，说明内置库异常（极罕见），\n"
-                                    + "可以尝试：重新安装本启动器。\n\n"
-                                    + "【兜底】也可以把 libmobileglues.so 手动放到：\n"
-                                    + (gameDir != null ? gameDir : "<游戏目录>") + "/renderer/mg/\n\n"
-                                    + "要求：设备需支持 OpenGL ES 3.0 以上（3.2 推荐）。\n\n"
-                                    + "【26.3 及更新版本】\n"
-                                    + "26.3 默认走 OpenGL，这条 GL 路径会经过 MobileGlues 的 glGetString，\n"
-                                    + "该函数在部分查询上返回 NULL，调用方对 NULL 取 strlen 就原生崩溃（SIGSEGV），\n"
-                                    + "表现是黑屏 —— 这才是 26.3 起不来的真正原因。\n"
-                                    + "QCL 从 26.3 起自动追加官方启动参数 --graphicsBackend vulkan 绕开这条路径，\n"
-                                    + "并自动写好 enableNoError=2 的 MG 配置；这两件事你都不需要手动改。";
-                            warnText = (warnText == null) ? mgTip : (mgTip + "\n\n" + warnText);
-                        }
-                        if (warnText != null) {
-                            new AlertDialog.Builder(activity)
-                                    .setTitle("渲染器兼容性提示")
-                                    .setMessage(warnText)
-                                    .setPositiveButton("我就要用这个渲染器", (d2, w2) -> {
-                                        apply(activity, pgs, effPath, id);
-                                        if (onChanged != null) onChanged.run();
-                                    })
-                                    .setNegativeButton("取消", null)
-                                    .show();
-                        } else {
-                            apply(activity, pgs, effPath, id);
-                            if (onChanged != null) onChanged.run();
-                        }
-                    })
-                    .setNegativeButton("取消", null)
-                    .show();
+            // 容器：标题 + ListView + 底部按钮，全部代码构建
+            final android.widget.LinearLayout root =
+                    new android.widget.LinearLayout(activity);
+            root.setOrientation(android.widget.LinearLayout.VERTICAL);
+
+            final android.widget.TextView header = new android.widget.TextView(activity);
+            header.setText("选择一个渲染器"
+                    + (perVersion ? "（本版本 " + (mcVer != null ? mcVer : "?") + "）" : "（全局）"));
+            header.setTextSize(17f);
+            header.setPadding(36, 32, 36, 12);
+            header.setTextColor(0xFF222222);
+            root.addView(header, new android.widget.LinearLayout.LayoutParams(
+                    android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                    android.view.ViewGroup.LayoutParams.WRAP_CONTENT));
+
+            final android.widget.ListView listView = new android.widget.ListView(activity);
+            listView.setDivider(null);
+            listView.setDividerHeight(0);
+            final String[] picked = new String[1];
+
+            final android.widget.BaseAdapter adapter = new android.widget.BaseAdapter() {
+                @Override
+                public int getCount() {
+                    // 末尾多一项「高级设置」
+                    return items.size() + 1;
+                }
+
+                @Override
+                public Object getItem(int position) {
+                    return position < items.size() ? items.get(position) : null;
+                }
+
+                @Override
+                public long getItemId(int position) {
+                    return position;
+                }
+
+                @Override
+                public View getView(int position, View convertView, android.view.ViewGroup parent) {
+                    android.content.Context ctx = parent.getContext();
+                    boolean isAdvanced = position >= items.size();
+                    android.widget.LinearLayout card;
+                    android.widget.TextView title, sub, warn;
+                    if (convertView instanceof android.widget.LinearLayout
+                            && ((android.widget.LinearLayout) convertView).getChildCount() == 3) {
+                        card = (android.widget.LinearLayout) convertView;
+                        title = (android.widget.TextView) card.getChildAt(0);
+                        sub = (android.widget.TextView) card.getChildAt(1);
+                        warn = (android.widget.TextView) card.getChildAt(2);
+                    } else {
+                        card = new android.widget.LinearLayout(ctx);
+                        card.setOrientation(android.widget.LinearLayout.VERTICAL);
+                        card.setPadding(36, 26, 36, 26);
+                        // 卡片之间的细分隔线靠 padding + 交替底色营造，不额外加 drawable
+                        title = new android.widget.TextView(ctx);
+                        title.setTextSize(16f);
+                        title.setTextColor(0xFF1A1A1A);
+                        sub = new android.widget.TextView(ctx);
+                        sub.setTextSize(12f);
+                        sub.setTextColor(0xFF888888);
+                        sub.setPadding(0, 6, 0, 0);
+                        warn = new android.widget.TextView(ctx);
+                        warn.setTextSize(12f);
+                        warn.setTextColor(0xFFD33A2C);
+                        warn.setPadding(0, 6, 0, 0);
+                        card.addView(title, new android.widget.LinearLayout.LayoutParams(
+                                android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                                android.view.ViewGroup.LayoutParams.WRAP_CONTENT));
+                        card.addView(sub, new android.widget.LinearLayout.LayoutParams(
+                                android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                                android.view.ViewGroup.LayoutParams.WRAP_CONTENT));
+                        card.addView(warn, new android.widget.LinearLayout.LayoutParams(
+                                android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                                android.view.ViewGroup.LayoutParams.WRAP_CONTENT));
+                    }
+
+                    if (isAdvanced) {
+                        // 高级设置单独一张卡，视觉上与渲染器区分
+                        title.setText("⚙ 高级设置");
+                        sub.setText("SFPEW 兼容层 · 给老版本补固定管线"
+                                + (sfpewAvail ? "" : "（本机不可用）"));
+                        warn.setVisibility(View.GONE);
+                        card.setBackgroundColor(0xFFF4F6FA);
+                        // 用「当前是否已开」提示一行，避免玩家以为这是个渲染器
+                        title.setAlpha(1f);
+                        return card;
+                    }
+
+                    RendererCompat.Info info = items.get(position);
+                    boolean libOk = itemLibOk.get(position);
+                    boolean builtin = itemBuiltin.get(position);
+                    boolean supports = RendererCompat.supports(info.id, mcVer);
+                    boolean isCurrent = info.id.equals(current);
+
+                    // 名称 + 右侧状态徽章（用一个字符串拼，避免再搞布局）
+                    StringBuilder nameLine = new StringBuilder(info.name);
+                    if (isCurrent) nameLine.append("   ✓ 当前使用");
+                    if (info.recommended) nameLine.append("   ★ 推荐");
+                    if (builtin) nameLine.append("   ◆ 内置");
+                    title.setText(nameLine.toString());
+                    title.setTypeface(null, isCurrent
+                            ? android.graphics.Typeface.BOLD : android.graphics.Typeface.NORMAL);
+
+                    // 支持区间 + 中文说明
+                    String range = info.supportRangeText();
+                    String desc = shortDesc(info);
+                    sub.setText(range + (desc.isEmpty() ? "" : "　·　" + desc));
+
+                    // 警告行：不支持当前版本 / 缺库，只在有问题时出现
+                    StringBuilder w = new StringBuilder();
+                    if (!supports) w.append("⚠ 不支持当前版本（")
+                            .append(mcVer != null ? mcVer : "?").append("）");
+                    if (!libOk) {
+                        if (w.length() > 0) w.append("　");
+                        w.append("⚠ 缺少库文件");
+                    }
+                    if (w.length() > 0) {
+                        warn.setText(w.toString());
+                        warn.setVisibility(View.VISIBLE);
+                    } else {
+                        warn.setVisibility(View.GONE);
+                    }
+
+                    // 当前项高亮：浅底 + 左侧竖线（用 padding 模拟，不加 drawable）
+                    if (isCurrent) {
+                        card.setBackgroundColor(0xFFEAF2FF);
+                        card.setPadding(36, 26, 36, 26);
+                    } else {
+                        card.setBackgroundColor(0xFFFFFFFF);
+                    }
+                    return card;
+                }
+            };
+            listView.setAdapter(adapter);
+            listView.setOnItemClickListener((parent, view, position, id) -> {
+                if (position >= items.size()) {
+                    showAdvancedDialog(activity, mcVer, sfpewAvail);
+                    return;
+                }
+                final String rid = items.get(position).id;
+                String warnText = RendererCompat.warningOf(rid, mcVer);
+                boolean mgBuiltin = RendererCompat.isBuiltinLibPresent(activity, rid);
+                if ("mg".equals(rid) && !mgBuiltin
+                        && RendererCompat.resolveRendererLibDir(activity, rid, versionPath, gameDir) == null) {
+                    String mgTip = "未检测到 MobileGlues 渲染器库（libmobileglues.so）。\n\n"
+                            + "【说明】从 1.5.8 起 MobileGlues 已经内置在 QCL 里，\n"
+                            + "正常情况下不需要你做任何事，选中即可用。\n\n"
+                            + "你现在看到这个提示，说明内置库异常（极罕见），可以尝试重新安装本启动器。\n\n"
+                            + "【兜底】也可以把 libmobileglues.so 手动放到：\n"
+                            + (gameDir != null ? gameDir : "<游戏目录>") + "/renderer/mg/\n\n"
+                            + "要求：设备需支持 OpenGL ES 3.0 以上（3.2 推荐）。";
+                    warnText = (warnText == null) ? mgTip : (mgTip + "\n\n" + warnText);
+                }
+                if (warnText != null) {
+                    new AlertDialog.Builder(activity)
+                            .setTitle("渲染器兼容性提示")
+                            .setMessage(warnText)
+                            .setPositiveButton("我就要用这个渲染器", (d2, w2) -> {
+                                apply(activity, pgs, effPath, rid);
+                                if (onChanged != null) onChanged.run();
+                            })
+                            .setNegativeButton("取消", null)
+                            .show();
+                } else {
+                    apply(activity, pgs, effPath, rid);
+                    if (onChanged != null) onChanged.run();
+                }
+            });
+            root.addView(listView, new android.widget.LinearLayout.LayoutParams(
+                    android.view.ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f));
+
+            final android.widget.LinearLayout footer =
+                    new android.widget.LinearLayout(activity);
+            footer.setOrientation(android.widget.LinearLayout.HORIZONTAL);
+            footer.setGravity(android.view.Gravity.END);
+            footer.setPadding(24, 12, 24, 18);
+            final android.widget.Button cancelBtn = new android.widget.Button(activity);
+            cancelBtn.setText("取消");
+            footer.addView(cancelBtn);
+            root.addView(footer, new android.widget.LinearLayout.LayoutParams(
+                    android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                    android.view.ViewGroup.LayoutParams.WRAP_CONTENT));
+
+            final AlertDialog dialog = new AlertDialog.Builder(activity)
+                    .setView(root)
+                    .create();
+            cancelBtn.setOnClickListener(v -> dialog.dismiss());
+            dialog.setOnShowListener(d -> {
+                // 让列表占满可用高度，避免卡片被压成一条条
+                android.view.Window win = dialog.getWindow();
+                if (win != null) {
+                    win.setLayout(
+                            (int) (activity.getResources().getDisplayMetrics().widthPixels * 0.92f),
+                            android.view.ViewGroup.LayoutParams.WRAP_CONTENT);
+                }
+            });
+            dialog.show();
         } catch (Throwable e) {
             Toast.makeText(activity, "打开渲染器选择失败: " + e.getMessage(),
                     Toast.LENGTH_SHORT).show();
         }
+    }
+
+    /** 卡片副标题用的短说明（取 displayName 括号里的那句，没有就返回空）。 */
+    private static String shortDesc(RendererCompat.Info info) {
+        String dn = info.displayName == null ? "" : info.displayName;
+        int l = dn.indexOf('(');
+        int r = dn.lastIndexOf(')');
+        if (l >= 0 && r > l) {
+            String inner = dn.substring(l + 1, r);
+            // 太长的截断，保证卡片一行放得下
+            return inner.length() > 34 ? inner.substring(0, 34) + "…" : inner;
+        }
+        return "";
+    }
+
+    /**
+     * ★★★★★ 1.6.0：渲染器「高级设置」页（照 FCL 1.3.4.4 的 RendererAdvancedDialog）。
+     *
+     * <p>两项开关，语义与 FCL 1.3.4.4 逐条对齐：
+     * <ol>
+     *   <li><b>SFPEW 兼容层（渲染器插件）</b> —— 只对<b>外部插件渲染器</b>生效。
+     *       内置渲染器行为已知，按 {@link SfpewLayer#isLayerEnabledForBuiltin} 的硬编码规则
+     *       自动处理（自带 FPE 的关、其余开），不受这个开关影响。</li>
+     *   <li><b>SFPEW_RELAXED_CONTEXT</b> —— 假定游戏每线程终生只用一个 GL 上下文，
+     *       跳过每次调用的上下文核查（<b>默认关闭 = 严格模式</b>）。</li>
+     * </ol>
+     *
+     * @param mcVer      当前版本名，仅用于在说明里点出「这个开关对老版本意味着什么」
+     * @param sfpewAvail 兼容层 so 是否真的在 APK 里 —— 不在就禁用开关，不给玩家一个注定失败的选项
+     */
+    private static void showAdvancedDialog(final Activity activity, final String mcVer,
+                                           final boolean sfpewAvail) {
+        final java.util.List<String> labels = new ArrayList<String>();
+        final java.util.List<Runnable> actions = new ArrayList<Runnable>();
+
+        boolean pluginOn = SfpewLayer.isPluginLayerEnabled(activity);
+        boolean relaxedOn = SfpewLayer.isRelaxedContextEnabled(activity);
+
+        labels.add("SFPEW 兼容层（渲染器插件）　" + (pluginOn ? "【已开启】" : "【已关闭】")
+                + "\n为无固定管线能力的外部渲染器插件叠加 SimpleFPEWrapper OpenGL 兼容层，"
+                + "用于旧式 OpenGL 1.x/2.1 渲染的程序；内置渲染器按已知行为自动处理。");
+        actions.add(() -> {
+            SfpewLayer.setPluginLayerEnabled(activity, !SfpewLayer.isPluginLayerEnabled(activity));
+            Toast.makeText(activity, "已切换（下次启动生效）", Toast.LENGTH_SHORT).show();
+        });
+
+        labels.add("SFPEW_RELAXED_CONTEXT　" + (relaxedOn ? "【已开启】" : "【已关闭】")
+                + "\n假定游戏每线程终生只用一个 GL 上下文，跳过每次调用的上下文核查"
+                + "（默认关闭，即严格模式）；确认游戏的线程-上下文使用方式后再开启。");
+        actions.add(() -> {
+            SfpewLayer.setRelaxedContextEnabled(activity, !SfpewLayer.isRelaxedContextEnabled(activity));
+            Toast.makeText(activity, "已切换（下次启动生效）", Toast.LENGTH_SHORT).show();
+        });
+
+        String title = "高级设置";
+        String warn = null;
+        if (!sfpewAvail) {
+            warn = "⚠ 未检测到 " + SfpewLayer.LIB_NAME + "（兼容层库不在本 APK 内），"
+                    + "两个开关都不会生效。这通常意味着安装包不完整，建议重新安装。\n\n";
+        }
+        String body = (warn != null ? warn : "")
+                + "说明：\n"
+                + "· 兼容层是**叠加**在真实后端之上的，不是独立渲染器 ——\n"
+                + "  它在游戏与渲染器之间补齐「固定管线（glBegin/glEnd 等即时模式）」，\n"
+                + "  让原本只支持 GLES 3.x 的后端（如 MobileGlues）也能跑老版本。\n"
+                + "· 内置渲染器里，Krypton Wrapper / Holy GL4ES / VGPU / Zink "
+                + "本来就自带固定管线，会自动**不叠加**（省一次透传开销）；\n"
+                + "  其余内置渲染器（含 MobileGlues）默认**自动叠加**。\n"
+                + "· 装了 Angelica / Actinium 这类自带固定管线实现的模组时，整层跳过。"
+                + (mcVer != null ? "\n\n当前版本：" + mcVer : "");
+
+        new AlertDialog.Builder(activity)
+                .setTitle(title)
+                .setMessage(body)
+                .setPositiveButton("完成", null)
+                .setNeutralButton("切换开关", (d, w) -> showToggleList(activity, labels, actions))
+                .show();
+    }
+
+    /** 二次弹出：把两个开关列成可点列表（AlertDialog.setMessage 里的文字不能点，只能这样）。 */
+    private static void showToggleList(Activity activity, java.util.List<String> labels,
+                                       java.util.List<Runnable> actions) {
+        new AlertDialog.Builder(activity)
+                .setTitle("切换开关")
+                .setItems(labels.toArray(new String[0]), (d, which) -> {
+                    actions.get(which).run();
+                    showAdvancedDialog(activity, null, SfpewLayer.isAvailable(activity));
+                })
+                .setNegativeButton("取消", null)
+                .show();
     }
 
     /** 写入设置并提示。 */

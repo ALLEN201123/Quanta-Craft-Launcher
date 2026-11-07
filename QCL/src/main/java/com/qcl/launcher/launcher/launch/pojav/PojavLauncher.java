@@ -496,10 +496,63 @@ public class PojavLauncher {
             } catch (Throwable ignored) {
                 // 读不到就当关闭（保持原行为）
             }
-            // ★ 说明：外部渲染器（mg）的库能被找到，靠的是**把渲染器库目录并进 LD_LIBRARY_PATH**
-            //   （对齐 FCL 的 appendCommonPaths：`sb.append(pluginLibPath + ":")`）。
-            //   FCL 并不修改这个 libname，QCL 同样保持原样（见 JREUtils 的 LD_LIBRARY_PATH 处理）。
-            args.add("-Dorg.lwjgl.opengl.libname=" + JREUtils.getGraphicsLibrary((String)qclEffectiveRenderer));
+            // ★★★★★ 1.6.0：**SFPEW 兼容层判定必须最先做**。
+            //
+            //   为什么提前：下面 `-Dorg.lwjgl.opengl.libname` 要按判定结果选库名，
+            //   而原来的判定代码排在它**后面**（约 60 行之后）。读到的是默认值 "0"
+            //   → 永远走 else 分支 → libname 永远是后端库（mg → libmobileglues.so）
+            //   → 游戏直接经 MG 加载 GL，包装层根本不参与 → 黑屏。
+            //   实测日志已证实：env 里 SFPEW_LAYER=1 都对，唯独
+            //   `-Dorg.lwjgl.opengl.libname=libmobileglues.so` 没改。
+            //
+            //   判定依据见 SfpewLayer.isLayerEnabled：内置渲染器硬编码、插件渲染器看开关、
+            //   装了 Angelica/Actinium 则整层跳过。
+            //   结果经 System property 传给 JREUtils（跨模块，与 qcl.renderer.* 同一套路）。
+            boolean qclSfpewForLibname = false;
+            try {
+                String qclPickedIdEarly = (String) qclEffectiveRenderer;
+                boolean qclSfpewOn = com.qcl.launcher.launcher.launch.SfpewLayer
+                        .isLayerEnabled(context, qclPickedIdEarly)
+                        && com.qcl.launcher.launcher.launch.SfpewLayer.isAvailable(context);
+                boolean qclSfpewRelaxed = qclSfpewOn
+                        && com.qcl.launcher.launcher.launch.SfpewLayer.isRelaxedContextEnabled(context);
+                System.setProperty("qcl.sfpew.enabled", qclSfpewOn ? "1" : "0");
+                System.setProperty("qcl.sfpew.relaxed", qclSfpewRelaxed ? "1" : "0");
+                System.setProperty("qcl.sfpew.libname",
+                        com.qcl.launcher.launcher.launch.SfpewLayer.LIB_NAME);
+                qclSfpewForLibname = qclSfpewOn;
+                Log.i("jrelog", "[SFPEW] renderer=" + qclPickedIdEarly
+                        + " enabled=" + qclSfpewOn + " relaxed=" + qclSfpewRelaxed);
+            } catch (Throwable qclSfpewSet) {
+                // 取不到就按关闭处理，不因兼容层判定失败影响启动
+                System.setProperty("qcl.sfpew.enabled", "0");
+                Log.w("jrelog", "[SFPEW] 判定失败，按关闭处理: " + qclSfpewSet);
+            }
+
+            // ★★★★★ 1.6.0 关键修复（照 FCL 1.3.4.4 的 rebaseArgs / gl_lib_name）：
+            //   SFPEW 兼容层启用时，**这个 libname 必须改指包装层**，否则兼容层等于没开 ——
+            //   实测证据（inf-20100618 启动日志）：
+            //       SFPEW_LAYER=1               ← env 注入成功了
+            //       POJAVEXEC_EGL=.../libSimpleFPEWrapper.so
+            //       但 -Dorg.lwjgl.opengl.libname=libmobileglues.so   ← 这里没改！
+            //   结果：LWJGL 仍然按 libname 直接加载 MG 的 GL，游戏的固定管线调用
+            //   （glBegin/glEnd/glMatrixMode）根本不经过包装层 → 没有 FPE 翻译 → 黑屏。
+            //
+            //   FCL 的写法是：
+            //       String glLibName = isSfpewLayerEnabled(renderer)
+            //               ? FCLPath.NATIVE_LIB_DIR + "/libSimpleFPEWrapper.so"
+            //               : renderer.getGLPath();
+            //   即：兼容层开启时 GL 符号经包装层句柄解析（LWJGL 按 libname 加载），
+            //   底座渲染器只承担 EGL 与驱动。
+            String qclGlLibName;
+            if (qclSfpewForLibname) {
+                qclGlLibName = context.getApplicationInfo().nativeLibraryDir
+                        + "/" + com.qcl.launcher.launcher.launch.SfpewLayer.LIB_NAME;
+                Log.i("jrelog", "[SFPEW] gl.libname 改指包装层: " + qclGlLibName);
+            } else {
+                qclGlLibName = JREUtils.getGraphicsLibrary((String) qclEffectiveRenderer);
+            }
+            args.add("-Dorg.lwjgl.opengl.libname=" + qclGlLibName);
             args.add("-Dorg.lwjgl.spvc.libname=spirv-cross-c-shared");
             // ★★★ 音效：对齐 FCL DefaultLauncher，指定 OpenAL 库路径（远古/LWJGL2 时代的 paulscode 走 LWJGL OpenAL）。
             args.add("-Dorg.lwjgl.openal.libname=" + context.getApplicationInfo().nativeLibraryDir + "/libopenal.so");
@@ -529,6 +582,8 @@ public class PojavLauncher {
                     System.setProperty("qcl.renderer.eglname", qclRInfo.eglName == null ? "" : qclRInfo.eglName);
                     System.setProperty("qcl.renderer.libdir", qclLibDir == null ? "" : qclLibDir);
                 }
+                // ★ SFPEW 判定已在**上方**（gl.libname 之前）完成并写入 System property，
+                //   这里不再重复判定 —— 重复不但多余，还曾因顺序问题让判定读到自己尚未写入的默认值。
             }
             catch (Throwable qclR) {
                 // 保持旧行为，不因取渲染器信息失败而影响启动

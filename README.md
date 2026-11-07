@@ -83,6 +83,30 @@ QCL 自己写的是**窗口 / Surface / EGL 上下文 / 输入桥 / 帧节奏**�
 
 ### 当前进展（1.5.2）
 
+### 当前进展（1.6.0）
+
+- **内置 SimpleFPEWrapper 兼容层：老版本也能用 MobileGlues 了。**
+  过去 MG 只能跑 1.17+，因为它只实现 GLES 3.x，**没有固定管线**（`glBegin`/`glEnd`、
+  `glMatrixMode` 这类即时模式）—— 而 1.16 及更早（尤其 1.8.9、b1.x 远古版）大量依赖固定管线。
+  现在把 SFPEW 当作**叠加在渲染器之上的兼容层**（照 FCL 1.3.4.4 的 #1983 定位）：
+  游戏经 `libSimpleFPEWrapper.so` 解析 GL 符号，FPE 调用被翻译成 GLES，MG 只承担 EGL 与驱动。
+  **真机实测通过**：`inf-20100618`（infdev 远古版）+ MobileGlues，日志里
+  `GL RENDERER: Adreno (TM) 750 | OpenGL ES 3.2 (SFPEW 26.11-dev)` —— 包装层确实接管了。
+  - 内置渲染器按硬编码规则处理：Krypton Wrapper / Holy GL4ES / VGPU / Zink **自带固定管线，不叠加**；
+    其余（含 MobileGlues）**自动叠加**。外部插件渲染器由「高级设置」开关控制，默认关闭。
+  - 装了自带 FPE 实现的模组（Angelica / Actinium）时整层跳过，避免冲突。
+  - 伴随 MG 最低版本限制一并移除：MG 的 `minMcVer` 由 `1.17` 改为**空**（支持所有版本），
+    **最高版本限制保留** —— 兼容层补的是固定管线，不扩展渲染器的现代 GL 上限。
+- **渲染器选择界面重做（卡片式）。** 旧版用 `AlertDialog.setItems` 把
+  「名称 / 版本区间 / ★推荐 / 【内置】/ ✓当前 / ⚠不支持 / ⚠缺库」六七项塞进一行纯文本，读起来像乱码。
+  现在每条渲染器是一张卡片：名称 + 状态徽章、版本区间 + 一句说明、仅在有问题时出现的红色警告行；
+  当前使用的整卡浅蓝高亮并加粗。末尾「⚙ 高级设置」独立成一张灰卡，视觉上不与渲染器混淆。
+  **未新增任何布局资源**（全部代码构建），避免搬运漏改的老坑。
+- **README 更正：26.3 的启动问题与 MobileGlues 无关。** 1.5.8 曾把 26.3 崩溃归因到 MG 的
+  `glGetString` 返回 `NULL`，该结论**是错的**。真正起作用的是追加官方参数
+  `--graphicsBackend vulkan`，它是**渲染器无关**的 —— 换任何渲染器都同样生效。
+  详见下方 1.5.8 段落里保留的更正记录。
+
 ### 当前进展（1.5.9）
 
 - **公告「展开 / 收起」按钮恢复可用 + 修首次显示拉得巨长** —— 上一版「撤销折叠」改过头了：showAnnouncementAt() 把正文设成 Integer.MAX_VALUE **并把按钮 setVisibility(GONE)**，于是 XML 里写好的「展开」按钮玩家根本看不见、也点不到（每次翻页还会再 GONE 一次，功能等于彻底废掉）。现在改回正规做法：正文默认 **6 行 + 末尾省略号**、按钮可见并显示「Show more」，点开变全文 + 「Show less」，换公告/翻页回到折叠态。顺带修首次显示的初始化时序：原来 setText() 触发重排后**才**做入场动画，容器带着满高正文进场（玩家看到公告铺满半屏）；现在先落定折叠态、再 
@@ -90,19 +114,23 @@ requestLayout()、最后做动画，首帧就是「6 行 + Show more」。
 
 ### 当前进展（1.5.8）
 
-- **Minecraft 26.3 终于能启动了**（从 1.5.1 挂到 1.5.7 都没定位）—— 真根因是
-  **「官方默认值 + 渲染器」的组合**，**不是 QCL 的 bug**：
-  - 26.2 引入了 Vulkan 后端，但 **26.3 的默认图形 API 仍是 `DEFAULT`（= OpenGL）**；
-  - 走 OpenGL 时这条 GL 路径会经过 `libmobileglues.so` 的 `glGetString`，它在部分查询上返回 `NULL`；
-  - 调用方对 `NULL` 取 `strlen` ⇒ **原生 SIGSEGV**（空指针解引用），表现为黑屏崩溃。
-    tombstone 铁证：`__strlen_aarch64 ← glGetString ← libmobileglues.so`。
-  - **26.4 官方把 `Default` 改成等同 `Prefer Vulkan`**，所以同一台手机、同一份 MG 下 26.4 一直能进 ——
-    这就是「崩 26.3、不崩 26.4」的全部原因。
+- **Minecraft 26.3 终于能启动了**（从 1.5.1 挂到 1.5.7 都没定位）—— 真根因**跟 MobileGlues 没关系**，
+  是 **26.3 自己的默认图形 API 取值**：
+  - 26.2 引入了 Vulkan 后端，但 **26.3 的默认图形 API 仍是 `DEFAULT`（= 走 OpenGL 路径）**；
+  - 走 OpenGL 时该路径在 SDL3 + 默认后端组合下拿不到可用的 GL 上下文，
+    表现为黑屏崩溃 —— **换成 Vulkan 后端即正常**；
+  - **26.4 官方把 `Default` 改成等同 `Prefer Vulkan`**，所以同一台手机、同一个渲染器下
+    26.4 一直能进 —— 这就是「崩 26.3、不崩 26.4」的全部原因。
   - 修法：从 26.3 起启动时追加**官方支持的启动参数** `--graphicsBackend vulkan`。
     为什么不写 `options.txt`：① 写根目录无效（QCL 默认各版本独立）；② 写 `versions/<ver>/options.txt`
     会被 26.3 在**上次异常关闭后主动重置**（`Detected unexpected shutdown... resetting preferred graphics API
     to Default`）；③ 写进 `onCreate`/`onSurfaceTextureAvailable` 也不行 —— 26.3 走 SDL3，该回调根本不触发。
     启动参数优先级高于游戏内设置、且不受异常关闭重置影响。**26.2 及以下一律不碰**（那些没有 Vulkan 后端）。
+  - ⚠️ **1.5.8 之前这里写的是另一套结论**：当时把崩溃归因到 `libmobileglues.so` 的 `glGetString`
+    返回 `NULL`、被调用方 `strlen(NULL)` 触发 SIGSEGV，并据此提了 PR。
+    **那个结论是错的** —— 真正起作用的是「追加 `--graphicsBackend vulkan`」这一条，
+    它是**渲染器无关**的：换 Krypton / Holy-GL4ES / Zink 同样生效，MG 只是当时恰好被选中而已。
+    此处按事实更正，不再把 26.3 的启动问题算在 MG 头上。
 - **MobileGlues 已内置**（`QCL/libs/MobileGlues-release.aar`，7.8 MB，含四 ABI 的 `libmobileglues.so`）——
   以前要让 MG 生效得自己装 MG 的插件 APK，现在随启动器打包，选中即可用。
   库解析顺序：**内置（APK 自带）→ 外部插件 APK → `renderer/<id>/` 手放目录**。
@@ -271,13 +299,13 @@ requestLayout()、最后做动画，首帧就是「6 行 + Show more」。
 **每个版本改了什么，都在 GitHub Releases 里，README 不逐版记录：**
 
 - 全部版本：https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases
-- 当前版本：**1.5.9**（versionCode 361）
+- 当前版本：**1.6.0**（versionCode 362）
 
 > 建议先按下面这张表判断自己关心的问题是在哪一版修的，直接查对应 Release 的说明：
 >
 > | 关注点 | 去看 |
 > |---|---|
-> | **Minecraft 26.3 终于能启动了（从 1.5.1 起挂了三版）—— 真根因：26.3 默认仍走 OpenGL，该 GL 路径经 libmobileglues.so 的 glGetString 返回 NULL、被 strlen(NULL) ⇒ 原生 SIGSEGV；26.4 官方把 Default 改成等同 Prefer Vulkan，所以 26.4 一直能进。修法用官方启动参数 --graphicsBackend vulkan（写 options.txt 会被上次异常关闭的重置打回，且 SDL3 下 onSurfaceTextureAvailable 根本不触发）** / **MobileGlues 已内置（7.8 MB，四 ABI）** / **自动写 enableNoError=2（键名不是 ignoreError，这是另一个独立的除零崩溃）** / **新增「查看上次启动日志」+ logcat 不再过滤原生崩溃** / **JNA 5.19.1、fml.toml earlyWindowControl、首帧视角甩动、自定义背景降采样、安装器空转** | **1.5.8** |
+> | **Minecraft 26.3 终于能启动了（从 1.5.1 起挂了三版）—— 真根因是 26.3 自己的默认图形 API 仍取 Default（走 OpenGL），与渲染器无关：追加官方参数 --graphicsBackend vulkan 即可（写 options.txt 会被上次异常关闭的重置打回，且 SDL3 下 onSurfaceTextureAvailable 根本不触发）。26.4 官方把 Default 改成等同 Prefer Vulkan，所以 26.4 一直能进。此前把原因算在 MobileGlues 的 glGetString 上是错的，已更正** / **MobileGlues 已内置（2.0.1，含四 ABI）** / **自动写 enableNoError=2（键名不是 ignoreError，这是另一个独立的除零崩溃）** / **新增「查看上次启动日志」+ logcat 不再过滤原生崩溃** / **JNA 5.19.1、fml.toml earlyWindowControl、首帧视角甩动、自定义背景降采样、安装器空转** | **1.5.8** |
 > | **Legacy Fabric / Legacy Fabric API 加版本限制（只支持 1.3–1.13.2 以及部分快照 · 愚人节版本，不支持的版本直接不显示）** / **修复收藏页取消收藏后大退重进又复活（写盘被"防丢数据"守卫拦住 + ★ 只按单键删除）** | **1.5.7** |
 > | **JAR 启动器（独立页面 + 独立进程，可直接跑 .jar，自动判断所需 Java 版本）** / **Java 管理（查看/删除本机 Java）** / **3 个新模组加载器：Cleanroom · Legacy Fabric · Legacy Fabric API**（「安装游戏」界面已补齐，图标取自 FCL；版本选择改为独立列表页，可装旧版本） / **外观「启动等待界面图片」6 格选择器（可单独换图，手机/平板自适应）** / **面板色「重置」按钮** / **游戏版本下载页搜索框（版本号 / 正式版 / 快照版 / 远古版 / 愚人节）** / **5 个下载页全部支持翻页 + 「第 N / M 页」** / **下载模组自动带前置（只装必需，前置的前置递归装，跨版本去重）** / 修复安装 Forge 一直失败 / 修复取消收藏后大退仍显示旧收藏 / 修复自制加载器点了没效果 / 修复混合下载源只有 Modrinth 没有 CurseForge / 修复主题色必须进外观页才生效 / 修复外观里一堆白按钮不跟主题色（含 JAR 启动按钮与弹窗按钮） / 修复改主题色需退出重进 / 修复新手教程气泡不随屏幕比例 / 修复等待界面退后台变黑屏 / 修复已撤销的等待界面轮播又回来 / 修复下载页 7 标签小屏只见 3 个 / 修复设置页 6 标签小屏溢出 / 修复下载列表一屏只看 2~3 个 / 修复筛选控件被 label 挤成竖线、输入框显示不出字 / 修复点「筛选」重载列表 / 修复页码最多只 200 页 / 修复「共 N 页」显示不出 / 修复 JAR 页面空白。**⚠️ 26.3 仍然启动不了，本版未修好（如实说明）** | **1.5.2** |
 > | **输入桥与视角偏移（26.4 按钮点不动 / 虚拟键盘失效 / 往左滑往右偏 / 滑到最边缘像被焊住 / 鼠标滑出屏幕 / 开背包关背包点鼠标视角大跳）** / **原生 QCL 视角偏移最后几个坑彻底收尾** / **外观页新增「字体颜色自定义调节」** / **左侧导航栏改纯自适应（大屏占满、小屏自动压缩，不再需要滚动）** / **切到夜间模式自动同步配色（不必再重启）** / **切换新旧排版自动重启** / **旧排版主界面人物不再与按钮重叠** / 修复重命名游戏实例后实例消失 / 修复 Forge 整合包加载器被认成 Fabric / 修复下载中断导致启动失败与进度一直显示 0 B/s / 修复整合包安装弹窗取消按钮在小屏手机上出屏 / 修复下载页·游戏列表·自动安装页打开后整页空白 / 修复目录里没有游戏时点「游戏单独设置」崩溃 / 修复自动安装选 Forge 点了没反应、Forge 版本列表加载不出来 / 修复夜间模式残留白色背景导致白色文字看不见。**⚠️ 26.3 仍然启动不了，本版未修好（如实说明）** | **1.5.1** |

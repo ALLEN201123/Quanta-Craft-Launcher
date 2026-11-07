@@ -67,10 +67,19 @@ EXTERNAL_API void pojavTerminate() {
 
     switch (pojav_environ->config_renderer) {
         case RENDERER_GL4ES: {
-            eglMakeCurrent_p(potatoBridge.eglDisplay, EGL_NO_SURFACE, EGL_NO_SURFACE,
-                             EGL_NO_CONTEXT);
+            // ★★★★★ 1.6.0：SFPEW 兼容层启用时，退出路径也必须经包装层（照 FCL 1.3.4.4）。
+            //   理由：swap/makeCurrent 不经包装时，立即模式批次可能还没清空 —— 先经包装层 drain；
+            //   而「销毁与创建必须同源」——SFPEW 接管建上下文后上下文可能由包装层持有，
+            //   销毁若走系统 EGL 就是所有权错配（可能泄漏或直接崩）。
+            //   包装库缺入口时（sfpew_* == NULL）自动回落系统 EGL，此时上下文均为底座所有。
+            EGLBoolean (*terminate_make_current)(EGLDisplay, EGLSurface, EGLSurface, EGLContext) =
+                    sfpew_eglMakeCurrent_p != NULL ? sfpew_eglMakeCurrent_p : eglMakeCurrent_p;
+            EGLBoolean (*terminate_destroy_context)(EGLDisplay, EGLContext) =
+                    sfpew_eglDestroyContext_p != NULL ? sfpew_eglDestroyContext_p : eglDestroyContext_p;
+            terminate_make_current(potatoBridge.eglDisplay, EGL_NO_SURFACE, EGL_NO_SURFACE,
+                                   EGL_NO_CONTEXT);
             eglDestroySurface_p(potatoBridge.eglDisplay, potatoBridge.eglSurface);
-            eglDestroyContext_p(potatoBridge.eglDisplay, potatoBridge.eglContext);
+            terminate_destroy_context(potatoBridge.eglDisplay, potatoBridge.eglContext);
             eglTerminate_p(potatoBridge.eglDisplay);
             eglReleaseThread_p();
 

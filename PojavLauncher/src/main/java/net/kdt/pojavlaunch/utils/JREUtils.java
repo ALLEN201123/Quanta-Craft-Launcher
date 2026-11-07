@@ -391,6 +391,7 @@ public class JREUtils {
                 arrayMap.put("SDL_EGL_LIBRARY", qclEglCand.getAbsolutePath());
             }
         }
+
         // ★★★★★ 1.5.8：**MobileGlues 配置注入 —— 26.3 启动崩溃（除零）的最终修复**。
         //
         //   实测日志（26.3 + MG / Android 16 aarch64）：
@@ -484,6 +485,67 @@ public class JREUtils {
             }
         } catch (Throwable pluginEnvErr) {
             Logger.getInstance(activity).appendToLog("[渲染器插件] 失败: " + pluginEnvErr);
+        }
+
+        // ★★★★★ 1.6.0：**SFPEW 兼容层叠加**（照 FCL 1.3.4.4 / #1983 的 addRendererEnv）。
+        //
+        //   ⚠️ 位置极关键 —— 必须排在**插件 env 注入之后**（就在上面这个 try/catch 之后）。
+        //
+        //   实测踩过的坑（inf-20100618 启动日志）：
+        //     39: Added custom env: SDL_OPENGL_LIBRARY=.../libSimpleFPEWrapper.so   ← 我这里设对了
+        //     65: Added custom env: POJAVEXEC_EGL=.../libSimpleFPEWrapper.so
+        //     79: [渲染器插件] 注入 LIBGL_EGL=libmobileglues.so
+        //         ↑ 插件在 Os.setenv 循环**之后**又注入一遍，把 POJAVEXEC_EGL 覆盖回 MG
+        //   于是 elg_loader dlopen 的仍是 MG 而非包装层，兼容层等于没开。
+        //   放到插件之后，兼容层的赋值才是最后一次写，不会被覆盖。
+        //
+        //   机制（逐条对齐 FCL）：
+        //     · SFPEW_LAYER=1        —— native 桥按它路由 makeCurrent/swap 生命周期；
+        //     · SFPEW_EGL=<后端 EGL> —— 包装层与底座 EGL **同源**，建/销上下文同源，
+        //                               避免「包装层创建、底座销毁」的所有权错配；
+        //     · POJAVEXEC_EGL → 包装层（绝对路径）—— egl_loader 据此 dlopen 包装层；
+        //     · SDL_OPENGL_LIBRARY / SDL_EGL_LIBRARY → 包装层，SDL 建上下文同样经包装层；
+        //     · SFPEW_RELAXED_CONTEXT （可选，默认关 = 严格模式）。
+        //
+        //   ⚠️ 只在「库真实在 APK nativeLibraryDir 里」时启用 —— 不放行一个注定失败的路径。
+        //   这里直接 Os.setenv（不再走 arrayMap），因为 arrayMap 的写入循环已经跑过了。
+        if (System.getProperty("qcl.sfpew.enabled", "0").equals("1")) {
+            try {
+                String qclNativeDir = activity.getApplicationInfo().nativeLibraryDir;
+                String sfpewLibName = System.getProperty("qcl.sfpew.libname",
+                        "libSimpleFPEWrapper.so");
+                java.io.File sfpewLib = new java.io.File(qclNativeDir, sfpewLibName);
+                if (sfpewLib.isFile()) {
+                    String sfpewPath = sfpewLib.getAbsolutePath();
+                    // 后端 EGL 名先记下来给包装层用（此时 POJAVEXEC_EGL 已被插件注入过）
+                    String backendEgl = Os.getenv("POJAVEXEC_EGL");
+                    if (backendEgl != null && !backendEgl.isEmpty()) {
+                        Os.setenv("SFPEW_EGL", backendEgl, true);
+                    }
+                    Os.setenv("SFPEW_LAYER", "1", true);
+                    // 包装层导出完整 EGL 面：egl_loader 的 dlopen 目标
+                    Os.setenv("POJAVEXEC_EGL", sfpewPath, true);
+                    // SDL 的 GL / EGL 栈整体经包装层
+                    Os.setenv("SDL_OPENGL_LIBRARY", sfpewPath, true);
+                    Os.setenv("SDL_EGL_LIBRARY", sfpewPath, true);
+                    if (System.getProperty("qcl.sfpew.relaxed", "0").equals("1")) {
+                        Os.setenv("SFPEW_RELAXED_CONTEXT", "1", true);
+                    }
+                    Logger.getInstance(activity).appendToLog(
+                            "[SFPEW] 兼容层已启用: layer=1 egl=" + sfpewPath
+                                    + " backendEgl=" + backendEgl
+                                    + " relaxed=" + System.getProperty("qcl.sfpew.relaxed", "0"));
+                    Log.i("DynamicLoader", "[SFPEW] 兼容层已启用: " + sfpewPath
+                            + " backendEgl=" + backendEgl);
+                } else {
+                    Logger.getInstance(activity).appendToLog(
+                            "[SFPEW] 库不在 nativeLibraryDir（" + sfpewLib + "），不启用");
+                    Log.w("DynamicLoader", "[SFPEW] 库不在 nativeLibraryDir（" + sfpewLib + "）");
+                }
+            } catch (Throwable qclSfpew) {
+                Logger.getInstance(activity).appendToLog("[SFPEW] 启用失败: " + qclSfpew);
+                Log.w("DynamicLoader", "[SFPEW] 启用失败，回落到无兼容层: " + qclSfpew);
+            }
         }
         jvmLibraryPath = getJvmLibDir(str);
         Log.d("DynamicLoader", "Base LD_LIBRARY_PATH: " + LD_LIBRARY_PATH);

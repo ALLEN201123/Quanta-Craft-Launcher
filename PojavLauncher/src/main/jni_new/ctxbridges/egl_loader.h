@@ -30,6 +30,16 @@ extern EGLBoolean (*eglQuerySurface_p)( 	EGLDisplay display,
                                            EGLint attribute,
                                            EGLint * value);
 
+// ★★★★★ 1.6.0：SFPEW 兼容层（SFPEW_LAYER=1 时启用）：从 libSimpleFPEWrapper.so 解析的
+// 包装生命周期入口。非 SFPEW 渲染器保持 NULL，调用方回落系统 EGL。
+// 作用：包装层记录线程本地上下文（供 SFPEW_RELAXED_CONTEXT 的严格/宽松模式判定），
+// 并在 eglSwapBuffers 前清空立即模式批次 —— 这就是「给老版本补固定管线」的落地点。
+// 照 FCL 1.3.4.4 ctxbridges/egl_loader.h。
+extern EGLBoolean (*sfpew_eglMakeCurrent_p) (EGLDisplay dpy, EGLSurface draw, EGLSurface read, EGLContext ctx);
+extern EGLBoolean (*sfpew_eglSwapBuffers_p) (EGLDisplay dpy, EGLSurface draw);
+extern EGLContext (*sfpew_eglCreateContext_p) (EGLDisplay dpy, EGLConfig config, EGLContext share_list, const EGLint *attrib_list);
+extern EGLBoolean (*sfpew_eglDestroyContext_p) (EGLDisplay dpy, EGLContext ctx);
+
 bool dlsym_EGL();
 void* getProcAddress(const char* procname);
 

@@ -35,6 +35,13 @@ EGLBoolean (*eglQuerySurface_p)( 	EGLDisplay display,
                                     EGLint * value);
 __eglMustCastToProperFunctionPointerType (*eglGetProcAddress_p) (const char *procname);
 
+// ★★★★★ 1.6.0：SFPEW 包装生命周期入口（照 FCL 1.3.4.4）。
+// 非 SFPEW 渲染器保持 NULL —— bridge_* 系列据此回落系统 EGL。
+EGLBoolean (*sfpew_eglMakeCurrent_p) (EGLDisplay dpy, EGLSurface draw, EGLSurface read, EGLContext ctx);
+EGLBoolean (*sfpew_eglSwapBuffers_p) (EGLDisplay dpy, EGLSurface draw);
+EGLContext (*sfpew_eglCreateContext_p) (EGLDisplay dpy, EGLConfig config, EGLContext share_list, const EGLint *attrib_list);
+EGLBoolean (*sfpew_eglDestroyContext_p) (EGLDisplay dpy, EGLContext ctx);
+
 bool dlsym_EGL() {
     char* gles = getenv("LIBGL_GLES");
     char* eglName = (strncmp(gles ? gles : "", "libGLESv2_angle.so", 18) == 0) ? "libEGL_angle.so" : getenv("POJAVEXEC_EGL");
@@ -78,6 +85,57 @@ bool dlsym_EGL() {
         __android_log_print(ANDROID_LOG_ERROR, "QCL_DBG", "FATAL - essential EGL symbols missing (getDisplay=%p init=%p)",
                eglGetDisplay_p, eglInitialize_p);
         return false;
+    }
+
+    // ★★★★★ 1.6.0：**SFPEW 兼容层**（照 FCL 1.3.4.4 ctxbridges/egl_loader.c）。
+    //
+    //   这是「给老版本补固定管线」真正生效的地方 —— 之前只在 Java 层注入 env 是没用的，
+    //   因为 native 侧不认那些变量，包装层根本没被 dlopen 过，游戏仍走原路径 → 黑屏。
+    //
+    //   做什么：
+    //     · 从 libSimpleFPEWrapper.so 解析包装生命周期入口（makeCurrent / swapBuffers /
+    //       createContext / destroyContext）；
+    //     · gl_bridge / egl_bridge 里的 bridge_* 函数据此**优先转发给包装层**，
+    //       包装层记录线程本地上下文、并在 swap 前清空立即模式批次；
+    //     · 于是游戏的固定管线（glBegin/glEnd、glMatrixMode）被翻译成 GLES 调用，
+    //       后端（MobileGlues 等）只承担 EGL 与驱动。
+    //
+    //   失败处理（与 FCL 一致，绝不硬崩）：
+    //     · 包装库 dlopen 失败 / 缺 eglGetProcAddress → 全部保持 NULL，回落系统 EGL；
+    //     · 生命周期入口（makeCurrent、swapBuffers）缺失 → 整体回落，避免半接管；
+    //     · 建/毁上下文入口缺失 → 只有它们回落底座，避免「包装层建、底座毁」的所有权错配。
+    if (getenv("SFPEW_LAYER") != NULL) {
+        void* wrapper = dlopen("libSimpleFPEWrapper.so", RTLD_NOW | RTLD_LOCAL);
+        void* (*sfpew_get_proc)(const char* char_sym) =
+                wrapper != NULL ? (void* (*)(const char*)) dlsym(wrapper, "eglGetProcAddress") : NULL;
+        __android_log_print(ANDROID_LOG_ERROR, "QCL_SFPEW",
+                "SFPEW_LAYER set: wrapper=%p get_proc=%p err=%s", wrapper, sfpew_get_proc, dlerror());
+        if (sfpew_get_proc != NULL) {
+            sfpew_eglMakeCurrent_p = (void*) sfpew_get_proc("eglMakeCurrent");
+            sfpew_eglSwapBuffers_p = (void*) sfpew_get_proc("eglSwapBuffers");
+        }
+        if (sfpew_eglMakeCurrent_p == NULL || sfpew_eglSwapBuffers_p == NULL) {
+            __android_log_print(ANDROID_LOG_ERROR, "QCL_SFPEW",
+                    "lifecycle resolution failed (makeCurrent=%p swapBuffers=%p), falling back to system EGL",
+                    sfpew_eglMakeCurrent_p, sfpew_eglSwapBuffers_p);
+            sfpew_eglMakeCurrent_p = NULL;
+            sfpew_eglSwapBuffers_p = NULL;
+        } else {
+            // 生命周期入口就绪后才接管建/毁：逐上下文自动开关要求建上下文经包装层解析
+            sfpew_eglCreateContext_p = (void*) sfpew_get_proc("eglCreateContext");
+            sfpew_eglDestroyContext_p = (void*) sfpew_get_proc("eglDestroyContext");
+            if (sfpew_eglCreateContext_p == NULL || sfpew_eglDestroyContext_p == NULL) {
+                __android_log_print(ANDROID_LOG_ERROR, "QCL_SFPEW",
+                        "context entry points unavailable, context creation stays on base EGL");
+                sfpew_eglCreateContext_p = NULL;
+                sfpew_eglDestroyContext_p = NULL;
+            } else {
+                __android_log_print(ANDROID_LOG_ERROR, "QCL_SFPEW",
+                        "layer ACTIVE: makeCurrent=%p swapBuffers=%p createContext=%p destroyContext=%p",
+                        sfpew_eglMakeCurrent_p, sfpew_eglSwapBuffers_p,
+                        sfpew_eglCreateContext_p, sfpew_eglDestroyContext_p);
+            }
+        }
     }
     return true;
 }

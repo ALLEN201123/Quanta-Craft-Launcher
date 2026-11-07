@@ -190,7 +190,7 @@ public final class RendererCompat {
     //   recommended：之前 5 个都标 ★推荐，现只保留 Krypton（用户指定的"最好的"）。
     //     · Krypton Wrapper：**最好的，支持全部历史版本（含远古），但不支持 26.3** ——
     //       min 留空 ⇒ 保留「含远古版本」；max 填 26.2 ⇒ 不会误导成支持 26.3
-    public static final Info[] ALL = {new Info("opengles2", "Holy-GL4ES", "Holy GL4ES (OpenGL 2.1)", "libgl4es_114.so", "libEGL.so", "", "1.21.4", "1.21.4", true, false), new Info("ng_gl4es", "Krypton Wrapper", "Krypton Wrapper (OpenGL 3.1+；支持所有历史版本含远古，不支持 26.3)", "libng_gl4es.so", "libEGL.so", "", "26.2", "26.2", true, true), new Info("zink", "Zink", "Kopper Zink (OpenGL 4.6, Mesa zink on Vulkan；26.3+ 唯一有希望的选项，需要设备有可用 Vulkan)", "libglxshim.so", "libEGL_mesa.so", "1.8", "26.4", "26.4", true, false), new Info("opengles3_virgl", "VirGLRenderer", "VirGLRenderer (OpenGL 4.3, Mesa 软渲染；上限已放开至 26.4，但真机能否跑 26.3+ 未实测)", "libOSMesa_81.so", "libEGL.so", "1.8", "26.4", "26.4", true, false), new Info("opengles3_virgl_osmesa8", "Freedreno", "Freedreno (OpenGL 4.6, 仅高通 adreno616-a660；超出该型号的 Adreno 不可用)", "libOSMesa_8.so", "libEGL.so", "1.8", "26.4", "26.4", true, false), new Info("opengles3_vgpu", "VGPU", "VGPU (OpenGL 2.1+)", "libvgpu.so", "libEGL.so", "", "1.16.5", "1.16.5", true, false), new Info("mg", "MobileGlues", "MobileGlues (已内置，无需另装插件；26.3 及以上可用 —— QCL 自动追加 --graphicsBackend vulkan)", "libmobileglues.so", "libEGL.so", "1.17", "26.4", "26.4", false, false)};
+    public static final Info[] ALL = {new Info("opengles2", "Holy-GL4ES", "Holy GL4ES (OpenGL 2.1)", "libgl4es_114.so", "libEGL.so", "", "1.21.4", "1.21.4", true, false), new Info("ng_gl4es", "Krypton Wrapper", "Krypton Wrapper (OpenGL 3.1+；支持所有历史版本含远古，不支持 26.3)", "libng_gl4es.so", "libEGL.so", "", "26.2", "26.2", true, true), new Info("zink", "Zink", "Kopper Zink (OpenGL 4.6, Mesa zink on Vulkan；26.3+ 唯一有希望的选项，需要设备有可用 Vulkan)", "libglxshim.so", "libEGL_mesa.so", "1.8", "26.4", "26.4", true, false), new Info("opengles3_virgl", "VirGLRenderer", "VirGLRenderer (OpenGL 4.3, Mesa 软渲染；上限已放开至 26.4，但真机能否跑 26.3+ 未实测)", "libOSMesa_81.so", "libEGL.so", "1.8", "26.4", "26.4", true, false), new Info("opengles3_virgl_osmesa8", "Freedreno", "Freedreno (OpenGL 4.6, 仅高通 adreno616-a660；超出该型号的 Adreno 不可用)", "libOSMesa_8.so", "libEGL.so", "1.8", "26.4", "26.4", true, false), new Info("opengles3_vgpu", "VGPU", "VGPU (OpenGL 2.1+)", "libvgpu.so", "libEGL.so", "", "1.16.5", "1.16.5", true, false), new Info("mg", "MobileGlues", "MobileGlues (已内置，无需另装插件；叠加 SFPEW 兼容层后可跑远古/1.8.9 等固定管线版本，26.3 及以上 QCL 自动追加 --graphicsBackend vulkan)", "libmobileglues.so", "libEGL.so", "", "26.4", "26.4", false, false)};
 
     public static String defaultRendererId() {
         // ★★★ 1.4.9 修正：原来这里返回 "opengles2"（Holy-GL4ES），但
@@ -294,6 +294,11 @@ public final class RendererCompat {
         //     · opengles2（Holy-GL4ES）—— minMcVer 为空 = 无下限
         //   照 FCL 的口径（VersionInstallPage/RendererCompat 同一套 min/maxMcVer 判据）：
         //     minMcVer 为空 ⇒ 全版本支持；否则按区间判，远古版本按"无下限"这一条单独判。
+        //
+        // ★★★★★ 1.6.0：**SFPEW 兼容层启用时，mg 的 1.17 下限不再适用**（照 FCL 1.3.4.4 #1983）。
+        //   SFPEW 给后端补上固定管线（FPE），于是 mg 也能跑 1.17 以下与远古版本
+        //   （FCL 实测 1.8.9 可跑）。因此 mg 的 minMcVer 已改为空串（全版本），
+        //   下面的判定自然放行 —— 但**最高版本限制保留**：层不扩展渲染器的现代 GL 上限。
         if (isAncient(str2)) {
             return find.minMcVer.isEmpty();
         }
