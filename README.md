@@ -102,9 +102,17 @@ QCL 自己写的是**窗口 / Surface / EGL 上下文 / 输入桥 / 帧节奏**�
   现在每条渲染器是一张卡片：名称 + 状态徽章、版本区间 + 一句说明、仅在有问题时出现的红色警告行；
   当前使用的整卡浅蓝高亮并加粗。末尾「⚙ 高级设置」独立成一张灰卡，视觉上不与渲染器混淆。
   **未新增任何布局资源**（全部代码构建），避免搬运漏改的老坑。
-- **README 更正：26.3 的启动问题与 MobileGlues 无关。** 1.5.8 曾把 26.3 崩溃归因到 MG 的
-  `glGetString` 返回 `NULL`，该结论**是错的**。真正起作用的是追加官方参数
-  `--graphicsBackend vulkan`，它是**渲染器无关**的 —— 换任何渲染器都同样生效。
+- **README 更正：26.3 的启动问题，归因错在 1.1.x 那一串，不在 1.5.8。**
+  **1.5.8 的修复是对的** —— 追加官方参数 `--graphicsBackend vulkan` 确实让 26.3 站了起来，
+  当时的描述「官方默认值 + 渲染器的组合问题」也站得住。
+  真正归因错误的是**更早的 1.1.3 → 1.1.8**：
+  - v1.1.3：「定位到一处崩溃是 MG 自己的」「MG 配 QCL 目前最多到 26.2」，准备向 MG 提请求；
+  - v1.1.6：「崩的位置在 MobileGlues 内部，`getGpuName()` 拿 `glGetString()` 未判空」，
+    并提了 PR #59；
+  - v1.1.7：PR 被维护者拒绝（「只是盖住问题，真正根因在生命周期」），结论「26.3 配 MG 暂时不用指望」；
+  - v1.1.8：仍写「26.3 配 MobileGlues 目前还是不行，等官方自己修」。
+  这一串把**图形后端的问题（OpenGL → Vulkan）**记成了**渲染器的问题**。
+  换 Krypton / Holy-GL4ES / Zink，只要仍走 OpenGL 后端就一样起不来 —— 关键变量是后端，不是渲染器。
   详见下方 1.5.8 段落里保留的更正记录。
 
 ### 当前进展（1.5.9）
@@ -114,8 +122,8 @@ requestLayout()、最后做动画，首帧就是「6 行 + Show more」。
 
 ### 当前进展（1.5.8）
 
-- **Minecraft 26.3 终于能启动了**（从 1.5.1 挂到 1.5.7 都没定位）—— 真根因**跟 MobileGlues 没关系**，
-  是 **26.3 自己的默认图形 API 取值**：
+- **Minecraft 26.3 终于能启动了**（从 1.5.1 挂到 1.5.7 都没定位）—— 真根因是
+  **26.3 自己的默认图形 API 取值**：
   - 26.2 引入了 Vulkan 后端，但 **26.3 的默认图形 API 仍是 `DEFAULT`（= 走 OpenGL 路径）**；
   - 走 OpenGL 时该路径在 SDL3 + 默认后端组合下拿不到可用的 GL 上下文，
     表现为黑屏崩溃 —— **换成 Vulkan 后端即正常**；
@@ -126,11 +134,12 @@ requestLayout()、最后做动画，首帧就是「6 行 + Show more」。
     会被 26.3 在**上次异常关闭后主动重置**（`Detected unexpected shutdown... resetting preferred graphics API
     to Default`）；③ 写进 `onCreate`/`onSurfaceTextureAvailable` 也不行 —— 26.3 走 SDL3，该回调根本不触发。
     启动参数优先级高于游戏内设置、且不受异常关闭重置影响。**26.2 及以下一律不碰**（那些没有 Vulkan 后端）。
-  - ⚠️ **1.5.8 之前这里写的是另一套结论**：当时把崩溃归因到 `libmobileglues.so` 的 `glGetString`
-    返回 `NULL`、被调用方 `strlen(NULL)` 触发 SIGSEGV，并据此提了 PR。
-    **那个结论是错的** —— 真正起作用的是「追加 `--graphicsBackend vulkan`」这一条，
-    它是**渲染器无关**的：换 Krypton / Holy-GL4ES / Zink 同样生效，MG 只是当时恰好被选中而已。
-    此处按事实更正，不再把 26.3 的启动问题算在 MG 头上。
+  - ✅ **这条修复是正确的、至今有效。**
+  - ⚠️ **被更正的是更早那一次没修好的尝试**（26.3 那时还起不来）：当时把崩溃归因到
+    `libmobileglues.so` 的 `glGetString` 返回 `NULL`、被调用方 `strlen(NULL)` 触发 SIGSEGV，
+    并据此提了 PR。**那个归因是错的** —— 关键变量是图形后端（OpenGL → Vulkan），不是渲染器；
+    换 Krypton / Holy-GL4ES / Zink，只要仍走 OpenGL 后端就一样起不来。
+    1.5.8 走对了方向（改走 Vulkan）才真正修好，所以「怪 MG」那版没修好、「改走 Vulkan」这版修好了。
 - **MobileGlues 已内置**（`QCL/libs/MobileGlues-release.aar`，7.8 MB，含四 ABI 的 `libmobileglues.so`）——
   以前要让 MG 生效得自己装 MG 的插件 APK，现在随启动器打包，选中即可用。
   库解析顺序：**内置（APK 自带）→ 外部插件 APK → `renderer/<id>/` 手放目录**。
