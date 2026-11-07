@@ -1,17 +1,17 @@
 {
-    "latestRelease":  {
-                          "versionCode":  361,
-                          "versionName":  "1.5.9",
-                          "date":  "2026-10-31",
-                          "url":  [
-                                      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.5.9/QCL-release-1.5.9-universal.apk",
-                                      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.5.9/QCL-release-1.5.9-arm64.apk",
-                                      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.5.9/QCL-release-1.5.9-arm.apk",
-                                      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.5.9/QCL-release-1.5.9-x86_64.apk",
-                                      "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.5.9/QCL-release-1.5.9-x86.apk"
-                                  ],
-                          "netdiskUrl":  "https://pan.quark.cn/s/f2c26c4fb66b",
-                          "updateLog":  "【1.5.9：公告「展开」按钮修好了 + 首次显示不再铺满半屏】\n\n一、公告的「展开 / 收起」按钮现在真的能看见了\n\n1.5.8 那版我说「撤销折叠」，结果改过头了：\n· 每次显示公告，代码都把正文设成「不限行数」（Integer.MAX_VALUE），\n  然后**把展开按钮直接隐藏掉**（setVisibility(GONE)）；\n· 于是 XML 里明明写好的「展开」按钮，玩家根本看不见，更点不到；\n· 而且每翻一页还会再隐藏一次 —— 这个功能等于被我废掉了。\n\n现在改回正规做法：\n· 公告正文**默认只显示 6 行**，末尾省略号；\n· 下面的按钮**可见**，显示「Show more」；\n· 点一下 → 显示全文，按钮文字变「Show less」；\n· 再点一下 → 收回 6 行；\n· 换一条公告 / 翻页 → 自动回到折叠态，按钮文字也跟着复位。\n\n二、修「首次启动时公告铺满半个屏幕」\n\n原因是我把顺序写反了：\n· 先 setText()（这一步会触发一次重新排版）\n· 再做入场动画\n· 最后才让公告栏可见\n结果公告栏是**带着「还没折叠的满高正文」**进场的，首帧就撑满了半屏。\n\n现在改成：\n· 先把折叠状态和按钮文字/可见性全部落定；\n· 再请求一次排版，让高度按 6 行算准；\n· 最后才做入场动画。\n首帧就是「6 行 + Show more」，不会再抖一下。\n\n三、本版其它\n\n· 1.5.8 的内容全部保留（26.3 能启动、MobileGlues 内置、日志查看器等）。\n· 26.3 的真根因与修法见 1.5.8 的说明：\n  26.3 默认仍走 OpenGL → 经 libmobileglues.so 的 glGetString 返回 NULL\n  → 调用方 strlen(NULL) → 原生 SIGSEGV；\n  QCL 从 26.3 起自动追加官方启动参数 --graphicsBackend vulkan。\n\n四、已知问题（不变）\n\n· 无 Vulkan 的设备，26.3 可能仍无法启动（设备能力，不是启动器缺陷）。\n· 点两次 ESC 视角偶发偏移 —— 需要一份可复现的日志才能定位。\n· 远古版本颜色异常 —— 第三方转译路线共有的天花板，彻底解决依赖自研渲染器。\n\n（本版为 1.5.9，versionCode 361。）"
-                      },
-    "latestPrerelease":  null
+    "latestRelease": {
+        "versionCode": 362,
+        "versionName": "1.6.0",
+        "date": "2026-11-07",
+        "url": [
+            "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.6.0/QCL-release-1.6.0-universal.apk",
+            "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.6.0/QCL-release-1.6.0-arm64.apk",
+            "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.6.0/QCL-release-1.6.0-arm.apk",
+            "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.6.0/QCL-release-1.6.0-x86_64.apk",
+            "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.6.0/QCL-release-1.6.0-x86.apk"
+        ],
+        "netdiskUrl": "https://pan.quark.cn/s/f2c26c4fb66b",
+        "updateLog": "【1.6.0：老版本也能用 MobileGlues 了 —— 内置 SFPEW 兼容层】\n\n这一版的核心是：**把 SimpleFPEWrapper 当成兼容层叠在渲染器上**，让原本只能跑 1.17+ 的\nMobileGlues 也能跑 1.8.9、b1.x 这些远古/固定管线版本。\n\n一、为什么以前 MG 跑不了老版本\n\nMobileGlues 只实现 GLES 3.x，**没有固定管线**（glBegin/glEnd、glMatrixMode 这类即时模式）。\n而 1.16 及更早的游戏大量依赖固定管线 —— 所以以前 MG 的最低版本被卡在 1.17。\n\n现在 SFPEW 补上了这一层：游戏经 libSimpleFPEWrapper.so 解析 GL 符号，\n固定管线调用被翻译成 GLES，MG 只承担 EGL 与驱动。\n\n**真机实测通过**：inf-20100618（infdev 远古版）+ MobileGlues，\n日志显示 GL RENDERER: Adreno 750 | OpenGL ES 3.2 (SFPEW 26.11-dev)。\n\n二、怎么用\n\n1. 渲染器选 MobileGlues；\n2. 直接启动老版本 —— **不需要开任何开关**（内置渲染器是自动叠加的）。\n\n自带固定管线的渲染器（Krypton Wrapper / Holy GL4ES / VGPU / Zink）会自动不叠加，\n避免多一层透传开销。装了 Angelica / Actinium 这类自带 FPE 的模组时，整层跳过。\n\n三、渲染器选择界面改成卡片式\n\n以前一行纯文本塞「名称 / 版本区间 / 推荐 / 内置 / 当前 / 警告」六七项，读起来像乱码。\n现在每条是一张卡片：名称 + 状态徽章、版本区间 + 一句说明、有问题时才出现的红色警告；\n当前使用的整卡浅蓝高亮。「高级设置」独立成灰卡，不会跟渲染器混淆。\n\n四、更正一处此前的错误结论\n\n1.5.8 曾把 26.3 崩溃归因到 MobileGlues 的 glGetString 返回 NULL，**那个结论是错的**。\n真正起作用的是追加官方参数 --graphicsBackend vulkan，它跟渲染器无关 ——\n换任何渲染器都同样生效。README 已按事实更正，不再把 26.3 的启动问题算在 MG 头上。\n\n（本版为 1.6.0，versionCode 362）"
+    },
+    "latestPrerelease": null
 }
