@@ -61,7 +61,7 @@ public class UpdateChecker {
      * 这个仓库只放一个 launcher_version.json，不放安装包；
      * 安装包仍然从 GitHub Release 下（国内用户可以选弹窗里的「网盘下载」）。
      */
-    public static final String UPDATE_URL_CN = "https://gitee.com/allne201123/qcl-repo/raw/master/launcher_version.json";
+    public static final String UPDATE_URL_CN = "https://gitee.com/allne201123/qcl-repo/raw/main/launcher_version.json";
 
     /**
      * ★★★ 1.2.6：再多兜几个国内能通的源。
