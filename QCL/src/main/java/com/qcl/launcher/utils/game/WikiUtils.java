@@ -143,13 +143,21 @@ public final class WikiUtils {
         return WIKI_BASE + "Java_Edition_" + page.replace(" ", "_");
     }
 
-    /** 中文站 URL（按实测表页面名拼）。 */
+    /**
+     * 中文站 URL（按实测表页面名拼）。
+     *
+     * <p>★★★ 2026-11-18：**中文站页面名必须做 URL 编码** —— 中文站是
+     * {@code Java版1.20.1} 这种含 CJK 字符的标题，直接塞进 {@link Uri} 时
+     * 部分系统浏览器会把「版」按 GBK 重新解释，跳到不存在的页面。
+     * 实测（2026-11-18）：{@code https://zh.minecraft.wiki/w/Java版1.20.1}
+     * 编码后可达，页面标题确为「Java版1.20.1」。
+     */
     public static String toChineseWikiUrl(String versionId) {
         String page = toWikiPageName(versionId);
         if (page == null || page.isEmpty()) {
             return WIKI_CN_BASE;
         }
-        return WIKI_CN_BASE + "Java版" + page.replace(" ", "_");
+        return WIKI_CN_BASE + Uri.encode("Java版" + page.replace(" ", "_"));
     }
 
     /**
@@ -157,13 +165,55 @@ public final class WikiUtils {
      *
      * <p>★ 用 {@code ACTION_VIEW} 交给系统浏览器；没有浏览器时静默失败（不崩）。
      *
+     * <p>★★★ 2026-11-18：默认**中文**（群反馈：「Wiki下载版本那里需要改为跳转中文 Wiki，
+     * 原先的那个下载版本右边的地球按钮是跳转英文」）。
+     *
+     * <p>★★★ 2026-11-19：**语言改由设置页决定**（「你保留的英文入口加在设置里面」）。
+     * 读 {@link LauncherSetting#wikiLanguage}：
+     * {@code 0} = 中文（默认），{@code 1} = 英文。
+     * 取不到设置时**回退中文**（保持 11-18 的行为）。
+     *
      * @return true = 已成功发起打开请求
      */
     public static boolean openWiki(Context context, String versionId) {
         if (context == null) {
             return false;
         }
-        return openUrl(context, toWikiUrl(versionId));
+        return openUrl(context, isEnglish(context) ? toEnglishWikiUrl(versionId)
+                : toChineseWikiUrl(versionId));
+    }
+
+    /**
+     * 读取「Wiki 语言」设置：true = 英文。
+     *
+     * <p>★ 任何异常（设置还没初始化 / 读不到）都回退 {@code false}（中文），
+     * 绝不因为配置问题让地球图标点不动。
+     */
+    private static boolean isEnglish(Context context) {
+        try {
+            final com.qcl.launcher.launcher.MainActivity act =
+                    (com.qcl.launcher.launcher.MainActivity) context;
+            if (act != null && act.launcherSetting != null) {
+                return act.launcherSetting.wikiLanguage == 1;
+            }
+        } catch (Throwable ignored) {
+        }
+        return false;
+    }
+
+    /**
+     * 打开该版本的**英文** Wiki 页面（无条件英文，不读设置）。
+     *
+     * <p>保留给「明确要英文」的入口；常规入口请用 {@link #openWiki(Context, String)}，
+     * 它会按设置页的选择走。
+     *
+     * @return true = 已成功发起打开请求
+     */
+    public static boolean openEnglishWiki(Context context, String versionId) {
+        if (context == null) {
+            return false;
+        }
+        return openUrl(context, toEnglishWikiUrl(versionId));
     }
 
     /** 打开任意 URL（交给系统浏览器）。 */

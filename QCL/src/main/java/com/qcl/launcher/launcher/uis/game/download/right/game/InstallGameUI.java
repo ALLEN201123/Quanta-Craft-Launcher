@@ -68,6 +68,19 @@ public class InstallGameUI extends BaseUI implements View.OnClickListener, TextW
      */
     private View legacyFabricRow;
     private View legacyFabricAPIRow;
+    /**
+     * ★★★★★ 2026-11-18（1.6.1）【Fabric / NeoForge 的版本门槛】——
+     * 留住这两个「整行」引用，供 {@link #applyLoaderVersionGate()} 按 MC 版本显示/隐藏。
+     *
+     * <p>群友反馈（QQ 群 @打游戏的阿坤）原话：
+     * 「调整一下那个加载器的显示范围」「比如 Fabric 只在 1.14+ 显示，
+     * NeoForge 只在 1.20.1+ 显示」「反正就像上次 Legacy Fabric 那种」。
+     *
+     * <p>即：照 1.5.7 给 Legacy Fabric 加版本限制的同一套做法，
+     * 给 Fabric 和 NeoForge 也各加一条下限，低于门槛就**整行隐藏**。
+     */
+    private View fabricRow;
+    private View neoForgeRow;
     private LinearLayout selectNeoForgeVersion;
     private ImageView selectNeoForge;
     private TextView gameVersionText;
@@ -221,6 +234,11 @@ public class InstallGameUI extends BaseUI implements View.OnClickListener, TextW
         // ★ 1.5.7：留住「整行」引用，供版本限制里 setVisibility 用（见 applyLegacyFabricExclusion）
         this.legacyFabricRow = vLegacyFabric;
         this.legacyFabricAPIRow = vLegacyFabricAPI;
+        // ★ 1.6.1：Fabric / NeoForge 的整行引用（见 applyLoaderVersionGate）
+        //   这两个 id 用的是「选择行」容器：select_fabric_version / select_neoforge_version。
+        //   取不到时保持 null，applyLoaderVersionGate 里判空跳过（不炸）。
+        this.fabricRow = this.activity.findViewById(R.id.select_fabric_version);
+        this.neoForgeRow = this.activity.findViewById(R.id.select_neoforge_version);
         // 绑定这三行的「版本文字」与「取消按钮」
         this.cleanroomVersionText = (TextView) this.activity.findViewById(R.id.cleanroom_version_text);
         this.deleteCleanroomVersion = (ImageButton) this.activity.findViewById(R.id.call_off_install_cleanroom);
@@ -687,6 +705,10 @@ public class InstallGameUI extends BaseUI implements View.OnClickListener, TextW
         //   必须和 applyNeoForgeExclusion 一样放在 init() 最末尾：
         //   上面那几段是「层层覆盖式」的 setVisibility(0)，写在中间会被后面的分支重新点亮。
         applyLegacyFabricExclusion();
+        // ★★★★★ 1.6.1（2026-11-18）：Fabric / NeoForge 的**版本门槛**。
+        //   Fabric 只在 1.14+ 显示，NeoForge 只在 1.20.1+ 显示（群友需求，照 Legacy Fabric 那套做法）。
+        //   放在最后：它会把整行 GONE 掉，必须盖住上面所有 setVisibility(0)。
+        applyLoaderVersionGate();
     }
 
     /**
@@ -734,6 +756,150 @@ public class InstallGameUI extends BaseUI implements View.OnClickListener, TextW
             }
         } catch (Throwable ignored) {
         }
+    }
+
+    /**
+     * ★★★★★ 2026-11-18（1.6.1）【Fabric / NeoForge 的版本门槛】。
+     *
+     * <p><b>需求来源</b>（QQ 群 @打游戏的阿坤）：
+     * 「调整一下那个加载器的显示范围」「比如 Fabric 只在 1.14+ 显示，
+     * NeoForge 只在 1.20.1+ 显示」「反正就像上次 Legacy Fabric 那种」。
+     *
+     * <p><b>旧行为</b>：这两行在「安装游戏」里**永远显示**，
+     * 选 1.7.3 也照样能点 Fabric，选 1.12.2 也照样能点 NeoForge，
+     * 点进去拉到的列表是空的（或选了装不上）—— 和 1.5.7 之前的 Legacy Fabric 同一个病。
+     *
+     * <p><b>下限的依据</b>（不是猜的）：
+     * <ul>
+     *   <li>Fabric：{@code https://meta.fabricmc.net/v2/versions/game} 实测
+     *       <b>最早稳定版就是 1.14</b>（1.14 / 1.14.1 / 1.14.2 / 1.14.3 / 1.14.4 …），
+     *       更早的版本（1.13.2 及以下）走 Legacy Fabric 那条线。</li>
+     *   <li>NeoForge：1.20.1 是它 fork 出来后的首个目标版本，1.20 及以下没有。</li>
+     * </ul>
+     *
+     * <p><b>为什么用「版本号比较」而不是写死常量表</b>：
+     * 这两个下限是<b>一条没有例外的连续区间</b>（1.14 之后所有版本 Fabric 都支持），
+     * 不像 Legacy Fabric 那样只零散支持 76 个特定版本。
+     * 用比较法以后上游出 26.4、27.0 都不用改代码；写死表则每次都要重抓。
+     *
+     * <p><b>快照/预发布怎么办</b>：{@code 24w14a} 这类快照的版本号比较没有意义
+     * （"24w14a" 和 "1.14" 没法直接比），所以：
+     * <ul>
+     *   <li>发布版（{@code 1.x} / {@code 26.x} 这种纯数字点分）→ 走数值比较；</li>
+     *   <li>快照/预发布/特殊名 → <b>默认放行</b>（宁可多显示一行，也不误藏掉能用的），
+     *       真要装的时候上游接口自己会拒。</li>
+     * </ul>
+     *
+     * <p>必须和 {@link #applyLegacyFabricExclusion()} 一样放在 {@code init()} 最末尾：
+     * 上面那几段是「层层覆盖式」的 setVisibility，写在中间会被后面的分支重新点亮。
+     */
+    private void applyLoaderVersionGate() {
+        try {
+            final String mc = (this.version == null || this.version.id == null)
+                    ? "" : this.version.id.trim();
+
+            // ---- Fabric：1.14 及以上 ----
+            final boolean fabricOk = isAtLeast(mc, 1, 14);
+            if (this.fabricRow != null) {
+                this.fabricRow.setVisibility(fabricOk ? View.VISIBLE : View.GONE);
+            }
+            if (!fabricOk) {
+                // 清掉之前在这个不支持版本上选过的 Fabric（否则会带着不可能的加载器往下走）
+                this.fabricVersion = null;
+                if (this.fabricVersionText != null) {
+                    this.fabricVersionText.setText(
+                            this.context.getString(R.string.install_game_ui_none));
+                }
+                if (this.deleteFabricVersion != null) {
+                    this.deleteFabricVersion.setVisibility(View.GONE);
+                }
+            }
+
+            // ---- NeoForge：1.20.1 及以上 ----
+            final boolean neoOk = isAtLeast(mc, 1, 20, 1);
+            if (this.neoForgeRow != null) {
+                this.neoForgeRow.setVisibility(neoOk ? View.VISIBLE : View.GONE);
+            }
+            if (!neoOk) {
+                this.neoForgeVersion = null;
+                if (this.neoForgeVersionText != null) {
+                    this.neoForgeVersionText.setText(
+                            this.context.getString(R.string.install_game_ui_none));
+                }
+                if (this.deleteNeoForgeVersion != null) {
+                    this.deleteNeoForgeVersion.setVisibility(View.GONE);
+                }
+            }
+        } catch (Throwable ignored) {
+        }
+    }
+
+    /**
+     * 版本号是否 ≥ 给定下限（用于 {@link #applyLoaderVersionGate()}）。
+     *
+     * <p>只认「纯数字点分」的发布版（{@code 1.14} / {@code 1.20.1} / {@code 26.3}）。
+     *
+     * <p>★★★ 2026-11-19 修正：**远古版（b1.x / a1.x / c0.x / in- / inf-）一律返回 false**。
+     *
+     * <p>之前这里写的是 {@code return true}（放行），导致 <b>b1.7.3 上 Fabric 行照样显示</b> ——
+     * 而 Fabric 官方根本不支持 b1.7.3（{@code meta.fabricmc.net} 最早稳定版就是 1.14）。
+     * 玩家点了 Fabric 那一行，拉到的列表是空的。
+     *
+     * <p>远古版本该怎么装加载器（已实现的路径，别混）：
+     * <ul>
+     *   <li><b>b1.7.3</b> → {@code Babric}（{@link com.qcl.launcher.launcher.download.babric.BabricInstallTask}）
+     *       或 {@code ModLoader}（b1.7.3 用 ModloaderFix 版）；两者都支持。</li>
+     *   <li><b>b1.8.1 / b1.7.2 / b1.5_01 / 更早 Beta</b> → {@code ModLoader}。</li>
+     *   <li><b>Alpha（a1.2.x / 1.1）</b> → {@code ModLoader}（表里有，见
+     *       {@code ModLoaderVersions} 的 Gitee 镜像条目）。</li>
+     *   <li><b>1.3 ~ 1.13.2</b> → {@code Legacy Fabric}（不是 Fabric，那一行自己判）。</li>
+     * </ul>
+     *
+     * <p>其余带字母的（快照 {@code 24w14a}、预发布 {@code 1.21.5-pre2}）仍然放行：
+     * 新版本的快照多数确实有 Fabric，而真有例外时上游接口自己会拒。
+     *
+     * @param mc      当前选中的 MC 版本 id
+     * @param minimum 下限主版本号、次版本号、可选的修订号
+     */
+    private static boolean isAtLeast(String mc, int... minimum) {
+        if (mc == null || mc.isEmpty() || minimum == null || minimum.length == 0) {
+            return false;
+        }
+        // 远古版：没有 Fabric/NeoForge，一律不显示（走 ModLoader / Babric / Legacy Fabric）
+        if (mc.charAt(0) == 'b' || mc.charAt(0) == 'a' || mc.charAt(0) == 'c'
+                || mc.startsWith("in-") || mc.startsWith("inf-")
+                || mc.contains("_") && mc.contains(".") && !Character.isDigit(mc.charAt(0))) {
+            return false;
+        }
+        // 只接受纯数字点分
+        final String[] parts = mc.split("\\.");
+        final int[] parsed = new int[Math.max(parts.length, minimum.length)];
+        try {
+            for (int i = 0; i < parts.length && i < parsed.length; i++) {
+                final String p = parts[i];
+                if (p.isEmpty()) {
+                    return true;
+                }
+                for (int k = 0; k < p.length(); k++) {
+                    if (!Character.isDigit(p.charAt(k))) {
+                        return true; // 含字母（26w14a 之类混进来的）→ 放行
+                    }
+                }
+                parsed[i] = Integer.parseInt(p);
+            }
+        } catch (Throwable ignored) {
+            return true;
+        }
+        for (int i = 0; i < minimum.length; i++) {
+            final int have = i < parsed.length ? parsed[i] : 0;
+            if (have > minimum[i]) {
+                return true;
+            }
+            if (have < minimum[i]) {
+                return false;
+            }
+        }
+        return true; // 完全相等也算达到
     }
 
     /**

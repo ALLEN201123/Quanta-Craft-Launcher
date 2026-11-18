@@ -114,9 +114,15 @@ public final class ModLoaderVersions {
      * ★ 它是 .jar 文件，但 jar 本身就是 zip，解压逻辑照旧能用。
      * ★ 这个资产没有官方提供的 sha256（GitHub Release 没带），所以不做校验；
      *   地址是官方仓库的 HTTPS 直链。
+     *
+     * ★★★★★ 2026-11-18（1.6.1）：**地址从 `raw/master` 改成 `raw/main` 并重新上传**。
+     *   旧地址 `raw/master/modloader/...jar` 实测 404（仓库 master 分支上没有
+     *   `modloader/` 目录，见下方 Alpha 那段的说明）。本轮实测两个 GitHub 源
+     *   返回同一份文件、sha256 = `725591f1e27624f210206e057f9a38b85f28b955bb7ff25bf2ee2449994f1e8c`
+     *   （与 putCustom 里登记的一致），已重新传到 Gitee `main` 并验证 raw 直链 200 + sha 一致。
      */
     private static final String B173_FIX_URL =
-            "https://gitee.com/allne201123/qcl-repo/raw/master/modloader/ModLoader.Fix.b1.7.3-1.0.0.jar";
+            "https://gitee.com/allne201123/qcl-repo/raw/main/modloader/ModLoader.Fix.b1.7.3-1.0.0.jar";
 
     /**
      * ★★★ MCArchive 权威清单（https://mcarchive.net/mods/modloader，2026-09-22 抓取）：
@@ -170,18 +176,33 @@ public final class ModLoaderVersions {
 
         // ---- Alpha / 早期：MCArchive 原文件是 .rar（启动器解不了），
         //      已用 7-Zip 解开后重打成 .zip 传到 Gitee 镜像（国内直连）----
-        putCustom("a1.2.6", "ModLoader-a1.2.6.zip", "6a7a1a7baff97e6011c789b8e9caa2c55560b6cf4fa9a717cedac31ead59a4e0",
-                "https://gitee.com/allne201123/qcl-repo/raw/master/modloader/ModLoader-a1.2.6.zip");
-        putCustom("a1.2.3_04", "ModLoader-a1.2.3_04.zip", "3842baa52a691d1b34aa1aa34d5d1a88675f940827cecef968b8d97979beb635",
-                "https://gitee.com/allne201123/qcl-repo/raw/master/modloader/ModLoader-a1.2.3_04.zip");
-        putCustom("a1.2.2", "ModLoader-a1.2.2.zip", "a0292bda7c3554b35f244a51277a4bfd7985414e974814b37ac41a355d960147",
-                "https://gitee.com/allne201123/qcl-repo/raw/master/modloader/ModLoader-a1.2.2.zip");
-        putCustom("a1.2.1_01", "ModLoader-a1.2.1_01.zip", "52b2683776cd516f3d9194727450ce4f026c31d58cbf1c42341c32b4b8fb4cfa",
-                "https://gitee.com/allne201123/qcl-repo/raw/master/modloader/ModLoader-a1.2.1_01.zip");
-        putCustom("a1.2.0_02", "ModLoader-a1.2.0_02.zip", "3ae688492df3564e4d0aa3bc2140d1991456c254c68be6d62f5f6182d9882a71",
-                "https://gitee.com/allne201123/qcl-repo/raw/master/modloader/ModLoader-a1.2.0_02.zip");
-        putCustom("1.1", "ModLoader-1.1.zip", "eeafb39390bb9da56a4ed108d82ab2e96344b2aac68668096c9a83e8f1147e0e",
-                "https://gitee.com/allne201123/qcl-repo/raw/master/modloader/ModLoader-1.1.zip");
+        //
+        // ★★★★★ 2026-11-18（1.6.1）**镜像全部重做**：
+        //   1.5.x 时期这批链接指向 `raw/master/modloader/*`，但 **master 分支上
+        //   `modloader/` 目录整个不见了**（2026-11-05 记录 + 2026-11-18 实测全部 404，
+        //   12 个分支逐个查过都没有该目录）。表现为：界面能选 Alpha 版 ModLoader，
+        //   点安装必失败。
+        //
+        //   本轮重新做了一遍完整链路（2026-11-18）：
+        //     MCArchive 下载（带 sha256 校验）→ 7-Zip 解 rar → 重打 zip
+        //     → 算新 sha256 → 上传 Gitee `main` 分支 modloader/ → raw 直链实测 200 + sha 一致
+        //
+        //   ⚠️ **分支是 `main` 不是 `master`** —— 这个仓库的默认分支早已改成 1.5.4，
+        //      但内容最全的是 `main`；写 `master` 会静默 404。
+        //   ⚠️ **sha256 是「重打包后的 zip」的**，和 MCArchive 原 rar 的 sha 不同，
+        //      所以这里每个值都必须和上传的文件一一对应，改地址不改 sha 会导致校验失败。
+        putCustom("a1.2.6", "ModLoader-a1.2.6.zip", "399262b37970d8a74291f3574f117ebface29da1d1566774d874a35df224675a",
+                "https://gitee.com/allne201123/qcl-repo/raw/main/modloader/ModLoader-a1.2.6.zip");
+        putCustom("a1.2.3_04", "ModLoader-a1.2.3_04.zip", "5c44c13470829c304a84823af4547362065f5252c070510eea2e5f4580ac09b2",
+                "https://gitee.com/allne201123/qcl-repo/raw/main/modloader/ModLoader-a1.2.3_04.zip");
+        putCustom("a1.2.2", "ModLoader-a1.2.2.zip", "15169ace06fc9b05ed0e71f5378b36662f6b02e4b27f7a5ff25b2d16ae210cfe",
+                "https://gitee.com/allne201123/qcl-repo/raw/main/modloader/ModLoader-a1.2.2.zip");
+        putCustom("a1.2.1_01", "ModLoader-a1.2.1_01.zip", "eb2a93af9539399376155598cb8cfd3bf7064ccc05c08310cdb8e3413106edb9",
+                "https://gitee.com/allne201123/qcl-repo/raw/main/modloader/ModLoader-a1.2.1_01.zip");
+        putCustom("a1.2.0_02", "ModLoader-a1.2.0_02.zip", "b19861bc65d288c5edb9101e0cff6a317d2a94f39a6f5b57a1732342b380937e",
+                "https://gitee.com/allne201123/qcl-repo/raw/main/modloader/ModLoader-a1.2.0_02.zip");
+        putCustom("1.1", "ModLoader-1.1.zip", "b346323a784b35ffe91038ac75546a9a8c4698bdd2a2f9a4b1433991d816859c",
+                "https://gitee.com/allne201123/qcl-repo/raw/main/modloader/ModLoader-1.1.zip");
 
     }
 

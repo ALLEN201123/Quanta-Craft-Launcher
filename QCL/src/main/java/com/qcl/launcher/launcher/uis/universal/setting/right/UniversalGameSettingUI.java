@@ -130,6 +130,17 @@ SeekBar.OnSeekBarChangeListener {
     private TextView currentControlPattern;
     private ControllerManagerDialog controllerManagerDialog;
     private SwitchCompat checkTouchInjector;
+    /**
+     * ★★★★★ 2026-11-19（1.6.1）**Wiki 语言选择器**。
+     *
+     * <p>用户需求原话：「你保留的英文入口加在设置里面」——
+     * 不要往版本长按菜单塞第 11 项（那已经 10 项了），放到设置页。
+     *
+     * <p>只影响「点版本列表 / 下载页的地球图标」跳哪个 Wiki 站，
+     * 与游戏语言、界面语言都无关。存在
+     * {@link com.qcl.launcher.launcher.setting.launcher.LauncherSetting#wikiLanguage}。
+     */
+    private android.widget.Spinner wikiLanguageSpinner;
 
     public UniversalGameSettingUI(Context context, MainActivity activity) {
         super(context, activity);
@@ -147,6 +158,7 @@ SeekBar.OnSeekBarChangeListener {
         this.showJava = (ImageView)this.activity.findViewById(R.id.show_java);
         this.javaSetting = (LinearLayout)this.activity.findViewById(R.id.java_setting);
         this.buildRuntimeBitSelector();
+        this.buildWikiLanguageSelector();
         this.showGameDirSetting = (LinearLayout)this.activity.findViewById(R.id.show_game_directory_selector);
         this.gameDirText = (TextView)this.activity.findViewById(R.id.game_directory_text);
         this.showGameDir = (ImageView)this.activity.findViewById(R.id.show_game_dir);
@@ -391,6 +403,72 @@ SeekBar.OnSeekBarChangeListener {
     public void refresh() {
         // ★ 1.5.0：原来这里只有一句 isolateAlertLayout.setVisibility(8)；
         //   警告块整体移除后该控件已不存在，此方法不再有任何需要刷新的内容。
+    }
+
+    /**
+     * ★★★★★ 2026-11-19（1.6.1）**Wiki 语言选择器**。
+     *
+     * <p><b>用户需求原话</b>：「你保留的英文入口加在设置里面」——
+     * 不要往版本长按菜单加第 11 项（那已经 10 项），务必放设置页。
+     *
+     * <p>两项：
+     * <ul>
+     *   <li>{@code 0} 中文（{@code zh.minecraft.wiki}）—— 默认</li>
+     *   <li>{@code 1} 英文（{@code minecraft.wiki}）</li>
+     * </ul>
+     *
+     * <p>只影响版本列表 / 下载页那个地球图标跳哪个站；
+     * {@link com.qcl.launcher.utils.game.WikiUtils#openWiki} 读的就是这个值。
+     *
+     * <p>★ 照 {@link #buildRuntimeBitSelector()} 的写法：整个方法 try/catch 兜住，
+     * 控件取不到就直接返回 —— 老布局/改版后不会因为缺一个 Spinner 就崩。
+     */
+    private void buildWikiLanguageSelector() {
+        try {
+            this.wikiLanguageSpinner =
+                    (android.widget.Spinner) this.activity.findViewById(R.id.wiki_language_spinner);
+            if (this.wikiLanguageSpinner == null) {
+                return;
+            }
+            final java.util.ArrayList<String> items = new java.util.ArrayList<String>();
+            items.add(this.context.getString(R.string.wiki_lang_chinese));
+            items.add(this.context.getString(R.string.wiki_lang_english));
+            this.wikiLanguageSpinner.setAdapter(new android.widget.ArrayAdapter<String>(
+                    this.context, R.layout.item_spinner, items));
+            int saved = 0;
+            if (this.activity.launcherSetting != null) {
+                saved = this.activity.launcherSetting.wikiLanguage;
+            }
+            if (saved != 1) {
+                saved = 0; // 越界值一律当中文
+            }
+            this.wikiLanguageSpinner.setSelection(saved);
+            this.wikiLanguageSpinner.setOnItemSelectedListener(
+                    new android.widget.AdapterView.OnItemSelectedListener() {
+                        @Override
+                        public void onItemSelected(android.widget.AdapterView<?> parent,
+                                                   View view, int position, long id) {
+                            if (UniversalGameSettingUI.this.activity.launcherSetting == null) {
+                                return;
+                            }
+                            if (UniversalGameSettingUI.this.activity.launcherSetting.wikiLanguage
+                                    == position) {
+                                return; // 没变就别写盘
+                            }
+                            UniversalGameSettingUI.this.activity.launcherSetting.wikiLanguage =
+                                    (position == 1) ? 1 : 0;
+                            GsonUtils.saveLauncherSetting(
+                                    UniversalGameSettingUI.this.activity.launcherSetting,
+                                    AppManifest.SETTING_DIR + "/launcher_setting.json");
+                        }
+
+                        @Override
+                        public void onNothingSelected(android.widget.AdapterView<?> parent) {
+                        }
+                    });
+        } catch (Throwable t) {
+            t.printStackTrace();
+        }
     }
 
     private void buildRuntimeBitSelector() {

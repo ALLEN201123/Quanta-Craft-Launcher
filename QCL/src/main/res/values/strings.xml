@@ -747,6 +747,9 @@
     <string name="universal_setting_ui_cache_custom">Custom</string>
     <string name="universal_setting_ui_lang">Language</string>
     <string name="universal_setting_ui_lang_sys">Use System Language</string>
+    <string name="universal_setting_ui_wiki_lang">Wiki language</string>
+    <string name="wiki_lang_chinese">Chinese (zh.minecraft.wiki)</string>
+    <string name="wiki_lang_english">English (minecraft.wiki)</string>
     <string name="universal_setting_ui_export_log">Export launcher logs</string>
     <string name="universal_setting_ui_log">Debug</string>
     <string name="dialog_update_title">Launcher Update Available</string>

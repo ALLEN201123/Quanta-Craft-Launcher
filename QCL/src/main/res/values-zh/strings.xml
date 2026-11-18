@@ -761,6 +761,9 @@
     <string name="universal_setting_ui_lang">语言</string>
     <string name="universal_setting_ui_lang_sys">跟随系统语言</string>
     <string name="universal_setting_ui_log">调试</string>
+    <string name="universal_setting_ui_wiki_lang">Wiki 语言</string>
+    <string name="wiki_lang_chinese">中文（zh.minecraft.wiki）</string>
+    <string name="wiki_lang_english">English（minecraft.wiki）</string>
     <string name="universal_setting_ui_export_log">导出启动器日志</string>
 
     <string name="dialog_update_title">检测到启动器有更新</string>

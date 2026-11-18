@@ -32,8 +32,25 @@ import java.util.List;
 
 import com.qcl.launcher.R;
 public class UpdateChecker {
-    public static final String UPDATE_URL = "https://raw.githubusercontent.com/ALLEN201123/Quanta-Craft-Launcher/main/launcher_version.json";
-    public static final String UPDATE_URL_CDN = "https://cdn.jsdelivr.net/gh/ALLEN201123/Quanta-Craft-Launcher@main/launcher_version.json";
+    /**
+     * ★★★★★ 1.6.0：**更新检查改用独立小仓库 `qcl-version`**。
+     *
+     * 为什么必须换：原先把 json 放在源码仓库 `Quanta-Craft-Launcher` 里，
+     * 而该仓库有 **633 MB**（jar / so / aar 都在里面）。
+     * jsDelivr 对它返回 403：
+     *     {"status":403,"message":"Package size exceeded the configured limit of 50 MB."}
+     * 也就是说 jsDelivr **拒绝为这个仓库服务**，那几个 jsDelivr 源只会吐历史残留缓存，
+     * purge 也刷不动（它没有新内容可刷）。表现为：raw 和 gitee 都已是新版，
+     * 但 cdn / fastly / gcore / jsdmirror 一直停在旧版本号 —— 玩家收不到更新提示。
+     *
+     * 修法：新建 `ALLEN201123/qcl-version`（仓库里**只放 launcher_version.json**，
+     * 大小几十 KB，远低于 jsDelivr 的 50 MB 上限）。实测 5 个 jsDelivr 节点
+     * （cdn / fastly / gcore / jsdmirror / b-cdn）**全部能读到最新版本号**。
+     *
+     * GitHub raw 与 Gitee 镜像保持不动（它们本来就能读大仓库）。
+     */
+    public static final String UPDATE_URL = "https://raw.githubusercontent.com/ALLEN201123/qcl-version/main/launcher_version.json";
+    public static final String UPDATE_URL_CDN = "https://cdn.jsdelivr.net/gh/ALLEN201123/qcl-version@main/launcher_version.json";
     /**
      * ★★★ 1.2.2：国内镜像（Gitee），照 FCL 的做法
      * （FCL 用的是 https://gitee.com/fcl-team/FCL-Repo/raw/main/res/version_map.json）。
@@ -54,9 +71,9 @@ public class UpdateChecker {
      *   这就是「手机上收不到更新推送」的真凶（旧代码中文环境先读 Gitee，
      *   读到旧版本号就判定「没有新版」，后面更快的源根本没机会看）。
      */
-    public static final String UPDATE_URL_FASTLY = "https://fastly.jsdelivr.net/gh/ALLEN201123/Quanta-Craft-Launcher@main/launcher_version.json";
-    public static final String UPDATE_URL_GCORE = "https://gcore.jsdelivr.net/gh/ALLEN201123/Quanta-Craft-Launcher@main/launcher_version.json";
-    public static final String UPDATE_URL_PROXY = "https://ghproxy.net/https://raw.githubusercontent.com/ALLEN201123/Quanta-Craft-Launcher/main/launcher_version.json";
+    public static final String UPDATE_URL_FASTLY = "https://fastly.jsdelivr.net/gh/ALLEN201123/qcl-version@main/launcher_version.json";
+    public static final String UPDATE_URL_GCORE = "https://gcore.jsdelivr.net/gh/ALLEN201123/qcl-version@main/launcher_version.json";
+    public static final String UPDATE_URL_PROXY = "https://ghproxy.net/https://raw.githubusercontent.com/ALLEN201123/qcl-version/main/launcher_version.json";
 
     /**
      * ★★★ 1.2.8：再加两家国内可达的 jsDelivr 镜像。
@@ -65,8 +82,13 @@ public class UpdateChecker {
      * 1.2.6 只列了部分源，玩家如果恰好只能连到那几个「还没刷新」的源，
      * 取到的最大值就还是旧的 → 依然收不到提示。多列几个源，命中新版本号的几率才够。
      */
-    public static final String UPDATE_URL_JSDMIRROR = "https://cdn.jsdmirror.com/gh/ALLEN201123/Quanta-Craft-Launcher@main/launcher_version.json";
-    public static final String UPDATE_URL_BCDN = "https://jsdelivr.b-cdn.net/gh/ALLEN201123/Quanta-Craft-Launcher@main/launcher_version.json";
+    public static final String UPDATE_URL_JSDMIRROR = "https://cdn.jsdmirror.com/gh/ALLEN201123/qcl-version@main/launcher_version.json";
+    public static final String UPDATE_URL_BCDN = "https://jsdelivr.b-cdn.net/gh/ALLEN201123/qcl-version@main/launcher_version.json";
+    /**
+     * 兜底：源码仓库里那份（大仓库、jsDelivr 不服务，但 raw 可读）。
+     * 保留它只是为了小仓库万一不可用时还有一条路。
+     */
+    public static final String UPDATE_URL_LEGACY = "https://raw.githubusercontent.com/ALLEN201123/Quanta-Craft-Launcher/main/launcher_version.json";
     private Context context;
     private MainActivity activity;
     private boolean isChecking;
@@ -128,6 +150,8 @@ public class UpdateChecker {
                             urls.add(UPDATE_URL);
                             urls.add(UPDATE_URL_CDN);
                             urls.add(UPDATE_URL_PROXY);
+                            // 最后兜底：源码仓库 raw（大仓库，jsDelivr 不服务但 raw 可读）
+                            urls.add(UPDATE_URL_LEGACY);
                         } else {
                             urls.add(UPDATE_URL);
                             urls.add(UPDATE_URL_CDN);
@@ -137,6 +161,7 @@ public class UpdateChecker {
                             urls.add(UPDATE_URL_BCDN);
                             urls.add(UPDATE_URL_PROXY);
                             urls.add(UPDATE_URL_CN);
+                            urls.add(UPDATE_URL_LEGACY);
                         }
 
                         // ★★★ 1.2.6 关键修法：**每个源都读一遍，取 versionCode 最大的那份**。

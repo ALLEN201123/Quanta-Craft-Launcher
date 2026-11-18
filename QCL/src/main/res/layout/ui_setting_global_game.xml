@@ -404,6 +404,45 @@
                     android:layout_height="1px"
                     android:background="@color/colorDarkGray"/>
 
+                <!-- ★★★★★ 2026-11-19（1.6.1）**Wiki 语言**。
+                     用户要求原话：「你保留的英文入口加在设置里面」——
+                     不要往版本长按菜单加第 11 项（那已经 10 项了）。
+                     这一项只决定「点版本列表/下载页的地球图标」跳哪个 Wiki：
+                       中文 → zh.minecraft.wiki
+                       英文 → minecraft.wiki
+                     与界面语言无关（本项目没有界面语言切换项）。 -->
+                <LinearLayout
+                    android:paddingTop="12dp"
+                    android:paddingBottom="12dp"
+                    android:paddingLeft="15dp"
+                    android:paddingRight="15dp"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:singleLine="true"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/universal_setting_ui_wiki_lang"
+                        android:textSize="@dimen/text_size_middle"
+                        android:textColor="@color/colorPureBlack"
+                        android:layout_gravity="center"/>
+
+                    <Spinner
+                        android:layout_width="match_parent"
+                        android:layout_height="32dp"
+                        android:id="@+id/wiki_language_spinner"
+                        android:layout_gravity="center"
+                        android:layout_marginStart="200dp"/>
+
+                </LinearLayout>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1px"
+                    android:background="@color/colorDarkGray"/>
+
                 <TextView
                     android:singleLine="true"
                     android:layout_width="wrap_content"

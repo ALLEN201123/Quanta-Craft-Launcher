@@ -110,6 +110,25 @@ public class LauncherSetting {
      */
     public int lastLaunchPromptAt;
 
+    /**
+     * ★★★★★ 2026-11-19（1.6.1）**Wiki 语言**：点版本列表 / 下载页的地球图标时，
+     * 跳中文站还是英文站。
+     *
+     * <p><b>用户需求原话</b>：「Wiki下载版本那里需要改为跳转中文Wiki，原先的那个下载版本，
+     * 右边的地球按钮是跳转英文」「你保留的英文入口加在设置里面」——
+     * 即：**默认中文**，英文入口放进设置页，不要往版本长按菜单加第 11 项。
+     *
+     * <p>取值：
+     * <ul>
+     *   <li>{@code 0} = 中文（{@code zh.minecraft.wiki}）—— **默认**</li>
+     *   <li>{@code 1} = 英文（{@code minecraft.wiki}）</li>
+     * </ul>
+     *
+     * <p>★ Gson 走 Unsafe 分配 → 字段初始值不执行，老玩家 json 里没这个键
+     * ⇒ 读出来就是 {@code 0} = 中文，恰好是用户要的默认行为，不需要额外 chosen 标记。
+     */
+    public int wikiLanguage = 0;
+
     public LauncherSetting(String str, SourceSetting sourceSetting, int i, int i2, boolean z, boolean z2, boolean z3, boolean z4, boolean z5, String str2, String str3, BackgroundSetting backgroundSetting, String str4) {
         this.gameFileDirectory = str;
         this.downloadUrlSource = sourceSetting;
