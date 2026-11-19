@@ -1,6 +1,43 @@
 {
   "announcements": [
     {
+      "id": 112,
+      "significant": true,
+      "outdated": false,
+      "minVersion": 0,
+      "maxVersion": 2147483647,
+      "specificLang": [],
+      "title": [
+        {
+          "lang": "zh_CN",
+          "text": "QCL 1.6.2：所有加载器的显示范围都按版本收窄（Cleanroom/LiteLoader/ModLoader/Babric/Quilt 全补齐）"
+        },
+        {
+          "lang": "zh_TW",
+          "text": "QCL 1.6.2：所有載入器的顯示範圍都按版本收窄（Cleanroom/LiteLoader/ModLoader/Babric/Quilt 全補齊）"
+        },
+        {
+          "lang": "en_US",
+          "text": "QCL 1.6.2: every loader gated by the versions it actually supports"
+        }
+      ],
+      "date": "2026-11-19",
+      "content": [
+        {
+          "lang": "zh_CN",
+          "text": "【1.6.2：所有加载器的显示范围都按版本收窄了】\n\n上一版只处理了 Fabric 和 NeoForge，这次把剩下的全部补齐。以前不管选什么版本，\n安装页里所有加载器都一股脑展示出来 —— 选 1.20.1 也能点 ModLoader，选 b1.7.3 也能点 Fabric，\n点进去拉到的列表是空的，白点一次。\n\n现在每个加载器都只在它真正支持的版本区间里出现：\n\n· Fabric / Fabric API —— 1.14 及以上（Fabric 官方最早就是 1.14）\n· Quilt / Quilt API —— 1.14 及以上（上游实际最早 1.14.4，这里放宽到 1.14）\n· NeoForge —— 1.20.1 及以上\n· Cleanroom —— 只有 1.12.2（它是 1.12.2 的 Forge 分支）\n· LiteLoader —— 1.12.2 及以下（1.13 起从未支持）\n· ModLoader —— 1.6.2 及以下，含 Beta / Alpha / Infdev 等远古版\n· Babric —— 只有 Beta 1.7.3（上游 meta 里就这一个）\n· Forge / OptiFine / Legacy Fabric —— 不设门槛，各自按版本自己判断\n\n如果之前在某版本上选过某个加载器，之后又把游戏版本切到不支持的范围，\n那个选择会被自动清掉，不会带着一个装不上的加载器继续往下走。\n\n万一某个版本你确实需要某个加载器但它被藏起来了，可以在 QQ 群里报，带上版本号和加载器名。\n\n—— 遇到问题请到 QQ 群反馈，记得带上版本号、手机型号、Android 版本和日志。"
+        },
+        {
+          "lang": "zh_TW",
+          "text": "【1.6.2：所有載入器的顯示範圍都按版本收窄了】\n\n上一版只處理了 Fabric 和 NeoForge，這次把剩下的全部補齊。以前不管選什麼版本，\n安裝頁裡所有載入器都一股腦展示出來 —— 選 1.20.1 也能點 ModLoader，選 b1.7.3 也能點 Fabric，\n點進去拉到的是空列表，白點一次。\n\n現在每個載入器都只在它真正支援的版本區間裡出現：\n\n· Fabric / Fabric API —— 1.14 及以上（Fabric 官方最早就是 1.14）\n· Quilt / Quilt API —— 1.14 及以上（上游實際最早 1.14.4，這裡放寬到 1.14）\n· NeoForge —— 1.20.1 及以上\n· Cleanroom —— 只有 1.12.2（它是 1.12.2 的 Forge 分支）\n· LiteLoader —— 1.12.2 及以下（1.13 起從未支援）\n· ModLoader —— 1.6.2 及以下，含 Beta / Alpha / Infdev 等遠古版\n· Babric —— 只有 Beta 1.7.3（上游 meta 裡就這一個）\n· Forge / OptiFine / Legacy Fabric —— 不設門檻，各自按版本自己判斷\n\n如果之前在某版本上選過某個載入器，之後又把遊戲版本切到不支援的範圍，\n那個選擇會被自動清掉，不會帶著一個裝不上的載入器繼續往下走。\n\n萬一某個版本你確實需要某個載入器但它被藏起來了，可以在 QQ 群裡報，帶上版本號和載入器名。\n\n—— 遇到問題請到 QQ 群回饋，記得帶上版本號、手機型號、Android 版本和日誌。"
+        },
+        {
+          "lang": "en_US",
+          "text": "[1.6.2: every loader now shows only on versions it actually supports]\n\nThe previous release gated only Fabric and NeoForge. This one covers the rest. Before this,\npicking any version listed every loader at once - on 1.20.1 you could still tap ModLoader, on\nb1.7.3 you could still tap Fabric, and both led to an empty list.\n\nNow each loader appears only inside the range it genuinely supports:\n\n- Fabric / Fabric API - 1.14 and newer (1.14 is Fabric's earliest supported release)\n- Quilt / Quilt API - 1.14 and newer (upstream actually starts at 1.14.4; widened to 1.14 here)\n- NeoForge - 1.20.1 and newer\n- Cleanroom - only 1.12.2 (it is a Forge fork of 1.12.2)\n- LiteLoader - 1.12.2 and older (never supported past 1.13)\n- ModLoader - 1.6.2 and older, including Beta / Alpha / Infdev\n- Babric - only Beta 1.7.3 (the upstream meta lists just that one)\n- Forge / OptiFine / Legacy Fabric - not gated; each decides for itself\n\nIf you had a loader selected and then switched to a version that cannot support it, the selection\nis cleared so you never carry an impossible loader forward.\n\nIf a loader you need is hidden on a version where it should work, report it in the QQ group with\nthe version and the loader name.\n\n-- Report issues in the QQ group and include the version, phone model, Android version and logs."
+        }
+      ]
+    },
+    {
       "id": 111,
       "significant": true,
       "outdated": false,

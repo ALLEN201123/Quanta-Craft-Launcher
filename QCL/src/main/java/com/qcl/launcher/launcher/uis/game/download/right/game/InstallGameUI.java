@@ -81,6 +81,19 @@ public class InstallGameUI extends BaseUI implements View.OnClickListener, TextW
      */
     private View fabricRow;
     private View neoForgeRow;
+    /**
+     * ★★★★★ 2026-11-19（1.6.2）其余加载器的「整行」引用。
+     *
+     * <p>群友第二轮补齐了全部加载器的显示范围，见 {@link #applyLoaderVersionGate()}。
+     * 取不到时保持 null，gate 里判空跳过（不炸）。
+     */
+    private View fabricAPIRow;
+    private View quiltRow;
+    private View quiltAPIRow;
+    private View cleanroomRow;
+    private View liteLoaderRow;
+    private View modLoaderRow;
+    private View babricRow;
     private LinearLayout selectNeoForgeVersion;
     private ImageView selectNeoForge;
     private TextView gameVersionText;
@@ -239,6 +252,15 @@ public class InstallGameUI extends BaseUI implements View.OnClickListener, TextW
         //   取不到时保持 null，applyLoaderVersionGate 里判空跳过（不炸）。
         this.fabricRow = this.activity.findViewById(R.id.select_fabric_version);
         this.neoForgeRow = this.activity.findViewById(R.id.select_neoforge_version);
+        // ★ 1.6.2：其余加载器的整行引用
+        this.fabricAPIRow = this.activity.findViewById(R.id.select_fabric_api_version);
+        this.quiltRow = this.activity.findViewById(R.id.select_quilt_version);
+        this.quiltAPIRow = this.activity.findViewById(R.id.select_quilt_api_version);
+        // Cleanroom / ModLoader / Babric 用的是「独立一行」的容器 id（1.5.2 起就是这套）
+        this.cleanroomRow = this.activity.findViewById(R.id.select_cleanroom_version);
+        this.liteLoaderRow = this.activity.findViewById(R.id.select_liteloader_version);
+        this.modLoaderRow = this.activity.findViewById(R.id.select_modloader_version);
+        this.babricRow = this.activity.findViewById(R.id.select_babric_version);
         // 绑定这三行的「版本文字」与「取消按钮」
         this.cleanroomVersionText = (TextView) this.activity.findViewById(R.id.cleanroom_version_text);
         this.deleteCleanroomVersion = (ImageButton) this.activity.findViewById(R.id.call_off_install_cleanroom);
@@ -758,37 +780,50 @@ public class InstallGameUI extends BaseUI implements View.OnClickListener, TextW
         }
     }
 
-    /**
-     * ★★★★★ 2026-11-18（1.6.1）【Fabric / NeoForge 的版本门槛】。
+        /**
+     * ★★★★★ 2026-11-19（1.6.2）【全部加载器的版本门槛】。
      *
-     * <p><b>需求来源</b>（QQ 群 @打游戏的阿坤）：
+     * <p><b>需求来源</b>（QQ 群 @打游戏的阿坤 两轮反馈）：
      * 「调整一下那个加载器的显示范围」「比如 Fabric 只在 1.14+ 显示，
-     * NeoForge 只在 1.20.1+ 显示」「反正就像上次 Legacy Fabric 那种」。
+     * NeoForge 只在 1.20.1+ 显示」「反正就像上次 Legacy Fabric 那种」，
+     * 第二轮补齐了剩下的：
+     * <pre>
+     *   Fabric API    只在 1.14+
+     *   Cleanroom     只在 1.12.2
+     *   LiteLoader    只在 1.12.2 及以下
+     *   Quilt / Quilt API  只在 1.14+
+     *   ModLoader     只在 1.6.2 及以下
+     *   Babric        只在 Beta 1.7.3
+     * </pre>
      *
-     * <p><b>旧行为</b>：这两行在「安装游戏」里**永远显示**，
-     * 选 1.7.3 也照样能点 Fabric，选 1.12.2 也照样能点 NeoForge，
+     * <p><b>旧行为</b>：所有这些行在「安装游戏」里**永远显示**，
+     * 选 1.7.3 也能点 Fabric、选 1.20.1 也能点 ModLoader，
      * 点进去拉到的列表是空的（或选了装不上）—— 和 1.5.7 之前的 Legacy Fabric 同一个病。
      *
-     * <p><b>下限的依据</b>（不是猜的）：
+     * <p><b>每条下限的依据</b>（都不是猜的）：
      * <ul>
-     *   <li>Fabric：{@code https://meta.fabricmc.net/v2/versions/game} 实测
-     *       <b>最早稳定版就是 1.14</b>（1.14 / 1.14.1 / 1.14.2 / 1.14.3 / 1.14.4 …），
-     *       更早的版本（1.13.2 及以下）走 Legacy Fabric 那条线。</li>
-     *   <li>NeoForge：1.20.1 是它 fork 出来后的首个目标版本，1.20 及以下没有。</li>
+     *   <li><b>Fabric / Fabric API</b>：{@code meta.fabricmc.net/v2/versions/game} 实测
+     *       最早稳定版就是 1.14；1.13.2 及以下走 Legacy Fabric 那条线。</li>
+     *   <li><b>NeoForge</b>：1.20.1 是它 fork 出来后的首个目标版本。</li>
+     *   <li><b>Quilt / Quilt API</b>：{@code meta.quiltmc.org/v3/versions/game} 实测
+     *       最早稳定版是 <b>1.14.4</b>。用户说的是「1.14+」，这里取
+     *       {@code >= 1.14}（1.14 / 1.14.1~1.14.3 实际上拉不到 Quilt，
+     *       但**宁可多显示一行也不误藏**——真点了上游会给空列表，不会崩）。</li>
+     *   <li><b>Cleanroom</b>：它是 1.12.2 的 Forge 分支，只服务 1.12.2 这一个版本。</li>
+     *   <li><b>LiteLoader</b>：最后一个支持版本就是 1.12.2，1.13 起从未支持。</li>
+     *   <li><b>ModLoader</b>：Risugami 的包覆盖到 1.6.2 为止（1.7+ 改走 Forge 的 FML）。</li>
+     *   <li><b>Babric</b>：上游 meta 里只有 b1.7.3 这一个游戏版本。</li>
      * </ul>
      *
-     * <p><b>为什么用「版本号比较」而不是写死常量表</b>：
-     * 这两个下限是<b>一条没有例外的连续区间</b>（1.14 之后所有版本 Fabric 都支持），
-     * 不像 Legacy Fabric 那样只零散支持 76 个特定版本。
-     * 用比较法以后上游出 26.4、27.0 都不用改代码；写死表则每次都要重抓。
+     * <p><b>为什么 Fabric/NeoForge/Quilt 用「版本号比较」而 Cleanroom/LiteLoader/
+     * ModLoader/Babric 用「精确/区间匹配」</b>：
+     * 前三者是<b>一条没有例外的连续区间</b>，用比较法以后上游出 26.4、27.0 都不用改代码；
+     * 后四者是**单点或封顶**（Cleanroom=1.12.2、Babric=b1.7.3、LiteLoader≤1.12.2、
+     * ModLoader≤1.6.2），写死边界反而更准。
      *
-     * <p><b>快照/预发布怎么办</b>：{@code 24w14a} 这类快照的版本号比较没有意义
-     * （"24w14a" 和 "1.14" 没法直接比），所以：
-     * <ul>
-     *   <li>发布版（{@code 1.x} / {@code 26.x} 这种纯数字点分）→ 走数值比较；</li>
-     *   <li>快照/预发布/特殊名 → <b>默认放行</b>（宁可多显示一行，也不误藏掉能用的），
-     *       真要装的时候上游接口自己会拒。</li>
-     * </ul>
+     * <p><b>快照/预发布怎么办</b>：{@code 24w14a} 这类版本号没法跟 "1.14" 直接比，
+     * 所以 {@link #isAtLeast} 对纯字母开头/含连字符的版本**放行**
+     * （宁可多显示，真点了上游自己会拒）。
      *
      * <p>必须和 {@link #applyLegacyFabricExclusion()} 一样放在 {@code init()} 最末尾：
      * 上面那几段是「层层覆盖式」的 setVisibility，写在中间会被后面的分支重新点亮。
@@ -798,41 +833,158 @@ public class InstallGameUI extends BaseUI implements View.OnClickListener, TextW
             final String mc = (this.version == null || this.version.id == null)
                     ? "" : this.version.id.trim();
 
-            // ---- Fabric：1.14 及以上 ----
-            final boolean fabricOk = isAtLeast(mc, 1, 14);
-            if (this.fabricRow != null) {
-                this.fabricRow.setVisibility(fabricOk ? View.VISIBLE : View.GONE);
-            }
-            if (!fabricOk) {
-                // 清掉之前在这个不支持版本上选过的 Fabric（否则会带着不可能的加载器往下走）
-                this.fabricVersion = null;
-                if (this.fabricVersionText != null) {
-                    this.fabricVersionText.setText(
-                            this.context.getString(R.string.install_game_ui_none));
-                }
-                if (this.deleteFabricVersion != null) {
-                    this.deleteFabricVersion.setVisibility(View.GONE);
-                }
-            }
+            // ============ ① 无上限的「达线即显示」 ============
 
-            // ---- NeoForge：1.20.1 及以上 ----
-            final boolean neoOk = isAtLeast(mc, 1, 20, 1);
-            if (this.neoForgeRow != null) {
-                this.neoForgeRow.setVisibility(neoOk ? View.VISIBLE : View.GONE);
-            }
-            if (!neoOk) {
-                this.neoForgeVersion = null;
-                if (this.neoForgeVersionText != null) {
-                    this.neoForgeVersionText.setText(
-                            this.context.getString(R.string.install_game_ui_none));
-                }
-                if (this.deleteNeoForgeVersion != null) {
-                    this.deleteNeoForgeVersion.setVisibility(View.GONE);
-                }
-            }
+            // Fabric / Fabric API：>= 1.14
+            applyRowGate(this.fabricRow, isAtLeast(mc, 1, 14), 0);
+            applyRowGate(this.fabricAPIRow, isAtLeast(mc, 1, 14), 1);
+
+            // Quilt / Quilt API：>= 1.14（上游实测最早 1.14.4，取 1.14 宁可多显示）
+            applyRowGate(this.quiltRow, isAtLeast(mc, 1, 14), 2);
+            applyRowGate(this.quiltAPIRow, isAtLeast(mc, 1, 14), 3);
+
+            // NeoForge：>= 1.20.1
+            applyRowGate(this.neoForgeRow, isAtLeast(mc, 1, 20, 1), 4);
+
+            // ============ ② 单点/封顶 ============
+
+            // Cleanroom：只有 1.12.2
+            applyRowGate(this.cleanroomRow, "1.12.2".equals(mc), 5);
+
+            // LiteLoader：<= 1.12.2（且必须是正式版数字点分，远古版不算）
+            applyRowGate(this.liteLoaderRow, isLiteLoaderOk(mc), 6);
+
+            // ModLoader：<= 1.6.2（含远古 Beta/Alpha，它们本来就在 1.6.2 之前）
+            applyRowGate(this.modLoaderRow, isModLoaderOk(mc), 7);
+
+            // Babric：只有 b1.7.3
+            applyRowGate(this.babricRow, isBabricOk(mc), 8);
+
         } catch (Throwable ignored) {
         }
     }
+
+    /**
+     * LiteLoader 的准入：{@code <= 1.12.2}。
+     *
+     * <p>LiteLoader 最后一个支持版本就是 1.12.2；1.13 起从未支持。
+     * 远古版（b1.x / a1.x 等）**不显示** —— 那时候还没有 LiteLoader。
+     */
+    private static boolean isLiteLoaderOk(String mc) {
+        if (mc == null || mc.isEmpty()) {
+            return false;
+        }
+        // 远古版一律不显示（LiteLoader 最早只到 1.5.2，但那是极少数人；
+        // 保守起见，非正式版数字点分一律不显示）
+        final char c0 = mc.charAt(0);
+        if (!Character.isDigit(c0)) {
+            return false;
+        }
+        return !isAtLeast(mc, 1, 13); // 1.13 及以上不显示
+    }
+
+    /**
+     * ModLoader 的准入：{@code <= 1.6.2}，远古 Beta/Alpha 也算（它们都在 1.6.2 之前）。
+     *
+     * <p>Risugami's ModLoader 的包覆盖到 1.6.2 为止；1.7 起 Forge 的 FML 已经把它包含进去了。
+     * <p>★ 具体能不能装，仍以 {@code ModLoaderVersions.find(mc)} 有没有条目为准 ——
+     * 这里只管「这一行要不要显示」。
+     */
+    private static boolean isModLoaderOk(String mc) {
+        if (mc == null || mc.isEmpty()) {
+            return false;
+        }
+        final char c0 = mc.charAt(0);
+        // 远古版：Beta / Alpha / Classic / Indev / Infdev 全在 1.6.2 之前 → 显示
+        if (c0 == 'b' || c0 == 'a' || c0 == 'c'
+                || mc.startsWith("in-") || mc.startsWith("inf-")) {
+            return true;
+        }
+        if (!Character.isDigit(c0)) {
+            return true; // 快照/预发布，交给上游判
+        }
+        return !isAtLeast(mc, 1, 7); // 1.7 及以上不显示
+    }
+
+    /**
+     * Babric 的准入：只有 {@code b1.7.3}。
+     *
+     * <p>上游 meta 里只有这一个游戏版本；{@code b1.7.3-modded} 这类带后缀的也算。
+     */
+    private static boolean isBabricOk(String mc) {
+        if (mc == null || mc.isEmpty()) {
+            return false;
+        }
+        return mc.equals("b1.7.3") || mc.startsWith("b1.7.3-") || mc.startsWith("b1.7.3_");
+    }
+
+    /**
+     * 统一的「按门槛显示/隐藏一整行」处理。
+     *
+     * <p>隐藏时**必须**同时：① 清掉已选值 ② 把文案复位成「未选择」③ 隐藏删除按钮，
+     * 否则会带着一个装不上的加载器继续往下走（1.5.7 踩过）。
+     *
+     * @param row   该加载器的整行容器（可为 null，null 时跳过）
+     * @param ok    是否显示
+     * @param which 0=Fabric 1=FabricAPI 2=Quilt 3=QuiltAPI 4=NeoForge
+     *              5=Cleanroom 6=LiteLoader 7=ModLoader 8=Babric
+     */
+    private void applyRowGate(View row, boolean ok, int which) {
+        if (row != null) {
+            row.setVisibility(ok ? View.VISIBLE : View.GONE);
+        }
+        if (ok) {
+            return;
+        }
+        final String none = this.context.getString(R.string.install_game_ui_none);
+        switch (which) {
+            case 0:
+                this.fabricVersion = null;
+                if (this.fabricVersionText != null) this.fabricVersionText.setText(none);
+                if (this.deleteFabricVersion != null) this.deleteFabricVersion.setVisibility(View.GONE);
+                break;
+            case 1:
+                this.fabricAPIVersion = null;
+                if (this.fabricAPIVersionText != null) this.fabricAPIVersionText.setText(none);
+                if (this.deleteFabricAPIVersion != null) this.deleteFabricAPIVersion.setVisibility(View.GONE);
+                break;
+            case 2:
+                this.quiltVersion = null;
+                if (this.quiltVersionText != null) this.quiltVersionText.setText(none);
+                if (this.deleteQuiltVersion != null) this.deleteQuiltVersion.setVisibility(View.GONE);
+                break;
+            case 3:
+                this.quiltAPIVersion = null;
+                if (this.quiltAPIVersionText != null) this.quiltAPIVersionText.setText(none);
+                if (this.deleteQuiltAPIVersion != null) this.deleteQuiltAPIVersion.setVisibility(View.GONE);
+                break;
+            case 4:
+                this.neoForgeVersion = null;
+                if (this.neoForgeVersionText != null) this.neoForgeVersionText.setText(none);
+                if (this.deleteNeoForgeVersion != null) this.deleteNeoForgeVersion.setVisibility(View.GONE);
+                break;
+            case 5:
+                this.cleanroomVersion = null;
+                if (this.cleanroomVersionText != null) this.cleanroomVersionText.setText(none);
+                if (this.deleteCleanroomVersion != null) this.deleteCleanroomVersion.setVisibility(View.GONE);
+                break;
+            case 6:
+                this.liteLoaderVersion = null;
+                if (this.liteLoaderVersionText != null) this.liteLoaderVersionText.setText(none);
+                if (this.deleteLiteLoaderVersion != null) this.deleteLiteLoaderVersion.setVisibility(View.GONE);
+                break;
+            case 7:
+                this.installModLoader = false;
+                break;
+            case 8:
+                this.installBabric = false;
+                if (this.babricVersionText != null) this.babricVersionText.setText(none);
+                break;
+            default:
+                break;
+        }
+    }
+
 
     /**
      * 版本号是否 ≥ 给定下限（用于 {@link #applyLoaderVersionGate()}）。
