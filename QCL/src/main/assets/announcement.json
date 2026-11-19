@@ -1,6 +1,43 @@
 {
   "announcements": [
     {
+      "id": 113,
+      "significant": true,
+      "outdated": false,
+      "minVersion": 0,
+      "maxVersion": 2147483647,
+      "specificLang": [],
+      "title": [
+        {
+          "lang": "zh_CN",
+          "text": "QCL 1.6.3：修加载器显示范围的漏判 —— 带后缀的版本号（如 1.0.0-c2-1656）"
+        },
+        {
+          "lang": "zh_TW",
+          "text": "QCL 1.6.3：修載入器顯示範圍的漏判 —— 帶後綴的版本號（如 1.0.0-c2-1656）"
+        },
+        {
+          "lang": "en_US",
+          "text": "QCL 1.6.3: fix loader gating for suffixed version ids (e.g. 1.0.0-c2-1656)"
+        }
+      ],
+      "date": "2026-11-19",
+      "content": [
+        {
+          "lang": "zh_CN",
+          "text": "【1.6.3：修一个加载器显示范围的漏判 —— 带后缀的版本号】\n\n上一版给所有加载器加了显示范围（Fabric 只在 1.14+、Quilt 只在 1.14+ 等），\n但判断版本号时有个漏洞：像 1.0.0-c2-1656 这种「带后缀」的版本，\n程序一看到后面有字母就当成「新版本」放行了，结果 Fabric / Fabric API /\nQuilt / Quilt API 四行照旧显示，点进去又装不上。\n\n修法：先把 - 后面的后缀剥掉，只拿主干版本号去比。\n现在 1.0.0-c2-1656 会被正确识别为 1.0.0，远低于 1.14，四行全部隐藏。\n\n顺带修好的还有 1.21.5-pre2 这类预发布 —— 以前也被漏判成放行，\n现在按 1.21.5 判断，行为正确（1.21.5 >= 1.14，所以照样显示，这是对的）。\n\n感谢群友「打游戏的阿坤」的截图反馈。\n\n—— 遇到问题请到 QQ 群反馈，记得带上版本号、手机型号、Android 版本和日志。"
+        },
+        {
+          "lang": "zh_TW",
+          "text": "【1.6.3：修一個載入器顯示範圍的漏判 —— 帶後綴的版本號】\n\n上一版給所有載入器加了顯示範圍（Fabric 只在 1.14+、Quilt 只在 1.14+ 等），\n但判斷版本號時有個漏洞：像 1.0.0-c2-1656 這種「帶後綴」的版本，\n程式一看後面有字母就當成「新版本」放行了，結果 Fabric / Fabric API /\nQuilt / Quilt API 四行照舊顯示，點進去又裝不上。\n\n修法：先把 - 後面的後綴剝掉，只拿主幹版本號去比。\n現在 1.0.0-c2-1656 會被正確識別為 1.0.0，遠低於 1.14，四行全部隱藏。\n\n順帶修好的還有 1.21.5-pre2 這類預發布 —— 以前也被漏判成放行，\n現在按 1.21.5 判斷，行為正確（1.21.5 >= 1.14，所以照樣顯示，這是對的）。\n\n感謝群友「打遊戲的阿坤」的截圖回饋。\n\n—— 遇到問題請到 QQ 群回饋，記得帶上版本號、手機型號、Android 版本和日誌。"
+        },
+        {
+          "lang": "en_US",
+          "text": "[1.6.3: fix a missed case in loader gating - versions with a suffix]\n\nThe previous release gated every loader by the MC version range (Fabric only on 1.14+,\nQuilt only on 1.14+, and so on), but the version comparison had a hole: a build like\n1.0.0-c2-1656 carries letters after a dash, and the check treated \"contains letters\" as\n\"is new\", so Fabric / Fabric API / Quilt / Quilt API all stayed visible and then failed\nto fetch anything.\n\nFix: strip the -suffix first and compare only the core version. 1.0.0-c2-1656 is now\ncorrectly read as 1.0.0, far below 1.14, so all four rows are hidden.\n\nPre-releases like 1.21.5-pre2 were affected too; they are now compared as 1.21.5, which\nis correct (1.21.5 >= 1.14, so the rows still show - as they should).\n\nThanks to the community member for the screenshot report.\n\n-- Report issues in the QQ group and include the version, phone model, Android version and logs."
+        }
+      ]
+    },
+    {
       "id": 112,
       "significant": true,
       "outdated": false,
