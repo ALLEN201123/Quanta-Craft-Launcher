@@ -1,6 +1,43 @@
 {
   "announcements": [
     {
+      "id": 115,
+      "significant": true,
+      "outdated": false,
+      "minVersion": 0,
+      "maxVersion": 2147483647,
+      "specificLang": [],
+      "title": [
+        {
+          "lang": "zh_CN",
+          "text": "QCL 1.6.5：修快照版本被误判 —— 11w47a 不该显示 NeoForge"
+        },
+        {
+          "lang": "zh_TW",
+          "text": "QCL 1.6.5：修快照版本被誤判 —— 11w47a 不該顯示 NeoForge"
+        },
+        {
+          "lang": "en_US",
+          "text": "QCL 1.6.5: fix snapshots wrongly treated as new versions"
+        }
+      ],
+      "date": "2026-11-20",
+      "content": [
+        {
+          "lang": "zh_CN",
+          "text": "【1.6.5：修快照版本被误判成新版本 —— 11w47a 居然显示 NeoForge】\n\n群友「打游戏的阿坤」发现：选 11w47a 这类老快照时，NeoForge 那一行会显示出来，\n点进去当然装不上。他给的范围很准：11w47a ~ 18w22c 这些快照都有这个问题，\n1.13-pre1 以上正常。\n\n原因是判断\"版本够不够新\"时，代码一看到版本号里有字母就直接当成新版本放行了\n—— 这个规则本来是为 24w14a 这种现代快照写的，结果把 2011 年的 11w47a\n也一起放行了。\n\n现在改成：周快照先拆成年、周、序号三段再比，跟 Fabric / Quilt 用的是同一套口径。\n这样 11w47a（2011 年）就正确地判成\"太老\"，而 23w31a（1.20 起始周）正常显示。\n\n同时把\"认不出版本形态\"的默认行为从\"放行\"改成\"不显示\"——\n宁可少显示一行，也不要让你点开一个空列表。\n\n—— 遇到问题请到 QQ 群反馈，记得带上版本号、手机型号、Android 版本和日志。"
+        },
+        {
+          "lang": "zh_TW",
+          "text": "【1.6.5：修快照版本被誤判成新版本 —— 11w47a 居然顯示 NeoForge】\n\n群友「打遊戲的阿坤」發現：選 11w47a 這類老快照時，NeoForge 那一行會顯示出來，\n點進去當然裝不上。他給的範圍很準：11w47a ~ 18w22c 這些快照都有這個問題，\n1.13-pre1 以上正常。\n\n原因是判斷「版本夠不夠新」時，程式一看到版本號裡有字母就直接當成新版本放行了\n—— 這個規則本來是為 24w14a 這種現代快照寫的，結果把 2011 年的 11w47a\n也一起放行了。\n\n現在改成：週快照先拆成年、週、序號三段再比，跟 Fabric / Quilt 用的是同一套口徑。\n這樣 11w47a（2011 年）就正確地判成「太老」，而 23w31a（1.20 起始週）正常顯示。\n\n同時把「認不出版本形態」的預設行為從「放行」改成「不顯示」——\n寧可少顯示一行，也不要讓你點開一個空列表。\n\n—— 遇到問題請到 QQ 群回饋，記得帶上版本號、手機型號、Android 版本和日誌。"
+        },
+        {
+          "lang": "en_US",
+          "text": "[1.6.5: snapshots wrongly treated as new versions - 11w47a showed NeoForge]\n\nA community member found that picking an old snapshot like 11w47a makes the NeoForge\nrow appear, which of course cannot install anything. Their range was precise:\n11w47a through 18w22c all misbehave, while 1.13-pre1 and later are fine.\n\nThe cause: when deciding whether a version is new enough, the code treated any version\nstring containing letters as \"new\" and let it through. That rule was written for modern\nsnapshots like 24w14a, but it also let 11w47a from 2011 through.\n\nSnapshots are now split into year, week and revision and compared as a triple, matching\nthe logic already used for Fabric and Quilt. So 11w47a (2011) is correctly read as too\nold, while 23w31a (the first week of 1.20) still shows as expected.\n\nThe fallback for unrecognised version shapes also changed from \"allow\" to \"hide\":\nbetter to hide a row than to open an empty list.\n\n-- Report issues in the QQ group and include the version, phone model, Android version and logs."
+        }
+      ]
+    },
+    {
       "id": 114,
       "significant": true,
       "outdated": false,

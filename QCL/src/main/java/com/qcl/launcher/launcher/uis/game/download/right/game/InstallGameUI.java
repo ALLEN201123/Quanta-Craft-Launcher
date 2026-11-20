@@ -1304,6 +1304,39 @@ public class InstallGameUI extends BaseUI implements View.OnClickListener, TextW
         if (core.isEmpty()) {
             return false;
         }
+        // ④ ★★★ 1.6.5：周快照**必须先单独判**，不能掉进下面的「含字母就放行」。
+        //
+        //   群友「打游戏的阿坤」2026-11-20 报：「11w47a 有 NeoForge？」
+        //   并给出准确范围：**11w47a ~ 18w22c 这些快照都错，1.13-pre1 以上正常**。
+        //
+        //   根因：旧代码走到 parts[0]="11w47a" 发现含字母 → 直接 return true，
+        //   于是 2011 年的快照被判定为「≥ 1.20.1」，NeoForge 行照样显示。
+        //   （1.13-pre1 之所以正常，是因为它走的是「剥 -pre1 后变 1.13」的数字分支。）
+        //
+        //   修法：周快照用 parseWeekSnapshot 归一成 "YYWWx" 与门槛周比较 ——
+        //   与 {@link #supportsFabricLike} 里的 Fabric/Quilt 判定同一套口径。
+        final String week = parseWeekSnapshot(core);
+        if (week != null) {
+            // 主版本 ≥ 2（如 26.x）→ 任何真实快照都到线
+            if (minimum[0] >= 2) {
+                return true;
+            }
+            final int minMinor = minimum.length > 1 ? minimum[1] : 0;
+            // 把「1.次版本」翻成「该次版本开发周期的起始周」。只列实际用到的门槛：
+            //   1.14 → 18w43b（Fabric）  1.20 → 23w31a（NeoForge）  1.21 → 24w21a
+            //   其余保守按 1001a（1.0 起）→ 只要是真快照就算到线。
+            final String minWeek;
+            if (minMinor >= 21) {
+                minWeek = "2421a";
+            } else if (minMinor >= 20) {
+                minWeek = "2331a";
+            } else if (minMinor >= 14) {
+                minWeek = "1843b";
+            } else {
+                minWeek = "1001a";
+            }
+            return week.compareTo(minWeek) >= 0;
+        }
         // ④ 逐段比较主干
         final String[] parts = core.split("\\.");
         for (int idx = 0; idx < minimum.length; idx++) {
@@ -1313,16 +1346,18 @@ public class InstallGameUI extends BaseUI implements View.OnClickListener, TextW
                 if (seg.isEmpty()) {
                     return false;
                 }
-                // 该段不是纯数字（快照 24w14a 之类）→ 无法比较，放行交给上游
+                // 该段不是纯数字，且不是周快照（上面已处理）→ 形态认不出。
+                //   ★ 1.6.5：旧代码这里 return true（放行），把认不出的东西都当新版本；
+                //   现在改成 return false —— 宁可少显示一行，也不要让玩家点开一个空列表。
                 for (int c = 0; c < seg.length(); c++) {
                     if (!Character.isDigit(seg.charAt(c))) {
-                        return true;
+                        return false;
                     }
                 }
                 try {
                     have = Integer.parseInt(seg);
                 } catch (Throwable ignored) {
-                    return true;
+                    return false;   // ★ 1.6.5：解析不出来就按「不到线」处理，不再放行
                 }
             } else {
                 have = 0; // 段数不足（1.6 vs 1.6.0）→ 缺的当 0
