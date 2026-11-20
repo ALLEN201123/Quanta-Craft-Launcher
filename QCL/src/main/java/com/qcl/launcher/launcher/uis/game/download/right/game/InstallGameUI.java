@@ -833,36 +833,64 @@ public class InstallGameUI extends BaseUI implements View.OnClickListener, TextW
             final String mc = (this.version == null || this.version.id == null)
                     ? "" : this.version.id.trim();
 
-            // ============ ⓪ 愚人节版：所有「现代加载器」一律不显示 ============
+            // ============ ⓪ 愚人节版：**按上游实际有没有，而不是一律禁用** ============
             //
-            // ★ 1.6.3（群友「打游戏的阿坤」反馈：「好像没有覆盖到快照、远古版本、愚人节版本」）：
-            //   愚人节版（15w14a / 20w14infinite / 2.0_purple …）虽然多数在清单里被标成
-            //   snapshot，但它们**不是正常开发快照** —— 服务端往往没有对应的加载器构建，
-            //   点了就是空列表。所以这里直接一票否决：
-            //     Fabric / Fabric API / Quilt / Quilt API / NeoForge / Cleanroom / LiteLoader
-            //   全部隐藏；只保留 ModLoader 与 Babric 的常规判断
-            //   （这两个是「往 jar 里塞 class」/「老 Fabric 分支」，与官方构建无关）。
+            // ★ 1.6.3 首版写的是「愚人节版一票否决所有现代加载器」，**这是错的**。
+            //   群友「打游戏的阿坤」2026-11-20 实测反驳：「3D Shareware v1.34、20w14infinite、
+            //   22w13oneBlockAtATime、23w13a_or_b、24w14potato、25w14craftmine、26w14a 都能用
+            //   Fabric」「2.0、15w14a、1.RV-Pre1 都能用 Legacy Fabric」「25w14craftmine 能用 NeoForge」。
             //
-            //   ⚠️ 用 AprilFools 的白名单**精确匹配**，不要用「4 月 1 日前后」兜底 ——
-            //     26w14a / 21w13a / 20w14a / 17w13b / b1.4 都是正常版本，按日期判会全误伤
-            //     （AprilFools 的注释里记着这条踩坑）。
+            //   拉上游官方目录逐条核对（2026-11-20）：
+            //     meta.fabricmc.net/v2/versions/game       537 个
+            //       ✅ 3D Shareware v1.34 / 20w14infinite / 23w13a_or_b / 24w14potato /
+            //          25w14craftmine / 26w14a
+            //       ✅ 22w13oneblockatatime —— 注意官方 id 是**全小写**
+            //       ❌ 15w14a / 1.RV-Pre1 / 2.0*
+            //     meta.quiltmc.org/v3/versions/game        448 个
+            //       ✅ 20w14infinite / 22w13oneblockatatime / 23w13a_or_b / 24w14potato /
+            //          25w14craftmine / 26w14a
+            //       ❌ 3D Shareware v1.34 / 15w14a / 2.0*
+            //     meta.legacyfabric.net/v2/versions/game    76 个
+            //       ✅ 15w14a / 2point0_purple / 2point0_blue / 2point0_red
+            //       ❌ 1.RV-Pre1
+            //
+            //   结论：**愚人节版的支持情况各不相同，必须逐个查表，不能一刀切。**
+            //   下面的表就是照这三份官方目录抄下来的，不靠猜。
+            //
+            //   ⚠️ 依旧用 AprilFools 白名单做「这是不是愚人节版」的判定，
+            //     不要用「4 月 1 日前后」兜底 —— 26w14a / 21w13a / 20w14a / 17w13b / b1.4
+            //     都是正常版本，按日期判会全误伤（AprilFools 注释里记着这条踩坑）。
             final boolean aprilFools =
                     com.qcl.launcher.launcher.download.game.AprilFools.isAprilFools(mc);
+            // 愚人节版里实际有 Fabric 构建的（官方 id 原样，大小写敏感）
+            final boolean aprilHasFabric = aprilFools && APRIL_FABRIC.contains(mc)
+                    || aprilFools && "22w13oneBlockAtATime".equalsIgnoreCase(mc);
+            // 愚人节版里实际有 Quilt 构建的
+            final boolean aprilHasQuilt = aprilFools && APRIL_QUILT.contains(mc)
+                    || aprilFools && "22w13oneBlockAtATime".equalsIgnoreCase(mc);
 
             // ============ ① 无上限的「达线即显示」 ============
 
-            // Fabric / Fabric API：正式版 >= 1.14，周快照 >= 18w43b
-            //   ★ 1.6.3：改用 supportsFabricLike —— 它同时处理正式版、周快照、预发布，
-            //     修掉「14w02a / 15w14a / 1.0.0-c2-1656 被误显示」的问题。
-            applyRowGate(this.fabricRow, !aprilFools && supportsFabricLike(mc, false), 0);
-            applyRowGate(this.fabricAPIRow, !aprilFools && supportsFabricLike(mc, false), 1);
+            // Fabric / Fabric API：正式版 >= 1.14，周快照 >= 18w43b；
+            //   愚人节版按 APRIL_FABRIC 白名单（它们的时间戳都在 18w43b 之后，但周序号
+            //   与正式版不等价，只能查表）
+            applyRowGate(this.fabricRow,
+                    aprilFools ? aprilHasFabric : supportsFabricLike(mc, false), 0);
+            applyRowGate(this.fabricAPIRow,
+                    aprilFools ? aprilHasFabric : supportsFabricLike(mc, false), 1);
 
-            // Quilt / Quilt API：正式版 >= 1.14.4，周快照 >= 19w36a（上游实测的最早值）
-            applyRowGate(this.quiltRow, !aprilFools && supportsFabricLike(mc, true), 2);
-            applyRowGate(this.quiltAPIRow, !aprilFools && supportsFabricLike(mc, true), 3);
+            // Quilt / Quilt API：正式版 >= 1.14.4，周快照 >= 19w36a；愚人节版查 APRIL_QUILT
+            applyRowGate(this.quiltRow,
+                    aprilFools ? aprilHasQuilt : supportsFabricLike(mc, true), 2);
+            applyRowGate(this.quiltAPIRow,
+                    aprilFools ? aprilHasQuilt : supportsFabricLike(mc, true), 3);
 
             // NeoForge：>= 1.20.1
-            applyRowGate(this.neoForgeRow, !aprilFools && isAtLeast(mc, 1, 20, 1), 4);
+            // NeoForge：>= 1.20.1；愚人节版查 APRIL_NEOFORGE
+            //   ★ 1.6.3：25w14craftmine 群友实测能用 NeoForge（实验版没有独立 maven 条目，
+            //     无法用版本号规则判），故单独放行。
+            applyRowGate(this.neoForgeRow,
+                    aprilFools ? APRIL_NEOFORGE.contains(mc) : isAtLeast(mc, 1, 20, 1), 4);
 
             // ============ ② 单点/封顶 ============
 
@@ -1137,6 +1165,86 @@ public class InstallGameUI extends BaseUI implements View.OnClickListener, TextW
         }
     }
 
+
+    /**
+     * ★ 1.6.3：**愚人节版里实际有 Fabric 构建的那些**（官方 id，大小写敏感）。
+     *
+     * <p>来源：{@code https://meta.fabricmc.net/v2/versions/game}（537 个版本，2026-11-20 核对）。
+     * 群友「打游戏的阿坤」实测补充了 {@code 22w13oneBlockAtATime}，
+     * 官方列表里写作**全小写** {@code 22w13oneblockatatime} —— 两者都要认，见调用处的
+     * {@code equalsIgnoreCase}。
+     *
+     * <p>不在这个表里的愚人节版（{@code 15w14a} / {@code 1.RV-Pre1} / {@code 2.0*}）
+     * 上游**没有** Fabric 构建 —— 它们走 Legacy Fabric（见 {@link #APRIL_LEGACY_FABRIC}）。
+     */
+    private static final java.util.Set<String> APRIL_FABRIC =
+            new java.util.HashSet<String>(java.util.Arrays.asList(
+                    "3D Shareware v1.34",
+                    "20w14infinite",
+                    "23w13a_or_b",
+                    "24w14potato",
+                    "24w14potato_original",
+                    "25w14craftmine",
+                    "25w14craftmine_original",
+                    "26w14a"
+            ));
+
+    /**
+     * ★ 1.6.3：**愚人节版里实际有 Quilt 构建的那些**。
+     *
+     * <p>来源：{@code https://meta.quiltmc.org/v3/versions/game}（448 个版本，2026-11-20 核对）。
+     * 与 Fabric 表的差别：{@code 3D Shareware v1.34} Quilt **没有**；
+     * {@code 22w13oneblockatatime} Quilt **有**。
+     */
+    private static final java.util.Set<String> APRIL_QUILT =
+            new java.util.HashSet<String>(java.util.Arrays.asList(
+                    "20w14infinite",
+                    "23w13a_or_b",
+                    "24w14potato",
+                    "25w14craftmine",
+                    "26w14a"
+            ));
+
+    /**
+     * ★ 1.6.3：**愚人节版里能用 Legacy Fabric 的那些**。
+     *
+     * <p>来源：{@code https://meta.legacyfabric.net/v2/versions/game}（76 个版本，2026-11-20 核对）。
+     *
+     * <p>⚠️ 注意官方 id 写法：{@code 2point0_purple}（不是 {@code 2.0_purple}）。
+     * Minecraft 清单里条目名是 {@code 2.0_purple}，但 Legacy Fabric 目录里登记成
+     * {@code 2point0_*}，所以两个写法都要认。
+     *
+     * <p>{@code 1.RV-Pre1} 群友说能用，但**官方 Legacy Fabric 目录里没有它** ——
+     * 按上游为准，这里不列（若有误，以官方目录更新为准）。
+     */
+    private static final java.util.Set<String> APRIL_LEGACY_FABRIC =
+            new java.util.HashSet<String>(java.util.Arrays.asList(
+                    "15w14a",
+                    "2.0", "2.0_blue", "2.0_red", "2.0_purple",
+                    "2point0_blue", "2point0_red", "2point0_purple"
+            ));
+
+    /**
+     * ★ 1.6.3：**愚人节版里能用 NeoForge 的那些**。
+     *
+     * <p>群友「打游戏的阿坤」2026-11-20 实机报告：{@code 25w14craftmine} 能用 NeoForge。
+     * NeoForge 的 maven 目录按 {@code <MC 次版本>.<补丁>} 编号，实验版没有独立条目，
+     * 无法用版本号规则判断，只能查表。这一条按群友实测收录；
+     * 官方 maven（maven.neoforged.net）当时连不上，未能二次核对。
+     */
+    private static final java.util.Set<String> APRIL_NEOFORGE =
+            new java.util.HashSet<String>(java.util.Arrays.asList(
+                    "25w14craftmine",
+                    "25w14craftmine_original"
+            ));
+
+    /**
+     * ★ 1.6.3：该愚人节版是否属于「能用 Legacy Fabric」的那批。
+     * <p>Legacy Fabric 那一行自己不判版本，这里只给别处复用。
+     */
+    private static boolean isAprilLegacyFabric(String mc) {
+        return mc != null && APRIL_LEGACY_FABRIC.contains(mc);
+    }
 
     /**
      * 版本号是否 ≥ 给定下限（用于 {@link #applyLoaderVersionGate()}）。

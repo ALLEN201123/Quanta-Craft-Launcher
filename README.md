@@ -83,7 +83,7 @@ QCL 自己写的是**窗口 / Surface / EGL 上下文 / 输入桥 / 帧节奏**�
 
 ### 当前进展（1.5.2）
 
-### 当前进展（1.6.3）
+### 当前进展（1.6.4）
 
 - **内置 SimpleFPEWrapper 兼容层：老版本也能用 MobileGlues 了。**
   过去 MG 只能跑 1.17+，因为它只实现 GLES 3.x，**没有固定管线**（`glBegin`/`glEnd`、
@@ -308,7 +308,7 @@ requestLayout()、最后做动画，首帧就是「6 行 + Show more」。
 **每个版本改了什么，都在 GitHub Releases 里，README 不逐版记录：**
 
 - 全部版本：https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases
-- 当前版本：**1.6.3**（versionCode 365）
+- 当前版本：**1.6.4**（versionCode 366）
 
 > 建议先按下面这张表判断自己关心的问题是在哪一版修的，直接查对应 Release 的说明：
 >

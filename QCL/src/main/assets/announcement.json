@@ -1,6 +1,43 @@
 {
   "announcements": [
     {
+      "id": 114,
+      "significant": true,
+      "outdated": false,
+      "minVersion": 0,
+      "maxVersion": 2147483647,
+      "specificLang": [],
+      "title": [
+        {
+          "lang": "zh_CN",
+          "text": "QCL 1.6.4：愚人节版本不该一刀切 —— 按官方目录逐个显示加载器"
+        },
+        {
+          "lang": "zh_TW",
+          "text": "QCL 1.6.4：愚人節版本不該一刀切 —— 按官方目錄逐個顯示載入器"
+        },
+        {
+          "lang": "en_US",
+          "text": "QCL 1.6.4: April Fools versions no longer blocked wholesale"
+        }
+      ],
+      "date": "2026-11-20",
+      "content": [
+        {
+          "lang": "zh_CN",
+          "text": "【1.6.4：愚人节版本不该一刀切】\n\n上一版（1.6.3）我判断错了：把所有愚人节版本当成\"没有加载器构建\"，一律隐藏了\nFabric / Quilt / NeoForge。实际上它们各有各的支持情况，不能一概而论。\n\n感谢群友「打游戏的阿坤」实测指出这个问题。这次我拉了三个官方目录逐条核对：\n\nFabric（meta.fabricmc.net，537 个版本）\n  能用的：3D Shareware v1.34、20w14infinite、22w13oneBlockAtATime、\n         23w13a_or_b、24w14potato、25w14craftmine、26w14a\n  不能用的：15w14a、1.RV-Pre1、2.0 系列\n\nQuilt（meta.quiltmc.org，448 个版本）\n  能用的：20w14infinite、22w13oneBlockAtATime、23w13a_or_b、\n         24w14potato、25w14craftmine、26w14a\n  注意 3D Shareware v1.34 在 Quilt 里没有\n\nNeoForge\n  25w14craftmine 可以用（群友实测）\n\nLegacy Fabric（meta.legacyfabric.net，76 个版本）\n  能用的：15w14a、2.0 / 2.0_blue / 2.0_red / 2.0_purple\n  注意 1.RV-Pre1 官方目录里没有\n\n现在这些版本会按实际情况显示对应的加载器，不再全部隐藏。\n\n另外修了一个连带问题：Legacy Fabric 那边认的版本名是 2point0_purple，\n而游戏清单里写的是 2.0_purple，两个名字对不上，导致你选 2.0 系列时\nLegacy Fabric 那一行被误判成\"不支持\"藏起来了。现在两个写法都认。\n\n顺带说明 Legacy Fabric 和 Legacy Fabric API 支持范围不一样：\n  15w14a     → 加载器和 API 都有\n  1.RV-Pre1  → 只有 API（加载器官方没有）\n  2.0 系列   → 只有加载器（API 没有）\n\n—— 遇到问题请到 QQ 群反馈，记得带上版本号、手机型号、Android 版本和日志。"
+        },
+        {
+          "lang": "zh_TW",
+          "text": "【1.6.4：愚人節版本不該一刀切】\n\n上一版（1.6.3）我判斷錯了：把所有愚人節版本當成「沒有載入器構建」，一律隱藏了\nFabric / Quilt / NeoForge。實際上它們各有各的支援情況，不能一概而論。\n\n感謝群友「打遊戲的阿坤」實測指出這個問題。這次我拉了三個官方目錄逐條核對：\n\nFabric（meta.fabricmc.net，537 個版本）\n  能用的：3D Shareware v1.34、20w14infinite、22w13oneBlockAtATime、\n         23w13a_or_b、24w14potato、25w14craftmine、26w14a\n  不能用的：15w14a、1.RV-Pre1、2.0 系列\n\nQuilt（meta.quiltmc.org，448 個版本）\n  能用的：20w14infinite、22w13oneBlockAtATime、23w13a_or_b、\n         24w14potato、25w14craftmine、26w14a\n  注意 3D Shareware v1.34 在 Quilt 裡沒有\n\nNeoForge\n  25w14craftmine 可以用（群友實測）\n\nLegacy Fabric（meta.legacyfabric.net，76 個版本）\n  能用的：15w14a、2.0 / 2.0_blue / 2.0_red / 2.0_purple\n  注意 1.RV-Pre1 官方目錄裡沒有\n\n現在這些版本會按實際情況顯示對應的載入器，不再全部隱藏。\n\n另外修了一個連帶問題：Legacy Fabric 那邊認的版本名是 2point0_purple，\n而遊戲清單裡寫的是 2.0_purple，兩個名字對不上，導致你選 2.0 系列時\nLegacy Fabric 那一行被誤判成「不支援」藏起來了。現在兩個寫法都認。\n\n順帶說明 Legacy Fabric 和 Legacy Fabric API 支援範圍不一樣：\n  15w14a     → 載入器和 API 都有\n  1.RV-Pre1  → 只有 API（載入器官方沒有）\n  2.0 系列   → 只有載入器（API 沒有）\n\n—— 遇到問題請到 QQ 群回饋，記得帶上版本號、手機型號、Android 版本和日誌。"
+        },
+        {
+          "lang": "en_US",
+          "text": "[1.6.4: April Fools versions should not be blocked wholesale]\n\nThe previous release (1.6.3) got this wrong: it treated every April Fools version as\nhaving no loader builds and hid Fabric / Quilt / NeoForge for all of them. In reality\nthey differ, and a blanket rule does not fit.\n\nThanks to the community member who tested and reported this. I checked three official\ndirectories entry by entry:\n\nFabric (meta.fabricmc.net, 537 versions)\n  Works: 3D Shareware v1.34, 20w14infinite, 22w13oneBlockAtATime,\n         23w13a_or_b, 24w14potato, 25w14craftmine, 26w14a\n  Does not: 15w14a, 1.RV-Pre1, the 2.0 series\n\nQuilt (meta.quiltmc.org, 448 versions)\n  Works: 20w14infinite, 22w13oneBlockAtATime, 23w13a_or_b,\n         24w14potato, 25w14craftmine, 26w14a\n  Note: 3D Shareware v1.34 is not in Quilt\n\nNeoForge\n  25w14craftmine works (community-tested)\n\nLegacy Fabric (meta.legacyfabric.net, 76 versions)\n  Works: 15w14a, 2.0 / 2.0_blue / 2.0_red / 2.0_purple\n  Note: 1.RV-Pre1 is not in the official directory\n\nThese versions now show the loaders that actually exist instead of hiding all of them.\n\nAlso fixed a related mismatch: Legacy Fabric registers the version as 2point0_purple\nwhile the game manifest calls it 2.0_purple, so picking a 2.0 build wrongly hid the\nLegacy Fabric row. Both spellings now resolve.\n\nNote that Legacy Fabric and Legacy Fabric API do not cover the same set:\n  15w14a     -> loader and API\n  1.RV-Pre1  -> API only (no official loader)\n  2.0 series -> loader only (no API)\n\n-- Report issues in the QQ group and include the version, phone model, Android version and logs."
+        }
+      ]
+    },
+    {
       "id": 113,
       "significant": true,
       "outdated": false,

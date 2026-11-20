@@ -66,6 +66,62 @@ public final class LegacyFabricSupport {
     private static final Set<String> LOADER_SET = toSet(LOADER_GAME_VERSIONS);
     private static final Set<String> API_SET = toSet(API_GAME_VERSIONS);
 
+    /**
+     * ★★★ 1.6.4：【清单 id 与上游 id 写法不一致的别名表】。
+     *
+     * <p>群友「打游戏的阿坤」2026-11-20 实测反馈「2.0、15w14a、1.RV-Pre1 都能用 Legacy Fabric」，
+     * 拉上游接口核对后发现根因：
+     * <pre>
+     *   Minecraft 清单里的条目名：  2.0_purple / 2.0_blue / 2.0_red
+     *   Legacy Fabric meta 里的名：  2point0_purple / 2point0_blue / 2point0_red
+     * </pre>
+     * 两个名字**完全匹配不上**，于是玩家选「2.0_purple」时 Legacy Fabric 那一行被判成不支持
+     * 被整行隐藏 —— 而它其实**是**支持的（{@code /v2/versions/loader/2point0_purple} 返回 76 个 loader）。
+     *
+     * <p>实测对照（2026-11-20）：
+     * <pre>
+     *   GET /v2/versions/loader/2point0_purple  → 200，76 个 loader  ✅
+     *   GET /v2/versions/loader/2.0_purple      → 400 Bad Request    ❌
+     * </pre>
+     *
+     * <p>★ 为什么不在 {@link #LOADER_GAME_VERSIONS} 里直接加 {@code 2.0_purple}：
+     * 那个常量是「上游接口返回值的逐字抄录」，加进去会让
+     * {@link #loaderListUrl(String)} 拼出一个必 400 的请求地址。
+     * 别名必须在**查询侧**归一化，而不是污染数据表。
+     */
+    private static final java.util.Map<String, String> ID_ALIAS;
+
+    static {
+        final java.util.Map<String, String> m = new java.util.LinkedHashMap<String, String>();
+        // 清单写法 → 上游写法（2.0 的愚人节三个变体）
+        m.put("2.0", "2point0_purple");   // 裸 "2.0" 在清单里没有，兜底指向 purple
+        m.put("2.0_purple", "2point0_purple");
+        m.put("2.0_blue", "2point0_blue");
+        m.put("2.0_red", "2point0_red");
+        // 反向也收（万一清单哪天改用上游写法）
+        m.put("2point0_purple", "2point0_purple");
+        m.put("2point0_blue", "2point0_blue");
+        m.put("2point0_red", "2point0_red");
+        ID_ALIAS = java.util.Collections.unmodifiableMap(m);
+    }
+
+    /**
+     * 把「Minecraft 清单里的版本 id」归一成「上游 Legacy Fabric 认的 id」。
+     *
+     * <p>只有 {@code 2.0_*} ↔ {@code 2point0_*} 这一组需要换名，其余原样返回。
+     *
+     * @param mcVersion 清单 id，可为 null
+     * @return 上游 id；入参为 null 时返回 null
+     */
+    public static String toUpstreamId(String mcVersion) {
+        if (mcVersion == null) {
+            return null;
+        }
+        final String t = mcVersion.trim();
+        final String mapped = ID_ALIAS.get(t);
+        return mapped != null ? mapped : t;
+    }
+
     private LegacyFabricSupport() {
     }
 
@@ -81,14 +137,37 @@ public final class LegacyFabricSupport {
         return Collections.unmodifiableSet(set);
     }
 
-    /** 该游戏版本能不能装 Legacy Fabric（加载器）。 */
+    /**
+     * 该游戏版本能不能装 Legacy Fabric（加载器）。
+     *
+     * <p>★ 1.6.4：先走 {@link #toUpstreamId(String)} 归一化，让清单里的
+     * {@code 2.0_purple} 能匹配上数据表里的 {@code 2point0_purple}。
+     */
     public static boolean isLoaderSupported(String mcVersion) {
-        return mcVersion != null && LOADER_SET.contains(mcVersion.trim());
+        if (mcVersion == null) {
+            return false;
+        }
+        return LOADER_SET.contains(toUpstreamId(mcVersion));
     }
 
-    /** 该游戏版本能不能装 Legacy Fabric API。 */
+    /**
+     * 该游戏版本能不能装 Legacy Fabric API。
+     *
+     * <p>★ 1.6.4：同样先归一化。
+     *
+     * <p>注意 API 与 loader 的支持范围**不一样**（群友 2026-11-20 反馈「但是有 Legacy Fabric API」）：
+     * <ul>
+     *   <li>{@code 15w14a} —— loader ✅ + API ✅</li>
+     *   <li>{@code 1.RV-Pre1} —— loader ❌（上游 400）+ API ✅ <b>只有 API</b></li>
+     *   <li>{@code 2point0_*} —— loader ✅ + API ❌ <b>只有 loader</b></li>
+     * </ul>
+     * 所以这两行必须分开判，不能共用一个「支持/不支持」。
+     */
     public static boolean isApiSupported(String mcVersion) {
-        return mcVersion != null && API_SET.contains(mcVersion.trim());
+        if (mcVersion == null) {
+            return false;
+        }
+        return API_SET.contains(toUpstreamId(mcVersion));
     }
 
     public static int loaderVersionCount() {
@@ -103,9 +182,12 @@ public final class LegacyFabricSupport {
      * 「只列真的支持这个版本的 loader」的接口。
      *
      * <p>不支持的版本会返回 400 / 空数组 —— 这也是之前在界面上点开只看到一片空白的原因。
+     *
+     * <p>★ 1.6.4：URL 里必须用**上游 id**，否则 {@code 2.0_purple} 会拼成
+     * {@code /v2/versions/loader/2.0_purple} → 400（实测）。故先归一化。
      */
     public static String loaderListUrl(String mcVersion) {
-        return "https://meta.legacyfabric.net/v2/versions/loader/" + mcVersion;
+        return "https://meta.legacyfabric.net/v2/versions/loader/" + toUpstreamId(mcVersion);
     }
 
     /** 人话版支持范围（提示文案用）。 */
