@@ -9,7 +9,9 @@
             "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.6.5/QCL-release-1.6.5-arm.apk",
             "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.6.5/QCL-release-1.6.5-x86_64.apk",
             "https://github.com/ALLEN201123/Quanta-Craft-Launcher/releases/download/v1.6.5/QCL-release-1.6.5-x86.apk"
-        ]
+        ],
+        "netdiskUrl": "https://pan.quark.cn/s/f2c26c4fb66b",
+        "updateLog": "【1.6.5：修快照版本被误判成新版本】\n\n· 11w47a 这类老快照以前会错误地显示 NeoForge，现在按「年/周/序号」正确比较\n· 加载器显示范围补齐：快照 / 愚人节 / 带后缀版本号（如 1.0.0-c2-1656）\n· 愚人节版本不再一刀切，按官方目录逐个显示\n· 修复 Legacy Fabric 版本名对不上（2.0_purple vs 2point0_purple）\n· 公告「展开」按钮修复，首次显示不再铺满半屏\n\n完整历史见 GitHub Releases。"
     },
     "latestPrerelease": null
 }
